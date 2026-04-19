@@ -58,8 +58,38 @@ import click
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT))
 
-from spl.codecs import encode_image                     # noqa: E402
-from spl.adapters.liquid import LiquidAdapter           # noqa: E402
+from spl3.adapters.liquid import LiquidAdapter           # noqa: E402
+
+
+def encode_image(image: str, max_dim: int = 1024) -> dict:
+    """Encode a local image file or pass through a URL as an ImagePart dict."""
+    if image.startswith("http://") or image.startswith("https://"):
+        media_type = "image/jpeg"
+        for ext, mt in [(".png", "image/png"), (".webp", "image/webp"), (".gif", "image/gif")]:
+            if image.lower().endswith(ext):
+                media_type = mt
+                break
+        return {"type": "image", "source": "url", "url": image, "media_type": media_type}
+
+    import base64
+    import io
+    from PIL import Image
+
+    path = Path(image)
+    suffix = path.suffix.lower()
+    media_type = {"jpg": "image/jpeg", "jpeg": "image/jpeg",
+                  "png": "image/png", "webp": "image/webp",
+                  "gif": "image/gif"}.get(suffix.lstrip("."), "image/jpeg")
+
+    img = Image.open(path).convert("RGB")
+    if max(img.size) > max_dim:
+        img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+
+    buf = io.BytesIO()
+    fmt = "JPEG" if media_type == "image/jpeg" else suffix.lstrip(".").upper()
+    img.save(buf, format=fmt)
+    data = base64.b64encode(buf.getvalue()).decode()
+    return {"type": "image", "source": "base64", "media_type": media_type, "data": data}
 
 # ── Prompt templates (mirror image_caption.spl CREATE FUNCTIONs) ─────────────
 

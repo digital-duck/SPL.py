@@ -1,0 +1,23 @@
+PROMPT classify_intent
+SELECT @input AS text LIMIT 100 TOKENS
+GENERATE classify(text) WITH OUTPUT BUDGET 200 TOKENS INTO @intent;
+
+WORKFLOW route_handler
+  INPUT @input TEXT, @intent TEXT
+  OUTPUT @handler TEXT
+DO
+  DO
+    EVALUATE
+      WHEN @intent = 'booking' THEN
+        @handler := 'bookings';
+      WHEN @intent = 'payment' THEN
+        @handler := 'payments';
+      ELSE
+        @handler := 'unknown';
+    END;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @handler := 'unknown';
+  END;
+  COMMIT @handler;
+END;

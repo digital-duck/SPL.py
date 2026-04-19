@@ -1,0 +1,4275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SPL Cookbook — spl-go</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body     { font-family: 'Segoe UI', Tahoma, sans-serif;
+               background: #0e1117; color: #e6edf3; margin: 0; padding: 32px 48px; }
+    h1       { color: #4f8ef7; border-bottom: 2px solid #21262d;
+               padding-bottom: 10px; margin-bottom: 6px; }
+    .meta    { color: #8b949e; margin-bottom: 24px; font-size: .95em; }
+    .meta b  { color: #3fb950; }
+
+    /* ── Table ── */
+    .tbl-wrap { overflow-x: auto; border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,.5); }
+    table    { width: 100%; border-collapse: collapse; background: #161b22; }
+    th, td   { padding: 9px 13px; text-align: left;
+               border-bottom: 1px solid #30363d; white-space: nowrap; }
+    th       { background: #21262d; color: #8b949e; font-size: 11px;
+               font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+               cursor: pointer; user-select: none; position: sticky; top: 0; }
+    th:hover { color: #e6edf3; background: #2d333b; }
+    th .arrow { margin-left: 4px; opacity: .4; font-size: 10px; }
+    th.asc  .arrow::after { content: "▲"; opacity: 1; }
+    th.desc .arrow::after { content: "▼"; opacity: 1; }
+    th:not(.asc):not(.desc) .arrow::after { content: "⇅"; }
+    tr:hover { background: #1c2128; }
+    .ok      { color: #3fb950; font-weight: 600; }
+    .fail    { color: #f85149; font-weight: 600; }
+    .mono    { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
+    .cat     { font-size: 11px; color: #8b949e; }
+    .spl-status { font-size: 11px; color: #a5d6ff; font-style: italic; }
+    a        { color: #79c0ff; text-decoration: none; }
+    a:hover  { text-decoration: underline; }
+
+    /* ── Filter bar ── */
+    .filters { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+    .filters input, .filters select {
+      background: #161b22; color: #e6edf3; border: 1px solid #30363d;
+      border-radius: 6px; padding: 6px 10px; font-size: 13px; }
+    .filters input:focus, .filters select:focus {
+      outline: none; border-color: #4f8ef7; }
+
+    /* ── Modal ── */
+    #modal-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); z-index: 100;
+      align-items: center; justify-content: center; }
+    #modal-backdrop.open { display: flex; }
+    #modal {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      width: min(860px, 92vw); max-height: 82vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 8px 40px rgba(0,0,0,.7); }
+    #modal-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 18px; border-bottom: 1px solid #30363d; }
+    #modal-title { font-weight: 600; color: #79c0ff; font-size: 13px; }
+    #modal-close {
+      background: none; border: none; color: #8b949e; font-size: 20px;
+      cursor: pointer; line-height: 1; padding: 0 4px; }
+    #modal-close:hover { color: #f85149; }
+    #modal-body {
+      overflow-y: auto; padding: 0; flex: 1; }
+    #modal-body pre {
+      margin: 0; padding: 18px 20px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 13px; line-height: 1.6; color: #e6edf3;
+      white-space: pre; tab-size: 4; }
+
+    .footer { margin-top: 32px; font-size: 12px; color: #8b949e; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>SPL Cookbook — Batch Run Report <span style="color:#8b949e;font-size:.7em">(spl-go)</span></h1>
+  <div class="meta">
+    Generated: 2026-04-19 14:21:04 &nbsp;|&nbsp;
+    Runtime: <b>spl-go</b> &nbsp;|&nbsp;
+    Adapter: <b>ollama</b> &nbsp;|&nbsp;
+    Model: <b>gemma3</b> &nbsp;|&nbsp;
+    Pass: <b>38/39</b> &nbsp;|&nbsp;
+    Wall time: <b>1660s</b>
+  </div>
+
+  <div class="filters">
+    <input id="f-search" type="search" placeholder="🔍  Search recipe…" style="flex:1;min-width:180px">
+    <select id="f-status">
+      <option value="">All statuses</option>
+      <option value="SUCCESS">✅ OK only</option>
+      <option value="FAILED">❌ Failed only</option>
+    </select>
+    <select id="f-cat"><option value="">All categories</option></select>
+  </div>
+
+  <div class="tbl-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th data-col="0">#<span class="arrow"></span></th>
+        <th>Recipe</th>
+        <th data-col="2">Category<span class="arrow"></span></th>
+        <th data-col="3">Status<span class="arrow"></span></th>
+        <th>Model</th>
+        <th data-col="5">Elapsed<span class="arrow"></span></th>
+        <th data-col="6">LLM Calls<span class="arrow"></span></th>
+        <th data-col="7">Tokens in/out<span class="arrow"></span></th>
+        <th>SPL Status</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+<tr data-status="SUCCESS" data-elapsed="1.3" data-calls="1" data-tokens="123">
+  <td class="mono" data-val="1">01</td>
+  <td><a href="#" class="src-link" data-title="cookbook/01_hello_world/hello.spl" data-src="-- Recipe Name: Hello World
+-- Minimal SPL program — updated to support parameters and smaller models.
+
+CREATE FUNCTION greeting(user_input TEXT, lang TEXT)
+RETURNS TEXT
+AS $$
+You are a friendly assistant.
+The user said: &quot;{user_input}&quot;
+Please respond in {lang}. Introduce yourself and SPL 3.0 in two sentences.
+$$;
+
+PROMPT hello_world
+SELECT
+    system_role(&#x27;You are a friendly assistant.&#x27;),
+    context.user_input AS user_input,
+    context.lang AS lang
+GENERATE greeting(user_input, lang)
+"><strong>Hello World</strong></a></td>
+  <td class="cat" data-val="basics">basics</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="1.3">1.3s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="123">53 / 70</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.6" data-calls="1" data-tokens="69">
+  <td class="mono" data-val="2">02</td>
+  <td><a href="#" class="src-link" data-title="cookbook/02_ollama_proxy/proxy.spl" data-src="-- Recipe Name: Ollama Proxy
+-- General-purpose LLM query — proxy any prompt to any adapter/model.
+--
+-- Usage:
+--   spl3 run cookbook/02_ollama_proxy/proxy.spl --adapter ollama --model gemma3 prompt=&quot;Explain quantum computing in one sentence&quot;
+--   spl3 run cookbook/02_ollama_proxy/proxy.spl --adapter ollama --model llama3.2 prompt=&quot;Write a haiku about coding&quot;
+--   spl3 run cookbook/02_ollama_proxy/proxy.spl --adapter ollama --model mistral prompt=&quot;What is 2+2?&quot;
+--   spl3 run cookbook/02_ollama_proxy/proxy.spl --adapter anthropic prompt=&quot;Summarise the history of AI&quot;
+--
+-- Parameters:
+--   prompt  (required)  The user prompt / question
+
+CREATE FUNCTION answer(prompt TEXT)
+RETURNS TEXT
+AS $$
+{prompt}
+$$;
+
+PROMPT ollama_proxy
+SELECT
+    system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+    context.prompt AS prompt
+GENERATE answer(prompt)
+"><strong>Ollama Proxy</strong></a></td>
+  <td class="cat" data-val="basics">basics</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.6">0.6s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="69">42 / 27</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.9" data-calls="1" data-tokens="120">
+  <td class="mono" data-val="3">03</td>
+  <td><a href="#" class="src-link" data-title="cookbook/03_multilingual/multilingual.spl" data-src="-- Recipe Name: Multilingual Greeting
+-- Greet in any language — demonstrates parametric context with lang.
+--
+-- Usage:
+--   spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama user_input=&quot;hello wen&quot; lang=&quot;Chinese&quot;
+
+CREATE FUNCTION greeting(input TEXT, lang TEXT)
+RETURNS TEXT
+AS $$
+You are a friendly assistant. 
+The user said: &quot;{input}&quot;
+Please respond in {lang}. Introduce yourself and SPL 3.0 in two sentences.
+$$;
+
+PROMPT multilingual_greeting
+SELECT
+    system_role(&#x27;You are a friendly assistant. Respond in the language specified.&#x27;),
+    context.user_input AS input,
+    context.lang AS lang
+GENERATE greeting(input, lang)
+"><strong>Multilingual Greeting</strong></a></td>
+  <td class="cat" data-val="basics">basics</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.9">0.9s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="120">75 / 45</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="40.3" data-calls="4" data-tokens="2754">
+  <td class="mono" data-val="4">04</td>
+  <td><a href="#" class="src-link" data-title="cookbook/04_model_showdown/showdown.spl" data-src="-- Recipe Name: Model Showdown
+-- Same prompt to multiple Ollama models — compare responses side-by-side.
+-- Uses parallel CTEs instead of a bash loop for a pure-SPL implementation.
+--
+-- Usage:
+--   spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama \
+--       prompt=&quot;What is the meaning of life?&quot;
+
+CREATE FUNCTION answer(prompt TEXT)
+RETURNS TEXT
+AS $$
+{prompt}
+$$;
+
+CREATE FUNCTION compare_responses(
+    prompt TEXT,
+    model_1 TEXT, answer_1 TEXT,
+    model_2 TEXT, answer_2 TEXT,
+    model_3 TEXT, answer_3 TEXT
+) RETURNS TEXT
+AS $$
+You are a neutral evaluator comparing responses from three AI models.
+
+Prompt given to all models: &quot;{prompt}&quot;
+
+First, reproduce model raw response exactly as given, formatted like this:
+
+=== {model_1} ===
+{answer_1}
+
+=== {model_2} ===
+{answer_2}
+
+=== {model_3} ===
+{answer_3}
+
+Then provide your evaluation. For each model briefly assess:
+- Response quality
+- Key strengths or weaknesses
+
+Conclude with which model gave the most helpful answer and why.
+$$;
+
+WORKFLOW model_showdown
+    INPUT:
+        @prompt  TEXT DEFAULT &#x27;What is the meaning of life?&#x27;,
+        @model_1 TEXT DEFAULT &#x27;gemma3&#x27;,
+        @model_2 TEXT DEFAULT &#x27;phi4&#x27;,
+        @model_3 TEXT DEFAULT &#x27;qwen2.5&#x27;
+    OUTPUT: @comparison TEXT
+DO
+    -- Run the same prompt against all three models in parallel CTEs
+    WITH
+        response_1 AS (
+            PROMPT ask_model_1
+            SELECT
+                system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+                @prompt AS prompt
+            GENERATE answer(prompt)
+            USING MODEL @model_1
+        ),
+        response_2 AS (
+            PROMPT ask_model_2
+            SELECT
+                system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+                @prompt AS prompt
+            GENERATE answer(prompt)
+            USING MODEL @model_2
+        ),
+        response_3 AS (
+            PROMPT ask_model_3
+            SELECT
+                system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+                @prompt AS prompt
+            GENERATE answer(prompt)
+            USING MODEL @model_3
+        )
+    SELECT
+        response_1.answer AS answer_1,
+        response_2.answer AS answer_2,
+        response_3.answer AS answer_3
+    INTO @answer_1, @answer_2, @answer_3
+
+    -- Judge all three responses together
+    GENERATE compare_responses(
+        @prompt,
+        @model_1, @answer_1,
+        @model_2, @answer_2,
+        @model_3, @answer_3
+    ) INTO @comparison
+
+    RETURN @comparison WITH
+        status   = &#x27;complete&#x27;,
+        model_1  = @model_1,
+        model_2  = @model_2,
+        model_3  = @model_3
+
+EXCEPTION
+    WHEN GenerationError THEN
+        RETURN &#x27;One or more models failed to respond.&#x27; WITH status = &#x27;error&#x27;
+END
+"><strong>Model Showdown</strong></a></td>
+  <td class="cat" data-val="benchmarking">benchmarking</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="40.3">40.3s</td>
+  <td class="mono" style="text-align:center" data-val="4">4</td>
+  <td class="mono" data-val="2754">977 / 1,777</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="18.2" data-calls="6" data-tokens="3378">
+  <td class="mono" data-val="5">05</td>
+  <td><a href="#" class="src-link" data-title="cookbook/05_self_refine/self_refine.spl" data-src="-- Recipe Name: Self-Refine Pattern
+-- Iteratively improves output through critique and refinement
+
+CREATE FUNCTION draft(task TEXT) 
+RETURN TEXT
+AS $$
+You are an expert writer. Complete the following task thoroughly and well.
+
+Task: {task}
+
+Write a high-quality response now.
+$$;
+
+CREATE FUNCTION critique(current TEXT) 
+RETURN TEXT
+AS $$
+You are a strict critic reviewing written content.
+
+If the content fully meets the bar with no meaningful improvements needed,
+reply with exactly this token and nothing else: [APPROVED]
+
+Otherwise, provide specific, actionable feedback on how to improve it.
+Do NOT output [APPROVED] unless the content truly needs no further work.
+
+Content to review:
+{current}
+$$;
+
+CREATE FUNCTION refined(current TEXT, feedback TEXT) 
+RETURN TEXT
+AS $$
+You are an expert writer. Improve the following draft based on the feedback.
+
+Draft:
+{current}
+
+Feedback:
+{feedback}
+
+Write the improved version now.
+$$;
+
+WORKFLOW self_refine
+  INPUT:
+    @task TEXT DEFAULT &#x27;What are the benefits of meditation?&#x27;,
+    @output_budget INTEGER DEFAULT 2000,
+    @max_iterations INTEGER DEFAULT 5,
+    @writer_model TEXT DEFAULT &#x27;gemma3&#x27;,
+    @critic_model TEXT DEFAULT &#x27;llama3.2&#x27;,
+    @log_dir TEXT DEFAULT &#x27;cookbook/05_self_refine/logs-spl&#x27;
+  OUTPUT: @result TEXT
+DO
+  @iteration := 0
+
+  LOGGING f&#x27;Self-refine started | max_iterations={@max_iterations} for task:\n {@task}&#x27; LEVEL INFO
+
+  -- Initial draft
+  GENERATE draft(@task) WITH OUTPUT BUDGET @output_budget TOKENS 
+    USING MODEL @writer_model 
+    INTO @current
+  LOGGING &#x27;Initial draft ready&#x27; LEVEL INFO
+  CALL write_file(f&#x27;{@log_dir}/draft_0.md&#x27;, @current) INTO NONE
+
+  -- Iterative refinement loop
+  WHILE @iteration &lt; @max_iterations DO
+    LOGGING f&#x27;Iteration {@iteration} | critiquing ...&#x27; LEVEL DEBUG
+    GENERATE critique(@current) WITH OUTPUT BUDGET @output_budget TOKENS 
+      USING MODEL @critic_model 
+      INTO @feedback
+    CALL write_file(f&#x27;{@log_dir}/feedback_{@iteration}.md&#x27;, @feedback) INTO NONE
+
+    EVALUATE @feedback
+      WHEN contains(&#x27;[APPROVED]&#x27;) THEN
+        LOGGING f&#x27;Approved at iteration {@iteration}&#x27; LEVEL INFO
+        CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @current) INTO NONE
+        RETURN @current WITH status = &#x27;complete&#x27;, iterations = @iteration
+      ELSE
+        GENERATE refined(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS 
+          USING MODEL @writer_model 
+          INTO @current
+        @iteration := @iteration + 1
+        CALL write_file(f&#x27;{@log_dir}/draft_{@iteration}.md&#x27;, @current) INTO NONE
+        LOGGING f&#x27;Refined | iteration={@iteration}&#x27; LEVEL DEBUG
+    END
+  END
+
+  -- If loop exhausted, commit best effort
+  LOGGING f&#x27;Max iterations reached | iterations={@iteration}&#x27; LEVEL WARN
+  CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @current) INTO NONE
+  RETURN @current WITH status = &#x27;max_iterations&#x27;, iterations = @iteration
+
+EXCEPTION
+  WHEN MaxIterationsReached THEN
+    CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @current) INTO NONE
+    RETURN @current WITH status = &#x27;partial&#x27;
+  WHEN BudgetExceeded THEN
+    RETURN @current WITH status = &#x27;budget_limit&#x27;
+END
+"><strong>Self-Refine</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="18.2">18.2s</td>
+  <td class="mono" style="text-align:center" data-val="6">6</td>
+  <td class="mono" data-val="3378">2,145 / 1,233</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="2.2" data-calls="3" data-tokens="361">
+  <td class="mono" data-val="6">06</td>
+  <td><a href="#" class="src-link" data-title="cookbook/06_react_agent/react_agent.spl" data-src="-- Recipe Name: ReAct Agent — Population Growth
+-- Fetch a country&#x27;s population for the past two years via WebSearch,
+-- then compute year-over-year growth rate using a Python tool (no LLM math).
+--
+-- Usage:
+--   spl3 run cookbook/06_react_agent/react_agent.spl \
+--       --adapter claude_cli --model claude-sonnet-4-6 \
+--       --allowed-tools WebSearch \
+--       --tools cookbook/06_react_agent/tools.py \
+--       country=&quot;France&quot;
+
+-- Tight prompt for search_population: return only the number, no narration.
+CREATE FUNCTION search_population(country TEXT, year INT) 
+RETURN TEXT 
+AS $$
+Use WebSearch to find the total population of {country} for the year {year}.
+
+Return ONLY the population as a plain integer with no commas, spaces, or text.
+Example of valid output: 1409670000
+No explanation. No units. No markdown. Just the number.
+
+$$;
+
+-- calc_growth_rate is a Python tool registered from tools.py via --tools.
+-- CALL routes to Python directly — deterministic, zero LLM cost.
+
+-- Tight prompt for growth_report: plain narrative, no tool use, no file writes.
+CREATE FUNCTION growth_report(country TEXT, year_prev TEXT, pop_prev TEXT, year_curr TEXT, pop_curr TEXT, growth_rate TEXT) 
+RETURN TEXT 
+AS $$
+
+Write a concise 2-3 sentence population growth report for {country}.
+
+Data:
+- {year_prev} population: {pop_prev}
+- {year_curr} population: {pop_curr}
+- Year-over-year growth rate: {growth_rate}%
+
+Plain prose only. No markdown headers. No file creation. No tool use. Just the narrative.
+
+$$;
+
+-- SPL PROCEDURE: search the web for a country&#x27;s population in a specific year.
+PROCEDURE search_population(country TEXT, year INT)
+RETURN TEXT
+DO
+  GENERATE search_population(country, year) INTO @result
+  RETURN @result
+END
+
+
+WORKFLOW population_growth
+  INPUT:
+    @country TEXT DEFAULT &#x27;China&#x27;,
+    @year_curr INTEGER DEFAULT 2023
+  OUTPUT: @report TEXT
+DO
+  @year_prev := @year_curr - 1
+
+  LOGGING f&#x27;Population growth | country={@country} years={@year_prev}-{@year_curr}&#x27; LEVEL INFO
+
+  -- Step 1: Fetch population for each year via WebSearch
+  CALL search_population(@country, @year_prev) INTO @pop_prev
+  CALL search_population(@country, @year_curr) INTO @pop_curr
+  LOGGING f&#x27;Population fetched | {@year_prev}={@pop_prev} {@year_curr}={@pop_curr}&#x27; LEVEL DEBUG
+
+  -- Step 2: Compute growth rate — routed to Python tool, not LLM
+  CALL calc_growth_rate(@pop_prev, @pop_curr) INTO @growth_rate
+  LOGGING f&#x27;Growth rate computed: {@growth_rate}%&#x27; LEVEL INFO
+
+  -- Step 3: Compose the final human-readable report
+  GENERATE growth_report(@country, @year_prev, @pop_prev, @year_curr, @pop_curr, @growth_rate) 
+    INTO @report
+
+  RETURN @report WITH status = &#x27;complete&#x27;
+
+EXCEPTION
+  WHEN SearchFailed THEN
+    GENERATE search_error_report(@country) INTO @report
+    RETURN @report WITH status = &#x27;error&#x27;
+END
+"><strong>ReAct Agent</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="2.2">2.2s</td>
+  <td class="mono" style="text-align:center" data-val="3">3</td>
+  <td class="mono" data-val="361">258 / 103</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="14.3" data-calls="3" data-tokens="1958">
+  <td class="mono" data-val="7">07</td>
+  <td><a href="#" class="src-link" data-title="cookbook/07_safe_generation/safe_generation.spl" data-src="-- Recipe Name: Safe Generation with Exception Handling
+-- Demonstrates LLM-specific error handling patterns
+
+CREATE FUNCTION response(prompt TEXT)
+RETURNS TEXT
+AS $$
+You are a helpful assistant. Respond to the following prompt.
+Prompt: {prompt}
+$$;
+
+CREATE FUNCTION quality_assess(result TEXT)
+RETURNS TEXT
+AS $$
+Analyze the following result for quality.
+Reply with one of: &#x27;high_quality&#x27;, &#x27;acceptable&#x27;, or &#x27;low_quality&#x27;.
+Result: {result}
+$$;
+
+CREATE FUNCTION improved(result TEXT, prompt TEXT)
+RETURNS TEXT
+AS $$
+Improve the following result based on the original prompt.
+Original Prompt: {prompt}
+Current Result: {result}
+$$;
+
+WORKFLOW safe_generation
+  INPUT: @prompt TEXT DEFAULT &#x27;Explain how encryption works&#x27;
+  OUTPUT: @result TEXT
+  SECURITY: CLASSIFICATION: internal
+DO
+  GENERATE response(@prompt) INTO @result
+
+  -- Quality check via semantic evaluation (LLM-as-judge)
+  GENERATE quality_assess(@result) INTO @quality
+
+  EVALUATE @quality
+    WHEN &#x27;high_quality&#x27; THEN
+      RETURN @result WITH status = &#x27;high_quality&#x27;
+    WHEN &#x27;acceptable&#x27; THEN
+      GENERATE improved(@result, @prompt) INTO @result
+      RETURN @result WITH status = &#x27;refined&#x27;
+    ELSE
+      RETURN @result WITH status = &#x27;best_effort&#x27;
+  END
+
+EXCEPTION
+  WHEN HallucinationDetected THEN
+    GENERATE response(@prompt) INTO @result
+    RETURN @result WITH status = &#x27;conservative&#x27;
+
+  WHEN ContextLengthExceeded THEN
+    RETRY WITH temperature = 0.1 LIMIT 3
+
+  WHEN RefusalToAnswer THEN
+    RETURN @prompt WITH status = &#x27;refused&#x27;
+
+  WHEN BudgetExceeded THEN
+    RETURN @result WITH status = &#x27;truncated&#x27;
+END
+"><strong>Safe Generation</strong></a></td>
+  <td class="cat" data-val="safety">safety</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="14.3">14.3s</td>
+  <td class="mono" style="text-align:center" data-val="3">3</td>
+  <td class="mono" data-val="1958">1,031 / 927</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.8" data-calls="1" data-tokens="98">
+  <td class="mono" data-val="8">08</td>
+  <td><a href="#" class="src-link" data-title="cookbook/08_rag_query/rag_query.spl" data-src="-- Recipe Name: RAG Query
+-- Retrieval-augmented generation over indexed documents.
+--
+-- Setup:
+--   pip install &quot;dd-vectordb[faiss]&quot; &quot;dd-embed[sentence-transformers]&quot;
+--   spl doc-rag add cookbook/08_rag_query/data/who-is-wen.md
+--
+-- Usage:
+--   spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama question=&quot;Where did Wen grow up?&quot;
+
+CREATE FUNCTION answer(question TEXT)
+RETURNS TEXT
+AS $$
+You are a knowledgeable assistant. Use the provided context to answer the question accurately.
+Question: {question}
+$$;
+
+PROMPT rag_answer
+SELECT
+    system_role(&#x27;You are a knowledgeable assistant. Use the provided context to answer accurately.&#x27;),
+    rag.query(context.question, top_k=3) AS background,
+    context.question AS question
+GENERATE answer(question)
+"><strong>RAG Query</strong></a></td>
+  <td class="cat" data-val="retrieval">retrieval</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.8">0.8s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="98">63 / 35</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="32.8" data-calls="3" data-tokens="4028">
+  <td class="mono" data-val="9">09</td>
+  <td><a href="#" class="src-link" data-title="cookbook/09_chain_of_thought/chain.spl" data-src="-- Recipe Name: Chain of Thought
+-- Multi-step reasoning: Research → Analyze → Summarize
+-- Each GENERATE feeds into the next via workflow variables.
+--
+-- Usage:
+--   spl3 run cookbook/09_chain_of_thought/chain.spl --adapter ollama --model gemma3 topic=&quot;distributed AI inference&quot;
+
+CREATE FUNCTION research(topic TEXT)
+RETURNS TEXT
+AS $$
+Research and provide key facts about {topic}.
+$$;
+
+CREATE FUNCTION analyze(research TEXT)
+RETURNS TEXT
+AS $$
+Analyze the following research findings for key trends and implications.
+Research: {research}
+$$;
+
+-- Note: summarize() is a built-in SPL function, but using it in GENERATE 
+-- without a template will use LLM fallback. We&#x27;ll define a custom one.
+CREATE FUNCTION summarize_analysis(analysis TEXT)
+RETURNS TEXT
+AS $$
+Summarize the following analysis into a concise executive brief.
+Analysis: {analysis}
+$$;
+
+WORKFLOW chain_of_thought
+    INPUT: @topic TEXT DEFAULT &#x27;distributed AI inference&#x27;
+    OUTPUT: @summary TEXT
+DO
+    -- Step 1: Research
+    GENERATE research(@topic) INTO @research
+
+    -- Step 2: Analyze
+    GENERATE analyze(@research) INTO @analysis
+
+    -- Step 3: Summarize
+    GENERATE summarize_analysis(@analysis) INTO @summary
+
+    RETURN @summary WITH status = &#x27;complete&#x27;
+END
+"><strong>Chain of Thought</strong></a></td>
+  <td class="cat" data-val="reasoning">reasoning</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="32.8">32.8s</td>
+  <td class="mono" style="text-align:center" data-val="3">3</td>
+  <td class="mono" data-val="4028">1,852 / 2,176</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="5.6" data-calls="7" data-tokens="884">
+  <td class="mono" data-val="10">10</td>
+  <td><a href="#" class="src-link" data-title="cookbook/10_batch_test/batch_test.spl" data-src="-- Recipe Name: Batch Test
+-- Automated testing of key cookbook recipes across multiple models.
+-- Uses parallel CTEs to fan out all recipe × model combinations at once,
+-- then generates a structured PASS/FAIL report.
+--
+-- The bash script (batch_test.sh) is kept for CI/CD and shell-based pipelines.
+--
+-- Usage:
+--   spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama
+--   spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama \
+--       model_1=gemma3 model_2=mistral
+
+CREATE FUNCTION summarize_results(
+    model_1 TEXT,
+    model_2 TEXT,
+    r1_name TEXT, r1_m1 TEXT, r1_m2 TEXT,
+    r2_name TEXT, r2_m1 TEXT, r2_m2 TEXT,
+    r3_name TEXT, r3_m1 TEXT, r3_m2 TEXT
+) RETURN TEXT
+AS $$
+
+You are a test reporter. Review the outputs below and produce a concise pass/fail report.
+
+A result is PASS if the output is a non-empty, coherent response.
+A result is FAIL if the output is empty, contains an error, or is clearly nonsensical.
+
+Models under test: {model_1}, {model_2}
+
+Recipe: {r1_name}
+  {model_1}: {r1_m1}
+  {model_2}: {r1_m2}
+
+Recipe: {r2_name}
+  {model_1}: {r2_m1}
+  {model_2}: {r2_m2}
+
+Recipe: {r3_name}
+  {model_1}: {r3_m1}
+  {model_2}: {r3_m2}
+
+Format each line as:
+  PASS  recipe_name  ({model})
+  FAIL  recipe_name  ({model})
+
+End with a summary line: &quot;Results: X/Y passed, Z failed&quot;
+$$;
+
+WORKFLOW batch_test
+    INPUT:
+        @model_1 TEXT DEFAULT &#x27;gemma3&#x27;,
+        @model_2 TEXT DEFAULT &#x27;llama3.2&#x27;
+    OUTPUT: @report TEXT
+DO
+    -- Fan out all recipe × model combinations in parallel CTEs
+    WITH
+        -- Recipe 01: Hello World
+        hello_m1 AS (
+            PROMPT hello_world
+            SELECT
+                system_role(&#x27;You are a helpful assistant. Say hello briefly.&#x27;)
+            GENERATE greeting()
+            USING MODEL @model_1
+        ),
+        hello_m2 AS (
+            PROMPT hello_world
+            SELECT
+                system_role(&#x27;You are a helpful assistant. Say hello briefly.&#x27;)
+            GENERATE greeting()
+            USING MODEL @model_2
+        ),
+
+        -- Recipe 02: Ollama Proxy
+        proxy_m1 AS (
+            PROMPT ollama_proxy
+            SELECT
+                system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+                &#x27;hello&#x27; AS prompt
+            GENERATE answer(prompt)
+            USING MODEL @model_1
+        ),
+        proxy_m2 AS (
+            PROMPT ollama_proxy
+            SELECT
+                system_role(&#x27;You are a helpful, knowledgeable assistant.&#x27;),
+                &#x27;hello&#x27; AS prompt
+            GENERATE answer(prompt)
+            USING MODEL @model_2
+        ),
+
+        -- Recipe 03: Multilingual
+        multi_m1 AS (
+            PROMPT multilingual
+            SELECT
+                system_role(&#x27;You are a multilingual assistant.&#x27;),
+                &#x27;hello&#x27; AS user_input,
+                &#x27;English&#x27; AS lang
+            GENERATE response(user_input, lang)
+            USING MODEL @model_1
+        ),
+        multi_m2 AS (
+            PROMPT multilingual
+            SELECT
+                system_role(&#x27;You are a multilingual assistant.&#x27;),
+                &#x27;hello&#x27; AS user_input,
+                &#x27;English&#x27; AS lang
+            GENERATE response(user_input, lang)
+            USING MODEL @model_2
+        )
+
+    SELECT
+        hello_m1.greeting  AS hello_m1,  hello_m2.greeting  AS hello_m2,
+        proxy_m1.answer    AS proxy_m1,  proxy_m2.answer    AS proxy_m2,
+        multi_m1.response  AS multi_m1,  multi_m2.response  AS multi_m2
+    INTO @hello_m1, @hello_m2,
+         @proxy_m1, @proxy_m2,
+         @multi_m1, @multi_m2
+
+    -- Generate the structured pass/fail report
+    GENERATE summarize_results(
+        @model_1, @model_2,
+        &#x27;01_hello_world/hello.spl&#x27;,        @hello_m1, @hello_m2,
+        &#x27;02_ollama_proxy/proxy.spl&#x27;,        @proxy_m1, @proxy_m2,
+        &#x27;03_multilingual/multilingual.spl&#x27;, @multi_m1, @multi_m2
+    ) INTO @report
+
+    RETURN @report WITH
+        status  = &#x27;complete&#x27;,
+        model_1 = @model_1,
+        model_2 = @model_2
+
+EXCEPTION
+    WHEN GenerationError THEN
+        RETURN &#x27;Batch test failed during generation.&#x27; WITH status = &#x27;error&#x27;
+END
+"><strong>Batch Test</strong></a></td>
+  <td class="cat" data-val="benchmarking">benchmarking</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="5.6">5.6s</td>
+  <td class="mono" style="text-align:center" data-val="7">7</td>
+  <td class="mono" data-val="884">573 / 311</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="68.4" data-calls="9" data-tokens="14479">
+  <td class="mono" data-val="11">11</td>
+  <td><a href="#" class="src-link" data-title="cookbook/11_debate_arena/debate.spl" data-src="-- Recipe Name: Debate Arena
+-- Two LLM personas argue opposing sides of a topic, then a judge picks the winner.
+-- Demonstrates multi-perspective reasoning, adversarial generation, and semantic evaluation.
+--
+-- Usage:
+--   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama --model gemma3 topic=&quot;AI should be open-sourced&quot;
+--   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama --model llama3.2 topic=&quot;Remote work is better than office work&quot;
+--   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama topic=&quot;Tabs are better than spaces&quot;
+
+CREATE FUNCTION pro_argument(topic TEXT, previous TEXT) 
+RETURNS TEXT
+AS $$
+You are a skilled debate champion arguing STRONGLY IN FAVOR of the following motion:
+
+Motion: &quot;{topic}&quot;
+
+Your opponent&#x27;s last argument (or &quot;opening statement&quot; if this is your first turn):
+{previous}
+
+Write a focused, persuasive argument supporting the motion. If this is a rebuttal round,
+directly address and counter your opponent&#x27;s points. Be concise (3-5 paragraphs).
+Do NOT offer balanced views — you are arguing one side.
+$$;
+
+CREATE FUNCTION con_argument(topic TEXT, previous TEXT) 
+RETURNS TEXT
+AS $$
+You are a skilled debate champion arguing STRONGLY AGAINST the following motion:
+
+Motion: &quot;{topic}&quot;
+
+Your opponent&#x27;s last argument (or &quot;opening statement&quot; if this is your first turn):
+{previous}
+
+Write a focused, persuasive argument opposing the motion. If this is a rebuttal round,
+directly address and counter your opponent&#x27;s points. Be concise (3-5 paragraphs).
+Do NOT offer balanced views — you are arguing one side.
+$$;
+
+CREATE FUNCTION judge_debate(topic TEXT, pro_history TEXT, con_history TEXT) 
+RETURNS TEXT
+AS $$
+You are an impartial debate judge evaluating the following debate.
+
+Motion: &quot;{topic}&quot;
+
+--- PRO SIDE (arguing IN FAVOR) ---
+{pro_history}
+
+--- CON SIDE (arguing AGAINST) ---
+{con_history}
+
+Evaluate the debate on these criteria:
+1. Strength of arguments
+2. Quality of rebuttals
+3. Clarity and persuasiveness
+
+Declare a winner (PRO or CON) and explain your reasoning in 2-3 paragraphs.
+$$;
+
+WORKFLOW debate_arena
+    INPUT:
+        @topic TEXT DEFAULT &#x27;AI should be open-sourced&#x27;,
+        @max_rounds INTEGER DEFAULT 3,
+        @log_dir TEXT DEFAULT &#x27;cookbook/11_debate_arena/logs-spl&#x27;
+    OUTPUT: @verdict TEXT
+DO
+    @round := 0
+    @pro_history := &#x27;&#x27;
+    @con_history := &#x27;&#x27;
+
+    LOGGING f&#x27;Debate started | topic: {@topic} | rounds: {@max_rounds}&#x27; LEVEL INFO
+
+    -- Opening statements
+    GENERATE pro_argument(@topic, &#x27;opening statement&#x27;) INTO @pro
+    GENERATE con_argument(@topic, &#x27;opening statement&#x27;) INTO @con
+
+    @pro_history := @pro
+    @con_history := @con
+
+    LOGGING &#x27;Opening statements complete&#x27; LEVEL INFO
+    CALL write_file(f&#x27;{@log_dir}/opening_pro.md&#x27;, @pro) INTO NONE
+    CALL write_file(f&#x27;{@log_dir}/opening_con.md&#x27;, @con) INTO NONE
+
+    -- Rebuttal rounds
+    WHILE @round &lt; @max_rounds DO
+        LOGGING f&#x27;Round {@round} | pro rebuttal ...&#x27; LEVEL DEBUG
+        -- Pro rebuts Con&#x27;s latest point
+        GENERATE pro_argument(@topic, @con_history) INTO @pro_rebuttal
+        @pro_history := @pro_history || &#x27;\n---\n&#x27; || @pro_rebuttal
+        CALL write_file(f&#x27;{@log_dir}/round_{@round}_pro.md&#x27;, @pro_rebuttal) INTO NONE
+
+        LOGGING f&#x27;Round {@round} | con rebuttal ...&#x27; LEVEL DEBUG
+        -- Con rebuts Pro&#x27;s latest point
+        GENERATE con_argument(@topic, @pro_history) INTO @con_rebuttal
+        @con_history := @con_history || &#x27;\n---\n&#x27; || @con_rebuttal
+        CALL write_file(f&#x27;{@log_dir}/round_{@round}_con.md&#x27;, @con_rebuttal) INTO NONE
+
+        @round := @round + 1
+        LOGGING f&#x27;Round {@round} complete&#x27; LEVEL INFO
+    END
+
+    LOGGING &#x27;All rounds done — judge deliberating ...&#x27; LEVEL INFO
+
+    -- Judge evaluates both sides
+    GENERATE judge_debate(@topic, @pro_history, @con_history) INTO @verdict
+
+    LOGGING f&#x27;Verdict ready | rounds={@round}&#x27; LEVEL INFO
+    CALL write_file(f&#x27;{@log_dir}/verdict.md&#x27;, @verdict) INTO NONE
+    RETURN @verdict WITH status = &#x27;complete&#x27;, rounds = @round
+
+EXCEPTION
+    WHEN MaxIterationsReached THEN
+        GENERATE judge_debate(@topic, @pro_history, @con_history) INTO @verdict
+        RETURN @verdict WITH status = &#x27;partial&#x27;
+    WHEN BudgetExceeded THEN
+        RETURN @pro_history WITH status = &#x27;budget_limit&#x27;
+END
+"><strong>Debate Arena</strong></a></td>
+  <td class="cat" data-val="multi-agent">multi-agent</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="68.4">68.4s</td>
+  <td class="mono" style="text-align:center" data-val="9">9</td>
+  <td class="mono" data-val="14479">10,310 / 4,169</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="26.6" data-calls="25" data-tokens="6264">
+  <td class="mono" data-val="12">12</td>
+  <td><a href="#" class="src-link" data-title="cookbook/12_plan_and_execute/plan_execute.spl" data-src="-- Recipe Name: Plan and Execute
+-- A planner agent decomposes a task into steps, then an executor implements each one.
+-- When output_dir is set, generated code files are written to disk one-by-one.
+--
+-- Usage:
+--   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+--       --tools cookbook/12_plan_and_execute/tools.py \
+--       task=&quot;Build a REST API for a todo app&quot; \
+--       output_dir=&quot;cookbook/12_plan_and_execute/output&quot;
+--
+--   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+--       task=&quot;Set up a CI/CD pipeline for a Python project&quot;
+
+
+-- Phase 1: Decompose task into a numbered implementation plan
+CREATE FUNCTION plan(task TEXT) 
+RETURN TEXT
+AS $$
+You are a senior software architect. Break down this task into clear implementation steps:
+
+Task: {task}
+
+Output a numbered list of concrete steps (3–6 steps). Each step should be specific
+and independently executable. No prose — just the numbered list.
+$$;
+
+-- Count how many steps are in the plan (capped at max_steps)
+CREATE FUNCTION count_steps(plan TEXT, max_steps TEXT) 
+RETURN TEXT
+AS $$
+Count the number of numbered steps in this plan.
+Return ONLY a single integer — no explanation, no text.
+If there are more than {max_steps} steps, return {max_steps}.
+
+Plan:
+{plan}
+$$;
+
+-- Extract step N from the plan (0-indexed)
+CREATE FUNCTION extract_step(plan TEXT, step_index TEXT) 
+RETURN TEXT
+AS $$
+Extract step number {step_index} (0-indexed) from this numbered plan and return
+ONLY that step&#x27;s description. No numbering prefix. No extra text.
+
+Plan:
+{plan}
+$$;
+
+-- Execute a step: produce a concise design decision + list of files to create
+CREATE FUNCTION execute_step(current_step TEXT, prior_results TEXT) 
+RETURN TEXT
+AS $$
+You are a senior software engineer planning an implementation.
+
+Step: {current_step}
+Completed so far: {prior_results}
+
+Describe in 2-3 sentences what this step produces and list the filenames it creates.
+Be brief — no code yet, just the design decision and file list.
+$$;
+
+-- Validate that a step produced meaningful output (design notes, not code)
+CREATE FUNCTION validate_step(current_step TEXT, step_result TEXT) 
+RETURN TEXT
+AS $$
+Does the following design note meaningfully address the step?
+Note: this is a planning phase — expect a 2-3 sentence description and a file list, NOT code.
+
+Step: {current_step}
+Design note: {step_result}
+
+Reply with exactly one word: &quot;passed&quot; or &quot;failed&quot;.
+Only reply &quot;failed&quot; if the design note is empty, completely off-topic, or missing a file list.
+$$;
+
+-- Re-plan after a step failure
+CREATE FUNCTION replan(task TEXT, plan TEXT, step_index TEXT, step_result TEXT) 
+RETURN TEXT
+AS $$
+A step in our implementation plan failed. Create a revised plan.
+
+Original task: {task}
+Original plan: {plan}
+Failed at step: {step_index}
+Failure details: {step_result}
+
+Output a new numbered plan starting from step {step_index}. Keep completed steps as-is.
+$$;
+
+-- Phase 4a: List all source files to create (no code — just filenames + one-line descriptions)
+CREATE FUNCTION outline_files(task TEXT, results TEXT) 
+RETURN TEXT
+AS $$
+You are a senior software engineer. Based on the implementation plan below, list every
+source file that must be created to complete the task.
+
+Task: {task}
+
+Implementation plan:
+{results}
+
+Output a numbered list — one file per line — with the filename and a one-sentence description.
+Always include a README.md as the last item.
+Example:
+1. app.py - Flask application entry point, registers blueprints and starts the server
+2. models.py - SQLAlchemy ORM models for Todo and User
+3. README.md - Setup instructions, project layout, and example API calls
+
+No code. No prose. Just the numbered file list.
+$$;
+
+-- Count files in the outline
+CREATE FUNCTION count_files(outline TEXT) 
+RETURN TEXT
+AS $$
+Count the number of numbered items in this file list.
+Return ONLY a single integer — no explanation, no text.
+
+List:
+{outline}
+$$;
+
+-- Extract one file entry at index N (0-indexed)
+CREATE FUNCTION extract_file(outline TEXT, file_index TEXT) 
+RETURN TEXT
+AS $$
+Extract item number {file_index} (0-indexed) from this numbered file list and return
+ONLY that item&#x27;s filename and description. No number prefix. No extra text.
+
+List:
+{outline}
+$$;
+
+-- Generate complete code for ONE file
+CREATE FUNCTION generate_file(task TEXT, results TEXT, file_desc TEXT) 
+RETURN TEXT
+AS $$
+You are a senior software engineer. Write complete, runnable code for ONE source file.
+
+Task: {task}
+
+Implementation plan:
+{results}
+
+File to create: {file_desc}
+
+Output a SINGLE fenced code block. The FIRST line inside the fence MUST be a filename comment:
+
+```python
+# filename: app/main.py
+...complete code...
+```
+
+Requirements:
+- Complete, runnable code — no placeholders, no TODOs.
+- Error handling, type hints, brief inline comments.
+- Only this one file — nothing else.
+$$;
+
+-- Summarize what was built
+CREATE FUNCTION summarize(task TEXT, results TEXT, file_outline TEXT) 
+RETURN TEXT
+AS $$
+In 3-5 sentences, describe what was built for this task and how to run it.
+
+Task: {task}
+Files created:
+{file_outline}
+$$;
+
+
+WORKFLOW plan_and_execute
+    INPUT:
+        @task TEXT DEFAULT &#x27;Build a REST API for a todo app&#x27;,
+        @output_dir TEXT DEFAULT &#x27;&#x27;,
+        @max_steps INTEGER DEFAULT 5,
+        @max_replans INTEGER DEFAULT 3,
+        @log_dir TEXT DEFAULT &#x27;cookbook/12_plan_and_execute/logs-spl&#x27;
+    OUTPUT: @final_report TEXT
+DO
+    @step_index := 0
+    @results := &#x27;&#x27;
+    @replan_count := 0
+    
+    LOGGING f&#x27;Plan-and-Execute | task: {@task}&#x27; LEVEL INFO
+
+    -- Phase 1: Plan
+    GENERATE plan(@task) INTO @plan
+    LOGGING f&#x27;Plan ready | steps to execute (max={@max_steps})&#x27; LEVEL INFO
+    CALL write_file(f&#x27;{@log_dir}/plan.md&#x27;, @plan) INTO NONE
+
+    -- Phase 2: Count steps (capped at max_steps)
+    GENERATE count_steps(@plan, @max_steps) INTO @step_count
+    LOGGING f&#x27;Step count: {@step_count}&#x27; LEVEL DEBUG
+
+    -- Phase 3: Execute each step (brief design notes only — no code)
+    WHILE @step_index &lt; @step_count DO
+        LOGGING f&#x27;Executing step {@step_index}/{@step_count} ...&#x27; LEVEL INFO
+        GENERATE extract_step(@plan, @step_index) INTO @current_step
+        GENERATE execute_step(@current_step, @results) INTO @step_result
+        GENERATE validate_step(@current_step, @step_result) INTO @validation
+
+        EVALUATE @validation
+            WHEN &#x27;failed&#x27; THEN
+                @replan_count := @replan_count + 1
+                LOGGING f&#x27;Step {@step_index} failed — replanning ({@replan_count}/{@max_replans})&#x27; LEVEL WARN
+                EVALUATE @replan_count
+                    WHEN &gt;= @max_replans THEN
+                        LOGGING f&#x27;Max replans reached — accepting step as-is&#x27; LEVEL WARN
+                        @results := @results || &#x27;\n## Step &#x27; || @step_index || &#x27;\n&#x27; || @step_result
+                        CALL write_file(f&#x27;{@log_dir}/step_{@step_index}.md&#x27;, @step_result) INTO NONE
+                        @step_index := @step_index + 1
+                    ELSE
+                        GENERATE replan(@task, @plan, @step_index, @step_result) INTO @plan
+                        GENERATE count_steps(@plan, @max_steps) INTO @step_count
+                        @step_index := 0
+                        @results := &#x27;&#x27;
+                END
+            ELSE
+                @results := @results || &#x27;\n## Step &#x27; || @step_index || &#x27;\n&#x27; || @step_result
+                CALL write_file(f&#x27;{@log_dir}/step_{@step_index}.md&#x27;, @step_result) INTO NONE
+                @step_index := @step_index + 1
+                LOGGING f&#x27;Step {@step_index} done&#x27; LEVEL DEBUG
+        END
+    END
+
+    LOGGING f&#x27;All {@step_count} steps complete — generating files&#x27; LEVEL INFO
+
+    -- Phase 4: Outline all files to generate
+    GENERATE outline_files(@task, @results) INTO @file_outline
+    GENERATE count_files(@file_outline) INTO @file_count
+    LOGGING f&#x27;File outline ready | {@file_count} files to generate&#x27; LEVEL INFO
+
+    -- Phase 5: Generate each file individually (one LLM call per file — avoids truncation)
+    @file_index := 0
+    WHILE @file_index &lt; @file_count DO
+        LOGGING f&#x27;Generating file {@file_index}/{@file_count} ...&#x27; LEVEL INFO
+        GENERATE extract_file(@file_outline, @file_index) INTO @current_file
+        GENERATE generate_file(@task, @results, @current_file) INTO @file_code
+        CALL write_code_files(@file_code, @output_dir) INTO @file_written
+        LOGGING f&#x27;Written: {@file_written}&#x27; LEVEL DEBUG
+        @file_index := @file_index + 1
+    END
+
+    LOGGING f&#x27;All {@file_count} files generated&#x27; LEVEL INFO
+
+    -- Phase 6: Summary report
+    GENERATE summarize(@task, @results, @file_outline) INTO @final_report
+
+    CALL write_file(f&#x27;{@log_dir}/final_report.md&#x27;, @final_report) INTO NONE
+    RETURN @final_report WITH status = &#x27;complete&#x27;, steps_executed = @step_index, files_generated = @file_count
+
+EXCEPTION
+    WHEN MaxIterationsReached THEN
+        GENERATE summarize(@task, @results, @file_outline) INTO @final_report
+        RETURN @final_report WITH status = &#x27;partial&#x27;, steps_executed = @step_index
+    WHEN BudgetExceeded THEN
+        RETURN @results WITH status = &#x27;budget_limit&#x27;
+END
+"><strong>Plan and Execute</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="26.6">26.6s</td>
+  <td class="mono" style="text-align:center" data-val="25">25</td>
+  <td class="mono" data-val="6264">4,958 / 1,306</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="77.8" data-calls="8" data-tokens="14880">
+  <td class="mono" data-val="14">14</td>
+  <td><a href="#" class="src-link" data-title="cookbook/14_multi_agent/multi_agent.spl" data-src="-- Recipe Name: Multi-Agent Collaboration
+-- Specialized agents (Researcher, Analyst, Writer) collaborate on a report.
+-- Each agent has a distinct role and passes results to the next.
+-- Demonstrates procedural decomposition, CALL-based delegation, and role specialization.
+--
+-- Usage:
+--   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama --model gemma3 topic=&quot;Impact of AI on healthcare&quot;
+--   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama topic=&quot;Future of renewable energy&quot;
+--   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama topic=&quot;State of quantum computing in 2025&quot;
+--
+-- Logs written to @log_dir (default: cookbook/14_multi_agent/logs):
+--   research.md   — facts and key themes from Researcher agent
+--   analysis.md   — trends, risks, and opportunities from Analyst agent
+--   report.md     — final polished report from Writer agent
+
+-- Agent 1: Researcher — gathers key facts and sources
+PROCEDURE researcher(topic TEXT) RETURN TEXT
+DO
+    GENERATE research_facts(topic) INTO @facts
+    GENERATE identify_key_themes(@facts) INTO @themes
+    @result := @facts || &#x27;\n\nKey Themes:\n&#x27; || @themes
+    RETURN @result
+END
+
+-- Agent 2: Analyst — identifies trends, risks, and opportunities
+PROCEDURE analyst(research TEXT, topic TEXT) RETURN TEXT
+DO
+    GENERATE analyze_trends(research) INTO @trends
+    GENERATE assess_risks(research, topic) INTO @risks
+    GENERATE find_opportunities(research, topic) INTO @opportunities
+    @result := &#x27;Trends:\n&#x27; || @trends || &#x27;\n\nRisks:\n&#x27; || @risks || &#x27;\n\nOpportunities:\n&#x27; || @opportunities
+    RETURN @result
+END
+
+-- Agent 3: Writer — produces polished final report
+PROCEDURE writer(research TEXT, analysis TEXT, topic TEXT) RETURN TEXT
+DO
+    GENERATE draft_report(topic, research, analysis) INTO @draft
+    GENERATE critique(@draft) INTO @feedback
+    GENERATE revise_report(@draft, @feedback) INTO @final
+    RETURN @final
+END
+
+-- Orchestrator workflow
+WORKFLOW multi_agent_report
+    INPUT: 
+        @topic TEXT,
+        @log_dir TEXT DEFAULT &#x27;cookbook/14_multi_agent/logs-spl&#x27;
+    OUTPUT: @report TEXT
+DO
+    LOGGING f&#x27;Multi-agent report | topic={@topic}&#x27; LEVEL INFO
+
+    -- Delegate to specialized agents
+    LOGGING &#x27;Agent 1: Researcher ...&#x27; LEVEL DEBUG
+    CALL researcher(@topic) INTO @research
+    LOGGING f&#x27;Research:\n{@research}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/research.md&#x27;, @research) INTO NONE
+    LOGGING &#x27;Agent 2: Analyst ...&#x27; LEVEL DEBUG
+    CALL analyst(@research, @topic) INTO @analysis
+    LOGGING f&#x27;Analysis:\n{@analysis}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/analysis.md&#x27;, @analysis) INTO NONE
+    LOGGING &#x27;Agent 3: Writer ...&#x27; LEVEL DEBUG
+    CALL writer(@research, @analysis, @topic) INTO @report
+    LOGGING f&#x27;Report:\n{@report}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/report.md&#x27;, @report) INTO NONE
+
+    LOGGING &#x27;Report complete&#x27; LEVEL INFO
+    RETURN @report WITH status = &#x27;complete&#x27;
+
+EXCEPTION
+    WHEN BudgetExceeded THEN
+        RETURN @research WITH status = &#x27;partial_research_only&#x27;
+    WHEN HallucinationDetected THEN
+        RETRY WITH temperature = 0.1 LIMIT 3
+END
+"><strong>Multi-Agent Collaboration</strong></a></td>
+  <td class="cat" data-val="multi-agent">multi-agent</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="77.8">77.8s</td>
+  <td class="mono" style="text-align:center" data-val="8">8</td>
+  <td class="mono" data-val="14880">10,003 / 4,877</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="85.8" data-calls="9" data-tokens="18682">
+  <td class="mono" data-val="15">15</td>
+  <td><a href="#" class="src-link" data-title="cookbook/15_code_review/code_review.spl" data-src="-- Recipe 15: Automated Code Review
+-- Multi-pass code review: security audit, performance check, style review, then synthesis.
+-- Demonstrates tool-augmented analysis, multi-criteria evaluation, and structured output.
+--
+-- Usage:
+--   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama --model gemma3 code=&quot;./myscript.py&quot;
+--   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code=&quot;$(cat main.go)&quot;
+--   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code=&quot;def foo(x): return eval(x)&quot;
+--
+-- Logs written to @log_dir (default: cookbook/15_code_review/logs):
+--   security.md    — security audit findings
+--   performance.md — performance analysis findings
+--   style.md       — style and best-practice findings
+--   bugs.md        — bug detection findings
+--   review.md      — final synthesized review
+
+CREATE FUNCTION detect_lang(code TEXT)
+RETURN TEXT
+AS $$
+You are a polyglot programmer. Identify the programming language of the provided code.
+Reply with only the language name — nothing else.
+
+Code:
+{code}
+$$;
+
+WORKFLOW code_review
+    INPUT:
+        @code     TEXT,
+        @log_dir  TEXT DEFAULT &#x27;cookbook/15_code_review/logs&#x27;
+    OUTPUT: @review TEXT
+DO
+    -- 1. Handle file path vs raw code
+    CALL read_file(@code) INTO @file_content
+    EVALUATE @file_content
+        WHEN != &#x27;&#x27; THEN
+            LOGGING f&#x27;Reading code from file: {@code}&#x27;
+            @code_to_review := @file_content
+        ELSE
+            LOGGING &#x27;Reviewing raw code input&#x27;
+            @code_to_review := @code
+    END
+
+    -- 2. Auto-detect language (deterministic-style LLM call: bounded output)
+    GENERATE detect_lang(@code_to_review) INTO @language
+    @language := trim(@language)
+    LOGGING f&#x27;Detected language: {@language}&#x27; LEVEL INFO
+
+    -- Pass 1: Security audit
+    GENERATE security_audit(@code_to_review, @language) INTO @security_findings
+    LOGGING f&#x27;Security findings:\n{@security_findings}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/security.md&#x27;, @security_findings) INTO NONE
+
+    -- Pass 2: Performance analysis
+    GENERATE performance_review(@code_to_review, @language) INTO @perf_findings
+    LOGGING f&#x27;Performance findings:\n{@perf_findings}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/performance.md&#x27;, @perf_findings) INTO NONE
+
+    -- Pass 3: Code style and best practices
+    GENERATE style_review(@code_to_review, @language) INTO @style_findings
+    LOGGING f&#x27;Style findings:\n{@style_findings}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/style.md&#x27;, @style_findings) INTO NONE
+
+    -- Pass 4: Bug detection
+    GENERATE bug_detection(@code_to_review, @language) INTO @bug_findings
+    LOGGING f&#x27;Bug findings:\n{@bug_findings}&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/bugs.md&#x27;, @bug_findings) INTO NONE
+
+    -- Severity scoring for each category
+    GENERATE severity_score(@security_findings) INTO @sec_score
+    GENERATE severity_score(@perf_findings) INTO @perf_score
+    GENERATE severity_score(@bug_findings) INTO @bug_score
+    LOGGING f&#x27;Scores | sec={@sec_score} perf={@perf_score} bug={@bug_score}&#x27; LEVEL INFO
+
+    -- Synthesize all findings into a structured review
+    GENERATE synthesize_review(
+        @security_findings, @sec_score,
+        @perf_findings, @perf_score,
+        @style_findings,
+        @bug_findings, @bug_score
+    ) INTO @review
+    CALL write_file(f&#x27;{@log_dir}/review.md&#x27;, @review) INTO NONE
+
+    -- Determine overall verdict
+    EVALUATE @sec_score
+        WHEN &gt; 8 THEN
+            LOGGING f&#x27;Critical security issues | score={@sec_score}&#x27; LEVEL WARN
+            RETURN @review WITH status = &#x27;critical_issues&#x27;, verdict = &#x27;block&#x27;
+        WHEN &gt; 5 THEN
+            RETURN @review WITH status = &#x27;needs_fixes&#x27;, verdict = &#x27;request_changes&#x27;
+        ELSE
+            RETURN @review WITH status = &#x27;approved&#x27;, verdict = &#x27;approve&#x27;
+    END
+
+EXCEPTION
+    WHEN ContextLengthExceeded THEN
+        -- Code too large — review in chunks
+        GENERATE summarize_code(@code_to_review) INTO @summary
+        GENERATE quick_review(@summary, @language) INTO @review
+        CALL write_file(f&#x27;{@log_dir}/review.md&#x27;, @review) INTO NONE
+        RETURN @review WITH status = &#x27;partial_large_file&#x27;
+    WHEN BudgetExceeded THEN
+        CALL write_file(f&#x27;{@log_dir}/security.md&#x27;, @security_findings) INTO NONE
+        RETURN @security_findings WITH status = &#x27;security_only&#x27;
+END
+"><strong>Code Review</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="85.8">85.8s</td>
+  <td class="mono" style="text-align:center" data-val="9">9</td>
+  <td class="mono" data-val="18682">13,395 / 5,287</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="32.7" data-calls="3" data-tokens="5033">
+  <td class="mono" data-val="16">16</td>
+  <td><a href="#" class="src-link" data-title="cookbook/16_reflection/reflection.spl" data-src="-- Recipe 16: Reflection Agent
+-- The agent solves a problem, then reflects on its own reasoning to catch errors.
+-- If reflection finds issues, it corrects and re-reflects until confident.
+-- Demonstrates meta-cognitive loops and self-assessment patterns.
+--
+-- Usage:
+--   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama --model gemma3 problem=&quot;What are the trade-offs of microservices vs monoliths?&quot;
+--   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama problem=&quot;Design a URL shortener system&quot;
+--   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama problem=&quot;Explain why bubble sort is O(n^2)&quot;
+
+WORKFLOW reflection_agent
+    INPUT:
+        @problem TEXT,
+        @max_reflections Number DEFAULT 3,
+        @log_dir TEXT DEFAULT &#x27;cookbook/16_reflection/logs-spl&#x27;
+    OUTPUT: @answer TEXT
+DO
+    @iteration := 0
+    @confidence := 0
+
+    LOGGING f&#x27;Reflection agent started | max_reflections={@max_reflections} on problem:\n {@problem}&#x27; LEVEL INFO
+
+    -- Initial attempt at solving the problem
+    GENERATE solve(@problem) INTO @answer
+    LOGGING &#x27;Initial solution ready&#x27; LEVEL INFO
+    CALL write_file(f&#x27;{@log_dir}/answer_0.md&#x27;, @answer) INTO NONE
+
+    -- Reflection loop: assess and improve
+    WHILE @iteration &lt; @max_reflections DO
+        LOGGING f&#x27;Reflection iteration {@iteration} ...&#x27; LEVEL DEBUG
+        -- Reflect: identify errors, gaps, or weak reasoning
+        GENERATE reflect(@problem, @answer) INTO @reflection
+        CALL write_file(f&#x27;{@log_dir}/reflection_{@iteration}.md&#x27;, @reflection) INTO NONE
+
+        -- Score confidence in the answer
+        GENERATE confidence_score(@answer, @reflection) INTO @confidence
+        LOGGING f&#x27;Confidence score: {@confidence} | iteration={@iteration}&#x27; LEVEL DEBUG
+
+        EVALUATE @confidence
+            WHEN &gt; 0.85 THEN
+                LOGGING f&#x27;Confident at iteration {@iteration} | score={@confidence}&#x27; LEVEL INFO
+                CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @answer) INTO NONE
+                RETURN @answer WITH status = &#x27;confident&#x27;, confidence = @confidence, reflections = @iteration
+            ELSE
+                -- Extract specific issues to fix
+                GENERATE extract_issues(@reflection) INTO @issues
+
+                -- Correct the answer based on identified issues
+                GENERATE correct(@answer, @issues, @problem) INTO @answer
+                @iteration := @iteration + 1
+                CALL write_file(f&#x27;{@log_dir}/answer_{@iteration}.md&#x27;, @answer) INTO NONE
+        END
+    END
+
+    -- If loop exhausted, commit best effort with final confidence
+    LOGGING f&#x27;Max reflections reached | confidence={@confidence}&#x27; LEVEL WARN
+    CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @answer) INTO NONE
+    RETURN @answer WITH status = &#x27;best_effort&#x27;, confidence = @confidence, reflections = @iteration
+
+EXCEPTION
+    WHEN MaxIterationsReached THEN
+        CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @answer) INTO NONE
+        RETURN @answer WITH status = &#x27;max_reflections&#x27;, confidence = @confidence
+    WHEN HallucinationDetected THEN
+        GENERATE solve(@problem) INTO @answer
+        RETURN @answer WITH status = &#x27;restarted&#x27;
+END
+"><strong>Reflection Agent</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="32.7">32.7s</td>
+  <td class="mono" style="text-align:center" data-val="3">3</td>
+  <td class="mono" data-val="5033">2,920 / 2,113</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="159.8" data-calls="13" data-tokens="19091">
+  <td class="mono" data-val="17">17</td>
+  <td><a href="#" class="src-link" data-title="cookbook/17_tree_of_thought/tree_of_thought.spl" data-src="-- Recipe 17: Tree of Thought (Dynamic)
+-- Explores multiple reasoning paths in parallel using a list of models.
+-- Uses MAP and LIST for dynamic path management and evaluation.
+
+CREATE FUNCTION initial_approach(problem TEXT) 
+RETURN TEXT
+AS $$
+Provide an initial high-level approach or reasoning path for the following problem:
+{problem}
+
+Focus on a unique perspective or specialized methodology.
+$$;
+
+CREATE FUNCTION develop(path TEXT, problem TEXT) 
+RETURN TEXT
+AS $$
+Take the following initial approach and develop it one level deeper, adding specific steps and technical details:
+Approach: {path}
+Problem: {problem}
+$$;
+
+CREATE FUNCTION evaluate_path(path TEXT, problem TEXT) 
+RETURN TEXT
+AS $$
+Score the following reasoning path on a scale of 1-10 based on its feasibility and depth.
+Problem: {problem}
+Path: {path}
+
+Output only the numeric score.
+$$;
+
+CREATE FUNCTION select_best(results_map TEXT, problem TEXT) 
+RETURN TEXT
+AS $$
+Review the following developed reasoning paths and their scores provided in a JSON map:
+{results_map}
+
+Problem: {problem}
+
+Identify the path with the best reasoning and provide the content of that path as the output.
+$$;
+
+CREATE FUNCTION refine_solution(path TEXT, problem TEXT) RETURN TEXT
+AS $$
+Refine the following reasoning path into a complete, polished solution for the problem.
+Problem: {problem}
+Path: {path}
+$$;
+
+CREATE FUNCTION verify(solution TEXT, problem TEXT) RETURN TEXT
+AS $$
+Verify if the following solution is sound and fully addresses the problem.
+Problem: {problem}
+Solution: {solution}
+
+Output &#x27;sound&#x27; if it is correct, otherwise provide a brief critique.
+$$;
+
+CREATE FUNCTION synthesize_all(results_map TEXT, problem TEXT) RETURN TEXT
+AS $$
+Synthesize insights from all the following reasoning paths to create a comprehensive final solution.
+Problem: {problem}
+Paths: {results_map}
+$$;
+
+WORKFLOW tree_of_thought
+    INPUT:
+        @problem TEXT DEFAULT &#x27;Design a sustainable urban transport system.&#x27;,
+        @models LIST DEFAULT [&#x27;gemma3&#x27;, &#x27;phi4&#x27;],
+        @log_dir TEXT DEFAULT &#x27;cookbook/17_tree_of_thought/logs-spl&#x27;
+    OUTPUT: @best_solution TEXT
+DO
+    LOGGING f&#x27;Tree of thought | problem: {@problem} | models: {@models}&#x27; LEVEL INFO
+
+    @results := {}
+    @count := COUNT(@models)
+    @i := 0
+
+    -- Step 1 &amp; 2: Generate and Develop paths in a loop
+    WHILE @i &lt; @count DO
+        @current_model := @models[@i]
+        LOGGING f&#x27;Exploring path {@i + 1}/{@count} using {@current_model}...&#x27;
+        
+        GENERATE initial_approach(@problem) 
+            USING MODEL @current_model 
+            INTO @init_path
+        GENERATE develop(@init_path, @problem) 
+            USING MODEL @current_model 
+            INTO @developed_path
+        GENERATE evaluate_path(@developed_path, @problem) 
+            INTO @score
+        
+        -- Store path and score in map
+        @path_data := {}
+        @path_data[&#x27;content&#x27;] := @developed_path
+        @path_data[&#x27;score&#x27;] := @score
+        @results[@current_model] := @path_data
+        
+        CALL write_file(f&#x27;{@log_dir}/path_{@current_model}.md&#x27;, @developed_path) INTO NONE
+        
+        @i := @i + 1
+    END
+
+    -- Step 4: Select the best path
+    LOGGING &#x27;Evaluating all paths to select the best...&#x27;
+    GENERATE select_best(@results, @problem) INTO @best_path
+
+    -- Step 5: Refine the winning path into a final solution
+    LOGGING &#x27;Refining winning path...&#x27;
+    GENERATE refine_solution(@best_path, @problem) INTO @best_solution
+
+    -- Step 6: Verify the solution holds up
+    GENERATE verify(@best_solution, @problem) INTO @verification
+    LOGGING f&#x27;Verification result: {@verification}&#x27; LEVEL INFO
+
+    EVALUATE @verification
+        WHEN &#x27;sound&#x27; THEN
+            RETURN @best_solution WITH status = &#x27;complete&#x27;, paths_explored = @count
+        ELSE
+            -- If verification fails, combine insights from all paths
+            LOGGING &#x27;Verification failed — synthesizing all paths&#x27; LEVEL WARN
+            GENERATE synthesize_all(@results, @problem) 
+                INTO @best_solution
+            RETURN @best_solution WITH status = &#x27;synthesized&#x27;, paths_explored = @count
+    END
+
+    CALL write_file(f&#x27;{@log_dir}/final_solution.md&#x27;, @best_solution) INTO NONE
+
+EXCEPTION
+    WHEN BudgetExceeded THEN
+        RETURN @best_solution WITH status = &#x27;budget_limit&#x27;
+    WHEN HallucinationDetected THEN
+        RETRY WITH temperature = 0.1 LIMIT 3
+END
+"><strong>Tree of Thought</strong></a></td>
+  <td class="cat" data-val="reasoning">reasoning</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="159.8">159.8s</td>
+  <td class="mono" style="text-align:center" data-val="13">13</td>
+  <td class="mono" data-val="19091">11,469 / 7,622</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="69.0" data-calls="9" data-tokens="7970">
+  <td class="mono" data-val="18">18</td>
+  <td><a href="#" class="src-link" data-title="cookbook/18_guardrails/guardrails.spl" data-src="-- Recipe Name: Guardrails Pipeline
+-- Input validation → safe generation → output validation → response.
+-- Demonstrates safety-first patterns: content filtering, PII detection, and output sanitization.
+-- Four gates before a response is committed.
+--
+-- Usage (from catalog):
+--   spl3 run cookbook/18_guardrails/guardrails.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/18_guardrails/tools.py \
+--       input_id=safe_encryption
+--
+--   spl3 run cookbook/18_guardrails/guardrails.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/18_guardrails/tools.py \
+--       input_id=pii_ssn
+--
+--   spl3 run cookbook/18_guardrails/guardrails.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/18_guardrails/tools.py \
+--       input_id=harmful_malware
+--
+-- Usage (ad-hoc — no catalog):
+--   spl3 run cookbook/18_guardrails/guardrails.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/18_guardrails/tools.py \
+--       user_input=&quot;My SSN is 123-45-6789, help me file taxes&quot;
+--
+-- Discover available test inputs:
+--   spl3 run ... input_id=list
+
+WORKFLOW guardrails_pipeline
+    INPUT:  @input_id   TEXT DEFAULT &#x27;&#x27;,
+            @user_input TEXT DEFAULT &#x27;&#x27;
+    OUTPUT: @safe_response TEXT
+    SECURITY: CLASSIFICATION: internal
+DO
+    -- Step 1: Load test input from catalog (deterministic — no LLM)
+    -- If input_id is blank, @user_input is used directly in subsequent steps.
+    CALL load_test_input(@input_id) INTO @test_context
+
+    -- Gate 1a: Keyword pre-screen (deterministic — no LLM)
+    -- Fast check for obvious harmful / off-topic patterns before spending tokens.
+    CALL classify_input_keywords(@user_input) INTO @keyword_class
+
+    EVALUATE @keyword_class
+        WHEN STARTSWITH &#x27;harmful&#x27; THEN
+            RETURN &#x27;I cannot help with that request.&#x27; WITH
+                status        = &#x27;blocked_harmful&#x27;,
+                gate          = &#x27;keyword_prescreen&#x27;,
+                keyword_match = @keyword_class
+        WHEN STARTSWITH &#x27;off_topic&#x27; THEN
+            RETURN &#x27;That question is outside my scope. Please ask something relevant.&#x27; WITH
+                status        = &#x27;blocked_off_topic&#x27;,
+                gate          = &#x27;keyword_prescreen&#x27;,
+                keyword_match = @keyword_class
+        ELSE
+            -- Continue to LLM classification
+    END
+
+    -- Gate 1b: LLM input content classification (nuanced cases keywords miss)
+    GENERATE classify_input(@user_input, @test_context) INTO @input_class
+
+    EVALUATE @input_class
+        WHEN &#x27;harmful&#x27; THEN
+            RETURN &#x27;I cannot help with that request.&#x27; WITH
+                status = &#x27;blocked_harmful&#x27;,
+                gate   = &#x27;llm_classifier&#x27;
+        WHEN &#x27;off_topic&#x27; THEN
+            RETURN &#x27;That question is outside my scope. Please ask something relevant.&#x27; WITH
+                status = &#x27;blocked_off_topic&#x27;,
+                gate   = &#x27;llm_classifier&#x27;
+        ELSE
+            -- Input is acceptable, continue
+    END
+
+    -- Gate 2: PII detection (deterministic — no LLM)
+    CALL detect_pii(@user_input) INTO @pii_report
+
+    EVALUATE @pii_report
+        WHEN STARTSWITH &#x27;pii_found&#x27; THEN
+            -- Gate 2b: Redact PII (deterministic — no LLM)
+            CALL redact_pii(@user_input) INTO @clean_input
+        ELSE
+            SET @clean_input = @user_input
+    END
+
+    -- Gate 3: Generate response with safety-tuned prompt
+    GENERATE safe_response(@clean_input) INTO @raw_response
+
+    -- Gate 4: Output validation — check for PII leakage or harmful content
+    GENERATE validate_output(@raw_response, @clean_input) INTO @output_check
+
+    EVALUATE @output_check
+        WHEN &#x27;safe&#x27; THEN
+            SET @safe_response = @raw_response
+        WHEN &#x27;contains_pii&#x27; THEN
+            -- Deterministic PII redaction on the output too
+            CALL redact_pii(@raw_response) INTO @safe_response
+        WHEN &#x27;hallucination&#x27; THEN
+            GENERATE safe_response(@clean_input) INTO @safe_response
+            RETRY WITH temperature = 0.1 LIMIT 3
+        ELSE
+            SET @safe_response = &#x27;I was unable to generate a safe response. Please rephrase your question.&#x27;
+    END
+
+    RETURN @safe_response WITH
+        status       = &#x27;complete&#x27;,
+        input_class  = @input_class,
+        pii_detected = @pii_report
+
+EXCEPTION
+    WHEN RefusalToAnswer THEN
+        RETURN &#x27;This request cannot be processed.&#x27; WITH status = &#x27;refused&#x27;
+    WHEN HallucinationDetected THEN
+        RETURN &#x27;Unable to provide a verified response.&#x27; WITH status = &#x27;hallucination_blocked&#x27;
+    WHEN BudgetExceeded THEN
+        RETURN @safe_response WITH status = &#x27;budget_limit&#x27;
+END
+"><strong>Guardrails Pipeline</strong></a></td>
+  <td class="cat" data-val="safety">safety</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="69.0">69.0s</td>
+  <td class="mono" style="text-align:center" data-val="9">9</td>
+  <td class="mono" data-val="7970">3,462 / 4,508</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="1.3" data-calls="3" data-tokens="327">
+  <td class="mono" data-val="19">19</td>
+  <td><a href="#" class="src-link" data-title="cookbook/19_memory_conversation/memory_chat.spl" data-src="-- Recipe Name: Memory-Augmented Conversation
+-- A conversational agent that remembers facts from prior turns using persistent memory.
+-- Demonstrates STORAGE-typed workflow inputs, context accumulation, and stateful interactions.
+--
+-- Usage:
+--   spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+--       &#x27;user_input=My name is Alice and I am a data scientist&#x27;
+--   spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+--       &#x27;user_input=What is my name?&#x27;
+--
+-- Memory is a first-class INPUT parameter — declared, injected, portable.
+-- Override the default path at call time: memory=path/to/other.db
+--
+-- Memory management:
+--   Inspect:  spl memory get chat_user_profile
+--   Reset:    spl memory delete chat_user_profile &amp;&amp; spl memory delete chat_history
+
+-- Extract any personal facts the user shared. Return the exact string &#x27;no_new_facts&#x27;
+-- if nothing new was shared, otherwise return a bullet list of facts.
+CREATE FUNCTION extract_facts(user_input TEXT) 
+RETURN TEXT
+AS $$
+
+You are a fact extractor. Read the user message and extract any personal facts they shared
+about themselves (name, job, preferences, location, etc.).
+
+If no personal facts are present, reply with exactly: no_new_facts
+Otherwise reply with a concise bullet list, one fact per line, e.g.:
+- Name: Alice
+- Role: data scientist
+- Preference: Python over R
+
+User message: &quot;{user_input}&quot;
+$$;
+
+-- Merge new facts into an existing profile. Return the updated profile as a bullet list.
+CREATE FUNCTION merge_profile(existing_profile TEXT, new_facts TEXT) 
+RETURN TEXT
+AS $$
+
+You are maintaining a user profile as a concise bullet list.
+If the existing profile is empty or blank, start a new profile from the new facts only.
+Otherwise merge the new facts in, keeping all prior facts unless directly contradicted.
+Do NOT invent or assume any facts not explicitly stated.
+Return ONLY the bullet list, no preamble.
+
+Existing profile:
+{existing_profile}
+
+New facts to merge:
+{new_facts}
+$$;
+
+-- Reply using full context: known profile + conversation history + current message.
+CREATE FUNCTION contextual_reply(user_input TEXT, profile TEXT, history TEXT) 
+RETURN TEXT
+AS $$
+
+Known facts about the user: {profile}
+
+Recent conversation:
+{history}
+
+Based solely on the known facts above, answer in one sentence: &quot;{user_input}&quot;
+If the fact is not listed above, respond: &quot;I don&#x27;t have that in memory.&quot;
+$$;
+
+WORKFLOW memory_conversation
+    INPUT:
+        @user_input TEXT,
+        @memory     STORAGE(sqlite, &#x27;~/.spl/memory.db&#x27;)
+    OUTPUT: @response TEXT
+DO
+    LOGGING f&#x27;Memory conversation | input: {@user_input}&#x27; LEVEL INFO
+
+    -- Load existing user profile and chat history from the injected storage backend
+    @profile      := @memory[&#x27;chat_user_profile&#x27;]
+    @chat_history := @memory[&#x27;chat_history&#x27;]
+    LOGGING f&#x27;Profile loaded: {@profile}&#x27; LEVEL DEBUG
+
+    -- Extract any new personal facts the user shared
+    GENERATE extract_facts(@user_input) INTO @new_facts
+    LOGGING f&#x27;New facts: {@new_facts}&#x27; LEVEL DEBUG
+
+    -- Update profile only when new facts were actually found (exact string check)
+    EVALUATE @new_facts
+        WHEN = &#x27;no_new_facts&#x27; THEN
+            LOGGING &#x27;No new facts — profile unchanged&#x27; LEVEL DEBUG
+        ELSE
+            LOGGING &#x27;New facts detected — merging profile&#x27; LEVEL DEBUG
+            GENERATE merge_profile(@profile, @new_facts) INTO @profile
+            @memory[&#x27;chat_user_profile&#x27;] := @profile
+    END
+
+    -- Generate response with full context: profile + history + current input
+    GENERATE contextual_reply(@user_input, @profile, @chat_history) INTO @response
+
+    -- Persist updated chat history (keep last 10 turns, deterministic — no LLM cost)
+    @chat_history := @chat_history || &#x27;\nUser: &#x27; || @user_input || &#x27;\nAssistant: &#x27; || @response
+    CALL trim_turns(@chat_history, &#x27;10&#x27;) INTO @chat_history
+    @memory[&#x27;chat_history&#x27;] := @chat_history
+
+    LOGGING &#x27;Response ready&#x27; LEVEL INFO
+    RETURN @response WITH status = &#x27;complete&#x27;
+
+EXCEPTION
+    WHEN BudgetExceeded THEN
+        RETURN &#x27;I remember you! But I ran out of budget for this response.&#x27; WITH status = &#x27;budget_limit&#x27;
+END
+"><strong>Memory Conversation</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="1.3">1.3s</td>
+  <td class="mono" style="text-align:center" data-val="3">3</td>
+  <td class="mono" data-val="327">290 / 37</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="106.6" data-calls="13" data-tokens="18172">
+  <td class="mono" data-val="20">20</td>
+  <td><a href="#" class="src-link" data-title="cookbook/20_ensemble_voting/ensemble.spl" data-src="-- Recipe Name: Ensemble Voting
+-- Generates multiple independent answers, then uses majority voting to pick the best.
+-- Demonstrates ensemble methods, comparative scoring, and consensus-driven output.
+--
+-- Usage:
+--   spl3 run cookbook/20_ensemble_voting/ensemble.spl --adapter ollama --model gemma3 question=&quot;What causes inflation?&quot;
+--   spl3 run cookbook/20_ensemble_voting/ensemble.spl --adapter ollama question=&quot;Is Rust faster than C++?&quot;
+--   spl3 run cookbook/20_ensemble_voting/ensemble.spl --adapter ollama question=&quot;What is the best database for time-series data?&quot;
+
+WORKFLOW ensemble_voting
+    INPUT: @question TEXT
+    OUTPUT: @final_answer TEXT
+DO
+    LOGGING f&#x27;Ensemble voting | question: {@question}&#x27; LEVEL INFO
+
+    -- Step 1: Generate 5 independent candidate answers with varying temperatures
+    LOGGING &#x27;Generating 5 candidate answers ...&#x27; LEVEL DEBUG
+    GENERATE answer_candidate(@question) INTO @candidate_1
+    GENERATE answer_candidate(@question) INTO @candidate_2
+    GENERATE answer_candidate(@question) INTO @candidate_3
+    GENERATE answer_candidate(@question) INTO @candidate_4
+    GENERATE answer_candidate(@question) INTO @candidate_5
+    LOGGING &#x27;5 candidates ready — scoring ...&#x27; LEVEL INFO
+
+    -- Step 2: Score each candidate on accuracy, completeness, and clarity
+    GENERATE score_candidate(@candidate_1, @question) INTO @score_1
+    GENERATE score_candidate(@candidate_2, @question) INTO @score_2
+    GENERATE score_candidate(@candidate_3, @question) INTO @score_3
+    GENERATE score_candidate(@candidate_4, @question) INTO @score_4
+    GENERATE score_candidate(@candidate_5, @question) INTO @score_5
+    LOGGING f&#x27;Scores: 1={@score_1} 2={@score_2} 3={@score_3} 4={@score_4} 5={@score_5}&#x27; LEVEL DEBUG
+
+    -- Step 3: Find consensus — identify common themes across candidates
+    LOGGING &#x27;Finding consensus ...&#x27; LEVEL DEBUG
+    GENERATE find_consensus(
+        @candidate_1, @candidate_2, @candidate_3,
+        @candidate_4, @candidate_5
+    ) INTO @consensus
+
+    -- Step 4: Select the best candidate based on scores and consensus alignment
+    LOGGING &#x27;Selecting winner ...&#x27; LEVEL DEBUG
+    GENERATE select_winner(
+        @candidate_1, @score_1,
+        @candidate_2, @score_2,
+        @candidate_3, @score_3,
+        @candidate_4, @score_4,
+        @candidate_5, @score_5,
+        @consensus
+    ) INTO @best_candidate
+
+    -- Step 5: Polish the winning answer, incorporating consensus insights
+    GENERATE polish(@best_candidate, @consensus, @question) INTO @final_answer
+
+    LOGGING &#x27;Final answer ready&#x27; LEVEL INFO
+    RETURN @final_answer WITH status = &#x27;complete&#x27;, candidates = 5
+
+EXCEPTION
+    WHEN BudgetExceeded THEN
+        -- If budget runs out, use whatever candidates we have
+        GENERATE select_winner(
+            @candidate_1, @score_1,
+            @candidate_2, @score_2,
+            @candidate_3, @score_3
+        ) INTO @final_answer
+        RETURN @final_answer WITH status = &#x27;partial&#x27;, candidates = 3
+    WHEN HallucinationDetected THEN
+        RETRY WITH temperature = 0.1 LIMIT 3
+END
+"><strong>Ensemble Voting</strong></a></td>
+  <td class="cat" data-val="multi-agent">multi-agent</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="106.6">106.6s</td>
+  <td class="mono" style="text-align:center" data-val="13">13</td>
+  <td class="mono" data-val="18172">11,407 / 6,765</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="31.5" data-calls="4" data-tokens="4292">
+  <td class="mono" data-val="21">21</td>
+  <td><a href="#" class="src-link" data-title="cookbook/21_multi_model_pipeline/multi_model.spl" data-src="-- Recipe Name: Multi-Model Pipeline
+-- Showcases GENERATE ... USING MODEL per-step model selection
+-- and semantic WHILE loop with variable context.
+--
+-- Each step can target a different model — the right model for each task.
+-- Usage:
+--   spl3 run cookbook/21_multi_model_pipeline/multi_model.spl --adapter ollama topic=&quot;climate change&quot;
+
+CREATE FUNCTION research(topic TEXT) 
+RETURN TEXT 
+AS $$
+
+You are a research specialist.
+Provide key facts, statistics, and recent developments about: {topic}
+Focus on factual accuracy. Be thorough but concise.
+$$;
+
+CREATE FUNCTION analyze(facts TEXT) 
+RETURN TEXT 
+AS $$
+
+You are a data analyst.
+Analyze the following research and identify the 3 most significant insights:
+
+{facts}
+
+For each insight, explain why it matters and rate its significance (1-10).
+$$;
+
+CREATE FUNCTION write_summary(analysis TEXT) 
+RETURN TEXT 
+AS $$
+
+You are a professional writer.
+Write a clear, engaging 2-paragraph summary based on this analysis:
+
+{analysis}
+
+The first paragraph should present the key findings.
+The second paragraph should discuss implications and outlook.
+$$;
+
+CREATE FUNCTION quality_check(text TEXT) 
+RETURN TEXT 
+AS $$
+
+You are a quality reviewer.
+Rate the following text on a scale of 0.0 to 1.0 for:
+- Clarity
+- Accuracy
+- Completeness
+
+Return ONLY a single number (the average score).
+
+Text: {text}
+$$;
+
+WORKFLOW multi_model_pipeline
+  INPUT:
+    @topic TEXT,
+    @max_iterations INT DEFAULT 3,
+    @log_dir TEXT DEFAULT &#x27;cookbook/21_multi_model_pipeline/logs-spl&#x27;
+  OUTPUT: @final TEXT
+DO
+  LOGGING f&#x27;Multi-model pipeline | topic={@topic}&#x27; LEVEL INFO
+
+  -- Step 1: Research with a fast model (good for factual retrieval)
+  GENERATE research(@topic) USING MODEL &#x27;gemma3&#x27; INTO @facts
+  LOGGING &#x27;Research complete&#x27; LEVEL DEBUG
+  CALL write_file(f&#x27;{@log_dir}/research.md&#x27;, @facts) INTO NONE
+
+  -- Step 2: Analysis with a reasoning model
+  GENERATE analyze(@facts) USING MODEL &#x27;gemma3&#x27; INTO @analysis
+  LOGGING &#x27;Analysis complete&#x27; LEVEL DEBUG
+  CALL write_file(f&#x27;{@log_dir}/analysis.md&#x27;, @analysis) INTO NONE
+
+  -- Step 3: Writing with a creative model
+  GENERATE write_summary(@analysis) USING MODEL &#x27;gemma3&#x27; INTO @draft
+  LOGGING &#x27;Initial draft ready&#x27; LEVEL INFO
+  CALL write_file(f&#x27;{@log_dir}/draft_0.md&#x27;, @draft) INTO NONE
+
+  -- Step 4: Quality loop — refine until score &gt; 0.7 (max 3 iterations)
+  @iteration := 0
+  @quality := 0
+
+  WHILE @iteration &lt; @max_iterations DO
+    LOGGING f&#x27;Quality check | iteration={@iteration}&#x27; LEVEL DEBUG
+    GENERATE quality_check(@draft) INTO @quality
+    LOGGING f&#x27;Quality score: {@quality}&#x27; LEVEL DEBUG
+
+    EVALUATE @quality
+      WHEN &gt; 0.7 THEN
+        LOGGING f&#x27;Quality threshold met | score={@quality}&#x27; LEVEL INFO
+        CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @draft) INTO NONE
+        RETURN @draft WITH status = &#x27;high_quality&#x27;, score = @quality
+      ELSE
+        GENERATE write_summary(@analysis) INTO @draft
+        @iteration := @iteration + 1
+        CALL write_file(f&#x27;{@log_dir}/draft_{@iteration}.md&#x27;, @draft) INTO NONE
+    END
+  END
+
+  -- Fallback: commit whatever we have
+  LOGGING f&#x27;Max iterations reached | final score={@quality}&#x27; LEVEL WARN
+  CALL write_file(f&#x27;{@log_dir}/final.md&#x27;, @draft) INTO NONE
+  RETURN @draft WITH status = &#x27;max_iterations&#x27;, score = @quality
+
+EXCEPTION
+  WHEN MaxIterationsReached THEN
+    RETURN @draft WITH status = &#x27;partial&#x27;
+  WHEN ModelOverloaded THEN
+    RETURN @draft WITH status = &#x27;model_overloaded&#x27;
+END
+"><strong>Multi-Model Pipeline</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="31.5">31.5s</td>
+  <td class="mono" style="text-align:center" data-val="4">4</td>
+  <td class="mono" data-val="4292">2,244 / 2,048</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="6.9" data-calls="1" data-tokens="0">
+  <td class="mono" data-val="22">22</td>
+  <td><strong>Text2SPL Demo</strong></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="6.9">6.9s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="0">—</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="1.5" data-calls="1" data-tokens="209">
+  <td class="mono" data-val="23">23</td>
+  <td><a href="#" class="src-link" data-title="cookbook/23_structured_output/structured_output.spl" data-src="-- Recipe Name: Structured Output
+-- Extract typed, structured data from free-form text using CREATE FUNCTION with JSON schema.
+-- Demonstrates schema-constrained generation — the LLM must return valid JSON matching the spec.
+--
+-- Usage:
+--   spl3 run cookbook/23_structured_output/structured_output.spl --adapter ollama --model gemma3 \
+--       text=&quot;John Smith, 42, joined Acme Corp in March 2021 earning $95,000/year&quot;
+--
+--   spl3 run cookbook/23_structured_output/structured_output.spl --adapter ollama \
+--       text=&quot;Invoice #INV-2045 from TechSupplies Ltd dated 15 Jan 2024 for $3,420.50 due in 30 days&quot;
+
+-- Define the extraction schema
+CREATE FUNCTION extract_entity_schema()
+RETURN JSON
+AS $$
+{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;people&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;name&quot;:       { &quot;type&quot;: &quot;string&quot; },
+          &quot;age&quot;:        { &quot;type&quot;: &quot;integer&quot; },
+          &quot;role&quot;:       { &quot;type&quot;: &quot;string&quot; },
+          &quot;salary&quot;:     { &quot;type&quot;: &quot;number&quot; },
+          &quot;start_date&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot; }
+        },
+        &quot;required&quot;: [&quot;name&quot;]
+      }
+    },
+    &quot;organizations&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;name&quot;:     { &quot;type&quot;: &quot;string&quot; },
+          &quot;type&quot;:     { &quot;type&quot;: &quot;string&quot; },
+          &quot;industry&quot;: { &quot;type&quot;: &quot;string&quot; }
+        },
+        &quot;required&quot;: [&quot;name&quot;]
+      }
+    },
+    &quot;amounts&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;value&quot;:    { &quot;type&quot;: &quot;number&quot; },
+          &quot;currency&quot;: { &quot;type&quot;: &quot;string&quot;, &quot;default&quot;: &quot;USD&quot; },
+          &quot;label&quot;:    { &quot;type&quot;: &quot;string&quot; }
+        },
+        &quot;required&quot;: [&quot;value&quot;]
+      }
+    },
+    &quot;dates&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;value&quot;: { &quot;type&quot;: &quot;string&quot; },
+          &quot;label&quot;: { &quot;type&quot;: &quot;string&quot; }
+        },
+        &quot;required&quot;: [&quot;value&quot;]
+      }
+    }
+  }
+}
+$$;
+
+PROMPT extract_entities
+SELECT
+    system_role(&#x27;You are a precise data extraction engine. Extract all entities from the text and return valid JSON matching the provided schema. Return only the JSON object, no explanation.&#x27;),
+    context.text AS text,
+    extract_entity_schema() AS schema
+GENERATE structured_extraction(text, schema)
+"><strong>Structured Output</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="1.5">1.5s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="209">121 / 88</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.7" data-calls="1" data-tokens="121">
+  <td class="mono" data-val="24">24</td>
+  <td><a href="#" class="src-link" data-title="cookbook/24_few_shot/few_shot.spl" data-src="-- Recipe Name: Few-Shot Prompting
+-- Embed gold-standard examples directly in the SELECT context to guide output format and style.
+-- Demonstrates in-context learning — no fine-tuning required.
+--
+-- Usage:
+--   spl3 run cookbook/24_few_shot/few_shot.spl --adapter ollama --model gemma3 \
+--       text=&quot;The quarterly results exceeded all analyst forecasts by a significant margin&quot;
+--
+--   spl3 run cookbook/24_few_shot/few_shot.spl --adapter ollama \
+--       text=&quot;System outage detected in EU-WEST-2 affecting 15% of users&quot; \
+--       domain=&quot;ops&quot;
+
+-- Gold-standard examples for tone/format calibration
+CREATE FUNCTION few_shot_examples(domain TEXT DEFAULT &#x27;general&#x27;)
+RETURN TEXT
+AS $$
+SELECT CASE domain
+  WHEN &#x27;finance&#x27; THEN
+    &quot;&quot;&quot;### Examples
+
+Input: &quot;Revenue grew 12% YoY despite headwinds in APAC.&quot;
+Output: {&quot;sentiment&quot;: &quot;positive&quot;, &quot;magnitude&quot;: 0.7, &quot;topics&quot;: [&quot;revenue&quot;, &quot;growth&quot;, &quot;APAC&quot;], &quot;summary&quot;: &quot;Revenue up 12% YoY.&quot;}
+
+Input: &quot;Write-downs of $2.3B drove a net loss for Q3.&quot;
+Output: {&quot;sentiment&quot;: &quot;negative&quot;, &quot;magnitude&quot;: 0.9, &quot;topics&quot;: [&quot;write-downs&quot;, &quot;net loss&quot;, &quot;Q3&quot;], &quot;summary&quot;: &quot;Q3 net loss from $2.3B write-downs.&quot;}&quot;&quot;&quot;
+
+  WHEN &#x27;ops&#x27; THEN
+    &quot;&quot;&quot;### Examples
+
+Input: &quot;Deployment succeeded. All health checks passing. P99 latency 45ms.&quot;
+Output: {&quot;status&quot;: &quot;healthy&quot;, &quot;severity&quot;: &quot;none&quot;, &quot;action_required&quot;: false, &quot;summary&quot;: &quot;Deploy OK, latency nominal.&quot;}
+
+Input: &quot;Pod crash-loop in prod-east. OOMKilled. Restarted 7 times in 10 min.&quot;
+Output: {&quot;status&quot;: &quot;incident&quot;, &quot;severity&quot;: &quot;high&quot;, &quot;action_required&quot;: true, &quot;summary&quot;: &quot;OOM crash-loop in prod-east, immediate attention needed.&quot;}&quot;&quot;&quot;
+
+  ELSE
+    &quot;&quot;&quot;### Examples
+
+Input: &quot;The new feature launched today and users are loving it!&quot;
+Output: {&quot;sentiment&quot;: &quot;positive&quot;, &quot;magnitude&quot;: 0.8, &quot;summary&quot;: &quot;Successful feature launch with positive user reception.&quot;}
+
+Input: &quot;We encountered several critical bugs that delayed the release by two weeks.&quot;
+Output: {&quot;sentiment&quot;: &quot;negative&quot;, &quot;magnitude&quot;: 0.7, &quot;summary&quot;: &quot;Critical bugs caused two-week release delay.&quot;}&quot;&quot;&quot;
+END
+$$;
+
+PROMPT few_shot_classifier
+SELECT
+    system_role(&#x27;You are a precise text classifier. Follow the examples exactly — same JSON structure, same field names. Return only the JSON object.&#x27;),
+    few_shot_examples(context.domain) AS examples,
+    context.text AS text,
+    context.domain AS domain
+GENERATE classify(text, examples)
+"><strong>Few-Shot Prompting</strong></a></td>
+  <td class="cat" data-val="basics">basics</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.7">0.7s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="121">86 / 35</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="76.6" data-calls="6" data-tokens="10430">
+  <td class="mono" data-val="25">25</td>
+  <td><a href="#" class="src-link" data-title="cookbook/25_nested_procs/nested_procs.spl" data-src="-- Recipe Name: Nested Procedures
+-- Demonstrates PROCEDURE calling PROCEDURE — deep composability without external orchestration.
+-- Pattern: a high-level workflow delegates subtasks to reusable PROCEDURE units.
+--
+-- Usage:
+--   spl3 run cookbook/25_nested_procs/nested_procs.spl --adapter ollama --model gemma3 \
+--       topic=&quot;quantum computing&quot; audience=&quot;high school students&quot;
+--
+--   spl3 run cookbook/25_nested_procs/nested_procs.spl --adapter ollama \
+--       topic=&quot;CRISPR gene editing&quot; audience=&quot;policy makers&quot; depth=&quot;deep&quot;
+
+-- Inner PROCEDURE: generate a single explanation layer
+PROCEDURE explain_layer(content TEXT, audience TEXT, style TEXT DEFAULT &#x27;clear and engaging&#x27;)
+RETURN TEXT
+DO
+    GENERATE explain(content, audience, style) INTO @explanation
+    RETURN @explanation
+END
+
+-- Inner PROCEDURE: generate a concrete example for a concept
+PROCEDURE make_example(concept TEXT, context TEXT, audience TEXT)
+RETURN TEXT
+DO
+    GENERATE concrete_example(concept, context, audience) INTO @example
+    RETURN @example
+END
+
+-- Inner PROCEDURE: check comprehension level and simplify if needed
+PROCEDURE calibrate_complexity(text TEXT, audience TEXT, target_grade INT DEFAULT 8)
+RETURN TEXT
+DO
+    GENERATE assess_reading_level(text) INTO @reading_level
+    EVALUATE @reading_level
+        WHEN &gt; target_grade THEN
+            GENERATE simplify(text, audience) INTO @calibrated
+            RETURN @calibrated
+        ELSE
+            RETURN text
+    END
+END
+
+-- Outer WORKFLOW: orchestrates the inner procedures
+WORKFLOW layered_explainer
+    INPUT:  @topic    TEXT,
+            @audience TEXT,
+            @depth    TEXT DEFAULT &#x27;standard&#x27;
+    OUTPUT: @article TEXT
+DO
+    -- Step 1: Research the topic
+    GENERATE research_overview(@topic) INTO @overview
+
+    -- Step 2: Delegate explanation to inner procedure
+    CALL explain_layer(
+        content  = @overview,
+        audience = @audience,
+        style    = &#x27;clear, engaging, avoid jargon&#x27;
+    ) INTO @base_explanation
+
+    -- Step 3: Generate a concrete example via another inner procedure
+    CALL make_example(
+        concept  = @topic,
+        context  = @base_explanation,
+        audience = @audience
+    ) INTO @example
+
+    -- Step 4: Calibrate complexity (nested call inside a conditional)
+    CALL calibrate_complexity(
+        text         = @base_explanation,
+        audience     = @audience,
+        target_grade = 8
+    ) INTO @calibrated_explanation
+
+    -- Step 5: Assemble the final article
+    GENERATE assemble_article(
+        @topic,
+        @calibrated_explanation,
+        @example,
+        @depth
+    ) INTO @article
+
+    RETURN @article WITH status = &#x27;complete&#x27;, audience = @audience
+END
+"><strong>Nested Procedures</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="76.6">76.6s</td>
+  <td class="mono" style="text-align:center" data-val="6">6</td>
+  <td class="mono" data-val="10430">5,435 / 4,995</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="75.7" data-calls="7" data-tokens="9632">
+  <td class="mono" data-val="26">26</td>
+  <td><a href="#" class="src-link" data-title="cookbook/26_ab_test/ab_test.spl" data-src="
+-- Recipe Name: Prompt A/B Test
+-- Compare two prompt variants using EVALUATE scoring. Pick the winner automatically.
+-- Demonstrates data-driven prompt engineering built into the workflow itself.
+-- Supports pre-built experiments from experiments.json or ad-hoc task + prompt_a + prompt_b.
+--
+-- Usage (from catalog):
+--   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/26_ab_test/tools.py \
+--       experiment_id=neural_networks
+--
+--   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/26_ab_test/tools.py \
+--       experiment_id=standing_desk winner_threshold=2.0
+--
+-- Usage (ad-hoc — no catalog):
+--   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/26_ab_test/tools.py \
+--       task=&quot;Explain neural networks&quot; \
+--       prompt_a=&quot;Explain like I&#x27;m 5&quot; \
+--       prompt_b=&quot;Give a technical explanation with analogies&quot;
+--
+-- Discover available experiments:
+--   spl3 run ... experiment_id=list
+
+-- Scoring rubric as a reusable function
+CREATE FUNCTION scoring_rubric()
+RETURN TEXT
+AS $$
+Rate the response on a scale of 0–10 for each criterion:
+1. Clarity (0-10): Is it easy to understand?
+2. Completeness (0-10): Does it fully address the task?
+3. Relevance (0-10): Is every sentence on-topic?
+4. Engagement (0-10): Is it interesting to read?
+
+Return valid JSON only — no prose outside the JSON:
+{&quot;clarity&quot;: N, &quot;completeness&quot;: N, &quot;relevance&quot;: N, &quot;engagement&quot;: N, &quot;total&quot;: N, &quot;rationale&quot;: &quot;one concise sentence&quot;}
+$$;
+
+WORKFLOW ab_test
+    INPUT:  @experiment_id    TEXT DEFAULT &#x27;&#x27;,
+            @task             TEXT DEFAULT &#x27;&#x27;,
+            @prompt_a         TEXT DEFAULT &#x27;&#x27;,
+            @prompt_b         TEXT DEFAULT &#x27;&#x27;,
+            @winner_threshold FLOAT DEFAULT 1.5
+    OUTPUT: @winner_output TEXT
+DO
+    -- Step 1: Load experiment from catalog (deterministic — no LLM)
+    -- Sets @experiment_context with task, prompt_a, prompt_b, and notes.
+    -- If experiment_id is blank, the context will be empty and @task/@prompt_a/@prompt_b are used directly.
+    CALL load_experiment(@experiment_id) INTO @experiment_context
+
+    -- Step 2: Generate Variant A response
+    GENERATE run_variant_a(
+        @task,
+        @prompt_a,
+        @experiment_context
+    ) INTO @response_a
+
+    -- Step 3: Generate Variant B response
+    GENERATE run_variant_b(
+        @task,
+        @prompt_b,
+        @experiment_context
+    ) INTO @response_b
+
+    -- Step 4: Score both variants against the rubric (LLM)
+    GENERATE evaluate_response(@response_a, @task, scoring_rubric()) 
+        INTO @score_a_json
+    GENERATE evaluate_response(@response_b, @task, scoring_rubric()) 
+        INTO @score_b_json
+
+    -- Step 5: Extract numeric totals (deterministic — no LLM)
+    CALL extract_score_total(@score_a_json) INTO @score_a
+    CALL extract_score_total(@score_b_json) INTO @score_b
+
+    -- Step 6: Pick winner or declare tie
+    EVALUATE (@score_a - @score_b)
+        WHEN &gt; @winner_threshold THEN
+            SET @winner_output = @response_a
+            RETURN @winner_output WITH
+                winner    = &#x27;A&#x27;,
+                score_a   = @score_a,
+                score_b   = @score_b,
+                margin    = (@score_a - @score_b)
+        WHEN &lt; (0 - @winner_threshold) THEN
+            SET @winner_output = @response_b
+            RETURN @winner_output WITH
+                winner    = &#x27;B&#x27;,
+                score_a   = @score_a,
+                score_b   = @score_b,
+                margin    = (@score_b - @score_a)
+        ELSE
+            -- Scores too close — format both with explanation (deterministic — no LLM)
+            CALL format_tie_result(@response_a, @response_b, @score_a_json, @score_b_json) 
+                INTO @winner_output
+            RETURN @winner_output WITH
+                winner  = &#x27;tie&#x27;,
+                score_a = @score_a,
+                score_b = @score_b
+    END
+
+EXCEPTION
+    WHEN GenerationError THEN
+        RETURN &#x27;A/B test failed during generation.&#x27; WITH status = &#x27;error&#x27;
+END
+"><strong>Prompt A/B Test</strong></a></td>
+  <td class="cat" data-val="benchmarking">benchmarking</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="75.7">75.7s</td>
+  <td class="mono" style="text-align:center" data-val="7">7</td>
+  <td class="mono" data-val="9632">4,701 / 4,931</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="1.2" data-calls="1" data-tokens="210">
+  <td class="mono" data-val="27">27</td>
+  <td><a href="#" class="src-link" data-title="cookbook/27_data_extraction/data_extraction.spl" data-src="-- Recipe Name: Data Extraction
+-- Pull structured fields from messy text: names, dates, amounts, references.
+-- Demonstrates schema-constrained extraction on real-world noisy input.
+--
+-- Usage:
+--   spl3 run cookbook/27_data_extraction/data_extraction.spl --adapter ollama --model gemma3 \
+--       text=&quot;Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March.&quot;
+--
+--   spl3 run cookbook/27_data_extraction/data_extraction.spl --adapter ollama \
+--       text=&quot;$(cat invoice.txt)&quot; format=&quot;invoice&quot;
+
+CREATE FUNCTION extraction_schema(format TEXT DEFAULT &#x27;general&#x27;)
+RETURN JSON
+AS $$
+SELECT CASE format
+  WHEN &#x27;invoice&#x27; THEN &#x27;{
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;invoice_number&quot;: {&quot;type&quot;: &quot;string&quot;},
+      &quot;vendor&quot;:         {&quot;type&quot;: &quot;string&quot;},
+      &quot;amount&quot;:         {&quot;type&quot;: &quot;number&quot;},
+      &quot;currency&quot;:       {&quot;type&quot;: &quot;string&quot;, &quot;default&quot;: &quot;USD&quot;},
+      &quot;issue_date&quot;:     {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;},
+      &quot;due_date&quot;:       {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;},
+      &quot;line_items&quot;:     {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {&quot;description&quot;: {&quot;type&quot;: &quot;string&quot;}, &quot;amount&quot;: {&quot;type&quot;: &quot;number&quot;}}}},
+      &quot;payment_terms&quot;:  {&quot;type&quot;: &quot;string&quot;},
+      &quot;po_reference&quot;:   {&quot;type&quot;: &quot;string&quot;}
+    }
+  }&#x27;
+  WHEN &#x27;contract&#x27; THEN &#x27;{
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;parties&quot;:        {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+      &quot;effective_date&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;},
+      &quot;expiry_date&quot;:    {&quot;type&quot;: &quot;string&quot;, &quot;format&quot;: &quot;date&quot;},
+      &quot;value&quot;:          {&quot;type&quot;: &quot;number&quot;},
+      &quot;currency&quot;:       {&quot;type&quot;: &quot;string&quot;},
+      &quot;jurisdiction&quot;:   {&quot;type&quot;: &quot;string&quot;},
+      &quot;key_obligations&quot;:{&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}}
+    }
+  }&#x27;
+  ELSE &#x27;{
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;names&quot;:        {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+      &quot;organizations&quot;:{&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+      &quot;dates&quot;:        {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {&quot;value&quot;: {&quot;type&quot;: &quot;string&quot;}, &quot;label&quot;: {&quot;type&quot;: &quot;string&quot;}}}},
+      &quot;amounts&quot;:      {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {&quot;value&quot;: {&quot;type&quot;: &quot;number&quot;}, &quot;currency&quot;: {&quot;type&quot;: &quot;string&quot;}, &quot;label&quot;: {&quot;type&quot;: &quot;string&quot;}}}},
+      &quot;references&quot;:   {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+      &quot;locations&quot;:    {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}}
+    }
+  }&#x27;
+END
+$$;
+
+PROMPT extract_fields
+SELECT
+    system_role(&#x27;You are a data extraction specialist. Extract all relevant fields from the text and return valid JSON matching the schema exactly. If a field is not present in the text, omit it. Return only the JSON object.&#x27;),
+    context.text AS text,
+    extraction_schema(context.format) AS schema,
+    context.format AS format
+GENERATE extract(text, schema)
+"><strong>Data Extraction</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="1.2">1.2s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="210">143 / 67</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="22.3" data-calls="6" data-tokens="3480">
+  <td class="mono" data-val="28">28</td>
+  <td><a href="#" class="src-link" data-title="cookbook/28_support_triage/support_triage.spl" data-src="-- Recipe Name: Customer Support Triage
+-- Classify → route → draft response in a single workflow.
+-- Demonstrates multi-step pipeline with branching, deterministic tool calls for
+-- order lookup, and LLM generation grounded in real order data.
+--
+-- Usage:
+--   spl3 run cookbook/28_support_triage/support_triage.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/28_support_triage/tools.py \
+--       ticket=&quot;My account has been charged twice for the same order #ORD-12345&quot;
+--
+--   spl3 run cookbook/28_support_triage/support_triage.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/28_support_triage/tools.py \
+--       ticket=&quot;Package for order ORD-67890 hasn&#x27;t arrived, it&#x27;s been 10 days&quot; \
+--       product=&quot;CloudDash&quot; tone=&quot;empathetic&quot;
+--
+--   spl3 run cookbook/28_support_triage/support_triage.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/28_support_triage/tools.py \
+--       ticket=&quot;I can&#x27;t log in, password reset email never arrives&quot; \
+--       tone=&quot;friendly&quot;
+
+-- ── Helper functions (evaluated locally, zero LLM cost) ────────────────────
+
+CREATE FUNCTION support_categories()
+RETURN TEXT
+AS $$
+Ticket categories and their routing:
+- billing:      finance team, SLA 4h,  high priority
+                Covers: duplicate charges, wrong amounts, refund requests, invoice issues
+- account:      auth team,    SLA 2h,  high priority
+                Covers: login failures, password reset, account locked, 2FA issues
+- shipping:     fulfillment,  SLA 6h,  high priority
+                Covers: delayed delivery, wrong item received, missing package, tracking problems
+- technical:    engineering,  SLA 8h,  medium priority
+                Covers: app bugs, API errors, integration failures, data export issues
+- product:      product team, SLA 24h, medium priority
+                Covers: feature requests, how-to questions, documentation gaps
+- complaint:    customer success, SLA 1h, urgent
+                Covers: angry customers, escalation threats, repeated unresolved issues
+- general:      first-line,   SLA 48h, low priority
+                Covers: general inquiries, account queries, other
+$$;
+
+CREATE FUNCTION response_tone_guide(tone TEXT DEFAULT &#x27;professional&#x27;)
+RETURN TEXT
+AS $$
+SELECT CASE tone
+  WHEN &#x27;empathetic&#x27; THEN &#x27;Warm and understanding. Acknowledge frustration. Use &quot;I understand&quot; and &quot;I am sorry&quot;. Avoid jargon. Refer to the customer by first name.&#x27;
+  WHEN &#x27;formal&#x27;     THEN &#x27;Professional and precise. Use formal language. Reference ticket numbers and order IDs explicitly. State next steps clearly.&#x27;
+  WHEN &#x27;friendly&#x27;   THEN &#x27;Conversational and positive. Use the customer first name. End with an enthusiastic offer to help further.&#x27;
+  ELSE                   &#x27;Professional but approachable. Concise. Action-oriented. Reference specific order details when available. No excessive apologies.&#x27;
+END
+$$;
+
+CREATE FUNCTION order_context_prompt(order_context TEXT)
+RETURN TEXT
+AS $$
+SELECT CASE
+  WHEN order_context = &#x27;No order number found in this ticket.&#x27;
+    THEN &#x27;No order number was referenced — respond based on the ticket text alone.&#x27;
+  WHEN order_context LIKE &#x27;%not found in system%&#x27;
+    THEN &#x27;The customer referenced an order number but it was not found. Ask them to confirm the order ID.&#x27;
+  ELSE
+    &#x27;Use the following verified order record to ground your response with accurate details (amounts, dates, status):
+
+&#x27; || order_context
+END
+$$;
+
+-- ── Main workflow ───────────────────────────────────────────────────────────
+
+WORKFLOW support_triage
+    INPUT:  @ticket  TEXT,
+            @product TEXT DEFAULT &#x27;CloudDash&#x27;,
+            @tone    TEXT DEFAULT &#x27;professional&#x27;
+    OUTPUT: @drafted_response TEXT
+DO
+    LOGGING f&#x27;Support triage | product={@product} tone={@tone}&#x27; LEVEL INFO
+
+    -- Step 1: Extract any order numbers mentioned in the ticket (deterministic tool — no LLM)
+    CALL extract_order_numbers(@ticket) INTO @order_numbers
+
+    -- Step 2: Fetch the matching order record(s) from orders.json (deterministic tool — no LLM)
+    CALL lookup_order(@order_numbers) INTO @order_context
+    LOGGING f&#x27;Order context loaded | order_numbers={@order_numbers}&#x27; LEVEL DEBUG
+
+    -- Step 3: Classify the ticket using categories + order data as grounding context
+    GENERATE classify_ticket(@ticket, support_categories(), order_context_prompt(@order_context)) 
+        INTO @classification_json
+    LOGGING f&#x27;Classification: {@classification_json}&#x27; LEVEL DEBUG
+
+    -- Step 4: Extract key structured details from the ticket
+    GENERATE extract_ticket_details(@ticket, @order_context) 
+        INTO @details_json
+
+    -- Step 5: Score urgency 0-10 based on ticket text and classification
+    GENERATE detect_urgency(@ticket, @classification_json) INTO @urgency_score
+    LOGGING f&#x27;Urgency score: {@urgency_score}&#x27; LEVEL INFO
+
+    -- Step 6: Route — escalate immediately if urgency &gt; 8, otherwise draft response
+    EVALUATE @urgency_score
+        WHEN &gt; 8 THEN
+            LOGGING f&#x27;High urgency — escalating | score={@urgency_score}&#x27; LEVEL WARN
+            GENERATE escalation_alert(@ticket, @classification_json, @order_context) INTO @alert
+            RETURN @alert WITH status = &#x27;escalated&#x27;, priority = &#x27;critical&#x27;
+        ELSE
+            -- Step 7: Draft a grounded, tone-appropriate response
+            GENERATE draft_response(
+                @ticket,
+                @classification_json,
+                @details_json,
+                @order_context,
+                @product,
+                response_tone_guide(@tone)
+            ) INTO @drafted_response
+
+            -- Step 8: Quality-check the draft (0-10); revise once if score &lt; 6
+            GENERATE check_response_quality(@drafted_response, @ticket, @order_context) 
+                INTO @quality_score
+            LOGGING f&#x27;Draft quality score: {@quality_score}&#x27; LEVEL DEBUG
+
+            EVALUATE @quality_score
+                WHEN &lt; 6 THEN
+                    LOGGING f&#x27;Quality below threshold — revising | score={@quality_score}&#x27; LEVEL WARN
+                    GENERATE improve_response(@drafted_response, @ticket, @order_context) INTO @drafted_response
+                    RETURN @drafted_response WITH status = &#x27;drafted_revised&#x27;
+                ELSE
+                    RETURN @drafted_response WITH status = &#x27;drafted&#x27;, quality = @quality_score
+            END
+    END
+
+EXCEPTION
+    WHEN GenerationError THEN
+        GENERATE fallback_response(@ticket, @product) 
+            INTO @drafted_response
+        RETURN @drafted_response WITH status = &#x27;fallback&#x27;
+END
+"><strong>Customer Support Triage</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="22.3">22.3s</td>
+  <td class="mono" style="text-align:center" data-val="6">6</td>
+  <td class="mono" data-val="3480">2,026 / 1,454</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="64.4" data-calls="8" data-tokens="10162">
+  <td class="mono" data-val="29">29</td>
+  <td><a href="#" class="src-link" data-title="cookbook/29_meeting_actions/meeting_actions.spl" data-src="-- Recipe Name: Meeting Notes → Action Items
+-- Transcript in, structured TODO list + owners out.
+-- Demonstrates multi-step extraction + structured output from long-form text,
+-- with deterministic tool calls for file loading, speaker extraction,
+-- date normalisation, and ownership validation.
+--
+-- Usage (load from file):
+--   spl3 run cookbook/29_meeting_actions/meeting_actions.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/29_meeting_actions/tools.py \
+--       filename=sprint_planning.txt \
+--       output_format=markdown
+--
+-- Usage (inline transcript):
+--   spl3 run cookbook/29_meeting_actions/meeting_actions.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/29_meeting_actions/tools.py \
+--       transcript=&quot;Alice: fix the login bug by Friday. Bob: I will handle it.&quot; \
+--       output_format=json
+--
+-- Sample transcripts in transcripts/:
+--   sprint_planning.txt   Full sprint planning with assignments and decisions
+--   design_review.txt     API architecture review with open questions
+--   standup.txt           Short daily standup with blockers
+
+-- ── Schema (zero LLM cost — injected as grounding context) ─────────────────
+
+CREATE FUNCTION action_item_schema()
+RETURN JSON
+AS $$
+{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;meeting_title&quot;:   {&quot;type&quot;: &quot;string&quot;},
+    &quot;meeting_date&quot;:    {&quot;type&quot;: &quot;string&quot;},
+    &quot;attendees&quot;:       {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+    &quot;meeting_summary&quot;: {&quot;type&quot;: &quot;string&quot;},
+    &quot;decisions&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}
+    },
+    &quot;action_items&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+          &quot;task&quot;:     {&quot;type&quot;: &quot;string&quot;},
+          &quot;owner&quot;:    {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Person responsible. Use exact speaker name or empty string if unassigned.&quot;},
+          &quot;due_date&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Due date or relative phrase e.g. Friday, next Wednesday, end of sprint&quot;},
+          &quot;priority&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;enum&quot;: [&quot;high&quot;, &quot;medium&quot;, &quot;low&quot;]},
+          &quot;context&quot;:  {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;Why this task matters or what triggered it&quot;}
+        },
+        &quot;required&quot;: [&quot;task&quot;, &quot;priority&quot;]
+      }
+    },
+    &quot;open_questions&quot;: {
+      &quot;type&quot;: &quot;array&quot;,
+      &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}
+    },
+    &quot;next_meeting&quot;: {&quot;type&quot;: &quot;string&quot;}
+  },
+  &quot;required&quot;: [&quot;meeting_summary&quot;, &quot;action_items&quot;]
+}
+$$;
+
+-- ── Main workflow ───────────────────────────────────────────────────────────
+
+WORKFLOW meeting_to_actions
+    INPUT:  
+        @filename      TEXT DEFAULT &#x27;&#x27;,
+        @transcript    TEXT DEFAULT &#x27;&#x27;,
+        @output_format TEXT DEFAULT &#x27;json&#x27;,
+        @log_dir TEXT DEFAULT &#x27;cookbook/04_model_showdown/logs-spl&#x27;
+    OUTPUT: @output TEXT
+DO
+    LOGGING f&#x27;Meeting to actions | format={@output_format} filename={@filename}&#x27; LEVEL INFO
+
+    -- Step 1: Load transcript from file if filename provided (deterministic — no LLM)
+    CALL load_transcript(@filename) INTO @file_content
+
+    -- Step 2: Extract speaker names for grounding the LLM (deterministic — no LLM)
+    CALL extract_speakers(@file_content) INTO @speakers_from_file
+    CALL extract_speakers(@transcript)   INTO @speakers_from_inline
+    LOGGING f&#x27;Speakers from file: {@speakers_from_file}&#x27; LEVEL DEBUG
+
+    -- Step 3: Normalise transcript — merge sources, clean formatting, identify speakers
+    GENERATE normalize_transcript(
+        @file_content,
+        @transcript,
+        @speakers_from_file,
+        @speakers_from_inline
+    ) INTO @clean_transcript
+    LOGGING &#x27;Transcript normalised&#x27; LEVEL DEBUG
+    CALL write_file(f&#x27;{@log_dir}/clean_transcript.md&#x27;, @clean_transcript) INTO NONE
+
+    -- Step 4: Extract structured action items grounded by schema and known speakers
+    GENERATE extract_actions(
+        @clean_transcript,
+        action_item_schema(),
+        @speakers_from_file,
+        @speakers_from_inline
+    ) INTO @structured_json
+    LOGGING &#x27;Action items extracted&#x27; LEVEL INFO
+    CALL write_file(f&#x27;{@log_dir}/structured_json.md&#x27;, @structured_json) INTO NONE
+
+    -- Step 5: Normalise relative due dates to ISO-8601 (deterministic — no LLM)
+    CALL normalize_dates(@structured_json) INTO @structured_json
+
+    -- Step 6: Validate ownership — flag unowned high-priority items (deterministic — no LLM)
+    CALL validate_ownership(@structured_json) INTO @validation_notes
+
+    -- Step 7: Format and commit output
+    EVALUATE @output_format
+        WHEN = &#x27;markdown&#x27; THEN
+            GENERATE format_as_markdown(@structured_json, @validation_notes) 
+              INTO @output
+            CALL write_file(f&#x27;{@log_dir}/output.md&#x27;, @output) INTO NONE
+
+            RETURN @output WITH status = &#x27;complete&#x27;, format = &#x27;markdown&#x27;
+        WHEN = &#x27;email&#x27; THEN
+            GENERATE format_as_email(@structured_json, @validation_notes) 
+              INTO @output
+            CALL write_file(f&#x27;{@log_dir}/output-email.md&#x27;, @output) INTO NONE
+            RETURN @output WITH status = &#x27;complete&#x27;, format = &#x27;email&#x27;
+        ELSE
+            SET @output = @structured_json
+            RETURN @output WITH status = &#x27;complete&#x27;, format = &#x27;json&#x27;
+    END
+
+EXCEPTION
+    WHEN ContextLengthExceeded THEN
+        -- Long transcript: summarise first, then extract from the summary
+        GENERATE summarize_transcript(@clean_transcript) 
+          INTO @summary
+        GENERATE extract_actions(@summary, action_item_schema(), @speakers_from_file, @speakers_from_inline) 
+          INTO @structured_json
+        CALL normalize_dates(@structured_json) INTO @structured_json
+        CALL validate_ownership(@structured_json) INTO @validation_notes
+        SET @output = @structured_json
+        RETURN @output WITH status = &#x27;complete_chunked&#x27;
+END
+"><strong>Meeting Notes to Actions</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="64.4">64.4s</td>
+  <td class="mono" style="text-align:center" data-val="8">8</td>
+  <td class="mono" data-val="10162">5,876 / 4,286</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="101.3" data-calls="7" data-tokens="16947">
+  <td class="mono" data-val="30">30</td>
+  <td><a href="#" class="src-link" data-title="cookbook/30_code_gen/code_gen.spl" data-src="-- Recipe Name: Code Generator + Tests
+-- Generate a function, then generate its unit tests — in a single workflow.
+-- Demonstrates sequential generation where output of step N is input to step N+1.
+--
+-- @spec accepts either:
+--   • an inline text description, or
+--   • a file path — the file contents are loaded automatically via load_spec()
+--
+-- Usage:
+--   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/30_code_gen/tools.py \
+--       spec=&quot;A function that validates an email address&quot; language=&quot;Python&quot;
+--
+--   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama \
+--       --tools cookbook/30_code_gen/tools.py \
+--       spec=&quot;Binary search over a sorted list, return index or -1&quot; language=&quot;Go&quot; \
+--       test_framework=&quot;testing&quot;
+--
+--   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/30_code_gen/tools.py \
+--       spec=&quot;specs/email_validator.txt&quot; language=&quot;Python&quot;
+
+CREATE FUNCTION language_conventions(language TEXT)
+RETURN TEXT
+AS $$
+SELECT CASE language
+  WHEN &#x27;Python&#x27; THEN &#x27;PEP 8 style. Type hints required. Docstring in Google format. No bare except.&#x27;
+  WHEN &#x27;Go&#x27;     THEN &#x27;Standard Go conventions. Return (value, error). Table-driven tests. No panics in library code.&#x27;
+  WHEN &#x27;TypeScript&#x27; THEN &#x27;Strict mode. Explicit return types. JSDoc comments. No any type.&#x27;
+  WHEN &#x27;Rust&#x27;   THEN &#x27;Idiomatic Rust. Result&lt;T, E&gt; for fallible ops. No unwrap() in library code. Doc comments.&#x27;
+  ELSE               &#x27;Clean, idiomatic code. Clear naming. Minimal dependencies. Well-commented edge cases.&#x27;
+END
+$$;
+
+CREATE FUNCTION test_framework_guide(language TEXT, framework TEXT DEFAULT &#x27;default&#x27;)
+RETURN TEXT
+AS $$
+SELECT CASE language || &#x27;:&#x27; || framework
+  WHEN &#x27;Python:pytest&#x27;   THEN &#x27;pytest. Use fixtures. Parametrize for multiple inputs. Assert with descriptive messages.&#x27;
+  WHEN &#x27;Python:unittest&#x27; THEN &#x27;unittest.TestCase. setUp/tearDown. assertEqual, assertRaises. One assertion per test.&#x27;
+  WHEN &#x27;Go:testing&#x27;      THEN &#x27;testing package. Table-driven tests with t.Run. t.Errorf not t.Fatalf unless truly fatal.&#x27;
+  WHEN &#x27;TypeScript:jest&#x27; THEN &#x27;Jest. describe/it blocks. Mocks via jest.fn(). Async tests with async/await.&#x27;
+  ELSE                        &#x27;Standard test framework for &#x27; || language || &#x27;. Cover: happy path, edge cases, error cases.&#x27;
+END
+$$;
+
+WORKFLOW code_gen_with_tests
+    INPUT:
+        @spec           TEXT,
+        @language       TEXT DEFAULT &#x27;Python&#x27;,
+        @test_framework TEXT DEFAULT &#x27;default&#x27;
+    OUTPUT: @final_output TEXT
+DO
+    LOGGING f&#x27;Code gen start | language={@language} framework={@test_framework}&#x27; LEVEL INFO
+
+    -- Step 0: Resolve spec — accept file path or inline text
+    CALL load_spec(@spec) INTO @spec
+    LOGGING f&#x27;Spec resolved ({@spec})&#x27; LEVEL DEBUG
+
+    -- Step 1: Generate the implementation
+    LOGGING &#x27;Generating implementation ...&#x27; LEVEL DEBUG
+    GENERATE implement_function(
+        @spec,
+        @language,
+        language_conventions(@language)
+    ) INTO @implementation
+    LOGGING f&#x27;Implementation generated ({@language})&#x27; LEVEL DEBUG
+
+    -- Step 2: Self-review the implementation
+    LOGGING &#x27;Reviewing implementation ...&#x27; LEVEL DEBUG
+    GENERATE review_implementation(@implementation, @spec, @language)
+        INTO @review_notes
+    LOGGING f&#x27;Review notes: {@review_notes}&#x27; LEVEL DEBUG
+
+    -- Step 3: Refine if issues found
+    EVALUATE @review_notes
+        WHEN contains(&#x27;issue&#x27;) OR contains(&#x27;error&#x27;) OR contains(&#x27;problem&#x27;) THEN
+            LOGGING &#x27;Issues found — fixing implementation&#x27; LEVEL WARN
+            GENERATE fix_implementation(@implementation, @review_notes, @language)
+                INTO @implementation
+            LOGGING &#x27;Fixed implementation generated&#x27; LEVEL DEBUG
+        ELSE
+            LOGGING &#x27;Implementation looks good — skipping fix step&#x27; LEVEL DEBUG
+    END
+
+    -- Step 4: Generate unit tests targeting the implementation
+    LOGGING &#x27;Generating unit tests ...&#x27; LEVEL DEBUG
+    GENERATE generate_tests(
+        @implementation,
+        @spec,
+        @language,
+        test_framework_guide(@language, @test_framework)
+    ) INTO @tests
+    LOGGING &#x27;Unit tests generated&#x27; LEVEL DEBUG
+
+    -- Step 5: Verify tests compile/parse (static check)
+    LOGGING &#x27;Verifying test syntax ...&#x27; LEVEL DEBUG
+    GENERATE verify_test_syntax(@tests, @language)
+        INTO @syntax_ok
+    LOGGING f&#x27;Syntax check result: {@syntax_ok}&#x27; LEVEL DEBUG
+
+    -- Step 6: Assemble final output
+    LOGGING &#x27;Assembling final output ...&#x27; LEVEL DEBUG
+    GENERATE assemble_output(@implementation, @tests, @language) INTO @final_output
+
+    LOGGING f&#x27;Code gen complete | language={@language} framework={@test_framework}&#x27; LEVEL INFO
+    RETURN @final_output WITH
+        status = &#x27;complete&#x27;,
+        language = @language,
+        test_framework = @test_framework
+
+EXCEPTION
+    WHEN GenerationError THEN
+        LOGGING f&#x27;GenerationError caught — returning partial result&#x27; LEVEL WARN
+        RETURN @implementation WITH status = &#x27;implementation_only&#x27;, reason = &#x27;test_generation_failed&#x27;
+END
+"><strong>Code Generator + Tests</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="101.3">101.3s</td>
+  <td class="mono" style="text-align:center" data-val="7">7</td>
+  <td class="mono" data-val="16947">10,244 / 6,703</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="97.4" data-calls="7" data-tokens="16141">
+  <td class="mono" data-val="31">31</td>
+  <td><a href="#" class="src-link" data-title="cookbook/31_sentiment_pipeline/sentiment.spl" data-src="-- Recipe Name: Sentiment Pipeline
+-- Batch sentiment over a list of inputs, aggregate trend statistics.
+-- Demonstrates iteration over a list with per-item structured output + aggregation,
+-- with deterministic tool calls for loading, splitting, stats, and extreme detection.
+--
+-- Usage (load from file):
+--   spl3 run cookbook/31_sentiment_pipeline/sentiment.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/31_sentiment_pipeline/tools.py \
+--       filename=product_reviews.txt \
+--       domain=product_reviews
+--
+-- Usage (inline pipe-delimited):
+--   spl3 run cookbook/31_sentiment_pipeline/sentiment.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/31_sentiment_pipeline/tools.py \
+--       items=&quot;Great product, love it! | Terrible experience, never again | It was okay I guess&quot; \
+--       delimiter=&quot;|&quot; \
+--       domain=product_reviews
+--
+-- Sample files in reviews/:
+--   product_reviews.txt   15 product reviews (positive, negative, mixed)
+--   support_tickets.txt   12 customer support messages
+--   social_media.txt      15 social media posts
+
+-- ── Schema (zero LLM cost — injected as grounding context) ─────────────────
+
+CREATE FUNCTION sentiment_schema()
+RETURN JSON
+AS $$
+{
+  &quot;type&quot;: &quot;array&quot;,
+  &quot;description&quot;: &quot;One entry per input item, in the same order as the input list.&quot;,
+  &quot;items&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;properties&quot;: {
+      &quot;item&quot;:       {&quot;type&quot;: &quot;string&quot;, &quot;description&quot;: &quot;The original text that was analysed&quot;},
+      &quot;label&quot;:      {&quot;type&quot;: &quot;string&quot;, &quot;enum&quot;: [&quot;positive&quot;, &quot;negative&quot;, &quot;neutral&quot;, &quot;mixed&quot;]},
+      &quot;score&quot;:      {&quot;type&quot;: &quot;number&quot;, &quot;minimum&quot;: -1, &quot;maximum&quot;: 1,
+                     &quot;description&quot;: &quot;Sentiment score: -1 most negative, +1 most positive&quot;},
+      &quot;confidence&quot;: {&quot;type&quot;: &quot;number&quot;, &quot;minimum&quot;: 0, &quot;maximum&quot;: 1,
+                     &quot;description&quot;: &quot;Model confidence in the label&quot;},
+      &quot;emotions&quot;:   {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;},
+                     &quot;description&quot;: &quot;Detected emotions e.g. joy, anger, frustration, surprise&quot;},
+      &quot;key_phrases&quot;:{&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;},
+                     &quot;description&quot;: &quot;Most sentiment-bearing phrases from the text&quot;}
+    },
+    &quot;required&quot;: [&quot;item&quot;, &quot;label&quot;, &quot;score&quot;, &quot;confidence&quot;]
+  }
+}
+$$;
+
+-- ── Main workflow ───────────────────────────────────────────────────────────
+
+WORKFLOW sentiment_pipeline
+    INPUT:  @filename  TEXT DEFAULT &#x27;&#x27;,
+            @items     TEXT DEFAULT &#x27;&#x27;,
+            @delimiter TEXT DEFAULT &#x27;\n&#x27;,
+            @domain    TEXT DEFAULT &#x27;general&#x27;
+    OUTPUT: @report TEXT
+DO
+    LOGGING f&#x27;Sentiment pipeline | domain={@domain} filename={@filename}&#x27; LEVEL INFO
+
+    -- Step 1: Load items from file if filename provided (deterministic — no LLM)
+    CALL load_items(@filename) INTO @file_content
+
+    -- Step 2: Split into a clean JSON array (deterministic — no LLM)
+    CALL split_items(@file_content, @items, @delimiter) INTO @item_list
+    LOGGING f&#x27;Items loaded and split | list={@item_list}&#x27; LEVEL DEBUG
+
+    -- Step 3: Batch sentiment — one structured result per item (LLM)
+    LOGGING &#x27;Running batch sentiment ...&#x27; LEVEL INFO
+    GENERATE batch_sentiment(@item_list, sentiment_schema(), @domain) 
+        INTO @sentiment_results
+
+    -- Step 4: Compute aggregate statistics (deterministic — no LLM)
+    CALL compute_stats(@sentiment_results) INTO @stats_json
+    LOGGING f&#x27;Stats computed: {@stats_json}&#x27; LEVEL DEBUG
+
+    -- Step 5: Identify extreme and notable items (deterministic — no LLM)
+    CALL find_extremes(@sentiment_results) INTO @extremes
+
+    -- Step 6: Generate trend narrative from stats and extremes (LLM)
+    GENERATE summarize_sentiment_trends(
+        @stats_json,
+        @extremes,
+        @domain
+    ) INTO @trend_summary
+    LOGGING &#x27;Trend narrative ready&#x27; LEVEL DEBUG
+
+    -- Step 7: Assemble the full report (LLM)
+    GENERATE assemble_sentiment_report(
+        @sentiment_results,
+        @stats_json,
+        @trend_summary,
+        @extremes,
+        @domain
+    ) INTO @report
+
+    LOGGING f&#x27;Sentiment report complete | domain={@domain}&#x27; LEVEL INFO
+    RETURN @report WITH status = &#x27;complete&#x27;, domain = @domain
+
+EXCEPTION
+    WHEN ContextLengthExceeded THEN
+        -- Too many items — skip per-item detail, return stats + trend only
+        CALL compute_stats(@sentiment_results) INTO @stats_json
+        CALL find_extremes(@sentiment_results) INTO @extremes
+        GENERATE summarize_sentiment_trends(@stats_json, @extremes, @domain) INTO @trend_summary
+        SET @report = @trend_summary
+        RETURN @report WITH status = &#x27;stats_only&#x27;, reason = &#x27;context_length_exceeded&#x27;
+END
+"><strong>Sentiment Pipeline</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="97.4">97.4s</td>
+  <td class="mono" style="text-align:center" data-val="7">7</td>
+  <td class="mono" data-val="16141">9,676 / 6,465</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="130.2" data-calls="10" data-tokens="27442">
+  <td class="mono" data-val="32">32</td>
+  <td><a href="#" class="src-link" data-title="cookbook/32_socratic_tutor/socratic_tutor.spl" data-src="-- Recipe Name: Socratic Tutor
+-- Ask guiding questions rather than giving answers directly.
+-- Demonstrates persona-constrained generation + iterative dialogue simulation,
+-- with deterministic tools for topic loading, level guidance, and dialogue formatting.
+--
+-- Usage (topic from catalog):
+--   spl3 run cookbook/32_socratic_tutor/socratic_tutor.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/32_socratic_tutor/tools.py \
+--       topic_id=sky_blue subject=science student_level=&quot;middle school&quot;
+--
+--   spl3 run cookbook/32_socratic_tutor/socratic_tutor.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/32_socratic_tutor/tools.py \
+--       topic_id=sqrt2_irrational subject=math student_level=undergraduate
+--
+--   spl3 run cookbook/32_socratic_tutor/socratic_tutor.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/32_socratic_tutor/tools.py \
+--       topic_id=recursion subject=programming student_level=&quot;high school&quot;
+--
+-- Usage (freeform topic, no catalog):
+--   spl3 run cookbook/32_socratic_tutor/socratic_tutor.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/32_socratic_tutor/tools.py \
+--       topic=&quot;Why is the speed of light constant?&quot; student_level=undergraduate
+--
+-- List available topics:
+--   spl3 run ... topic_id=list subject=science    (or math, programming)
+
+-- ── Socratic persona (zero LLM cost — injected as system context) ───────────
+
+CREATE FUNCTION socratic_persona(student_level TEXT DEFAULT &#x27;high school&#x27;)
+RETURN TEXT
+AS $$
+You are a Socratic tutor. Your role is to guide the student to discover answers themselves.
+
+Core rules — NEVER break these:
+1. Ask exactly ONE clear question at a time. Never give two questions in one turn.
+2. Never state facts or give direct answers. All knowledge must come from the student.
+3. Build on what the student just said — start from their words, not a script.
+4. If a student is stuck, give a hint as another question: &quot;What if you considered...?&quot;
+5. Celebrate partial insights: &quot;Good instinct! Now what does that suggest about...?&quot;
+6. Never say &quot;The answer is...&quot;, &quot;You should know that...&quot;, or &quot;Actually, it&#x27;s...&quot;.
+
+Student level: {student_level}
+Adjust vocabulary, abstraction level, and question complexity accordingly.
+$$;
+
+-- ── Main workflow ───────────────────────────────────────────────────────────
+
+WORKFLOW socratic_tutor
+    INPUT:  @topic         TEXT DEFAULT &#x27;&#x27;,
+            @topic_id      TEXT DEFAULT &#x27;&#x27;,
+            @subject       TEXT DEFAULT &#x27;&#x27;,
+            @student_level TEXT DEFAULT &#x27;high school&#x27;,
+            @max_questions INT  DEFAULT 5
+    OUTPUT: @dialogue TEXT
+DO
+    LOGGING f&#x27;Socratic tutor | level={@student_level} topic={@topic} topic_id={@topic_id}&#x27; LEVEL INFO
+
+    -- Step 1: Load structured topic context from catalog (deterministic — no LLM)
+    CALL load_topic(@topic_id, @subject) INTO @topic_context
+
+    -- Step 2: Get level-appropriate vocabulary and scaffolding guidance (deterministic — no LLM)
+    CALL get_level_guidance(@student_level) INTO @level_guide
+    LOGGING &#x27;Topic and level guidance loaded&#x27; LEVEL DEBUG
+
+    -- Step 3: Opening Socratic question — grounded by topic context and level guide (LLM)
+    GENERATE opening_question(
+        @topic,
+        @topic_context,
+        socratic_persona(@student_level),
+        @level_guide
+    ) INTO @question_1
+
+    -- Step 4: Simulate a typical student response at the given level (LLM)
+    GENERATE simulate_student_response(
+        @question_1,
+        @topic,
+        @topic_context,
+        @student_level
+    ) INTO @student_1
+
+    -- Step 5: Follow-up question that builds on the student&#x27;s actual response (LLM)
+    GENERATE followup_question(
+        @question_1,
+        @student_1,
+        @topic,
+        @topic_context,
+        socratic_persona(@student_level)
+    ) INTO @question_2
+
+    -- Step 6: Student works further toward understanding (LLM)
+    GENERATE simulate_student_response(
+        @question_2,
+        @topic,
+        @topic_context,
+        @student_level
+    ) INTO @student_2
+
+    -- Step 7: Assess whether understanding is emerging (LLM — returns 0-10 score)
+    GENERATE assess_understanding(
+        @student_1,
+        @student_2,
+        @topic,
+        @topic_context
+    ) INTO @understanding_score
+    LOGGING f&#x27;Understanding score: {@understanding_score}&#x27; LEVEL INFO
+
+    -- Step 8: Adapt the third question based on understanding score
+    EVALUATE @understanding_score
+        WHEN &gt; 7 THEN
+            -- Student is getting it — consolidation question to cement understanding
+            GENERATE consolidation_question(
+                @topic,
+                @topic_context,
+                @student_2,
+                socratic_persona(@student_level)
+            ) INTO @question_3
+        ELSE
+            -- Student needs more scaffolding — hint question to unblock
+            GENERATE hint_question(
+                @question_2,
+                @topic,
+                @topic_context,
+                socratic_persona(@student_level),
+                @level_guide
+            ) INTO @question_3
+    END
+
+    -- Step 9: Final student response to the third question (LLM)
+    GENERATE simulate_student_response(
+        @question_3,
+        @topic,
+        @topic_context,
+        @student_level
+    ) INTO @student_3
+
+    -- Step 10: Format the complete dialogue (deterministic — no LLM)
+    CALL compile_dialogue(
+        @question_1, @student_1,
+        @question_2, @student_2,
+        @question_3, @student_3,
+        @topic,
+        @understanding_score
+    ) INTO @dialogue
+
+    LOGGING f&#x27;Dialogue compiled | understanding_score={@understanding_score}&#x27; LEVEL INFO
+    RETURN @dialogue WITH status = &#x27;complete&#x27;, understanding_score = @understanding_score
+END
+"><strong>Socratic Tutor</strong></a></td>
+  <td class="cat" data-val="multi-agent">multi-agent</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="130.2">130.2s</td>
+  <td class="mono" style="text-align:center" data-val="10">10</td>
+  <td class="mono" data-val="27442">19,102 / 8,340</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="185.8" data-calls="15" data-tokens="39871">
+  <td class="mono" data-val="33">33</td>
+  <td><a href="#" class="src-link" data-title="cookbook/33_interview_sim/interview_sim.spl" data-src="-- Recipe Name: Interview Simulator
+-- Two-persona structured Q&amp;A with evaluation.
+-- Interviewer persona asks questions, candidate persona answers, evaluator scores.
+-- Uses deterministic tools for role/candidate loading, question extraction,
+-- score aggregation, and transcript formatting.
+--
+-- Usage (from catalog):
+--   spl3 run cookbook/33_interview_sim/interview_sim.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/33_interview_sim/tools.py \
+--       role_key=senior_swe focus=system_design candidate_id=alice_senior_swe difficulty=hard
+--
+--   spl3 run cookbook/33_interview_sim/interview_sim.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/33_interview_sim/tools.py \
+--       role_key=data_scientist focus=statistics candidate_id=carol_data_scientist
+--
+--   spl3 run cookbook/33_interview_sim/interview_sim.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/33_interview_sim/tools.py \
+--       role_key=devops_engineer focus=kubernetes candidate_id=dave_devops difficulty=hard
+--
+-- Usage (freeform, no catalog):
+--   spl3 run cookbook/33_interview_sim/interview_sim.spl \
+--       --adapter ollama --model gemma3 \
+--       --tools cookbook/33_interview_sim/tools.py \
+--       role=&quot;ML Engineer&quot; focus=&quot;deep learning&quot; difficulty=medium experience=&quot;3 years&quot;
+--
+-- Discover what is available:
+--   spl3 run ... role_key=list     (lists all roles)
+--   spl3 run ... candidate_id=list (lists all candidates)
+
+-- ── Persona functions (zero LLM cost — injected as system context) ──────────
+
+CREATE FUNCTION interviewer_persona(role TEXT, focus TEXT, difficulty TEXT DEFAULT &#x27;medium&#x27;)
+RETURN TEXT
+AS $$
+You are an experienced technical interviewer at a top tech company.
+Role being interviewed for: {role}
+Focus area for this session: {focus}
+Difficulty level: {difficulty}
+
+Rules:
+- Ask targeted, probing questions. Follow up on shallow or vague answers.
+- Be professional and neutral — neither warm nor hostile.
+- Ask exactly one question at a time.
+- Do not reveal what a good answer looks like before hearing the response.
+- If the answer by candidate is incomplete, push deeper with a follow-up.
+$$;
+
+CREATE FUNCTION candidate_persona(role TEXT, experience TEXT DEFAULT &#x27;5 years&#x27;)
+RETURN TEXT
+AS $$
+You are a job candidate interviewing for: {role}
+You have {experience} of relevant experience.
+
+Rules:
+- Answer honestly based on the candidate profile you have been given.
+- Think out loud and be specific — reference real or plausible past experiences.
+- Show genuine strengths confidently. Show gaps honestly without guessing wildly.
+- If unsure, say so and explain your reasoning process rather than bluffing.
+$$;
+
+CREATE FUNCTION evaluation_rubric()
+RETURN TEXT
+AS $$
+Evaluate the candidate answer on four dimensions (each 0-10):
+1. accuracy     — Is the answer technically correct and free of errors?
+2. depth        — Does the candidate go beyond the surface level?
+3. communication — Is the answer clear, structured, and easy to follow?
+4. experience   — Does the candidate reference concrete real-world scenarios?
+
+Also derive: total = accuracy + depth + communication + experience  (max 40)
+
+Return valid JSON only — no prose outside the JSON:
+{&quot;accuracy&quot;: N, &quot;depth&quot;: N, &quot;communication&quot;: N, &quot;experience&quot;: N, &quot;total&quot;: N, &quot;feedback&quot;: &quot;one concise sentence&quot;}
+$$;
+
+-- ── Main workflow ───────────────────────────────────────────────────────────
+
+WORKFLOW interview_sim
+    INPUT:  @role_key      TEXT DEFAULT &#x27;&#x27;,
+            @candidate_id  TEXT DEFAULT &#x27;&#x27;,
+            @role          TEXT DEFAULT &#x27;&#x27;,
+            @focus         TEXT DEFAULT &#x27;&#x27;,
+            @difficulty    TEXT DEFAULT &#x27;medium&#x27;,
+            @num_questions INT  DEFAULT 3,
+            @experience    TEXT DEFAULT &#x27;5 years&#x27;
+    OUTPUT: @evaluation_report TEXT
+DO
+    LOGGING f&#x27;Interview sim | role={@role} focus={@focus} difficulty={@difficulty}&#x27; LEVEL INFO
+
+    -- Step 1: Load role and focus area context (deterministic — no LLM)
+    CALL load_role(@role_key, @focus) INTO @role_context
+
+    -- Step 2: Load candidate profile (deterministic — no LLM)
+    CALL load_candidate(@candidate_id) INTO @candidate_profile
+    LOGGING f&#x27;Role and candidate loaded | candidate_id={@candidate_id}&#x27; LEVEL DEBUG
+
+    -- Step 3: Generate the full question set upfront (LLM, grounded by role context)
+    GENERATE generate_question_set(
+        @role,
+        @role_context,
+        @focus,
+        @difficulty,
+        @num_questions,
+        interviewer_persona(@role, @focus, @difficulty)
+    ) INTO @questions_json
+
+    -- Step 4: Extract individual questions (deterministic — replaces GENERATE ask_question)
+    CALL extract_question(@questions_json, &#x27;1&#x27;) INTO @q1
+    CALL extract_question(@questions_json, &#x27;2&#x27;) INTO @q2
+    CALL extract_question(@questions_json, &#x27;3&#x27;) INTO @q3
+
+    -- Step 5: Candidate answers each question (LLM, grounded by candidate profile)
+    GENERATE answer_question(
+        @q1, @role, @role_context, @candidate_profile,
+        candidate_persona(@role, @experience)
+    ) INTO @a1
+
+    GENERATE answer_question(
+        @q2, @role, @role_context, @candidate_profile,
+        candidate_persona(@role, @experience)
+    ) INTO @a2
+
+    GENERATE answer_question(
+        @q3, @role, @role_context, @candidate_profile,
+        candidate_persona(@role, @experience)
+    ) INTO @a3
+
+    -- Step 6: Score each answer against the rubric (LLM)
+    LOGGING &#x27;Scoring answers ...&#x27; LEVEL DEBUG
+    GENERATE score_answer(@q1, @a1, @role_context, evaluation_rubric()) INTO @score1
+    GENERATE score_answer(@q2, @a2, @role_context, evaluation_rubric()) INTO @score2
+    GENERATE score_answer(@q3, @a3, @role_context, evaluation_rubric()) INTO @score3
+
+    -- Step 7: Aggregate scores across all questions (deterministic — no LLM)
+    CALL aggregate_scores(@score1, @score2, @score3) INTO @agg_scores
+    LOGGING f&#x27;Aggregate scores: {@agg_scores}&#x27; LEVEL INFO
+
+    -- Step 8: Compile the interview transcript (deterministic — no LLM)
+    CALL compile_transcript(
+        @q1, @a1, @score1,
+        @q2, @a2, @score2,
+        @q3, @a3, @score3,
+        @role, @focus
+    ) INTO @transcript
+
+    -- Step 9: Write the overall evaluation narrative (LLM, receives deterministic agg_scores)
+    GENERATE overall_evaluation(
+        @transcript,
+        @agg_scores,
+        @role,
+        @focus,
+        @candidate_profile
+    ) INTO @evaluation_report
+
+    LOGGING f&#x27;Evaluation complete | role={@role} focus={@focus}&#x27; LEVEL INFO
+    RETURN @evaluation_report WITH
+        status     = &#x27;complete&#x27;,
+        role       = @role,
+        focus      = @focus,
+        difficulty = @difficulty
+
+EXCEPTION
+    WHEN GenerationError THEN
+        RETURN @transcript WITH status = &#x27;partial&#x27;, reason = &#x27;evaluation_failed&#x27;
+END
+"><strong>Interview Simulator</strong></a></td>
+  <td class="cat" data-val="multi-agent">multi-agent</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="185.8">185.8s</td>
+  <td class="mono" style="text-align:center" data-val="15">15</td>
+  <td class="mono" data-val="39871">27,975 / 11,896</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="9.7" data-calls="5" data-tokens="2096">
+  <td class="mono" data-val="34">34</td>
+  <td><a href="#" class="src-link" data-title="cookbook/34_progressive_summary/progressive_summary.spl" data-src="-- Recipe Name: Progressive Summarizer
+-- Layered summary: sentence → paragraph → page.
+-- Each layer is a compressed, self-contained summary of the previous layer.
+--
+-- Usage:
+--   spl3 run cookbook/34_progressive_summary/progressive_summary.spl --adapter ollama --model gemma3 \
+--       text=&quot;$(cat long_article.txt)&quot;
+--
+--   spl3 run cookbook/34_progressive_summary/progressive_summary.spl --adapter ollama \
+--       text=&quot;$(cat research_paper.txt)&quot; audience=&quot;executive&quot; layers=3
+
+CREATE FUNCTION summary_constraints(layer TEXT)
+RETURN TEXT
+AS $$
+SELECT CASE layer
+  WHEN &#x27;sentence&#x27;  THEN &#x27;One sentence only. Maximum 25 words. Capture the single most important idea.&#x27;
+  WHEN &#x27;paragraph&#x27; THEN &#x27;3-5 sentences. Cover main points and key supporting evidence. No examples or details.&#x27;
+  WHEN &#x27;page&#x27;      THEN &#x27;2-3 paragraphs. Include context, main argument, evidence, and implications.&#x27;
+  ELSE                   &#x27;Comprehensive summary with all major points, key evidence, and conclusions.&#x27;
+END
+$$;
+
+WORKFLOW progressive_summarizer
+    INPUT:
+        @text TEXT,
+        @audience TEXT DEFAULT &#x27;general&#x27;,
+        @layers INT DEFAULT 3
+    OUTPUT: @summary_package TEXT
+DO
+    LOGGING f&#x27;Progressive summary | audience={@audience} layers={@layers}&#x27; LEVEL INFO
+
+    -- Layer 1: One-sentence summary
+    GENERATE summarize(
+        @text,
+        summary_constraints(&#x27;sentence&#x27;),
+        @audience
+    ) INTO @sentence_summary
+    LOGGING f&#x27;Layer 1 done | sentence summary ready&#x27; LEVEL DEBUG
+
+    -- Layer 2: Paragraph summary (built on layer 1 for coherence)
+    GENERATE expand_summary(
+        @text,
+        @sentence_summary,
+        summary_constraints(&#x27;paragraph&#x27;),
+        @audience
+    ) INTO @paragraph_summary
+    LOGGING f&#x27;Layer 2 done | paragraph summary ready&#x27; LEVEL DEBUG
+
+    -- Layer 3: Page-length summary (built on layer 2)
+    EVALUATE @layers
+        WHEN &gt;= 3 THEN
+            GENERATE expand_summary(
+                @text,
+                @paragraph_summary,
+                summary_constraints(&#x27;page&#x27;),
+                @audience
+            ) INTO @page_summary
+            LOGGING &#x27;Layer 3 done | page summary ready&#x27; LEVEL DEBUG
+        ELSE
+            @page_summary := &#x27;&#x27;
+    END
+
+    -- Quality check: does each layer faithfully represent the original?
+    GENERATE verify_summary_fidelity(@text, @sentence_summary, @paragraph_summary) 
+        INTO @fidelity_score
+    LOGGING f&#x27;Fidelity score: {@fidelity_score}&#x27; LEVEL INFO
+
+    -- Assemble all layers into a structured output
+    GENERATE assemble_summary_package(
+        @sentence_summary,
+        @paragraph_summary,
+        @page_summary,
+        @fidelity_score,
+        @audience
+    ) INTO @summary_package
+
+    RETURN @summary_package WITH
+        status = &#x27;complete&#x27;,
+        layers_generated = @layers,
+        audience = @audience,
+        fidelity = @fidelity_score
+
+EXCEPTION
+    WHEN ContextLengthExceeded THEN
+        -- Text too long — chunk first then summarize each chunk
+        GENERATE chunk_and_summarize(@text, summary_constraints(&#x27;paragraph&#x27;)) 
+            INTO @paragraph_summary
+        GENERATE summarize(@paragraph_summary, summary_constraints(&#x27;sentence&#x27;), @audience) 
+            INTO @sentence_summary
+        GENERATE assemble_summary_package(@sentence_summary, @paragraph_summary, &#x27;&#x27;, &#x27;n/a&#x27;, @audience) 
+            INTO @summary_package
+        RETURN @summary_package WITH status = &#x27;complete_chunked&#x27;
+END
+"><strong>Progressive Summarizer</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="9.7">9.7s</td>
+  <td class="mono" style="text-align:center" data-val="5">5</td>
+  <td class="mono" data-val="2096">1,520 / 576</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="64.7" data-calls="5" data-tokens="10600">
+  <td class="mono" data-val="35">35</td>
+  <td><a href="#" class="src-link" data-title="cookbook/35_hypothesis_tester/hypothesis.spl" data-src="-- Recipe Name: Hypothesis Tester
+-- Generate hypothesis → design test → evaluate evidence → conclude.
+-- Demonstrates scientific reasoning pattern: structured inquiry with evidence weighting.
+--
+-- Usage:
+--   spl3 run cookbook/35_hypothesis_tester/hypothesis.spl --adapter ollama --model gemma3 \
+--       observation=&quot;Remote teams show lower productivity in the first month after joining&quot;
+--
+--   spl3 run cookbook/35_hypothesis_tester/hypothesis.spl --adapter ollama \
+--       observation=&quot;Users who receive onboarding emails churn 30% less&quot; \
+--       domain=&quot;product&quot; confidence_threshold=0.75
+
+CREATE FUNCTION hypothesis_framework()
+RETURN TEXT
+AS $$
+Scientific hypothesis format:
+- Null hypothesis (H0): The effect does not exist / is due to chance
+- Alternative hypothesis (H1): The proposed causal or correlational claim
+- Key variables: independent, dependent, confounding
+- Testability: How would we falsify H0?
+$$;
+
+CREATE FUNCTION evidence_schema()
+RETURN JSON
+AS $$
+{
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;supports_h1&quot;:   {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+    &quot;supports_h0&quot;:   {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+    &quot;inconclusive&quot;:  {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+    &quot;confidence&quot;:    {&quot;type&quot;: &quot;number&quot;, &quot;minimum&quot;: 0, &quot;maximum&quot;: 1},
+    &quot;verdict&quot;:       {&quot;type&quot;: &quot;string&quot;, &quot;enum&quot;: [&quot;reject_h0&quot;, &quot;fail_to_reject_h0&quot;, &quot;inconclusive&quot;]},
+    &quot;caveats&quot;:       {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}}
+  },
+  &quot;required&quot;: [&quot;confidence&quot;, &quot;verdict&quot;]
+}
+$$;
+
+WORKFLOW hypothesis_tester
+    INPUT:
+        @observation          TEXT,
+        @domain               TEXT  DEFAULT &#x27;general&#x27;,
+        @confidence_threshold FLOAT DEFAULT 0.7
+    OUTPUT: @conclusion TEXT
+DO
+    LOGGING f&#x27;Hypothesis tester | domain={@domain} threshold={@confidence_threshold}&#x27; LEVEL INFO
+
+    -- Step 1: Formulate hypotheses
+    GENERATE formulate_hypotheses(
+        @observation,
+        @domain,
+        hypothesis_framework()
+    ) INTO @hypotheses
+    LOGGING &#x27;Hypotheses formulated&#x27; LEVEL DEBUG
+
+    -- Step 2: Design a test plan
+    GENERATE design_test(
+        @hypotheses,
+        @domain
+    ) INTO @test_plan
+    LOGGING &#x27;Test plan designed&#x27; LEVEL DEBUG
+
+    -- Step 3: Gather and evaluate available evidence
+    GENERATE evaluate_evidence(
+        @observation,
+        @hypotheses,
+        @test_plan,
+        evidence_schema()
+    ) INTO @evidence_json
+    LOGGING &#x27;Evidence evaluated&#x27; LEVEL DEBUG
+
+    -- Step 4: Extract confidence score
+    GENERATE extract_confidence(@evidence_json) INTO @confidence
+    LOGGING f&#x27;Confidence score: {@confidence} | threshold={@confidence_threshold}&#x27; LEVEL INFO
+
+    -- Step 5: Draw conclusion based on evidence strength
+    EVALUATE @confidence
+        WHEN &gt;= @confidence_threshold THEN
+            GENERATE write_conclusion(
+                @hypotheses, @evidence_json, @test_plan, &#x27;confident&#x27;
+            ) INTO @conclusion
+            RETURN @conclusion WITH
+                status = &#x27;concluded&#x27;,
+                verdict = &#x27;h1_supported&#x27;,
+                confidence = @confidence
+        WHEN &gt;= 0.4 THEN
+            GENERATE write_conclusion(
+                @hypotheses, @evidence_json, @test_plan, &#x27;uncertain&#x27;
+            ) INTO @conclusion
+            RETURN @conclusion WITH
+                status = &#x27;inconclusive&#x27;,
+                verdict = &#x27;needs_more_data&#x27;,
+                confidence = @confidence
+        ELSE
+            GENERATE write_conclusion(
+                @hypotheses, @evidence_json, @test_plan, &#x27;refuted&#x27;
+            ) INTO @conclusion
+            RETURN @conclusion WITH
+                status = &#x27;concluded&#x27;,
+                verdict = &#x27;h0_not_rejected&#x27;,
+                confidence = @confidence
+    END
+
+EXCEPTION
+    WHEN GenerationError THEN
+        RETURN @hypotheses WITH 
+            status = &#x27;hypotheses_only&#x27;, 
+            reason = &#x27;evidence_evaluation_failed&#x27;
+END
+"><strong>Hypothesis Tester</strong></a></td>
+  <td class="cat" data-val="reasoning">reasoning</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="64.7">64.7s</td>
+  <td class="mono" style="text-align:center" data-val="5">5</td>
+  <td class="mono" data-val="10600">6,301 / 4,299</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.3" data-calls="6" data-tokens="5929">
+  <td class="mono" data-val="45">45</td>
+  <td><a href="#" class="src-link" data-title="cookbook/45_vision_to_action/vision_to_action.spl" data-src="-- Recipe 45: Vision to Action
+-- Demonstrates handling image metadata or OCR text as INPUT to drive a decision tree.
+-- An LLM classifies the described scene; deterministic EVALUATE branches to the
+-- appropriate action with no further LLM cost.
+--
+-- Note: uses TEXT as a stand-in for the IMAGE type coming in SPL v3.0.
+--
+-- Usage:
+--   spl3 run cookbook/45_vision_to_action/vision_to_action.spl \
+--       --adapter ollama \
+--       image_description=&quot;Image shows a package being delivered to the front door.&quot;
+
+CREATE FUNCTION classify(image_description TEXT)
+RETURN TEXT
+AS $$
+You are a security analyst reviewing surveillance footage.
+Classify the activity described below into exactly one of: DELIVERY, INTRUSION, or IGNORE.
+
+Definitions:
+- DELIVERY: a known courier or person leaving an item at the door
+- INTRUSION: unauthorized entry or suspicious loitering near entry points
+- IGNORE: routine activity (walking past, cars, wildlife, etc.)
+
+Reply with only the classification word — nothing else.
+
+Image description: {image_description}
+$$;
+
+WORKFLOW vision_to_action
+    INPUT: @image_description TEXT DEFAULT &#x27;Image shows a package being delivered to the front door.&#x27;
+    OUTPUT: @action_taken TEXT
+DO
+    LOGGING f&#x27;Analyzing image: {@image_description}&#x27; LEVEL INFO
+
+    -- Step 1: Classify image content (LLM — one call, bounded output)
+    GENERATE classify(@image_description) INTO @scene_label
+    LOGGING f&#x27;Classification: {@scene_label}&#x27; LEVEL DEBUG
+
+    -- Step 2: Decision tree (deterministic — no LLM cost)
+    -- Use contains() because LLM may add whitespace or punctuation
+    EVALUATE @scene_label
+        WHEN contains(&#x27;INTRUSION&#x27;) THEN
+            LOGGING &#x27;Intrusion detected — sounding alarm and alerting authorities&#x27; LEVEL WARN
+            @action_taken := &#x27;SOUND_ALARM_CALL_POLICE&#x27;
+        WHEN contains(&#x27;DELIVERY&#x27;) THEN
+            LOGGING &#x27;Delivery detected — notifying homeowner&#x27; LEVEL INFO
+            @action_taken := &#x27;NOTIFY_HOMEOWNER_DELIVERY&#x27;
+        ELSE
+            LOGGING &#x27;Routine activity — no action required&#x27; LEVEL DEBUG
+            @action_taken := &#x27;IGNORE&#x27;
+    END
+
+    RETURN f&#x27;Action taken: {@action_taken}&#x27; WITH
+        status  = &#x27;complete&#x27;,
+        label   = @scene_label,
+        action  = @action_taken
+
+EXCEPTION
+    WHEN GenerationError THEN
+        LOGGING &#x27;Classification failed — defaulting to IGNORE for safety&#x27; LEVEL WARN
+        RETURN &#x27;Action taken: IGNORE&#x27; WITH status = &#x27;error&#x27;, reason = &#x27;classification_failed&#x27;
+END
+"><strong>Vision to Action</strong></a></td>
+  <td class="cat" data-val="application">application</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.3">0.3s</td>
+  <td class="mono" style="text-align:center" data-val="6">6</td>
+  <td class="mono" data-val="5929">3,620 / 2,309</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="0.0" data-calls="0" data-tokens="0">
+  <td class="mono" data-val="50">50</td>
+  <td><a href="#" class="src-link" data-title="cookbook/50_code_pipeline/code_pipeline.spl" data-src="-- code_pipeline.spl
+-- Orchestrator: full code generation lifecycle with test-gated iteration
+-- and optional closure check (spec → code → spec&#x27; → judge(spec, spec&#x27;)).
+--
+-- Lifecycle:
+--
+--   Step 0 (00_analyze_spec)
+--     [READY] → Step 1          writes: spec/input.md, spec/analysis.md
+--     [VAGUE] → abort ✗
+--
+--   Step 1 (generate → review → improve)  ←─────────────────────────────┐
+--     01_generate_code   writes: target/{lang}/code.{ext}               │
+--     02_review_code     writes: target/{lang}/review.md                 │
+--     03_improve_code    writes: target/{lang}/code.{ext}  (updated)     │
+--   Step 2 (04_test_code)                                                 │
+--     writes: tests/{lang}/result.md                                     │
+--     [PASSED] → Step 3                                                   │
+--     [FAILED]  → back to Step 1 (up to @max_cycles) ────────────────────┘
+--
+--   Step 3 (document + closure)
+--     05_document_code   writes: target/{lang}/docs.md
+--     06_extract_spec    writes: spec/extracted.md
+--     07_spec_judge      (if @check_closure = TRUE)
+--        [CLOSED]   → implementation matches original intent  ✓
+--        [DIVERGED] → semantic drift detected                 ⚠
+--
+-- Log layout under @log_dir:
+--   spec/
+--     input.md        ← original user spec
+--     analysis.md     ← step 0 verdict + structured restatement
+--     extracted.md    ← step 3b reverse-engineered spec
+--   target/{lang}/
+--     code.{ext}      ← final generated + improved source (ext = py, go, ts, js, …)
+--     review.md       ← last review feedback
+--     docs.md         ← generated documentation
+--   tests/{lang}/
+--     result.md       ← last test verdict
+--
+-- The closure check enforces a fixed-point condition on autonomous vibe coding:
+-- the system is self-consistent when extract_spec(code) ≈ original spec.
+--
+-- Demonstrates SPL 3.0 workflow composition:
+--   CALL sub-workflow dispatch via Hub registry
+--   WHILE + EVALUATE for test-gated retry
+--   EVALUATE for optional closure branching
+--   EXCEPTION WHEN for declarative error handling
+--   IMPORT without .spl extension (extension is optional as of SPL 3.1)
+--
+-- Supported target languages (@lang): python (default), go, ts, js
+--
+-- Per-task model configuration (@task_models MAP):
+--   Keys: analyze | generate | review | improve | test | document | extract | judge
+--   Any absent key falls back to @pipeline_model (the global default).
+--   Example: {&quot;judge&quot;:&quot;gemma3&quot;,&quot;analyze&quot;:&quot;gemma3&quot;} routes fast tasks to a lighter model.
+--
+-- Run locally:
+--   spl3 run code_pipeline.spl --param spec=&quot;Write a binary search function&quot;
+--   spl3 run code_pipeline.spl --param spec=&quot;Write a binary search function&quot; --param lang=go
+--   spl3 run code_pipeline.spl --param pipeline_model=&quot;gemma4:e4b&quot; \
+--       --param task_models=&#x27;{&quot;judge&quot;:&quot;gemma3&quot;,&quot;analyze&quot;:&quot;gemma3&quot;}&#x27; \
+--       --param spec=&quot;Write a binary search function&quot;
+--
+-- Run on Momagrid:
+--   spl3 run code_pipeline.spl --adapter momagrid --hub http://localhost:8080 \
+--       --param spec=&quot;Write a binary search function&quot; --param lang=ts
+
+IMPORT &#x27;00_analyze_spec&#x27;
+IMPORT &#x27;01_generate_code&#x27;
+IMPORT &#x27;02_review_code&#x27;
+IMPORT &#x27;03_improve_code&#x27;
+IMPORT &#x27;04_test_code&#x27;
+IMPORT &#x27;05_document_code&#x27;
+IMPORT &#x27;06_extract_spec&#x27;
+IMPORT &#x27;07_spec_judge&#x27;
+
+WORKFLOW code_pipeline
+    INPUT:
+        @spec          TEXT,
+        @lang          TEXT    DEFAULT &#x27;python&#x27;,
+        @pipeline_model         TEXT    DEFAULT &#x27;gemma4&#x27;,
+        @task_models   MAP     DEFAULT {},
+        @max_cycles    INTEGER DEFAULT 3,
+        @check_closure BOOL    DEFAULT TRUE,
+        @log_dir       TEXT    DEFAULT &#x27;cookbook/50_code_pipeline/logs-spl&#x27;
+    OUTPUT: @docs TEXT
+DO
+    -- ── Resolve per-task models (task_models overrides @pipeline_model per step) ──
+    -- Keys: analyze | generate | review | improve | test | document | extract | judge
+    -- Any key absent or empty falls back to @pipeline_model.
+    @m_analyze  := @task_models[&#x27;analyze&#x27;]
+    EVALUATE @m_analyze  WHEN = &#x27;&#x27; THEN @m_analyze  := @pipeline_model END
+    @m_generate := @task_models[&#x27;generate&#x27;]
+    EVALUATE @m_generate WHEN = &#x27;&#x27; THEN @m_generate := @pipeline_model END
+    @m_review   := @task_models[&#x27;review&#x27;]
+    EVALUATE @m_review   WHEN = &#x27;&#x27; THEN @m_review   := @pipeline_model END
+    @m_improve  := @task_models[&#x27;improve&#x27;]
+    EVALUATE @m_improve  WHEN = &#x27;&#x27; THEN @m_improve  := @pipeline_model END
+    @m_test     := @task_models[&#x27;test&#x27;]
+    EVALUATE @m_test     WHEN = &#x27;&#x27; THEN @m_test     := @pipeline_model END
+    @m_document := @task_models[&#x27;document&#x27;]
+    EVALUATE @m_document WHEN = &#x27;&#x27; THEN @m_document := @pipeline_model END
+    @m_extract  := @task_models[&#x27;extract&#x27;]
+    EVALUATE @m_extract  WHEN = &#x27;&#x27; THEN @m_extract  := @pipeline_model END
+    @m_judge    := @task_models[&#x27;judge&#x27;]
+    EVALUATE @m_judge    WHEN = &#x27;&#x27; THEN @m_judge    := @pipeline_model END
+
+    LOGGING f&#x27;[code_pipeline] started | lang={@lang} max_cycles={@max_cycles} check_closure={@check_closure}&#x27; LEVEL INFO
+    LOGGING f&#x27;[code_pipeline] spec=&quot;{@spec}&quot;&#x27; LEVEL INFO
+    LOGGING f&#x27;[code_pipeline] models | analyze={@m_analyze} generate={@m_generate} review={@m_review} improve={@m_improve} test={@m_test} document={@m_document} extract={@m_extract} judge={@m_judge}&#x27; LEVEL DEBUG
+
+    -- ── Step 0: Spec analysis — abort early if spec is too vague ─────────
+    LOGGING &#x27;[code_pipeline] step 0: analyze spec&#x27; LEVEL INFO
+    CALL analyze_spec(@spec, @m_analyze, @log_dir) INTO @analysis
+    EVALUATE @analysis
+        WHEN contains(&#x27;[READY]&#x27;) THEN
+            LOGGING &#x27;[code_pipeline] spec gate: READY — proceeding&#x27; LEVEL INFO
+        ELSE
+            LOGGING &#x27;[code_pipeline] spec gate: no [READY] token — aborting pipeline&#x27; LEVEL WARN
+            RETURN @analysis WITH status = &#x27;vague_spec&#x27;
+    END
+
+    -- Persist the original spec now that it has passed the gate
+    CALL write_file(f&#x27;{@log_dir}/spec/input.md&#x27;, @spec) INTO NONE
+
+    @cycle       := 0
+    @test_passed := FALSE
+
+    -- ── Steps 1 + 2: Generate → Review → Improve → Test (with retry) ────
+    WHILE NOT @test_passed AND @cycle &lt; @max_cycles DO
+
+        @cycle := @cycle + 1
+        LOGGING f&#x27;[code_pipeline] cycle={@cycle} | step 1: generate&#x27; LEVEL INFO
+
+        CALL generate_code(@spec, @lang, @m_generate, @log_dir) INTO @code
+
+        LOGGING f&#x27;[code_pipeline] cycle={@cycle} | step 1: review&#x27; LEVEL INFO
+        CALL review_code(@code, @lang, @m_review, @log_dir) INTO @feedback
+
+        LOGGING f&#x27;[code_pipeline] cycle={@cycle} | step 1: improve&#x27; LEVEL INFO
+        CALL improve_code(@code, @feedback, &#x27;&#x27;, @lang, @m_improve, @log_dir) INTO @code
+
+        LOGGING f&#x27;[code_pipeline] cycle={@cycle} | step 2: test&#x27; LEVEL INFO
+        CALL test_code(@code, @spec, @lang, @m_test, @log_dir) INTO @test_result
+
+        EVALUATE @test_result
+            WHEN contains(&#x27;[PASSED]&#x27;) THEN
+                LOGGING f&#x27;[code_pipeline] tests passed at cycle={@cycle}&#x27; LEVEL INFO
+                @test_passed := TRUE
+            ELSE
+                LOGGING f&#x27;[code_pipeline] tests failed at cycle={@cycle} | retrying ...&#x27; LEVEL WARN
+        END
+
+    END
+
+    -- ── Step 3a: Document ─────────────────────────────────────────────────
+    LOGGING &#x27;[code_pipeline] step 3: document&#x27; LEVEL INFO
+    CALL document_code(@code, @spec, @lang, @m_document, @log_dir) INTO @docs
+
+    -- ── Step 3b: Extract spec from implementation ─────────────────────────
+    LOGGING &#x27;[code_pipeline] step 3: extract spec from implementation&#x27; LEVEL INFO
+    CALL extract_spec(@code, @m_extract, @log_dir) INTO @out_spec
+
+    -- ── Step 3c: Closure check (optional) ────────────────────────────────
+    EVALUATE @check_closure
+        WHEN = TRUE THEN
+            LOGGING &#x27;[code_pipeline] step 3: closure check — spec vs derived spec&#x27; LEVEL INFO
+            CALL spec_judge(@spec, @out_spec, @m_judge, @log_dir) INTO @closure_report
+            @docs := @docs || &#x27;
+
+---
+
+## Closure Report
+
+**Original spec:** &#x27; || @spec || &#x27;
+
+**Derived spec (from implementation):**
+&#x27; || @out_spec || &#x27;
+
+**Judge verdict:**
+&#x27; || @closure_report
+        ELSE
+            LOGGING &#x27;[code_pipeline] closure check skipped&#x27; LEVEL DEBUG
+    END
+
+    LOGGING f&#x27;[code_pipeline] done | lang={@lang} cycles={@cycle} test_passed={@test_passed} check_closure={@check_closure}&#x27; LEVEL INFO
+    RETURN @docs
+
+EXCEPTION
+    WHEN RefusalToAnswer THEN
+        LOGGING &#x27;[code_pipeline] generator refused — aborting pipeline&#x27; LEVEL WARN
+        RETURN &#x27;Refused.&#x27; WITH status = &#x27;refused&#x27;
+    WHEN ModelUnavailable THEN
+        LOGGING &#x27;[code_pipeline] model unavailable&#x27; LEVEL ERROR
+        RETURN &#x27;[ERROR] Model unavailable.&#x27; WITH status = &#x27;failed&#x27;
+END
+"><strong>Code Pipeline</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.0">0.0s</td>
+  <td class="mono" style="text-align:center" data-val="0">0</td>
+  <td class="mono" data-val="0">—</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="FAILED" data-elapsed="0.0" data-calls="1" data-tokens="0">
+  <td class="mono" data-val="63">63</td>
+  <td><a href="#" class="src-link" data-title="cookbook/63_parallel_code_review/parallel_code_review.spl" data-src="-- Recipe 63: Parallel Code Review
+-- Category: agentic / SPL 3.0
+-- Run three independent quality checks on a code snippet concurrently:
+--   style review, security audit, and test case generation.
+-- Merge all three into a single prioritised action plan.
+--
+-- SPL INPUT types:  TEXT (code + lang + model)
+-- SPL OUTPUT type:  TEXT (consolidated review report)
+--
+-- Pipeline:
+--   @code ──┬── style_review    ──► @style_fb  ──┐
+--           ├── security_audit  ──► @sec_fb    ──┼── merge ──► @report
+--           └── test_generator  ──► @test_fb   ──┘
+--
+-- Demonstrates:
+--   IMPORT — load three sub-workflow definitions from separate files
+--   CALL PARALLEL — three independent LLM calls run concurrently
+--   Fan-out + merge pattern with heterogeneous sub-workflows
+--   Named-argument CALL dispatch to WORKFLOW definitions
+--
+-- Run locally (Ollama):
+--   spl3 run parallel_code_review.spl code=&quot;def add(a, b): return a - b&quot;
+--   spl3 run parallel_code_review.spl \
+--       code=&quot;$(cat my_module.py)&quot; lang=python review_model=gemma4
+--
+-- Run with spl-go:
+--   spl-go run parallel_code_review.spl \
+--       code=&quot;def add(a, b): return a - b&quot; --adapter ollama --param review_model=gemma3
+
+IMPORT &#x27;00_style_review&#x27;
+IMPORT &#x27;01_security_audit&#x27;
+IMPORT &#x27;02_test_generator&#x27;
+
+-- ── Merge function ─────────────────────────────────────────────────────────────
+
+CREATE FUNCTION merge_reviews(style TEXT, sec_audit TEXT, tests TEXT) RETURN TEXT
+AS $$
+You are a senior engineering lead consolidating three independent code-review reports
+into a single, actionable plan.
+
+Style &amp; Correctness Review:
+{style}
+
+Security Audit:
+{sec_audit}
+
+Generated Test Cases:
+{tests}
+
+Produce a consolidated report with three sections:
+1. **Action Items** — numbered list of changes to make, CRITICAL first, then MODERATE, then LOW
+2. **Test Coverage** — paste the generated tests verbatim under a code block
+3. **Summary** — one paragraph overall assessment (is this code production-ready?)
+
+Keep the Action Items section under 150 words.
+$$;
+
+-- ── Main orchestrator ──────────────────────────────────────────────────────────
+
+WORKFLOW parallel_code_review
+    INPUT:
+        @code    TEXT,
+        @lang    TEXT    DEFAULT &#x27;python&#x27;,
+        @review_model   TEXT    DEFAULT &#x27;gemma4&#x27;,
+        @log_dir TEXT    DEFAULT &#x27;cookbook/63_parallel_code_review/logs-spl&#x27;
+    OUTPUT: @report TEXT
+DO
+    LOGGING f&#x27;[parallel_code_review] starting 3-way parallel review | lang={@lang} review_model={@review_model}&#x27; LEVEL INFO
+
+    -- Three independent quality checks run concurrently.
+    -- style_review, security_audit, and test_generator all read @code
+    -- but write only to their own INTO @var — no interference.
+    CALL PARALLEL
+        style_review   (@code, lang=@lang, review_model=@review_model, log_dir=@log_dir) INTO @style_fb,
+        security_audit (@code, lang=@lang, review_model=@review_model, log_dir=@log_dir) INTO @sec_fb,
+        test_generator (@code, lang=@lang, review_model=@review_model, log_dir=@log_dir) INTO @test_fb
+    END
+
+    LOGGING &#x27;[parallel_code_review] parallel checks complete — merging into report&#x27; LEVEL INFO
+
+    GENERATE merge_reviews(@style_fb, @sec_fb, @test_fb)
+        WITH OUTPUT BUDGET 1024 TOKENS
+        USING MODEL @review_model
+        INTO @report
+
+    LOGGING f&#x27;[parallel_code_review] done | report_len={len(@report)}&#x27; LEVEL INFO
+    COMMIT @report
+
+EXCEPTION
+    WHEN ModelUnavailable THEN
+        LOGGING f&#x27;[parallel_code_review] model unavailable: {@review_model}&#x27; LEVEL ERROR
+        RETURN &#x27;[ERROR] Model unavailable.&#x27; WITH status = &#x27;failed&#x27;
+    WHEN BudgetExceeded THEN
+        LOGGING &#x27;[parallel_code_review] token budget exceeded during merge&#x27; LEVEL WARN
+        COMMIT @report WITH status = &#x27;truncated&#x27;
+END
+"><strong>Parallel Code Review</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="fail" data-val="FAILED">❌ FAIL</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="0.0">0.0s</td>
+  <td class="mono" style="text-align:center" data-val="1">1</td>
+  <td class="mono" data-val="0">—</td>
+  <td class="spl-status">-</td>
+</tr>
+<tr data-status="SUCCESS" data-elapsed="11.3" data-calls="4" data-tokens="1363">
+  <td class="mono" data-val="64">64</td>
+  <td><a href="#" class="src-link" data-title="cookbook/64_parallel_news_digest/parallel_news_digest.spl" data-src="-- Recipe 64: Parallel News Digest
+-- Category: agentic / SPL 3.0
+-- Summarise three independent news topics concurrently, then synthesise
+-- them into a single morning briefing.
+--
+-- SPL INPUT types:  TEXT (three topic strings + model)
+-- SPL OUTPUT type:  TEXT (consolidated morning briefing)
+--
+-- Pipeline:
+--   @topic_tech  ──┐
+--   @topic_sci   ──┼── CALL PARALLEL ──► 3 summaries ──► merge ──► @digest
+--   @topic_biz   ──┘
+--
+-- Demonstrates:
+--   CALL PARALLEL — three independent LLM calls run concurrently
+--   CALL dispatching a WORKFLOW definition (summarise_single)
+--   Fan-out + merge pattern (pure text, no external services)
+--
+-- Run locally (Ollama):
+--   spl3 run parallel_news_digest.spl
+--   spl3 run parallel_news_digest.spl topic_tech=&quot;quantum computing breakthroughs&quot;
+--   spl3 run parallel_news_digest.spl digest_model=gemma3
+--
+-- Run with spl-go:
+--   spl-go run parallel_news_digest.spl --adapter ollama --param digest_model=gemma3
+--   spl-go run parallel_news_digest.spl --adapter echo   -- dry-run
+
+-- ── Prompt functions ───────────────────��──────────────────────────────────────
+
+CREATE FUNCTION summarise_topic(topic TEXT, context TEXT) RETURN TEXT
+AS $$
+You are a concise news analyst writing for a busy professional.
+
+Write a 3-sentence summary of recent and notable developments in: {topic}
+Additional context or constraints: {context}
+
+Rules:
+- Be factual and neutral in tone
+- Focus on the most impactful or surprising developments
+- End with one sentence on the likely near-term outlook
+$$;
+
+CREATE FUNCTION morning_briefing(tech TEXT, science TEXT, business TEXT) RETURN TEXT
+AS $$
+You are an executive assistant writing a morning briefing for a senior leader.
+
+Combine the three topic summaries below into a single, coherent 200-word digest.
+Start with one orienting sentence, then present each topic under a bold header.
+Close with a one-sentence &quot;watch today&quot; callout highlighting the most time-sensitive item.
+
+Technology:
+{tech}
+
+Science:
+{science}
+
+Business:
+{business}
+$$;
+
+-- ── Sub-workflow (called in parallel) ───────────────���────────────────────────
+
+WORKFLOW summarise_single
+    INPUT:
+        @topic   TEXT,
+        @context TEXT    DEFAULT &#x27;&#x27;,
+        @digest_model   TEXT    DEFAULT &#x27;gemma3&#x27;,
+        @log_dir TEXT    DEFAULT &#x27;&#x27;
+    OUTPUT: @summary TEXT
+DO
+    LOGGING f&#x27;[summarise_single] topic=&quot;{@topic}&quot;&#x27; LEVEL DEBUG
+    GENERATE summarise_topic(@topic, @context)
+        WITH OUTPUT BUDGET 256 TOKENS
+        USING MODEL @digest_model
+        INTO @summary
+    COMMIT @summary
+END
+
+-- ── Main orchestrator ──────────────────────────���──────────────────────────────
+
+WORKFLOW parallel_news_digest
+    INPUT:
+        @topic_tech     TEXT    DEFAULT &#x27;AI and large language models&#x27;,
+        @topic_science  TEXT    DEFAULT &#x27;space exploration and astronomy&#x27;,
+        @topic_business TEXT    DEFAULT &#x27;global markets and energy transition&#x27;,
+        @digest_model   TEXT    DEFAULT &#x27;gemma3&#x27;,
+        @output_budget  INTEGER DEFAULT 512,
+        @log_dir        TEXT    DEFAULT &#x27;cookbook/64_parallel_news_digest/logs-spl&#x27;
+    OUTPUT: @digest TEXT
+DO
+    LOGGING f&#x27;[parallel_news_digest] digest_model={@digest_model}&#x27; LEVEL INFO
+    LOGGING f&#x27;[parallel_news_digest] topics: &quot;{@topic_tech}&quot; | &quot;{@topic_science}&quot; | &quot;{@topic_business}&quot;&#x27; LEVEL INFO
+
+    -- Three independent summaries run concurrently.
+    -- Each branch receives a snapshot of the parent scope; results flow back
+    -- only via INTO @var — no shared mutable state between branches.
+    CALL PARALLEL
+        summarise_single(@topic_tech,     digest_model=@digest_model, log_dir=@log_dir) INTO @tech_summary,
+        summarise_single(@topic_science,  digest_model=@digest_model, log_dir=@log_dir) INTO @sci_summary,
+        summarise_single(@topic_business, digest_model=@digest_model, log_dir=@log_dir) INTO @biz_summary
+    END
+
+    LOGGING &#x27;[parallel_news_digest] parallel summaries complete — merging into digest&#x27; LEVEL INFO
+
+    GENERATE morning_briefing(@tech_summary, @sci_summary, @biz_summary)
+        WITH OUTPUT BUDGET @output_budget TOKENS
+        USING MODEL @digest_model
+        INTO @digest
+
+    LOGGING f&#x27;[parallel_news_digest] done | digest_len={len(@digest)}&#x27; LEVEL INFO
+    COMMIT @digest
+
+EXCEPTION
+    WHEN ModelUnavailable THEN
+        LOGGING f&#x27;[parallel_news_digest] model unavailable: {@digest_model}&#x27; LEVEL ERROR
+        RETURN &#x27;[ERROR] Model unavailable.&#x27; WITH status = &#x27;failed&#x27;
+    WHEN BudgetExceeded THEN
+        LOGGING &#x27;[parallel_news_digest] token budget exceeded&#x27; LEVEL WARN
+        COMMIT @digest WITH status = &#x27;truncated&#x27;
+END
+"><strong>Parallel News Digest</strong></a></td>
+  <td class="cat" data-val="agentic">agentic</td>
+  <td class="ok" data-val="SUCCESS">✅ OK</td>
+  <td class="mono">gemma3</td>
+  <td class="mono" data-val="11.3">11.3s</td>
+  <td class="mono" style="text-align:center" data-val="4">4</td>
+  <td class="mono" data-val="1363">680 / 683</td>
+  <td class="spl-status">-</td>
+</tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div id="modal-backdrop">
+    <div id="modal">
+      <div id="modal-header">
+        <span id="modal-title"></span>
+        <button id="modal-close">✕</button>
+      </div>
+      <div id="modal-body"><pre id="modal-pre"></pre></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    SPL 3.0 — Declarative Agentic Workflow Language &nbsp;|&nbsp;
+    Digital Duck © 2026 &nbsp;|&nbsp; Apache 2.0
+  </div>
+
+<script>
+(function() {
+  // ── Sorting ──────────────────────────────────────────────────────────────
+  const tbody  = document.getElementById('tbody');
+  const ths    = document.querySelectorAll('th[data-col]');
+  let sortCol  = null, sortAsc = true;
+
+  function cellVal(row, col) {
+    const td = row.children[col];
+    return td.dataset.val !== undefined ? td.dataset.val : td.textContent.trim();
+  }
+
+  function sortBy(col) {
+    sortAsc = (sortCol === col) ? !sortAsc : true;
+    sortCol = col;
+    ths.forEach(th => { th.classList.remove('asc','desc'); });
+    const th = [...ths].find(t => +t.dataset.col === col);
+    if (th) th.classList.add(sortAsc ? 'asc' : 'desc');
+
+    const rows = [...tbody.querySelectorAll('tr')];
+    rows.sort((a, b) => {
+      let av = cellVal(a, col), bv = cellVal(b, col);
+      const an = parseFloat(av), bn = parseFloat(bv);
+      if (!isNaN(an) && !isNaN(bn)) { av = an; bv = bn; }
+      if (av < bv) return sortAsc ? -1 : 1;
+      if (av > bv) return sortAsc ?  1 : -1;
+      return 0;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+  }
+
+  ths.forEach(th => th.addEventListener('click', () => sortBy(+th.dataset.col)));
+
+  // ── Filtering ────────────────────────────────────────────────────────────
+  const fSearch = document.getElementById('f-search');
+  const fStatus = document.getElementById('f-status');
+  const fCat    = document.getElementById('f-cat');
+
+  // Populate category dropdown
+  const cats = [...new Set([...tbody.querySelectorAll('td:nth-child(3)')].map(td => td.textContent.trim()))].sort();
+  cats.forEach(c => { const o = document.createElement('option'); o.value = o.text = c; fCat.appendChild(o); });
+
+  function applyFilters() {
+    const q   = fSearch.value.toLowerCase();
+    const st  = fStatus.value;
+    const cat = fCat.value;
+    tbody.querySelectorAll('tr').forEach(row => {
+      const name   = row.children[1].textContent.toLowerCase();
+      const status = row.dataset.status;
+      const rowCat = row.children[2].textContent.trim();
+      const show   = (!q || name.includes(q))
+                  && (!st  || status === st)
+                  && (!cat || rowCat === cat);
+      row.style.display = show ? '' : 'none';
+    });
+  }
+
+  [fSearch, fStatus, fCat].forEach(el => el.addEventListener('input', applyFilters));
+
+  // ── Source modal ─────────────────────────────────────────────────────────
+  const backdrop = document.getElementById('modal-backdrop');
+  const title    = document.getElementById('modal-title');
+  const pre      = document.getElementById('modal-pre');
+
+  document.getElementById('modal-close').addEventListener('click', () => backdrop.classList.remove('open'));
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) backdrop.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') backdrop.classList.remove('open'); });
+
+  document.addEventListener('click', e => {
+    const link = e.target.closest('.src-link');
+    if (!link) return;
+    e.preventDefault();
+    title.textContent = link.dataset.title;
+    pre.textContent   = link.dataset.src;
+    backdrop.classList.add('open');
+  });
+})();
+</script>
+</body>
+</html>

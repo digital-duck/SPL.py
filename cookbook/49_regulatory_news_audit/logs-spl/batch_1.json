@@ -1,0 +1,12 @@
+```json
+{
+  "risk_level": "high",
+  "flags": [
+    "Sanctions",
+    "AML",
+    "Market Manipulation",
+    "AI Ethics"
+  ],
+  "summary": "The partnership with an unregulated crypto exchange introduces significant AML risks due to potential exposure to illicit funds and lack of regulatory oversight."
+}
+```

@@ -1,0 +1,18 @@
+WORKFLOW classify_intent
+INPUT (@text TEXT, @model_name TEXT DEFAULT 'default_model')
+OUTPUT (@intent TEXT)
+SECURITY (owner='admin', classification='sensitive')
+DO
+  GENERATE classify_text(@text) WITH OUTPUT BUDGET 100 TOKENS MODEL '<@model_name>' INTO @intent
+  WHEN @intent IN ('greeting', 'goodbye') THEN
+    COMMIT @text WITH status='route_to_greeting_handler'
+  WHEN @intent IN ('query', 'command') THEN
+    COMMIT @text WITH status='route_to_command_handler'
+  ELSE
+    RAISE UnknownIntent '<@intent>'
+  END
+EXCEPTION
+  WHEN UnknownIntent THEN
+    @intent := 'unknown'
+    COMMIT @intent WITH status='unknown'
+END

@@ -1,0 +1,1 @@
+Okay, please provide me with the independent answers separated by “---” as you requested. I need the text of each answer to analyze them and formulate the definitive, consensus-based response to the question: “What causes inflation?” Once you paste the answers here, I’ll get to work on crafting the final, authoritative answer.

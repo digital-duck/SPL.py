@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SPL Cookbook — spl-go</title>
+  <style>
+    body     { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+               background: #0e1117; color: #fafafa; margin: 40px; }
+    h1       { color: #4f8ef7; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
+    .meta    { color: #888; margin-bottom: 20px; font-size: 1.05em; }
+    .meta b  { color: #3fb950; }
+    table    { width: 100%; border-collapse: collapse; background: #161b22;
+               border-radius: 8px; overflow: hidden;
+               box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    th, td   { padding: 10px 13px; text-align: left;
+               border-bottom: 1px solid #30363d; }
+    th       { background: #21262d; color: #8b949e; font-weight: 600;
+               text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+    tr:hover { background: #1c2128; }
+    .ok      { color: #3fb950; font-weight: bold; }
+    .fail    { color: #f85149; font-weight: bold; }
+    .mono    { font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; }
+    .cat     { font-size: 11px; color: #8b949e; }
+    .spl-status { font-size: 11px; color: #a5d6ff; font-style: italic; }
+    .footer  { margin-top: 36px; font-size: 12px; color: #8b949e; text-align: center; }
+    a        { color: #79c0ff; text-decoration: none; }
+    a:hover  { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>SPL Cookbook — Batch Run Report (spl-go)</h1>
+  <div class="meta">
+    Generated: 2026-04-19 14:17:20 &nbsp;|&nbsp;
+    Runtime: <b>spl-go</b> &nbsp;|&nbsp;
+    Adapter: <b>ollama</b> &nbsp;|&nbsp;
+    Model: <b>gemma3</b> &nbsp;|&nbsp;
+    Pass: <b>38/39</b> &nbsp;|&nbsp;
+    Wall time: <b>1660s</b>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Recipe</th><th>Category</th><th>Status</th>
+        <th>Model</th><th>Elapsed</th><th>LLM Calls</th>
+        <th>Tokens in/out</th><th>SPL Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="mono">01</td>
+        <td><a href="../01_hello_world/hello.spl" target="_blank"><strong>Hello World</strong></a></td>
+        <td class="cat">basics</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">1.3s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">53 / 70</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">02</td>
+        <td><a href="../02_ollama_proxy/proxy.spl" target="_blank"><strong>Ollama Proxy</strong></a></td>
+        <td class="cat">basics</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.6s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">42 / 27</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">03</td>
+        <td><a href="../03_multilingual/multilingual.spl" target="_blank"><strong>Multilingual Greeting</strong></a></td>
+        <td class="cat">basics</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.9s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">75 / 45</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">04</td>
+        <td><a href="../04_model_showdown/showdown.spl" target="_blank"><strong>Model Showdown</strong></a></td>
+        <td class="cat">benchmarking</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">40.3s</td>
+        <td class="mono" style="text-align:center">4</td>
+        <td class="mono">977 / 1,777</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">05</td>
+        <td><a href="../05_self_refine/self_refine.spl" target="_blank"><strong>Self-Refine</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">18.2s</td>
+        <td class="mono" style="text-align:center">6</td>
+        <td class="mono">2,145 / 1,233</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">06</td>
+        <td><a href="../06_react_agent/react_agent.spl" target="_blank"><strong>ReAct Agent</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">2.2s</td>
+        <td class="mono" style="text-align:center">3</td>
+        <td class="mono">258 / 103</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">07</td>
+        <td><a href="../07_safe_generation/safe_generation.spl" target="_blank"><strong>Safe Generation</strong></a></td>
+        <td class="cat">safety</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">14.3s</td>
+        <td class="mono" style="text-align:center">3</td>
+        <td class="mono">1,031 / 927</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">08</td>
+        <td><a href="../08_rag_query/rag_query.spl" target="_blank"><strong>RAG Query</strong></a></td>
+        <td class="cat">retrieval</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.8s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">63 / 35</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">09</td>
+        <td><a href="../09_chain_of_thought/chain.spl" target="_blank"><strong>Chain of Thought</strong></a></td>
+        <td class="cat">reasoning</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">32.8s</td>
+        <td class="mono" style="text-align:center">3</td>
+        <td class="mono">1,852 / 2,176</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">10</td>
+        <td><a href="../10_batch_test/batch_test.spl" target="_blank"><strong>Batch Test</strong></a></td>
+        <td class="cat">benchmarking</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">5.6s</td>
+        <td class="mono" style="text-align:center">7</td>
+        <td class="mono">573 / 311</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">11</td>
+        <td><a href="../11_debate_arena/debate.spl" target="_blank"><strong>Debate Arena</strong></a></td>
+        <td class="cat">multi-agent</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">68.4s</td>
+        <td class="mono" style="text-align:center">9</td>
+        <td class="mono">10,310 / 4,169</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">12</td>
+        <td><a href="../12_plan_and_execute/plan_execute.spl" target="_blank"><strong>Plan and Execute</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">26.6s</td>
+        <td class="mono" style="text-align:center">25</td>
+        <td class="mono">4,958 / 1,306</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">14</td>
+        <td><a href="../14_multi_agent/multi_agent.spl" target="_blank"><strong>Multi-Agent Collaboration</strong></a></td>
+        <td class="cat">multi-agent</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">77.8s</td>
+        <td class="mono" style="text-align:center">8</td>
+        <td class="mono">10,003 / 4,877</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">15</td>
+        <td><a href="../15_code_review/code_review.spl" target="_blank"><strong>Code Review</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">85.8s</td>
+        <td class="mono" style="text-align:center">9</td>
+        <td class="mono">13,395 / 5,287</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">16</td>
+        <td><a href="../16_reflection/reflection.spl" target="_blank"><strong>Reflection Agent</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">32.7s</td>
+        <td class="mono" style="text-align:center">3</td>
+        <td class="mono">2,920 / 2,113</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">17</td>
+        <td><a href="../17_tree_of_thought/tree_of_thought.spl" target="_blank"><strong>Tree of Thought</strong></a></td>
+        <td class="cat">reasoning</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">159.8s</td>
+        <td class="mono" style="text-align:center">13</td>
+        <td class="mono">11,469 / 7,622</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">18</td>
+        <td><a href="../18_guardrails/guardrails.spl" target="_blank"><strong>Guardrails Pipeline</strong></a></td>
+        <td class="cat">safety</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">69.0s</td>
+        <td class="mono" style="text-align:center">9</td>
+        <td class="mono">3,462 / 4,508</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">19</td>
+        <td><a href="../19_memory_conversation/memory_chat.spl" target="_blank"><strong>Memory Conversation</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">1.3s</td>
+        <td class="mono" style="text-align:center">3</td>
+        <td class="mono">290 / 37</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">20</td>
+        <td><a href="../20_ensemble_voting/ensemble.spl" target="_blank"><strong>Ensemble Voting</strong></a></td>
+        <td class="cat">multi-agent</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">106.6s</td>
+        <td class="mono" style="text-align:center">13</td>
+        <td class="mono">11,407 / 6,765</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">21</td>
+        <td><a href="../21_multi_model_pipeline/multi_model.spl" target="_blank"><strong>Multi-Model Pipeline</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">31.5s</td>
+        <td class="mono" style="text-align:center">4</td>
+        <td class="mono">2,244 / 2,048</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">22</td>
+        <td><strong>Text2SPL Demo</strong></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">6.9s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">—</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">23</td>
+        <td><a href="../23_structured_output/structured_output.spl" target="_blank"><strong>Structured Output</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">1.5s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">121 / 88</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">24</td>
+        <td><a href="../24_few_shot/few_shot.spl" target="_blank"><strong>Few-Shot Prompting</strong></a></td>
+        <td class="cat">basics</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.7s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">86 / 35</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">25</td>
+        <td><a href="../25_nested_procs/nested_procs.spl" target="_blank"><strong>Nested Procedures</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">76.6s</td>
+        <td class="mono" style="text-align:center">6</td>
+        <td class="mono">5,435 / 4,995</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">26</td>
+        <td><a href="../26_ab_test/ab_test.spl" target="_blank"><strong>Prompt A/B Test</strong></a></td>
+        <td class="cat">benchmarking</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">75.7s</td>
+        <td class="mono" style="text-align:center">7</td>
+        <td class="mono">4,701 / 4,931</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">27</td>
+        <td><a href="../27_data_extraction/data_extraction.spl" target="_blank"><strong>Data Extraction</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">1.2s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">143 / 67</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">28</td>
+        <td><a href="../28_support_triage/support_triage.spl" target="_blank"><strong>Customer Support Triage</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">22.3s</td>
+        <td class="mono" style="text-align:center">6</td>
+        <td class="mono">2,026 / 1,454</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">29</td>
+        <td><a href="../29_meeting_actions/meeting_actions.spl" target="_blank"><strong>Meeting Notes to Actions</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">64.4s</td>
+        <td class="mono" style="text-align:center">8</td>
+        <td class="mono">5,876 / 4,286</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">30</td>
+        <td><a href="../30_code_gen/code_gen.spl" target="_blank"><strong>Code Generator + Tests</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">101.3s</td>
+        <td class="mono" style="text-align:center">7</td>
+        <td class="mono">10,244 / 6,703</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">31</td>
+        <td><a href="../31_sentiment_pipeline/sentiment.spl" target="_blank"><strong>Sentiment Pipeline</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">97.4s</td>
+        <td class="mono" style="text-align:center">7</td>
+        <td class="mono">9,676 / 6,465</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">32</td>
+        <td><a href="../32_socratic_tutor/socratic_tutor.spl" target="_blank"><strong>Socratic Tutor</strong></a></td>
+        <td class="cat">multi-agent</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">130.2s</td>
+        <td class="mono" style="text-align:center">10</td>
+        <td class="mono">19,102 / 8,340</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">33</td>
+        <td><a href="../33_interview_sim/interview_sim.spl" target="_blank"><strong>Interview Simulator</strong></a></td>
+        <td class="cat">multi-agent</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">185.8s</td>
+        <td class="mono" style="text-align:center">15</td>
+        <td class="mono">27,975 / 11,896</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">34</td>
+        <td><a href="../34_progressive_summary/progressive_summary.spl" target="_blank"><strong>Progressive Summarizer</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">9.7s</td>
+        <td class="mono" style="text-align:center">5</td>
+        <td class="mono">1,520 / 576</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">35</td>
+        <td><a href="../35_hypothesis_tester/hypothesis.spl" target="_blank"><strong>Hypothesis Tester</strong></a></td>
+        <td class="cat">reasoning</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">64.7s</td>
+        <td class="mono" style="text-align:center">5</td>
+        <td class="mono">6,301 / 4,299</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">45</td>
+        <td><a href="../45_vision_to_action/vision_to_action.spl" target="_blank"><strong>Vision to Action</strong></a></td>
+        <td class="cat">application</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.3s</td>
+        <td class="mono" style="text-align:center">6</td>
+        <td class="mono">3,620 / 2,309</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">50</td>
+        <td><a href="../50_code_pipeline/code_pipeline.spl" target="_blank"><strong>Code Pipeline</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.0s</td>
+        <td class="mono" style="text-align:center">0</td>
+        <td class="mono">—</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">63</td>
+        <td><a href="../63_parallel_code_review/parallel_code_review.spl" target="_blank"><strong>Parallel Code Review</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="fail">FAIL</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">0.0s</td>
+        <td class="mono" style="text-align:center">1</td>
+        <td class="mono">—</td>
+        <td class="spl-status">-</td>
+      </tr>
+      <tr>
+        <td class="mono">64</td>
+        <td><a href="../64_parallel_news_digest/parallel_news_digest.spl" target="_blank"><strong>Parallel News Digest</strong></a></td>
+        <td class="cat">agentic</td>
+        <td class="ok">OK</td>
+        <td class="mono">gemma3</td>
+        <td class="mono">11.3s</td>
+        <td class="mono" style="text-align:center">4</td>
+        <td class="mono">680 / 683</td>
+        <td class="spl-status">-</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footer">
+    SPL 3.0 — Declarative Agentic Workflow Language &nbsp;|&nbsp;
+    Digital Duck © 2026 &nbsp;|&nbsp; Apache 2.0
+  </div>
+</body>
+</html>

@@ -121,8 +121,12 @@ def main(ctx, hub, verbose):
         "Google AI Studio, HuggingFace Chat, or any other playground."
     ),
 )
+@click.option("--tools", "tools_module", default=None, metavar="FILE",
+              help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
+@click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
+              help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts):
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -142,10 +146,12 @@ def run(ctx, spl_file, adapter, model, param, log_prompts):
 
     hub_url = ctx.obj.get("hub")
 
-    asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts))
+    asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
+                              tools_module, allowed_tools))
 
 
-async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None):
+async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
+                        tools_module=None, allowed_tools=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -173,6 +179,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     # Build executor and attach composer for CALL workflow_name() dispatch
     adapter_kwargs = {"model": model} if model else {}
+    if allowed_tools:
+        adapter_kwargs["allowed_tools"] = [t.strip() for t in allowed_tools.split(",")]
     _inner_adapter = get_adapter(adapter_name, **adapter_kwargs)
     capturing = _CapturingAdapter(_inner_adapter)
     executor = Executor(adapter=capturing)
@@ -180,6 +188,22 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     if log_prompts:
         executor.prompt_log_dir = log_prompts
         click.echo(f"Prompt logging → {log_prompts}/")
+
+    # Load tools module (or auto-load tools.py from .spl directory)
+    if tools_module:
+        from spl.tools import load_tools_module
+        loaded = load_tools_module(tools_module)
+        for tool_name, tool_fn in loaded.items():
+            executor.register_tool(tool_name, tool_fn)
+        click.echo(f"Loaded {len(loaded)} tool(s) from {tools_module}")
+    else:
+        auto_tools = path.parent / "tools.py"
+        if auto_tools.exists():
+            from spl.tools import load_tools_module
+            loaded = load_tools_module(str(auto_tools))
+            for tool_name, tool_fn in loaded.items():
+                executor.register_tool(tool_name, tool_fn)
+            click.echo(f"Auto-loaded {len(loaded)} tool(s) from {auto_tools}")
 
     # Parse the file — needed for function registration and PROMPT fallback
     from spl.lexer import Lexer
@@ -539,3 +563,85 @@ def code_rag_stats(storage_dir):
     store = CodeRAGStore(storage_dir=storage_dir)
     click.echo(f"Code-RAG store: {storage_dir}")
     click.echo(f"  Indexed pairs: {store.count()}")
+
+
+# ------------------------------------------------------------------ #
+# spl3 text2spl                                                       #
+# ------------------------------------------------------------------ #
+
+@main.command("text2spl")
+@click.argument("description")
+@click.option("--adapter", default=None, metavar="NAME",
+              help="Compiler adapter (default: ollama).")
+@click.option("--model", "-m", default=None, metavar="MODEL",
+              help="Compiler model.")
+@click.option("--mode", type=click.Choice(["auto", "prompt", "workflow"]),
+              default="auto", show_default=True,
+              help="Generation mode.")
+@click.option("--validate/--no-validate", default=True, show_default=True,
+              help="Validate generated SPL code.")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write generated SPL to FILE.")
+def cmd_text2spl(description: str, adapter, model, mode, validate, output):
+    """Compile natural language DESCRIPTION into SPL 3.0 code.
+
+    \b
+    Examples:
+      spl3 text2spl "summarize a document with a 2000 token budget"
+      spl3 text2spl "build a review agent" --mode workflow -o review.spl
+      spl3 text2spl "classify intent" --adapter ollama -m gemma3
+    """
+    from spl.text2spl import Text2SPL
+    from spl.adapters import get_adapter
+
+    adapter = adapter or "ollama"
+    try:
+        llm = get_adapter(adapter, **({"model": model} if model else {}))
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+    compiler = Text2SPL(adapter=llm)
+    try:
+        spl_code = asyncio.run(compiler.compile(description, mode=mode))
+    except Exception as exc:
+        raise click.ClickException(f"Compilation failed: {exc}") from exc
+
+    if validate:
+        valid, message = Text2SPL.validate_output(spl_code)
+        if not valid:
+            click.echo(spl_code, err=True)
+            raise click.ClickException(f"Validation failed: {message}")
+
+    if output:
+        Path(output).write_text(spl_code, encoding="utf-8")
+        click.echo(f"Written to {output}")
+    else:
+        click.echo(spl_code)
+
+
+# ------------------------------------------------------------------ #
+# spl3 validate                                                       #
+# ------------------------------------------------------------------ #
+
+@main.command("validate")
+@click.argument("spl_file")
+def cmd_validate(spl_file):
+    """Validate SPL syntax of SPL_FILE."""
+    from pathlib import Path
+    from spl.lexer import Lexer
+    from spl3.parser import SPL3Parser
+
+    path = Path(spl_file)
+    if not path.exists():
+        raise click.ClickException(f"File not found: {path}")
+    source = path.read_text(encoding="utf-8")
+    try:
+        tokens = Lexer(source).tokenize()
+        SPL3Parser(tokens).parse()
+        click.echo(f"OK: {path}")
+    except Exception as exc:
+        raise click.ClickException(f"Parse error: {exc}") from exc
+
+
+if __name__ == "__main__":
+    main()

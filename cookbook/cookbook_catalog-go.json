@@ -941,7 +941,8 @@
         "./cookbook/50_code_pipeline/code_pipeline.spl",
         "--adapter",
         "ollama",
-        "spec=Write a binary search function that returns the index or -1"
+        "spec=Write a binary search function that returns the index or -1",
+        "pipeline_model=gemma3"
       ],
       "dir": "50_code_pipeline",
       "log": "code_pipeline",
@@ -1181,7 +1182,8 @@
         "./cookbook/63_parallel_code_review/parallel_code_review.spl",
         "--adapter",
         "ollama",
-        "code=def add(a, b): return a - b"
+        "code=def add(a, b): return a - b",
+        "review_model=gemma3"
       ],
       "dir": "63_parallel_code_review",
       "log": "parallel_code_review",

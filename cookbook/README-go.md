@@ -1,6 +1,6 @@
 # Testing spl-go with the Cookbook
 
-`cookbook_catalog_go.json` mirrors the standard catalog but runs every recipe through the `spl-go` binary (zero-dependency Go runtime). Use it to catch regressions and find missing functionality before they reach production.
+`cookbook_catalog-go.json` mirrors the standard catalog but runs every recipe through the `spl-go` binary (zero-dependency Go runtime). Use it to catch regressions and find missing functionality before they reach production.
 
 ## Prerequisites
 
@@ -21,37 +21,37 @@ cd ~/projects/digital-duck/SPL.go && go build -o spl-go .
 cd ~/projects/digital-duck/SPL20
 
 # Sequential (recommended for first pass — shows live output)
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json 2>&1 | tee cookbook/out/run_all_go_$(date +%Y%m%d_%H%M%S).md
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json 2>&1 | tee cookbook/logs/run_all_go_$(date +%Y%m%d_%H%M%S).md
 
 
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json \
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json \
     --ids "4, 14, 17, 25, 06, 37, 13, 36, 41–44, 47–49" \
-    2>&1 | tee cookbook/out/run_all_go_$(date +%Y%m%d_%H%M%S).md
+    2>&1 | tee cookbook/logs/run_all_go_$(date +%Y%m%d_%H%M%S).md
 
 
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json \
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json \
     --ids "4, 6,13,14,17,25,36,37" \
-    2>&1 | tee cookbook/out/run_all_go_$(date +%Y%m%d_%H%M%S).md
+    2>&1 | tee cookbook/logs/run_all_go_$(date +%Y%m%d_%H%M%S).md
 
 
 # Override model
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json --model llama3.2
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --model llama3.2
 
 # Run specific recipes by ID
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json --ids 01,02,05,07
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --ids 01,02,05,07
 ```
 
 ## Browse the go catalog
 
 ```bash
 # Full table
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json --catalog
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --catalog
 
 # Filter by category
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json --catalog --category agentic
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --catalog --category agentic
 
 # What's disabled and why
-python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog_go.json --catalog --status disabled
+python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --catalog --status disabled
 ```
 
 ## Disabled recipes and why

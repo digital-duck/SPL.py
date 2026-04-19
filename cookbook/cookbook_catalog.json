@@ -70,7 +70,10 @@
         "./cookbook/04_model_showdown/showdown.spl",
         "--adapter",
         "ollama",
-        "prompt=Write a poem about Spring season"
+        "prompt=Write a poem about Spring season",
+        "model_1=gemma3",
+        "model_2=gemma3",
+        "model_3=gemma3"
       ],
       "dir": "04_model_showdown",
       "log": "showdown",
@@ -941,12 +944,14 @@
         "python",
         "cookbook/51_image_caption/run.py",
         "--image",
-        "cookbook/51_image_caption/sample/photo.jpg"
+        "cookbook/51_image_caption/sample/photo.jpg",
+        "--model",
+        "gemma4:e2b"
       ],
       "dir": "51_image_caption",
       "log": "image_caption",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "multimodal",
       "tier": 1,
       "requires": [
@@ -1063,7 +1068,7 @@
         "python",
         "cookbook/57_image_convert/run.py",
         "--image",
-        "cookbook/57_image_convert/sample/photo.png",
+        "cookbook/57_image_convert/sample/photo.jpg",
         "--target-format",
         "jpeg"
       ],
@@ -1114,8 +1119,8 @@
       ],
       "dir": "59_audio_convert",
       "log": "audio_convert",
-      "is_active": true,
-      "approval_status": "new",
+      "is_active": false,
+      "approval_status": "wip",
       "category": "media",
       "tier": 1,
       "requires": [
@@ -1157,8 +1162,8 @@
       ],
       "dir": "61_video_to_audio",
       "log": "video_to_audio",
-      "is_active": true,
-      "approval_status": "new",
+      "is_active": false,
+      "approval_status": "wip",
       "category": "media",
       "tier": 1,
       "requires": [
@@ -1196,7 +1201,8 @@
         "run",
         "cookbook/63_parallel_code_review/parallel_code_review.spl",
         "--param",
-        "code=def add(a, b): return a - b"
+        "code=def add(a, b): return a - b",
+        "review_model=gemma3"
       ],
       "dir": "63_parallel_code_review",
       "log": "parallel_code_review",

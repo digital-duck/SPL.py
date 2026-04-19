@@ -66,7 +66,7 @@ $$;
 WORKFLOW tree_of_thought
     INPUT:
         @problem TEXT DEFAULT 'Design a sustainable urban transport system.',
-        @models LIST DEFAULT ['gemma3', 'phi4', 'qwen2.5'],
+        @models LIST DEFAULT ['gemma3', 'phi4'],
         @log_dir TEXT DEFAULT 'cookbook/17_tree_of_thought/logs-spl'
     OUTPUT: @best_solution TEXT
 DO

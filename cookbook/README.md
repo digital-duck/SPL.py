@@ -34,6 +34,10 @@ mkdir -p cookbook/logs
 python cookbook/run_all.py --adapter ollama --model gemma3 \
   2>&1 | tee cookbook/logs/exp1_spl3_single_$(date +%Y%m%d_%H%M%S).md
 
+
+
+
+
 # Exp 2 — spl3, Momagrid
 export MOMAGRID_HUB_URL=http://192.168.0.235:9000
 python cookbook/run_all.py --adapter momagrid --model llama3.2 --workers 4 \
@@ -474,13 +478,87 @@ python cookbook/run_all.py catalog --category reasoning
 python cookbook/run_all.py catalog --status approved
 ```
 
+## Analyzing Results — `analyze_logs.py`
+
+After any `run_all.py` run, use `analyze_logs.py` to generate paper-ready reports.
+Batch logs are written to `cookbook/logs/`; the analyzer finds the latest one automatically.
+
+### Single-runtime stats
+
+```bash
+# Aggregate metrics for the latest spl3 run (default)
+python cookbook/analyze_logs.py --paper-stats
+
+# Specific log file
+python cookbook/analyze_logs.py \
+  --run cookbook/logs/exp1_spl3_single_20260419_121027.md \
+  --paper-stats
+
+# Per-recipe markdown table
+python cookbook/analyze_logs.py --summary
+
+# HTML report saved to cookbook/out/
+python cookbook/analyze_logs.py --html
+
+# Everything at once
+python cookbook/analyze_logs.py --all
+```
+
+Use `--runtime` to label the report (propagates into HTML title and stdout headers):
+
+```bash
+python cookbook/analyze_logs.py \
+  --run cookbook/logs/exp3_splgo_single_20260419_140000.md \
+  --runtime spl-go \
+  --paper-stats
+```
+
+### Cross-runtime comparison (§6.4 conformance matrix)
+
+Once all three single-GPU runs are complete, generate the cross-runtime table used in §6.4:
+
+```bash
+python cookbook/analyze_logs.py \
+  --compare spl3=cookbook/logs/exp1_spl3_single_YYYYMMDD_HHMMSS.md \
+  --compare spl-go=cookbook/logs/exp3_splgo_single_YYYYMMDD_HHMMSS.md \
+  --compare spl-ts=cookbook/logs/exp5_splts_single_YYYYMMDD_HHMMSS.md
+```
+
+Output includes:
+- Per-recipe ✅/❌ matrix across all runtimes
+- Pass-rate and wall-time summary table (paste directly into the paper)
+- Count of recipes approved across **all** runtimes
+
+Add Momagrid runs to extend to the full 6-experiment matrix:
+
+```bash
+python cookbook/analyze_logs.py \
+  --compare "spl3 (single)"=cookbook/logs/exp1_spl3_single_....md \
+  --compare "spl3 (grid)"=cookbook/logs/exp2_spl3_momagrid_....md \
+  --compare "spl-go (single)"=cookbook/logs/exp3_splgo_single_....md \
+  --compare "spl-go (grid)"=cookbook/logs/exp4_splgo_momagrid_....md \
+  --compare "spl-ts (single)"=cookbook/logs/exp5_splts_single_....md \
+  --compare "spl-ts (grid)"=cookbook/logs/exp6_splts_momagrid_....md
+```
+
+### Non-default catalog files
+
+```bash
+# spl-go catalog
+python cookbook/analyze_logs.py \
+  --run cookbook/logs/exp3_splgo_single_....md \
+  --runtime spl-go \
+  --catalog-file cookbook/cookbook_catalog-go.json \
+  --paper-stats
+```
+
 ## Code-RAG
 
-Run 
+Run
 ```bash
-spl code-rag parse-log cookbook/out/run_all_20260320_052826.md 
+spl3 code-rag seed cookbook/ --catalog cookbook/cookbook_catalog.json
 ```
-once the run finishes to capture all 30 new  (prompt, SPL) pairs into Code-RAG       
+once the run finishes to capture all (prompt, SPL) pairs into the Code-RAG index.
 
 
 
@@ -686,4 +764,40 @@ Demonstrates the `spl text2spl` / `spl text2spl` command: natural language descr
 
 ```bash
 bash cookbook/10_batch_test/batch_test.sh
+```
+
+### Fixes
+
+┌────────┬─────────────────────────────────────────────────────┬──────────────────────────────────────────────────┐
+  │ Recipe │                        Issue                        │                       Fix                        │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 04     │ Old cli.py signature (before tools/allowed_tools)   │ Fixed by our earlier cli.py update               │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 06/13  │ --tools/--claude-allowed-tools unknown options      │ Added to spl3/cli.py run command                 │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 17     │ qwen2.5 model not pulled → 404                      │ Changed DEFAULT list to                          │
+  │        │                                                     │ ['gemma3','phi4','gemma3']                       │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 22     │ spl3 text2spl command missing                       │ Added text2spl + validate commands to            │
+  │        │                                                     │ spl3/cli.py                                      │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 50/63  │ Double --param --param in apply_overrides           │ Fixed: consume flag+value together               │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 57     │ --model injected into python runner; wrong filename │ Fixed injection (spl3-only) +                    │
+  │        │                                                     │ photo.png→photo.jpg                              │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 59     │ --model injected + no audio sample files            │ Fixed injection; marked inactive (wip)           │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 51     │ spl.codecs + spl.adapters.liquid not yet            │ Marked inactive (wip)                            │
+  │        │ implemented                                         │                                                  │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 61     │ Missing run.py + no sample directory                │ Marked inactive (wip)                            │
+  ├────────┼─────────────────────────────────────────────────────┼──────────────────────────────────────────────────┤
+  │ 63     │ gemma4 hardcoded as default model                   │ Added review_model=gemma3 to catalog             │
+  └────────┴─────────────────────────────────────────────────────┴──────────────────────────────────────────────────┘
+
+```bash
+python cookbook/run_all.py --adapter ollama --model gemma3 \
+  --ids "04,06,13,17,22,50,51,57,63" \
+  2>&1 | tee cookbook/logs/exp1_spl3_single_$(date +%Y%m%d_%H%M%S).md
 ```

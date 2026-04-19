@@ -92,6 +92,8 @@ class SPL3Parser(SPL2Parser):
             arguments.append(self._parse_call_argument())
             while self._check(TokenType.COMMA):
                 self._advance()
+                if self._check(TokenType.RPAREN):
+                    break  # trailing comma
                 arguments.append(self._parse_call_argument())
         self._expect(TokenType.RPAREN)
 
@@ -131,6 +133,8 @@ class SPL3Parser(SPL2Parser):
             arguments.append(self._parse_call_argument())
             while self._check(TokenType.COMMA):
                 self._advance()
+                if self._check(TokenType.RPAREN):
+                    break  # trailing comma
                 arguments.append(self._parse_call_argument())
         self._expect(TokenType.RPAREN)
         self._expect(TokenType.INTO)

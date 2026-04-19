@@ -1,0 +1,17 @@
+PROMPT classify_intent
+SELECT @text AS input LIMIT 100 TOKENS
+GENERATE classify(input) STORE RESULT IN memory.intent;
+
+WORKFLOW route_handler
+  INPUT @intent TEXT
+  OUTPUT @handler TEXT
+  DO
+    EVALUATE
+      WHEN 'query' THEN
+        GENERATE answer(memory.intent) INTO @handler
+      WHEN 'command' THEN
+        GENERATE execute_command(memory.intent) INTO @handler
+      ELSE
+        GENERATE unknown_intent(memory.intent) INTO @handler
+    END;
+  END;

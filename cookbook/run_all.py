@@ -247,7 +247,12 @@ def apply_overrides(cmd_args: list[str], adapter: str, model: str) -> list[str]:
                     i += 1
             elif tok == "--param":
                 expanded.append(tok)
-                i += 1
+                if i + 1 < len(result):
+                    expanded.append(result[i + 1])
+                    i += 2
+                else:
+                    i += 1
+                continue
             elif not tok.startswith("-") and _param_re.match(tok):
                 expanded.append("--param")
                 expanded.append(tok)
@@ -267,7 +272,8 @@ def apply_overrides(cmd_args: list[str], adapter: str, model: str) -> list[str]:
                     result.insert(i + 1, adapter)
                     break
 
-    if model:
+    is_spl_cmd = Path(result[0]).name in ("spl3", "spl-go", "spl-ts")
+    if model and is_spl_cmd:
         found = False
         for i in range(len(result)):
             if result[i] == "--model":

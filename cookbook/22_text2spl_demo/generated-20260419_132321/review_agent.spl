@@ -1,0 +1,30 @@
+WORKFLOW review_agent
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  DO
+    GENERATE rewrite(@draft, style='improved') INTO @current;
+    GENERATE sentiment(@current) INTO @quality;
+    IF @quality < 0.8 THEN
+      GENERATE critique(@current) INTO @critique;
+    END;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @final := 'unknown';
+      COMMIT @final;
+    WHEN ModelOverloaded THEN
+      RETRY;
+  END;
+  DO
+    IF @quality >= 0.8 THEN
+      GENERATE refine(@current) INTO @refined;
+      @final := @refined;
+      COMMIT @final;
+    ELSE
+      @draft := @current;
+    END;
+  EXCEPTION
+    WHEN ContextLengthExceeded THEN
+      RAISE;
+  END;
+END;

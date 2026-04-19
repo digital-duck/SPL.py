@@ -73,7 +73,9 @@
         "--adapter",
         "ollama",
         "--param",
-        "prompt=Write a poem about Spring season"
+        "prompt=Write a poem about Spring season",
+        "--param",
+        "model_3=llama3.2"
       ],
       "dir": "04_model_showdown",
       "log": "showdown",
@@ -1024,7 +1026,9 @@
         "--adapter",
         "ollama",
         "--param",
-        "spec=Write a binary search function that returns the index or -1"
+        "spec=Write a binary search function that returns the index or -1",
+        "--param",
+        "pipeline_model=gemma3"
       ],
       "dir": "50_code_pipeline",
       "log": "code_pipeline",
@@ -1283,7 +1287,9 @@
         "--adapter",
         "ollama",
         "--param",
-        "code=def add(a, b): return a - b"
+        "code=def add(a, b): return a - b",
+        "--param",
+        "review_model=gemma3"
       ],
       "dir": "63_parallel_code_review",
       "log": "parallel_code_review",

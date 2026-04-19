@@ -1,0 +1,12 @@
+```json
+{
+  "risk_level": "medium",
+  "flags": [
+    "sanctions",
+    "aml",
+    "market manipulation",
+    "ai ethics"
+  ],
+  "summary": "The reported increase in non-performing loans (NPLs) raises concerns about potential AML vulnerabilities due to distressed borrowers and the risk of unknowingly facilitating sanctions evasion if the network lacks robust due diligence procedures."
+}
+```

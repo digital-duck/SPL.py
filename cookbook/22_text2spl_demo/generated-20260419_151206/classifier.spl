@@ -1,0 +1,10 @@
+PROMPT classify_intent
+SELECT @input AS text LIMIT 100 TOKENS,
+       'user intent' AS category
+GENERATE classify(text, category) WITH OUTPUT BUDGET 200 TOKENS INTO @result;
+
+CASE
+  WHEN @result = 'positive' THEN CALL handle_positive
+  WHEN @result = 'negative' THEN CALL handle_negative
+  ELSE CALL handle_unknown
+END;

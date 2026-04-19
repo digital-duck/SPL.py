@@ -1,0 +1,29 @@
+WORKFLOW refine_text
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  @quality := 0.0;
+  @current := @draft;
+  WHILE @quality < 0.8 DO
+    GENERATE rewrite(@current, style='improved') INTO @temp;
+    GENERATE sentiment(@temp) INTO @quality;
+    IF @quality > 0.7 THEN
+      GENERATE suggest_improvement(@temp) INTO @suggestion;
+    END;
+    @current := @temp;
+  END;
+  @final := @temp;
+  COMMIT @final;
+END;
+
+CREATE FUNCTION rewrite(text TEXT, style TEXT)
+RETURNS TEXT AS $$
+  CASE style
+    WHEN 'improved' THEN text || '.'
+    ELSE text
+  END;
+$$;
+
+CREATE FUNCTION suggest_improvement(text TEXT) RETURNS TEXT AS $$
+  'Consider adding more context to improve clarity.'
+$$;

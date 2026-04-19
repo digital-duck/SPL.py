@@ -1,0 +1,21 @@
+WORKFLOW classify_intent
+INPUT (@text TEXT, @model_name TEXT DEFAULT 'llama3.2')
+OUTPUT (@intent, @handler)
+SECURITY (owner='admin', classification='public')
+DO
+  GENERATE classify_intent(@text) WITH OUTPUT BUDGET 20 TOKENS INTO @intent
+  CASE @intent
+    WHEN 'greeting' THEN
+      CALL greet_handler(@text) INTO @handler
+    WHEN 'query' THEN
+      CALL query_handler(@text) INTO @handler
+    WHEN 'complaint' THEN
+      CALL complaint_handler(@text) INTO @handler
+    ELSE
+      RAISE UnknownIntent 'Unknown intent'
+  END
+EXCEPTION
+  WHEN UnknownIntent THEN
+    @result := 'unknown'
+    COMMIT @result WITH status='unknown'
+END

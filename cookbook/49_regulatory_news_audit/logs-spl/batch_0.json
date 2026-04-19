@@ -1,0 +1,11 @@
+```json
+{
+  "risk_level": "low",
+  "flags": [
+    "sanctions",
+    "aml",
+    "ai_ethics"
+  ],
+  "summary": "While the news doesn’t directly present regulatory risk, the rate hike could trigger scrutiny regarding potential conflicts of interest if the institution's lending activities are not carefully monitored, and AI model performance in lending decisions should be continuously evaluated."
+}
+```

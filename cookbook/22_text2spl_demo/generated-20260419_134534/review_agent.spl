@@ -1,0 +1,16 @@
+WORKFLOW review_agent
+INPUT (@text TEXT)
+OUTPUT (@review TEXT)
+DO
+  @draft := GENERATE draft_text(@text) WITH OUTPUT BUDGET 100 TOKENS MODEL 'llama3.2'
+  WHILE @draft QUALITY < 0.8 DO
+    @critique := GENERATE critique_text(@draft) WITH OUTPUT BUDGET 50 TOKENS MODEL 'llama3.1'
+    @refine := GENERATE refine_text(@draft, @critique) WITH OUTPUT BUDGET 100 TOKENS MODEL 'llama3.2'
+    @draft := @refine
+  END
+  COMMIT @review WITH status='approved', quality_score=0.8
+EXCEPTION
+  WHEN QualityBelowThreshold THEN
+    @review := 'rejected'
+    COMMIT @review WITH status='rejected'
+END

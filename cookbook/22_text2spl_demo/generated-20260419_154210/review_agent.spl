@@ -1,0 +1,35 @@
+WORKFLOW review_agent
+INPUT (@text TEXT, @num_turns INTEGER DEFAULT 5)
+OUTPUT (@review TEXT)
+SECURITY (owner='agent', classification='confidential')
+DO
+  DO
+    GENERATE draft_review(@text) WITH OUTPUT BUDGET 100 TOKENS MODEL 'llama3.2' INTO @draft
+    @review := @draft
+    COMMIT @review WITH status='draft'
+    EVALUATE @review
+    WHEN <0.8 THEN
+      BREAK
+    END
+  WHILE @review AS text NOT CONTAINS 'good'
+  DO
+    GENERATE critique(@text) WITH OUTPUT BUDGET 50 TOKENS MODEL 'llama3.2' INTO @critique
+    @review := @critique
+    COMMIT @review WITH status='critique'
+    EVALUATE @review
+    WHEN <0.8 THEN
+      BREAK
+    END
+  END
+  GENERATE refine(@text) WITH OUTPUT BUDGET 50 TOKENS MODEL 'llama3.2' INTO @refine
+  @review := @refine
+  COMMIT @review WITH status='refined'
+  EVALUATE @review
+  WHEN >= 0.8 THEN
+    BREAK
+  END
+END
+EXCEPTION
+  WHEN <0.8> THEN
+    RAISE QualityBelowThreshold 'Review quality too low'
+  END

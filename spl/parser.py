@@ -904,6 +904,8 @@ class Parser:
             parameters.append(self._parse_parameter())
             while self._check(TokenType.COMMA):
                 self._advance()
+                if self._check(TokenType.RPAREN):
+                    break  # trailing comma
                 parameters.append(self._parse_parameter())
         self._expect(TokenType.RPAREN)
 
@@ -1516,6 +1518,8 @@ class Parser:
                 elements.append(self._parse_expression())
                 while self._check(TokenType.COMMA):
                     self._advance()
+                    if self._check(TokenType.RBRACKET):
+                        break  # trailing comma
                     elements.append(self._parse_expression())
             self._expect(TokenType.RBRACKET)
             return ListLiteral(elements=elements)
@@ -1531,6 +1535,8 @@ class Parser:
                 pairs.append((key, val))
                 while self._check(TokenType.COMMA):
                     self._advance()
+                    if self._check(TokenType.RBRACE):
+                        break  # trailing comma
                     key = self._parse_expression()
                     self._expect(TokenType.COLON)
                     val = self._parse_expression()
@@ -1600,6 +1606,8 @@ class Parser:
                 args.append(self._parse_call_argument())
                 while self._check(TokenType.COMMA):
                     self._advance()
+                    if self._check(TokenType.RPAREN):
+                        break  # trailing comma
                     args.append(self._parse_call_argument())
             self._expect(TokenType.RPAREN)
             return FunctionCall(name=name, arguments=args)
