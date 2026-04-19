@@ -1,0 +1,21 @@
+# Recipe 03: Multilingual Greeting
+
+Greet in any language — demonstrates parametric context passing via `user_input` and `lang`.
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `user_input` | TEXT | *(required)* | The greeting or message to translate |
+| `lang` | TEXT | *(required)* | Target language (e.g. Chinese, French, Japanese, Spanish) |
+
+## Usage
+
+```bash
+spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model gemma3 \
+    --param user_input="Hello Wen-Guang" --param lang="Chinese"
+
+spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model gemma3 \
+    --param user_input="Hello Wen-Guang" --param lang="Spanish"
+
+```

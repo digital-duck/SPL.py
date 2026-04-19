@@ -1,0 +1,11 @@
+PROMPT classify_intent
+SELECT @user_input AS input
+GENERATE extract_entities(input) INTO @entities
+GENERATE classify_entities(@entities)
+IF @intent = 'booking' THEN
+  CALL book_handler(@input, @summary)
+ELSE IF @intent = 'payment' THEN
+  CALL payment_handler(@input, @summary)
+ELSE
+  CALL unknown_handler(@input, @summary)
+END

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Recipe 22: text2SPL Compiler Demo
+# Showcases the natural language → SPL 3.0 compiler.
+#
+# Usage:
+#   bash cookbook/22_text2spl_demo/text2spl_demo.sh [adapter] [model]
+#
+# Requires: spl installed, Ollama running with gemma3 (or pass adapter/model)
+
+set -uo pipefail
+
+ADAPTER="ollama"
+MODEL="gemma3"
+SPL_BIN="spl3"  # override with --spl-bin spl-go or --spl-bin spl-ts
+
+# Parse --adapter / --model / --spl-bin flags (run_all.py injects these) or positional args
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --adapter) ADAPTER="$2"; shift 2 ;;
+        --model|-m) MODEL="$2"; shift 2 ;;
+        --spl-bin) SPL_BIN="$2"; shift 2 ;;
+        --*) shift 2 ;;          # skip unknown --flag value pairs
+        *) ADAPTER="$1"; MODEL="${2:-$MODEL}"; break ;;
+    esac
+done
+
+# spl-go removed the -m shorthand; use --model for both (both accept it)
+MODEL_FLAG="--model"
+TS=$(date +%Y%m%d_%H%M%S)
+OUTDIR="cookbook/22_text2spl_demo/generated-${TS}"
+mkdir -p "$OUTDIR"
+
+PASS=0
+FAIL=0
+
+run_demo() {
+    local num="$1" label="$2" desc="$3" mode="$4" outfile="$5"
+
+    echo "--- Demo $num: $label ---"
+    echo "  Input:  '$desc'"
+    echo "  Mode:   $mode"
+    echo ""
+
+    # Use --no-validate so generation succeeds even if output has syntax issues;
+    # we validate separately to show current maturity of each mode.
+    if "$SPL_BIN" text2spl "$desc" \
+        --adapter "$ADAPTER" $MODEL_FLAG "$MODEL" --mode "$mode" --no-validate -o "$outfile" 2>&1; then
+        echo ""
+        echo "  Validating generated code..."
+        if "$SPL_BIN" validate "$outfile" 2>&1; then
+            echo "  [validation: OK]"
+        else
+            echo "  [validation: warning — generated code has issues (known limitation for $mode mode)]"
+        fi
+        PASS=$((PASS + 1))   # generation succeeded; validation status is informational
+    else
+        echo "  [generation: FAILED]"
+        FAIL=$((FAIL + 1))
+    fi
+    echo ""
+}
+
+echo "=== SPL 3.0 text2SPL Compiler Demo ==="
+echo "    Runtime: $SPL_BIN  Adapter: $ADAPTER  Model: $MODEL"
+echo ""
+
+# --- Demo 1: Simple PROMPT (most reliable) ---
+run_demo 1 "Compile a simple prompt" \
+    "summarize a document with a 2000 token budget" \
+    "prompt" "$OUTDIR/summarize.spl"
+
+# --- Demo 2: WORKFLOW generation ---
+run_demo 2 "Compile a multi-step workflow" \
+    "build a review agent that drafts, critiques, and refines text until quality > 0.8" \
+    "workflow" "$OUTDIR/review_agent.spl"
+
+# --- Demo 3: Auto mode ---
+run_demo 3 "Auto mode — LLM decides the best form" \
+    "classify user intent and route to the right handler" \
+    "auto" "$OUTDIR/classifier.spl"
+
+# --- Summary ---
+echo "=== Generated files ==="
+ls -la "$OUTDIR"/*.spl 2>/dev/null || echo "  (no files generated)"
+echo ""
+echo "=== Demo complete: $PASS passed, $FAIL failed ==="
+echo "  To view:    cat $OUTDIR/summarize.spl"
+echo "  To execute: $SPL_BIN run $OUTDIR/summarize.spl --adapter $ADAPTER"
+
+# Exit non-zero only if all demos failed
+if [ "$PASS" -eq 0 ] && [ "$FAIL" -gt 0 ]; then
+    exit 1
+fi

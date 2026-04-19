@@ -1,0 +1,15 @@
+WORKFLOW classify_intent
+  INPUT @text TEXT
+  OUTPUT @label TEXT
+  INPUT @models LIST<MODEL> DEFAULT ['default_model']
+DO
+  GENERATE extract_entities(@text) INTO @entities;
+  GENERATE classify_entities(@entities, 'intent') INTO @intent_label;
+  RETURN @intent_label;
+  EVALUATE
+    WHEN @intent_label = 'unknown' THEN
+      @label := 'unknown';
+    ELSE
+      @label := 'default_handler';
+  END;
+END;

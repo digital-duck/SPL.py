@@ -1,0 +1,74 @@
+WORKFLOW refine_text
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  DO
+    GENERATE rewrite(@draft, style='improved') INTO @temp;
+    GENERATE sentiment(@temp) INTO @quality;
+    RETURN @temp;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @quality := 0.0;
+      @temp := @draft;
+      RETURN @temp;
+    WHEN ModelOverloaded THEN
+      RETRY;
+  END;
+
+  DO
+    IF @quality < 0.8 THEN
+      GENERATE rewrite(@temp, style='refined') INTO @temp;
+      GENERATE sentiment(@temp) INTO @quality;
+      RETURN @temp;
+    ELSE
+      BREAK;
+    END;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @quality := 0.0;
+      @temp := @draft;
+      RETURN @temp;
+    WHEN ModelOverloaded THEN
+      RETRY;
+  END;
+
+  DO
+    IF @summary != 'the text is high quality' THEN
+      GENERATE rewrite(@temp, style='improved') INTO @temp;
+      GENERATE sentiment(@temp) INTO @quality;
+      RETURN @temp;
+    ELSE
+      BREAK;
+    END;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @quality := 0.0;
+      @temp := @draft;
+      RETURN @temp;
+    WHEN ModelOverloaded THEN
+      RETRY;
+  END;
+
+  GENERATE classify(@temp) INTO @label;
+  RETURN @label;
+
+  DO
+    IF @label != 'positive' THEN
+      GENERATE rewrite(@temp, style='improved') INTO @temp;
+      GENERATE sentiment(@temp) INTO @quality;
+      RETURN @temp;
+    ELSE
+      BREAK;
+    END;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @quality := 0.0;
+      @temp := @draft;
+      RETURN @temp;
+    WHEN ModelOverloaded THEN
+      RETRY;
+  END;
+
+  GENERATE rewrite(@temp, style='refined') INTO @final;
+  RETURN @final;
+END;

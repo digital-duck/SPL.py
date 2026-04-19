@@ -1,0 +1,1231 @@
+{
+  "_comment": "SPL 2.0 Cookbook Catalog \u2014 single source of truth for all recipes.",
+  "_schema": {
+    "is_active": "bool   \u2014 included in default batch run (python run_all.py)",
+    "approval_status": "string \u2014 new | approved | wip | disabled | rejected",
+    "category": "string \u2014 basics | agentic | reasoning | safety | retrieval | multi-agent | application | benchmarking"
+  },
+  "recipes": [
+    {
+      "id": "01",
+      "name": "Hello World",
+      "description": "Minimal SPL program \u2014 verify spl2 + adapter + model work",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/01_hello_world/hello.spl",
+        "--adapter",
+        "ollama"
+      ],
+      "dir": "01_hello_world",
+      "log": "hello",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "basics"
+    },
+    {
+      "id": "02",
+      "name": "Ollama Proxy",
+      "description": "General-purpose LLM query \u2014 proxy any Ollama model",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/02_ollama_proxy/proxy.spl",
+        "--adapter",
+        "ollama",
+        "prompt=Explain quantum computing in one sentence"
+      ],
+      "dir": "02_ollama_proxy",
+      "log": "proxy",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "basics"
+    },
+    {
+      "id": "03",
+      "name": "Multilingual Greeting",
+      "description": "Greet in any language \u2014 parametric context demo",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/03_multilingual/multilingual.spl",
+        "--adapter",
+        "ollama",
+        "user_input=Hello Wen-Guang",
+        "lang=Chinese"
+      ],
+      "dir": "03_multilingual",
+      "log": "multilingual",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "basics"
+    },
+    {
+      "id": "04",
+      "name": "Model Showdown",
+      "description": "Same prompt to multiple models \u2014 compare output and latency via parallel CTEs",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/04_model_showdown/showdown.spl",
+        "--adapter",
+        "ollama",
+        "prompt=Write a poem about Spring season"
+      ],
+      "dir": "04_model_showdown",
+      "log": "showdown",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "benchmarking"
+    },
+    {
+      "id": "05",
+      "name": "Self-Refine",
+      "description": "Iterative improvement: draft \u2192 critique \u2192 refine loop",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/05_self_refine/self_refine.spl",
+        "--adapter",
+        "ollama",
+        "task=Write a haiku about coding"
+      ],
+      "dir": "05_self_refine",
+      "log": "self_refine",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "agentic"
+    },
+    {
+      "id": "06",
+      "name": "ReAct Agent",
+      "description": "Population growth via WebSearch + Python tool \u2014 requires claude_cli adapter and --allowed-tools WebSearch",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/06_react_agent/react_agent.spl",
+        "--adapter",
+        "claude_cli",
+        "--model",
+        "claude-sonnet-4-6",
+        "--claude-allowed-tools",
+        "WebSearch",
+        "--tools",
+        "./cookbook/06_react_agent/tools.py",
+        "country=France"
+      ],
+      "dir": "06_react_agent",
+      "log": "react_agent",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "agentic"
+    },
+    {
+      "id": "07",
+      "name": "Safe Generation",
+      "description": "Exception handling for production LLM safety",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/07_safe_generation/safe_generation.spl",
+        "--adapter",
+        "ollama",
+        "prompt=Explain how encryption works"
+      ],
+      "dir": "07_safe_generation",
+      "log": "safe_generation",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "safety"
+    },
+    {
+      "id": "08",
+      "name": "RAG Query",
+      "description": "Retrieval-augmented generation over indexed documents \u2014 requires: spl2 rag add <doc>",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/08_rag_query/rag_query.spl",
+        "--adapter",
+        "ollama",
+        "question=Who is Wen?"
+      ],
+      "dir": "08_rag_query",
+      "log": "rag_query",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "retrieval"
+    },
+    {
+      "id": "09",
+      "name": "Chain of Thought",
+      "description": "Multi-step reasoning: Research \u2192 Analyze \u2192 Summarize",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/09_chain_of_thought/chain.spl",
+        "--adapter",
+        "ollama",
+        "topic=distributed AI inference"
+      ],
+      "dir": "09_chain_of_thought",
+      "log": "chain",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning"
+    },
+    {
+      "id": "10",
+      "name": "Batch Test",
+      "description": "Automated testing of cookbook recipes across models via parallel CTEs",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/10_batch_test/batch_test.spl",
+        "--adapter",
+        "ollama"
+      ],
+      "dir": "10_batch_test",
+      "log": "batch_test",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "benchmarking"
+    },
+    {
+      "id": "11",
+      "name": "Debate Arena",
+      "description": "Adversarial debate between two LLM personas with a judge",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/11_debate_arena/debate.spl",
+        "--adapter",
+        "ollama",
+        "topic=AI should be open-sourced"
+      ],
+      "dir": "11_debate_arena",
+      "log": "debate",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "multi-agent"
+    },
+    {
+      "id": "12",
+      "name": "Plan and Execute",
+      "description": "Planner decomposes task into steps, executor runs each one",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/12_plan_and_execute/plan_execute.spl",
+        "--adapter",
+        "ollama",
+        "task=Build a REST API for a todo app"
+      ],
+      "dir": "12_plan_and_execute",
+      "log": "plan_execute",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "agentic"
+    },
+    {
+      "id": "13",
+      "name": "Map-Reduce Summarizer",
+      "description": "Split large docs into chunks, summarize each, combine results",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/13_map_reduce/map_reduce.spl",
+        "--tools",
+        "./cookbook/13_map_reduce/tools.py",
+        "--adapter",
+        "ollama",
+        "document=The quick brown fox jumps over the lazy dog. This is a test document for map-reduce summarization.",
+        "style=bullet points"
+      ],
+      "dir": "13_map_reduce",
+      "log": "map_reduce",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "application"
+    },
+    {
+      "id": "14",
+      "name": "Multi-Agent Collaboration",
+      "description": "Researcher \u2192 Analyst \u2192 Writer collaboration via PROCEDURE",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/14_multi_agent/multi_agent.spl",
+        "--adapter",
+        "ollama",
+        "topic=Impact of AI on healthcare"
+      ],
+      "dir": "14_multi_agent",
+      "log": "multi_agent",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "multi-agent"
+    },
+    {
+      "id": "15",
+      "name": "Code Review",
+      "description": "Multi-pass review: security, performance, style, bugs",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/15_code_review/code_review.spl",
+        "--adapter",
+        "ollama",
+        "code=./cookbook/15_code_review/code_review.spl"
+      ],
+      "dir": "15_code_review",
+      "log": "code_review",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "application"
+    },
+    {
+      "id": "16",
+      "name": "Reflection Agent",
+      "description": "Meta-cognitive loop: solve \u2192 reflect \u2192 correct until confident",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/16_reflection/reflection.spl",
+        "--adapter",
+        "ollama",
+        "problem=Design a URL shortener system"
+      ],
+      "dir": "16_reflection",
+      "log": "reflection",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "agentic"
+    },
+    {
+      "id": "17",
+      "name": "Tree of Thought",
+      "description": "Explore multiple reasoning paths, score and pick the best",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/17_tree_of_thought/tree_of_thought.spl",
+        "--adapter",
+        "ollama",
+        "problem=Should we rewrite the legacy system or incrementally refactor?"
+      ],
+      "dir": "17_tree_of_thought",
+      "log": "tree_of_thought",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning"
+    },
+    {
+      "id": "18",
+      "name": "Guardrails Pipeline",
+      "description": "Input/output safety pipeline with PII detection and filtering",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/18_guardrails/guardrails.spl",
+        "--adapter",
+        "ollama",
+        "user_input=Explain how encryption works"
+      ],
+      "dir": "18_guardrails",
+      "log": "guardrails",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "safety"
+    },
+    {
+      "id": "19",
+      "name": "Memory Conversation",
+      "description": "Persistent memory across conversations via memory.get/set",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/19_memory_conversation/memory_chat.spl",
+        "--adapter",
+        "ollama",
+        "user_input=My name is Alice and I am a data scientist"
+      ],
+      "dir": "19_memory_conversation",
+      "log": "memory_chat",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "application"
+    },
+    {
+      "id": "20",
+      "name": "Ensemble Voting",
+      "description": "Generate multiple answers, score and vote for consensus",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/20_ensemble_voting/ensemble.spl",
+        "--adapter",
+        "ollama",
+        "question=What causes inflation?"
+      ],
+      "dir": "20_ensemble_voting",
+      "log": "ensemble",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "multi-agent"
+    },
+    {
+      "id": "21",
+      "name": "Multi-Model Pipeline",
+      "description": "Per-step model selection with GENERATE...USING MODEL and quality loop",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/21_multi_model_pipeline/multi_model.spl",
+        "--adapter",
+        "ollama",
+        "topic=climate change"
+      ],
+      "dir": "21_multi_model_pipeline",
+      "log": "multi_model",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "agentic"
+    },
+    {
+      "id": "22",
+      "name": "Text2SPL Demo",
+      "description": "Natural language to SPL 2.0 compiler \u2014 prompt, workflow, and auto modes",
+      "args": [
+        "bash",
+        "./cookbook/22_text2spl_demo/text2spl_demo.sh"
+      ],
+      "dir": "22_text2spl_demo",
+      "log": "text2spl_demo",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "23",
+      "name": "Structured Output",
+      "description": "CREATE FUNCTION with JSON schema \u2014 extract typed data from free text",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/23_structured_output/structured_output.spl",
+        "--adapter",
+        "ollama",
+        "text=John Smith, 42, joined Acme Corp in March 2021 earning $95,000/year"
+      ],
+      "dir": "23_structured_output",
+      "log": "structured_output",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "24",
+      "name": "Few-Shot Prompting",
+      "description": "Gold-standard examples embedded in SELECT context \u2014 in-context learning",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/24_few_shot/few_shot.spl",
+        "--adapter",
+        "ollama",
+        "text=The quarterly results exceeded all analyst forecasts by a significant margin",
+        "domain=finance"
+      ],
+      "dir": "24_few_shot",
+      "log": "few_shot",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "basics"
+    },
+    {
+      "id": "25",
+      "name": "Nested Procedures",
+      "description": "PROCEDURE calling PROCEDURE \u2014 deep composability without external orchestration",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/25_nested_procs/nested_procs.spl",
+        "--adapter",
+        "ollama",
+        "topic=quantum computing",
+        "audience=high school students"
+      ],
+      "dir": "25_nested_procs",
+      "log": "nested_procs",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic"
+    },
+    {
+      "id": "26",
+      "name": "Prompt A/B Test",
+      "description": "CTEs + EVALUATE scoring \u2014 compare two prompt variants, pick winner automatically",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/26_ab_test/ab_test.spl",
+        "--adapter",
+        "ollama",
+        "task=Explain neural networks",
+        "prompt_a=Explain like I'm 5",
+        "prompt_b=Give a technical explanation with analogies"
+      ],
+      "dir": "26_ab_test",
+      "log": "ab_test",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "benchmarking"
+    },
+    {
+      "id": "27",
+      "name": "Data Extraction",
+      "description": "Pull structured fields from messy text \u2014 names, dates, amounts, references",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/27_data_extraction/data_extraction.spl",
+        "--adapter",
+        "ollama",
+        "text=Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March.",
+        "format=general"
+      ],
+      "dir": "27_data_extraction",
+      "log": "data_extraction",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "28",
+      "name": "Customer Support Triage",
+      "description": "Classify \u2192 route \u2192 draft response in one workflow",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/28_support_triage/support_triage.spl",
+        "--adapter",
+        "ollama",
+        "ticket=My account has been charged twice for the same order #12345"
+      ],
+      "dir": "28_support_triage",
+      "log": "support_triage",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "29",
+      "name": "Meeting Notes to Actions",
+      "description": "Transcript in, structured TODO list + owners out",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/29_meeting_actions/meeting_actions.spl",
+        "--adapter",
+        "ollama",
+        "transcript=Alice: we need to fix the login bug before Friday. Bob: I'll handle it. Alice: also need to update the docs",
+        "output_format=markdown"
+      ],
+      "dir": "29_meeting_actions",
+      "log": "meeting_actions",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "30",
+      "name": "Code Generator + Tests",
+      "description": "Generate a function then generate its unit tests in one workflow",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/30_code_gen/code_gen.spl",
+        "--adapter",
+        "ollama",
+        "spec=A function that validates an email address",
+        "language=Python"
+      ],
+      "dir": "30_code_gen",
+      "log": "code_gen",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "31",
+      "name": "Sentiment Pipeline",
+      "description": "Batch sentiment over a list, aggregate trend statistics",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/31_sentiment_pipeline/sentiment.spl",
+        "--adapter",
+        "ollama",
+        "items=Great product, love it! | Terrible experience, never again | It was okay I guess",
+        "domain=product_reviews"
+      ],
+      "dir": "31_sentiment_pipeline",
+      "log": "sentiment",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "32",
+      "name": "Socratic Tutor",
+      "description": "Ask guiding questions rather than giving answers \u2014 persona-constrained generation",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/32_socratic_tutor/socratic_tutor.spl",
+        "--adapter",
+        "ollama",
+        "topic=Why does the sky appear blue?",
+        "student_level=middle school"
+      ],
+      "dir": "32_socratic_tutor",
+      "log": "socratic_tutor",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "multi-agent"
+    },
+    {
+      "id": "33",
+      "name": "Interview Simulator",
+      "description": "Two-persona structured Q&A with per-question scoring and overall evaluation",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/33_interview_sim/interview_sim.spl",
+        "--adapter",
+        "ollama",
+        "role=Senior Software Engineer",
+        "focus=system design"
+      ],
+      "dir": "33_interview_sim",
+      "log": "interview_sim",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "multi-agent"
+    },
+    {
+      "id": "34",
+      "name": "Progressive Summarizer",
+      "description": "Layered summary: sentence \u2192 paragraph \u2192 page with fidelity verification",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/34_progressive_summary/progressive_summary.spl",
+        "--adapter",
+        "ollama",
+        "text=Artificial intelligence has transformed industries from healthcare to finance, enabling automation of complex tasks that previously required human expertise. Machine learning models can now diagnose diseases from medical images, detect fraud in financial transactions, and generate human-like text. However, these advances raise important questions about bias, accountability, and the future of work.",
+        "audience=executive"
+      ],
+      "dir": "34_progressive_summary",
+      "log": "progressive_summary",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "35",
+      "name": "Hypothesis Tester",
+      "description": "Generate hypothesis \u2192 design test \u2192 evaluate evidence \u2192 conclude",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/35_hypothesis_tester/hypothesis.spl",
+        "--adapter",
+        "ollama",
+        "observation=Remote teams show lower productivity in the first month after joining",
+        "domain=management"
+      ],
+      "dir": "35_hypothesis_tester",
+      "log": "hypothesis",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning"
+    },
+    {
+      "id": "36",
+      "name": "Tool-Use / Function-Call",
+      "description": "Register Python functions as CALL-able tools \u2014 deterministic math, zero LLM cost",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/36_tool_use/tool_use.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/36_tool_use/tools.py",
+        "sales=1200,1450,1380,1600,1750,1900",
+        "prev_total=7800",
+        "period=H1 2025"
+      ],
+      "dir": "36_tool_use",
+      "log": "tool_use",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic"
+    },
+    {
+      "id": "37",
+      "name": "Headline News Aggregator",
+      "description": "Generate \u2192 expand \u2192 evaluate coverage \u2192 daily news digest for any topic area",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/37_headline_news/headline_news.spl",
+        "--adapter",
+        "claude_cli",
+        "--model",
+        "claude-opus-4-6",
+        "topic=artificial intelligence"
+      ],
+      "dir": "37_headline_news",
+      "log": "headline_news",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "38",
+      "name": "Bedrock Quickstart",
+      "description": "Fan out to three AWS Bedrock model families (Claude + Nova) and compare \u2014 adapter smoke test for enterprise environments",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/38_bedrock_quickstart/bedrock_quickstart.spl",
+        "--adapter",
+        "bedrock",
+        "prompt=Explain the CAP theorem in two sentences."
+      ],
+      "dir": "38_bedrock_quickstart",
+      "log": "bedrock_quickstart",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics"
+    },
+    {
+      "id": "39",
+      "name": "Vertex AI Quickstart",
+      "description": "Fan out to three Gemini tiers (Pro / Flash / Lite) on GCP Vertex AI and compare \u2014 adapter smoke test for GCP environments",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/39_vertex_quickstart/vertex_quickstart.spl",
+        "--adapter",
+        "vertex",
+        "prompt=Explain the CAP theorem in two sentences."
+      ],
+      "dir": "39_vertex_quickstart",
+      "log": "vertex_quickstart",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics"
+    },
+    {
+      "id": "40",
+      "name": "Azure OpenAI Quickstart",
+      "description": "Fan out to three Azure OpenAI deployments (GPT-4o / GPT-4o mini / GPT-3.5 Turbo) and compare \u2014 adapter smoke test for Azure environments",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl",
+        "--adapter",
+        "azure_openai",
+        "prompt=Explain the CAP theorem in two sentences."
+      ],
+      "dir": "40_azure_openai_quickstart",
+      "log": "azure_openai_quickstart",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics"
+    },
+    {
+      "id": "41",
+      "name": "Human Steering",
+      "description": "Human-in-the-loop: draft \u2192 pause for stdin feedback \u2192 conditionally refine \u2014 demonstrates EVALUATE on human input",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/41_human_steering/human_steering.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/41_human_steering/tools.py",
+        "topic=The future of agentic AI"
+      ],
+      "dir": "41_human_steering",
+      "log": "human_steering",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic"
+    },
+    {
+      "id": "42",
+      "name": "Knowledge Synthesis",
+      "description": "RAG-writer pattern: extract 3 insights via LLM, persist to vector store via CALL rag_update \u2014 agents that write back to the knowledge base",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/42_knowledge_synthesis/knowledge_synthesis.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/42_knowledge_synthesis/tools.py",
+        "raw_text=Recent advances in sparse attention mechanisms dramatically reduce transformer memory footprint while preserving model quality on long-context tasks."
+      ],
+      "dir": "42_knowledge_synthesis",
+      "log": "knowledge_synthesis",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "retrieval"
+    },
+    {
+      "id": "43",
+      "name": "Prompt Self-Tuning",
+      "description": "Meta-programming: generate two improved prompt variants, A/B test via check_quality, select winner \u2014 automated prompt optimization",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/43_prompt_self_tuning/prompt_self_tuning.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/43_prompt_self_tuning/tools.py",
+        "baseline_prompt=Summarize this technical document.",
+        "failed_case=The document describes a complex quantum algorithm."
+      ],
+      "dir": "43_prompt_self_tuning",
+      "log": "prompt_self_tuning",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic"
+    },
+    {
+      "id": "44",
+      "name": "Adaptive Failover",
+      "description": "Resilience: try primary model \u2192 quality gate \u2192 auto-failover to stronger model if needed \u2014 GENERATE USING MODEL @var",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/44_adaptive_failover/adaptive_failover.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/44_adaptive_failover/tools.py",
+        "query=Explain quantum entanglement for a technical audience.",
+        "primary_model=phi4",
+        "fallback_model=gemma3"
+      ],
+      "dir": "44_adaptive_failover",
+      "log": "adaptive_failover",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic"
+    },
+    {
+      "id": "45",
+      "name": "Vision to Action",
+      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE \u2014 deterministic EVALUATE decision tree, zero-cost routing",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/45_vision_to_action/vision_to_action.spl",
+        "--adapter",
+        "ollama",
+        "image_description=Image shows a package being delivered to the front door."
+      ],
+      "dir": "45_vision_to_action",
+      "log": "vision_to_action",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "47",
+      "name": "arXiv Morning Brief",
+      "description": "Download arXiv PDFs \u2192 chunk \u2192 summarize each \u2192 reduce \u2192 assemble Markdown brief \u2014 WHILE loop, list tools, WITH OUTPUT BUDGET",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl",
+        "--tools",
+        "./cookbook/47_arxiv_morning_brief/tools.py",
+        "--adapter",
+        "ollama",
+        "urls=cookbook/47_arxiv_morning_brief/arxiv-papers.txt"
+      ],
+      "dir": "47_arxiv_morning_brief",
+      "log": "arxiv_morning_brief",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "48",
+      "name": "Credit Risk Assessment",
+      "description": "Fin-service: deterministic score gate \u2192 LLM qualitative review \u2192 EVALUATE routing \u2014 APPROVED / MANUAL_REVIEW / REJECTED",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/48_credit_risk/assess_credit_risk.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/48_credit_risk/tools.py",
+        "applicant_data=Applicant: Jane Doe | Income: $72,000 | Debt: $18,000 | Employment: 5 years | Prior defaults: none",
+        "credit_score=680"
+      ],
+      "dir": "48_credit_risk",
+      "log": "credit_risk",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "49",
+      "name": "Regulatory News Audit",
+      "description": "Fin-service: WHILE loop over news feed \u2014 LLM compliance audit per item, JSON risk extraction, CRITICAL ALERT on high-risk findings",
+      "args": [
+        "spl3",
+        "run",
+        "./cookbook/49_regulatory_news_audit/audit_news.spl",
+        "--adapter",
+        "ollama",
+        "--tools",
+        "./cookbook/49_regulatory_news_audit/tools.py",
+        "news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt"
+      ],
+      "dir": "49_regulatory_news_audit",
+      "log": "audit_news",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "application"
+    },
+    {
+      "id": "50",
+      "name": "Code Pipeline",
+      "description": "NDD closure: generate \u2192 review \u2192 improve \u2192 test \u2192 document \u2192 spec_judge (TEXT \u2192 TEXT)",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/50_code_pipeline/code_pipeline.spl",
+        "--param",
+        "spec=Write a binary search function that returns the index or -1",
+        "--param",
+        "pipeline_model=gemma3"
+      ],
+      "dir": "50_code_pipeline",
+      "log": "code_pipeline",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 1,
+      "requires": [
+        "ollama:gemma3"
+      ]
+    },
+    {
+      "id": "51",
+      "name": "Image Caption",
+      "description": "Describe / analyse / OCR an image using Gemma4 vision (IMAGE \u2192 TEXT)",
+      "args": [
+        "python",
+        "cookbook/51_image_caption/run.py",
+        "--image",
+        "cookbook/51_image_caption/sample/photo.jpg"
+      ],
+      "dir": "51_image_caption",
+      "log": "image_caption",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 1,
+      "requires": [
+        "ollama:gemma4:e4b"
+      ]
+    },
+    {
+      "id": "52",
+      "name": "Audio Summary",
+      "description": "Transcribe / summarise / extract key points from audio (AUDIO \u2192 TEXT)",
+      "args": [
+        "python",
+        "cookbook/52_audio_summary/run.py",
+        "--audio",
+        "cookbook/52_audio_summary/sample/clip.mp3"
+      ],
+      "dir": "52_audio_summary",
+      "log": "audio_summary",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 3,
+      "requires": [
+        "env:OPENROUTER_API_KEY"
+      ]
+    },
+    {
+      "id": "53",
+      "name": "Video Summary",
+      "description": "Summarise / transcribe / extract key moments from a video using gemma4 (VIDEO \u2192 TEXT)",
+      "args": [
+        "python",
+        "cookbook/53_video_summary/run.py",
+        "--video",
+        "cookbook/53_video_summary/sample/clip.mp4"
+      ],
+      "dir": "53_video_summary",
+      "log": "video_summary",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 1,
+      "requires": [
+        "ollama:gemma4",
+        "system:ffmpeg"
+      ]
+    },
+    {
+      "id": "54",
+      "name": "Text to Image",
+      "description": "Generate an image from a text prompt using DALL-E 3 (TEXT \u2192 IMAGE)",
+      "args": [
+        "python",
+        "cookbook/54_text_to_image/run.py",
+        "--prompt",
+        "A serene mountain lake at golden hour, photorealistic"
+      ],
+      "dir": "54_text_to_image",
+      "log": "text_to_image",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 2,
+      "requires": [
+        "env:OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "55",
+      "name": "Text to Speech",
+      "description": "Convert text to natural speech and save as audio file (TEXT \u2192 AUDIO)",
+      "args": [
+        "python",
+        "cookbook/55_text_to_speech/run.py",
+        "--text",
+        "Welcome to SPL 3.0 multimodal support."
+      ],
+      "dir": "55_text_to_speech",
+      "log": "text_to_speech",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 2,
+      "requires": [
+        "env:OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "56",
+      "name": "Text to Video",
+      "description": "Generate a video clip from a text prompt via Google Veo 2 / RunwayML (TEXT \u2192 VIDEO)",
+      "args": [
+        "python",
+        "cookbook/56_text_to_video/run.py",
+        "--prompt",
+        "A duck walking through a quiet forest at dawn"
+      ],
+      "dir": "56_text_to_video",
+      "log": "text_to_video",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 2,
+      "requires": [
+        "env:GOOGLE_API_KEY",
+        "ollama:gemma4"
+      ]
+    },
+    {
+      "id": "57",
+      "name": "Image Format Conversion",
+      "description": "Convert image between formats: PNG \u2194 JPEG \u2194 WebP \u2194 BMP (IMAGE \u2192 IMAGE, codec only)",
+      "args": [
+        "python",
+        "cookbook/57_image_convert/run.py",
+        "--image",
+        "cookbook/57_image_convert/sample/photo.png",
+        "--target-format",
+        "jpeg"
+      ],
+      "dir": "57_image_convert",
+      "log": "image_convert",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "media",
+      "tier": 1,
+      "requires": [
+        "python:Pillow"
+      ]
+    },
+    {
+      "id": "58",
+      "name": "Image Restyle",
+      "description": "Analyse image with Gemma4 vision, restyle with DALL-E 3 (IMAGE+TEXT \u2192 TEXT+IMAGE)",
+      "args": [
+        "python",
+        "cookbook/58_image_restyle/run.py",
+        "--image",
+        "cookbook/58_image_restyle/sample/photo.jpg",
+        "--style",
+        "watercolor painting, soft edges, pastel tones"
+      ],
+      "dir": "58_image_restyle",
+      "log": "image_restyle",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 4,
+      "requires": [
+        "ollama:gemma4:e4b",
+        "env:OPENAI_API_KEY"
+      ]
+    },
+    {
+      "id": "59",
+      "name": "Audio Format Conversion",
+      "description": "Convert audio between formats: WAV \u2194 MP3 \u2194 OGG \u2194 FLAC (AUDIO \u2192 AUDIO, codec only)",
+      "args": [
+        "python",
+        "cookbook/59_audio_convert/run.py",
+        "--audio",
+        "cookbook/59_audio_convert/sample/clip.wav",
+        "--target-format",
+        "mp3"
+      ],
+      "dir": "59_audio_convert",
+      "log": "audio_convert",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "media",
+      "tier": 1,
+      "requires": [
+        "python:pydub",
+        "system:ffmpeg"
+      ]
+    },
+    {
+      "id": "60",
+      "name": "Voice Dialogue",
+      "description": "Full voice assistant pipeline: transcribe \u2192 respond \u2192 speak (AUDIO+TEXT \u2192 TEXT+AUDIO)",
+      "args": [
+        "python",
+        "cookbook/60_voice_dialogue/run.py",
+        "--audio",
+        "cookbook/60_voice_dialogue/sample/question.mp3"
+      ],
+      "dir": "60_voice_dialogue",
+      "log": "voice_dialogue",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 4,
+      "requires": [
+        "env:OPENROUTER_API_KEY",
+        "env:OPENAI_API_KEY",
+        "ollama:gemma4:e4b"
+      ]
+    },
+    {
+      "id": "61",
+      "name": "Video to Audio",
+      "description": "Extract audio track from a video file: .mp4 \u2192 .mp3 / .wav / .flac (VIDEO \u2192 AUDIO, codec only)",
+      "args": [
+        "python",
+        "cookbook/61_video_to_audio/run.py",
+        "--video",
+        "cookbook/61_video_to_audio/sample/clip.mp4"
+      ],
+      "dir": "61_video_to_audio",
+      "log": "video_to_audio",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "media",
+      "tier": 1,
+      "requires": [
+        "python:pydub",
+        "system:ffmpeg"
+      ]
+    },
+    {
+      "id": "62",
+      "name": "Video to Image",
+      "description": "Extract frame(s) from a video; optionally caption with gemma4 vision (VIDEO \u2192 IMAGE)",
+      "args": [
+        "python",
+        "cookbook/62_video_to_image/run.py",
+        "--video",
+        "cookbook/62_video_to_image/sample/clip.mp4"
+      ],
+      "dir": "62_video_to_image",
+      "log": "video_to_image",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 1,
+      "requires": [
+        "system:ffmpeg",
+        "ollama:gemma4"
+      ]
+    },
+    {
+      "id": "63",
+      "name": "Parallel Code Review",
+      "description": "Style, security, and test-generation reviews run concurrently via CALL PARALLEL; merged into one report (TEXT \u2192 TEXT)",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/63_parallel_code_review/parallel_code_review.spl",
+        "--param",
+        "code=def add(a, b): return a - b"
+      ],
+      "dir": "63_parallel_code_review",
+      "log": "parallel_code_review",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 1,
+      "requires": [
+        "ollama:gemma4"
+      ]
+    },
+    {
+      "id": "64",
+      "name": "Parallel News Digest",
+      "description": "Summarise three news topics concurrently via CALL PARALLEL; merge into a morning briefing (TEXT \u2192 TEXT)",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/64_parallel_news_digest/parallel_news_digest.spl"
+      ],
+      "dir": "64_parallel_news_digest",
+      "log": "parallel_news_digest",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 1,
+      "requires": [
+        "ollama:gemma4"
+      ]
+    }
+  ]
+}
