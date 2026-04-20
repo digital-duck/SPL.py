@@ -643,5 +643,13 @@ def cmd_validate(spl_file):
         raise click.ClickException(f"Parse error: {exc}") from exc
 
 
+# ------------------------------------------------------------------ #
+# spl3 splc                                                           #
+# ------------------------------------------------------------------ #
+
+from spl3.splc.cli import splc as _splc_command
+main.add_command(_splc_command, name="splc")
+
+
 if __name__ == "__main__":
     main()

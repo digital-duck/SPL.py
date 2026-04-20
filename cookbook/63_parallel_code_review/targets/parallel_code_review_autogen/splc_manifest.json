@@ -1,0 +1,21 @@
+{
+  "splc_version": "0.1.0",
+  "generated_at": "2026-04-20T17:50:15.172914+00:00",
+  "source": {
+    "spl_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/parallel_code_review.spl",
+    "spl_sha256": "3aec52aa381b1cf2"
+  },
+  "target": {
+    "lang": "python/autogen",
+    "label": "Python \u2014 AutoGen",
+    "output_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/targets/parallel_code_review_autogen/parallel_code_review_python_autogen.py"
+  },
+  "compilation": {
+    "model": "claude-sonnet-4-6",
+    "adapter": "claude_cli",
+    "references": [],
+    "rag_enabled": true,
+    "rag_k": 3
+  },
+  "doda_note": "This file is a splc-compiled physical artifact. The source .spl file is the invariant logical view. To retarget, run: splc --spl <source.spl> --lang <new-target>"
+}

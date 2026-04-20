@@ -3,7 +3,7 @@
 .igrid/
 GEMINI.md
 CLAUDE.md
-**/logs/
+# **/logs/
 **/out/
 go_git.log
 

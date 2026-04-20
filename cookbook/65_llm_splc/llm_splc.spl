@@ -76,6 +76,7 @@ Requirements:
 1. Preserve the exact workflow logic — every GENERATE, CALL, EVALUATE, WHILE, EXCEPTION WHEN must have a counterpart.
 2. All LLM prompts from CREATE FUNCTION blocks must appear verbatim in the output.
 3. Parameterise the model name so it can be swapped without code changes.
+   Use 'gemma3' as the default model (Ollama-compatible) — NOT gpt-4 or any OpenAI model.
 4. Output only the complete, runnable code — no explanation, no markdown fences.
 5. Include a __main__ block with a usage example matching the SPL INPUT defaults.
 $$;
