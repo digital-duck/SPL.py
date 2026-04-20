@@ -14,6 +14,7 @@ Available tools after loading
 Image   : convert_image, resize_image, image_info
 Audio   : convert_audio, trim_audio, get_audio_duration
 Video   : extract_audio, extract_frame, get_video_duration, video_info
+File    : load_file, write_file
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from __future__ import annotations
 from cookbook.tools import image_tools as _img   # noqa: F401
 from cookbook.tools import audio_tools as _aud   # noqa: F401
 from cookbook.tools import video_tools as _vid   # noqa: F401
+from cookbook.tools import file_tools as _file   # noqa: F401
 
 
 def get_cookbook_tools() -> list[str]:
