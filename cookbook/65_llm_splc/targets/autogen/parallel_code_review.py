@@ -9,11 +9,50 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ParallelCodeReview:
-    def __init__(self, review_model: str = "gemma3"):
+    def __init__(self, review_model: str = "gemma4"):
         self.review_model = review_model
 
-        # Configure LLM for Ollama
-        llm_config = {
+        # Configure LLM for Ollama - style reviewer (400 tokens)
+        style_llm_config = {
+            "config_list": [
+                {
+                    "model": review_model,
+                    "base_url": "http://localhost:11434/v1",
+                    "api_key": "ollama",
+                }
+            ],
+            "temperature": 0.1,
+            "max_tokens": 400,
+        }
+
+        # Configure LLM for Ollama - security auditor (400 tokens)
+        security_llm_config = {
+            "config_list": [
+                {
+                    "model": review_model,
+                    "base_url": "http://localhost:11434/v1",
+                    "api_key": "ollama",
+                }
+            ],
+            "temperature": 0.1,
+            "max_tokens": 400,
+        }
+
+        # Configure LLM for Ollama - test generator (512 tokens)
+        test_llm_config = {
+            "config_list": [
+                {
+                    "model": review_model,
+                    "base_url": "http://localhost:11434/v1",
+                    "api_key": "ollama",
+                }
+            ],
+            "temperature": 0.1,
+            "max_tokens": 512,
+        }
+
+        # Configure LLM for Ollama - report merger (1024 tokens)
+        merge_llm_config = {
             "config_list": [
                 {
                     "model": review_model,
@@ -29,28 +68,28 @@ class ParallelCodeReview:
         self.style_reviewer = AssistantAgent(
             name="style_reviewer",
             system_message="You are a senior code engineer conducting style and correctness reviews.",
-            llm_config=llm_config,
+            llm_config=style_llm_config,
             max_consecutive_auto_reply=1,
         )
 
         self.security_auditor = AssistantAgent(
             name="security_auditor",
             system_message="You are a security engineer conducting static analysis.",
-            llm_config=llm_config,
+            llm_config=security_llm_config,
             max_consecutive_auto_reply=1,
         )
 
         self.test_generator = AssistantAgent(
             name="test_generator",
             system_message="You are a test engineer writing unit tests.",
-            llm_config=llm_config,
+            llm_config=test_llm_config,
             max_consecutive_auto_reply=1,
         )
 
         self.report_merger = AssistantAgent(
             name="report_merger",
             system_message="You are a senior engineering lead consolidating code review reports.",
-            llm_config=llm_config,
+            llm_config=merge_llm_config,
             max_consecutive_auto_reply=1,
         )
 
@@ -94,7 +133,7 @@ Check for (where applicable):
 6. Excessive permissions or privilege escalation paths
 
 Format: numbered list, CRITICAL issues first, then MODERATE, then LOW.
-If no security issues found, say "No security issues detected."
+If no issues found, say "No security issues detected."
 Keep your audit under 200 words."""
 
     def _test_generator_prompt(self, code: str, lang: str) -> str:
@@ -195,7 +234,7 @@ Keep the Action Items section under 150 words."""
             else:
                 raise
 
-def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma3", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
     """Main function equivalent to SPL workflow parallel_code_review"""
     reviewer = ParallelCodeReview(review_model)
     return asyncio.run(reviewer.run_parallel_review(code, lang, log_dir))

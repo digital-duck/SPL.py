@@ -20,7 +20,7 @@ def write_file(path: str, content: str) -> str:
     import re
     code_exts = {".py", ".go", ".ts", ".js"}
     if os.path.splitext(path)[1] in code_exts:
-        content = re.sub(r"^```[a-zA-Z]*\n?", "", content.strip())
+        content = re.sub(r"^```[a-zA-Z0-9_]*\n?", "", content.strip())
         content = re.sub(r"\n?```$", "", content).strip()
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "w", encoding="utf-8") as fh:

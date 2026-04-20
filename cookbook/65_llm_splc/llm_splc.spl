@@ -43,7 +43,7 @@ SELECT CASE target
      EVALUATE → inspect last message content and branch in Python.
      WHILE → loop until termination condition on reply content.
      EXCEPTION WHEN → try/except around initiate_chat.
-     Include all imports. Use gpt-4o or model param where model is needed.'
+     Include all imports. Use gemma3 as the default model (Ollama-compatible) — NOT gpt-4o or any OpenAI model.'
   WHEN 'crewai' THEN
     'CrewAI (Python). Use Agent + Task + Crew.
      Each GENERATE maps to a Task assigned to an Agent.

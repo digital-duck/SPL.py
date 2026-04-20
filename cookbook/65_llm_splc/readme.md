@@ -50,6 +50,16 @@ spl3 run cookbook/65_llm_splc/llm_splc.spl \
     --param output_file="$(pwd)/cookbook/65_llm_splc/targets/crewai/parallel_code_review.py"
 ```
 
+```bash
+spl3 run cookbook/65_llm_splc/llm_splc.spl \
+    --adapter ollama --model=gemma3 \
+    --tools cookbook/65_llm_splc/tools.py \
+    --param spl_file="$(pwd)/cookbook/63_parallel_code_review/parallel_code_review.spl" \
+    --param target="crewai" \
+    --param output_file="$(pwd)/cookbook/65_llm_splc/targets-ollama/crewai/parallel_code_review.py"
+```
+
+
 ## General usage
 
 ```bash

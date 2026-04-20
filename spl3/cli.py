@@ -177,6 +177,11 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
         registry = FederatedRegistry(local, hub_reg)
         click.echo(f"Hub registry: {hub_url}")
 
+    # Propagate --model into workflow @model param so USING MODEL @model picks it up.
+    # Only set if the user hasn't already passed --param model=... explicitly.
+    if model and "model" not in params:
+        params["model"] = model
+
     # Build executor and attach composer for CALL workflow_name() dispatch
     adapter_kwargs = {"model": model} if model else {}
     if allowed_tools:
