@@ -1,0 +1,31 @@
+WORKFLOW review_agent
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  @quality := summarize(@draft);
+  WHILE @quality < 0.8 DO
+    GENERATE rewrite(@draft, style='improved') INTO @current;
+    @quality := sentiment(@current);
+  END;
+  @final := @current;
+  COMMIT @final;
+
+CREATE FUNCTION summarize(text TEXT)
+RETURNS NUMBER AS $$
+  sum([t for t in text.split() if t.isalpha()])
+$$;
+
+CREATE FUNCTION rewrite(text TEXT, style TEXT DEFAULT 'standard')
+RETURNS TEXT AS $$
+  if style == 'improved' then
+    return [t for t in text.split() if t.isalpha()] ++ ['a', 'the']
+  else
+    return text
+  end;
+$$;
+
+CREATE FUNCTION sentiment(text TEXT)
+RETURNS NUMBER AS $$
+  sum([1 if t in ['good', 'great'] else -1 for t in text.split()])
+  / length(text.split())
+$$;

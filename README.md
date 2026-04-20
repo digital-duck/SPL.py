@@ -46,7 +46,7 @@ SPL synthesizes three programming paradigms:
 
 | Version | Highlights |
 |---|---|
-| **1.0** | Single-query `PROMPT` statements; lexer, parser, executor foundation |
+| **1.0** | `SELECT … GENERATE` paradigm; single-query `PROMPT` statements; lexer, parser, executor foundation |
 | **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
 | **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
 

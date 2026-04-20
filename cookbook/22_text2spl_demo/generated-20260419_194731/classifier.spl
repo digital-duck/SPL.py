@@ -1,0 +1,11 @@
+PROMPT classify_intent
+SELECT @input AS text LIMIT 100 TOKENS
+GENERATE classify(text) STORE RESULT IN memory.intent;
+
+PROMPT route_to_handler
+SELECT @intent AS intent_type
+CASE
+  WHEN @intent = 'booking' THEN CALL book_handler()
+  WHEN @intent = 'payment' THEN CALL pay_handler()
+  ELSE CALL default_handler()
+END;

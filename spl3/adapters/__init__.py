@@ -102,6 +102,7 @@ def _bootstrap() -> None:
         ("bedrock",      "spl.adapters.bedrock",      "BedrockAdapter"),
         ("vertex",       "spl.adapters.vertex",       "VertexAdapter"),
         ("azure_openai", "spl.adapters.azure_openai", "AzureOpenAIAdapter"),
+        ("momagrid",     "spl.adapters.momagrid",     "MomagridAdapter"),
     ]:
         try:
             register_adapter(_name, getattr(_importlib.import_module(_mod), _cls))

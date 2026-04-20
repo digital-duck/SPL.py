@@ -1,0 +1,45 @@
+WORKFLOW refine_agent
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  DO
+    GENERATE rewrite(@draft, style='improved') INTO @temp;
+    COMMIT @temp;
+    @quality := 0.0;
+    @current := @temp;
+    WHILE @quality < 0.8 DO
+      GENERATE sentiment(@temp) INTO @quality;
+      IF @quality > 0.7 THEN
+        BREAK;
+      END;
+      GENERATE rewrite(@temp, style='refined') INTO @temp;
+      COMMIT @temp;
+      @quality := 0.0;
+      @current := @temp;
+    END;
+    @final := @temp;
+    COMMIT @final;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @final := 'unknown';
+      COMMIT @final;
+  END;
+END;
+
+CREATE FUNCTION rewrite(text TEXT, style TEXT)
+RETURNS TEXT AS $$ 
+  CASE style
+    WHEN 'improved' THEN text || '.'
+    WHEN 'refined' THEN text || ','
+  END;
+$$;
+
+CREATE FUNCTION sentiment(text TEXT) RETURNS NUMBER AS $$ 
+  SUM(
+    CASE
+      WHEN text LIKE '%good%' THEN 1.0
+      WHEN text LIKE '%bad%' THEN -1.0
+      ELSE 0.0
+    END
+  ) / LENGTH(text);
+$$;

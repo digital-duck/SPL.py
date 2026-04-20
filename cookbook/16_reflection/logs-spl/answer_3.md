@@ -1,111 +1,118 @@
-Here's an alternative design for a URL shortener system:
+**URL Shortener System Design**
 
-**Overview**
+The goal of this project is to design an efficient and scalable URL shortener system that can handle high traffic and provide basic statistics about how often each shortened URL is clicked.
 
-The URL shortener system will be designed to provide a simple and efficient way for users to shorten long URLs. The system will store shortened URLs in a database and provide an API for users to shorten URLs.
+**System Components**
 
-**Database Schema**
+1.  **Database**: A PostgreSQL database with the following tables:
+    *   `urls`: stores information about all URLs, including the shortened URLs and their corresponding original URLs.
+2.  **URL Shortener Service**: a Flask API that shortens URLs, generates unique shortened URLs, and stores them in the database.
+3.  **Redirect Service**: a Flask API that redirects users to the correct original URL based on the shortened URL.
 
-The database schema will consist of the following tables:
+**System Flow**
 
-*   **Urls**: stores the shortened URLs
-    *   `id` (primary key): unique identifier for each URL, generated using UUID
-    *   `original_url`: the original, long URL
-    *   `short_code`: a unique short code for the URL
-    *   `clicks`: the number of times the URL has been clicked
-*   **Clicks**: stores the click history for each URL
-    *   `id` (primary key): unique identifier for each click, generated using UUID
-    *   `url_id` (foreign key): references the `id` column in the `Urls` table
-    *   `click_time`: the timestamp of when the URL was clicked
+1.  When a user submits a new URL for shortening, it's processed by the URL Shortener Service.
+2.  The service generates a unique shortened URL and stores this information in the database along with the corresponding original URL.
+3.  When a user clicks on a shortened URL, it's intercepted by the Redirect Service.
+4.  The service retrieves the original URL from the database based on the shortened URL and redirects the user to the correct location.
 
-**API Endpoints**
+**Scalability Strategies**
 
-The following API endpoints will be provided:
+1.  **Distributed Database**: Use a distributed PostgreSQL database with multiple nodes to handle high traffic and improve performance.
+2.  **Load Balancing**: Implement load balancing using HAProxy or NGINX to distribute incoming requests across multiple instances of the URL Shortener Service and Redirect Service.
 
-1.  **POST /urls**: creates a new shortened URL
-    *   Request Body:
-        ```json
-{
-  "original_url": "https://www.example.com/very-long-url"
-}
-```
-    *   Response: the short code for the URL, including additional metadata such as original length and creation time
-    *   Example: `{"short_code": "abc123", "original_length": 50, "created_at": "2023-03-01T12:00:00Z"}`
+**Security Measures**
 
-2.  **GET /urls/{short_code}**: retrieves the original URL associated with a given short code
-    *   Request Parameters:
-        ```bash
-?short_code=abc123
-```
-    *   Response: the original URL, including additional metadata such as original length and creation time
-    *   Example: `https://www.example.com/very-long-url`
+1.  **HTTPS**: Secure the server with HTTPS using SSL/TLS certificates to protect user data.
+2.  **Password Hashing**: Use password hashing libraries like Werkzeug to securely store passwords for administrators.
+3.  **Input Validation**: Validate user input data, including URLs and shortened URLs, to prevent SQL injection and other attacks.
 
-3.  **GET /clicks**: retrieves the click history for all URLs
-    *   Response: a list of click history for each URL, including the number of clicks and most recent click time
-    *   Example:
-        ```json
-[
-  {
-    "url_id": 1,
-    "click_count": 10,
-    "most_recent_click_time": "2023-03-01T12:00:00Z"
-  },
-  {
-    "url_id": 2,
-    "click_count": 5,
-    "most_recent_click_time": "2023-03-02T13:30:00Z"
-  }
-]
-```
+**Code Implementation**
 
-4.  **GET /urls/{short_code}/clicks**: logs a click for the URL associated with the given short code
-    *   Request Parameters:
-        ```bash
-?short_code=abc123
-```
-    *   Response: `message` indicating that the click has been logged successfully
-
-**System Architecture**
-
-The system will be built using a microservices architecture, with each endpoint implemented as a separate service.
-
-1.  **URL Shortener Service**: This service will handle the creation and management of shortened URLs. It will store data in the `Urls` table and provide API endpoints for creating and retrieving shortened URLs.
-2.  **Click History Service**: This service will handle the logging of click history for each URL. It will store data in the `Clicks` table and provide API endpoints for storing and retrieving click history.
-
-**Implementation**
-
-The implementation will be written in a programming language such as Python, using a web framework such as Flask or Django. The system will use a robust database library like `psycopg2` or `mysql-connector-python`.
-
-Here is an example of how the system could be implemented:
+Below is an example code implementation in Python:
 
 ```python
-from flask import Flask, request, jsonify
-import uuid
-from psycopg2 import connect
+import os
+from flask import Flask, request, redirect, url_for, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 
-# Connect to PostgreSQL database
-conn = connect(
-    host="localhost",
-    database="url_shortener",
-    user="username",
-    password="password"
-)
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user:password@host:port/dbname'
+db = SQLAlchemy(app)
 
-def get_uuid():
-    return str(uuid.uuid4())
+class URL(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    original_url = db.Column(db.String(200), unique=True, nullable=False)
+    shortened_url = db.Column(db.String(20), unique=True, nullable=False)
 
-@app.route('/urls', methods=['POST'])
-def create_url():
+@app.route('/shorten', methods=['POST'])
+def shorten_url():
+    data = request.get_json()
+    
+    # Validate input URL
+    validate_url(data['url'])
+    
+    original_url = data['url']
     try:
-        original_url = request.json['original_url']
-        short_code = get_uuid()
-        urls.insert(short_code, {'original_url': original_url, 'clicks': 0})
-        conn.execute("INSERT INTO urls (id, original_url) VALUES (%s, %s)", (short_code, original_url))
-        return jsonify({'short_code': short_code}), 201
-    except KeyError as e:
-        logger.error(f"Missing required field: {str(e)}")
-        return jsonify({"error": f"Missing required field: {str(e)}"}), 400
+        url_entry = URL.query.filter_by(original_url=original_url).first()
+        if url_entry:
+            return jsonify({'error': 'URL already shortened'}), 400
+        
+        shortened_url = generate_shortened_url()
+        
+        # Create a new URL entry in the database
+        try:
+            url_entry = URL(original_url=original_url, shortened_url=shortened_url)
+            db.session.add(url_entry)
+            db.session.commit()
+            
+            return {'original_url': original_url, 'shortened_url': shortened_url}
+        except Exception as e:
+            # Log any errors that occur during database operations
+            app.logger.error(str(e))
+            return jsonify({'error': 'Failed to shorten URL'}), 500
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
 
-@app.route('/urls/<string
+@app.route('/click', methods=['POST'])
+def click_shortened_url():
+    data = request.get_json()
+    
+    # Validate shortened URL
+    validate_shoroten_url(data['url'])
+    
+    try:
+        url_entry = URL.query.filter_by(shortened_url=data['url']).first()
+        if not url_entry or url_entry.original_url == data['url']:
+            return jsonify({'error': 'URL not found'}), 404
+        
+        # Redirect to the original URL
+        return redirect(url_for('original_url', url=url_entry.shortened_url))
+    
+    except Exception as e:
+        app.logger.error(str(e))
+        return jsonify({'error': 'Failed to click URL'}), 500
+
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    stats = {'num_clicks': URL.query.count(), 'last_updated': datetime.now()}
+    
+    # Calculate the last updated time to improve performance
+    recent_urls = URL.query.order_by(URL.id.desc()).limit(10).all()
+    for url in recent_urls:
+        try:
+            stats['num_clicks'] += 1
+        except Exception as e:
+            app.logger.error(str(e))
+    
+    return jsonify({'stats': stats})
+
+def validate_url(url):
+    # Validate the input URL
+    try:

@@ -1,0 +1,25 @@
+WORKFLOW review_agent
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  DO
+    GENERATE rewrite(@draft, style='improved') INTO @current;
+    GENERATE sentiment(@current) INTO @quality;
+  EXCEPTION
+    WHEN HallucinationDetected THEN
+      @quality := 0.0;
+      @current := @draft;
+  END;
+
+  WHILE @quality < 0.8 DO
+    GENERATE refine(@current, style='refined') INTO @next;
+    GENERATE sentiment(@next) INTO @new_quality;
+    IF @new_quality > @quality THEN
+      @quality := @new_quality;
+      @current := @next;
+    END;  -- Removed 'IF' keyword
+
+  END;
+
+  COMMIT @final;
+END;

@@ -4,16 +4,35 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spl-llm"
-version = "3.0.0"
-description = "SPL - A Declarative Language for Agentic Workflow Orchestration"
-readme = "README.md"
+version = "3.0.1"
+description = "SPL — A Declarative Language for Agentic LLM Workflow Orchestration"
+readme = {file = "README.md", content-type = "text/markdown"}
 license = "Apache-2.0"
 requires-python = ">=3.11"
+authors = [
+    {name = "Wen G. Gong", email = "p2p2learn@outlook.com"},
+]
+keywords = [
+    "llm", "agentic-ai", "workflow", "orchestration", "dsl",
+    "prompt-engineering", "multi-agent", "declarative", "spl",
+    "langchain", "langgraph", "ollama", "openai", "anthropic",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "click>=8.0",
     "httpx>=0.27",
     "pyyaml>=6.0",
-    # dd-* ecosystem
+    # dd-* ecosystem (all published on PyPI)
     "dd-llm[openai]>=0.1.0",
     "dd-vectordb>=0.1.0",
     "dd-embed>=0.1.0",
@@ -24,19 +43,29 @@ dependencies = [
     "dd-logging>=0.1.2",
     # LLM provider SDKs
     "anthropic>=0.25.0",
-    # UI
+]
+
+[project.optional-dependencies]
+ui = [
     "streamlit>=1.35",
     "pandas>=2.0",
     "streamlit-aggrid>=1.0.5",
     "streamlit-ace>=0.1.1",
     "chromadb>=0.5",
 ]
-
-[project.optional-dependencies]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
+    "build>=1.0",
+    "twine>=5.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/digital-duck/SPL.py"
+Repository = "https://github.com/digital-duck/SPL.py"
+Documentation = "https://github.com/digital-duck/SPL.py/blob/main/README.md"
+"Bug Tracker" = "https://github.com/digital-duck/SPL.py/issues"
+"arXiv Paper" = "https://arxiv.org/abs/2602.21257"
 
 [project.scripts]
 spl3 = "spl3.cli:main"

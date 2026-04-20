@@ -1,0 +1,18 @@
+WORKFLOW classify_intent
+  INPUT @text TEXT,
+        @models JSON
+  OUTPUT @label TEXT,
+          @selected_model TEXT
+DO
+  GENERATE extract_entities(@text) INTO @entities;
+  EVALUATE
+    WHEN @entities = 'question' THEN
+      @selected_model := select_best_model('question_handler', @models);
+    WHEN @entities = 'order' THEN
+      @selected_model := select_best_model('order_handler', @models);
+    ELSE
+      @selected_model := select_default_model(@models);
+  END;
+  GENERATE classify(@text, @selected_model) INTO @label;
+  COMMIT @label;
+END;

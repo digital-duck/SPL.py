@@ -1,1 +1,1 @@
-# Score for candidate 2\nGenerator: gemma3 | Scorer: llama3.2\n\nScore: 6.7
+# Score for candidate 2\nGenerator: gemma3 | Scorer: llama3.2\n\nScore: 8.6

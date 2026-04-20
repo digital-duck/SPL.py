@@ -1,12 +1,13 @@
 ```json
 {
-  "risk_level": "medium",
-  "flags": [
-    "sanctions",
-    "aml",
-    "ai_ethics",
-    "market_manipulation"
-  ],
-  "summary": "The draft guidelines related to AI credit scoring transparency necessitate banks to ensure their models don’t inadvertently violate sanctions regulations or AML requirements, while also addressing potential biases and ethical concerns related to AI implementation."
+  "risk_level": "low",
+  "flags": ["AML"],
+  "summary": "The EU's new guidelines on AI credit scoring transparency may introduce AML risks if banks fail to implement proper controls to prevent misuse of AI-driven credit scoring systems."
 }
 ```
+
+Explanation:
+
+*   Risk Level: Low - While the news item mentions AML, it does not indicate a significant risk. The 18-month compliance window and the fact that the EU is publishing guidelines suggest a proactive approach to regulating AI in the financial sector.
+*   Flags: AML - Sanctions are not mentioned in this news item, but there is an implicit risk of AML if banks fail to implement proper controls to prevent misuse of AI-driven credit scoring systems. This could lead to reputational damage and regulatory action.
+*   Summary: The EU's new guidelines on AI credit scoring transparency may introduce AML risks if banks fail to implement proper controls to prevent misuse of AI-driven credit scoring systems.
