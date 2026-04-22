@@ -43,11 +43,14 @@ class TestLocalRegistry:
 
     def test_overwrite_warns(self, caplog):
         import logging
+        logging.getLogger("spl").propagate = True
+        logger = logging.getLogger("spl.registry")
+        logger.propagate = True
         registry = LocalRegistry()
         defn1 = WorkflowDefinition("wf", "file1.spl", None)
         defn2 = WorkflowDefinition("wf", "file2.spl", None)
         registry.register(defn1)
-        with caplog.at_level(logging.WARNING, logger="spl.registry"):
+        with caplog.at_level(logging.WARNING):
             registry.register(defn2)
         assert "overwriting" in caplog.text
 

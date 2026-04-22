@@ -455,7 +455,13 @@ class Optimizer:
         """Estimate total tokens across all steps."""
         total = 0
         for step in steps:
-            total += step.estimated_tokens
+            # Handle cases where estimated_tokens might be a string (variable name)
+            tokens = step.estimated_tokens
+            if isinstance(tokens, str):
+                # If it's a variable reference (e.g. "@budget"), we can't know
+                # the value at optimize time. Use 0 for the estimate.
+                tokens = 0
+            total += tokens or 0
             total += self._estimate_total_tokens(step.substeps)
             for branch in step.branches:
                 total += self._estimate_total_tokens(branch.steps)

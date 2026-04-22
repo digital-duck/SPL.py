@@ -927,20 +927,6 @@ def memory_delete(key: str, storage_dir: str | None, db: str | None) -> None:
         raise click.ClickException(f"Key not found: {key}")
 
 
-@cli.group("rag", hidden=True)
-@click.pass_context
-def cmd_rag_alias(ctx: click.Context) -> None:
-    """Alias for 'doc-rag'."""
-    pass
-
-# Link the subcommands of doc-rag to rag alias
-cmd_rag_alias.add_command(rag_add, "add")
-cmd_rag_alias.add_command(rag_query, "query")
-cmd_rag_alias.add_command(rag_count, "count")
-
-
-# ── spl doc-rag ───────────────────────────────────────────────────────────────
-
 @cli.group("doc-rag")
 def cmd_rag() -> None:
     """Manage the document RAG vector store (.spl/vectors)."""
@@ -1013,6 +999,17 @@ def rag_count(storage_dir: str) -> None:
     n = store.count()
     store.close()
     click.echo(f"Documents indexed: {n}")
+
+
+@cli.group("rag", hidden=True)
+def cmd_rag_alias() -> None:
+    """Alias for 'doc-rag'."""
+    pass
+
+
+cmd_rag_alias.add_command(rag_add, "add")
+cmd_rag_alias.add_command(rag_query, "query")
+cmd_rag_alias.add_command(rag_count, "count")
 
 
 # ── spl code-rag ────────────────────────────────────────────────────────────
