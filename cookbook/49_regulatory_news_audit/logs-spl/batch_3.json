@@ -1,12 +1,15 @@
-```json
+Here is the output in strictly valid JSON format:
+
+```
 {
-  "risk_level": "medium",
-  "flags": [
-    "sanctions",
-    "aml",
-    "market manipulation",
-    "ai ethics"
-  ],
-  "summary": "The reported increase in non-performing loans (NPLs) raises concerns about potential AML vulnerabilities due to distressed borrowers and the risk of unknowingly facilitating sanctions evasion if the network lacks robust due diligence procedures."
+  "risk_level": "low",
+  "flags": ["AML"],
+  "summary": "The news item does not explicitly mention any regulatory risks, but it highlights a situation that may raise AML concerns if the microfinance network fails to implement adequate due diligence and monitoring measures for borrowers affected by agricultural drought."
 }
 ```
+
+Explanation:
+
+- The risk level is set as low because the article does not mention any intentional or manipulative behavior, which would be typical of market manipulation.
+- Flags include AML (Anti-Money Laundering) as a potential concern if the network fails to implement adequate controls on borrowers affected by drought. This is a regulatory risk rather than a market manipulation risk, but still warrants attention due to its connection to financial institution compliance with AML regulations.
+- There are no flags or risk levels for sanctions, AI ethics, or market manipulation in this scenario because these risks are not explicitly mentioned in the news item.

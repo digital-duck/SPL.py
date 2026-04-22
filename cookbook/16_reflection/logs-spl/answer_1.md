@@ -1,125 +1,135 @@
-Here is a design for a URL shortener system:
+Here is an example design for a URL shortener system:
 
-**Overview**
+**System Requirements**
 
-The URL shortener system will be designed to provide a simple and efficient way for users to shorten long URLs. The system will store shortened URLs in a database and provide an API for users to shorten URLs.
+*   Unique Shortened URLs: Each original URL should be mapped to a unique shortened URL.
+*   Redirects: When a user clicks on a shortened URL, they should be redirected to the corresponding original URL.
+*   Stats and Analytics: Provide basic statistics about how often each shortened URL is clicked.
 
-**Database Schema**
+**System Design**
 
-The database schema will consist of the following tables:
+The system will consist of three main components:
 
-*   **Urls**: stores the shortened URLs
-    *   `id` (primary key): unique identifier for each URL
-    *   `original_url`: the original, long URL
-    *   `short_code`: a unique short code for the URL
-    *   `clicks`: the number of times the URL has been clicked
+1.  **Database**: This will store information about all URLs, including the shortened URLs and their corresponding original URLs.
+2.  **URL Shortener Service**: This service will be responsible for shortening URLs, generating unique shortened URLs, and storing them in the database.
+3.  **Redirect Service**: This service will redirect users to the correct original URL based on the shortened URL.
 
-*   **Clicks**: stores the click history for each URL
-    *   `id` (primary key): unique identifier for each click
-    *   `url_id` (foreign key): references the `id` column in the `Urls` table
-    *   `click_time`: the timestamp of when the URL was clicked
+**Flow**
 
-**API Endpoints**
+Here's a high-level overview of how the system works:
 
-The following API endpoints will be provided:
+1.  When a user submits a new URL for shortening, it's processed by the URL Shortener Service.
+2.  The service generates a unique shortened URL and stores this information in the database along with the corresponding original URL.
+3.  When a user clicks on a shortened URL, it's intercepted by the Redirect Service.
+4.  The service retrieves the original URL from the database based on the shortened URL and redirects the user to the correct location.
 
-1.  **POST /urls**: creates a new shortened URL
-    *   Request Body:
-        ```json
-{
-  "original_url": "https://www.example.com/very-long-url"
-}
-```
-    *   Response: the short code for the URL
-    *   Example: `https://short.url/abc123`
+**Scalability**
 
-2.  **GET /urls/{short_code}**: retrieves the original URL associated with a given short code
-    *   Request Parameters:
-        ```bash
-?short_code=abc123
-```
-    *   Response: the original URL
-    *   Example: `https://www.example.com/very-long-url`
+To ensure our system can handle high traffic and maintain performance, we'll use the following strategies:
 
-3.  **GET /clicks**: retrieves the click history for all URLs
-    *   Response: a list of click history for each URL
-    *   Example:
-        ```json
-[
-  {
-    "url_id": 1,
-    "click_time": "2023-03-01T12:00:00Z"
-  },
-  {
-    "url_id": 2,
-    "click_time": "2023-03-02T13:30:00Z"
-  }
-]
-```
+*   **Distributed Database**: Use a distributed database that's designed for horizontal scaling. This allows us to add more nodes as needed to support increased load.
+*   **Load Balancing**: Implement load balancing to distribute incoming requests across multiple instances of our URL Shortener Service and Redirect Service.
 
-4.  **GET /urls/{short_code}/clicks**: logs a click for the URL associated with the given short code
-    *   Request Parameters:
-        ```bash
-?short_code=abc123
-```
-    *   Response: `message` indicating that the click has been logged successfully
+**Code Implementation**
 
-**System Architecture**
-
-The system will be built using a microservices architecture, with each endpoint implemented as a separate service.
-
-1.  **URL Shortener Service**: This service will handle the creation and management of shortened URLs. It will store data in the `Urls` table and provide API endpoints for creating and retrieving shortened URLs.
-2.  **Click History Service**: This service will handle the logging of click history for each URL. It will store data in the `Clicks` table and provide API endpoints for storing and retrieving click history.
-
-**Implementation**
-
-The implementation will be written in a programming language such as Python, using a web framework such as Flask or Django.
-
-Here is an example of how the system could be implemented:
+Below is an example code implementation in Python:
 
 ```python
-from flask import Flask, request, jsonify
 import uuid
+from flask import Flask, request, redirect, url_for
 from datetime import datetime
 
 app = Flask(__name__)
 
-# In-memory database
-urls = {}
-clicks = {}
+# In-memory database for demonstration purposes only. 
+# In a real-world application, you'd want to use a production-ready database.
 
-@app.route('/urls', methods=['POST'])
-def create_url():
-    original_url = request.json['original_url']
-    short_code = str(uuid.uuid4())
-    urls[short_code] = {'original_url': original_url, 'clicks': 0}
-    return jsonify({'short_code': short_code})
+database = {}
 
-@app.route('/urls/<string:short_code>', methods=['GET'])
-def get_original_url(short_code):
-    if short_code in urls:
-        return jsonify(urls[short_code]['original_url'])
-    else:
-        return jsonify({'error': 'Invalid short code'}), 404
+@app.route('/shorten', methods=['POST'])
+def shorten_url():
+    original_url = request.form.get('url')
+    
+    if not original_url:
+        return {'error': 'Missing URL'}, 400
+    
+    shortened_url = generate_shortened_url()
+    
+    # Store the mapping between the shortened URL and the original URL in the database.
+    database[shortened_url] = original_url
+    
+    return {'original_url': original_url, 'shortened_url': shortened_url}
 
-@app.route('/clicks', methods=['GET'])
-def get_click_history():
-    click_history = []
-    for url_id, clicks_data in clicks.items():
-        for click_time, _ in clicks_data:
-            click_history.append({
-                'url_id': url_id,
-                'click_time': click_time
-            })
-    return jsonify(click_history)
+@app.route('/click', methods=['POST'])
+def click_shortened_url():
+    shortened_url = request.form.get('url')
+    
+    if not shortened_url:
+        return {'error': 'Missing URL'}, 400
+    
+    # Retrieve the original URL from the database based on the shortened URL.
+    original_url = database[shortened_url]
+    
+    # Redirect the user to the correct location.
+    return redirect(original_url)
 
-@app.route('/urls/<string:short_code>/clicks', methods=['POST'])
-def log_click(short_code):
-    if short_code in urls:
-        urls[short_code]['clicks'] += 1
-        clicks[str(uuid.uuid4())] = [(datetime.now(), short_code)]
-        return jsonify({'message': 'Click logged successfully'})
-    else:
-        return jsonify({'error': 'Invalid short code'}), 404
+@app.route('/stats', methods=['GET'])
+def get_stats():
+    stats = {'num_clicks': 0, 'last_updated': datetime.now()}
+    
+    # Retrieve the mappings between shortened URLs and original URLs from the database.
+    for shortened_url, original_url in database.items():
+        stats['num_clicks'] += 1
+    
+    return {'stats': stats}
 
-if __name__ == '__
+# Function to generate a unique shortened URL.
+def generate_shortened_url():
+    return f'http://example.com/short/{uuid.uuid4().hex[:6]}'
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+**API Documentation**
+
+Here's some sample API documentation for our URL shortener system:
+
+### Shorten URL Endpoint
+
+*   `POST /shorten`
+    *   Request Body:
+        +   `url`: The original URL to be shortened.
+    *   Response: A JSON object containing the shortened URL and the original URL.
+
+Example Request:
+
+```bash
+curl -X POST \
+  http://localhost:5000/shorten \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'url=https://www.example.com'
+```
+
+### Click
+
+Example Response:
+
+```bash
+http://example.com/short/abc123
+```
+
+### Stats
+
+Example Response:
+
+```json
+{
+    "stats": {
+        "num_clicks": 10,
+        "last_updated": "2023-02-20T14:30:00.000000"
+    }
+}
+```
+
+This is a basic implementation of an in-memory database and doesn't account for things like handling duplicate URLs, caching, etc. However, it should give you a starting point to build upon.

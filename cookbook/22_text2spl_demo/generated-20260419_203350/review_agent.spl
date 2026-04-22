@@ -1,0 +1,29 @@
+WORKFLOW review_agent
+INPUT (@text TEXT DEFAULT '', @threshold REAL DEFAULT 0.8)
+OUTPUT (@review TEXT)
+SECURITY (owner='system', classification='internal')
+DO
+  -- Draft initial review
+  GENERATE draft_review(@text) WITH OUTPUT BUDGET 100 TOKENS INTO @draft
+
+  -- Critique the draft
+  GENERATE critique(@text, @draft) WITH OUTPUT BUDGET 50 TOKENS MODEL 'llama3.2' INTO @critique
+
+  -- Refine based on critique
+  GENERATE refine(@text, @critique) WITH OUTPUT BUDGET 100 TOKENS MODEL 'llama3.2' INTO @refined
+
+  -- Evaluate the refined review against the threshold
+  EVALUATE @refined
+  WHEN >= @threshold THEN
+    COMMIT @text WITH status='approved'
+    @review := 'Approved'
+  ELSE
+    RAISE QualityBelowThreshold 'Review quality too low'
+    @review := 'Rejected'
+  END
+
+EXCEPTION
+  WHEN QualityBelowThreshold THEN
+    @review := 'Rejected'
+    COMMIT @review WITH status='rejected'
+END

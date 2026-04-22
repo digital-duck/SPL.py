@@ -117,3 +117,54 @@ LLM calls breakdown: 3 parallel sub-workflow calls + 1 serial merge.
 | Branch isolation | All branches read `@code`; each writes only to its own `INTO @var` |
 | Named arguments in `CALL` | `lang=@lang, model=@model, log_dir=@log_dir` |
 | Fan-out → merge | 3 parallel outputs feed 1 final `GENERATE merge_reviews(...)` |
+
+---
+
+## LLM-compiled targets (recipe 65)
+
+Generated via `cookbook/65_llm_splc/` using `--adapter claude_cli`. See recipe 65 readme for commands.
+
+### AutoGen (`targets/autogen/parallel_code_review.py`)
+
+**Generated:** 2026-04-20 | 3 LLM calls | 316s | 9610 chars
+
+**What the compiler got right:**
+- `AssistantAgent + UserProxyAgent` pattern with per-agent `llm_config`
+- `asyncio.gather(*tasks)` for `CALL PARALLEL` — three reviews dispatched concurrently
+- Ollama-compatible config (`base_url: http://localhost:11434/v1`)
+- Per-agent `max_tokens` matching SPL `WITH OUTPUT BUDGET` values
+- All verbatim prompts from `CREATE FUNCTION` blocks preserved
+- Logging messages mirror SPL `LOGGING` statements
+- Exception handling maps to both `EXCEPTION WHEN` blocks
+
+**Known gap — `initiate_chat` is synchronous:**
+```python
+# Generated (blocks event loop):
+chat_result = self.user_proxy.initiate_chat(agent, message=message, max_turns=1)
+
+# Should be (true async):
+chat_result = await asyncio.to_thread(
+    self.user_proxy.initiate_chat, agent, message=message, max_turns=1
+)
+```
+The three `asyncio.gather` tasks appear parallel but run sequentially because `initiate_chat` blocks the event loop. Fix before production use.
+
+**Self-review caught:** default model mismatch (`gemma3` → `gemma4` to match SPL spec). Fix step corrected it.
+
+---
+
+### CrewAI (`targets/crewai/parallel_code_review.py`)
+
+**Generated:** 2026-04-20 (draft — re-run pending fix step validation)
+
+**What the compiler got right:**
+- `Agent + Task + Crew + Process` pattern — correct CrewAI idioms
+- `Process.parallel` for the `CALL PARALLEL` branches
+- Two-crew pattern: parallel review crew → merge crew
+- `gemma3` as default model (Ollama-compatible)
+- `merge_reviews` prompt verbatim from SPL `CREATE FUNCTION`
+- Exception handling maps to both `EXCEPTION WHEN` blocks
+
+**Known gap:**
+- `langchain_community.llms.Ollama` is deprecated; use `langchain_ollama` or direct Ollama client
+- `parallel_results[0/1/2]` — CrewAI `kickoff()` returns `CrewOutput`, not a list; use `.tasks_output[i].raw`

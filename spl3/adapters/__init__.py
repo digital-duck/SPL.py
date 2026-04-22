@@ -16,14 +16,21 @@ import inspect as _inspect
 import logging as _logging
 from pathlib import Path as _Path
 
-# ── Extend __path__ to include SPL20's adapters/ ──────────────────────────────
-# Keeps `from spl3.adapters.claude_cli import …` etc. resolvable via SPL20's files.
-_spl20_adapters = _Path(__file__).parent.parent.parent.parent / "SPL20" / "spl" / "adapters"
-if _spl20_adapters.exists():
-    __path__ = list(__path__) + [str(_spl20_adapters)]
+# ── Extend __path__ to include spl/adapters/ ─────────────────────────────────
+# In dev layout: spl3/adapters/ and spl/adapters/ are siblings inside SPL.py/
+# In installed layout: both land in site-packages/ as spl3/ and spl/ siblings
+# Try installed-package path first (3 levels up), then legacy monorepo path.
+_spl_adapters = _Path(__file__).parent.parent.parent / "spl" / "adapters"
+if _spl_adapters.exists():
+    __path__ = list(__path__) + [str(_spl_adapters)]
+else:
+    _spl20_adapters = _Path(__file__).parent.parent.parent.parent / "SPL20" / "spl" / "adapters"
+    if _spl20_adapters.exists():
+        __path__ = list(__path__) + [str(_spl20_adapters)]
 
 # ── Re-export base types ───────────────────────────────────────────────────────
-from spl3.adapters.base import LLMAdapter, GenerationResult  # noqa: F401
+# spl.adapters.base is always available — spl/ is co-installed with spl3/
+from spl.adapters.base import LLMAdapter, GenerationResult  # noqa: F401
 
 _log = _logging.getLogger("spl.adapters")
 _ADAPTER_REGISTRY: dict[str, type] = {}
@@ -102,6 +109,7 @@ def _bootstrap() -> None:
         ("bedrock",      "spl.adapters.bedrock",      "BedrockAdapter"),
         ("vertex",       "spl.adapters.vertex",       "VertexAdapter"),
         ("azure_openai", "spl.adapters.azure_openai", "AzureOpenAIAdapter"),
+        ("momagrid",     "spl.adapters.momagrid",     "MomagridAdapter"),
     ]:
         try:
             register_adapter(_name, getattr(_importlib.import_module(_mod), _cls))

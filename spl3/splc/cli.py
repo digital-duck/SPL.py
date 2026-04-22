@@ -580,7 +580,7 @@ def _compile(prompt: str, *, model: str, verbose: bool) -> tuple[str, str]:
 
     import asyncio
 
-    adapter = ClaudeCLIAdapter(model=model)
+    adapter = ClaudeCLIAdapter(default_model=model)
 
     async def _run() -> str:
         result = await adapter.generate(prompt)
@@ -594,8 +594,17 @@ def _compile(prompt: str, *, model: str, verbose: bool) -> tuple[str, str]:
     # Split implementation from readme (if present)
     if "--- README ---" in raw:
         impl_part, _, readme_part = raw.partition("--- README ---")
-        return impl_part.strip(), readme_part.strip()
-    return raw.strip(), ""
+        return _strip_fences(impl_part), readme_part.strip()
+    return _strip_fences(raw), ""
+
+
+def _strip_fences(text: str) -> str:
+    """Remove leading/trailing markdown code fences from LLM output."""
+    import re
+    text = text.strip()
+    text = re.sub(r"^```[a-zA-Z]*\n?", "", text)
+    text = re.sub(r"\n?```$", "", text)
+    return text.strip()
 
 
 # ── Manifest writer ───────────────────────────────────────────────────────────

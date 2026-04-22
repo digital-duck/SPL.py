@@ -1,1 +1,3 @@
-Okay, please provide me with the independent answers separated by “---” as you requested. I need the text of each answer to analyze them and formulate the definitive, consensus-based response to the question: “What causes inflation?” Once you paste the answers here, I’ll get to work on crafting the final, authoritative answer.
+Please provide me with the independent answers separated by “---”. I need the text of the answers to be able to analyze them and fulfill your request for a consensus summary. Once you paste the answers here, I’ll do my best to identify the points of agreement, disagreement, and any contradictions.
+
+**Once you provide the answers, I will synthesize them into a definitive, authoritative, and clear response to the question: “What causes inflation?”**

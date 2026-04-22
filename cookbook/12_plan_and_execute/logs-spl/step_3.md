@@ -1,6 +1,1 @@
-This step focuses on solidifying the API’s core design by detailing the URLs and JSON structure for todo item interactions. It ensures consistency in data exchange, defining endpoints like `/todos` and `/todos/{id}` alongside a standardized JSON model. The output is documented in `api_spec.md` and finalized in `todo_model.json`.
-
-**Filenames:**
-
-*   `api_spec.md`
-*   `todo_model.json`
+This step finalizes the API blueprint by detailing each endpoint and its associated JSON data model for todo items, guaranteeing a standardized format for all client-server interactions. It meticulously specifies the structure of todo item data, including fields like ID, title, description, and completion status. **Filenames Created:** `api_design.md`

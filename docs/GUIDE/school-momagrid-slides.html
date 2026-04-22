@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Momagrid — AI for Every Classroom</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ── Slide container ── */
+  #deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 60px 80px;
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+  }
+  .slide.active { display: flex; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Typography ── */
+  h1 { font-size: 3rem; font-weight: 800; line-height: 1.15; margin-bottom: 0.4em; }
+  h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5em; }
+  h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.8em; color: #79c0ff; }
+  p  { font-size: 1.25rem; line-height: 1.7; max-width: 820px; color: #c9d1d9; }
+  .zh { font-size: 1rem; color: #8b949e; margin-top: 0.3em; letter-spacing: 0.05em; }
+  .accent { color: #58a6ff; }
+  .green  { color: #56d364; }
+  .yellow { color: #e3b341; }
+  .red    { color: #f85149; }
+  .tag {
+    display: inline-block;
+    background: #1f2937;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 0.95rem;
+    margin: 4px;
+    color: #c9d1d9;
+  }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 24px 32px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    text-align: left;
+    max-width: 780px;
+    margin: 16px auto;
+  }
+  .cmd { color: #79c0ff; }
+  .cmt { color: #8b949e; }
+  .str { color: #a5d6ff; }
+  .kw  { color: #ff7b72; }
+
+  /* ── Lists ── */
+  ul.checks { list-style: none; text-align: left; max-width: 700px; }
+  ul.checks li { font-size: 1.2rem; padding: 8px 0; color: #c9d1d9; }
+  ul.checks li::before { margin-right: 12px; }
+  ul.checks li.ok::before   { content: '✅'; }
+  ul.checks li.no::before   { content: '❌'; }
+  ul.checks li.star::before { content: '⭐'; }
+  ul.checks li.arrow::before { content: '→'; color: #58a6ff; }
+
+  /* ── Two-column layout ── */
+  .cols { display: flex; gap: 40px; align-items: flex-start; max-width: 1000px; }
+  .col  { flex: 1; text-align: left; }
+  .col h3 { font-size: 1.2rem; margin-bottom: 12px; }
+
+  /* ── Big stat ── */
+  .stats { display: flex; gap: 60px; margin: 24px 0; }
+  .stat { text-align: center; }
+  .stat .num { font-size: 3.5rem; font-weight: 800; color: #58a6ff; line-height: 1; }
+  .stat .lbl { font-size: 0.95rem; color: #8b949e; margin-top: 4px; }
+
+  /* ── Architecture SVG ── */
+  .arch { margin: 8px auto; width: 96vw; max-width: none; }
+
+  /* ── Chinese text toggle ── */
+  body.hide-zh .zh { display: none !important; }
+  #zh-btn {
+    background: none;
+    border: 1px solid #30363d;
+    border-radius: 20px;
+    color: #8b949e;
+    font-size: 0.8rem;
+    padding: 3px 12px;
+    cursor: pointer;
+    margin-left: 14px;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  #zh-btn:hover { color: #e6edf3; border-color: #58a6ff; }
+  #zh-btn.zh-on { color: #e3b341; border-color: #e3b341; }
+
+  /* ── Two-command hero ── */
+  .cmd-pair { display: flex; gap: 30px; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+  .cmd-card {
+    background: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 14px;
+    padding: 28px 36px;
+    text-align: left;
+    min-width: 300px;
+  }
+  .cmd-card .role { font-size: 0.85rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .cmd-card code { font-size: 1.3rem; color: #79c0ff; font-family: 'Cascadia Code', monospace; }
+  .cmd-card .note { font-size: 0.9rem; color: #8b949e; margin-top: 8px; }
+  .cmd-card.hub { border-color: #1f6feb; }
+  .cmd-card.agent { border-color: #238636; }
+
+  /* ── Navigation ── */
+  #nav {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(22,27,34,0.85);
+    border: 1px solid #30363d;
+    border-radius: 30px;
+    padding: 8px 20px;
+    backdrop-filter: blur(8px);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #30363d;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .dot.active { background: #58a6ff; transform: scale(1.4); }
+  #counter { font-size: 0.8rem; color: #8b949e; margin-left: 10px; }
+
+  /* ── Arrow buttons ── */
+  .arrow-btn {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(22,27,34,0.7);
+    border: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 1.6rem;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: color 0.2s, border-color 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .arrow-btn:hover { color: #e6edf3; border-color: #58a6ff; }
+  #prev { left: 20px; }
+  #next { right: 20px; }
+
+  /* ── Title slide gradient ── */
+  .slide.title-slide { background: radial-gradient(ellipse at 60% 40%, #0d2137 0%, #0d1117 70%); }
+
+  /* ── Slide-specific backgrounds ── */
+  .slide.dark-blue { background: radial-gradient(ellipse at 50% 30%, #0a1929 0%, #0d1117 70%); }
+  .slide.dark-green { background: radial-gradient(ellipse at 50% 30%, #0a2018 0%, #0d1117 70%); }
+
+  /* ── Table ── */
+  table { border-collapse: collapse; font-size: 1.05rem; max-width: 800px; }
+  th { background: #161b22; color: #79c0ff; padding: 10px 20px; border: 1px solid #30363d; }
+  td { padding: 10px 20px; border: 1px solid #30363d; color: #c9d1d9; }
+  tr:nth-child(even) td { background: #0d1117; }
+  tr:nth-child(odd)  td { background: #161b22; }
+
+  /* ── Callout box ── */
+  .callout {
+    background: #1c2b3a;
+    border-left: 4px solid #58a6ff;
+    border-radius: 0 10px 10px 0;
+    padding: 18px 28px;
+    max-width: 780px;
+    text-align: left;
+    font-size: 1.1rem;
+    color: #c9d1d9;
+    margin: 16px auto;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.6rem; }
+    .slide { padding: 40px 30px; }
+    .cmd-pair { flex-direction: column; }
+    .stats { gap: 30px; }
+    .stat .num { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- ── Slide 1: Title ── -->
+  <section class="slide title-slide active">
+    <div style="font-size:3.5rem; margin-bottom:16px;">🦆⚡</div>
+    <h1>School <span class="accent">Momagrid</span></h1>
+    <p class="zh">让每间教室都拥有AI推理能力</p>
+    <p style="margin-top:28px; font-size:1.4rem; color:#c9d1d9;">
+      Build your own AI inference network in <span class="green">one hour</span>.<br>
+      No cloud. No API keys. No cost.
+    </p>
+    <p style="margin-top:12px; font-size:1rem; color:#8b949e;">
+      SPL + Momagrid — Declare Once, Run Anywhere, on hardware you own.
+    </p>
+  </section>
+
+  <!-- ── Slide 2: The Problem ── -->
+  <section class="slide">
+    <h2>The <span class="red">Problem</span> with Cloud AI</h2>
+    <p class="zh" style="margin-bottom:28px;">云端AI的困境</p>
+    <ul class="checks">
+      <li class="no">API costs money — every request is billed per token</li>
+      <li class="no">Student data leaves your school and goes to external servers</li>
+      <li class="no">AI is a black box — students never see how it actually works</li>
+      <li class="no">One slow API = entire class waiting</li>
+      <li class="no">Internet outage = no AI, no class</li>
+    </ul>
+  </section>
+
+  <!-- ── Slide 3: Imagine This ── -->
+  <section class="slide dark-blue">
+    <h2>Imagine <span class="accent">This</span> Instead…</h2>
+    <p class="zh" style="margin-bottom:28px;">换一种方式想象</p>
+    <ul class="checks">
+      <li class="ok">Every student's laptop becomes an AI worker node</li>
+      <li class="ok">The classroom IS the AI cluster</li>
+      <li class="ok">Students write code → classmates' GPUs run it</li>
+      <li class="ok">All data stays within the school's own network</li>
+      <li class="ok">Works offline — no internet required once set up</li>
+    </ul>
+    <div class="callout" style="margin-top:24px;">
+      This is <strong>School Momagrid</strong>: a private AI inference grid built from the machines already in your classroom.
+    </div>
+  </section>
+
+  <!-- ── Slide 4: What is Momagrid ── -->
+  <section class="slide">
+    <h2>What is <span class="accent">Momagrid</span>?</h2>
+    <p class="zh" style="margin-bottom:28px;">Momagrid 是什么？</p>
+    <div class="cols" style="justify-content:center;">
+      <div class="col">
+        <h3>🖥️ Hub (1 machine)</h3>
+        <ul class="checks">
+          <li class="arrow">Receives AI task requests</li>
+          <li class="arrow">Routes tasks to available agents</li>
+          <li class="arrow">Tracks results and timing</li>
+          <li class="arrow">One command: <code style="color:#79c0ff">mg hub up</code></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>💻 Agent (every machine)</h3>
+        <ul class="checks">
+          <li class="arrow">Runs Ollama locally</li>
+          <li class="arrow">Picks up tasks from the Hub</li>
+          <li class="arrow">Returns results to the caller</li>
+          <li class="arrow">One command: <code style="color:#56d364">mg join &lt;url&gt;</code></li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:24px; font-size:1.1rem;">
+      <strong>SPL</strong> is the workflow language — write AI pipelines like SQL, run them on the grid.
+    </p>
+  </section>
+
+  <!-- ── Slide 5: Architecture ── -->
+  <section class="slide dark-green" style="padding:20px 30px; justify-content:flex-start; padding-top:28px;">
+    <h2 style="margin-bottom:4px;">How It <span class="green">Works</span></h2>
+    <p class="zh" style="margin-bottom:10px; font-size:0.9rem;">工作原理</p>
+    <div class="arch">
+      <svg viewBox="0 0 1100 500" xmlns="http://www.w3.org/2000/svg" style="width:100%; max-height:calc(100vh - 130px); height:auto; display:block;">
+        <defs>
+          <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L10,4 z" fill="#58a6ff"/>
+          </marker>
+          <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L10,4 z" fill="#3fb950"/>
+          </marker>
+        </defs>
+
+        <!-- ── SPL Workflow box ── -->
+        <rect x="30" y="155" width="230" height="130" rx="14" fill="#0d2137" stroke="#58a6ff" stroke-width="2.5"/>
+        <text x="145" y="192" text-anchor="middle" fill="#58a6ff" font-size="20" font-weight="bold">📄 .spl Workflow</text>
+        <text x="145" y="220" text-anchor="middle" fill="#c9d1d9" font-size="15" font-family="monospace">spl3 run ...</text>
+        <text x="145" y="244" text-anchor="middle" fill="#79c0ff" font-size="14" font-family="monospace">--adapter momagrid</text>
+        <text x="145" y="268" text-anchor="middle" fill="#8b949e" font-size="13">(any machine on the grid)</text>
+
+        <!-- Arrow SPL → Hub -->
+        <line x1="260" y1="220" x2="380" y2="220" stroke="#58a6ff" stroke-width="3" marker-end="url(#arrow-blue)"/>
+        <text x="320" y="210" text-anchor="middle" fill="#58a6ff" font-size="13">submit</text>
+
+        <!-- ── Hub box ── -->
+        <rect x="380" y="120" width="240" height="200" rx="14" fill="#131e2e" stroke="#1f6feb" stroke-width="3"/>
+        <text x="500" y="162" text-anchor="middle" fill="#79c0ff" font-size="22" font-weight="bold">🖥️ Hub</text>
+        <text x="500" y="192" text-anchor="middle" fill="#56d364" font-size="17" font-family="monospace">mg hub up</text>
+        <text x="500" y="218" text-anchor="middle" fill="#8b949e" font-size="14">port 9000</text>
+        <text x="500" y="244" text-anchor="middle" fill="#8b949e" font-size="14">routes tasks to agents</text>
+        <text x="500" y="268" text-anchor="middle" fill="#8b949e" font-size="14">tracks results &amp; timing</text>
+        <text x="500" y="296" text-anchor="middle" fill="#e3b341" font-size="13">teacher's machine</text>
+
+        <!-- Arrows Hub → Agents -->
+        <line x1="620" y1="175" x2="760" y2="95"  stroke="#3fb950" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+        <line x1="620" y1="220" x2="760" y2="220" stroke="#3fb950" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+        <line x1="620" y1="265" x2="760" y2="370" stroke="#3fb950" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+        <text x="695" y="138" text-anchor="middle" fill="#3fb950" font-size="12" transform="rotate(-20,695,138)">dispatch</text>
+        <text x="695" y="208" text-anchor="middle" fill="#3fb950" font-size="12">dispatch</text>
+        <text x="695" y="322" text-anchor="middle" fill="#3fb950" font-size="12" transform="rotate(20,695,322)">dispatch</text>
+
+        <!-- ── Agent A ── -->
+        <rect x="760" y="30" width="220" height="130" rx="14" fill="#0a2018" stroke="#3fb950" stroke-width="2.5"/>
+        <text x="870" y="68"  text-anchor="middle" fill="#56d364" font-size="19" font-weight="bold">💻 Agent A</text>
+        <text x="870" y="94"  text-anchor="middle" fill="#c9d1d9" font-size="14">student laptop</text>
+        <text x="870" y="116" text-anchor="middle" fill="#79c0ff" font-size="14" font-family="monospace">mg join &lt;url&gt;</text>
+        <text x="870" y="140" text-anchor="middle" fill="#e3b341" font-size="14">🦙 Ollama / llama3.2</text>
+
+        <!-- ── Agent B ── -->
+        <rect x="760" y="185" width="220" height="130" rx="14" fill="#0a2018" stroke="#3fb950" stroke-width="2.5"/>
+        <text x="870" y="223" text-anchor="middle" fill="#56d364" font-size="19" font-weight="bold">🖥️ Agent B</text>
+        <text x="870" y="249" text-anchor="middle" fill="#c9d1d9" font-size="14">student PC</text>
+        <text x="870" y="271" text-anchor="middle" fill="#79c0ff" font-size="14" font-family="monospace">mg join &lt;url&gt;</text>
+        <text x="870" y="295" text-anchor="middle" fill="#e3b341" font-size="14">🦙 Ollama / llama3.2</text>
+
+        <!-- ── Agent C ── -->
+        <rect x="760" y="330" width="220" height="120" rx="14" fill="#0a2018" stroke="#3fb950" stroke-width="2.5"/>
+        <text x="870" y="364" text-anchor="middle" fill="#56d364" font-size="19" font-weight="bold">🔬 Agent C</text>
+        <text x="870" y="388" text-anchor="middle" fill="#c9d1d9" font-size="14">lab machine</text>
+        <text x="870" y="410" text-anchor="middle" fill="#79c0ff" font-size="14" font-family="monospace">mg join &lt;url&gt;</text>
+        <text x="870" y="432" text-anchor="middle" fill="#e3b341" font-size="14">🦙 Ollama / llama3.2</text>
+
+        <!-- bottom label -->
+        <text x="550" y="478" text-anchor="middle" fill="#8b949e" font-size="15">
+          All inference runs locally on each agent — data never leaves your network
+        </text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ── Slide 6: Two Commands ── -->
+  <section class="slide">
+    <h2>Just <span class="accent">Two Commands</span></h2>
+    <p class="zh" style="margin-bottom:28px;">只需两条命令</p>
+    <div class="cmd-pair">
+      <div class="cmd-card hub">
+        <div class="role">🖥️ Hub machine (teacher / one student)</div>
+        <code>mg hub up</code>
+        <div class="note">Starts the grid. Share the IP shown with the class.</div>
+      </div>
+      <div class="cmd-card agent">
+        <div class="role">💻 Every other machine (students)</div>
+        <code>mg join http://192.168.x.x:9000</code>
+        <div class="note">That's it — this machine is now part of the grid.</div>
+      </div>
+    </div>
+    <p style="margin-top:16px; color:#8b949e; font-size:1rem;">
+      Verify with <code style="color:#79c0ff; font-family:monospace">mg agents</code> — see every student's machine appear in real time.
+    </p>
+  </section>
+
+  <!-- ── Slide 7: SPL Workflow ── -->
+  <section class="slide dark-blue">
+    <h2>Write AI Workflows in <span class="accent">SPL</span></h2>
+    <p class="zh" style="margin-bottom:16px;">用SPL编写AI工作流 — 像SQL一样简洁</p>
+    <pre><span class="cmt">-- A self-refining essay writer (35 lines)</span>
+<span class="kw">WORKFLOW</span> self_refine
+    <span class="kw">INPUT</span>:  @topic <span class="kw">TEXT</span>
+    <span class="kw">OUTPUT</span>: @essay <span class="kw">TEXT</span>
+<span class="kw">DO</span>
+    <span class="cmd">GENERATE</span> writer(@topic)             <span class="kw">INTO</span> @draft
+    <span class="cmd">CALL</span>     critique_workflow(@draft)  <span class="kw">INTO</span> @feedback
+    <span class="cmd">GENERATE</span> refiner(@draft, @feedback) <span class="kw">INTO</span> @essay
+    <span class="cmd">COMMIT</span>   @essay
+<span class="kw">END</span></pre>
+    <pre style="margin-top:8px;"><span class="cmt"># Run on the school grid — zero .spl changes</span>
+<span class="cmd">spl3 run</span> self_refine.spl <span class="str">--adapter momagrid</span> \
+     <span class="str">--param</span> topic=<span class="str">"Why is the sky blue?"</span></pre>
+    <p style="font-size:1rem; color:#8b949e; margin-top:8px;">
+      Each <code>GENERATE</code> is dispatched to an available agent. More students online = faster execution.
+    </p>
+  </section>
+
+  <!-- ── Slide 8: What Students Learn ── -->
+  <section class="slide">
+    <h2>What Students <span class="green">Learn</span></h2>
+    <p class="zh" style="margin-bottom:24px;">学生将学到什么</p>
+    <div class="cols" style="justify-content:center; gap:60px;">
+      <div class="col">
+        <h3>💻 CS Fundamentals</h3>
+        <ul class="checks">
+          <li class="star">Distributed computing</li>
+          <li class="star">Client-server architecture</li>
+          <li class="star">Network protocols (HTTP/REST)</li>
+          <li class="star">Task scheduling &amp; load balancing</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>🤖 AI &amp; ML</h3>
+        <ul class="checks">
+          <li class="star">LLM inference concepts</li>
+          <li class="star">Declarative AI programming (SPL)</li>
+          <li class="star">Prompt engineering</li>
+          <li class="star">Multi-agent coordination</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:24px;">
+      Students don't just <em>use</em> AI — they <em>build</em> the infrastructure that runs it.
+      <br><span style="color:#8b949e;font-size:0.95em">学生不只是使用AI，而是构建运行AI的基础设施。</span>
+    </div>
+  </section>
+
+  <!-- ── Slide 9: Real Numbers ── -->
+  <section class="slide dark-green">
+    <h2>Proven on <span class="green">Real Hardware</span></h2>
+    <p class="zh" style="margin-bottom:20px;">真实硬件验证结果（4块游戏显卡）</p>
+    <div class="stats">
+      <div class="stat"><div class="num">4</div><div class="lbl">Gaming GPUs<br>(consumer hardware)</div></div>
+      <div class="stat"><div class="num">133</div><div class="lbl">Recipes run<br>across 3 runtimes</div></div>
+      <div class="stat"><div class="num">97%</div><div class="lbl">Pass rate<br>(avg across runtimes)</div></div>
+      <div class="stat"><div class="num">3.6×</div><div class="lbl">Speedup vs<br>single GPU</div></div>
+    </div>
+    <div class="callout">
+      More agents = faster workflows. A classroom of 30 laptops is more powerful than a single server.<br>
+      WAN deployment validated: the Hub was exposed via public URL — agents ran tasks over the internet.
+    </div>
+  </section>
+
+  <!-- ── Slide 10: For Administrators ── -->
+  <section class="slide">
+    <h2>For School <span class="accent">Administrators</span></h2>
+    <p class="zh" style="margin-bottom:24px;">致学校管理者</p>
+    <table>
+      <tr><th>Concern</th><th>School Momagrid Answer</th></tr>
+      <tr><td>💰 Cost</td><td class="green">Zero — runs on existing student hardware</td></tr>
+      <tr><td>🔒 Privacy</td><td class="green">Data never leaves campus network</td></tr>
+      <tr><td>📋 FERPA / COPPA</td><td class="green">No external data transfer, full compliance</td></tr>
+      <tr><td>🔧 Maintenance</td><td class="green">Single Hub binary; agents are stateless</td></tr>
+      <tr><td>📚 Curriculum</td><td class="green">CS, AI, networking — one hands-on lab</td></tr>
+      <tr><td>🌐 Internet dependency</td><td class="green">Works fully offline after initial model pull</td></tr>
+      <tr><td>📦 Vendor lock-in</td><td class="green">100% open source (GitHub)</td></tr>
+    </table>
+  </section>
+
+  <!-- ── Slide 11: Setup in 1 Hour ── -->
+  <section class="slide dark-blue">
+    <h2>Setup in <span class="yellow">1 Hour</span></h2>
+    <p class="zh" style="margin-bottom:20px;">1小时内完成部署</p>
+    <div class="cols" style="justify-content:center;">
+      <div class="col">
+        <h3>⏱ 0–20 min: Prerequisites</h3>
+        <pre style="font-size:0.9rem; padding:16px 20px;">
+<span class="cmt"># Every machine (Hub + agents)</span>
+<span class="cmd">ollama pull llama3.2</span>   <span class="cmt"># ~2 GB</span>
+
+<span class="cmt"># Install mg CLI</span>
+git clone .../momagrid
+cd momagrid &amp;&amp; go build -o mg .
+ln -s $(pwd)/mg ~/.local/bin/mg</pre>
+      </div>
+      <div class="col">
+        <h3>⏱ 20–40 min: Launch the Grid</h3>
+        <pre style="font-size:0.9rem; padding:16px 20px;">
+<span class="cmt"># Hub machine (teacher's)</span>
+<span class="cmd">mg hub up</span>
+<span class="cmt"># → Hub at http://192.168.x.x:9000</span>
+
+<span class="cmt"># Every student machine</span>
+<span class="cmd">mg join http://192.168.x.x:9000</span>
+
+<span class="cmt"># Verify</span>
+<span class="cmd">mg agents</span>   <span class="cmt"># all students appear</span></pre>
+        <h3 style="margin-top:16px;">⏱ 40–60 min: First Workflow</h3>
+        <pre style="font-size:0.9rem; padding:16px 20px;">
+pip install spl3
+<span class="cmd">spl3 run</span> hello_world.spl \
+     <span class="str">--adapter momagrid</span>
+<span class="cmd">mg tasks</span>   <span class="cmt"># watch it fly!</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Slide 12: Vision ── -->
+  <section class="slide">
+    <h2>The <span class="accent">Bigger Vision</span></h2>
+    <p class="zh" style="margin-bottom:20px;">更大的愿景：去中心化AI推理网络</p>
+    <div class="callout">
+      Today: 4 gaming GPUs on a home LAN → <strong>3.6× speedup</strong>, zero cloud cost.<br><br>
+      Tomorrow: every school's grid joins a federated network — an <strong>internet of community GPUs</strong> for LLM inference.
+      Students don't just learn AI. They build the decentralized infrastructure that makes AI accessible to everyone.
+    </div>
+    <p style="margin-top:20px; font-size:1.1rem; color:#c9d1d9;">
+      <span class="accent">Declare Once</span>, Run Anywhere, Scale Freely — on hardware <em>you</em> own.
+    </p>
+    <p class="zh" style="margin-top:12px; font-size:0.95rem;">
+      声明一次，随处运行，在你自己的硬件上自由扩展。
+    </p>
+  </section>
+
+  <!-- ── Slide 13: Get Started ── -->
+  <section class="slide dark-green">
+    <h2>Get <span class="green">Started</span> Today</h2>
+    <p class="zh" style="margin-bottom:24px;">今天就开始</p>
+    <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-bottom:24px;">
+      <span class="tag">🦆 github.com/digital-duck/momagrid</span>
+      <span class="tag">🐍 github.com/digital-duck/SPL.py</span>
+      <span class="tag">⚡ github.com/digital-duck/SPL.go</span>
+      <span class="tag">🟦 github.com/digital-duck/SPL.ts</span>
+    </div>
+    <div class="callout">
+      <strong>What you need:</strong> Any machine with a GPU (even integrated graphics works for small models).
+      Install Ollama, pull <code>llama3.2</code>, run <code>mg hub up</code>.
+      Your classroom AI cluster is ready.
+    </div>
+    <p style="margin-top:24px; font-size:1.3rem; font-weight:600; color:#56d364;">
+      Two commands. One hour. Your own AI grid.
+    </p>
+    <p class="zh" style="font-size:0.95rem; margin-top:8px;">
+      两条命令。一小时。属于你的AI推理网络。
+    </p>
+  </section>
+
+</div>
+
+<!-- Navigation -->
+<button class="arrow-btn" id="prev" onclick="move(-1)">‹</button>
+<button class="arrow-btn" id="next" onclick="move(1)">›</button>
+
+<div id="nav"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let cur = 0;
+  let zhOn = true;
+
+  const nav = document.getElementById('nav');
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => go(i);
+    nav.appendChild(d);
+  });
+  const counter = document.createElement('div');
+  counter.id = 'counter';
+  nav.appendChild(counter);
+
+  // Chinese toggle button
+  const zhBtn = document.createElement('button');
+  zhBtn.id = 'zh-btn';
+  zhBtn.className = 'zh-on';
+  zhBtn.textContent = '中文 ON';
+  zhBtn.onclick = (e) => {
+    e.stopPropagation();
+    zhOn = !zhOn;
+    document.body.classList.toggle('hide-zh', !zhOn);
+    zhBtn.textContent = zhOn ? '中文 ON' : '中文 OFF';
+    zhBtn.classList.toggle('zh-on', zhOn);
+  };
+  nav.appendChild(zhBtn);
+
+  function go(n) {
+    slides[cur].classList.remove('active');
+    document.querySelectorAll('.dot')[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(n, slides.length - 1));
+    slides[cur].classList.add('active');
+    document.querySelectorAll('.dot')[cur].classList.add('active');
+    counter.textContent = (cur + 1) + ' / ' + slides.length;
+    document.getElementById('prev').style.opacity = cur === 0 ? '0.2' : '1';
+    document.getElementById('next').style.opacity = cur === slides.length - 1 ? '0.2' : '1';
+  }
+
+  function move(d) { go(cur + d); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') move(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp') move(-1);
+  });
+
+  // Click right half to advance, left half to go back
+  document.getElementById('deck').addEventListener('click', e => {
+    if (e.target.closest('.arrow-btn') || e.target.closest('#nav')) return;
+    move(e.clientX > window.innerWidth / 2 ? 1 : -1);
+  });
+
+  go(0);
+</script>
+</body>
+</html>

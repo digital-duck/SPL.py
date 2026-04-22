@@ -1,3 +1,13 @@
+.claude/
+.spl/
+.igrid/
+GEMINI.md
+CLAUDE.md
+# **/logs/
+**/out/
+go_git.log
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

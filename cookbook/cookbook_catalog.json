@@ -121,7 +121,12 @@
       "log": "react_agent",
       "is_active": true,
       "approval_status": "approved",
-      "category": "agentic"
+      "category": "agentic",
+      "excluded_adapters": [
+        "momagrid"
+      ],
+      "exclude_reason": "model refusal on population query with safety-tuned models; use ollama only",
+      "notes": "requires claude_cli adapter + WebSearch tool; momagrid does not support tool-use or claude_cli forwarding. Excluded from momagrid batch runs."
     },
     {
       "id": "07",
@@ -769,7 +774,12 @@
       "log": "human_steering",
       "is_active": true,
       "approval_status": "new",
-      "category": "agentic"
+      "category": "agentic",
+      "excluded_adapters": [
+        "momagrid"
+      ],
+      "exclude_reason": "requires interactive stdin; incompatible with batch/nohup execution",
+      "notes": "requires interactive stdin (human feedback loop); incompatible with nohup/batch execution. Run interactively only."
     },
     {
       "id": "42",

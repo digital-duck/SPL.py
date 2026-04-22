@@ -1,7 +1,7 @@
 """Claude Code CLI adapter: wraps the `claude` CLI for development use.
 
 Leverages Claude Code subscription billing for zero marginal cost during development.
-Invokes `claude -p "<prompt>"` via subprocess.
+Invokes `claude --print` via subprocess, feeding the prompt through stdin.
 """
 
 from __future__ import annotations
@@ -55,7 +55,9 @@ class ClaudeCLIAdapter(LLMAdapter):
 
         # Build CLI command
         effective_model = model or self.default_model
-        cmd = [self.cli_path, "-p", full_prompt, "--no-session-persistence",
+        # Pass prompt via stdin (not -p arg) to avoid OS arg-length limits
+        # with large prompts (e.g. review/fix steps that embed generated code).
+        cmd = [self.cli_path, "--print", "--no-session-persistence",
                "--model", effective_model]
         if self.allowed_tools:
             cmd += ["--allowedTools", ",".join(self.allowed_tools)]
@@ -77,17 +79,19 @@ class ClaudeCLIAdapter(LLMAdapter):
         }
         env = {k: v for k, v in os.environ.items() if k not in _STRIP_VARS}
 
-        # Run subprocess asynchronously
+        # Feed prompt via stdin using communicate(input=...) — avoids OS arg-length
+        # limits and eliminates the file-handle race in the temp-file approach.
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
-                stdin=subprocess.DEVNULL,
+                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
             )
             stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=self.timeout
+                proc.communicate(input=full_prompt.encode("utf-8")),
+                timeout=self.timeout,
             )
         except FileNotFoundError:
             raise RuntimeError(
