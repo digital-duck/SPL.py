@@ -1367,7 +1367,7 @@ class Executor:
             conn = state.get_storage(expr.storage_var) if state else None
             if conn is not None:
                 key = self._eval_expression(expr.key, state)
-                return conn.get(str(key))
+                return conn.get(str(key)) or ""
             var_val = state.get_var(expr.storage_var) if state else ""
             key_str = self._eval_expression(expr.key, state)
             # Try MAP (JSON dict) first

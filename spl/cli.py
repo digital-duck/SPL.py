@@ -315,7 +315,7 @@ def cmd_init() -> None:
     click.echo(f"  Config: {CONFIG_PATH}")
 
 
-# ── spl validate / syntax ───────────────────────────────────────────────────
+# ── spl validate / syntax / parse ───────────────────────────────────────────
 
 @cli.command("validate")
 @click.argument("file", type=click.Path(dir_okay=False))
@@ -347,6 +347,21 @@ def cmd_validate(file: str, as_json: bool) -> None:
         raise click.ClickException(str(exc)) from exc
 
 
+@cli.command("syntax", hidden=True)
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.pass_context
+def cmd_syntax(ctx: click.Context, file: str) -> None:
+    """Alias for 'validate'."""
+    ctx.invoke(cmd_validate, file=file, as_json=False)
+
+
+@cli.command("parse", hidden=True)
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.option("--json", "as_json", is_flag=True, default=False)
+@click.pass_context
+def cmd_parse(ctx: click.Context, file: str, as_json: bool) -> None:
+    """Alias for 'validate'."""
+    ctx.invoke(cmd_validate, file=file, as_json=as_json)
 
 
 # ── spl explain ──────────────────────────────────────────────────────────────
@@ -367,6 +382,18 @@ def cmd_explain(file: str) -> None:
         raise
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
+
+
+@cli.command("execute", hidden=True, context_settings={"ignore_unknown_options": True})
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.option("--adapter", default=None, metavar="NAME")
+@click.option("--model", "-m", default=None, metavar="MODEL")
+@click.option("--param", "-p", multiple=True, metavar="KEY=VALUE")
+@click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
+@click.pass_context
+def cmd_execute_alias(ctx: click.Context, **kwargs) -> None:
+    """Alias for 'run'."""
+    ctx.invoke(cmd_execute, **kwargs)
 
 
 # ── spl run ──────────────────────────────────────────────────────────────────
@@ -898,6 +925,18 @@ def memory_delete(key: str, storage_dir: str | None, db: str | None) -> None:
         click.echo(f"Deleted: {key}")
     else:
         raise click.ClickException(f"Key not found: {key}")
+
+
+@cli.group("rag", hidden=True)
+@click.pass_context
+def cmd_rag_alias(ctx: click.Context) -> None:
+    """Alias for 'doc-rag'."""
+    pass
+
+# Link the subcommands of doc-rag to rag alias
+cmd_rag_alias.add_command(rag_add, "add")
+cmd_rag_alias.add_command(rag_query, "query")
+cmd_rag_alias.add_command(rag_count, "count")
 
 
 # ── spl doc-rag ───────────────────────────────────────────────────────────────

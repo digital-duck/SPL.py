@@ -85,14 +85,14 @@ class StorageConnection:
     # Key-value API
     # ------------------------------------------------------------------
 
-    def get(self, key: str) -> str:
-        """Return value for key, or '' if absent."""
+    def get(self, key: str) -> str | None:
+        """Return value for key, or None if absent."""
         df = self._db.run_query(
             f"SELECT value FROM {_KV_TABLE} WHERE key = :key",
             params={"key": key},
         )
         if df is None or df.empty:
-            return ""
+            return None
         return str(df.iloc[0]["value"])
 
     def set(self, key: str, value: str) -> None:
