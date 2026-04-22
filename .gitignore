@@ -7,6 +7,8 @@ CLAUDE.md
 **/out/
 go_git.log
 
+README.html
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

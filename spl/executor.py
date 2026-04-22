@@ -600,11 +600,22 @@ class Executor:
                 arg_values: dict[str, str] = {}
                 for param, arg in zip(func_def.parameters, gen.arguments):
                     if isinstance(arg, Identifier):
-                        arg_values[param.name] = context.get(arg.name, "")
+                        val = context.get(arg.name, "")
                     elif isinstance(arg, Literal):
-                        arg_values[param.name] = str(arg.value)
+                        val = str(arg.value)
                     else:
-                        arg_values[param.name] = str(arg)
+                        val = str(arg)
+                    # Treat "[...]" sentinel placeholders as missing (same convention as prompt assembly)
+                    if val.startswith("["):
+                        val = ""
+                    # Fall back to parameter default when resolved value is empty
+                    if not val and param.default_value is not None and isinstance(param.default_value, Literal):
+                        val = str(param.default_value.value)
+                    arg_values[param.name] = val
+                # Handle positionally-omitted trailing parameters
+                for param in func_def.parameters[len(gen.arguments):]:
+                    if param.default_value is not None and isinstance(param.default_value, Literal):
+                        arg_values[param.name] = str(param.default_value.value)
                 task_text = func_def.body
                 for key, val in arg_values.items():
                     task_text = task_text.replace("{" + key + "}", val)
@@ -821,9 +832,17 @@ class Executor:
         args_text = [self._eval_expression(a, state) for a in gen.arguments]
         func_def = self.functions.get(gen.function_name)
         if func_def:
-            prompt_text = func_def.body
+            param_vals: dict[str, str] = {}
             for param, arg_val in zip(func_def.parameters, args_text):
-                prompt_text = prompt_text.replace("{" + param.name + "}", arg_val)
+                if not arg_val and param.default_value is not None:
+                    arg_val = self._eval_expression(param.default_value, state)
+                param_vals[param.name] = arg_val
+            for param in func_def.parameters[len(args_text):]:
+                if param.default_value is not None:
+                    param_vals[param.name] = self._eval_expression(param.default_value, state)
+            prompt_text = func_def.body
+            for key, val in param_vals.items():
+                prompt_text = prompt_text.replace("{" + key + "}", val)
         else:
             prompt_text = f"Task: {gen.function_name}\n\n"
             for i, arg_text in enumerate(args_text):
@@ -882,9 +901,17 @@ class Executor:
             # Check for user-defined function template
             func_def = self.functions.get(current_gen.function_name)
             if func_def:
-                prompt = func_def.body
+                func_param_vals: dict[str, str] = {}
                 for param, arg_val in zip(func_def.parameters, args_text):
-                    prompt = prompt.replace("{" + param.name + "}", arg_val)
+                    if not arg_val and param.default_value is not None:
+                        arg_val = self._eval_expression(param.default_value, state)
+                    func_param_vals[param.name] = arg_val
+                for param in func_def.parameters[len(args_text):]:
+                    if param.default_value is not None:
+                        func_param_vals[param.name] = self._eval_expression(param.default_value, state)
+                prompt = func_def.body
+                for key, val in func_param_vals.items():
+                    prompt = prompt.replace("{" + key + "}", val)
 
             if self.default_model:
                 model = self.default_model  # --model CLI flag overrides everything

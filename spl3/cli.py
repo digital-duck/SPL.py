@@ -649,6 +649,37 @@ def cmd_validate(spl_file):
 
 
 # ------------------------------------------------------------------ #
+# spl3 explain                                                        #
+# ------------------------------------------------------------------ #
+
+@main.command("explain")
+@click.argument("spl_file")
+def cmd_explain(spl_file):
+    """Show execution plan for SPL_FILE (no LLM call)."""
+    from pathlib import Path
+    from spl.lexer import Lexer
+    from spl.analyzer import Analyzer
+    from spl.optimizer import Optimizer
+    from spl.explain import explain_plans
+    from spl3.parser import SPL3Parser
+
+    path = Path(spl_file)
+    if not path.exists():
+        raise click.ClickException(f"File not found: {path}")
+    source = path.read_text(encoding="utf-8")
+    try:
+        tokens = Lexer(source).tokenize()
+        ast = SPL3Parser(tokens).parse()
+        analysis = Analyzer().analyze(ast)
+        plans = Optimizer().optimize(analysis)
+        click.echo(explain_plans(plans))
+    except click.ClickException:
+        raise
+    except Exception as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+# ------------------------------------------------------------------ #
 # spl3 splc                                                           #
 # ------------------------------------------------------------------ #
 

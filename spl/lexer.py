@@ -165,7 +165,7 @@ class Lexer:
         self.tokens.append(Token(token_type, value, self.line, self.column))
 
     def _skip_whitespace_and_comments(self):
-        """Skip whitespace and line comments (-- or #)."""
+        """Skip whitespace and comments (-- line, # line, /* block */)."""
         while self.pos < len(self.source):
             ch = self.source[self.pos]
             if ch in (' ', '\t', '\r', '\n'):
@@ -173,6 +173,16 @@ class Lexer:
             elif (ch == '-' and self._peek(1) == '-') or ch == '#':
                 # Line comment: skip until end of line
                 while self.pos < len(self.source) and self.source[self.pos] != '\n':
+                    self._advance()
+            elif ch == '/' and self._peek(1) == '*':
+                # Block comment: skip until */
+                self._advance()  # /
+                self._advance()  # *
+                while self.pos < len(self.source):
+                    if self.source[self.pos] == '*' and self._peek(1) == '/':
+                        self._advance()  # *
+                        self._advance()  # /
+                        break
                     self._advance()
             else:
                 break

@@ -199,7 +199,10 @@ class SPL3Parser(SPL2Parser):
             return UnaryOp(operator='NOT', operand=operand)
 
         # NONE / NULL literal
-        if tok.type == TokenType.IDENTIFIER and tok.value.upper() in ("NONE", "NULL"):
+        if tok.type == TokenType.NONE:
+            self._advance()
+            return NoneLiteral()
+        if tok.type == TokenType.IDENTIFIER and tok.value.upper() == "NULL":
             self._advance()
             return NoneLiteral()
 
@@ -293,7 +296,7 @@ class SPL3Parser(SPL2Parser):
             # SET is a keyword token, not IDENTIFIER — accept as type annotation
             param_type = self._advance().value  # "set"
 
-        if self._check(TokenType.DEFAULT):
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
 

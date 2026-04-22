@@ -746,9 +746,9 @@ class Parser:
         name = self._expect_identifier_or_keyword().value
         param_type = None
         default_value = None
-        if self._check(TokenType.IDENTIFIER) and not self._check_any(TokenType.COMMA, TokenType.RPAREN, TokenType.DEFAULT):
+        if self._check(TokenType.IDENTIFIER) and not self._check_any(TokenType.COMMA, TokenType.RPAREN, TokenType.DEFAULT, TokenType.ASSIGN):
             param_type = self._advance().value
-        if self._check(TokenType.DEFAULT):
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
         return Parameter(name=name, param_type=param_type, default_value=default_value)

@@ -21,6 +21,39 @@ END
 spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --param topic="What is vibe coding?"
 ```
 
+## Quick Start
+
+```bash
+conda create -n spl123 python=3.11
+conda activate spl123        # Python 3.11+
+
+pip install -e ".[dev]"      # install from this repo
+
+# Verify install
+spl3 --help
+
+# Run hello world (Ollama)
+spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
+
+# Run self-refine with local models and input parameters explicitly specified
+spl3 run cookbook/05_self_refine/self_refine.spl \
+    --adapter ollama \
+    --param task="Explain vibe coding" \
+    --param writer_model="gemma3" \
+    --param critic_model="llama3.2" \
+    --param max_iterations=3 \
+    --param log_dir="$HOME/.spl/logs/05_self_refine/output"
+
+# Run all active recipes
+python cookbook/run_all.py
+
+# Run a specific subset
+python cookbook/run_all.py --ids 01,05,13
+
+# Run multimodal / SPL 3.0 recipes (tier 1 = Ollama only)
+python cookbook/run_all.py --tier 1 --category multimodal
+```
+
 ## Why SPL
 
 Most agentic frameworks require hundreds of lines of imperative Python to wire up prompts, manage context, handle errors, and switch LLM providers. SPL takes a different path: **declare what you want, not how to get it.**
@@ -43,46 +76,7 @@ SPL synthesizes three programming paradigms:
 | Logic | Python | `CALL`, `@spl_tool`, typed variables |
 | Orchestration | Linux shell | `WORKFLOW` composition, `IMPORT` |
 
-## Version History
 
-| Version | Highlights |
-|---|---|
-| **1.0** | SQL-like statements (`SELECT`, `GENERATE`); lexer, parser, executor foundation |
-| **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
-| **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
-
-## Quick Start
-
-```bash
-conda create -n spl123 python=3.11
-conda activate spl123        # Python 3.11+
-
-pip install -e ".[dev]"      # install from this repo
-
-# Verify install
-spl3 --help
-
-# Run hello world (Ollama)
-spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
-
-# Run self-refine with a local model
-spl3 run cookbook/05_self_refine/self_refine.spl \
-    --adapter ollama \
-    --param task="Explain vibe coding" \
-    --param writer_model="gemma3" \
-    --param critic_model="llama3.2" \
-    --param max_iterations=3 \
-    --param log_dir="$HOME/.spl/logs/05_self_refine/output"
-
-# Run all active recipes
-python cookbook/run_all.py
-
-# Run a specific subset
-python cookbook/run_all.py --ids 01,05,13
-
-# Run multimodal / SPL 3.0 recipes (tier 1 = Ollama only)
-python cookbook/run_all.py --tier 1 --category multimodal
-```
 
 ## CLI Reference
 
@@ -124,7 +118,7 @@ Additional adapters available in the Python (`spl3`) runtime:
 
 > **Porting checklist**: Any new SPL runtime port must implement the four mandatory adapters before being considered feature-complete. `echo` is testing scaffolding only.
 
-## Architecture
+## Codebase Layout
 
 ```
 spl/              SPL 2.0 runtime (lexer, parser, executor, 14 adapters)
@@ -159,7 +153,7 @@ tests/            unified test suite (300+ tests)
 
 ## Cookbook
 
-65 recipes spanning beginner to advanced:
+Working examples are provided as 65 recipes spanning beginner to advanced:
 
 | Range | Theme |
 |---|---|
@@ -195,9 +189,9 @@ SPL 3.0 extends Momagrid as a **Compute OS**: each `CALL workflow_name()` become
 ## Tests
 
 ```bash
-pytest                              # full suite
 pytest tests/test_registry.py       # single file
 pytest -k test_status_mapping       # single test
+pytest                              # full suite
 ```
 
 ## Development Workflow
@@ -205,6 +199,14 @@ pytest -k test_status_mapping       # single test
 SPL.py is the **stable public repo**. New features are prototyped in [SPL30](https://github.com/digital-duck/SPL30) and graduate here when they have test coverage and a cookbook recipe.
 
 Future major versions (`spl4/`, `spl5/`, ...) will be prototyped in SPL30 and added as new subpackages alongside `spl/` and `spl3/`. The `spl3` CLI command is permanent — it always points to the highest available runtime layer.
+
+## Version History
+
+| Version | Highlights |
+|---|---|
+| **1.0** | SQL-like statements (`SELECT`, `GENERATE`); lexer, parser, executor foundation |
+| **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
+| **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
 
 ## License
 
