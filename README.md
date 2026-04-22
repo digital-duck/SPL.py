@@ -2,22 +2,23 @@
 
 **SPL** is a declarative language for agentic AI workflows — SQL for LLMs.
 
-Where SQL abstracts over databases, SPL abstracts over language models: the same `.spl` file runs on Ollama, Claude, OpenAI, Gemini, or a Momagrid compute grid without changing a single line of workflow code.
+Where SQL abstracts over databases, SPL abstracts over language models: the same `.spl` file runs on Ollama, Claude, OpenAI, Gemini, or a Momagrid compute grid without changing a single line of workflow code. Below is a condensed version of `self_refine` [workflow](./cookbook/05_self_refine/self_refine.spl)
+
 
 ```sql
 WORKFLOW self_refine
     INPUT:  @topic TEXT
     OUTPUT: @essay TEXT
 DO
-    GENERATE writer(@topic) INTO @essay
-    CALL critique_workflow(@essay) INTO @feedback
-    GENERATE refiner(@essay, @feedback) INTO @essay
+    GENERATE draft(@topic) INTO @essay
+    CALL critique(@essay) INTO @feedback
+    GENERATE refine(@essay, @feedback) INTO @essay
     COMMIT @essay
 END
 ```
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --param topic="the Tao of coding"
+spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --param topic="What is vibe coding?"
 ```
 
 ## Why SPL
@@ -46,7 +47,7 @@ SPL synthesizes three programming paradigms:
 
 | Version | Highlights |
 |---|---|
-| **1.0** | Single-query `PROMPT` statements; lexer, parser, executor foundation |
+| **1.0** | SQL-like statements (`SELECT`, `GENERATE`); lexer, parser, executor foundation |
 | **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
 | **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
 
@@ -67,8 +68,11 @@ spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
 # Run self-refine with a local model
 spl3 run cookbook/05_self_refine/self_refine.spl \
     --adapter ollama \
-    --param writer_model=gemma3 \
-    --param critic_model=gemma3
+    --param task="Explain vibe coding" \
+    --param writer_model="gemma3" \
+    --param critic_model="llama3.2" \
+    --param max_iterations=3 \
+    --param log_dir="$HOME/.spl/logs/05_self_refine/output"
 
 # Run all active recipes
 python cookbook/run_all.py

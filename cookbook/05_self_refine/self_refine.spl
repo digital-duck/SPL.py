@@ -26,7 +26,7 @@ Content to review:
 {current}
 $$;
 
-CREATE FUNCTION refined(current TEXT, feedback TEXT) 
+CREATE FUNCTION refine(current TEXT, feedback TEXT) 
 RETURN TEXT
 AS $$
 You are an expert writer. Improve the following draft based on the feedback.
@@ -75,7 +75,7 @@ DO
         CALL write_file(f'{@log_dir}/final.md', @current) INTO NONE
         RETURN @current WITH status = 'complete', iterations = @iteration
       ELSE
-        GENERATE refined(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS 
+        GENERATE refine(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS 
           USING MODEL @writer_model 
           INTO @current
         @iteration := @iteration + 1
