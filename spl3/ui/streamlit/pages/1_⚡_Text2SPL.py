@@ -259,7 +259,7 @@ with left:
             file_version = cur_v if (overwrite and cur_v) else (1 if cur_v is None else cur_v + 1)
             spl_file = SCRIPTS_DIR / f"{effective_name}_v{file_version}_{uuid.uuid4().hex[:6]}.spl"
             cmd = [
-                "spl", "text2spl", desc,
+                "spl3", "text2spl", desc,
                 "--mode", mode,
                 "--no-validate",
                 "-o", str(spl_file),
@@ -401,7 +401,7 @@ if st.session_state.spl_code:
         return result
 
     if btn_run:
-        run_cmd = ["spl", "run", st.session_state.spl_file, "--adapter", r_adapter, "--model", r_model]
+        run_cmd = ["spl3", "run", st.session_state.spl_file, "--adapter", r_adapter, "--model", r_model]
 
         raw_assignments = st.session_state.get("param_assignments", "") or ""
         effective_params = _parse_assignments(raw_assignments)

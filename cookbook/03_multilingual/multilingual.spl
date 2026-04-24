@@ -4,17 +4,17 @@
 -- Usage:
 --   spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama user_input="hello wen" lang="Chinese"
 
-CREATE FUNCTION greeting(input TEXT, lang TEXT)
+CREATE FUNCTION greeting(input TEXT := 'hello', lang List := ['Chinese', 'English', 'Spanish', 'French', 'German'])
 RETURNS TEXT
 AS $$
 You are a friendly assistant. 
 The user said: "{input}"
-Please respond in {lang}. Introduce yourself and SPL 3.0 in two sentences.
+Please translate the message in multiple languages: {lang}.
 $$;
 
 PROMPT multilingual_greeting
 SELECT
-    system_role('You are a friendly assistant. Respond in the language specified.'),
+    system_role('You are a friendly assistant.'),
     context.user_input AS input,
     context.lang AS lang
 GENERATE greeting(input, lang)

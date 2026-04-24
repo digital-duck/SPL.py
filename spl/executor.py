@@ -586,6 +586,23 @@ class Executor:
             _log.exception("RAG query failed")
             return "[RAG not initialized]"
 
+    def _eval_arg_in_context(self, arg, context: dict) -> str:
+        """Evaluate a generate-clause argument against a plain dict context."""
+        import re
+        if isinstance(arg, Literal):
+            if getattr(arg, 'literal_type', None) == 'bool':
+                return 'true' if arg.value else 'false'
+            return str(arg.value)
+        elif isinstance(arg, (Identifier, ParamRef)):
+            return context.get(arg.name, '')
+        elif isinstance(arg, DottedName):
+            return context.get(arg.full_name, context.get(arg.parts[0], ''))
+        elif isinstance(arg, FStringLiteral):
+            def _sub(m: re.Match) -> str:
+                return context.get(m.group(1), '')
+            return re.sub(r'\{@(\w+)\}', _sub, arg.template)
+        return str(arg)
+
     def _assemble_prompt(self, context: dict, plan: ExecutionPlan,
                          stmt: PromptStatement | None) -> str:
         parts = []
@@ -599,12 +616,7 @@ class Executor:
             if func_def:
                 arg_values: dict[str, str] = {}
                 for param, arg in zip(func_def.parameters, gen.arguments):
-                    if isinstance(arg, Identifier):
-                        val = context.get(arg.name, "")
-                    elif isinstance(arg, Literal):
-                        val = str(arg.value)
-                    else:
-                        val = str(arg)
+                    val = self._eval_arg_in_context(arg, context)
                     # Treat "[...]" sentinel placeholders as missing (same convention as prompt assembly)
                     if val.startswith("["):
                         val = ""
@@ -622,7 +634,7 @@ class Executor:
                 parts.append(f"\n## Task\n{task_text}")
             else:
                 args_str = ", ".join(
-                    a.name if isinstance(a, Identifier) else str(a)
+                    self._eval_arg_in_context(a, context)
                     for a in gen.arguments
                 )
                 parts.append(
