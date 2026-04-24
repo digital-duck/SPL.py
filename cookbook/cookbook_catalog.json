@@ -835,7 +835,7 @@
         "--tools",
         "./cookbook/44_adaptive_failover/tools.py",
         "query=Explain quantum entanglement for a technical audience.",
-        "primary_model=phi4",
+        "primary_model=phi4-mini",
         "fallback_model=gemma3"
       ],
       "dir": "44_adaptive_failover",

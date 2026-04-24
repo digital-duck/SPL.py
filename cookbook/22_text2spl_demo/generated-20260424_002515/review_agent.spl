@@ -1,0 +1,24 @@
+WORKFLOW review_agent
+  INPUT @draft TEXT
+  OUTPUT @final TEXT
+DO
+  @quality := 0.0;
+  @current := @draft;
+  WHILE @quality < 0.8 DO
+    GENERATE rewrite(@current, style='improved') INTO @current;
+    GENERATE sentiment(@current) INTO @quality;
+    IF @quality > 0.8 THEN
+      BREAK;
+    END;
+  END;
+  @final := @current;
+  COMMIT @final;
+END;
+
+CREATE FUNCTION rewrite(text TEXT, style TEXT) RETURNS TEXT AS $$
+  GENERATE rewrite(text, style='formal')
+$$;
+
+CREATE FUNCTION sentiment(text TEXT) RETURNS NUMBER AS $$
+  GENERATE sentiment(text)
+$$;

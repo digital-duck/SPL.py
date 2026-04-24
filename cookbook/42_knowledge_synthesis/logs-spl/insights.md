@@ -1,5 +1,5 @@
-Here are three core insights extracted from the text:
+Here are 3 core insights extracted from the text:
 
-• Recent advances in sparse attention mechanisms have significantly reduced transformer memory footprint.
-• This reduction in memory footprint has been achieved without compromising model quality on long-context tasks.
-• The use of sparse attention mechanisms is a promising method for improving transformer efficiency.
+*   Sparse attention mechanisms significantly decrease the memory requirements of transformer models.
+*   This reduction in memory impact doesn’t compromise the performance of transformers on long-context tasks.
+*   Recent advancements have focused on optimizing transformer architecture through sparse attention.
