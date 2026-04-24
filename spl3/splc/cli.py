@@ -275,7 +275,7 @@ def splc(
                     f"splc: using deterministic LangGraph transpiler for {spl_path.name}"
                 )
 
-            transpiler = LangGraphTranspiler(recipe_name)
+            transpiler = LangGraphTranspiler(recipe_name, spl_dir=spl_path.parent)
             impl_code = transpiler.transpile(program)
             readme_text = (
                 f"# {recipe_name} (Deterministic Python/LangGraph)\n\n"

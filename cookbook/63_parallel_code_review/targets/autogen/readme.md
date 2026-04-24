@@ -12,10 +12,10 @@ Runs three independent LLM agents concurrently (style review, security audit, te
 conda activate spl123
 
 # 2. Install dependencies
-pip install pyautogen openai
+pip install pyautogen openai click
 
 # 3. Ensure Ollama is running with your target model
-ollama pull gemma4        # or gemma3, mistral, etc.
+ollama pull gemma3        # or gemma3, mistral, etc.
 ollama serve              # if not already running as a service
 
 # 4. (Optional) override the Ollama endpoint
@@ -28,18 +28,15 @@ export OLLAMA_BASE_URL=http://localhost:11434/v1
 
 ```bash
 # Minimal — review a one-liner
-python parallel_code_review.py --code "def add(a, b): return a - b"
+python code_review_autogen.py --code "def add(a, b): return a - b"
 
 # Full flags
-python parallel_code_review.py \
-    --code "$(cat my_module.py)" \
+python code_review_autogen.py \
+    --code code_review_autogen.py \
     --lang python \
-    --review-model gemma4
-
-# Smaller/faster model
-python parallel_code_review.py \
-    --code "$(cat my_module.py)" \
     --review-model gemma3
+
+
 ```
 
 ---

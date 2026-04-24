@@ -34,12 +34,19 @@ from spl.ast_nodes import (
     GenerateIntoStatement,
     Literal,
     LoggingStatement,
+    NamedArg,
     ParamRef,
     SemanticCondition,
     WhileStatement,
     WorkflowStatement,
 )
-from spl3.ast_nodes import CompoundCondition, NoneLiteral, UnaryOp
+from spl3.ast_nodes import (
+    CallParallelBranch,
+    CallParallelStatement,
+    CompoundCondition,
+    NoneLiteral,
+    UnaryOp,
+)
 
 
 class LangGraphTranspiler:
@@ -50,14 +57,16 @@ class LangGraphTranspiler:
         from spl.lexer import Lexer
         from spl3.parser import SPL3Parser
         from spl3.splc.transpiler_langgraph import LangGraphTranspiler
+        from pathlib import Path
 
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
-        code = LangGraphTranspiler("self_refine").transpile(program)
+        code = LangGraphTranspiler("self_refine", spl_dir=Path(".")).transpile(program)
     """
 
-    def __init__(self, recipe_name: str):
+    def __init__(self, recipe_name: str, spl_dir=None):
         self.recipe_name = recipe_name
+        self.spl_dir = spl_dir            # source directory for resolving IMPORT paths
         self.prompts: dict[str, str] = {}          # fn_name → prompt body
         self.fn_params: dict[str, list] = {}        # fn_name → [Parameter]
         self.sub_workflows: dict[str, WorkflowStatement] = {}
@@ -66,6 +75,9 @@ class LangGraphTranspiler:
 
     def transpile(self, program) -> str:
         """Return full Python source as a string."""
+        # Pre-pass: resolve IMPORT statements by inlining sub-workflow files
+        self._resolve_imports(program)
+
         # Pass 1: collect CREATE FUNCTION definitions
         for stmt in program.statements:
             if isinstance(stmt, CreateFunctionStatement):
@@ -81,17 +93,60 @@ class LangGraphTranspiler:
         main_wf = workflows[-1]
         state_name = self._state_class_name(main_wf.name)
 
-        parts = [
-            self._gen_header(main_wf),
-            self._gen_prompts(),
-            self._gen_state_class(main_wf, state_name),
-            self._gen_helpers(),
-            self._gen_nodes(main_wf, state_name),
-            self._gen_routing_function(main_wf, state_name),
-            self._gen_build_graph(main_wf, state_name),
-            self._gen_main(main_wf),
-        ]
+        if self._is_fan_out_merge_pattern(main_wf):
+            parts = [
+                self._gen_header_fanout(main_wf),
+                self._gen_prompts(),
+                self._gen_state_class(main_wf, state_name),
+                self._gen_helpers_fanout(),
+                self._gen_nodes_fanout(main_wf, state_name),
+                self._gen_build_graph_fanout(main_wf, state_name),
+                self._gen_main(main_wf),
+            ]
+        else:
+            parts = [
+                self._gen_header(main_wf),
+                self._gen_prompts(),
+                self._gen_state_class(main_wf, state_name),
+                self._gen_helpers(),
+                self._gen_nodes(main_wf, state_name),
+                self._gen_routing_function(main_wf, state_name),
+                self._gen_build_graph(main_wf, state_name),
+                self._gen_main(main_wf),
+            ]
         return "\n\n".join(p for p in parts if p)
+
+    # ── Import resolution ─────────────────────────────────────────────────────
+
+    def _resolve_imports(self, program) -> None:
+        """Inline IMPORT statements: load referenced .spl files and append their
+        CreateFunctionStatement / WorkflowStatement nodes to program.statements."""
+        from spl3.ast_nodes import ImportStatement as _ImportStatement
+
+        if self.spl_dir is None:
+            return  # no base dir → can't resolve
+
+        from pathlib import Path as _Path
+        from spl.lexer import Lexer as _Lexer
+        from spl3.parser import SPL3Parser as _SPL3Parser
+
+        resolved: list = []
+        for stmt in program.statements:
+            if isinstance(stmt, _ImportStatement):
+                # Try exact path, then with .spl extension
+                for candidate in (
+                    _Path(self.spl_dir) / stmt.path,
+                    _Path(self.spl_dir) / (stmt.path + ".spl"),
+                ):
+                    if candidate.exists():
+                        src = candidate.read_text(encoding="utf-8")
+                        tokens = _Lexer(src).tokenize()
+                        sub_prog = _SPL3Parser(tokens).parse()
+                        resolved.extend(sub_prog.statements)
+                        break
+            else:
+                resolved.append(stmt)
+        program.statements = resolved
 
     # ── Code section generators ───────────────────────────────────────────────
 
@@ -122,7 +177,8 @@ from langgraph.graph import END, StateGraph'''
             "──────────────────────────"
         ]
         for name, body in self.prompts.items():
-            const = name.upper() + "_PROMPT"
+            base = name.upper()
+            const = base if base.endswith("_PROMPT") else base + "_PROMPT"
             body_clean = body.strip("\n")
             lines.append(f'\n{const} = """\\\n{body_clean}"""')
         return "\n".join(lines)
@@ -160,6 +216,206 @@ def _write(path: str, content: str) -> None:
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content, encoding="utf-8")"""
+
+    # ── Fan-out / merge pattern (CALL PARALLEL → merge → commit) ─────────────
+
+    def _is_fan_out_merge_pattern(self, wf: WorkflowStatement) -> bool:
+        return any(isinstance(s, CallParallelStatement) for s in wf.body)
+
+    def _find_call_parallel(self, wf: WorkflowStatement) -> CallParallelStatement | None:
+        return next((s for s in wf.body if isinstance(s, CallParallelStatement)), None)
+
+    def _gen_header_fanout(self, wf: WorkflowStatement) -> str:
+        name = wf.name
+        return f'''\
+"""
+{name} — generated by splc (deterministic Python/LangGraph transpiler)
+
+Pattern: CALL PARALLEL fan-out → merge → commit
+
+Usage:
+    pip install langgraph langchain-ollama click
+    python {name}_python_langgraph.py --code "Your code here"
+"""
+
+import asyncio
+from pathlib import Path
+from typing import TypedDict
+
+import click
+
+from langchain_ollama import ChatOllama
+from langgraph.graph import END, StateGraph'''
+
+    def _gen_helpers_fanout(self) -> str:
+        return """\
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+async def _invoke_async(model: str, prompt: str) -> str:
+    return await asyncio.to_thread(
+        lambda: ChatOllama(model=model).invoke(prompt).content.strip()
+    )
+
+def _invoke(model: str, prompt: str) -> str:
+    return ChatOllama(model=model).invoke(prompt).content.strip()
+
+def _write(path: str, content: str) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(content, encoding="utf-8")"""
+
+    def _gen_nodes_fanout(self, wf: WorkflowStatement, state_name: str) -> str:
+        parallel_stmt = self._find_call_parallel(wf)
+        # Statements after CALL PARALLEL
+        post_parallel = list(wf.body)[list(wf.body).index(parallel_stmt) + 1:]
+        merge_gen = next((s for s in post_parallel if isinstance(s, GenerateIntoStatement)), None)
+        merge_logging = [s for s in post_parallel if isinstance(s, LoggingStatement)]
+
+        parts = [
+            "# ── Nodes  (each mirrors one SPL statement block) "
+            "──────────────────────────"
+        ]
+        parts.append(self._gen_node_parallel(parallel_stmt, wf, state_name))
+        parts.append(self._gen_node_merge(merge_gen, merge_logging, wf, state_name))
+        parts.append(self._gen_node_commit_simple(wf, state_name))
+        return "\n\n".join(parts)
+
+    def _gen_node_parallel(
+        self, parallel_stmt: CallParallelStatement, wf: WorkflowStatement, state_name: str
+    ) -> str:
+        """Emit node_parallel: asyncio.gather over all CALL PARALLEL branches."""
+        lines = [f"def node_parallel(state: {state_name}) -> dict:"]
+
+        # Comment showing SPL source
+        lines.append("    # SPL: CALL PARALLEL")
+        for b in parallel_stmt.branches:
+            args_str = ", ".join(self._spl_arg(a) for a in b.arguments)
+            lines.append(f"    #   {b.workflow_name}({args_str}) INTO @{b.target_var}")
+
+        # Find the first LOGGING before CALL PARALLEL for startup message
+        pre_log = next(
+            (s for s in wf.body
+             if isinstance(s, LoggingStatement)
+             and wf.body.index(s) < wf.body.index(parallel_stmt)),
+            None,
+        )
+        if pre_log:
+            lines.append(f"    {self._log_py(pre_log)}")
+
+        # Build asyncio.gather coroutines
+        target_vars = []
+        invoke_lines = []
+        for b in parallel_stmt.branches:
+            sub_wf = self.sub_workflows.get(b.workflow_name)
+            target = b.target_var.lstrip("@")
+            target_vars.append(target)
+            if sub_wf:
+                param_map = self._build_param_map_from_branch(b, sub_wf)
+                gen = next(
+                    (s for s in sub_wf.body if isinstance(s, GenerateIntoStatement)), None
+                )
+                if gen:
+                    gc = gen.generate_clause
+                    model_expr = self._resolve(gc.model, param_map)
+                    prompt_call = self._prompt_fmt_mapped(gc.function_name, gc.arguments, param_map)
+                    invoke_lines.append(f"            _invoke_async({model_expr}, {prompt_call}),")
+                else:
+                    invoke_lines.append(f"            # TODO: no GENERATE found in {b.workflow_name}")
+            else:
+                invoke_lines.append(f"            # TODO: sub-workflow '{b.workflow_name}' not found")
+
+        lhs = ", ".join(target_vars)
+        lines.append(f"    async def _run():")
+        lines.append(f"        {lhs} = await asyncio.gather(")
+        lines.extend(invoke_lines)
+        lines.append(f"        )")
+        lines.append(f"        return {lhs}")
+        lines.append(f"")
+        lines.append(f"    {lhs} = asyncio.run(_run())")
+
+        # Post-gather logging
+        for b_idx, b in enumerate(parallel_stmt.branches):
+            sub_wf = self.sub_workflows.get(b.workflow_name)
+            if sub_wf:
+                for s in sub_wf.body:
+                    if isinstance(s, LoggingStatement):
+                        lines.append(f"    {self._log_py(s)}")
+                        break
+
+        ret = "{" + ", ".join(f'"{v}": {v}' for v in target_vars) + "}"
+        lines.append(f"    return {ret}")
+        return "\n".join(lines)
+
+    def _gen_node_merge(
+        self,
+        gen: GenerateIntoStatement | None,
+        logging_stmts: list,
+        wf: WorkflowStatement,
+        state_name: str,
+    ) -> str:
+        lines = [f"def node_merge(state: {state_name}) -> dict:"]
+        if gen:
+            gc = gen.generate_clause
+            args_str = ", ".join(self._spl_arg(a) for a in gc.arguments)
+            target = self._key(gen.target_variable)
+            lines.append(
+                f"    # SPL: GENERATE {gc.function_name}({args_str})"
+                f" USING MODEL {gc.model} INTO @{target}"
+            )
+            lines.append(
+                f"    {target} = _invoke({self._model_expr(gc.model)}, "
+                f"{self._prompt_fmt(gc.function_name, gc.arguments)})"
+            )
+            for s in logging_stmts:
+                lines.append(f"    {self._log_py(s, {target: target})}")
+            lines.append(f'    return {{"{target}": {target}}}')
+        else:
+            lines.append("    return {}")
+        return "\n".join(lines)
+
+    def _gen_node_commit_simple(self, wf: WorkflowStatement, state_name: str) -> str:
+        output_var = self._find_output_var(wf)
+        lines = [
+            f"def node_commit(state: {state_name}) -> dict:",
+            f"    # SPL: COMMIT @{output_var}",
+            "    return {}",
+        ]
+        return "\n".join(lines)
+
+    def _gen_build_graph_fanout(self, wf: WorkflowStatement, state_name: str) -> str:
+        return f"""\
+# ── Graph  (SPL: fan-out → merge → commit) ────────────────────────────────────
+
+def build_graph():
+    g = StateGraph({state_name})
+    g.add_node("parallel", node_parallel)
+    g.add_node("merge",    node_merge)
+    g.add_node("commit",   node_commit)
+
+    g.set_entry_point("parallel")
+    g.add_edge("parallel", "merge")
+    g.add_edge("merge",    "commit")
+    g.add_edge("commit",   END)
+    return g.compile()"""
+
+    def _build_param_map_from_branch(
+        self, branch: CallParallelBranch, sub_wf: WorkflowStatement
+    ) -> dict:
+        """Map sub-workflow input params to call-site arguments (named + positional)."""
+        named = {a.name: a.value for a in branch.arguments if isinstance(a, NamedArg)}
+        positional = [a for a in branch.arguments if not isinstance(a, NamedArg)]
+        param_map: dict = {}
+        pos_idx = 0
+        for param in sub_wf.inputs:
+            k = self._key(param.name)
+            if k in named:
+                param_map[k] = named[k]
+            elif pos_idx < len(positional):
+                param_map[k] = positional[pos_idx]
+                pos_idx += 1
+        return param_map
+
+    # ── Self-refine pattern (WHILE loop) ──────────────────────────────────────
 
     def _gen_nodes(self, wf: WorkflowStatement, state_name: str) -> str:
         segs = self._segment_body(wf)
@@ -582,6 +838,10 @@ def build_graph():
 
         def scan(stmts):
             for s in stmts:
+                if isinstance(s, CallParallelStatement):
+                    for branch in s.branches:
+                        if branch.target_var:
+                            vars[branch.target_var.lstrip("@")] = "str"
                 if isinstance(s, GenerateIntoStatement):
                     vars[self._key(s.target_variable)] = "str"
                 if isinstance(s, AssignmentStatement):
@@ -659,8 +919,14 @@ def build_graph():
         return f"# TODO: {type(expr).__name__}"
 
     def _fstr_py(self, template: str) -> str:
-        """'{@log_dir}/draft_{@iteration}.md' → f\"{state['log_dir']}/draft_{state['iteration']}.md\""""
+        """'{@log_dir}/draft_{@iteration}.md' → f\"{state['log_dir']}/draft_{state['iteration']}.md\"
+
+        Also handles @var inside expressions: 'len={len(@report)}' → 'len={len(state["report"])}'
+        """
+        # First pass: {@ var} simple references
         result = re.sub(r"\{@(\w+)\}", r"""{state['\1']}""", template)
+        # Second pass: @var remaining inside { } expressions (e.g. len(@report))
+        result = re.sub(r"@(\w+)", r"state['\1']", result)
         result = result.replace('"', '\\"').replace("\n", "\\n").replace("\t", "\\t")
         return f'f"{result}"'
 
@@ -688,9 +954,13 @@ def build_graph():
             return f'state["{k}"]'
         return self._expr_py(expr)
 
+    def _prompt_const(self, fn_name: str) -> str:
+        base = fn_name.upper()
+        return base if base.endswith("_PROMPT") else base + "_PROMPT"
+
     def _prompt_fmt(self, fn_name: str, arguments: list) -> str:
         """FN_PROMPT.format(param=state["val"], ...) for a direct GENERATE call."""
-        const = fn_name.upper() + "_PROMPT"
+        const = self._prompt_const(fn_name)
         params = self.fn_params.get(fn_name, [])
         if not params:
             parts = [self._expr_py(a) for a in arguments]
@@ -703,7 +973,7 @@ def build_graph():
 
     def _prompt_fmt_mapped(self, fn_name: str, arguments: list, param_map: dict) -> str:
         """Like _prompt_fmt but resolve arguments through param_map (for inlined sub-wf)."""
-        const = fn_name.upper() + "_PROMPT"
+        const = self._prompt_const(fn_name)
         params = self.fn_params.get(fn_name, [])
         if not params:
             parts = [self._resolve(a, param_map) for a in arguments]
@@ -748,6 +1018,8 @@ def build_graph():
 
     def _spl_arg(self, expr) -> str:
         """Render an AST expression as a terse SPL argument string (@name or value)."""
+        if isinstance(expr, NamedArg):
+            return f"{expr.name}={self._spl_arg(expr.value)}"
         if isinstance(expr, ParamRef):
             return f"@{self._key(expr.name)}"
         if isinstance(expr, str) and expr.startswith("@"):
