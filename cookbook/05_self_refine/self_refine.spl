@@ -42,22 +42,21 @@ $$;
 
 WORKFLOW self_refine
   INPUT:
-    @task TEXT DEFAULT 'What are the benefits of meditation?',
-    @output_budget INTEGER DEFAULT 2000,
-    @max_iterations INTEGER DEFAULT 5,
-    @writer_model TEXT DEFAULT 'gemma3',
-    @critic_model TEXT DEFAULT 'llama3.2',
-    @log_dir TEXT DEFAULT 'cookbook/05_self_refine/logs-spl'
+    @task TEXT := 'What are the benefits of meditation?',
+    @output_budget INTEGER := 2000,
+    @max_iterations INTEGER := 3,
+    @writer_model TEXT := 'gemma3',
+    @critic_model TEXT := 'llama3.2',
+    @log_dir TEXT := 'cookbook/05_self_refine/logs-spl'
   OUTPUT: @result TEXT
 DO
   @iteration := 0
 
-  LOGGING f'Self-refine started | max_iterations={@max_iterations} for task:\n {@task}' LEVEL INFO
+  LOGGING f'Self-refine started | max_iterations={@max_iterations} for task:\n {@task} ...' LEVEL INFO
 
   -- Initial draft
   GENERATE draft(@task) WITH OUTPUT BUDGET @output_budget TOKENS 
-    USING MODEL @writer_model 
-    INTO @current
+    USING MODEL @writer_model INTO @current
   LOGGING 'Initial draft ready' LEVEL INFO
   CALL write_file(f'{@log_dir}/draft_0.md', @current) INTO NONE
 
@@ -65,8 +64,7 @@ DO
   WHILE @iteration < @max_iterations DO
     LOGGING f'Iteration {@iteration} | critiquing ...' LEVEL DEBUG
     GENERATE critique(@current) WITH OUTPUT BUDGET @output_budget TOKENS 
-      USING MODEL @critic_model 
-      INTO @feedback
+      USING MODEL @critic_model INTO @feedback
     CALL write_file(f'{@log_dir}/feedback_{@iteration}.md', @feedback) INTO NONE
 
     EVALUATE @feedback
@@ -75,12 +73,11 @@ DO
         CALL write_file(f'{@log_dir}/final.md', @current) INTO NONE
         RETURN @current WITH status = 'complete', iterations = @iteration
       ELSE
-        GENERATE refine(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS 
-          USING MODEL @writer_model 
-          INTO @current
         @iteration := @iteration + 1
-        CALL write_file(f'{@log_dir}/draft_{@iteration}.md', @current) INTO NONE
+        GENERATE refine(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS 
+          USING MODEL @writer_model INTO @current
         LOGGING f'Refined | iteration={@iteration}' LEVEL DEBUG
+        CALL write_file(f'{@log_dir}/draft_{@iteration}.md', @current) INTO NONE
     END
   END
 
