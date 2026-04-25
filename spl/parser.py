@@ -1178,6 +1178,12 @@ class Parser:
     def _parse_commit_statement(self) -> CommitStatement:
         """Parse RETURN expr [WITH key=value, ...]  (COMMIT accepted as deprecated alias)"""
         if self._check(TokenType.COMMIT):
+            import warnings
+            warnings.warn(
+                "COMMIT is deprecated and will be removed in a future version; use RETURN instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             self._advance()
         else:
             self._expect(TokenType.RETURN)

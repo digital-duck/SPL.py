@@ -73,7 +73,7 @@ DO
         WITH OUTPUT BUDGET 256 TOKENS
         USING MODEL @digest_model
         INTO @summary
-    COMMIT @summary
+    RETURN @summary
 END
 
 -- ── Main orchestrator ──────────────────────────���──────────────────────────────
@@ -108,7 +108,7 @@ DO
         INTO @digest
 
     LOGGING f'[parallel_news_digest] done | digest_len={len(@digest)}' LEVEL INFO
-    COMMIT @digest
+    RETURN @digest
 
 EXCEPTION
     WHEN ModelUnavailable THEN
@@ -116,5 +116,5 @@ EXCEPTION
         RETURN '[ERROR] Model unavailable.' WITH status = 'failed'
     WHEN BudgetExceeded THEN
         LOGGING '[parallel_news_digest] token budget exceeded' LEVEL WARN
-        COMMIT @digest WITH status = 'truncated'
+        RETURN @digest WITH status = 'truncated'
 END

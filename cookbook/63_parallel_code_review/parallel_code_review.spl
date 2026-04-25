@@ -84,7 +84,7 @@ DO
         INTO @report
 
     LOGGING f'[parallel_code_review] done | report_len={len(@report)}' LEVEL INFO
-    COMMIT @report
+    RETURN @report
 
 EXCEPTION
     WHEN ModelUnavailable THEN
@@ -92,5 +92,5 @@ EXCEPTION
         RETURN '[ERROR] Model unavailable.' WITH status = 'failed'
     WHEN BudgetExceeded THEN
         LOGGING '[parallel_code_review] token budget exceeded during merge' LEVEL WARN
-        COMMIT @report WITH status = 'truncated'
+        RETURN @report WITH status = 'truncated'
 END

@@ -17,7 +17,7 @@ Phase 1 scope (self_refine pattern):
     AssignmentStatement(@iteration := ...) → hoisted to top of node; drives return dict
     EVALUATE WHEN contains(...) THEN → _route() conditional edge
     WHILE cond DO    → graph back-edge + max-iterations guard in _route
-    COMMIT           → node_commit writing final.md
+    RETURN           → node_commit writing final.md
 """
 
 from __future__ import annotations
@@ -377,7 +377,7 @@ def _write(path: str, content: str) -> None:
         output_var = self._find_output_var(wf)
         lines = [
             f"def node_commit(state: {state_name}) -> dict:",
-            f"    # SPL: COMMIT @{output_var}",
+            f"    # SPL: RETURN @{output_var}",
             "    return {}",
         ]
         return "\n".join(lines)
@@ -617,7 +617,7 @@ def build_graph():
 
     def _gen_node_commit(self, when_stmts, post_stmts, wf, state_name: str) -> str:
         lines = [f"def node_commit(state: {state_name}) -> dict:"]
-        lines.append("    # COMMIT @current (write final.md and log status)")
+        lines.append("    # RETURN @current (write final.md and log status)")
 
         # Write final.md (deduplicate: same file written by both paths)
         all_stmts = list(when_stmts) + list(post_stmts)
@@ -658,7 +658,7 @@ def build_graph():
                         match_str = sem[len("contains:"):]
                         lines.append(
                             f"    # SPL: EVALUATE @{expr_key}"
-                            f" WHEN contains('{match_str}') THEN COMMIT"
+                            f" WHEN contains('{match_str}') THEN RETURN"
                         )
                         lines.append(f"    if {repr(match_str)} in state[\"{expr_key}\"]:")
                         lines.append('        return "commit"')

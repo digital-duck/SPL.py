@@ -33,5 +33,5 @@ DO
         WITH OUTPUT BUDGET 512 TOKENS
         USING MODEL @review_model
         INTO @tests
-    COMMIT @tests
+    RETURN @tests
 END

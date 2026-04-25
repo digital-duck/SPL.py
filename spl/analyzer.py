@@ -5,6 +5,7 @@ Extends SPL 1.0 analyzer with validation for:
 - EVALUATE condition types (semantic vs deterministic)
 - Exception type validation
 - Variable scope analysis for @var assignments
+- Static type checking: multimodal/scalar compatibility at CALL and GENERATE boundaries
 """
 
 from spl.ast_nodes import (
@@ -17,7 +18,19 @@ from spl.ast_nodes import (
     EvaluateStatement, WhenClause, SemanticCondition, ComparisonCondition,
     WhileStatement, CommitStatement, RetryStatement, RaiseStatement,
     AssignmentStatement, GenerateIntoStatement, CallStatement, SelectIntoStatement,
+    Parameter, ParamRef,
 )
+
+# Types whose values cannot be produced by a plain GENERATE (TEXT-output) call.
+_MULTIMODAL_TYPES = {"IMAGE", "AUDIO", "VIDEO"}
+
+# Types that are scalar / text-compatible — safe to pass to any TEXT param.
+_TEXT_COMPATIBLE = {"TEXT", "STR", "STRING", "NUMBER", "INT", "INTEGER",
+                    "FLOAT", "REAL", "BOOL", "BOOLEAN", ""}
+
+def _norm(t: str | None) -> str:
+    """Normalise a param_type string to upper-case, treating None as TEXT."""
+    return (t or "TEXT").strip().upper()
 
 
 class AnalysisError(Exception):
@@ -65,6 +78,18 @@ class AnalysisResult:
     @property
     def is_valid(self) -> bool:
         return True  # If we got here without raising, it's valid
+
+    def _param_type_map(self, params: list) -> dict[str, str]:
+        """Return {param_name: normalised_type} for a parameter list."""
+        return {p.name: _norm(p.param_type) for p in params}
+
+    def input_types(self, name: str) -> dict[str, str]:
+        """Return input type map for a named workflow or procedure."""
+        if name in self.defined_workflows:
+            return self._param_type_map(self.defined_workflows[name].inputs)
+        if name in self.defined_procedures:
+            return self._param_type_map(self.defined_procedures[name].parameters)
+        return {}
 
 
 class Analyzer:
@@ -184,14 +209,14 @@ class Analyzer:
         if stmt.accounting:
             self._validate_accounting(stmt.accounting, result)
 
-        # Validate body statements
-        scope = set()
+        # Build typed scope: {var_name: normalised_type}
+        type_scope: dict[str, str] = {}
         for param in stmt.inputs:
-            scope.add(param.name)
+            type_scope[param.name] = _norm(param.param_type)
         for param in stmt.outputs:
-            scope.add(param.name)
+            type_scope[param.name] = _norm(param.param_type)
 
-        self._validate_body(stmt.body, scope, result)
+        self._validate_body(stmt.body, type_scope, result)
         self._validate_exception_handlers(stmt.exception_handlers, result)
 
     def _analyze_procedure(self, stmt: ProcedureStatement, result: AnalysisResult):
@@ -203,31 +228,122 @@ class Analyzer:
         if stmt.security:
             self._validate_security(stmt.security, result)
 
-        scope = set()
+        type_scope: dict[str, str] = {}
         for param in stmt.parameters:
-            scope.add(param.name)
+            type_scope[param.name] = _norm(param.param_type)
 
-        self._validate_body(stmt.body, scope, result)
+        self._validate_body(stmt.body, type_scope, result)
         self._validate_exception_handlers(stmt.exception_handlers, result)
 
-    def _validate_body(self, stmts: list, scope: set[str], result: AnalysisResult):
-        """Validate statements inside a workflow/procedure body."""
+    def _validate_body(self, stmts: list, type_scope: dict[str, str], result: AnalysisResult):
+        """Validate statements inside a workflow/procedure body.
+
+        type_scope: {var_name: normalised_type} — tracks declared/inferred types.
+        GENERATE always produces TEXT; multimodal values come from INPUT params only.
+        """
         for stmt in stmts:
             if isinstance(stmt, AssignmentStatement):
-                scope.add(stmt.variable)
+                # Assignment: infer type as TEXT (conservative)
+                type_scope[stmt.variable] = "TEXT"
+
             elif isinstance(stmt, GenerateIntoStatement):
+                target = stmt.target_variable
+                if target:
+                    declared = type_scope.get(target)
+                    if declared and declared in _MULTIMODAL_TYPES:
+                        raise AnalysisError(
+                            f"Type error: GENERATE produces TEXT but '{target}' is "
+                            f"declared as {declared}. Multimodal values must come "
+                            f"from workflow inputs, not GENERATE."
+                        )
+                    type_scope[target] = "TEXT"
+
+            elif isinstance(stmt, CallStatement):
+                self._validate_call_types(stmt, type_scope, result)
+                # Bind the INTO target as TEXT (sub-workflow OUTPUT is TEXT by convention
+                # unless it declares a multimodal OUTPUT, which we warn about separately)
                 if stmt.target_variable:
-                    scope.add(stmt.target_variable)
+                    target = stmt.target_variable
+                    if target not in type_scope:
+                        type_scope[target] = "TEXT"
+
             elif isinstance(stmt, EvaluateStatement):
                 for wc in stmt.when_clauses:
-                    self._validate_body(wc.statements, scope.copy(), result)
+                    self._validate_body(wc.statements, dict(type_scope), result)
                 if stmt.else_statements:
-                    self._validate_body(stmt.else_statements, scope.copy(), result)
+                    self._validate_body(stmt.else_statements, dict(type_scope), result)
+
             elif isinstance(stmt, WhileStatement):
-                self._validate_body(stmt.body, scope.copy(), result)
+                self._validate_body(stmt.body, dict(type_scope), result)
+
             elif isinstance(stmt, DoBlock):
-                self._validate_body(stmt.statements, scope.copy(), result)
+                self._validate_body(stmt.statements, dict(type_scope), result)
                 self._validate_exception_handlers(stmt.exception_handlers, result)
+
+    def _validate_call_types(self, stmt: CallStatement, type_scope: dict[str, str],
+                              result: AnalysisResult):
+        """Check that argument types are compatible with callee input parameter types.
+
+        Rules:
+        - A multimodal argument (IMAGE/AUDIO/VIDEO) may only be passed to a parameter
+          declared with the same multimodal type.
+        - A TEXT/scalar argument must not be passed to a multimodal parameter.
+        - Unknown callees (defined in IMPORTed files not yet resolved) are skipped.
+        """
+        # Look up callee in known workflows/procedures
+        callee_wf = result.defined_workflows.get(stmt.procedure_name)
+        callee_pr = result.defined_procedures.get(stmt.procedure_name)
+        if callee_wf is None and callee_pr is None:
+            return  # callee may be in an imported file; skip
+
+        callee_params = (
+            list(callee_wf.inputs) if callee_wf else list(callee_pr.parameters)
+        )
+
+        # Separate named from positional arguments
+        from spl.ast_nodes import NamedArg
+        named_args = {a.name: a.value for a in stmt.arguments if isinstance(a, NamedArg)}
+        positional = [a for a in stmt.arguments if not isinstance(a, NamedArg)]
+        pos_idx = 0
+
+        for param in callee_params:
+            expected = _norm(param.param_type)
+            pname = param.name
+
+            if pname in named_args:
+                arg_expr = named_args[pname]
+            elif pos_idx < len(positional):
+                arg_expr = positional[pos_idx]
+                pos_idx += 1
+            else:
+                continue  # param has default or was omitted
+
+            # Resolve arg type from scope if it's a variable reference
+            actual = "TEXT"
+            if isinstance(arg_expr, ParamRef):
+                actual = type_scope.get(arg_expr.name, "TEXT")
+            elif hasattr(arg_expr, "name") and isinstance(getattr(arg_expr, "name", None), str):
+                actual = type_scope.get(arg_expr.name, "TEXT")
+
+            # Check compatibility
+            if expected in _MULTIMODAL_TYPES and actual not in _MULTIMODAL_TYPES:
+                if actual != "TEXT":  # TEXT passing to multimodal param = likely error
+                    raise AnalysisError(
+                        f"Type error in CALL {stmt.procedure_name}: "
+                        f"parameter '{pname}' expects {expected} but received {actual}."
+                    )
+                # TEXT → multimodal param: warn (common for path strings)
+                result.warnings.append(AnalysisWarning(
+                    f"Possible type mismatch in CALL {stmt.procedure_name}: "
+                    f"parameter '{pname}' expects {expected} but received TEXT. "
+                    f"If passing a file path this is intentional; otherwise check the type."
+                ))
+            elif actual in _MULTIMODAL_TYPES and expected not in _MULTIMODAL_TYPES:
+                raise AnalysisError(
+                    f"Type error in CALL {stmt.procedure_name}: "
+                    f"parameter '{pname}' expects {expected} but received {actual} "
+                    f"(multimodal value cannot be used as a text/scalar argument)."
+                )
 
     def _validate_exception_handlers(self, handlers: list[ExceptionHandler], result: AnalysisResult):
         """Validate exception handler types."""

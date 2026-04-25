@@ -535,7 +535,7 @@ class TypeScriptTranspiler:
             into = f" INTO {stmt.target_variable}" if stmt.target_variable else ""
             return f"// SPL: CALL {stmt.procedure_name}({args}){into}"
         if isinstance(stmt, CommitStatement):
-            return f"// SPL: COMMIT {self._spl_expr(stmt.expression)}"
+            return f"// SPL: RETURN {self._spl_expr(stmt.expression)}"
         if isinstance(stmt, EvaluateStatement):
             return f"// SPL: EVALUATE {self._spl_expr(stmt.expression)} ..."
         if isinstance(stmt, WhileStatement):

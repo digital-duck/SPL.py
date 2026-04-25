@@ -62,8 +62,8 @@ Variable assignment:
 Generate into variable:
   GENERATE <function>(<args>) INTO @<var> [USING MODEL '<model>'];
 
-Commit output:
-  COMMIT @<var>;
+Return output:
+  RETURN @<var>;
 
 Conditional branching:
   EVALUATE
@@ -132,7 +132,7 @@ DO
     GENERATE sentiment(@current) INTO @quality;
   END;
   @final := @current;
-  COMMIT @final;
+  RETURN @final;
 END;
 
 Example 3 -- Classification with exception handling:
@@ -143,11 +143,11 @@ WORKFLOW safe_classify
 DO
   DO
     GENERATE classify(@text) INTO @label;
-    COMMIT @label;
+    RETURN @label;
   EXCEPTION
     WHEN HallucinationDetected THEN
       @label := 'unknown';
-      COMMIT @label;
+      RETURN @label;
     WHEN ModelOverloaded THEN
       RETRY;
   END;

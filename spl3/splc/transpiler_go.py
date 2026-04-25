@@ -18,7 +18,7 @@ class GoTranspiler:
         self.workflow_inputs = {}   # workflow_name → [param_name, ...]  (Issue 4)
         self.indent_level = 0
         self.current_wf_vars = {}
-        self._in_exception_handler = False   # Issue 3: COMMIT → named-return assignment inside defer
+        self._in_exception_handler = False   # Issue 3: RETURN → named-return assignment inside defer
 
     def indent(self):
         return "  " * self.indent_level
@@ -448,7 +448,7 @@ class GoTranspiler:
             into = f" INTO {stmt.target_variable}" if stmt.target_variable else ""
             return f"// SPL: CALL {stmt.procedure_name}({args}){into}"
         if isinstance(stmt, CommitStatement):
-            return f"// SPL: COMMIT {self._spl_expr(stmt.expression)}"
+            return f"// SPL: RETURN {self._spl_expr(stmt.expression)}"
         if isinstance(stmt, EvaluateStatement):
             return f"// SPL: EVALUATE {self._spl_expr(stmt.expression)} ..."
         if isinstance(stmt, WhileStatement):

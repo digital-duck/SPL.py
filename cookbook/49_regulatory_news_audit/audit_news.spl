@@ -69,5 +69,5 @@ DO
     @batch_id := @batch_id + 1
   END
 
-  COMMIT 'Scan Complete' WITH total_batches = @batch_id
+  RETURN 'Scan Complete' WITH total_batches = @batch_id
 END
