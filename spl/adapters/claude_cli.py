@@ -104,6 +104,14 @@ class ClaudeCLIAdapter(LLMAdapter):
         stderr_text = stderr.decode('utf-8', errors='replace').strip()
 
         if proc.returncode != 0:
+            low_stderr = stderr_text.lower()
+            # Detect session limit, rate limit, or quota issues
+            if any(m in low_stderr for m in ["session limit", "rate limit", "quota"]):
+                # Use local import to avoid circular dependency at module load time.
+                # The executor will catch this and handle it via EXCEPTION WHEN ModelOverloaded.
+                from spl.executor import ModelOverloaded
+                raise ModelOverloaded(f"Claude CLI limit reached: {stderr_text}")
+            
             raise RuntimeError(f"Claude CLI error (exit {proc.returncode}): {stderr_text}")
 
         content = stdout.decode('utf-8', errors='replace').strip()

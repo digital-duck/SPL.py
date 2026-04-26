@@ -23,6 +23,7 @@ _DD_LLM_PROVIDERS: dict[str, str] = {
     "ollama":     "ollama",
     "openrouter": "openrouter",
     "claude_cli": "claude_cli",
+    "gemini_cli": "gemini_cli",
     "google":     "gemini",
 }
 
@@ -68,6 +69,7 @@ def _register_bespoke_adapters():
     """Register bespoke SPL adapter implementations as fallback."""
     _candidates = [
         ("claude_cli",  "spl.adapters.claude_cli",  "ClaudeCLIAdapter"),
+        ("gemini_cli",  "spl.adapters.gemini_cli",  "GeminiCLIAdapter"),
         ("openrouter",  "spl.adapters.openrouter",  "OpenRouterAdapter"),
         ("ollama",      "spl.adapters.ollama",       "OllamaAdapter"),
         ("anthropic",   "spl.adapters.anthropic",    "AnthropicAdapter"),
