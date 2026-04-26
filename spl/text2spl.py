@@ -111,6 +111,37 @@ Arguments can be positional or named: function(arg1, arg2, style='formal')
 --- Types ---
 TEXT, NUMBER, BOOLEAN, LIST, JSON
 
+== STRICT CONVENTIONS — FOLLOW EXACTLY ==
+
+1. CREATE FUNCTION parameter names have NO @ prefix.
+   CORRECT:   CREATE FUNCTION critique(current TEXT, feedback TEXT) RETURNS TEXT AS $$ ... $$;
+   WRONG:     CREATE FUNCTION critique(@current TEXT, @feedback TEXT) RETURNS TEXT AS $$ ... $$;
+   The @ sigil is ONLY for workflow-level variables declared in INPUT or assigned with :=
+
+2. EVALUATE always targets a specific variable and uses contains() for string matching.
+   CORRECT:   EVALUATE @feedback
+                WHEN contains('[APPROVED]') THEN ...
+                ELSE ...
+              END;
+   WRONG:     EVALUATE
+                WHEN '[APPROVED]' THEN ...   -- missing target variable
+              END;
+   WRONG:     EVALUATE @feedback
+                WHEN @feedback = '[APPROVED]' THEN ...  -- use contains(), not =
+
+3. WHILE is for numeric/boolean guards. EVALUATE is for string/semantic branching.
+   Use WHILE for loop termination:   WHILE @iteration < @max_iterations DO ... END;
+   Use EVALUATE inside the loop for branching on LLM output content.
+   Never put comparison operators (>=, <=, !=) inside EVALUATE WHEN clauses.
+
+4. RETURN can carry metadata using WITH:
+   RETURN @result WITH status = 'complete', iterations = @iteration
+
+5. CREATE FUNCTION bodies use {param} template slots, not @param:
+   CREATE FUNCTION draft(task TEXT) RETURNS TEXT AS $$
+     Write a response to: {task}
+   $$;
+
 == EXAMPLES ==
 
 Example 1 -- Simple summarisation prompt:
@@ -135,7 +166,43 @@ DO
   RETURN @final;
 END;
 
-Example 3 -- Classification with exception handling:
+Example 3 -- Self-refine loop with EVALUATE branch and CREATE FUNCTION:
+
+CREATE FUNCTION critique(current TEXT) RETURNS TEXT AS $$
+  Review the following and reply with exactly [APPROVED] if no improvements are needed,
+  otherwise provide specific feedback.
+  Content: {current}
+$$;
+
+CREATE FUNCTION refine(current TEXT, feedback TEXT) RETURNS TEXT AS $$
+  Improve the following based on the feedback provided.
+  Draft: {current}
+  Feedback: {feedback}
+$$;
+
+WORKFLOW self_refine
+  INPUT @task TEXT, @max_iterations INTEGER := 3
+  OUTPUT @result TEXT
+DO
+  @iteration := 0;
+  GENERATE draft(@task) INTO @current;
+  WHILE @iteration < @max_iterations DO
+    GENERATE critique(@current) INTO @feedback;
+    EVALUATE @feedback
+      WHEN contains('[APPROVED]') THEN
+        RETURN @current WITH status = 'complete', iterations = @iteration;
+      ELSE
+        @iteration := @iteration + 1;
+        GENERATE refine(@current, @feedback) INTO @current;
+    END;
+  END;
+  RETURN @current WITH status = 'max_iterations', iterations = @iteration;
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    RETURN @current WITH status = 'budget_limit';
+END;
+
+Example 5 -- Classification with exception handling:
 
 WORKFLOW safe_classify
   INPUT @text TEXT
@@ -153,7 +220,7 @@ DO
   END;
 END;
 
-Example 4 -- Translation prompt with model selection:
+Example 6 -- Translation prompt with model selection:
 
 PROMPT translate_email USING MODEL 'claude-sonnet'
 SELECT @email AS source LIMIT 1000 TOKENS,
@@ -253,6 +320,12 @@ class Text2SPL:
                 f"The following SPL 2.0 code has an error:\n\n"
                 f"```\n{spl_code}\n```\n\n"
                 f"Error: {message}\n\n"
+                f"Reminder of strict SPL conventions:\n"
+                f"- CREATE FUNCTION parameters must NOT have @ prefix (only workflow variables use @)\n"
+                f"- CREATE FUNCTION bodies use {{param}} template slots, not @param\n"
+                f"- EVALUATE must target a variable: EVALUATE @var WHEN contains('...') THEN\n"
+                f"- EVALUATE WHEN clauses use contains() for string matching — never comparison operators\n"
+                f"- Numeric comparisons (>=, <, =) belong in WHILE conditions, not EVALUATE WHEN\n\n"
                 f"Fix the error and return only the corrected SPL 2.0 code. "
                 f"Do not include markdown fences or explanations."
             )
@@ -294,7 +367,7 @@ class Text2SPL:
         # Build dynamic examples block from retrieved pairs
         examples_block = "== EXAMPLES ==\n"
         for i, hit in enumerate(hits, 1):
-            label = hit["name"] or hit["description"][:60]
+            label = hit["metadata"].get("name") or hit["description"][:60]
             examples_block += f"\nExample {i} -- {label}:\n\n{hit['spl_source']}\n"
 
         _log.debug("Code-RAG: injected %d examples for %r", len(hits), description[:50])

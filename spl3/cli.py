@@ -735,8 +735,13 @@ def cmd_text2spl(description: str, adapter, model, mode, validate, output):
     if validate:
         valid, message = Text2SPL.validate_output(spl_code)
         if not valid:
-            click.echo(spl_code, err=True)
-            raise click.ClickException(f"Validation failed: {message}")
+            if output:
+                Path(output).write_text(spl_code, encoding="utf-8")
+                click.echo(f"Written to {output} (with validation errors — review and fix)")
+            else:
+                click.echo(spl_code)
+            click.echo(f"Warning: {message}", err=True)
+            raise SystemExit(1)
 
     if output:
         Path(output).write_text(spl_code, encoding="utf-8")
@@ -865,31 +870,52 @@ Write the specification now.
 
 
 @main.command("describe")
-@click.argument("spl_file")
+@click.argument("spl_path")
 @click.option("--adapter", default="ollama", show_default=True,
               help="LLM adapter to use for generation.")
 @click.option("--model", default=None, metavar="MODEL",
               help="Model override for the adapter.")
 @click.option("--spec-dir", default=None, metavar="DIR",
-              help="Directory to write the spec file (default: same directory as SPL_FILE).")
-def cmd_describe(spl_file, adapter, model, spec_dir):
-    """Generate a plain-English functional specification for SPL_FILE.
+              help="Directory to write the spec file (default: same dir as input).")
+def cmd_describe(spl_path, adapter, model, spec_dir):
+    """Generate a plain-English functional specification for a .spl file or folder.
 
     \b
-    Writes output to <filename>-spec.md alongside the .spl file by default.
-    Use --spec-dir to redirect the spec file to a different directory.
+    SPL_PATH can be:
+      - a single .spl file  → spec named <stem>-spec.md
+      - a folder            → all *.spl files in the folder are gathered and
+                              described together as one recipe unit;
+                              spec named <folder>-spec.md
 
     \b
     Examples:
-      spl3 describe self_refine.spl
-      spl3 describe cookbook/05_self_refine/self_refine.spl --spec-dir docs/specs
-      spl3 describe my_workflow.spl --adapter ollama --model gemma3
+      spl3 describe cookbook/05_self_refine/self_refine.spl
+      spl3 describe cookbook/63_parallel_code_review/
+      spl3 describe my_workflow.spl --adapter claude_cli --spec-dir docs/specs
     """
-    path = Path(spl_file)
+    path = Path(spl_path)
     if not path.exists():
-        raise click.ClickException(f"File not found: {path}")
+        raise click.ClickException(f"Path not found: {path}")
 
-    source = path.read_text(encoding="utf-8")
+    if path.is_dir():
+        spl_files = sorted(path.glob("*.spl"))
+        if not spl_files:
+            raise click.ClickException(f"No .spl files found in {path}")
+        # Concatenate all sources with file headers so the LLM sees the full recipe
+        parts = []
+        for f in spl_files:
+            parts.append(f"-- File: {f.name}\n" + f.read_text(encoding="utf-8"))
+        source = "\n\n".join(parts)
+        stem = path.resolve().name          # folder name → spec stem
+        spec_parent = path
+        click.echo(f"Describing {len(spl_files)} .spl file(s) in {path.name}/: "
+                   f"{', '.join(f.name for f in spl_files)}")
+    else:
+        source = path.read_text(encoding="utf-8")
+        stem = path.stem
+        spec_parent = path.parent
+        click.echo(f"Generating spec for {path.name} ...")
+
     prompt = _DESCRIBE_PROMPT.format(source=source)
 
     try:
@@ -897,24 +923,17 @@ def cmd_describe(spl_file, adapter, model, spec_dir):
     except ImportError:
         raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
 
-    adapter_kwargs = {"model": model} if model else {}
-    llm = get_adapter(adapter, **adapter_kwargs)
-
-    click.echo(f"Generating spec for {path.name} ...")
+    llm = get_adapter(adapter, **{"model": model} if model else {})
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
-
-    # result may be a string or an object with a .content attribute
     spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 
-    # Determine output path
-    stem = path.stem
     spec_filename = f"{stem}-spec.md"
     if spec_dir:
         out_dir = Path(spec_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         spec_path = out_dir / spec_filename
     else:
-        spec_path = path.parent / spec_filename
+        spec_path = spec_parent / spec_filename
 
     spec_path.write_text(spec_text, encoding="utf-8")
     click.echo(f"Spec written to: {spec_path}")

@@ -97,6 +97,12 @@ spl3 code-rag describe-all cookbook/ --adapter claude_cli \
   --catalog cookbook/cookbook_catalog.json
 spl3 code-rag seed cookbook/ --from-specs
 spl3 code-rag stats
+
+
+# test
+spl3 text2spl "self-refine a product description with writer and critic" \
+    --mode workflow --adapter claude_cli \
+    -o cookbook/05_self_refine/self_refine-product_gen.spl 
 ```
 
 > The `-spec.md` files in the cookbook are the source of truth — as long as those
