@@ -1,0 +1,65 @@
+CREATE FUNCTION generate_thought(problem_context TEXT, thought_history TEXT, current_step INTEGER, planning_state TEXT) RETURNS TEXT AS $$
+Generate the next step in chain-of-thought reasoning for the following problem.
+
+Problem context: {problem_context}
+
+Previous thoughts:
+{thought_history}
+
+Current step: {current_step}
+
+Current planning state (list of tasks with status):
+{planning_state}
+
+Respond in YAML format with:
+thought: "your detailed reasoning for this step"
+planning_update:
+  - status: "completed|in_progress|pending"
+    task: "description of planning item"
+    step_number: number
+    priority: "high|medium|low"
+next_thought_needed: true|false
+conclusion: "final answer if reasoning is complete, otherwise leave empty"
+confidence: 0.0-1.0
+$$;
+
+WORKFLOW chain_of_thought_reasoning
+  INPUT @problem TEXT, @max_iterations INTEGER := 3
+  OUTPUT @solution TEXT
+DO
+  @current_step := 1;
+  @thought_history := "";
+  @planning_state := "[]";
+  @problem_context := @problem;
+  @final_conclusion := "";
+  
+  WHILE @current_step <= @max_iterations DO
+    DO
+      GENERATE generate_thought(@problem_context, @thought_history, @current_step, @planning_state) INTO @step_response;
+      
+      EVALUATE @step_response
+        WHEN contains('next_thought_needed: false') THEN
+          GENERATE extract_entities(@step_response) INTO @conclusion_data;
+          @final_conclusion := @conclusion_data;
+          RETURN @final_conclusion WITH status = 'complete', total_steps = @current_step, planning_final = @planning_state;
+        ELSE
+          @thought_history := @thought_history + "\n--- Step " + @current_step + " ---\n" + @step_response;
+          GENERATE extract_entities(@step_response) INTO @planning_update;
+          @planning_state := @planning_state + "\n" + @planning_update;
+          @current_step := @current_step + 1;
+      END;
+    EXCEPTION
+      WHEN HallucinationDetected THEN
+        @current_step := @current_step + 1;
+      WHEN QualityBelowThreshold THEN
+        RETRY;
+    END;
+  END;
+  
+  RETURN @thought_history WITH status = 'max_iterations_reached', total_steps = @current_step, planning_final = @planning_state;
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    RETURN @thought_history WITH status = 'budget_exceeded', total_steps = @current_step, planning_state = @planning_state;
+  WHEN ContextLengthExceeded THEN
+    RETURN @final_conclusion WITH status = 'context_limit', total_steps = @current_step, planning_state = @planning_state;
+END;

@@ -128,9 +128,12 @@ def main(ctx, hub, verbose):
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
 @click.option("--workflow", "workflow_name", default=None, metavar="NAME",
               help="Name of the WORKFLOW to run (default: file stem or last defined).")
+@click.option("--no-autoload", "no_autoload", is_flag=True, default=False,
+              help="Do not auto-load sibling .spl files from the same directory. "
+                   "Only the specified file is loaded into the registry.")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
-        workflow_name):
+        workflow_name, no_autoload):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -151,11 +154,13 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
     hub_url = ctx.obj.get("hub")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
-                              tools_module, allowed_tools, workflow_name))
+                              tools_module, allowed_tools, workflow_name,
+                              no_autoload=no_autoload))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None, workflow_name=None):
+                        tools_module=None, allowed_tools=None, workflow_name=None,
+                        no_autoload=False):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -167,9 +172,12 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     started_at = datetime.now()
 
-    # Build registry: load all .spl files in the same directory
+    # Build registry: load the target file; optionally load sibling .spl files
     local = LocalRegistry()
-    local.load_dir(path.parent)
+    if no_autoload:
+        local.load_file(path)
+    else:
+        local.load_dir(path.parent)
     click.echo(f"Registry: {local.list()}")
 
     # Optionally attach Hub registry

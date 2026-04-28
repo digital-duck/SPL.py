@@ -9,15 +9,16 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 ## Table of Contents
 
 1. [Quick-start](#1-quick-start)
-2. [spl3 validate](#2-spl3-validate)
-3. [spl3 run](#3-spl3-run)
-4. [spl3 describe](#4-spl3-describe)
-5. [spl3 text2spl](#5-spl3-text2spl)
-6. [spl3 splc compile](#6-spl3-splc-compile)
-7. [spl3 splc describe](#7-spl3-splc-describe)
-8. [spl3 code-rag](#8-spl3-code-rag)
-9. [Pipelines](#9-pipelines)
-10. [Command reference](#10-command-reference)
+2. [LLM Adapters](#2-llm-adapters)
+3. [spl3 validate](#3-spl3-validate)
+4. [spl3 run](#4-spl3-run)
+5. [spl3 describe](#5-spl3-describe)
+6. [spl3 text2spl](#6-spl3-text2spl)
+7. [spl3 splc compile](#7-spl3-splc-compile)
+8. [spl3 splc describe](#8-spl3-splc-describe)
+9. [spl3 code-rag](#9-spl3-code-rag)
+10. [Pipelines](#10-pipelines)
+11. [Command reference](#11-command-reference)
 
 ---
 
@@ -27,8 +28,10 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 # Validate a .spl file
 spl3 validate cookbook/05_self_refine/self_refine.spl
 
-# Run it
+# Run it with different adapters
 spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
+spl3 run cookbook/05_self_refine/self_refine.spl --adapter claude_cli --model claude-sonnet-4-6
+spl3 run cookbook/05_self_refine/self_refine.spl --adapter gemini_cli --model gemini-2.5-flash
 
 # Generate a spec
 spl3 describe cookbook/05_self_refine/self_refine.spl --adapter claude_cli
@@ -39,7 +42,56 @@ spl3 splc compile cookbook/05_self_refine/self_refine.spl --lang python/pocketfl
 
 ---
 
-## 2. spl3 validate
+## 2. LLM Adapters
+
+SPL 3.0 supports multiple LLM adapters for different deployment scenarios and cost models:
+
+### Available Adapters
+
+| Adapter | Cost Model | Authentication | Models |
+|---------|------------|---------------|---------|
+| `claude_cli` | Subscription (flat rate) | Claude Code OAuth | `claude-sonnet-4-6` (default), any Claude model |
+| `gemini_cli` | Free tier + subscription | Gemini CLI OAuth | `gemini-2.5-flash` (default), `gemini-3-flash-preview`, `gemini-3.1-flash-lite-preview`, `gemini-2.5-flash-lite` |
+| `ollama` | Local inference | None required | `gemma3` (default), any Ollama-compatible model |
+
+### Claude CLI Adapter
+
+Zero marginal cost during development via Claude Code subscription. Wraps the `claude --print` command.
+
+```bash
+# Install Claude Code: https://docs.anthropic.com/en/docs/claude-code
+spl3 run workflow.spl --adapter claude_cli --model claude-sonnet-4-6
+```
+
+### Gemini CLI Adapter ✅ **Updated April 28, 2026**
+
+Zero marginal cost via Google's free tier or subscription billing. Wraps the `gemini -p ""` command.
+
+```bash
+# Install Gemini CLI: npm install -g @google/gemini-cli
+spl3 run workflow.spl --adapter gemini_cli --model gemini-2.5-flash
+```
+
+**Available models:** All current Gemini models supported:
+- `gemini-3-flash-preview` (latest)
+- `gemini-3.1-flash-lite-preview`
+- `gemini-2.5-flash` (default, recommended)
+- `gemini-2.5-flash-lite` (faster, lower cost)
+
+### Ollama Adapter
+
+Local inference for privacy and offline scenarios. Requires Ollama server running locally.
+
+```bash
+# Install Ollama: https://ollama.ai
+ollama serve  # start server
+ollama pull gemma3  # download model
+spl3 run workflow.spl --adapter ollama --model gemma3
+```
+
+---
+
+## 3. spl3 validate
 
 Checks lexer → parser → semantic analyser. No LLM call.
 
@@ -56,7 +108,7 @@ spl3 validate cookbook/05_self_refine/self_refine.spl
 
 ---
 
-## 3. spl3 run
+## 4. spl3 run
 
 Executes a `.spl` workflow against a live LLM adapter.
 
@@ -66,7 +118,7 @@ spl3 run <file.spl> [OPTIONS]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli` |
+| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli`, `gemini_cli` |
 | `--model` | adapter default | Model name override |
 | `-p key=value` | — | Workflow `INPUT` parameter overrides |
 | `--log-prompts DIR` | — | Write each assembled prompt to `DIR/` as `.md` |
@@ -88,7 +140,7 @@ spl3 run self_refine.spl --log-prompts logs/prompts/
 
 ---
 
-## 4. spl3 describe
+## 5. spl3 describe
 
 Generates a plain-English functional specification from `.spl` source and writes it as
 `<stem>-spec.md`.  The spec has **6 sections**:
@@ -136,7 +188,7 @@ spl3 describe cookbook/63_parallel_code_review/ --adapter claude_cli
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--adapter` | `ollama` | LLM adapter |
+| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli`, `gemini_cli` |
 | `--model` | adapter default | Model override |
 | `--spec-dir DIR` | same as input | Redirect spec output to a different directory |
 
@@ -154,7 +206,7 @@ spl3 code-rag describe-all cookbook/ --adapter claude_cli
 
 ---
 
-## 5. spl3 text2spl
+## 6. spl3 text2spl
 
 Compiles a natural language description into valid SPL 3.0 source code.  Uses an LLM
 adapter with a few-shot system prompt; optionally retrieves similar examples from the
@@ -166,7 +218,7 @@ spl3 text2spl "<description>" [OPTIONS]
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `--adapter` | `ollama` | LLM adapter |
+| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli`, `gemini_cli` |
 | `-m / --model` | adapter default | Model override |
 | `--mode` | `auto` | `auto` / `prompt` / `workflow` |
 | `--validate / --no-validate` | validate | Run lexer+parser+analyser on output |
@@ -176,9 +228,11 @@ spl3 text2spl "<description>" [OPTIONS]
 # One-shot generation
 spl3 text2spl "summarise a document with a 2000 token budget"
 
-# Explicit workflow mode, save to file
+# Explicit workflow mode, save to file, different adapters
 spl3 text2spl "build a review agent that refines text until quality > 0.8" \
   --mode workflow -o review.spl --adapter claude_cli
+spl3 text2spl "build a review agent that refines text until quality > 0.8" \
+  --mode workflow -o review.spl --adapter gemini_cli --model gemini-2.5-flash
 
 # Using Section 0 from a describe spec as input
 spl3 text2spl "$(sed -n '/^## 0/,/^## 1/p' self_refine-spec.md | head -10)" \
@@ -190,7 +244,7 @@ to inspect and fix.
 
 ---
 
-## 6. spl3 splc compile
+## 7. spl3 splc compile
 
 Deterministic (rule-based) or LLM-assisted compilation of a `.spl` logical view to a
 physical target language.
@@ -272,7 +326,7 @@ familiar to data professionals:
 
 ---
 
-## 7. spl3 splc describe
+## 8. spl3 splc describe
 
 Generates a spec from a **compiled target implementation** (Python, TypeScript, Go).
 This is the **reverse pipeline** — it lets you start from an existing implementation and
@@ -329,13 +383,13 @@ spl3 splc describe targets/python_pocketflow/ \
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--lang LABEL` | auto-detected | Human-readable label, e.g. `Python — PocketFlow` |
-| `--adapter` | `ollama` | LLM adapter |
+| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli`, `gemini_cli` |
 | `--model` | adapter default | Model override |
 | `--spec-dir DIR` | same as input | Redirect spec output |
 
 ---
 
-## 8. spl3 code-rag
+## 9. spl3 code-rag
 
 Manages the Code-RAG vector store that powers `text2spl` few-shot retrieval.
 Store location: `.spl/code_rag/chroma.sqlite3`
@@ -368,7 +422,7 @@ spl3 code-rag query "self-refine loop with critique and approval token"
 
 ---
 
-## 9. Pipelines
+## 10. Pipelines
 
 ### Forward pipeline — SPL → target implementation
 
@@ -427,7 +481,7 @@ done
 
 ---
 
-## 10. Command reference
+## 11. Command reference
 
 ```
 spl3 validate <file.spl>

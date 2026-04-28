@@ -1,68 +1,81 @@
-CREATE FUNCTION DecideAction(question TEXT, context TEXT) RETURNS TEXT AS $$
-  You are a research assistant. Analyze whether you can answer the question with current information.
+CREATE FUNCTION decide_action(question TEXT, context TEXT) RETURNS TEXT AS $$
+  You are a research agent. Given the question and accumulated context below, reason step-by-step and decide your next action.
 
   Question: {question}
 
-  Research context so far:
+  Accumulated context:
   {context}
 
-  Think step-by-step:
-  1. What specific information does this question require?
-  2. What relevant information do you currently have?
-  3. What critical gaps remain that prevent a complete answer?
-  4. Can you provide a comprehensive, accurate response now?
+  Respond with valid YAML in exactly this format:
+  action: search        # use "search" if you need more information, "answer" if you are confident enough
+  reasoning: <one sentence explaining your choice>
+  query: <specific search query>    # required when action is "search"
 
-  Output your decision in this YAML format:
-
-  reasoning: "Your detailed step-by-step analysis"
-  action: search
-  search_query: "specific search terms for missing information"
-
-  Use action "search" if significant information gaps remain.
-  Use action "answer" if you have sufficient context for a complete response.
-
-  IMPORTANT: Ensure valid YAML formatting. If syntax errors occur, immediately provide a corrected version.
+  Output only the YAML block. No prose before or after.
 $$;
 
-CREATE FUNCTION AnswerQuestion(question TEXT, context TEXT) RETURNS TEXT AS $$
-  Synthesize a comprehensive answer using all gathered research.
+CREATE FUNCTION repair_yaml(malformed TEXT) RETURNS TEXT AS $$
+  The following output is malformed or invalid YAML. Repair it so it strictly conforms to this schema:
+    action: search|answer
+    reasoning: <text>
+    query: <text, required when action is search>
 
-  Original question: {question}
+  Return only the corrected YAML. Do not include any explanation or surrounding text.
 
-  Complete research context:
+  Malformed input:
+  {malformed}
+$$;
+
+CREATE FUNCTION fetch_results(decision TEXT) RETURNS TEXT AS $$
+  Parse the "query" field from the following YAML decision:
+  {decision}
+
+  Perform a DuckDuckGo web search for that query and return the top 3-5 result snippets as concise bullet points, each prefixed with its source URL.
+$$;
+
+CREATE FUNCTION synthesize_answer(question TEXT, context TEXT) RETURNS TEXT AS $$
+  Using the research context below, write a comprehensive and well-structured answer to the question.
+
+  Question: {question}
+
+  Research context:
   {context}
 
-  Provide a thorough, well-structured response that directly addresses the question.
-  Reference key findings and sources from your research.
+  Provide a clear, factual prose answer with references to gathered evidence where appropriate.
 $$;
 
-WORKFLOW react_research
-  INPUT:
-    @question TEXT,
-    @max_iterations INTEGER := 3
-  OUTPUT: @answer TEXT
+WORKFLOW react_research_agent
+  INPUT @question TEXT, @max_iterations NUMBER := 3
+  OUTPUT @answer TEXT
 DO
-  @context := "Initial question: " + @question;
+  @context := @question;
   @iteration := 0;
 
   WHILE @iteration < @max_iterations DO
-    GENERATE DecideAction(@question, @context) INTO @decision;
+    DO
+      GENERATE decide_action(@question, @context) INTO @decision;
+    EXCEPTION
+      WHEN HallucinationDetected THEN
+        GENERATE repair_yaml(@decision) INTO @decision;
+    END;
 
     EVALUATE @decision
-      WHEN contains('action: answer') OR contains('action: "answer"') THEN
-        GENERATE AnswerQuestion(@question, @context) INTO @answer;
-        RETURN @answer WITH status = 'complete', iterations = @iteration;
+      WHEN contains('action: search') THEN
+        GENERATE fetch_results(@decision) INTO @snippets;
+        @context := @context + '\n\n--- Research pass ' + @iteration + ' ---\n' + @snippets;
+        @iteration := @iteration + 1;
+      WHEN contains('action: answer') THEN
+        GENERATE synthesize_answer(@question, @context) INTO @answer;
+        RETURN @answer WITH status = 'done', iterations = @iteration;
       ELSE
-        CALL web_search(@decision) INTO @search_results;
-        @context := @context + "\n\n--- Search Results ---\n" + @search_results;
         @iteration := @iteration + 1;
     END;
   END;
 
-  GENERATE AnswerQuestion(@question, @context) INTO @answer;
+  GENERATE synthesize_answer(@question, @context) INTO @answer;
   RETURN @answer WITH status = 'max_iterations', iterations = @iteration;
 EXCEPTION
   WHEN BudgetExceeded THEN
-    GENERATE AnswerQuestion(@question, @context) INTO @answer;
+    GENERATE synthesize_answer(@question, @context) INTO @answer;
     RETURN @answer WITH status = 'budget_limit';
 END;

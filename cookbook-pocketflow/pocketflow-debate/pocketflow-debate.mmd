@@ -1,0 +1,22 @@
+flowchart TD
+    N1(["structured_debate\nINPUT: "])
+    N2["GENERATE"]
+    N3(["RETURN @result"])
+    N4["GENERATE"]
+    N5(["RETURN @result"])
+    N6{"EVALUATE"}
+    N7(["RETURN @result"])
+    N8["advocate_for\n→ @case_for"]
+    N9["advocate_against\n→ @case_against"]
+    N10["judge_debate\n→ @verdict"]
+    N11(["RETURN @result"])
+    N1 --> N2
+    N2 --> N3
+    N2 --> N4
+    N4 --> N5
+    N4 --> N6
+    N6 --> N7
+    N6 --> N8
+    N8 --> N9
+    N9 --> N10
+    N10 --> N11

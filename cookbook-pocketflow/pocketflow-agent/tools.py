@@ -25,8 +25,10 @@ def web_search(query: str) -> str:
     except ImportError:
         from duckduckgo_search import DDGS
 
-    # Extract search_query from YAML decision block if present
+    # Extract query from YAML decision block — try search_query first, then query
     m = re.search(r'search_query\s*:\s*["\']?([^"\'\n]+)["\']?', query)
+    if not m:
+        m = re.search(r'(?<!\w)query\s*:\s*["\']?([^"\'\n]+)["\']?', query)
     if m:
         query = m.group(1).strip()
 

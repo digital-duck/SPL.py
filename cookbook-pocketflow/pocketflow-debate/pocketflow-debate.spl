@@ -1,0 +1,58 @@
+CREATE FUNCTION advocate_for(claim TEXT) RETURNS TEXT AS $$
+Generate supporting arguments for the following claim using evidence and reasoning.
+Return your response in YAML format with the following structure:
+arguments:
+  - point: "argument point"
+    evidence: "supporting evidence"
+    reasoning: "logical reasoning"
+key_points:
+  - "summary point 1"
+  - "summary point 2"
+
+Claim: {claim}
+$$;
+
+CREATE FUNCTION advocate_against(claim TEXT, case_for TEXT) RETURNS TEXT AS $$
+Generate rebuttals and counterarguments against the following claim, considering the arguments already made in favor.
+Return your response in YAML format with the following structure:
+arguments:
+  - point: "counterargument point"
+    evidence: "contradicting evidence"
+    reasoning: "logical reasoning"
+rebuttals:
+  - original_point: "point being rebutted"
+    rebuttal: "specific rebuttal"
+key_points:
+  - "summary point 1"
+  - "summary point 2"
+
+Claim: {claim}
+Case For: {case_for}
+$$;
+
+CREATE FUNCTION judge_debate(claim TEXT, case_for TEXT, case_against TEXT) RETURNS TEXT AS $$
+Evaluate both sides of the debate and declare a winner with numerical scores.
+Return your response in YAML format with the following structure:
+evaluation:
+  case_for_score: 85
+  case_against_score: 72
+  winner: "for"
+  reasoning: "explanation of decision"
+verdict:
+  conclusion: "final judgment"
+  confidence: 0.85
+
+Claim: {claim}
+Case For: {case_for}
+Case Against: {case_against}
+$$;
+
+WORKFLOW structured_debate
+  INPUT @claim TEXT
+  OUTPUT @verdict TEXT
+DO
+  GENERATE advocate_for(@claim) INTO @case_for;
+  GENERATE advocate_against(@claim, @case_for) INTO @case_against;
+  GENERATE judge_debate(@claim, @case_for, @case_against) INTO @verdict;
+  RETURN @verdict WITH status = 'complete', debate_type = 'adversarial';
+END;

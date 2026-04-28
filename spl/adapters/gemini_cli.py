@@ -23,7 +23,7 @@ class GeminiCLIAdapter(LLMAdapter):
     Gemini CLI configuration and authentication.
     """
 
-    DEFAULT_MODEL = "gemini-2.0-flash"
+    DEFAULT_MODEL = "gemini-2.5-flash"
 
     def __init__(
         self,
@@ -131,10 +131,10 @@ class GeminiCLIAdapter(LLMAdapter):
         return max(1, len(text) // 4)
 
     def list_models(self) -> list[str]:
-        """Return a selection of common Gemini models."""
+        """Return available Gemini models."""
         return [
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite",
-            "gemini-1.5-pro",
-            "gemini-1.5-flash",
+            "gemini-3-flash-preview",
+            "gemini-3.1-flash-lite-preview",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
         ]
