@@ -1327,7 +1327,10 @@ class Parser:
     # ================================================================
 
     def _parse_generate_into_statement(self) -> GenerateIntoStatement:
-        """Parse GENERATE func(args) [WITH options] INTO @var|NONE"""
+        """Parse GENERATE func(args) [WITH options] [USING MODEL x] INTO @var|NONE [USING MODEL x]
+
+        USING MODEL is accepted both before and after INTO for LLM-generated SPL compatibility.
+        """
         gen_clause = self._parse_generate_clause()
 
         target = None
@@ -1339,6 +1342,18 @@ class Parser:
             else:
                 self._expect(TokenType.AT)
                 target = self._expect_identifier_or_keyword().value
+
+        # Allow USING MODEL after INTO @var (LLMs often place it here)
+        if self._check(TokenType.USING) and gen_clause.model is None:
+            self._advance()
+            self._expect(TokenType.MODEL)
+            if self._check(TokenType.STRING):
+                gen_clause.model = self._advance().value
+            elif self._check(TokenType.AT):
+                self._advance()
+                gen_clause.model = '@' + self._expect_identifier_or_keyword().value
+            else:
+                gen_clause.model = self._expect(TokenType.IDENTIFIER).value
 
         return GenerateIntoStatement(
             generate_clause=gen_clause,

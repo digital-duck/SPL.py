@@ -126,8 +126,11 @@ def main(ctx, hub, verbose):
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
+@click.option("--workflow", "workflow_name", default=None, metavar="NAME",
+              help="Name of the WORKFLOW to run (default: file stem or last defined).")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
+        workflow_name):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -148,11 +151,11 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
     hub_url = ctx.obj.get("hub")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
-                              tools_module, allowed_tools))
+                              tools_module, allowed_tools, workflow_name))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None):
+                        tools_module=None, allowed_tools=None, workflow_name=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -231,7 +234,15 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     if defns:
         # ── SPL 3.0 WORKFLOW path ──────────────────────────────────────────
-        target = next((d for d in defns if d.name == stem), defns[-1])
+        if workflow_name:
+            target = next((d for d in defns if d.name == workflow_name), None)
+            if target is None:
+                available = [d.name for d in defns]
+                raise click.ClickException(
+                    f"Workflow {workflow_name!r} not found. Available: {available}"
+                )
+        else:
+            target = next((d for d in defns if d.name == stem), defns[-1])
         click.echo(f"Running workflow: {target.name}({list(params)})")
 
         result = await executor.execute_workflow(target.ast_node, params=params)
@@ -692,6 +703,118 @@ def code_rag_stats(storage_dir):
 
 
 # ------------------------------------------------------------------ #
+# Mermaid preview generator (rule-based, no LLM)                     #
+# ------------------------------------------------------------------ #
+
+def _spl_to_mermaid(spl_code: str) -> str:
+    """Generate a Mermaid flowchart from SPL source — lightweight structural preview.
+
+    Rule-based (no LLM). Extracts WORKFLOW name, INPUT/OUTPUT vars, and key
+    statements (GENERATE, CALL, EVALUATE, WHILE, RETURN) to build a top-down
+    flowchart. Errors are silently swallowed — Mermaid is never a gate.
+    """
+    import re
+
+    lines = spl_code.splitlines()
+    nodes: list[str] = []   # node definitions
+    edges: list[str] = []   # edge definitions
+    node_id = [0]
+
+    def nid():
+        node_id[0] += 1
+        return f"N{node_id[0]}"
+
+    # Extract workflow name
+    wf_match = re.search(r"WORKFLOW\s+(\w+)", spl_code, re.IGNORECASE)
+    wf_name = wf_match.group(1) if wf_match else "workflow"
+
+    # Extract INPUT params
+    in_match = re.search(r"INPUT\s*:(.*?)(?:OUTPUT|DO)", spl_code, re.IGNORECASE | re.DOTALL)
+    inputs = []
+    if in_match:
+        inputs = re.findall(r"@(\w+)", in_match.group(1))
+
+    # Extract OUTPUT var
+    out_match = re.search(r"OUTPUT\s*:\s*@(\w+)", spl_code, re.IGNORECASE)
+    output_var = out_match.group(1) if out_match else "result"
+
+    # Start node
+    start_id = nid()
+    nodes.append(f'    {start_id}(["{wf_name}\\nINPUT: {", ".join("@"+i for i in inputs)}"])')
+
+    prev_id = start_id
+    in_while = False
+    while_id = None
+
+    for line in lines:
+        stripped = line.strip()
+        sl = stripped.upper()
+
+        if sl.startswith("WHILE "):
+            cond = stripped[6:stripped.upper().find(" DO")].strip() if " DO" in sl else stripped[6:]
+            while_id = nid()
+            nodes.append(f'    {while_id}{{"{cond}"}}')
+            edges.append(f"    {prev_id} --> {while_id}")
+            prev_id = while_id
+            in_while = True
+
+        elif sl.startswith("GENERATE "):
+            m = re.match(r"GENERATE\s+(\w+)\s*\(", stripped, re.IGNORECASE)
+            fn = m.group(1) if m else "GENERATE"
+            tgt = re.search(r"INTO\s+@(\w+)", stripped, re.IGNORECASE)
+            label = fn + (f"\\n→ @{tgt.group(1)}" if tgt else "")
+            nnode = nid()
+            nodes.append(f'    {nnode}["{label}"]')
+            edges.append(f"    {prev_id} --> {nnode}")
+            prev_id = nnode
+
+        elif sl.startswith("CALL ") and "PARALLEL" not in sl:
+            m = re.match(r"CALL\s+(\w+)\s*\(", stripped, re.IGNORECASE)
+            fn = m.group(1) if m else "CALL"
+            tgt = re.search(r"INTO\s+@(\w+)", stripped, re.IGNORECASE)
+            label = f"CALL {fn}" + (f"\\n→ @{tgt.group(1)}" if tgt else "")
+            nnode = nid()
+            nodes.append(f'    {nnode}["{label}"]')
+            edges.append(f"    {prev_id} --> {nnode}")
+            prev_id = nnode
+
+        elif sl.startswith("EVALUATE "):
+            var = re.search(r"EVALUATE\s+@(\w+)", stripped, re.IGNORECASE)
+            label = f"EVALUATE\\n@{var.group(1)}" if var else "EVALUATE"
+            nnode = nid()
+            nodes.append(f'    {nnode}{{{{"EVALUATE\\n@{var.group(1)}"}}}}'
+                         if var else f'    {nnode}{{"{label}"}}')
+            edges.append(f"    {prev_id} --> {nnode}")
+            prev_id = nnode
+
+        elif sl.startswith("WHEN "):
+            cond_text = stripped[5:].replace("THEN", "").strip().replace('"', "'")
+            when_id = nid()
+            nodes.append(f'    {when_id}["{cond_text}"]')
+            edges.append(f"    {prev_id} -->|WHEN| {when_id}")
+            prev_id = when_id
+
+        elif sl == "ELSE":
+            else_id = nid()
+            nodes.append(f'    {else_id}["ELSE"]')
+            edges.append(f"    {prev_id} -->|ELSE| {else_id}")
+            prev_id = else_id
+
+        elif sl.startswith("RETURN "):
+            ret_id = nid()
+            nodes.append(f'    {ret_id}(["RETURN @{output_var}"])')
+            edges.append(f"    {prev_id} --> {ret_id}")
+            # Back-edge for WHILE loops
+            if in_while and while_id:
+                edges.append(f"    {ret_id} -.->|loop back| {while_id}")
+
+    out_lines = ["flowchart TD"]
+    out_lines.extend(nodes)
+    out_lines.extend(edges)
+    return "\n".join(out_lines)
+
+
+# ------------------------------------------------------------------ #
 # spl3 text2spl                                                       #
 # ------------------------------------------------------------------ #
 
@@ -773,7 +896,9 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
         valid, message = Text2SPL.validate_output(spl_code)
         if not valid:
             if output:
-                Path(output).write_text(spl_code, encoding="utf-8")
+                out_path = Path(output)
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(spl_code, encoding="utf-8")
                 click.echo(f"Written to {output} (with validation errors — review and fix)")
             else:
                 click.echo(spl_code)
@@ -781,8 +906,19 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
             raise SystemExit(1)
 
     if output:
-        Path(output).write_text(spl_code, encoding="utf-8")
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(spl_code, encoding="utf-8")
         click.echo(f"Written to {output}")
+        # Generate Mermaid chart as lightweight structural preview (not a gate)
+        try:
+            mermaid = _spl_to_mermaid(spl_code)
+            mermaid_path = out_path.with_suffix(".mmd")
+            mermaid_path.write_text(mermaid, encoding="utf-8")
+            click.echo(f"Mermaid preview → {mermaid_path.name}")
+            click.echo("\n" + mermaid)
+        except Exception:
+            pass  # Mermaid is a preview, never a gate
     else:
         click.echo(spl_code)
 

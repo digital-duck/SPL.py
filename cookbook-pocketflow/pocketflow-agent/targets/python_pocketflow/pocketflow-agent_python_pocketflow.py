@@ -118,13 +118,13 @@ class DecideNode(Node):
         # Transform — LLM decides: search or answer
         question, max_iterations, context = prep_res
         print("Deciding next action ...")
-        return _call_llm("llama3.2", DECIDEACTION_PROMPT.format(question=question, context=max_iterations))
+        return _call_llm("llama3.2", DECIDEACTION_PROMPT.format(question=question, context=context))
 
     def post(self, shared, prep_res, exec_res):
         # Load — store decision; EVALUATE routing
         shared["decision"] = exec_res
         i = shared.get("iteration", 0)
-        if 'action: answer|action: "answer"' in exec_res:
+        if 'action: answer' in exec_res or 'action: "answer"' in exec_res:
             return "answer"
         if i >= shared.get("max_iterations", 3):
             return "answer"
@@ -165,7 +165,7 @@ class AnswerNode(Node):
         # Transform — synthesize final answer from all gathered research
         question, max_iterations, context = prep_res
         print("Generating final answer ...")
-        return _call_llm("llama3.2", ANSWERQUESTION_PROMPT.format(question=question, context=max_iterations))
+        return _call_llm("llama3.2", ANSWERQUESTION_PROMPT.format(question=question, context=context))
 
     def post(self, shared, prep_res, exec_res):
         # Load — write answer and print status

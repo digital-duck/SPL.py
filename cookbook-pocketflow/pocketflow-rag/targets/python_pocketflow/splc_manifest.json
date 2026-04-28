@@ -1,14 +1,14 @@
 {
   "splc_version": "0.1.0",
-  "generated_at": "2026-04-28T00:26:55.280499+00:00",
+  "generated_at": "2026-04-28T04:38:49.192803+00:00",
   "source": {
-    "spl_file": "/home/gong2/projects/digital-duck/SPL.py/cookbook-pocketflow/pocketflow-agent/pocketflow-agent.spl",
-    "spl_sha256": "5dbdf8884c54b77d"
+    "spl_file": "/home/gong2/projects/digital-duck/SPL.py/cookbook-pocketflow/pocketflow-rag/pocketflow-rag.spl",
+    "spl_sha256": "a074a3691986c95e"
   },
   "target": {
     "lang": "python/pocketflow",
     "label": "Python \u2014 PocketFlow (minimalist ETL-style LLM orchestration)",
-    "output_file": "/home/gong2/projects/digital-duck/SPL.py/cookbook-pocketflow/pocketflow-agent/targets/python_pocketflow/pocketflow-agent_python_pocketflow.py"
+    "output_file": "/home/gong2/projects/digital-duck/SPL.py/cookbook-pocketflow/pocketflow-rag/targets/python_pocketflow/pocketflow-rag_python_pocketflow.py"
   },
   "compilation": {
     "model": "claude-sonnet-4-6",

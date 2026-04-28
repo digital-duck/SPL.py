@@ -1,0 +1,76 @@
+CREATE FUNCTION chunk_documents(texts TEXT) RETURNS LIST AS $$
+  Split the following raw texts into fixed-size segments of approximately 200 tokens each.
+  Return each segment as a separate item in a list.
+  Texts: {texts}
+$$;
+
+CREATE FUNCTION embed_documents(chunks LIST) RETURNS LIST AS $$
+  For each chunk in the provided list, produce a dense vector embedding using the OpenAI
+  text-embedding-ada-002 model. Return the full embedding matrix as a list of vectors.
+  Chunks: {chunks}
+$$;
+
+CREATE FUNCTION create_index(embeddings LIST) RETURNS JSON AS $$
+  Construct a FAISS flat-L2 vector index from the provided embedding matrix.
+  Return the serialised index structure as a JSON object.
+  Embeddings: {embeddings}
+$$;
+
+CREATE FUNCTION embed_query(query TEXT) RETURNS LIST AS $$
+  Produce a dense vector embedding for the following query using the OpenAI
+  text-embedding-ada-002 model. Return the embedding as a vector.
+  Query: {query}
+$$;
+
+CREATE FUNCTION retrieve_document(index JSON, query_embedding LIST, chunks LIST) RETURNS TEXT AS $$
+  Perform a nearest-neighbour search (k=1) against the FAISS flat-L2 index using the
+  provided query embedding. Return the single best-matching chunk from the chunks list.
+  Index: {index}
+  Query embedding: {query_embedding}
+  Chunks: {chunks}
+$$;
+
+CREATE FUNCTION generate_answer(retrieved_document TEXT, query TEXT) RETURNS TEXT AS $$
+  You are a helpful assistant. Answer the user''s question using ONLY the context provided.
+  Do not introduce information not present in the context.
+
+  Context:
+  {retrieved_document}
+
+  Question:
+  {query}
+
+  Answer:
+$$;
+
+WORKFLOW rag_index
+  INPUT @texts TEXT
+  OUTPUT @index JSON
+DO
+  GENERATE chunk_documents(@texts) INTO @chunks;
+  GENERATE embed_documents(@chunks) INTO @embeddings;
+  GENERATE create_index(@embeddings) INTO @index;
+  RETURN @index;
+END;
+
+WORKFLOW rag_query
+  INPUT @query TEXT, @index JSON, @chunks LIST
+  OUTPUT @generated_answer TEXT
+DO
+  GENERATE embed_query(@query) INTO @query_embedding;
+  GENERATE retrieve_document(@index, @query_embedding, @chunks) INTO @retrieved_document;
+  GENERATE generate_answer(@retrieved_document, @query) INTO @generated_answer
+    USING MODEL 'gemma3';
+  RETURN @generated_answer WITH status = 'complete';
+END;
+
+-- End-to-end workflow for testing: takes raw text + query, runs full pipeline
+WORKFLOW rag_e2e
+  INPUT @texts TEXT, @query TEXT
+  OUTPUT @answer TEXT
+DO
+  CALL rag_index(@texts) INTO @index;
+  GENERATE chunk_documents(@texts) INTO @chunks;
+  CALL rag_query(@query, @index, @chunks) INTO @answer;
+  RETURN @answer WITH status = 'complete';
+END;

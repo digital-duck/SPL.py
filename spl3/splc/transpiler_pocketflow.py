@@ -248,6 +248,8 @@ def _write(path: str, content: str) -> None:
     def _gen_nodes(self, wf: WorkflowStatement) -> str:
         if self.pattern == "react":
             return self._gen_nodes_react(wf)
+        if self.pattern == "linear":
+            return self._gen_nodes_linear(wf)
         # self_refine (default)
         segs = self._segment_body(wf)
         parts = [
@@ -263,6 +265,8 @@ def _write(path: str, content: str) -> None:
     def _gen_build_flow(self, wf: WorkflowStatement) -> str:
         if self.pattern == "react":
             return self._gen_build_flow_react(wf)
+        if self.pattern == "linear":
+            return self._gen_build_flow_linear(wf)
         # self_refine (default)
         return '''\
 # ── Flow wiring  (mirrors WORKFLOW control flow) ─────────────────────────────
@@ -291,6 +295,201 @@ def build_flow() -> Flow:
     refine  - "critique" >> critique
 
     return Flow(start=draft)'''
+
+    # ── Linear pattern generators ─────────────────────────────────────────────
+
+    def _gen_nodes_linear(self, wf: WorkflowStatement) -> str:
+        """Generate one Node per GENERATE/CALL statement in the workflow body.
+
+        Linear pipeline: StepNode1 → StepNode2 → ... → OutputNode
+        Each node does exactly one LLM call or sub-workflow CALL.
+        """
+        # Collect all actionable statements (skip pure assignments)
+        steps = [
+            s for s in wf.body
+            if isinstance(s, (GenerateIntoStatement, CallStatement))
+        ]
+        # Find the RETURN target variable
+        from spl.ast_nodes import CommitStatement
+        ret_stmt = next((s for s in wf.body if isinstance(s, CommitStatement)), None)
+        out_var = self._key(ret_stmt.expression.name) if (
+            ret_stmt and isinstance(ret_stmt.expression, ParamRef)
+        ) else (self._key(wf.outputs[0].name) if wf.outputs else "result")
+
+        inp_keys = [self._key(p.name) for p in wf.inputs]
+
+        parts = [
+            "# ── Nodes  (each mirrors one GENERATE / CALL statement) "
+            "────────────────────"
+        ]
+
+        node_names: list[str] = []
+        for idx, stmt in enumerate(steps):
+            is_last = (idx == len(steps) - 1)
+            next_action = "output" if is_last else f"step{idx + 2}"
+
+            if isinstance(stmt, GenerateIntoStatement):
+                gc = stmt.generate_clause
+                fn = gc.function_name
+                target = self._key(stmt.target_variable) if stmt.target_variable else f"out{idx}"
+                class_name = f"Step{idx + 1}_{fn.capitalize()}Node"
+                node_names.append(class_name)
+
+                # Build argument locals for exec()
+                arg_locals = [
+                    self._key(a.name) if isinstance(a, ParamRef) else self._expr_local(a)
+                    for a in gc.arguments
+                ]
+                # All vars needed for this step — inputs + any previously computed vars
+                all_prior = inp_keys + [
+                    self._key(s.target_variable)
+                    for s in steps[:idx]
+                    if isinstance(s, (GenerateIntoStatement, CallStatement))
+                    and s.target_variable
+                ]
+                needed = [v for v in all_prior if v in arg_locals]
+
+                lines = [
+                    f"class {class_name}(Node):",
+                    f'    # SPL: GENERATE {fn}(...) INTO @{target}',
+                    "",
+                    "    def prep(self, shared):",
+                    "        # Extract — pull required vars from shared store",
+                ]
+                for v in needed:
+                    lines.append(f'        {v} = shared["{v}"]')
+                if needed:
+                    lines.append(f'        return {", ".join(needed)}')
+                else:
+                    lines.append('        return None')
+
+                lines += [
+                    "",
+                    "    def exec(self, prep_res):",
+                    f"        # Transform — LLM call: {fn}",
+                ]
+                if needed:
+                    if len(needed) == 1:
+                        lines.append(f"        {needed[0]} = prep_res")
+                    else:
+                        lines.append(f"        {', '.join(needed)} = prep_res")
+                lines.append(f'        print("Running {fn} ...")')
+                lines.append(
+                    f"        return _call_llm({self._model_expr_local(gc.model)}, "
+                    f"{self._prompt_fmt(fn, gc.arguments, arg_locals)})"
+                )
+
+                lines += [
+                    "",
+                    "    def post(self, shared, prep_res, exec_res):",
+                    "        # Load — store result",
+                    f'        shared["{target}"] = exec_res',
+                ]
+
+            elif isinstance(stmt, CallStatement):
+                fn = stmt.procedure_name
+                target = self._key(stmt.target_variable) if stmt.target_variable else f"out{idx}"
+                class_name = f"Step{idx + 1}_{fn.capitalize()}Node"
+                node_names.append(class_name)
+
+                arg_locals = [
+                    self._key(a.name) if isinstance(a, ParamRef) else self._expr_local(a)
+                    for a in stmt.arguments
+                ]
+                all_prior = inp_keys + [
+                    self._key(s.target_variable)
+                    for s in steps[:idx]
+                    if isinstance(s, (GenerateIntoStatement, CallStatement))
+                    and s.target_variable
+                ]
+                needed = [v for v in all_prior if v in arg_locals]
+
+                lines = [
+                    f"class {class_name}(Node):",
+                    f'    # SPL: CALL {fn}(...) INTO @{target}',
+                    "",
+                    "    def prep(self, shared):",
+                    "        # Extract — pull required vars from shared store",
+                ]
+                for v in needed:
+                    lines.append(f'        {v} = shared["{v}"]')
+                if needed:
+                    lines.append(f'        return {", ".join(needed)}')
+                else:
+                    lines.append('        return None')
+
+                lines += [
+                    "",
+                    "    def exec(self, prep_res):",
+                    f"        # Transform — sub-workflow call: {fn}",
+                    f"        # NOTE: In standalone mode this calls the LLM to simulate {fn}.",
+                    f"        # For production, replace with a direct function call.",
+                ]
+                if needed:
+                    if len(needed) == 1:
+                        lines.append(f"        {needed[0]} = prep_res")
+                    else:
+                        lines.append(f"        {', '.join(needed)} = prep_res")
+                lines.append(f'        print("Calling {fn} ...")')
+                # Fall back to LLM simulation for sub-workflow calls
+                first_arg = arg_locals[0] if arg_locals else '""'
+                lines.append(f'        return _call_llm("llama3.2", f"Execute {fn}: {{{first_arg}}}")')
+
+                lines += [
+                    "",
+                    "    def post(self, shared, prep_res, exec_res):",
+                    "        # Load — store result",
+                    f'        shared["{target}"] = exec_res',
+                ]
+
+            # Route to next step or output
+            if is_last:
+                lines += [
+                    f'        shared["status"] = "complete"',
+                    f'        print(f"\\nStatus:  complete")',
+                    f'        print(f"\\n{{shared.get({repr(out_var)}, exec_res)}}")',
+                    '        return None',
+                ]
+            else:
+                lines.append(f'        return "{next_action}"')
+
+            parts.append("\n".join(lines))
+
+        return "\n\n".join(parts)
+
+    def _gen_build_flow_linear(self, wf: WorkflowStatement) -> str:
+        """Wire linear nodes: step1 → step2 → ... → last (returns None)."""
+        steps = [
+            s for s in wf.body
+            if isinstance(s, (GenerateIntoStatement, CallStatement))
+        ]
+        node_vars: list[tuple[str, str]] = []  # (var_name, class_name)
+        for idx, stmt in enumerate(steps):
+            if isinstance(stmt, GenerateIntoStatement):
+                fn = stmt.generate_clause.function_name
+            else:
+                fn = stmt.procedure_name
+            class_name = f"Step{idx + 1}_{fn.capitalize()}Node"
+            var_name = f"step{idx + 1}"
+            node_vars.append((var_name, class_name))
+
+        lines = [
+            "# ── Flow wiring  (mirrors WORKFLOW control flow) "
+            "─────────────────────────────",
+            "# SPL: sequential GENERATE/CALL chain — linear pipeline",
+            "",
+            "def build_flow() -> Flow:",
+        ]
+        for var_name, class_name in node_vars:
+            lines.append(f"    {var_name} = {class_name}()")
+
+        lines.append("")
+        for i, (var_name, _) in enumerate(node_vars[:-1]):
+            next_var = node_vars[i + 1][0]
+            lines.append(f'    {var_name} - "step{i + 2}" >> {next_var}')
+
+        lines.append(f"    return Flow(start={node_vars[0][0]})")
+        return "\n".join(lines)
 
     # ── ReAct pattern generators ──────────────────────────────────────────────
 
@@ -483,9 +682,13 @@ def build_flow() -> Flow:
             unpack = ", ".join(inp_keys + ["context"])
             lines.append(f"        {unpack} = prep_res")
             lines.append(f'        print("Generating final answer ...")')
+            arg_locals = [
+                self._key(a.name) if isinstance(a, ParamRef) else self._expr_local(a)
+                for a in gc.arguments
+            ]
             lines.append(
                 f"        return _call_llm({self._model_expr_local(gc.model)}, "
-                f"{self._prompt_fmt(gc.function_name, gc.arguments, inp_keys + ['context'])})"
+                f"{self._prompt_fmt(gc.function_name, gc.arguments, arg_locals)})"
             )
         else:
             lines.append('        return ""')
@@ -880,11 +1083,11 @@ def build_flow() -> Flow:
             for k in ("decision", "search_results", "answer"):
                 if k not in covered:
                     lines.append(f'        "{k}": "",')
-        else:
-            # self_refine: fixed shared vars
+        elif self.pattern == "self_refine":
             lines.append('        "iteration": 0,')
             lines.append('        "current": "",')
             lines.append('        "feedback": "",')
+        # linear: no extra shared vars needed beyond inputs
 
         lines.append("    }")
         lines.append("    build_flow().run(shared)")

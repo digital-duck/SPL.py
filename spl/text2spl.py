@@ -13,6 +13,12 @@ from spl.lexer import Lexer, LexerError
 from spl.parser import Parser, ParseError
 from spl.analyzer import Analyzer, AnalysisError
 
+# Use SPL3 parser for validation so := defaults and other SPL3 syntax are accepted
+try:
+    from spl3.parser import SPL3Parser as _ValidatorParser
+except ImportError:
+    _ValidatorParser = Parser  # fallback to SPL2 if spl3 not installed
+
 _log = logging.getLogger("spl.text2spl")
 
 
@@ -401,9 +407,9 @@ class Text2SPL:
         except LexerError as exc:
             return False, f"Lexer error: {exc}"
 
-        # Stage 2: Parsing
+        # Stage 2: Parsing (SPL3Parser accepts := defaults and other SPL3 extensions)
         try:
-            parser = Parser(tokens)
+            parser = _ValidatorParser(tokens)
             program = parser.parse()
         except ParseError as exc:
             return False, f"Parse error: {exc}"
@@ -440,4 +446,21 @@ class Text2SPL:
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
 
-        return "\n".join(lines)
+        result = "\n".join(lines)
+        return Text2SPL._escape_dollar_string_quotes(result)
+
+    @staticmethod
+    def _escape_dollar_string_quotes(spl: str) -> str:
+        """Escape unbalanced single quotes inside $$ ... $$ blocks as '' (SQL style).
+
+        Prevents VS Code syntax-highlighting breakage when CREATE FUNCTION bodies
+        contain natural language with apostrophes (e.g. "user's question").
+        Only touches content between $$ delimiters — never touches SPL syntax.
+        """
+        import re
+        def escape_body(m: re.Match) -> str:
+            body = m.group(1)
+            # Replace a single quote that is NOT already doubled
+            body = re.sub(r"'(?!')", "''", body)
+            return f"$$\n{body}\n$$"
+        return re.sub(r"\$\$\s*\n(.*?)\n\s*\$\$", escape_body, spl, flags=re.DOTALL)
