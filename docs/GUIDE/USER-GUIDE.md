@@ -14,11 +14,14 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 4. [spl3 run](#4-spl3-run)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
-7. [spl3 splc compile](#7-spl3-splc-compile)
-8. [spl3 splc describe](#8-spl3-splc-describe)
-9. [spl3 code-rag](#9-spl3-code-rag)
-10. [Pipelines](#10-pipelines)
-11. [Command reference](#11-command-reference)
+7. [spl3 text2mermaid](#7-spl3-text2mermaid)
+8. [spl3 mermaid2spl](#8-spl3-mermaid2spl)
+9. [spl3 splc compile](#9-spl3-splc-compile)
+10. [spl3 splc describe](#10-spl3-splc-describe)
+11. [spl3 code-rag](#11-spl3-code-rag)
+12. [Visual Workflow Pipeline](#12-visual-workflow-pipeline)
+13. [Pipelines](#13-pipelines)
+14. [Command reference](#14-command-reference)
 
 ---
 
@@ -244,7 +247,111 @@ to inspect and fix.
 
 ---
 
-## 7. spl3 splc compile
+## 7. spl3 text2mermaid
+
+Converts natural language workflow descriptions into Mermaid flowchart diagrams, creating a **visual representation** that can be reviewed and edited before generating SPL code.
+
+```bash
+spl3 text2mermaid "<description>" [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--description`, `-d` | — | Description as text or file path |
+| `--adapter` | `ollama` | LLM adapter: `ollama`, `claude_cli`, `gemini_cli` |
+| `--model`, `-m` | adapter default | Model override |
+| `--style` | `flowchart` | Diagram style: `flowchart`, `graph`, `sequence` |
+| `--output`, `-o` | stdout | Write Mermaid to FILE |
+| `--validate / --no-validate` | validate | Validate Mermaid syntax |
+| `--preview` | off | Open diagram in browser preview |
+
+```bash
+# Basic usage
+spl3 text2mermaid "build a review agent that refines text until quality > 0.8"
+
+# Save to file with preview
+spl3 text2mermaid "parallel code review workflow" -o review.mmd --preview
+
+# Use different adapter and style
+spl3 text2mermaid "research pipeline" --adapter claude_cli --style graph -o research.mmd
+```
+
+**Visual Checkpoint:** The generated Mermaid diagram provides a visual representation that humans can easily review and edit before converting to SPL code, addressing the semantic gap in automated code generation.
+
+---
+
+## 8. spl3 mermaid2spl
+
+Converts Mermaid flowchart diagrams into executable SPL workflow code, mapping visual elements to SPL constructs.
+
+```bash
+spl3 mermaid2spl <file.mmd> [OPTIONS]
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--output`, `-o` | stdout | Write SPL to FILE |
+| `--validate / --no-validate` | validate | Validate generated SPL syntax |
+| `--template` | `workflow` | Template type: `workflow`, `function` |
+| `--pattern-hints` | — | Comma-separated pattern hints for mapping |
+
+```bash
+# Basic conversion
+spl3 mermaid2spl workflow.mmd -o workflow.spl
+
+# Use function template with validation
+spl3 mermaid2spl diagram.mmd --template function --validate -o functions.spl
+
+# Provide pattern hints for better mapping
+spl3 mermaid2spl complex.mmd --pattern-hints "iterative,parallel" -o complex.spl
+```
+
+**Pattern Recognition:** The command automatically detects workflow patterns from the visual structure:
+- **Process nodes** → `GENERATE` statements
+- **Decision nodes** → `EVALUATE` blocks
+- **Loops** → `WHILE` constructs
+- **Parallel branches** → `CALL PARALLEL`
+
+---
+
+## 12. Visual Workflow Pipeline
+
+The **text2mermaid2spl pipeline** creates a human-in-the-loop workflow design process:
+
+### Complete Visual Pipeline
+
+```bash
+# Step 1: Natural language → Visual diagram
+spl3 text2mermaid "complex research workflow with quality gates" -o research.mmd
+
+# Step 2: Human reviews and edits research.mmd visually
+# [Edit Mermaid diagram to match exact intent]
+
+# Step 3: Visual diagram → Executable SPL
+spl3 mermaid2spl research.mmd -o research.spl
+
+# Step 4: Validate and execute
+spl3 validate research.spl
+spl3 run research.spl --adapter claude_cli
+```
+
+### Benefits
+
+**Visual Verification:** Catch structural issues before code generation
+- **Stakeholder Review:** Non-technical teams can validate workflow logic
+- **Faster Iteration:** Edit diagrams instead of debugging generated code
+- **Better Alignment:** Visual specs reduce intent ambiguity
+
+**Collaborative Design:**
+- **Product Managers:** Review business logic flow
+- **Engineers:** Verify technical implementation structure
+- **Documentation:** Living visual specs that stay current
+
+This pipeline transforms SPL development from **"semantic guessing"** to **"visual verification"**, making workflow design accessible and collaborative while maintaining SPL's declarative power.
+
+---
+
+## 9. spl3 splc compile
 
 Deterministic (rule-based) or LLM-assisted compilation of a `.spl` logical view to a
 physical target language.
@@ -326,7 +433,7 @@ familiar to data professionals:
 
 ---
 
-## 8. spl3 splc describe
+## 10. spl3 splc describe
 
 Generates a spec from a **compiled target implementation** (Python, TypeScript, Go).
 This is the **reverse pipeline** — it lets you start from an existing implementation and
@@ -389,7 +496,7 @@ spl3 splc describe targets/python_pocketflow/ \
 
 ---
 
-## 9. spl3 code-rag
+## 11. spl3 code-rag
 
 Manages the Code-RAG vector store that powers `text2spl` few-shot retrieval.
 Store location: `.spl/code_rag/chroma.sqlite3`
@@ -422,7 +529,7 @@ spl3 code-rag query "self-refine loop with critique and approval token"
 
 ---
 
-## 10. Pipelines
+## 13. Pipelines
 
 ### Forward pipeline — SPL → target implementation
 
@@ -481,7 +588,7 @@ done
 
 ---
 
-## 11. Command reference
+## 14. Command reference
 
 ```
 spl3 validate <file.spl>
@@ -489,6 +596,10 @@ spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR] [--to
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--spec-dir DIR]
 spl3 text2spl "<description>" [--adapter] [-m model] [--mode auto|prompt|workflow]
                                [--validate|--no-validate] [-o FILE]
+spl3 text2mermaid "<description>" [--adapter] [-m model] [--style flowchart|graph|sequence]
+                                  [--validate|--no-validate] [-o FILE] [--preview]
+spl3 mermaid2spl <file.mmd> [--template workflow|function] [--validate|--no-validate]
+                            [-o FILE] [--pattern-hints HINTS]
 spl3 explain <file.spl>
 
 spl3 splc compile <file.spl> --lang <target>
