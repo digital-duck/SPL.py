@@ -41,7 +41,7 @@ Tier legend
   4 = OpenAI + OpenRouter + Ollama
 
 conda activate spl3
-cd ~/projects/digital-duck/SPL.py
+cd ~/projects/digital-duck/SPL
 """
 
 from __future__ import annotations

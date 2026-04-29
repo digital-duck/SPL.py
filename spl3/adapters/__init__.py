@@ -17,7 +17,7 @@ import logging as _logging
 from pathlib import Path as _Path
 
 # ── Extend __path__ to include spl/adapters/ ─────────────────────────────────
-# In dev layout: spl3/adapters/ and spl/adapters/ are siblings inside SPL.py/
+# In dev layout: spl3/adapters/ and spl/adapters/ are siblings inside SPL/
 # In installed layout: both land in site-packages/ as spl3/ and spl/ siblings
 # Try installed-package path first (3 levels up), then legacy monorepo path.
 _spl_adapters = _Path(__file__).parent.parent.parent / "spl" / "adapters"

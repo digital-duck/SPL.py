@@ -126,14 +126,8 @@ def main(ctx, hub, verbose):
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
-@click.option("--workflow", "workflow_name", default=None, metavar="NAME",
-              help="Name of the WORKFLOW to run (default: file stem or last defined).")
-@click.option("--no-autoload", "no_autoload", is_flag=True, default=False,
-              help="Do not auto-load sibling .spl files from the same directory. "
-                   "Only the specified file is loaded into the registry.")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
-        workflow_name, no_autoload):
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -154,13 +148,11 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
     hub_url = ctx.obj.get("hub")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
-                              tools_module, allowed_tools, workflow_name,
-                              no_autoload=no_autoload))
+                              tools_module, allowed_tools))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None, workflow_name=None,
-                        no_autoload=False):
+                        tools_module=None, allowed_tools=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -172,12 +164,9 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     started_at = datetime.now()
 
-    # Build registry: load the target file; optionally load sibling .spl files
+    # Build registry: load all .spl files in the same directory
     local = LocalRegistry()
-    if no_autoload:
-        local.load_file(path)
-    else:
-        local.load_dir(path.parent)
+    local.load_dir(path.parent)
     click.echo(f"Registry: {local.list()}")
 
     # Optionally attach Hub registry
@@ -242,15 +231,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     if defns:
         # ── SPL 3.0 WORKFLOW path ──────────────────────────────────────────
-        if workflow_name:
-            target = next((d for d in defns if d.name == workflow_name), None)
-            if target is None:
-                available = [d.name for d in defns]
-                raise click.ClickException(
-                    f"Workflow {workflow_name!r} not found. Available: {available}"
-                )
-        else:
-            target = next((d for d in defns if d.name == stem), defns[-1])
+        target = next((d for d in defns if d.name == stem), defns[-1])
         click.echo(f"Running workflow: {target.name}({list(params)})")
 
         result = await executor.execute_workflow(target.ast_node, params=params)
@@ -711,118 +692,6 @@ def code_rag_stats(storage_dir):
 
 
 # ------------------------------------------------------------------ #
-# Mermaid preview generator (rule-based, no LLM)                     #
-# ------------------------------------------------------------------ #
-
-def _spl_to_mermaid(spl_code: str) -> str:
-    """Generate a Mermaid flowchart from SPL source — lightweight structural preview.
-
-    Rule-based (no LLM). Extracts WORKFLOW name, INPUT/OUTPUT vars, and key
-    statements (GENERATE, CALL, EVALUATE, WHILE, RETURN) to build a top-down
-    flowchart. Errors are silently swallowed — Mermaid is never a gate.
-    """
-    import re
-
-    lines = spl_code.splitlines()
-    nodes: list[str] = []   # node definitions
-    edges: list[str] = []   # edge definitions
-    node_id = [0]
-
-    def nid():
-        node_id[0] += 1
-        return f"N{node_id[0]}"
-
-    # Extract workflow name
-    wf_match = re.search(r"WORKFLOW\s+(\w+)", spl_code, re.IGNORECASE)
-    wf_name = wf_match.group(1) if wf_match else "workflow"
-
-    # Extract INPUT params
-    in_match = re.search(r"INPUT\s*:(.*?)(?:OUTPUT|DO)", spl_code, re.IGNORECASE | re.DOTALL)
-    inputs = []
-    if in_match:
-        inputs = re.findall(r"@(\w+)", in_match.group(1))
-
-    # Extract OUTPUT var
-    out_match = re.search(r"OUTPUT\s*:\s*@(\w+)", spl_code, re.IGNORECASE)
-    output_var = out_match.group(1) if out_match else "result"
-
-    # Start node
-    start_id = nid()
-    nodes.append(f'    {start_id}(["{wf_name}\\nINPUT: {", ".join("@"+i for i in inputs)}"])')
-
-    prev_id = start_id
-    in_while = False
-    while_id = None
-
-    for line in lines:
-        stripped = line.strip()
-        sl = stripped.upper()
-
-        if sl.startswith("WHILE "):
-            cond = stripped[6:stripped.upper().find(" DO")].strip() if " DO" in sl else stripped[6:]
-            while_id = nid()
-            nodes.append(f'    {while_id}{{"{cond}"}}')
-            edges.append(f"    {prev_id} --> {while_id}")
-            prev_id = while_id
-            in_while = True
-
-        elif sl.startswith("GENERATE "):
-            m = re.match(r"GENERATE\s+(\w+)\s*\(", stripped, re.IGNORECASE)
-            fn = m.group(1) if m else "GENERATE"
-            tgt = re.search(r"INTO\s+@(\w+)", stripped, re.IGNORECASE)
-            label = fn + (f"\\n→ @{tgt.group(1)}" if tgt else "")
-            nnode = nid()
-            nodes.append(f'    {nnode}["{label}"]')
-            edges.append(f"    {prev_id} --> {nnode}")
-            prev_id = nnode
-
-        elif sl.startswith("CALL ") and "PARALLEL" not in sl:
-            m = re.match(r"CALL\s+(\w+)\s*\(", stripped, re.IGNORECASE)
-            fn = m.group(1) if m else "CALL"
-            tgt = re.search(r"INTO\s+@(\w+)", stripped, re.IGNORECASE)
-            label = f"CALL {fn}" + (f"\\n→ @{tgt.group(1)}" if tgt else "")
-            nnode = nid()
-            nodes.append(f'    {nnode}["{label}"]')
-            edges.append(f"    {prev_id} --> {nnode}")
-            prev_id = nnode
-
-        elif sl.startswith("EVALUATE "):
-            var = re.search(r"EVALUATE\s+@(\w+)", stripped, re.IGNORECASE)
-            label = f"EVALUATE\\n@{var.group(1)}" if var else "EVALUATE"
-            nnode = nid()
-            nodes.append(f'    {nnode}{{{{"EVALUATE\\n@{var.group(1)}"}}}}'
-                         if var else f'    {nnode}{{"{label}"}}')
-            edges.append(f"    {prev_id} --> {nnode}")
-            prev_id = nnode
-
-        elif sl.startswith("WHEN "):
-            cond_text = stripped[5:].replace("THEN", "").strip().replace('"', "'")
-            when_id = nid()
-            nodes.append(f'    {when_id}["{cond_text}"]')
-            edges.append(f"    {prev_id} -->|WHEN| {when_id}")
-            prev_id = when_id
-
-        elif sl == "ELSE":
-            else_id = nid()
-            nodes.append(f'    {else_id}["ELSE"]')
-            edges.append(f"    {prev_id} -->|ELSE| {else_id}")
-            prev_id = else_id
-
-        elif sl.startswith("RETURN "):
-            ret_id = nid()
-            nodes.append(f'    {ret_id}(["RETURN @{output_var}"])')
-            edges.append(f"    {prev_id} --> {ret_id}")
-            # Back-edge for WHILE loops
-            if in_while and while_id:
-                edges.append(f"    {ret_id} -.->|loop back| {while_id}")
-
-    out_lines = ["flowchart TD"]
-    out_lines.extend(nodes)
-    out_lines.extend(edges)
-    return "\n".join(out_lines)
-
-
-# ------------------------------------------------------------------ #
 # spl3 text2spl                                                       #
 # ------------------------------------------------------------------ #
 
@@ -843,15 +712,17 @@ def _spl_to_mermaid(spl_code: str) -> str:
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write generated SPL to FILE.")
 def cmd_text2spl(description, description_opt, adapter, model, mode, validate, output):
-    """Generate SPL 3.0 code from a natural language description.
+    """Compile natural language DESCRIPTION into SPL 3.0 code.
 
-    DESCRIPTION may be a literal string, a plain text/markdown file path, or a
-    *-spec.md file produced by 'splc describe' (Section 0 is extracted automatically).
+    DESCRIPTION may be:
+      - a literal string passed as a positional argument or via --description
+      - a path to a plain text / markdown file (full file used as description)
+      - a path to a *-spec.md file (Section 0 is extracted automatically)
 
     \b
     Examples:
       spl3 text2spl "summarize a document with a 2000 token budget"
-      spl3 text2spl --description flow-splc-spec.md --mode workflow -o agent.spl
+      spl3 text2spl --description flow-splc-python_pocketflow-spec.md --mode workflow -o agent.spl
       spl3 text2spl "build a review agent" --mode workflow -o review.spl
       spl3 text2spl "classify intent" --adapter ollama -m gemma3
     """
@@ -859,7 +730,7 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
     from spl.text2spl import Text2SPL
     from spl.adapters import get_adapter
 
-    # --description option takes precedence over positional arg
+    # Resolve description: --description option takes precedence over positional arg
     raw = description_opt or description
     if not raw:
         raise click.UsageError(
@@ -870,17 +741,19 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
     candidate = Path(raw)
     if candidate.exists() and candidate.is_file():
         content = candidate.read_text(encoding="utf-8")
-        if candidate.suffix == ".md":
-            # Extract Section 0 from spec files
+        # If it's a -spec.md, extract Section 0
+        if candidate.name.endswith("-spec.md") or candidate.suffix == ".md":
+            # Match "## 0. ..." up to the next "## " heading or end of file
             m = _re.search(
                 r"^##\s*0\..*?\n(.*?)(?=^##\s|\Z)",
                 content,
                 _re.MULTILINE | _re.DOTALL,
             )
             if m:
-                raw = m.group(1).strip()
+                section0 = m.group(1).strip()
                 click.echo(f"Extracted Section 0 from {candidate.name} "
-                           f"({len(raw)} chars)", err=True)
+                           f"({len(section0)} chars)", err=True)
+                raw = section0
             else:
                 click.echo(f"No 'Section 0' heading found in {candidate.name} — "
                            "using full file content.", err=True)
@@ -904,9 +777,7 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
         valid, message = Text2SPL.validate_output(spl_code)
         if not valid:
             if output:
-                out_path = Path(output)
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                out_path.write_text(spl_code, encoding="utf-8")
+                Path(output).write_text(spl_code, encoding="utf-8")
                 click.echo(f"Written to {output} (with validation errors — review and fix)")
             else:
                 click.echo(spl_code)
@@ -914,19 +785,676 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
             raise SystemExit(1)
 
     if output:
-        out_path = Path(output)
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text(spl_code, encoding="utf-8")
+        Path(output).write_text(spl_code, encoding="utf-8")
         click.echo(f"Written to {output}")
-        # Generate Mermaid chart as lightweight structural preview (not a gate)
+    else:
+        click.echo(spl_code)
+
+
+# ------------------------------------------------------------------ #
+# Mermaid Syntax Post-Processor                                        #
+# ------------------------------------------------------------------ #
+
+def fix_mermaid_syntax(mermaid_text, style="flowchart"):
+    """
+    Rule-based post-processor to fix common LLM Mermaid syntax errors.
+
+    Handles:
+    - Single braces {Decision} → Double braces {{Decision}}
+    - Wrong arrows -> → Correct arrows -->
+    - Missing diagram declaration
+    """
+    import re
+
+    lines = mermaid_text.strip().split('\n')
+    fixed_lines = []
+
+    # Ensure diagram declaration
+    has_declaration = any(line.strip().startswith(('flowchart', 'graph', 'sequenceDiagram')) for line in lines)
+    if not has_declaration:
+        fixed_lines.append(f"{style} TD")
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        if line.startswith(('flowchart', 'graph', 'sequenceDiagram')):
+            fixed_lines.append(line)
+            continue
+
+        # Fix arrow syntax: -> becomes -->
+        line = re.sub(r'(?<!-)->(?!>)', '-->', line)
+
+        # Fix single braces to double braces for decisions: {text} → {{text}}
+        # This is the critical fix for the reported error
+        # Only replace single braces, avoid creating triple braces
+        line = re.sub(r'([A-Z])\{([^}]+)\}(?!\})', r'\1{{\2}}', line)
+
+        # Add proper indentation
+        if line and not line.startswith('    '):
+            line = "    " + line
+
+        fixed_lines.append(line)
+
+    return '\n'.join(fixed_lines)
+
+def fix_node_syntax(text, node_map, node_id_counter):
+    """Fix individual node syntax"""
+    import re
+
+    text = text.strip()
+    if not text:
+        return text
+
+    # Already properly formatted node: A[Label] or A{{Label}}
+    if re.match(r'^[A-Z]\[.*\]$', text) or re.match(r'^[A-Z]\{\{.*\}\}$', text):
+        return text
+
+    # Decision node with proper ID but wrong braces: A{Label}
+    decision_match = re.match(r'^([A-Z])\{([^}]+)\}$', text)
+    if decision_match:
+        node_id, label = decision_match.groups()
+        return f"{node_id}{{{{{label}}}}}"
+
+    # Node with proper ID: A[Label]
+    node_match = re.match(r'^([A-Z])\[([^\]]+)\]$', text)
+    if node_match:
+        return text  # Already correct
+
+    # Unbracketed text - need to assign ID and format
+    if text not in node_map:
+        node_id = chr(node_id_counter[0])
+        node_map[text] = node_id
+        node_id_counter[0] += 1
+    else:
+        node_id = node_map[text]
+
+    # Determine if it should be a decision node (contains question words or ends with ?)
+    if any(word in text.lower() for word in ['check', 'verify', 'validate', '?', 'ok', 'pass', 'fail', 'approved', 'decision']):
+        return f"{node_id}{{{{{text}}}}}"
+    else:
+        return f"{node_id}[{text}]"
+
+
+# ------------------------------------------------------------------ #
+# spl3 text2mmd                                                       #
+# ------------------------------------------------------------------ #
+
+@main.command("text2mmd")
+@click.argument("description", required=False, default=None)
+@click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
+              help="Natural language workflow description or file path.")
+@click.option("--adapter", default="ollama", show_default=True, metavar="NAME",
+              help="LLM adapter to use.")
+@click.option("--model", "-m", default=None, metavar="MODEL",
+              help="Model override for the adapter.")
+@click.option("--style", default="flowchart", show_default=True,
+              type=click.Choice(["flowchart", "graph", "sequence"]),
+              help="Mermaid diagram style.")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write generated Mermaid to FILE.")
+@click.option("--validate/--no-validate", default=True, show_default=True,
+              help="Validate generated Mermaid syntax.")
+@click.option("--preview", is_flag=True, default=True,
+              help="Open diagram in browser preview.")
+@click.option("--save-markdown", "--save-md", is_flag=True, default=True,
+              help="Save as .md file with mermaid code blocks (VS Code compatible).")
+@click.option("--save-html", is_flag=True, default=True,
+              help="Save as .html file for browser viewing.")
+@click.option("--save-png", is_flag=True, default=True,
+              help="Save as .png image file using headless browser.")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory (default: $HOME/.spl/mermaid).")
+@click.option("--no-defaults", is_flag=True, default=False,
+              help="Disable default --save-html, --save-markdown, --preview.")
+def cmd_text2mmd(description, description_opt, adapter, model, style, output, validate, preview, save_markdown, save_html, save_png, out_dir, no_defaults):
+    """Generate Mermaid flowchart from natural language workflow description.
+
+    This creates a visual representation of the workflow that can be reviewed
+    and edited before converting to SPL code.
+
+    \b
+    Examples:
+      spl3 text2mmd "build a review agent that refines text until quality > 0.8"
+      spl3 text2mmd --description "research workflow" -o research.mmd
+      spl3 text2mmd "parallel code review" --style flowchart --preview
+    """
+    import re as _re
+    import sys
+    import os
+    from pathlib import Path
+
+    try:
+        from spl.adapters import get_adapter
+    except ImportError:
+        raise click.ClickException("spl adapters not available")
+
+    # Handle --no-defaults flag
+    if no_defaults:
+        save_html = False
+        save_markdown = False
+        save_png = False
+        preview = False
+
+    # Setup output directory
+    if out_dir is None:
+        out_dir = Path.home() / ".spl" / "mermaid"
+    else:
+        out_dir = Path(out_dir)
+
+    # Create output directory if it doesn't exist
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Setup default output file if not provided
+    if output is None:
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output = out_dir / f"workflow_{timestamp}.mmd"
+    else:
+        # If output provided, use it but place in out_dir if it's just a filename
+        output_path = Path(output)
+        if not output_path.is_absolute() and output_path.parent == Path('.'):
+            output = out_dir / output_path
+        else:
+            output = output_path
+
+    # --description option takes precedence over positional arg
+    raw = description_opt or description
+    if not raw:
+        raise click.ClickException("DESCRIPTION is required (positional arg or --description)")
+
+    # Check if it's a file path
+    if Path(raw).exists():
+        desc_text = Path(raw).read_text(encoding="utf-8")
+    else:
+        desc_text = raw
+
+    # Generate Mermaid diagram
+    llm = get_adapter(adapter, **{"model": model} if model else {})
+
+    prompt = f"""Create a valid Mermaid {style} diagram from this workflow description.
+
+Workflow Description:
+{desc_text}
+
+MANDATORY SYNTAX RULES:
+1. Node format: A[Label Text] where A is ID, Label Text is in square brackets
+2. Decision format: C{{{{Decision Text}}}} - MUST use DOUBLE braces, never single braces
+3. Connections: A --> B or A -->|label| B
+4. Start with: {style} TD
+
+CORRECT Examples:
+- Process node: A[Start], B[Process Data], C[Generate Output]
+- Decision node: D{{{{Quality OK?}}}}, E{{{{Approved?}}}}
+- Connections: A --> B, C -->|Yes| D, C -->|No| E
+
+WRONG Examples (DO NOT USE):
+- C{{Decision}} ❌ (single braces)
+- Process Input ❌ (no brackets/ID)
+- A[Start] -> B ❌ (use --> not ->)
+
+Generate ONLY the diagram code. No explanations. Follow the format exactly:
+
+```mermaid
+{style} TD
+    A[Start] --> B[Process Request]
+    B --> C{{{{Quality Check}}}}
+    C -->|Pass| D[Approve]
+    C -->|Fail| E[Reject]
+    D --> F[End]
+    E --> F[End]
+```"""
+
+    result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
+    mermaid_text = result if isinstance(result, str) else getattr(result, "content", str(result))
+
+    # Extract mermaid code from markdown if present
+    if "```mermaid" in mermaid_text:
+        mermaid_match = _re.search(r"```mermaid\s*\n(.*?)\n```", mermaid_text, _re.DOTALL)
+        if mermaid_match:
+            mermaid_text = mermaid_match.group(1).strip()
+
+    # Apply rule-based post-processing to fix common LLM syntax errors
+    mermaid_text = fix_mermaid_syntax(mermaid_text, style)
+
+    # Enhanced validation
+    if validate:
+        validation_errors = []
+
+        # Check for basic Mermaid syntax
+        if not any(keyword in mermaid_text for keyword in ["flowchart", "graph", "sequenceDiagram"]):
+            validation_errors.append("Missing diagram type (flowchart, graph, or sequenceDiagram)")
+
+        # Check for common syntax errors
+        lines = mermaid_text.split('\n')
+        for i, line in enumerate(lines, 1):
+            line = line.strip()
+            if not line:
+                continue
+
+            # Check for unquoted node labels with spaces
+            if '-->' in line:
+                # Extract parts around arrows
+                parts = _re.split(r'\\s*(?:-->|->)\\s*', line)
+                for part in parts:
+                    part = part.strip()
+                    # Skip edge labels in pipes |label|
+                    if '|' in part and not (part.startswith('|') and part.endswith('|')):
+                        continue
+                    # Check for unbracketed labels with spaces
+                    if ' ' in part and not (_re.match(r'\\w+\\[.*\\]', part) or _re.match(r'\\w+\\{.*\\}', part)):
+                        validation_errors.append("Line " + str(i) + ": Node '" + part + "' has spaces but no brackets - use A[" + part + "]")
+
+            # Check for single braces instead of double braces for decisions
+            if '{' in line and '{{' not in line:
+                validation_errors.append("Line " + str(i) + ": Decision nodes should use double braces {{ }} not single braces { }")
+
+        # Check for circular references to Start
+        if 'Start' in mermaid_text and '-->' in mermaid_text:
+            # Look for patterns like "End --> Start" or "end --> Start"
+            if _re.search(r'(?:End|end|F)\\s*-->\\s*(?:Start|start|A)', mermaid_text):
+                validation_errors.append("Circular reference detected: workflow loops back to Start")
+
+        if validation_errors:
+            click.echo("Mermaid syntax warnings:", err=True)
+            for error in validation_errors:
+                click.echo("  - " + error, err=True)
+            click.echo("Note: These may cause rendering issues in browsers", err=True)
+
+    # Main .mmd output
+    Path(output).write_text(mermaid_text, encoding="utf-8")
+    click.echo("Mermaid diagram written to: " + str(output))
+
+    output_path = Path(output)
+    base_name = output_path.stem
+    output_dir = output_path.parent
+
+    # Generate additional formats
+    additional_files = []
+
+    # Markdown format for VS Code preview
+    if save_markdown:
+        cmd_line = ' '.join(['spl3', 'text2mmd'] + sys.argv[2:])
+        title = base_name.title().replace('_', ' ').replace('-', ' ')
+
+        markdown_content = "# " + title + " Workflow\n\n"
+        markdown_content += "Generated with [SPL](https://github.com/digital-duck/SPL) using: `" + cmd_line + "`\n\n"
+        markdown_content += "## Mermaid Diagram\n\n"
+        markdown_content += "```mermaid\n" + mermaid_text + "\n```\n\n"
+        markdown_content += "## Usage Options\n\n"
+        markdown_content += "### For SPL Development\n"
+        markdown_content += "1. Review the workflow diagram above\n"
+        markdown_content += "2. Edit the mermaid code if needed\n"
+        markdown_content += "3. Generate SPL code: `spl3 mmd2spl " + str(output) + " -o " + base_name + ".spl`\n"
+        markdown_content += "4. Validate: `spl3 validate " + base_name + ".spl`\n\n"
+        markdown_content += "### For General Use\n"
+        markdown_content += "1. Use the `.mmd` file with any Mermaid-compatible tool\n"
+        markdown_content += "2. Copy the diagram code for documentation, presentations, or websites\n"
+        markdown_content += "3. Edit the visual workflow and regenerate as needed\n\n"
+        markdown_content += "---\n\n"
+        markdown_content += "**Learn more**: [SPL Repository](https://github.com/digital-duck/SPL) | [Documentation](https://github.com/digital-duck/SPL#readme)\n"
+        md_path = output_dir / (base_name + ".md")
+        md_path.write_text(markdown_content, encoding="utf-8")
+        additional_files.append("Markdown (VS Code): " + str(md_path))
+
+    # HTML format for browser viewing
+    if save_html or preview:
+        title = base_name.title().replace('_', ' ').replace('-', ' ')
+        filename = Path(output).name
+
+        # Build HTML content with proper escaping
+        html_parts = [
+            "<!DOCTYPE html>",
+            "<html>",
+            "<head>",
+            '    <meta charset="UTF-8">',
+            '    <title>' + title + ' - Mermaid Workflow</title>',
+            '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
+            "    <style>",
+            "        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }",
+            "        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }",
+            "        .header { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }",
+            "        .mermaid { text-align: center; margin: 20px 0; min-height: 200px; }",
+            "        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 0.9em; }",
+            "        .raw-code { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; font-family: 'Courier New', monospace; white-space: pre-wrap; }",
+            "        .error-info { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0; }",
+            "    </style>",
+            "</head>",
+            "<body>",
+            '    <div class="container">',
+            '        <div class="header">',
+            "            <h1>" + title + " Workflow</h1>",
+            '            <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>',
+            "            <p><strong>File:</strong> " + filename + " | <strong>Style:</strong> " + style + " | <strong>Adapter:</strong> " + adapter + "</p>",
+            "        </div>",
+            '        <div id="mermaid-container" class="mermaid">',
+            mermaid_text,
+            "        </div>",
+            '        <div id="error-container" class="error-info" style="display: none;">',
+            "            <h3>⚠️ Mermaid Syntax Error</h3>",
+            "            <p>The diagram couldn't be rendered. This often happens due to:</p>",
+            "            <ul>",
+            "                <li>Invalid node naming (spaces without brackets)</li>",
+            "                <li>Incorrect edge syntax</li>",
+            "                <li>Circular references</li>",
+            "            </ul>",
+            "            <p><strong>Generated Code:</strong></p>",
+            '            <div class="raw-code">' + mermaid_text + "</div>",
+            "            <p>Please edit the <code>" + filename + "</code> file to fix syntax issues.</p>",
+            "        </div>",
+            '        <div class="footer">',
+            "            <p><strong>Usage Options:</strong></p>",
+            "            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl " + filename + " -o " + base_name + ".spl</code></p>",
+            "            <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>",
+            '            <hr style="margin: 20px 0;">',
+            '            <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |',
+            '               <a href="https://github.com/digital-duck/SPL#readme" target="_blank">Documentation</a></p>',
+            '            <p><small>Visual workflow programming • General purpose workflow visualization tool</small></p>',
+            "        </div>",
+            "    </div>",
+            "    <script>",
+            "        mermaid.initialize({",
+            "            startOnLoad: true,",
+            "            theme: 'default',",
+            "            securityLevel: 'loose',",
+            "            errorLevel: 'warn'",
+            "        });",
+            "        window.addEventListener('error', function(e) {",
+            "            if (e.message && e.message.toLowerCase().includes('mermaid')) {",
+            "                document.getElementById('mermaid-container').style.display = 'none';",
+            "                document.getElementById('error-container').style.display = 'block';",
+            "            }",
+            "        });",
+            "        setTimeout(function() {",
+            "            const container = document.getElementById('mermaid-container');",
+            "            if (container && (container.innerHTML.includes('Syntax error') || container.innerHTML.includes('Parse error'))) {",
+            "                container.style.display = 'none';",
+            "                document.getElementById('error-container').style.display = 'block';",
+            "            }",
+            "        }, 2000);",
+            "    </script>",
+            "</body>",
+            "</html>"
+        ]
+        html_content = "\n".join(html_parts)
+        html_path = output_dir / (base_name + ".html")
+        html_path.write_text(html_content, encoding="utf-8")
+        additional_files.append("HTML (Browser): " + str(html_path))
+
+        if preview:
+            import webbrowser
+            webbrowser.open("file://" + str(html_path.absolute()))
+            click.echo("Preview opened in browser: " + str(html_path))
+
+    # PNG format for images/presentations
+    if save_png:
+        png_path = output_dir / (base_name + ".png")
         try:
-            mermaid = _spl_to_mermaid(spl_code)
-            mermaid_path = out_path.with_suffix(".mmd")
-            mermaid_path.write_text(mermaid, encoding="utf-8")
-            click.echo(f"Mermaid preview → {mermaid_path.name}")
-            click.echo("\n" + mermaid)
-        except Exception:
-            pass  # Mermaid is a preview, never a gate
+            png_generated = False
+            import subprocess
+
+            # Create a simple HTML for PNG generation
+            png_html = """<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>body{margin:0;padding:20px;background:white;font-family:Arial,sans-serif}
+.mermaid{text-align:center}</style></head>
+<body><div class="mermaid">""" + mermaid_text + """</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'default',securityLevel:'loose'});</script>
+</body></html>"""
+
+            png_html_path = output_dir / (base_name + "_temp.html")
+            png_html_path.write_text(png_html, encoding="utf-8")
+
+            # Try Chrome/Chromium browsers
+            for chrome_cmd in ["google-chrome", "chromium-browser", "chromium", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]:
+                try:
+                    result = subprocess.run([
+                        chrome_cmd, "--headless", "--disable-gpu",
+                        "--window-size=1200,800", "--screenshot=" + str(png_path),
+                        "file://" + str(png_html_path.absolute())
+                    ], capture_output=True, timeout=30)
+
+                    if result.returncode == 0 and png_path.exists():
+                        png_html_path.unlink()  # Clean up
+                        additional_files.append("PNG Image: " + str(png_path))
+                        png_generated = True
+                        break
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    continue
+
+            # Clean up temp file
+            if png_html_path.exists():
+                png_html_path.unlink()
+
+            if not png_generated:
+                click.echo("Warning: PNG generation requires Chrome/Chromium browser", err=True)
+
+        except Exception as e:
+            click.echo("Warning: PNG generation failed: " + str(e), err=True)
+
+    # Report additional files
+    if additional_files:
+        click.echo("Additional formats generated:")
+        for file_desc in additional_files:
+            click.echo("  - " + file_desc)
+
+    # Summary
+    click.echo("\nAll files saved to: " + str(output_dir))
+
+
+# ------------------------------------------------------------------ #
+# spl3 mmd2spl                                                    #
+# ------------------------------------------------------------------ #
+
+@main.command("mmd2spl")
+@click.argument("mermaid_file")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write generated SPL to FILE.")
+@click.option("--validate/--no-validate", default=True, show_default=True,
+              help="Validate generated SPL syntax.")
+@click.option("--template", default="workflow", show_default=True,
+              type=click.Choice(["workflow", "function"]),
+              help="Base SPL template type.")
+@click.option("--pattern-hints", default=None, metavar="HINTS",
+              help="Comma-separated hints for SPL patterns (e.g., 'linear,parallel').")
+def cmd_mmd2spl(mermaid_file, output, validate, template, pattern_hints):
+    """Generate SPL workflow from Mermaid flowchart diagram.
+
+    Converts a Mermaid flowchart into executable SPL code, mapping visual
+    elements to SPL constructs like GENERATE, EVALUATE, WHILE, and CALL PARALLEL.
+
+    \b
+    Examples:
+      spl3 mmd2spl workflow.mmd -o workflow.spl
+      spl3 mmd2spl diagram.mmd --template function --validate
+      spl3 mmd2spl review.mmd --pattern-hints "iterative,quality-gate"
+    """
+    import re as _re
+    from pathlib import Path
+
+    # Read Mermaid file
+    if not Path(mermaid_file).exists():
+        raise click.ClickException(f"Mermaid file not found: {mermaid_file}")
+
+    mermaid_content = Path(mermaid_file).read_text(encoding="utf-8")
+
+    # Basic Mermaid parsing - extract nodes and connections
+    nodes = {}
+    edges = []
+
+    # Parse flowchart nodes: A[Label] or A{Decision} or A(Process)
+    node_pattern = r'(\\w+)(?:\\[(.*?)\\]|\\{(.*?)\\}|\\((.*?)\\))'
+    for match in _re.finditer(node_pattern, mermaid_content):
+        node_id = match.group(1)
+        label = match.group(2) or match.group(3) or match.group(4) or node_id
+
+        # Determine node type from syntax
+        if match.group(3):  # {label} = decision
+            node_type = "decision"
+        elif any(keyword in label.lower() for keyword in ["start", "begin"]):
+            node_type = "start"
+        elif any(keyword in label.lower() for keyword in ["end", "finish", "return"]):
+            node_type = "end"
+        else:
+            node_type = "process"
+
+        nodes[node_id] = {"label": label, "type": node_type}
+
+    # Parse edges: A --> B or A -->|label| B
+    edge_pattern = r'(\\w+)\\s*(?:-->|->)\\s*(?:\\|([^|]*)\\|\\s*)?(\\w+)'
+    for match in _re.finditer(edge_pattern, mermaid_content):
+        from_node = match.group(1)
+        edge_label = match.group(2)
+        to_node = match.group(3)
+        edges.append({"from": from_node, "to": to_node, "label": edge_label})
+
+    # Generate SPL based on structure
+    workflow_name = Path(mermaid_file).stem.replace("-", "_")
+
+    # Detect patterns
+    has_loops = any(
+        any(e2["from"] == edge["to"] and e2["to"] == edge["from"] for e2 in edges)
+        for edge in edges
+    )
+
+    has_decisions = any(node["type"] == "decision" for node in nodes.values())
+    has_parallel = len([n for n in nodes.values() if n["type"] == "process"]) > 3
+
+    # Build SPL
+    spl_lines = []
+
+    if template == "workflow":
+        spl_lines.extend([
+            f"WORKFLOW {workflow_name}",
+            "  INPUT @input TEXT",
+            "  OUTPUT @result TEXT",
+            "DO"
+        ])
+
+        # Add variables
+        for node_id, node in nodes.items():
+            if node["type"] == "process":
+                var_name = _re.sub(r'\W+', '_', node["label"].lower())
+                spl_lines.append(f"  @{var_name} := '';")
+
+        # Add main logic
+        process_nodes = [n for n in nodes.values() if n["type"] == "process"]
+        decision_nodes = [n for n in nodes.values() if n["type"] == "decision"]
+
+        if has_loops and decision_nodes:
+            # Iterative pattern
+            spl_lines.extend([
+                "  @iteration := 0;",
+                "  @max_iterations := 3;",
+                "",
+                "  WHILE @iteration < @max_iterations DO",
+                "    DO"
+            ])
+
+            for node in process_nodes[:2]:  # Main processes
+                var_name = _re.sub(r'\W+', '_', node["label"].lower())
+                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
+                # Avoid reserved keywords
+                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
+                    func_name = f"process_{func_name}"
+                spl_lines.append(f"      GENERATE {func_name}(@input) INTO @{var_name};")
+
+            # Add decision logic
+            if decision_nodes:
+                decision = decision_nodes[0]
+                spl_lines.extend([
+                    f"      EVALUATE @{var_name}",
+                    f"        WHEN contains('complete') THEN",
+                    f"          RETURN @{var_name} WITH status = 'complete';",
+                    f"        ELSE",
+                    f"          @iteration := @iteration + 1;",
+                    "      END;"
+                ])
+
+            spl_lines.extend([
+                "    END;",
+                "  END;",
+            ])
+
+        elif has_decisions:
+            # Conditional pattern
+            for node in process_nodes:
+                var_name = _re.sub(r'\W+', '_', node["label"].lower())
+                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
+                # Avoid reserved keywords
+                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
+                    func_name = f"process_{func_name}"
+                spl_lines.append(f"  GENERATE {func_name}(@input) INTO @{var_name};")
+
+            if decision_nodes:
+                decision = decision_nodes[0]
+                spl_lines.extend([
+                    f"  EVALUATE @{var_name}",
+                    f"    WHEN contains('condition') THEN",
+                    f"      @result := 'path_a';",
+                    f"    ELSE",
+                    f"      @result := 'path_b';",
+                    "  END;"
+                ])
+
+        elif has_parallel:
+            # Parallel pattern
+            spl_lines.append("  CALL PARALLEL")
+            for i, node in enumerate(process_nodes[:3]):  # Limit to 3 parallel
+                var_name = _re.sub(r'\W+', '_', node["label"].lower())
+                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
+                # Avoid reserved keywords
+                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
+                    func_name = f"process_{func_name}"
+                comma = "," if i < min(2, len(process_nodes) - 1) else ""
+                spl_lines.append(f"    {func_name}(@input) INTO @{var_name}{comma}")
+            spl_lines.append("  END")
+
+        else:
+            # Linear pattern
+            for node in process_nodes:
+                var_name = _re.sub(r'\W+', '_', node["label"].lower())
+                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
+                # Avoid reserved keywords
+                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
+                    func_name = f"process_{func_name}"
+                spl_lines.append(f"  GENERATE {func_name}(@input) INTO @{var_name};")
+
+        spl_lines.extend([
+            "  RETURN @result;",
+            "END;"
+        ])
+
+    else:  # function template
+        func_name = workflow_name
+        spl_lines.extend([
+            f"CREATE FUNCTION {func_name}(input TEXT) RETURNS TEXT AS $$",
+            f"Process the input through {workflow_name} workflow.",
+            "$$;"
+        ])
+
+    spl_code = "\n".join(spl_lines)
+
+    # Basic validation
+    if validate:
+        try:
+            # Simple syntax check
+            if not any(keyword in spl_code for keyword in ["WORKFLOW", "CREATE FUNCTION"]):
+                click.echo("Warning: Generated code may not be valid SPL", err=True)
+        except Exception as e:
+            click.echo(f"Validation warning: {e}", err=True)
+
+    # Output
+    if output:
+        Path(output).write_text(spl_code, encoding="utf-8")
+        click.echo(f"SPL code written to: {output}")
+
+        # Also generate .mmd file for reference
+        mmd_output = Path(output).with_suffix('.mmd')
+        mmd_output.write_text(mermaid_content, encoding="utf-8")
+        click.echo(f"Mermaid reference saved to: {mmd_output}")
     else:
         click.echo(spl_code)
 
@@ -1121,633 +1649,330 @@ def cmd_describe(spl_path, adapter, model, spec_dir):
 
 
 # ------------------------------------------------------------------ #
-# spl3 text2mermaid                                                   #
+# spl3 compare                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("text2mermaid")
-@click.argument("description", required=False, default=None)
-@click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
-              help="Natural language workflow description or file path.")
-@click.option("--adapter", default="ollama", show_default=True, metavar="NAME",
-              help="LLM adapter to use.")
-@click.option("--model", "-m", default=None, metavar="MODEL",
+@main.command("compare")
+@click.argument("file1")
+@click.argument("file2")
+@click.option("--adapter", default="ollama", show_default=True,
+              help="LLM adapter to use for semantic analysis.")
+@click.option("--model", default=None, metavar="MODEL",
               help="Model override for the adapter.")
-@click.option("--style", default="flowchart", show_default=True,
-              type=click.Choice(["flowchart", "graph", "sequence"]),
-              help="Mermaid diagram style.")
 @click.option("--output", "-o", default=None, metavar="FILE",
-              help="Write generated Mermaid to FILE.")
-@click.option("--validate/--no-validate", default=True, show_default=True,
-              help="Validate generated Mermaid syntax.")
-@click.option("--preview", is_flag=True, default=True,
-              help="Open diagram in browser preview.")
-@click.option("--save-markdown", "--save-md", is_flag=True, default=True,
-              help="Save as .md file with mermaid code blocks (VS Code compatible).")
-@click.option("--save-html", is_flag=True, default=True,
-              help="Save as .html file for browser viewing.")
-@click.option("--save-png", is_flag=True, default=True,
-              help="Save as .png image file using headless browser.")
-@click.option("--out-dir", default=None, metavar="DIR",
-              help="Output directory (default: $HOME/.spl/mermaid).")
-@click.option("--no-defaults", is_flag=True, default=False,
-              help="Disable default --save-html, --save-markdown, --preview.")
-def cmd_text2mermaid(description, description_opt, adapter, model, style, output, validate, preview, save_markdown, save_html, save_png, out_dir, no_defaults):
-    """Generate Mermaid flowchart from natural language workflow description.
+              help="Write comparison report to FILE.")
+@click.option("--format", default="markdown", show_default=True,
+              type=click.Choice(["markdown", "json", "text"]),
+              help="Output format for comparison report.")
+@click.option("--focus", default="all", show_default=True,
+              type=click.Choice(["all", "structure", "logic", "quality", "syntax"]),
+              help="Focus comparison on specific aspects.")
+@click.option("--diff", is_flag=True, default=False,
+              help="Include mechanical line-by-line diff (like git diff).")
+@click.option("--diff-only", is_flag=True, default=False,
+              help="Show only mechanical diff, skip semantic analysis.")
+@click.option("--diff-style", default="unified", show_default=True,
+              type=click.Choice(["unified", "context", "side-by-side"]),
+              help="Style for mechanical diff output.")
+@click.option("--no-color", is_flag=True, default=False,
+              help="Disable colored diff output.")
+def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_only, diff_style, no_color):
+    """Perform semantic and/or mechanical comparison between two files.
 
-    This creates a visual representation of the workflow that can be reviewed
-    and edited before converting to SPL code.
+    Analyzes and compares the content, structure, logic, and quality
+    of two files using LLM-powered semantic analysis and/or traditional
+    line-by-line diff. Works with any text-based files including .mmd, .md, .spl, .txt, etc.
 
     \b
     Examples:
-      spl3 text2mermaid "build a review agent that refines text until quality > 0.8"
-      spl3 text2mermaid --description "research workflow" -o research.mmd
-      spl3 text2mermaid "parallel code review" --style flowchart --preview
+      spl3 compare workflow1.mmd workflow2.mmd
+      spl3 compare claude_output.md ollama_output.md --focus quality
+      spl3 compare old_spec.md new_spec.md -o comparison_report.md --diff
+      spl3 compare chart1.mmd chart2.mmd --diff-only --diff-style side-by-side
+      spl3 compare file1.spl file2.spl --adapter claude_cli --diff --format json
     """
-    import re as _re
-    import sys
-    import os
     from pathlib import Path
+    import json as _json
+    import difflib
+    import sys
+
+    # Validate input files
+    path1 = Path(file1)
+    path2 = Path(file2)
+
+    if not path1.exists():
+        raise click.ClickException(f"File not found: {file1}")
+    if not path2.exists():
+        raise click.ClickException(f"File not found: {file2}")
+
+    # Read file contents
+    content1 = path1.read_text(encoding="utf-8")
+    content2 = path2.read_text(encoding="utf-8")
+
+    # Generate mechanical diff if requested
+    mechanical_diff = ""
+    if diff or diff_only:
+        lines1 = content1.splitlines(keepends=True)
+        lines2 = content2.splitlines(keepends=True)
+
+        if diff_style == "unified":
+            diff_lines = list(difflib.unified_diff(
+                lines1, lines2,
+                fromfile=f"a/{path1.name}",
+                tofile=f"b/{path2.name}",
+                lineterm=""
+            ))
+
+            if not no_color and sys.stdout.isatty():
+                # Add ANSI color codes for terminal output
+                colored_diff = []
+                for line in diff_lines:
+                    if line.startswith('+++') or line.startswith('---'):
+                        colored_diff.append(f"\033[1m{line}\033[0m")  # Bold
+                    elif line.startswith('@@'):
+                        colored_diff.append(f"\033[36m{line}\033[0m")  # Cyan
+                    elif line.startswith('+'):
+                        colored_diff.append(f"\033[32m{line}\033[0m")  # Green
+                    elif line.startswith('-'):
+                        colored_diff.append(f"\033[31m{line}\033[0m")  # Red
+                    else:
+                        colored_diff.append(line)
+                mechanical_diff = "\n".join(colored_diff)
+            else:
+                mechanical_diff = "\n".join(diff_lines)
+
+        elif diff_style == "context":
+            diff_lines = list(difflib.context_diff(
+                lines1, lines2,
+                fromfile=f"a/{path1.name}",
+                tofile=f"b/{path2.name}",
+                lineterm=""
+            ))
+            mechanical_diff = "\n".join(diff_lines)
+
+        elif diff_style == "side-by-side":
+            # Create side-by-side diff
+            differ = difflib.HtmlDiff()
+            if format == "markdown":
+                # For markdown, create a simple side-by-side table
+                side_by_side_lines = []
+                side_by_side_lines.append(f"| {path1.name} | {path2.name} |")
+                side_by_side_lines.append("|---|---|")
+
+                # Get line-by-line differences
+                for i, (line1, line2) in enumerate(zip(lines1, lines2)):
+                    line1_clean = line1.rstrip('\n\r').replace('|', '\\|')
+                    line2_clean = line2.rstrip('\n\r').replace('|', '\\|')
+                    if line1 != line2:
+                        side_by_side_lines.append(f"| **{line1_clean}** | **{line2_clean}** |")
+                    else:
+                        side_by_side_lines.append(f"| {line1_clean} | {line2_clean} |")
+
+                # Handle different file lengths
+                max_len = max(len(lines1), len(lines2))
+                for i in range(min(len(lines1), len(lines2)), max_len):
+                    if i < len(lines1):
+                        line1_clean = lines1[i].rstrip('\n\r').replace('|', '\\|')
+                        side_by_side_lines.append(f"| **{line1_clean}** | *[missing]* |")
+                    else:
+                        line2_clean = lines2[i].rstrip('\n\r').replace('|', '\\|')
+                        side_by_side_lines.append(f"| *[missing]* | **{line2_clean}** |")
+
+                mechanical_diff = "\n".join(side_by_side_lines)
+            else:
+                # For other formats, use simple text side-by-side
+                mechanical_diff = differ.make_file(
+                    lines1, lines2,
+                    fromdesc=path1.name,
+                    todesc=path2.name
+                )
+
+        # If no differences found
+        if not mechanical_diff.strip() or mechanical_diff == "\n".join([f"--- a/{path1.name}", f"+++ b/{path2.name}"]):
+            mechanical_diff = "No mechanical differences found - files are identical."
+
+    # Handle diff-only mode
+    if diff_only:
+        if output:
+            output_path = Path(output)
+            output_path.write_text(mechanical_diff, encoding="utf-8")
+            click.echo(f"Mechanical diff written to: {output_path}")
+        else:
+            click.echo(mechanical_diff)
+        return
+
+    # Determine file types for context
+    ext1 = path1.suffix.lower()
+    ext2 = path2.suffix.lower()
+
+    # Build comparison prompt based on focus
+    focus_prompts = {
+        "all": "Provide a comprehensive comparison covering structure, logic, quality, and syntax.",
+        "structure": "Focus on architectural and organizational differences.",
+        "logic": "Focus on logical flow, decision points, and process sequences.",
+        "quality": "Focus on completeness, sophistication, and best practices.",
+        "syntax": "Focus on syntax correctness, formatting, and technical accuracy."
+    }
+
+    prompt = f"""Compare these two files semantically and provide a detailed analysis.
+
+**File 1**: {path1.name} ({ext1})
+**File 2**: {path2.name} ({ext2})
+**Focus**: {focus_prompts[focus]}
+
+**File 1 Content:**
+```
+{content1}
+```
+
+**File 2 Content:**
+```
+{content2}
+```
+
+Please provide a structured comparison analysis with the following sections:
+
+## Summary
+Brief overview of the main differences and which file is stronger overall.
+
+## Content Analysis
+### File 1 Strengths
+- Key advantages and well-implemented aspects
+
+### File 2 Strengths
+- Key advantages and well-implemented aspects
+
+### Common Elements
+- Shared concepts, structures, or approaches
+
+## Detailed Comparison
+### Structure & Organization
+Compare the overall structure, flow, and organization.
+
+### Logic & Completeness
+Analyze logical flow, decision points, error handling, and completeness.
+
+### Quality & Sophistication
+Evaluate complexity, depth, best practices, and professional quality.
+
+### Syntax & Technical Accuracy
+Review syntax correctness, formatting, and technical implementation.
+
+## Recommendations
+1. **Best Choice**: Which file is better and why
+2. **Improvements**: Specific suggestions to enhance the weaker file
+3. **Hybrid Approach**: How to combine strengths from both files
+
+## Scoring
+Rate each file (1-10) on:
+- Structure: [File1]/10, [File2]/10
+- Logic: [File1]/10, [File2]/10
+- Quality: [File1]/10, [File2]/10
+- Overall: [File1]/10, [File2]/10
+
+Provide actionable insights for choosing between or improving these files."""
 
     try:
         from spl3.adapters import get_adapter
     except ImportError:
-        raise click.ClickException("spl3 adapters not available")
+        raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
 
-    # Handle --no-defaults flag
-    if no_defaults:
-        save_html = False
-        save_markdown = False
-        save_png = False
-        preview = False
-
-    # Setup output directory
-    if out_dir is None:
-        out_dir = Path.home() / ".spl" / "mermaid"
-    else:
-        out_dir = Path(out_dir)
-
-    # Create output directory if it doesn't exist
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    # Setup default output file if not provided
-    if output is None:
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output = out_dir / f"workflow_{timestamp}.mmd"
-    else:
-        # If output provided, use it but place in out_dir if it's just a filename
-        output_path = Path(output)
-        if not output_path.is_absolute() and output_path.parent == Path('.'):
-            output = out_dir / output_path
-        else:
-            output = output_path
-
-    # --description option takes precedence over positional arg
-    raw = description_opt or description
-    if not raw:
-        raise click.ClickException("DESCRIPTION is required (positional arg or --description)")
-
-    # Check if it's a file path
-    if Path(raw).exists():
-        desc_text = Path(raw).read_text(encoding="utf-8")
-    else:
-        desc_text = raw
-
-    # Generate Mermaid diagram
     llm = get_adapter(adapter, **{"model": model} if model else {})
 
-    prompt = f"""Convert this workflow description into a valid Mermaid {style} diagram.
-
-Workflow Description:
-{desc_text}
-
-CRITICAL SYNTAX RULES - Follow exactly:
-1. Use node IDs (A, B, C...) with labels in brackets: A[Start], B[Process], C{{Decision}}
-2. Node labels with spaces must be in brackets: A[Process Input] not A[Process Input]
-3. Decision nodes use double braces: C{{Check Quality}}
-4. Edge labels use pipe syntax: C -->|Yes| D
-5. No spaces in node IDs: use A, B, C not "Process Input"
-6. End with proper termination, no circular references to Start
-
-Generate a clear, well-structured Mermaid diagram:
-- Process steps: A[Label], B[Label]
-- Decision points: C{{Decision}}
-- Edge labels: -->|Label|
-- Proper flow: Start to End
-
-Output only valid Mermaid syntax, no explanations.
-
-Example:
-```mermaid
-{style} TD
-    A[Start] --> B[Process Input]
-    B --> C{{Quality Check}}
-    C -->|Pass| D[Approve]
-    C -->|Fail| E[Reject]
-    D --> F[End]
-    E --> F[End]
-```
-
-IMPORTANT: Decision nodes MUST use double braces {{{{ }}}} not single braces {{}}"""
-"""
+    if diff:
+        click.echo(f"Comparing {path1.name} vs {path2.name} using {adapter} (semantic + mechanical diff)...")
+    else:
+        click.echo(f"Comparing {path1.name} vs {path2.name} using {adapter}...")
 
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
-    mermaid_text = result if isinstance(result, str) else getattr(result, "content", str(result))
+    comparison_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 
-    # Extract mermaid code from markdown if present
-    if "```mermaid" in mermaid_text:
-        mermaid_match = _re.search(r"```mermaid\s*\n(.*?)\n```", mermaid_text, _re.DOTALL)
-        if mermaid_match:
-            mermaid_text = mermaid_match.group(1).strip()
-
-    # Enhanced validation
-    if validate:
-        validation_errors = []
-
-        # Check for basic Mermaid syntax
-        if not any(keyword in mermaid_text for keyword in ["flowchart", "graph", "sequenceDiagram"]):
-            validation_errors.append("Missing diagram type (flowchart, graph, or sequenceDiagram)")
-
-        # Check for common syntax errors
-        lines = mermaid_text.split('\n')
-        for i, line in enumerate(lines, 1):
-            line = line.strip()
-            if not line:
-                continue
-
-            # Check for unquoted node labels with spaces
-            if '-->' in line:
-                # Extract parts around arrows
-                parts = _re.split(r'\s*(?:-->|->)\s*', line)
-                for part in parts:
-                    part = part.strip()
-                    # Skip edge labels in pipes |label|
-                    if '|' in part and not (part.startswith('|') and part.endswith('|')):
-                        continue
-                    # Check for unbracketed labels with spaces
-                    if ' ' in part and not (_re.match(r'\w+\[.*\]', part) or _re.match(r'\w+\{.*\}', part)):
-                        validation_errors.append(f"Line {i}: Node '{part}' has spaces but no brackets - use A[{part}]")
-
-            # Check for single braces instead of double braces for decisions
-            if '{' in line and '{{' not in line:
-                validation_errors.append(f"Line {i}: Decision nodes should use double braces {{{{ }}}} not single braces {{ }}")
-
-        # Check for circular references to Start
-        if 'Start' in mermaid_text and '-->' in mermaid_text:
-            # Look for patterns like "End --> Start" or "end --> Start"
-            if _re.search(r'(?:End|end|F)\s*-->\s*(?:Start|start|A)', mermaid_text):
-                validation_errors.append("Circular reference detected: workflow loops back to Start")
-
-        if validation_errors:
-            click.echo("Mermaid syntax warnings:", err=True)
-            for error in validation_errors:
-                click.echo(f"  - {error}", err=True)
-            click.echo("Note: These may cause rendering issues in browsers", err=True)
-
-    # Main .mmd output
-    Path(output).write_text(mermaid_text, encoding="utf-8")
-    click.echo("Mermaid diagram written to: " + str(output))
-
-    output_path = Path(output)
-    base_name = output_path.stem
-    output_dir = output_path.parent
-
-        # Generate additional formats
-        additional_files = []
-
-        # Markdown format for VS Code preview
-        if save_markdown:
-            cmd_line = ' '.join(['spl3', 'text2mermaid'] + sys.argv[2:])
-            title = base_name.title().replace('_', ' ').replace('-', ' ')
-
-            markdown_content = "# " + title + " Workflow\n\n"
-            markdown_content += "Generated with [SPL.py](https://github.com/digital-duck/SPL.py) using: `" + cmd_line + "`\n\n"
-            markdown_content += "## Mermaid Diagram\n\n"
-            markdown_content += "```mermaid\n" + mermaid_text + "\n```\n\n"
-            markdown_content += "## Usage Options\n\n"
-            markdown_content += "### For SPL Development\n"
-            markdown_content += "1. Review the workflow diagram above\n"
-            markdown_content += "2. Edit the mermaid code if needed\n"
-            markdown_content += "3. Generate SPL code: `spl3 mermaid2spl " + str(output) + " -o " + base_name + ".spl`\n"
-            markdown_content += "4. Validate: `spl3 validate " + base_name + ".spl`\n\n"
-            markdown_content += "### For General Use\n"
-            markdown_content += "1. Use the `.mmd` file with any Mermaid-compatible tool\n"
-            markdown_content += "2. Copy the diagram code for documentation, presentations, or websites\n"
-            markdown_content += "3. Edit the visual workflow and regenerate as needed\n\n"
-            markdown_content += "---\n\n"
-            markdown_content += "**Learn more**: [SPL.py Repository](https://github.com/digital-duck/SPL.py) | [Documentation](https://github.com/digital-duck/SPL.py#readme) | [Visual Workflow Programming](https://github.com/digital-duck/SPL.py/blob/main/docs/text2mermaid2spl.md)\n"
-            md_path = output_dir / (base_name + ".md")
-            md_path.write_text(markdown_content, encoding="utf-8")
-            additional_files.append("Markdown (VS Code): " + str(md_path))
-
-        # HTML format for browser viewing
-        if save_html or preview:
-            title = base_name.title().replace('_', ' ').replace('-', ' ')
-            filename = Path(output).name
-
-            html_content = '''<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>''' + title + ''' - Mermaid Workflow</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
-        .mermaid { text-align: center; margin: 20px 0; min-height: 200px; }
-        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 0.9em; }
-        .raw-code { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; font-family: 'Courier New', monospace; white-space: pre-wrap; }
-        .error-info { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>''' + title + ''' Workflow</h1>
-            <p><strong>Generated with <a href="https://github.com/digital-duck/SPL.py" target="_blank" style="color: #0066cc;">SPL.py</a></strong></p>
-            <p><strong>File:</strong> ''' + filename + ''' | <strong>Style:</strong> ''' + style + ''' | <strong>Adapter:</strong> ''' + adapter + '''</p>
-        </div>
-        <div id="mermaid-container" class="mermaid">
-''' + mermaid_text + '''
-        </div>
-        <div id="error-container" class="error-info" style="display: none;">
-            <h3>⚠️ Mermaid Syntax Error</h3>
-            <p>The diagram couldn't be rendered. This often happens due to:</p>
-            <ul>
-                <li>Invalid node naming (spaces without brackets)</li>
-                <li>Incorrect edge syntax</li>
-                <li>Circular references</li>
-            </ul>
-            <p><strong>Generated Code:</strong></p>
-            <div class="raw-code">''' + mermaid_text + '''</div>
-            <p>Please edit the <code>''' + filename + '''</code> file to fix syntax issues.</p>
-        </div>
-        <div class="footer">
-            <p><strong>Usage Options:</strong></p>
-            <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 300px;">
-                    <h4>For SPL Development</h4>
-                    <ol>
-                        <li>Review the workflow diagram above</li>
-                        <li>If syntax errors, edit ''' + filename + ''' to fix issues</li>
-                        <li>Generate SPL: <code>spl3 mermaid2spl ''' + filename + ''' -o ''' + base_name + '''.spl</code></li>
-                        <li>Validate: <code>spl3 validate ''' + base_name + '''.spl</code></li>
-                    </ol>
-                </div>
-                <div style="flex: 1; min-width: 300px;">
-                    <h4>For General Use</h4>
-                    <ol>
-                        <li>Use the .mmd file with any Mermaid-compatible tool</li>
-                        <li>Copy diagram code for documentation or presentations</li>
-                        <li>Edit the visual workflow and regenerate as needed</li>
-                        <li>Share with teams for collaborative workflow design</li>
-                    </ol>
-                </div>
-            </div>
-            <hr style="margin: 20px 0; border: 1px solid #eee;">
-            <p><strong>About SPL.py:</strong>
-               <a href="https://github.com/digital-duck/SPL.py" target="_blank" style="color: #0066cc;">GitHub Repository</a> |
-               <a href="https://github.com/digital-duck/SPL.py#readme" target="_blank" style="color: #0066cc;">Documentation</a> |
-               <a href="https://github.com/digital-duck/SPL.py/blob/main/docs/text2mermaid2spl.md" target="_blank" style="color: #0066cc;">Visual Workflow Guide</a></p>
-            <p><small style="color: #666;">Visual workflow programming with human-in-the-loop validation • Use for any workflow visualization needs</small></p>
-        </div>
-    </div>
-    <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            securityLevel: 'loose',
-            errorLevel: 'warn'
-        });
-
-        // Error handling
-        window.addEventListener('error', function(e) {
-            if (e.message && e.message.toLowerCase().includes('mermaid')) {
-                document.getElementById('mermaid-container').style.display = 'none';
-                document.getElementById('error-container').style.display = 'block';
+    # Format output based on requested format
+    if format == "json":
+        # Extract key metrics for JSON (simplified structure)
+        json_output = {
+            "files": {
+                "file1": {"name": path1.name, "type": ext1},
+                "file2": {"name": path2.name, "type": ext2}
+            },
+            "analysis": {
+                "summary": comparison_text.split("## Content Analysis")[0].replace("## Summary", "").strip(),
+                "full_report": comparison_text
+            },
+            "metadata": {
+                "adapter": adapter,
+                "model": model or "default",
+                "focus": focus,
+                "timestamp": datetime.now().isoformat(),
+                "includes_diff": diff,
+                "diff_style": diff_style if diff else None
             }
-        });
+        }
 
-        // Check for syntax errors after render
-        setTimeout(function() {
-            const container = document.getElementById('mermaid-container');
-            if (container && (container.innerHTML.includes('Syntax error') || container.innerHTML.includes('Parse error'))) {
-                container.style.display = 'none';
-                document.getElementById('error-container').style.display = 'block';
+        if diff and mechanical_diff:
+            json_output["mechanical_diff"] = {
+                "style": diff_style,
+                "content": mechanical_diff
             }
-        }, 2000);
-    </script>
-</body>
-</html>'''
-            html_path = output_dir / (base_name + ".html")
-            html_path.write_text(html_content, encoding="utf-8")
-            additional_files.append("HTML (Browser): " + str(html_path))
 
-            if preview:
-                import webbrowser
-                webbrowser.open("file://" + str(html_path.absolute()))
-                click.echo("Preview opened in browser: " + str(html_path))
+        output_content = _json.dumps(json_output, indent=2)
 
-        # PNG format for images/presentations
-        if save_png:
-            png_path = output_dir / (base_name + ".png")
-            try:
-                # Try to generate PNG using different methods
-                png_generated = False
+    elif format == "text":
+        # Plain text without markdown formatting
+        output_content = comparison_text.replace("#", "").replace("**", "").replace("*", "")
 
-                # Method 1: Try using playwright (if available)
-                try:
-                    import subprocess
-                    # Create a standalone HTML for PNG generation
-                    png_html_content = '''<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <style>
-        body { margin: 0; padding: 20px; background: white; font-family: Arial, sans-serif; }
-        .mermaid { text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="mermaid">
-''' + mermaid_text + '''
-    </div>
-    <script>
-        mermaid.initialize({
-            startOnLoad: true,
-            theme: 'default',
-            securityLevel: 'loose'
-        });
-    </script>
-</body>
-</html>'''
+        if diff and mechanical_diff:
+            output_content = f"""MECHANICAL DIFF ({diff_style.upper()})
+{'=' * 60}
 
-                    png_html_path = output_dir / (base_name + "_temp.html")
-                    png_html_path.write_text(png_html_content, encoding="utf-8")
+{mechanical_diff}
 
-                    # Try using chromium/chrome headless
-                    chrome_commands = [
-                        "google-chrome",
-                        "chromium-browser",
-                        "chromium",
-                        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-                    ]
+{'=' * 60}
 
-                    for chrome_cmd in chrome_commands:
-                        try:
-                            result = subprocess.run([
-                                chrome_cmd, "--headless", "--disable-gpu",
-                                "--window-size=1200,800", "--screenshot=" + str(png_path),
-                                "file://" + str(png_html_path.absolute())
-                            ], capture_output=True, timeout=30)
+SEMANTIC ANALYSIS
+{'=' * 60}
 
-                            if result.returncode == 0 and png_path.exists():
-                                # Clean up temp file
-                                png_html_path.unlink()
-                                additional_files.append("PNG Image: " + str(png_path))
-                                png_generated = True
-                                break
-                        except (subprocess.TimeoutExpired, FileNotFoundError):
-                            continue
+{output_content}"""
 
-                    # Clean up temp file if still exists
-                    if png_html_path.exists():
-                        png_html_path.unlink()
+    else:  # markdown (default)
+        # Add metadata header
+        output_content = f"""# File Comparison Report
 
-                except ImportError:
-                    pass
+**Files Compared:**
+- File 1: `{path1.name}` ({ext1})
+- File 2: `{path2.name}` ({ext2})
+- **Adapter:** {adapter}
+- **Model:** {model or 'default'}
+- **Focus:** {focus}
+- **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{f"- **Includes Diff:** {diff_style} style" if diff else ""}
 
-                if not png_generated:
-                    click.echo("Warning: PNG generation requires Chrome/Chromium browser for headless capture", err=True)
-                    click.echo("Install Chrome or Chromium to enable PNG export", err=True)
+---
 
-            except Exception as e:
-                click.echo("Warning: PNG generation failed: " + str(e), err=True)
+{comparison_text}
 
-    # Report additional files
-    if additional_files:
-        click.echo("Additional formats generated:")
-        for file_desc in additional_files:
-            click.echo("  - " + file_desc)
+{f'''
+---
 
-    # Summary
-    click.echo("\nAll files saved to: " + str(output_dir))
+## Mechanical Diff ({diff_style.title()} Style)
 
+```diff
+{mechanical_diff}
+```
+''' if diff and mechanical_diff else ""}
 
-# ------------------------------------------------------------------ #
-# spl3 mermaid2spl                                                    #
-# ------------------------------------------------------------------ #
+---
 
-@main.command("mermaid2spl")
-@click.argument("mermaid_file")
-@click.option("--output", "-o", default=None, metavar="FILE",
-              help="Write generated SPL to FILE.")
-@click.option("--validate/--no-validate", default=True, show_default=True,
-              help="Validate generated SPL syntax.")
-@click.option("--template", default="workflow", show_default=True,
-              type=click.Choice(["workflow", "function"]),
-              help="Base SPL template type.")
-@click.option("--pattern-hints", default=None, metavar="HINTS",
-              help="Comma-separated hints for SPL patterns (e.g., 'linear,parallel').")
-def cmd_mermaid2spl(mermaid_file, output, validate, template, pattern_hints):
-    """Generate SPL workflow from Mermaid flowchart diagram.
+*Generated by SPL semantic comparison tool*
+"""
 
-    Converts a Mermaid flowchart into executable SPL code, mapping visual
-    elements to SPL constructs like GENERATE, EVALUATE, WHILE, and CALL PARALLEL.
-
-    \b
-    Examples:
-      spl3 mermaid2spl workflow.mmd -o workflow.spl
-      spl3 mermaid2spl diagram.mmd --template function --validate
-      spl3 mermaid2spl review.mmd --pattern-hints "iterative,quality-gate"
-    """
-    import re as _re
-
-    # Read Mermaid file
-    if not Path(mermaid_file).exists():
-        raise click.ClickException(f"Mermaid file not found: {mermaid_file}")
-
-    mermaid_content = Path(mermaid_file).read_text(encoding="utf-8")
-
-    # Basic Mermaid parsing - extract nodes and connections
-    nodes = {}
-    edges = []
-
-    # Parse flowchart nodes: A[Label] or A{Decision} or A(Process)
-    node_pattern = r'(\w+)(?:\[(.*?)\]|\{(.*?)\}|\((.*?)\))'
-    for match in _re.finditer(node_pattern, mermaid_content):
-        node_id = match.group(1)
-        label = match.group(2) or match.group(3) or match.group(4) or node_id
-
-        # Determine node type from syntax
-        if match.group(3):  # {label} = decision
-            node_type = "decision"
-        elif any(keyword in label.lower() for keyword in ["start", "begin"]):
-            node_type = "start"
-        elif any(keyword in label.lower() for keyword in ["end", "finish", "return"]):
-            node_type = "end"
-        else:
-            node_type = "process"
-
-        nodes[node_id] = {"label": label, "type": node_type}
-
-    # Parse edges: A --> B or A -->|label| B
-    edge_pattern = r'(\w+)\s*(?:-->|->)\s*(?:\|([^|]*)\|\s*)?(\w+)'
-    for match in _re.finditer(edge_pattern, mermaid_content):
-        from_node = match.group(1)
-        edge_label = match.group(2)
-        to_node = match.group(3)
-        edges.append({"from": from_node, "to": to_node, "label": edge_label})
-
-    # Generate SPL based on structure
-    workflow_name = Path(mermaid_file).stem.replace("-", "_")
-
-    # Detect patterns
-    has_loops = any(
-        any(e2["from"] == edge["to"] and e2["to"] == edge["from"] for e2 in edges)
-        for edge in edges
-    )
-
-    has_decisions = any(node["type"] == "decision" for node in nodes.values())
-    has_parallel = len([n for n in nodes.values() if n["type"] == "process"]) > 3
-
-    # Build SPL
-    spl_lines = []
-
-    if template == "workflow":
-        spl_lines.extend([
-            f"WORKFLOW {workflow_name}",
-            "  INPUT @input TEXT",
-            "  OUTPUT @result TEXT",
-            "DO"
-        ])
-
-        # Add variables
-        for node_id, node in nodes.items():
-            if node["type"] == "process":
-                var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                spl_lines.append(f"  @{var_name} := '';")
-
-        # Add main logic
-        process_nodes = [n for n in nodes.values() if n["type"] == "process"]
-        decision_nodes = [n for n in nodes.values() if n["type"] == "decision"]
-
-        if has_loops and decision_nodes:
-            # Iterative pattern
-            spl_lines.extend([
-                "  @iteration := 0;",
-                "  @max_iterations := 3;",
-                "",
-                "  WHILE @iteration < @max_iterations DO",
-                "    DO"
-            ])
-
-            for node in process_nodes[:2]:  # Main processes
-                var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
-                # Avoid reserved keywords
-                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
-                    func_name = f"process_{func_name}"
-                spl_lines.append(f"      GENERATE {func_name}(@input) INTO @{var_name};")
-
-            # Add decision logic
-            if decision_nodes:
-                decision = decision_nodes[0]
-                spl_lines.extend([
-                    f"      EVALUATE @{var_name}",
-                    f"        WHEN contains('complete') THEN",
-                    f"          RETURN @{var_name} WITH status = 'complete';",
-                    f"        ELSE",
-                    f"          @iteration := @iteration + 1;",
-                    "      END;"
-                ])
-
-            spl_lines.extend([
-                "    END;",
-                "  END;",
-            ])
-
-        elif has_decisions:
-            # Conditional pattern
-            for node in process_nodes:
-                var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
-                # Avoid reserved keywords
-                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
-                    func_name = f"process_{func_name}"
-                spl_lines.append(f"  GENERATE {func_name}(@input) INTO @{var_name};")
-
-            if decision_nodes:
-                decision = decision_nodes[0]
-                spl_lines.extend([
-                    f"  EVALUATE @{var_name}",
-                    f"    WHEN contains('condition') THEN",
-                    f"      @result := 'path_a';",
-                    f"    ELSE",
-                    f"      @result := 'path_b';",
-                    "  END;"
-                ])
-
-        elif has_parallel:
-            # Parallel pattern
-            spl_lines.append("  CALL PARALLEL")
-            for i, node in enumerate(process_nodes[:3]):  # Limit to 3 parallel
-                var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
-                # Avoid reserved keywords
-                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
-                    func_name = f"process_{func_name}"
-                comma = "," if i < min(2, len(process_nodes) - 1) else ""
-                spl_lines.append(f"    {func_name}(@input) INTO @{var_name}{comma}")
-            spl_lines.append("  END")
-
-        else:
-            # Linear pattern
-            for node in process_nodes:
-                var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                func_name = _re.sub(r'\W+', '_', node["label"].lower()).strip('_')
-                # Avoid reserved keywords
-                if func_name in ['input', 'output', 'result', 'return', 'end', 'do', 'while', 'evaluate', 'when', 'then', 'else']:
-                    func_name = f"process_{func_name}"
-                spl_lines.append(f"  GENERATE {func_name}(@input) INTO @{var_name};")
-
-        spl_lines.extend([
-            "  RETURN @result;",
-            "END;"
-        ])
-
-    else:  # function template
-        func_name = workflow_name
-        spl_lines.extend([
-            f"CREATE FUNCTION {func_name}(input TEXT) RETURNS TEXT AS $$",
-            f"Process the input through {workflow_name} workflow.",
-            "$$;"
-        ])
-
-    spl_code = "\n".join(spl_lines)
-
-    # Basic validation
-    if validate:
-        try:
-            # Simple syntax check
-            if not any(keyword in spl_code for keyword in ["WORKFLOW", "CREATE FUNCTION"]):
-                click.echo("Warning: Generated code may not be valid SPL", err=True)
-        except Exception as e:
-            click.echo(f"Validation warning: {e}", err=True)
-
-    # Output
+    # Output results
     if output:
-        Path(output).write_text(spl_code, encoding="utf-8")
-        click.echo(f"SPL code written to: {output}")
-
-        # Also generate .mmd file for reference
-        mmd_output = Path(output).with_suffix('.mmd')
-        mmd_output.write_text(mermaid_content, encoding="utf-8")
-        click.echo(f"Mermaid reference saved to: {mmd_output}")
+        output_path = Path(output)
+        output_path.write_text(output_content, encoding="utf-8")
+        click.echo(f"Comparison report written to: {output_path}")
     else:
-        click.echo(spl_code)
+        click.echo(output_content)
 
 
 # ------------------------------------------------------------------ #
