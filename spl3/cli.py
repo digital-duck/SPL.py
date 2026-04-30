@@ -777,7 +777,9 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
         valid, message = Text2SPL.validate_output(spl_code)
         if not valid:
             if output:
-                Path(output).write_text(spl_code, encoding="utf-8")
+                out_path = Path(output)
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(spl_code, encoding="utf-8")
                 click.echo(f"Written to {output} (with validation errors — review and fix)")
             else:
                 click.echo(spl_code)
@@ -785,7 +787,9 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
             raise SystemExit(1)
 
     if output:
-        Path(output).write_text(spl_code, encoding="utf-8")
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(spl_code, encoding="utf-8")
         click.echo(f"Written to {output}")
     else:
         click.echo(spl_code)
@@ -1063,10 +1067,10 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
             click.echo("Note: These may cause rendering issues in browsers", err=True)
 
     # Main .mmd output
-    Path(output).write_text(mermaid_text, encoding="utf-8")
-    click.echo("Mermaid diagram written to: " + str(output))
-
     output_path = Path(output)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(mermaid_text, encoding="utf-8")
+    click.echo("Mermaid diagram written to: " + str(output))
     base_name = output_path.stem
     output_dir = output_path.parent
 
@@ -1448,11 +1452,13 @@ def cmd_mmd2spl(mermaid_file, output, validate, template, pattern_hints):
 
     # Output
     if output:
-        Path(output).write_text(spl_code, encoding="utf-8")
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(spl_code, encoding="utf-8")
         click.echo(f"SPL code written to: {output}")
 
         # Also generate .mmd file for reference
-        mmd_output = Path(output).with_suffix('.mmd')
+        mmd_output = out_path.with_suffix('.mmd')
         mmd_output.write_text(mermaid_content, encoding="utf-8")
         click.echo(f"Mermaid reference saved to: {mmd_output}")
     else:
