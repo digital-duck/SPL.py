@@ -1,0 +1,74 @@
+CREATE FUNCTION decide_action(query TEXT, current_context TEXT) RETURNS TEXT AS $$
+  You are a research agent. Your goal is to gather enough information to answer the user''s query.
+  Analyze the current query and the accumulated context.
+  Decide if you have enough information to provide a definitive answer, or if you need to perform more searches.
+  Your output MUST be in YAML format with two fields: ''thinking'' (a string describing your thought process) and ''action'' (either ''search'' or ''answer'').
+
+  Query: {query}
+  Current Context: {current_context}
+
+  Example for ''search'':
+  ```yaml
+  thinking: "The current context is insufficient. I need to perform a web search to gather more details."
+  action: search
+  ```
+
+  Example for ''answer'':
+  ```yaml
+  thinking: "I have gathered sufficient information in the context to formulate a comprehensive answer."
+  action: answer
+  ```
+$$;
+
+CREATE FUNCTION simulate_web_search(search_query TEXT) RETURNS TEXT AS $$
+  Simulate a web search for the given query. Provide some relevant, concise information.
+
+  Search Query: {search_query}
+
+  Simulated Search Result:
+  - According to a quick search, {search_query} is a broad topic.
+  - Initial findings suggest: [brief relevant fact 1]
+  - Further investigation indicates: [brief relevant fact 2]
+$$;
+
+CREATE FUNCTION synthesize_answer(original_query TEXT, final_context TEXT) RETURNS TEXT AS $$
+  Synthesize a comprehensive answer to the original query based on the provided final context.
+  Ensure the answer is well-structured and directly addresses the query using the available information.
+
+  Original Query: {original_query}
+  Final Context: {final_context}
+
+  Answer:
+$$;
+
+WORKFLOW research_agent
+  INPUT @initial_query TEXT, @max_iterations INTEGER := 3
+  OUTPUT @answer TEXT
+DO
+  @context := '';
+  @iteration := 0;
+
+  WHILE @iteration < @max_iterations DO
+    GENERATE decide_action(@initial_query, @context) INTO @decision_yaml;
+
+    EVALUATE @decision_yaml
+      WHEN contains('action: answer') THEN
+        GENERATE synthesize_answer(@initial_query, @context) INTO @answer;
+        RETURN @answer WITH status = 'complete', iterations = @iteration;
+      ELSE -- action: search
+        @iteration := @iteration + 1;
+        -- Simulate web search to gather more information
+        GENERATE simulate_web_search(@initial_query) INTO @search_results;
+        @context := @context + "\n\n" + @search_results;
+    END;
+  END;
+
+  -- If max_iterations reached without a definitive answer, synthesize with available context
+  GENERATE synthesize_answer(@initial_query, @context) INTO @answer;
+  RETURN @answer WITH status = 'max_iterations_reached', iterations = @iteration;
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    RETURN @answer WITH status = 'budget_limit';
+  WHEN ModelOverloaded THEN
+    RETRY;
+END;

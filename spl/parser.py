@@ -1303,7 +1303,7 @@ class Parser:
         return StoreStatement(variable=var_name, key=key)
 
     def _parse_assignment_statement(self):
-        """Parse @var := expr  OR  @var['key'] := expr (storage write)."""
+        """Parse @var := expr  OR  @var TYPE := expr  OR  @var['key'] := expr (storage write)."""
         self._expect(TokenType.AT)
         var_name = self._expect_identifier_or_keyword().value
 
@@ -1317,6 +1317,13 @@ class Parser:
             return StorageAssignStatement(
                 storage_var=var_name, key=key_expr, value=value_expr
             )
+
+        # Optional inline type annotation: @var TYPE := expr
+        # LLMs frequently generate this form; consume the type token and ignore it.
+        if (self._check(TokenType.IDENTIFIER)
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].type == TokenType.ASSIGN):
+            self._advance()  # consume type annotation (e.g. TEXT, INTEGER)
 
         self._expect(TokenType.ASSIGN)
         expression = self._parse_expression()

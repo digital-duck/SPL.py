@@ -144,5 +144,9 @@ class ClaudeCLIAdapter(LLMAdapter):
         return max(1, len(text) // 4)
 
     def list_models(self) -> list[str]:
-        """Return the default model; any Claude model ID can be passed to generate()."""
-        return [self.default_model]
+        """Return available Claude models supported by the CLI."""
+        return [
+            "claude-haiku-4-5-20251001",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6",
+        ]

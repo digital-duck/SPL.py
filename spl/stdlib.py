@@ -22,6 +22,7 @@ Categories
   Hashing           : md5_hash, sha256_hash
   List / split      : list_get, list_length, list_join, list_contains, trim_turns
   File I/O          : write_file, read_file, file_exists, make_dir, path_join
+  Agentic / Network : web_search, http_get, run_python
 
 All tools accept and return strings (SPL's universal scalar type).
 Numeric tools accept numeric strings and return numeric strings so they
@@ -562,3 +563,114 @@ def path_join(*parts: str) -> str:
     Returns the joined path as a string.
     """
     return str(pathlib.Path(*[str(p).strip() for p in parts]))
+
+
+# ── Agentic / Network Tools ───────────────────────────────────────────────────
+
+@spl_tool(name="web_search")
+def web_search(query: str) -> str:
+    """WEB_SEARCH(query) — search the web via DuckDuckGo, return top-5 results.
+
+    Accepts a plain query string or a YAML/prefixed decision block:
+        'search: what is quantum computing'   → extracts the query after 'search:'
+        'search_query: ...'                   → extracts the search_query field
+
+    Usage in SPL:
+        CALL web_search(@query) INTO @results;
+        CALL web_search(@decision) INTO @results;
+
+    Requires: pip install ddgs   (or pip install duckduckgo_search)
+    """
+    import warnings
+
+    try:
+        from ddgs import DDGS
+    except ImportError:
+        try:
+            from duckduckgo_search import DDGS
+        except ImportError:
+            return "web_search unavailable: install ddgs (pip install ddgs)"
+
+    q = str(query).strip()
+
+    # Extract query from YAML/prefixed decision block if present
+    m = re.search(r'search_query\s*:\s*["\']?([^"\'\n]+)["\']?', q)
+    if not m:
+        m = re.search(r'^search\s*:\s*(.+)$', q, re.MULTILINE | re.IGNORECASE)
+    if not m:
+        m = re.search(r'(?<!\w)query\s*:\s*["\']?([^"\'\n]+)["\']?', q)
+    if m:
+        q = m.group(1).strip()
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            results = DDGS().text(q, max_results=5)
+        if not results:
+            return f"No results found for: {q}"
+        lines = []
+        for i, r in enumerate(results, 1):
+            title = r.get("title", "")
+            url   = r.get("href", "")
+            body  = r.get("body", "")
+            lines.append(f"[{i}] {title}\n    URL: {url}\n    {body}")
+        return "\n\n".join(lines)
+    except Exception as e:
+        return f"Search error: {e}"
+
+
+@spl_tool(name="http_get")
+def http_get(url: str, timeout: str = "10") -> str:
+    """HTTP_GET(url [, timeout]) — fetch a URL and return response body as text.
+
+    Returns the HTTP response body on success, or an error message on failure.
+    Timeout is in seconds (default 10).
+
+    Usage in SPL:
+        CALL http_get(@url) INTO @html;
+        CALL http_get(@url, '30') INTO @response;
+
+    Requires: pip install requests
+    """
+    try:
+        import requests
+    except ImportError:
+        return "http_get unavailable: install requests (pip install requests)"
+
+    try:
+        resp = requests.get(str(url).strip(), timeout=float(timeout))
+        resp.raise_for_status()
+        return resp.text
+    except Exception as e:
+        return f"HTTP error: {e}"
+
+
+@spl_tool(name="run_python")
+def run_python(code: str, timeout: str = "30") -> str:
+    """RUN_PYTHON(code [, timeout]) — execute Python code in a subprocess.
+
+    Returns stdout on success, or stderr on failure.
+    Timeout is in seconds (default 30).
+
+    Usage in SPL:
+        CALL run_python(@code_snippet) INTO @output;
+
+    Security note: executes arbitrary code — use only with trusted input.
+    """
+    import subprocess
+    import sys
+
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", str(code)],
+            capture_output=True,
+            text=True,
+            timeout=float(timeout),
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+        return f"Error (exit {result.returncode}):\n{result.stderr.strip()}"
+    except subprocess.TimeoutExpired:
+        return f"run_python timed out after {timeout}s"
+    except Exception as e:
+        return f"run_python error: {e}"

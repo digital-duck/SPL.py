@@ -81,12 +81,25 @@ SPL synthesizes three programming paradigms:
 ## CLI Reference
 
 ```bash
-spl3 run   <file.spl> [--adapter NAME] [--model MODEL] [--param KEY=VALUE ...]
-spl3 validate  <file.spl>
-spl3 explain   <file.spl>
-spl3 text2spl  "natural language description" [--mode prompt|workflow|auto]
+spl3 run      <file.spl> [--adapter NAME] [--model MODEL] [--param KEY=VALUE ...]
+spl3 validate <file.spl>
+spl3 explain  <file.spl>
+
+# Natural language → workflow pipeline
+spl3 text2spl  "natural language description" [--mode prompt|workflow|auto] [-o FILE]
+spl3 text2mmd  "description" [--adapter NAME] [-m MODEL] [-o FILE]   # → Mermaid diagram
+spl3 mmd2spl   <file.mmd>   [--adapter NAME] [-m MODEL] [-o FILE]   # → SPL workflow
+
+# Introspection
+spl3 show --adapter                        # list all adapters
+spl3 show --adapter <name> --model         # list models for an adapter
+spl3 show --tool                           # list all 64 stdlib tools by category
+spl3 show --tool <name>                    # show tool detail (usage, args, deps)
+
+# Code intelligence
 spl3 code-rag  seed <dir> --catalog <catalog.json>
 spl3 code-rag  query "judge-retry loop"
+
 spl3 --hub http://localhost:8080 run <file.spl>       # Hub-backed registry
 spl3 --hub http://localhost:8080 register <dir/>       # register workflows on Hub
 ```
@@ -132,6 +145,7 @@ spl/              SPL 2.0 runtime (lexer, parser, executor, 14 adapters)
   ir.py             JSON AST serialization
   text2spl.py       natural language → SPL compiler
   adapters/         LLM backend plugins
+  stdlib.py         64 built-in tools (web_search, http_get, run_python, file I/O, string, JSON, …)
   storage/          SQLite memory + vector store (RAG)
 
 spl3/             SPL 3.0 extension layer (inherits from spl/)
@@ -207,6 +221,7 @@ Future major versions (`spl4/`, `spl5/`, ...) will be prototyped in SPL30 and ad
 | **1.0** | SQL-like statements (`SELECT`, `GENERATE`); lexer, parser, executor foundation |
 | **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
 | **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
+| **3.1** | Visual Workflow Programming (`text2mmd`, `mmd2spl`); stdlib agentic tools (`web_search`, `http_get`, `run_python`); `spl3 show --tool` introspection; inline type annotations in assignments (`@var TYPE := expr`) |
 
 ## License
 

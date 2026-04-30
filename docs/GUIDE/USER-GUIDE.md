@@ -298,37 +298,46 @@ spl3 text2mermaid "research methodology" --adapter claude_cli --style sequence
 
 ---
 
-## 8. spl3 mermaid2spl
+## 8. spl3 mmd2spl
 
-Converts Mermaid flowchart diagrams into executable SPL workflow code, mapping visual elements to SPL constructs.
+Converts a Mermaid flowchart diagram into executable SPL workflow code using an LLM,
+mapping visual elements to the appropriate SPL constructs.
 
 ```bash
-spl3 mermaid2spl <file.mmd> [OPTIONS]
+spl3 mmd2spl <file.mmd> [OPTIONS]
 ```
 
 | Option | Default | Description |
 |--------|---------|-------------|
+| `--adapter` | `ollama` | LLM adapter to use |
+| `-m, --model` | — | Model override for the adapter |
 | `--output`, `-o` | stdout | Write SPL to FILE |
 | `--validate / --no-validate` | validate | Validate generated SPL syntax |
 | `--template` | `workflow` | Template type: `workflow`, `function` |
-| `--pattern-hints` | — | Comma-separated pattern hints for mapping |
+| `--pattern-hints` | — | Comma-separated hints (e.g. `react,self_refine`) |
 
 ```bash
-# Basic conversion
-spl3 mermaid2spl workflow.mmd -o workflow.spl
+# Basic conversion (uses ollama by default)
+spl3 mmd2spl workflow.mmd -o workflow.spl
 
-# Use function template with validation
-spl3 mermaid2spl diagram.mmd --template function --validate -o functions.spl
+# Use a specific adapter and model
+spl3 mmd2spl diagram.mmd --adapter claude_cli --model claude-sonnet-4-6 -o agent.spl
+spl3 mmd2spl diagram.mmd --adapter gemini_cli --model gemini-3-flash-preview -o agent.spl
 
-# Provide pattern hints for better mapping
-spl3 mermaid2spl complex.mmd --pattern-hints "iterative,parallel" -o complex.spl
+# Provide pattern hints for better SPL output
+spl3 mmd2spl complex.mmd --pattern-hints "react,self_refine" -o complex.spl
 ```
 
-**Pattern Recognition:** The command automatically detects workflow patterns from the visual structure:
-- **Process nodes** → `GENERATE` statements
-- **Decision nodes** → `EVALUATE` blocks
-- **Loops** → `WHILE` constructs
-- **Parallel branches** → `CALL PARALLEL`
+**Node-to-SPL mapping** (LLM-driven, not rule-based):
+- **Process boxes** `[...]` → `GENERATE` or `CALL` statements
+- **Decision diamonds** `{...}` → `EVALUATE ... WHEN ... ELSE ... END`
+- **Loops** (back-edges) → `WHILE ... DO ... END` with `RETURN` for early exit
+- **Parallel branches** → `CALL PARALLEL ... END`
+
+**Note:** Generated SPL is validated automatically. If validation fails, the file is still
+written so you can review and fix manually. Common LLM mistakes (`//` comments, `BREAK`,
+`STRING` type) are pre-empted by the prompt; the parser also accepts optional inline type
+annotations (`@var TEXT := value`) that LLMs frequently generate.
 
 ---
 
@@ -340,13 +349,13 @@ The **text2mermaid2spl pipeline** creates a human-in-the-loop workflow design pr
 
 ```bash
 # Step 1: Natural language → Visual diagram
-spl3 text2mermaid "complex research workflow with quality gates" -o research.mmd
+spl3 text2mmd "complex research workflow with quality gates" -o research.mmd
 
 # Step 2: Human reviews and edits research.mmd visually
 # [Edit Mermaid diagram to match exact intent]
 
 # Step 3: Visual diagram → Executable SPL
-spl3 mermaid2spl research.mmd -o research.spl
+spl3 mmd2spl research.mmd --adapter claude_cli -o research.spl
 
 # Step 4: Validate and execute
 spl3 validate research.spl
@@ -606,6 +615,65 @@ done
 
 ---
 
+## 13. Standard Library Tools
+
+SPL ships with a built-in tool library (`spl.stdlib`) that is automatically loaded at
+startup — no `--tools` flag or per-recipe `tools.py` required. Tools are invoked from
+SPL via `CALL`:
+
+```spl
+CALL web_search(@query) INTO @results;
+CALL http_get(@url) INTO @html;
+CALL run_python(@code) INTO @output;
+CALL read_file(@path) INTO @content;
+CALL write_file(@path, @content) INTO @saved_path;
+```
+
+### Discovering tools
+
+```bash
+spl3 show --tool                  # list all stdlib tools by category
+spl3 show --tool web_search       # show full docstring for a specific tool
+```
+
+### Tool categories
+
+| Category | Tools |
+|----------|-------|
+| **Agentic / Network** | `web_search`, `http_get`, `run_python` |
+| **File I/O** | `read_file`, `write_file`, `file_exists`, `make_dir`, `path_join` |
+| **String** | `upper`, `lower`, `trim`, `replace`, `concat`, `substr`, `split_part`, … |
+| **Pattern matching** | `contains`, `startswith`, `endswith`, `like`, `regexp_match` |
+| **JSON** | `json_get`, `json_set`, `json_keys`, `json_pretty` |
+| **Numeric** | `abs_val`, `round_val`, `ceil_val`, `floor_val`, `clamp`, … |
+| **Type conversion** | `to_int`, `to_float`, `to_text`, `to_bool` |
+| **Date / time** | `now_iso`, `date_format_val`, `date_diff_days` |
+| **List / array** | `list_get`, `list_length`, `list_join`, `list_contains`, `trim_turns` |
+| **Conditional** | `coalesce`, `nullif`, `iif` |
+| **Hashing** | `md5_hash`, `sha256_hash` |
+
+Run `spl3 show --tool` to see all 64 tools with one-line descriptions.
+
+### Agentic tools detail
+
+**`web_search`** — DuckDuckGo search, returns top-5 results. Accepts a plain query string
+or a YAML/prefixed decision block (`search: <query>`, `search_query: <query>`).
+Requires: `pip install ddgs`
+
+**`http_get`** — HTTP GET a URL, returns response body as text.
+Requires: `pip install requests`
+
+**`run_python`** — Execute a Python code string in a subprocess, returns stdout.
+Timeout defaults to 30 s.
+
+### Override pattern
+
+If a recipe needs custom tool behaviour, place a local `tools.py` in the working
+directory using the same `@spl_tool(name="web_search")` decorator — it shadows the
+stdlib version for that run only.
+
+---
+
 ## 14. Command reference
 
 ```
@@ -614,10 +682,10 @@ spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR] [--to
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--spec-dir DIR]
 spl3 text2spl "<description>" [--adapter] [-m model] [--mode auto|prompt|workflow]
                                [--validate|--no-validate] [-o FILE]
-spl3 text2mermaid "<description>" [--adapter] [-m model] [--style flowchart|graph|sequence]
-                                  [--validate|--no-validate] [-o FILE] [--preview]
-spl3 mermaid2spl <file.mmd> [--template workflow|function] [--validate|--no-validate]
-                            [-o FILE] [--pattern-hints HINTS]
+spl3 text2mmd "<description>" [--adapter] [-m model] [--style flowchart|graph|sequence]
+                               [--validate|--no-validate] [-o FILE] [--preview] [--out-dir DIR]
+spl3 mmd2spl <file.mmd> [--adapter] [-m model] [--template workflow|function]
+                         [--validate|--no-validate] [-o FILE] [--pattern-hints HINTS]
 spl3 explain <file.spl>
 
 spl3 splc compile <file.spl> --lang <target>
@@ -630,6 +698,11 @@ spl3 code-rag seed [cookbook/] [--catalog FILE] [--from-specs]
 spl3 code-rag describe-all [cookbook/] [--adapter] [--model]
 spl3 code-rag query "<text>"
 spl3 code-rag stats
+
+spl3 show --adapter                        # list all adapters
+spl3 show --adapter <name> --model         # list models for an adapter
+spl3 show --tool                           # list all stdlib tools by category
+spl3 show --tool <name>                    # show tool docstring
 
 spl3 registry list
 spl3 register <file.spl | dir/>

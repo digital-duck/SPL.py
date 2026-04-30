@@ -3,9 +3,10 @@
 Provider resolution order:
   1. dd-llm bridge  — preferred for providers dd-llm supports natively
                       (anthropic, openai, ollama, openrouter, claude_cli, google)
-  2. Bespoke adapters — fallback when dd-llm is not installed, or for providers
-                        dd-llm does not cover (echo, momagrid, deepseek, qwen,
-                        bedrock, vertex, azure_openai)
+  2. Bespoke adapters — registered after dd-llm to fill gaps for providers
+                        dd-llm does not cover (gemini_cli, echo, momagrid,
+                        deepseek, qwen, bedrock, vertex, azure_openai).
+                        Also serves as full fallback when dd-llm is not installed.
 """
 
 import inspect
@@ -17,13 +18,14 @@ _log = logging.getLogger("spl.adapters")
 _ADAPTER_REGISTRY: dict[str, type[LLMAdapter]] = {}
 
 # Providers handled by dd-llm; "google" maps to dd-llm's "gemini" backend.
+# gemini_cli is NOT listed here — dd-llm has no gemini_cli adapter.
+# It is registered via the bespoke GeminiCLIAdapter instead.
 _DD_LLM_PROVIDERS: dict[str, str] = {
     "anthropic":  "anthropic",
     "openai":     "openai",
     "ollama":     "ollama",
     "openrouter": "openrouter",
     "claude_cli": "claude_cli",
-    "gemini_cli": "gemini_cli",
     "google":     "gemini",
 }
 
@@ -106,9 +108,12 @@ def _register_builtin_adapters():
         except (ImportError, AttributeError):
             pass
 
-    # ── Prefer dd-llm bridge; fall back to bespoke implementations ────────
-    if not _register_dd_llm_adapters():
-        _register_bespoke_adapters()
+    # ── dd-llm bridge for supported providers; bespoke fills remaining gaps ──
+    # Always register bespoke after dd-llm: the `if name in _ADAPTER_REGISTRY`
+    # guard in _register_bespoke_adapters ensures dd-llm takes precedence for
+    # shared names, while CLI-only adapters (gemini_cli) are registered here.
+    _register_dd_llm_adapters()
+    _register_bespoke_adapters()
 
 
 _register_builtin_adapters()

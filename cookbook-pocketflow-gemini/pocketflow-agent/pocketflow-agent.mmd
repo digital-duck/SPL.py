@@ -1,0 +1,9 @@
+flowchart TD
+    Start[Start] --> DecideAction[DecideAction Prompt]
+    DecideAction --> ActionChoice{{action?}}
+    ActionChoice -->|search| SearchTool[Web Search Tool]
+    SearchTool --> UpdateContext[Update @context]
+    UpdateContext --> DecideAction
+    ActionChoice -->|answer| AnswerSynthesis[AnswerQuestion Prompt]
+    AnswerSynthesis --> ReturnAnswer[Return @answer]
+    ReturnAnswer --> End[End]
