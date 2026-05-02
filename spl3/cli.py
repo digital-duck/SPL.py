@@ -1982,6 +1982,157 @@ SEMANTIC ANALYSIS
 
 
 # ------------------------------------------------------------------ #
+# spl3 show                                                           #
+# ------------------------------------------------------------------ #
+
+@main.command("show")
+@click.option("--adapter", is_flag=False, flag_value="__list_all__", default=None,
+              help="List all adapters (no value) or specify adapter name")
+@click.option("--model", is_flag=True, default=False,
+              help="List available models (requires --adapter <name>)")
+@click.option("--tool", is_flag=False, flag_value="__list_all__", default=None,
+              metavar="NAME",
+              help="List all stdlib tools (no value) or show detail for a specific tool")
+def cmd_show(adapter, model, tool):
+    """List available adapters, models, and stdlib tools.
+
+    \b
+    Examples:
+      spl3 show --adapter                     # List all available adapters
+      spl3 show --adapter ollama --model      # List models for ollama adapter
+      spl3 show --adapter claude_cli --model  # List models for claude_cli adapter
+      spl3 show --tool                        # List all stdlib tools
+      spl3 show --tool web_search             # Show detail for a specific tool
+    """
+    from spl3.adapters import list_adapters, get_adapter
+
+    # Case 1: --adapter used as flag (list all adapters)
+    if adapter == "__list_all__":
+        if model:
+            raise click.ClickException("Cannot use --model when listing all adapters")
+
+        adapter_list = list_adapters()
+        if not adapter_list:
+            click.echo("No adapters available")
+            return
+
+        click.echo("Available adapters:")
+        for adapter_name in adapter_list:
+            click.echo(f"  {adapter_name}")
+
+        click.echo(f"\nTotal: {len(adapter_list)} adapter(s)")
+        click.echo("Use 'spl3 show --adapter <name> --model' to list models for a specific adapter")
+        return
+
+    # Case 2: --adapter has value and --model is used
+    if adapter and adapter != "__list_all__" and model:
+        adapter_list = list_adapters()
+        if adapter not in adapter_list:
+            available = ", ".join(sorted(adapter_list)) if adapter_list else "(none)"
+            raise click.ClickException(f"Unknown adapter '{adapter}'. Available: {available}")
+
+        try:
+            adapter_instance = get_adapter(adapter)
+            model_list = sorted(adapter_instance.list_models())
+
+            if not model_list:
+                click.echo(f"No models available for adapter '{adapter}'")
+                return
+
+            click.echo(f"Available models for '{adapter}':")
+            for model_name in model_list:
+                click.echo(f"  {model_name}")
+
+            click.echo(f"\nTotal: {len(model_list)} model(s)")
+
+        except Exception as e:
+            raise click.ClickException(f"Failed to list models for adapter '{adapter}': {e}")
+        return
+
+    # Case 3: Invalid combinations
+    if model and not adapter:
+        raise click.ClickException("--model flag requires --adapter <name> to specify which adapter to query")
+
+    if adapter and not model:
+        raise click.ClickException(f"Use --model to list models for adapter '{adapter}', or use --adapter alone to list all adapters")
+
+    # Case: --tool
+    if tool is not None:
+        from spl.tools import get_global_tools
+
+        # Category order and membership — matches stdlib.py section comments
+        _CATEGORIES = [
+            ("Type conversion",   ["to_int", "to_float", "to_text", "to_bool"]),
+            ("String",            ["upper", "lower", "trim", "ltrim", "rtrim", "length",
+                                   "len_val", "substr", "replace", "concat", "instr",
+                                   "lpad", "rpad", "split_part", "reverse"]),
+            ("Pattern matching",  ["like", "startswith", "endswith", "contains", "regexp_match"]),
+            ("Numeric",           ["abs_val", "round_val", "ceil_val", "floor_val",
+                                   "mod_val", "power_val", "sqrt_val", "sign_val", "clamp"]),
+            ("Conditional",       ["coalesce", "nullif", "iif"]),
+            ("Null / empty",      ["isnull", "nvl", "isblank"]),
+            ("Text aggregates",   ["word_count", "char_count", "line_count"]),
+            ("JSON",              ["json_get", "json_set", "json_keys", "json_pretty",
+                                   "json_length"]),
+            ("Date / time",       ["now_iso", "date_format_val", "date_diff_days"]),
+            ("Hashing",           ["md5_hash", "sha256_hash"]),
+            ("List / array",      ["list_get", "list_length", "list_join", "list_contains",
+                                   "trim_turns"]),
+            ("File I/O",          ["write_file", "read_file", "file_exists", "make_dir",
+                                   "path_join"]),
+            ("Agentic / Network", ["web_search", "http_get", "run_python"]),
+        ]
+
+        all_tools = get_global_tools()
+
+        if tool == "__list_all__":
+            # Assign each tool to its category; uncategorised tools go last
+            categorised = {name for names in _CATEGORIES for name in names[1]}
+            uncategorised = sorted(k for k in all_tools if k not in categorised)
+
+            total = 0
+            for cat_name, cat_tools in _CATEGORIES:
+                present = [t for t in cat_tools if t in all_tools]
+                if not present:
+                    continue
+                click.echo(f"\n{cat_name}:")
+                for name in present:
+                    fn = all_tools[name]
+                    doc = (fn.__doc__ or "").strip().splitlines()[0]
+                    click.echo(f"  {name:<22}  {doc}")
+                    total += 1
+
+            if uncategorised:
+                click.echo("\nOther:")
+                for name in uncategorised:
+                    fn = all_tools[name]
+                    doc = (fn.__doc__ or "").strip().splitlines()[0]
+                    click.echo(f"  {name:<22}  {doc}")
+                    total += 1
+
+            click.echo(f"\nTotal: {total} tool(s)  — use 'spl3 show --tool <name>' for detail")
+            return
+
+        # --tool <name>: show full docstring
+        if tool not in all_tools:
+            available = ", ".join(sorted(all_tools))
+            raise click.ClickException(
+                f"Unknown tool '{tool}'.\nAvailable: {available}"
+            )
+        fn = all_tools[tool]
+        click.echo(f"Tool: {tool}")
+        click.echo(f"{'─' * (len(tool) + 6)}")
+        click.echo(fn.__doc__ or "(no docstring)")
+        return
+
+    # Case 4: No options provided
+    raise click.ClickException(
+        "Use --adapter to list adapters, --adapter <name> --model to list models, "
+        "or --tool to list stdlib tools"
+    )
+
+
+# ------------------------------------------------------------------ #
 # spl3 splc                                                           #
 # ------------------------------------------------------------------ #
 

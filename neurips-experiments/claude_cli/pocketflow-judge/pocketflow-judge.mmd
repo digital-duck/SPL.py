@@ -1,0 +1,30 @@
+flowchart TD
+    N1(["product_description_refiner\nINPUT: "])
+    N2["GENERATE"]
+    N3{"EVALUATE"}
+    N4{"@attempt_count <= @max_attempts"}
+    N5["generate_description\n→ @current_draft"]
+    N6["judge_description\n→ @evaluation"]
+    N7{{"EVALUATE\n@evaluation"}}
+    N8["contains('VERDICT: PASS')"]
+    N9(["RETURN @result"])
+    N10["ELSE"]
+    N11["HallucinationDetected"]
+    N12["ModelOverloaded"]
+    N13["QualityBelowThreshold"]
+    N14(["RETURN @result"])
+    N1 --> N2
+    N2 --> N3
+    N3 --> N4
+    N4 --> N5
+    N5 --> N6
+    N6 --> N7
+    N7 -->|WHEN| N8
+    N8 --> N9
+    N9 -.->|loop back| N4
+    N8 -->|ELSE| N10
+    N10 -->|WHEN| N11
+    N11 -->|WHEN| N12
+    N12 -->|WHEN| N13
+    N13 --> N14
+    N14 -.->|loop back| N4

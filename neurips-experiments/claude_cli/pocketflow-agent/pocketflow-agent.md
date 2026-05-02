@@ -1,0 +1,42 @@
+```mermaid
+
+flowchart TD
+    N1(["react_research_agent\nINPUT: @question, @max_iterations"])
+    N2(["RETURN @result"])
+    N3{"@iteration < @max_iterations"}
+    N4["decide_action\n→ @decision"]
+    N5["HallucinationDetected"]
+    N6["repair_yaml\n→ @decision"]
+    N7{{"EVALUATE\n@decision"}}
+    N8["contains('action: search')"]
+    N9["fetch_results\n→ @snippets"]
+    N10["contains('action: answer')"]
+    N11["synthesize_answer\n→ @answer"]
+    N12(["RETURN @result"])
+    N13["ELSE"]
+    N14["synthesize_answer\n→ @answer"]
+    N15(["RETURN @result"])
+    N16["BudgetExceeded"]
+    N17["synthesize_answer\n→ @answer"]
+    N18(["RETURN @result"])
+    N1 --> N2
+    N1 --> N3
+    N3 --> N4
+    N4 -->|WHEN| N5
+    N5 --> N6
+    N6 --> N7
+    N7 -->|WHEN| N8
+    N8 --> N9
+    N9 -->|WHEN| N10
+    N10 --> N11
+    N11 --> N12
+    N12 -.->|loop back| N3
+    N11 -->|ELSE| N13
+    N13 --> N14
+    N14 --> N15
+    N15 -.->|loop back| N3
+    N14 -->|WHEN| N16
+    N16 --> N17
+    N17 --> N18
+    N18 -.->|loop back| N3
+```

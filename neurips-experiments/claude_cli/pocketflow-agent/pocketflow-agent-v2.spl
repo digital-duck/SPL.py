@@ -1,0 +1,86 @@
+CREATE FUNCTION decide_action(question TEXT, context TEXT) RETURNS TEXT AS $$
+  You are a research agent. Reason step-by-step about what to do next to fully answer the question.
+
+  Question: {question}
+
+  Accumulated research context:
+  {context}
+
+  Output ONLY a YAML block using exactly one of these two structures:
+
+  thought: <your step-by-step reasoning>
+  action: search
+  query: <specific search query to run>
+
+  OR:
+
+  thought: <your step-by-step reasoning>
+  action: answer
+
+  Choose action: answer only when the context contains sufficient information to respond completely.
+$$;
+
+CREATE FUNCTION repair_yaml(malformed TEXT) RETURNS TEXT AS $$
+  The following text is a malformed YAML block that should contain the keys: thought, action,
+  and optionally query. Rewrite it as strictly valid YAML while preserving the original intent.
+  Return only the corrected YAML block — no prose, no fences.
+
+  Malformed input:
+  {malformed}
+$$;
+
+CREATE FUNCTION search_web(decision TEXT) RETURNS TEXT AS $$
+  Extract the value of the "query" key from the following YAML decision block, then perform
+  a DuckDuckGo web search for that query. Return concise bullet-point summaries of the top
+  3 results, including the source title and one key fact per result.
+
+  Decision YAML:
+  {decision}
+$$;
+
+CREATE FUNCTION synthesize_answer(question TEXT, context TEXT) RETURNS TEXT AS $$
+  Using only the research notes below, write a comprehensive, accurate, and well-structured
+  prose answer to the question. Integrate evidence from the notes naturally and cite key facts.
+
+  Question: {question}
+
+  Research notes:
+  {context}
+$$;
+
+WORKFLOW react_research_agent
+  INPUT @question TEXT, @max_iterations INTEGER := 3
+  OUTPUT @answer TEXT
+DO
+  @context := @question;
+  @iteration := 0;
+
+  WHILE @iteration < @max_iterations DO
+    DO
+      GENERATE decide_action(@question, @context) INTO @decision;
+    EXCEPTION
+      WHEN HallucinationDetected THEN
+        GENERATE repair_yaml(@decision) INTO @decision;
+      WHEN ModelOverloaded THEN
+        RETRY;
+    END;
+
+    EVALUATE @decision
+      WHEN contains('action: answer') THEN
+        GENERATE synthesize_answer(@question, @context) INTO @answer;
+        RETURN @answer WITH status = 'done', iterations = @iteration;
+      ELSE
+        @iteration := @iteration + 1;
+        GENERATE search_web(@decision) INTO @snippets;
+        @context := @context + '\n---\n' + @snippets;
+    END;
+  END;
+
+  GENERATE synthesize_answer(@question, @context) INTO @answer;
+  RETURN @answer WITH status = 'max_iterations', iterations = @iteration;
+
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    GENERATE synthesize_answer(@question, @context) INTO @answer;
+    RETURN @answer WITH status = 'budget_limit';
+END;

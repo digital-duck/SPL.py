@@ -828,7 +828,20 @@ def _lang_label_from_path(path: Path) -> str:
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     help="Output directory for the spec file (default: same directory as IMPL_PATH).",
 )
-def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None) -> None:
+@click.option(
+    "-o", "--output",
+    "output_path",
+    default=None,
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Full output path for the spec file (overrides --spec-dir and auto-generated name).",
+)
+@click.option(
+    "--include-docs",
+    is_flag=True,
+    default=False,
+    help="Also include README.md (if present) to give the LLM original intent context.",
+)
+def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool) -> None:
     """Describe a compiled target implementation as a -spec.md file.
 
     \b
@@ -859,6 +872,13 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
                 f"Expected extensions: {', '.join(_IMPL_EXTENSIONS)}"
             )
         parts = []
+        if include_docs:
+            for name in ("README.md", "readme.md"):
+                readme = impl_path / name
+                if readme.exists():
+                    parts.append(f"# File: {readme.name}\n\n" + readme.read_text(encoding="utf-8"))
+                    click.echo(f"  + {readme.name} (intent context)")
+                    break
         for f in impl_files:
             parts.append(f"# File: {f.name}\n\n" + f.read_text(encoding="utf-8"))
         source = "\n\n".join(parts)
@@ -902,10 +922,19 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
     spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 
-    # Name: <recipe>-splc-<lang_slug>-spec.md
-    lang_slug = detected_label.lower().replace(" — ", "_").replace(" ", "_").replace("/", "_")
-    spec_filename = f"{stem}-splc-{lang_slug}-spec.md"
-    if spec_dir:
+    # Name: <recipe>-<adapter>-<model>-spec.md
+    import re as _re
+    _m = (model or "default").lower()
+    if adapter == "openrouter":
+        _m = _m.split("/", 1)[-1]          # drop provider prefix (google/...)
+        _m = _re.sub(r"(\d)\.(\d)", r"\1\2", _m)   # 3.1 → 31
+        _m = _re.sub(r"-(preview|latest|turbo|instruct|exp)$", "", _m)  # strip trailing tags
+    model_slug = _m.replace(" ", "_").replace("/", "_").replace(":", "-")
+    spec_filename = f"{stem}-{adapter}-{model_slug}-spec.md"
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path = output_path
+    elif spec_dir:
         spec_dir.mkdir(parents=True, exist_ok=True)
         spec_path = spec_dir / spec_filename
     else:

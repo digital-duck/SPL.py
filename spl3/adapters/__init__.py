@@ -35,13 +35,15 @@ from spl.adapters.base import LLMAdapter, GenerationResult  # noqa: F401
 _log = _logging.getLogger("spl.adapters")
 _ADAPTER_REGISTRY: dict[str, type] = {}
 
-# Providers handled natively by dd-llm bridge
+# Providers handled natively by dd-llm bridge.
+# claude_cli is intentionally excluded — SPL's own ClaudeCLIAdapter has a
+# proper list_models() and async subprocess implementation; dd-llm's stub
+# only returns ["claude-cli"] which is not useful.
 _DD_LLM_PROVIDERS: dict[str, str] = {
     "anthropic":  "anthropic",
     "openai":     "openai",
     "ollama":     "ollama",
     "openrouter": "openrouter",
-    "claude_cli": "claude_cli",
     "google":     "gemini",
 }
 
@@ -101,8 +103,11 @@ def _bootstrap() -> None:
             except (ImportError, AttributeError):
                 pass
 
-    # 3. Always-available SPL20 adapters
+    # 3. Always-available SPL20 adapters (these override dd-llm when present)
+    # claude_cli always uses SPL's own adapter — dd-llm's stub list_models() is useless
     for _name, _mod, _cls in [
+        ("claude_cli",   "spl.adapters.claude_cli",   "ClaudeCLIAdapter"),
+        ("gemini_cli",   "spl.adapters.gemini_cli",   "GeminiCLIAdapter"),
         ("echo",         "spl.adapters.echo",         "EchoAdapter"),
         ("deepseek",     "spl.adapters.deepseek",     "DeepSeekAdapter"),
         ("qwen",         "spl.adapters.qwen",         "QwenAdapter"),

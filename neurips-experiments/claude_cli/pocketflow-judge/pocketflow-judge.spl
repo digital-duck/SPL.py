@@ -1,0 +1,77 @@
+CREATE FUNCTION generate_description(task TEXT, feedback TEXT) RETURNS TEXT AS $$
+Generate a compelling product description for the following task.
+
+Task: {task}
+
+Previous feedback to incorporate: {feedback}
+
+Requirements:
+- Create an engaging and persuasive description
+- Highlight key benefits and unique features
+- Use clear, compelling language that converts
+- Focus on customer value proposition
+- Output in YAML format as shown below
+
+Output format:
+```yaml
+description: |
+  [Your compelling product description here - be specific and persuasive]
+```
+$$;
+
+CREATE FUNCTION judge_description(description TEXT) RETURNS TEXT AS $$
+Evaluate the following product description and provide detailed feedback.
+
+Description to evaluate:
+{description}
+
+Evaluation criteria (total 10 points):
+- Clarity and readability (0-3 points)
+- Persuasiveness and emotional appeal (0-3 points)
+- Feature highlighting and benefits (0-2 points)
+- Overall marketing effectiveness (0-2 points)
+
+Provide your assessment in this exact format:
+SCORE: [numeric score 1-10]
+VERDICT: [PASS if score >= 7, otherwise FAIL]
+FEEDBACK: [If FAIL, provide specific actionable improvements. If PASS, write "Approved - no improvements needed"]
+
+Be thorough in your feedback for failed descriptions.
+$$;
+
+WORKFLOW product_description_refiner
+  INPUT @product_task TEXT, @max_attempts INTEGER := 3
+  OUTPUT @final_description TEXT
+DO
+  @attempt_count := 1;
+  @feedback := '';
+  @current_draft := '';
+  @evaluation := '';
+  
+  WHILE @attempt_count <= @max_attempts DO
+    DO
+      GENERATE generate_description(@product_task, @feedback) INTO @current_draft;
+      GENERATE judge_description(@current_draft) INTO @evaluation;
+      
+      EVALUATE @evaluation
+        WHEN contains('VERDICT: PASS') THEN
+          RETURN @current_draft WITH attempts = @attempt_count, status = 'approved', evaluation = @evaluation;
+        ELSE
+          @attempt_count := @attempt_count + 1;
+          @feedback := @evaluation;
+      END;
+      
+    EXCEPTION
+      WHEN HallucinationDetected THEN
+        @feedback := 'Previous generation had quality issues. Please create a more factual and grounded description.';
+        @attempt_count := @attempt_count + 1;
+      WHEN ModelOverloaded THEN
+        RETRY;
+      WHEN QualityBelowThreshold THEN
+        @feedback := 'Output quality was insufficient. Please improve clarity and persuasiveness.';
+        @attempt_count := @attempt_count + 1;
+    END;
+  END;
+  
+  RETURN @current_draft WITH attempts = @attempt_count, status = 'max_attempts_reached', final_evaluation = @evaluation;
+END;
