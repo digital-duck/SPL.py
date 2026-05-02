@@ -1,0 +1,8 @@
+flowchart TD
+    A[User Query] --> B{{Decision Node}}
+    B -- Search --> C[Search Node]
+    C --> D[DuckDuckGo]
+    B -- Answer --> E[Answer Node]
+    E --> F[LLM - Answer Generation]
+    F --> E
+    E --> G[Agent Output]
