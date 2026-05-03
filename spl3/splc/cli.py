@@ -490,8 +490,13 @@ def _github_to_raw_readme(url: str) -> str:
 
 # ── RAG examples ─────────────────────────────────────────────────────────────
 
-def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool) -> str:
-    """Retrieve k similar recipes already compiled to the target lang from the RAG store."""
+def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool, query: str | None = None) -> str:
+    """Retrieve k similar recipes already compiled to the target lang from the RAG store.
+
+    Args:
+        spl_source: SPL source text (used to derive query via _spl_to_query if query is None).
+        query:      Override the RAG query directly (e.g. when calling from vibe with natural language).
+    """
     if not RAG_STORE_DIR.exists():
         if verbose:
             click.echo("  RAG store not found — skipping few-shot examples.")
@@ -508,8 +513,8 @@ def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool) ->
             click.echo("  WARN: spl.rag not importable — skipping RAG context.")
         return ""
 
-    # Use the SPL source as the query to find similar recipes
-    query = _spl_to_query(spl_source)
+    # Use the provided query directly, or derive one from the SPL source
+    query = query or _spl_to_query(spl_source)
     if verbose:
         click.echo(f"  RAG query: {query[:60]}...")
 
@@ -627,17 +632,18 @@ Source file: {spl_filename}\
 
 VIBE_SYSTEM_PROMPT = """\
 You are an expert software engineer. Your task is to translate a natural language REQUIREMENT
-directly into a working {lang_label} implementation.
+directly into a working {lang_label} implementation, bypassing any intermediate IR steps.
 
 Rules:
 1. The code must be complete, executable, and production-ready.
 2. Use only the target language's standard patterns for {lang_label}.
-3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct node wiring, 
-   shared state management, and robust error handling.
-4. Provide a main execution block that demonstrates the requirement.
-5. If the implementation requires LLM calls, use a pattern compatible with the `{adapter}` adapter
-   and the model `{model}`. For Python targets, prefer a `call_llm(prompt: str) -> str` helper.
-6. Output ONLY the implementation file content — no explanation before it.
+3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct
+   node wiring, shared state management, and robust error handling.
+4. Preserve ALL workflow semantics implied by the requirement: loops, conditional branches,
+   sub-workflow calls, exception handling, and logging.
+5. Provide a main execution block that demonstrates the requirement end-to-end.
+6. For LLM calls, use a `call_llm(prompt: str) -> str` helper that is easy to swap adapters.
+7. Output ONLY the implementation file content — no explanation before it.
    The file should be ready to run without modification.
 {readme_instr}
 
@@ -651,20 +657,20 @@ def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: b
     """Call the specified adapter and return (implementation, readme)."""
     import asyncio
     try:
-        from spl.adapters import get_adapter
+        from spl3.adapters import get_adapter
     except ImportError:
-        click.echo("ERROR: spl.adapters not found. Ensure SPL.py is installed.", err=True)
+        click.echo("ERROR: spl3.adapters not found. Ensure SPL.py is installed.", err=True)
         sys.exit(1)
 
     try:
-        llm = get_adapter(adapter, **{"model": model} if model else {})
+        llm = get_adapter(adapter, **({"model": model} if model else {}))
     except ValueError as exc:
         click.echo(f"ERROR: {exc}", err=True)
         sys.exit(1)
 
     async def _run() -> str:
-        result = await llm.generate(prompt)
-        return result.content
+        result = await llm.generate(prompt, **({"model": model} if model else {}))
+        return result if isinstance(result, str) else getattr(result, "content", str(result))
 
     raw = asyncio.run(_run())
 
@@ -959,7 +965,7 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
     except ImportError:
         raise click.ClickException("spl3 adapters not found: ensure spl3 is installed.")
 
-    llm = get_adapter(adapter, **{"model": model} if model else {})
+    llm = get_adapter(adapter, **({"model": model} if model else {}))
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
     spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 

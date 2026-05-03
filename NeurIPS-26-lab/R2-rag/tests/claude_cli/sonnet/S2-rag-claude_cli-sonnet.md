@@ -1,0 +1,44 @@
+# S2 Rag Claude Cli Sonnet Workflow
+
+Generated with [SPL](https://github.com/digital-duck/SPL) using: `spl3 text2mmd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag/tests/claude_cli/sonnet/S1-rag-claude_cli-sonnet-1-spec.md --adapter claude_cli --model claude-sonnet-4-6 -o /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag/tests/claude_cli/sonnet/S2-rag-claude_cli-sonnet.mmd`
+
+## Mermaid Diagram
+
+```mermaid
+    flowchart TD
+    START([Start]) --> A
+    subgraph PHASE1["Offline Indexing Workflow"]
+    A["ChunkDocuments<br/>(BatchNode)<br/>split texts -> chunks"] --> B["EmbedDocuments<br/>(BatchNode)<br/>chunks -> float32 vectors"]
+    B --> C["CreateIndex<br/>(Node)<br/>build FAISS IndexFlatL2"]
+    end
+    C --> SHARED["@shared store<br/>@texts, @embeddings, @index"]
+    SHARED --> D
+    subgraph PHASE2["Online Query Workflow"]
+    D["EmbedQuery<br/>(Node)<br/>query -> query_embedding"] --> E["RetrieveDocument<br/>(Node)<br/>FAISS k=1 search"]
+    E --> F["GenerateAnswer<br/>(Node)<br/>LLM GENERATE call"]
+    F --> G{Output<br/>path set?}
+    G -->|Yes| H["write_file<br/>persist Q/A pair"]
+    G -->|No| I["Return<br/>@generated_answer"]
+    H --> I
+    end
+    D -.-->|"reads @index,<br/>@texts"| SHARED
+    START --> D
+    I --> END([End])
+```
+
+## Usage Options
+
+### For SPL Development
+1. Review the workflow diagram above
+2. Edit the mermaid code if needed
+3. Generate SPL code: `spl3 mmd2spl /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag/tests/claude_cli/sonnet/S2-rag-claude_cli-sonnet.mmd -o S2-rag-claude_cli-sonnet.spl`
+4. Validate: `spl3 validate S2-rag-claude_cli-sonnet.spl`
+
+### For General Use
+1. Use the `.mmd` file with any Mermaid-compatible tool
+2. Copy the diagram code for documentation, presentations, or websites
+3. Edit the visual workflow and regenerate as needed
+
+---
+
+**Learn more**: [SPL Repository](https://github.com/digital-duck/SPL) | [Documentation](https://github.com/digital-duck/SPL#readme)

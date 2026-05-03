@@ -1,0 +1,15 @@
+flowchart TD
+    A[Start: Set @question from CLI\n@context = 'No previous search'] --> B[GENERATE decide_action\n@question + @context → YAML decision]
+    B --> C{{Parse YAML safely}}
+    C -->|Parse OK| D{{EVALUATE @decision action}}
+    C -->|YAMLError| E[Force block-scalar on known keys\nRewrite lines with pipe notation]
+    E --> F{{Retry yaml.safe_load}}
+    F -->|Parse OK| D
+    F -->|Still fails| G[Raise ValueError\nEXCEPTION: YAMLParseError]
+    D -->|action == search| H[Set @search_query from decision]
+    H --> I[CALL search_web_duckduckgo\n@search_query → up to 5 results]
+    I --> J[Append to @context\nSEARCH: query\nRESULTS: results]
+    J -->|return decide — loop back| B
+    D -->|action == answer| K[GENERATE answer_question\n@question + @context → prose answer]
+    K --> L[Store result in @answer]
+    L --> M[RETURN @answer\nstatus = done]

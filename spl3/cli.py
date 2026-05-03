@@ -730,7 +730,7 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
     """
     import re as _re
     from spl.text2spl import Text2SPL
-    from spl.adapters import get_adapter
+    from spl3.adapters import get_adapter
 
     # Resolve description: --description option takes precedence over positional arg
     raw = description_opt or description
@@ -814,44 +814,135 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
 # Mermaid Syntax Post-Processor                                        #
 # ------------------------------------------------------------------ #
 
+def _join_multiline_quoted(text: str) -> str:
+    """Replace actual newlines inside double-quoted strings with <br/>.
+
+    Handles both node labels  ["line1\nline2"]  and
+    edge labels               |"line1\nline2"|
+    """
+    result = []
+    in_quote = False
+    for ch in text:
+        if ch == '"':
+            in_quote = not in_quote
+            result.append(ch)
+        elif ch == '\n' and in_quote:
+            result.append('<br/>')
+        else:
+            result.append(ch)
+    return ''.join(result)
+
+
 def fix_mermaid_syntax(mermaid_text, style="flowchart"):
     """
     Rule-based post-processor to fix common LLM Mermaid syntax errors.
 
     Handles:
-    - Single braces {Decision} → Double braces {{Decision}}
-    - Wrong arrows -> → Correct arrows -->
+    - Actual newlines inside quoted labels/edge-labels  →  <br/>
+    - Wrong bare arrow ->  →  -->
+    - Unicode → inside labels  →  plain ->
+    - Literal \\n inside unquoted node labels  →  quoted label with <br/>
+    - Dotted edge with quoted label  -. "text" .-->  →  -.->|text|
+    - Edge targeting a subgraph name  A --> SG  →  A --> first_node_inside_SG
     - Missing diagram declaration
     """
     import re
 
+    # Pre-pass: fix actual newlines inside quoted strings before line-splitting
+    mermaid_text = _join_multiline_quoted(mermaid_text)
+
     lines = mermaid_text.strip().split('\n')
+
+    # ── Pass 1: collect subgraph names → first node inside each ──────────────
+    subgraph_first_node: dict[str, str] = {}
+    current_sg: str | None = None
+    sg_depth = 0
+
+    for raw in lines:
+        s = raw.strip()
+        m_sg = re.match(r'^subgraph\s+(\w+)', s)
+        if m_sg:
+            sg_id = m_sg.group(1)
+            subgraph_first_node[sg_id] = ""   # placeholder
+            current_sg = sg_id
+            sg_depth += 1
+            continue
+        if s == "end":
+            sg_depth = max(0, sg_depth - 1)
+            if sg_depth == 0:
+                current_sg = None
+            continue
+        # First node/edge line inside a subgraph → record the leading node ID
+        if current_sg and not subgraph_first_node[current_sg] and s and not s.startswith(('%%', 'direction')):
+            m_node = re.match(r'^(\w+)', s)
+            if m_node:
+                subgraph_first_node[current_sg] = m_node.group(1)
+
+    # ── Pass 2: line-by-line fixes ────────────────────────────────────────────
     fixed_lines = []
 
-    # Ensure diagram declaration
-    has_declaration = any(line.strip().startswith(('flowchart', 'graph', 'sequenceDiagram')) for line in lines)
+    has_declaration = any(
+        l.strip().startswith(('flowchart', 'graph', 'sequenceDiagram'))
+        for l in lines
+    )
     if not has_declaration:
         fixed_lines.append(f"{style} TD")
+
+    def _fix_label_newlines(m):
+        bracket, content, close = m.group(1), m.group(2), m.group(3)
+        if r'\n' in content:
+            content = content.replace(r'\n', '<br/>')
+            if not (content.startswith('"') and content.endswith('"')):
+                content = f'"{content}"'
+        return f'{bracket}{content}{close}'
 
     for line in lines:
         line = line.strip()
         if not line:
             continue
 
-        if line.startswith(('flowchart', 'graph', 'sequenceDiagram')):
-            fixed_lines.append(line)
+        # Pass structural keywords through unchanged (just indent)
+        if line.startswith(('flowchart', 'graph', 'sequenceDiagram', 'subgraph', 'end', 'direction')):
+            fixed_lines.append("    " + line if not line.startswith('    ') else line)
             continue
 
-        # Fix arrow syntax: -> becomes -->
-        line = re.sub(r'(?<!-)->(?!>)', '-->', line)
+        # Fix dotted edge with quoted label:  -. "text" .-->  →  -.->|text|
+        line = re.sub(r'-\.\s+"([^"]+)"\s+\.-->', r'-.->|\1|', line)
+        line = re.sub(r'-\.\s+\'([^\']+)\'\s+\.-->', r'-.->|\1|', line)
 
-        # Fix single braces to double braces for decisions: {text} → {{text}}
-        # This is the critical fix for the reported error
-        # Only replace single braces, avoid creating triple braces
-        line = re.sub(r'([A-Z])\{([^}]+)\}(?!\})', r'\1{{\2}}', line)
+        # Simplify non-standard cylindrical/database shape [("text")] → ["text"]
+        # Mermaid cylindrical shape is [(text)] not [("text")]
+        line = re.sub(r'\[\("([^"]+)"\)\]', r'["\1"]', line)
+        line = re.sub(r"\[\('([^']+)'\)\]", r"['\1']", line)
 
-        # Add proper indentation
-        if line and not line.startswith('    '):
+        # Fix bare -> arrow (not part of --> or -.->)
+        line = re.sub(r'(?<![=\-!])->(?!>)', '-->', line)
+
+        # Replace Unicode → inside labels
+        line = line.replace('→', '->')
+
+        # Fix \n inside unquoted square-bracket and curly-brace labels
+        line = re.sub(r'(\[)([^\]]+?)(\])', _fix_label_newlines, line)
+        line = re.sub(r'(\{)([^}]+?)(\})', _fix_label_newlines, line)
+
+        # Redirect edges that target a subgraph name to its first interior node
+        # Handles:  A --> SG,  A -->|label| SG,  A -.-> SG
+        for sg_name, first_node in subgraph_first_node.items():
+            if not first_node:
+                continue
+            # Edge with label:  -->|...|  SG_NAME  or  -.->|...| SG_NAME
+            line = re.sub(
+                r'(\|[^|]*\|)\s+' + re.escape(sg_name) + r'\b',
+                r'\1 ' + first_node, line
+            )
+            # Plain edge ending in SG_NAME (word boundary, not inside a label)
+            line = re.sub(
+                r'(--?>|-.->)\s+' + re.escape(sg_name) + r'\b',
+                r'\1 ' + first_node, line
+            )
+
+        # Indent
+        if not line.startswith('    '):
             line = "    " + line
 
         fixed_lines.append(line)
@@ -947,7 +1038,7 @@ def cmd_text2mmd(description, description_opt, adapter, model, style, output, va
     from pathlib import Path
 
     try:
-        from spl.adapters import get_adapter
+        from spl3.adapters import get_adapter
     except ImportError:
         raise click.ClickException("spl adapters not available")
 
@@ -992,7 +1083,7 @@ def cmd_text2mmd(description, description_opt, adapter, model, style, output, va
         desc_text = raw
 
     # Generate Mermaid diagram
-    llm = get_adapter(adapter, **{"model": model} if model else {})
+    llm = get_adapter(adapter, **({"model": model} if model else {}))
 
     prompt = f"""Create a valid Mermaid {style} diagram from this workflow description.
 
@@ -1000,31 +1091,39 @@ Workflow Description:
 {desc_text}
 
 MANDATORY SYNTAX RULES:
-1. Node format: A[Label Text] where A is ID, Label Text is in square brackets
-2. Decision format: C{{{{Decision Text}}}} - MUST use DOUBLE braces, never single braces
-3. Connections: A --> B or A -->|label| B
-4. Start with: {style} TD
+1. Every node must have an ID and a label: A[Label Text]
+2. Decision/branch node: use SINGLE braces — C{{Decision?}}  (renders as a diamond)
+3. Connections: A --> B  or  A -->|edge label| B  (always two dashes, never ->)
+4. Multi-word labels: keep them short. If you need a line break, use a QUOTED label with <br/>:
+   A["First line<br/>Second line"]
+5. Do NOT use \\n inside labels — it renders as a literal backslash-n.
+6. Do NOT use Unicode arrows (→) or other Unicode operators inside labels.
+7. Subgraphs: connect edges to the FIRST NODE inside the subgraph, not to the subgraph name.
+   CORRECT:  A --> B  (where B is the first node inside subgraph SG)
+   WRONG:    A --> SG  (subgraph name as edge target)
+8. Start with: {style} TD
 
 CORRECT Examples:
-- Process node: A[Start], B[Process Data], C[Generate Output]
-- Decision node: D{{{{Quality OK?}}}}, E{{{{Approved?}}}}
-- Connections: A --> B, C -->|Yes| D, C -->|No| E
+- Process node:   A[Start],  B[Process Data],  C["Embed<br/>Documents"]
+- Decision node:  D{{Quality OK?}},  E{{Approved?}}
+- Connections:    A --> B,  C -->|Yes| D,  C -->|No| E
 
 WRONG Examples (DO NOT USE):
-- C{{Decision}} ❌ (single braces)
-- Process Input ❌ (no brackets/ID)
-- A[Start] -> B ❌ (use --> not ->)
+- A[foo\\nbar]       ❌  (\\n in label — use <br/> inside quotes instead)
+- A[foo → bar]      ❌  (Unicode arrow in label)
+- A --> SubgraphID  ❌  (edge to subgraph name — target the first node inside)
+- A[Start] -> B     ❌  (use --> not ->)
 
 Generate ONLY the diagram code. No explanations. Follow the format exactly:
 
 ```mermaid
 {style} TD
-    A[Start] --> B[Process Request]
-    B --> C{{{{Quality Check}}}}
+    A([Start]) --> B[Process Request]
+    B --> C{{Quality Check?}}
     C -->|Pass| D[Approve]
     C -->|Fail| E[Reject]
-    D --> F[End]
-    E --> F[End]
+    D --> F([End])
+    E --> F
 ```"""
 
     if prompt_debug:
@@ -1046,43 +1145,26 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
     # Apply rule-based post-processing to fix common LLM syntax errors
     mermaid_text = fix_mermaid_syntax(mermaid_text, style)
 
-    # Enhanced validation
+    # Validation: check for known bad patterns that survive post-processing
     if validate:
         validation_errors = []
 
-        # Check for basic Mermaid syntax
-        if not any(keyword in mermaid_text for keyword in ["flowchart", "graph", "sequenceDiagram"]):
-            validation_errors.append("Missing diagram type (flowchart, graph, or sequenceDiagram)")
+        if not any(kw in mermaid_text for kw in ["flowchart", "graph", "sequenceDiagram"]):
+            validation_errors.append("Missing diagram type declaration (flowchart/graph/sequenceDiagram)")
 
-        # Check for common syntax errors
-        lines = mermaid_text.split('\n')
-        for i, line in enumerate(lines, 1):
-            line = line.strip()
-            if not line:
+        for i, line in enumerate(mermaid_text.split('\n'), 1):
+            s = line.strip()
+            if not s or s.startswith(('flowchart', 'graph', 'sequenceDiagram', 'subgraph', 'end', 'direction', '%%')):
                 continue
-
-            # Check for unquoted node labels with spaces
-            if '-->' in line:
-                # Extract parts around arrows
-                parts = _re.split(r'\\s*(?:-->|->)\\s*', line)
-                for part in parts:
-                    part = part.strip()
-                    # Skip edge labels in pipes |label|
-                    if '|' in part and not (part.startswith('|') and part.endswith('|')):
-                        continue
-                    # Check for unbracketed labels with spaces
-                    if ' ' in part and not (_re.match(r'\\w+\\[.*\\]', part) or _re.match(r'\\w+\\{.*\\}', part)):
-                        validation_errors.append("Line " + str(i) + ": Node '" + part + "' has spaces but no brackets - use A[" + part + "]")
-
-            # Check for single braces instead of double braces for decisions
-            if '{' in line and '{{' not in line:
-                validation_errors.append("Line " + str(i) + ": Decision nodes should use double braces {{ }} not single braces { }")
-
-        # Check for circular references to Start
-        if 'Start' in mermaid_text and '-->' in mermaid_text:
-            # Look for patterns like "End --> Start" or "end --> Start"
-            if _re.search(r'(?:End|end|F)\\s*-->\\s*(?:Start|start|A)', mermaid_text):
-                validation_errors.append("Circular reference detected: workflow loops back to Start")
+            # Raw \n in an unquoted label
+            if r'\n' in s and '"' not in s:
+                validation_errors.append(f"Line {i}: literal \\n in unquoted label — use quoted label with <br/>")
+            # Unicode arrow in label
+            if '→' in s:
+                validation_errors.append(f"Line {i}: Unicode → in label — use -> instead")
+            # Dotted edge with quoted label (wrong syntax)
+            if _re.search(r'-\.\s+"', s):
+                validation_errors.append(f"Line {i}: dotted edge with quoted label — use -.->|label| instead")
 
         if validation_errors:
             click.echo("Mermaid syntax warnings:", err=True)
@@ -1314,6 +1396,9 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
 
     mermaid_content = Path(mermaid_file).read_text(encoding="utf-8")
     workflow_name = Path(mermaid_file).stem.replace("-", "_")
+
+    if prompt_debug and not adapter:
+        raise click.UsageError("--prompt requires --adapter to be specified.")
 
     if adapter:
         # LLM-powered generation
@@ -1581,8 +1666,9 @@ def cmd_explain(spl_file):
 
 
 @main.command("vibe")
+@click.argument("description", default=None, required=False, metavar="DESCRIPTION")
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
-              help="Natural language requirement or file path.")
+              help="Natural language requirement or file path (overrides positional arg).")
 @click.option("--target", "-t", "lang", default="python/pocketflow", show_default=True,
               help="Target language/framework (e.g. go, ts, python/langgraph).")
 @click.option("--adapter", default="ollama", show_default=True,
@@ -1593,23 +1679,36 @@ def cmd_explain(spl_file):
               help="Write generated code to FILE.")
 @click.option("--rag/--no-rag", "use_rag", default=True, show_default=True,
               help="Include RAG examples from the shared SPL recipe store.")
+@click.option("--rag-k", default=3, show_default=True, type=click.IntRange(1, 10),
+              help="Number of RAG examples to include when --rag is on.")
 @click.option("--references", multiple=True, metavar="URL_OR_PATH",
               help="Reference codebase(s) to ground the output.")
 @click.option("--no-readme", is_flag=True, default=False,
               help="Skip generating readme section.")
+@click.option("-v", "--verbose", "verbose", is_flag=True, default=False,
+              help="Print progress and token counts.")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
-def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references, no_readme, prompt_debug):
-    """Mimic 'vibe coding' in one shot.
+def cmd_vibe(description, description_opt, lang, adapter, model, output, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
+    """Generate target code directly from a natural language description.
 
-    Generates target code directly from a natural language description,
-    bypassing intermediate IR steps (Mermaid/SPL). Reuses splc's
-    compilation infrastructure (RAG few-shots, references).
+    Bypasses the .mmd and .spl IR steps (vibe coding). Reuses splc's
+    compilation infrastructure: RAG few-shots, references, prompt structure.
+
+    \b
+    Useful as an ablation baseline: compare output quality against the full
+    IR pipeline (text2mmd → mmd2spl → splc compile) to quantify the value
+    of intermediate representations.
+
+    \b
+    Examples:
+      spl3 vibe "build a self-refine agent" -o out.py
+      spl3 vibe --description spec.md --target python/langgraph --adapter claude_cli
+      spl3 vibe "rag pipeline" --adapter openrouter -m qwen/qwen3.6-plus --prompt
     """
-    import asyncio
     from pathlib import Path
     from spl3.splc.cli import (
-        SUPPORTED_LANGS, VIBE_SYSTEM_PROMPT, _fetch_rag_examples, 
+        SUPPORTED_LANGS, VIBE_SYSTEM_PROMPT, _fetch_rag_examples,
         _fetch_references, compile_llm_code
     )
 
@@ -1619,38 +1718,42 @@ def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references,
 
     lang_meta = SUPPORTED_LANGS[lang]
 
-    # --description option takes precedence
-    if not description_opt:
-        raise click.UsageError("Provide a description via --description.")
+    # --description option takes precedence over positional arg
+    raw = description_opt or description
+    if not raw:
+        raise click.UsageError(
+            "Provide a description as a positional argument or via --description."
+        )
 
-    # Check if it's a file path
-    candidate = Path(description_opt)
+    # If it looks like a file path, read it
+    candidate = Path(raw)
     if candidate.exists() and candidate.is_file():
         raw_desc = candidate.read_text(encoding="utf-8")
     else:
-        raw_desc = description_opt
+        raw_desc = raw
 
     # ── Fetch references ──────────────────────────────────────────────────────
-    ref_context = _fetch_references(references, verbose=True)
+    ref_context = _fetch_references(references, verbose=verbose)
 
     # ── RAG few-shot examples ─────────────────────────────────────────────────
     rag_context = ""
     if use_rag:
-        # Use description directly as query for RAG lookup
-        rag_context = _fetch_rag_examples(raw_desc, lang, k=3, verbose=True)
+        # Pass raw_desc as the RAG query directly — bypasses _spl_to_query()
+        # which is designed for SPL syntax and would return "SPL workflow" for
+        # natural language input.
+        rag_context = _fetch_rag_examples(raw_desc, lang, k=rag_k, verbose=verbose, query=raw_desc)
 
     # ── Build prompt ──────────────────────────────────────────────────────────
     readme_instruction = (
         "\n\nAfter the implementation, output a `readme.md` section "
         "(starting with `--- README ---` on its own line) that includes: "
-        "setup instructions and a mapping table."
+        "setup instructions, run command, expected output pattern, "
+        "and a table mapping each logical step to its equivalent in the target."
         if not no_readme else ""
     )
 
     vibe_system = VIBE_SYSTEM_PROMPT.format(
-        lang_label = lang_meta["label"],
-        adapter    = adapter,
-        model      = model or "(default)",
+        lang_label   = lang_meta["label"],
         readme_instr = readme_instruction,
     )
 
@@ -1659,13 +1762,13 @@ def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references,
         prompt_parts.append(rag_context)
     if ref_context:
         prompt_parts.append(ref_context)
-    
+
     prompt_parts.append(
         f"# Requirement to Implement\n\n"
         f"{raw_desc}\n\n"
         f"Generate the {lang_meta['label']} code now."
     )
-    
+
     full_prompt = "\n\n---\n\n".join(prompt_parts)
 
     if prompt_debug:
@@ -1673,10 +1776,11 @@ def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references,
         click.echo("LLM PROMPT:")
         click.echo("=" * 70)
         click.echo(full_prompt)
+        click.echo(f"\n[Prompt length: {len(full_prompt)} chars / ~{len(full_prompt)//4} tokens]")
         return
 
     click.echo(f"Vibing {lang} code using {adapter}...")
-    impl_code, readme_text = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=True)
+    impl_code, readme_text = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=verbose)
 
     if output:
         out_path = Path(output)
@@ -1684,7 +1788,7 @@ def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references,
         out_path.write_text(impl_code, encoding="utf-8")
         click.echo(f"Code written to: {output}")
         if readme_text:
-            readme_path = out_path.parent / "readme_vibe.md"
+            readme_path = out_path.with_name(out_path.stem + "-readme.md")
             readme_path.write_text(readme_text, encoding="utf-8")
             click.echo(f"Readme written to: {readme_path}")
     else:
@@ -1849,13 +1953,10 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
         source = "\n\n".join(parts)
         stem = path.resolve().name          # folder name → spec stem
         spec_parent = path
-        click.echo(f"Describing {len(spl_files)} .spl file(s) in {path.name}/: "
-                   f"{', '.join(f.name for f in spl_files)}")
     else:
         source = path.read_text(encoding="utf-8")
         stem = path.stem
         spec_parent = path.parent
-        click.echo(f"Generating spec for {path.name} ...")
 
     prompt = _DESCRIBE_PROMPT.format(source=source)
 
@@ -1866,12 +1967,18 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
         click.echo(prompt)
         return
 
+    if path.is_dir():
+        click.echo(f"Describing {len(spl_files)} .spl file(s) in {path.name}/: "
+                   f"{', '.join(f.name for f in spl_files)}")
+    else:
+        click.echo(f"Generating spec for {path.name} ...")
+
     try:
         from spl3.adapters import get_adapter
     except ImportError:
         raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
 
-    llm = get_adapter(adapter, **{"model": model} if model else {})
+    llm = get_adapter(adapter, **({"model": model} if model else {}))
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
     spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 
@@ -1907,7 +2014,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
               help="Model for embedding.")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write comparison report to FILE.")
-@click.option("--format", default="markdown", show_default=True,
+@click.option("--format", "output_format", default="markdown", show_default=True,
               type=click.Choice(["markdown", "json", "text"]),
               help="Output format for comparison report.")
 @click.option("--focus", default="all", show_default=True,
@@ -1920,7 +2027,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
               help="Disable ANSI color in diff output.")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
-def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed, output, format, focus, diff_style, no_color, prompt_debug):
+def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed, output, output_format, focus, diff_style, no_color, prompt_debug):
 
     """Perform semantic and/or mechanical comparison between two files.
 
@@ -1953,6 +2060,9 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
     # Read file contents
     content1 = path1.read_text(encoding="utf-8")
     content2 = path2.read_text(encoding="utf-8")
+
+    ext1 = path1.suffix.lower()
+    ext2 = path2.suffix.lower()
 
     # Determine modes to run
     active_modes = list(modes)
@@ -2003,7 +2113,7 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
 
         elif diff_style == "side-by-side":
             # Create side-by-side diff
-            if format == "markdown":
+            if output_format == "markdown":
                 # For markdown, create a simple side-by-side table
                 side_by_side_lines = []
                 side_by_side_lines.append(f"| {path1.name} | {path2.name} |")
@@ -2030,35 +2140,24 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
 
                 mechanical_diff = "\n".join(side_by_side_lines)
             else:
-                differ = difflib.HtmlDiff()
-                mechanical_diff = differ.make_file(
+                # side-by-side is only supported for markdown; fall back to unified diff
+                click.echo("Warning: side-by-side diff is only supported with --format markdown. Falling back to unified.", err=True)
+                diff_lines = list(difflib.unified_diff(
                     lines1, lines2,
-                    fromdesc=path1.name,
-                    todesc=path2.name
-                )
+                    fromfile=f"a/{path1.name}",
+                    tofile=f"b/{path2.name}",
+                    lineterm=""
+                ))
+                mechanical_diff = "\n".join(diff_lines)
 
         # If no differences found
-        if not mechanical_diff.strip() or mechanical_diff == "\n".join([f"--- a/{path1.name}", f"+++ b/{path2.name}"]):
+        if not mechanical_diff.strip():
             mechanical_diff = "No mechanical differences found - files are identical."
         
         results["git-diff"] = mechanical_diff
 
-    # Handle diff-only mode (shorthand for mode=git-diff only)
-    if diff_only:
-        if output:
-            output_path = Path(output)
-            output_path.write_text(results.get("git-diff", ""), encoding="utf-8")
-            click.echo(f"Mechanical diff written to: {output_path}")
-        else:
-            click.echo(results.get("git-diff", ""))
-        return
-
     # ── LLM Semantic Mode ────────────────────────────────────────────────────
     if "llm" in active_modes:
-        # Determine file types for context
-        ext1 = path1.suffix.lower()
-        ext2 = path2.suffix.lower()
-
         # Build comparison prompt based on focus
         focus_prompts = {
             "all": "Provide a comprehensive comparison covering structure, logic, quality, and syntax.",
@@ -2131,8 +2230,7 @@ Provide actionable insights for choosing between or improving these files."""
             click.echo("LLM PROMPT:")
             click.echo("=" * 70)
             click.echo(prompt)
-            if "llm" == active_modes[-1] or (len(active_modes) == 1):
-                return
+            return
 
         try:
             from spl3.adapters import get_adapter
@@ -2150,7 +2248,10 @@ Provide actionable insights for choosing between or improving these files."""
     if "vector" in active_modes:
         click.echo(f"Calculating vector similarity using {adapter_embed}...")
         try:
-            from dd_embed import get_adapter as get_embed_adapter
+            try:
+                from dd_embed import get_adapter as get_embed_adapter
+            except ImportError:
+                raise ImportError("dd-embed not installed: pip install dd-embed")
             embed_llm = get_embed_adapter(adapter_embed, model_name=model_embed)
             
             # Simple average embedding for files (might need chunking for large files)
@@ -2171,8 +2272,11 @@ Provide actionable insights for choosing between or improving these files."""
     if "bert-score" in active_modes:
         click.echo("Calculating BERTScore...")
         try:
-            import bert_score
-            import torch
+            try:
+                import bert_score
+                import torch
+            except ImportError:
+                raise ImportError("bert-score not installed: pip install bert-score torch")
             # Force CPU usage
             device = "cpu"
             # bert_score.score returns (P, R, F1) tensors
@@ -2188,33 +2292,34 @@ Provide actionable insights for choosing between or improving these files."""
 
     # ── GED Mode ─────────────────────────────────────────────────────────────
     if "ged" in active_modes:
-        click.echo("Calculating Graph Edit Distance (GED)...")
-        try:
-            import networkx as nx
-            g1 = _parse_mermaid_to_nx(content1)
-            g2 = _parse_mermaid_to_nx(content2)
-            
-            # Simple GED (might be slow for large graphs)
-            # We use a heuristic or time-limited approach if needed
-            distance = nx.graph_edit_distance(g1, g2, timeout=10)
-            if distance is None:
-                # Timeout occurred
-                results["ged"] = "GED: Timeout (graph too complex)"
-            else:
-                results["ged"] = {
-                    "distance": float(distance),
-                    "node_count": [len(g1.nodes), len(g2.nodes)],
-                    "edge_count": [len(g1.edges), len(g2.edges)]
-                }
-        except Exception as e:
-            click.echo(f"Warning: GED failed: {e}", err=True)
-            results["ged"] = f"Error: {e}"
+        if ext1 != ".mmd" or ext2 != ".mmd":
+            click.echo("Warning: GED mode is only meaningful for .mmd files. Skipping.", err=True)
+            results["ged"] = "Skipped: GED requires .mmd input files."
+        else:
+            click.echo("Calculating Graph Edit Distance (GED)...")
+            try:
+                try:
+                    import networkx as nx
+                except ImportError:
+                    raise ImportError("networkx not installed: pip install networkx")
+                g1 = _parse_mermaid_to_nx(content1)
+                g2 = _parse_mermaid_to_nx(content2)
+
+                distance = nx.graph_edit_distance(g1, g2, timeout=10)
+                if distance is None:
+                    results["ged"] = "GED: Timeout (graph too complex)"
+                else:
+                    results["ged"] = {
+                        "distance": float(distance),
+                        "node_count": [len(g1.nodes), len(g2.nodes)],
+                        "edge_count": [len(g1.edges), len(g2.edges)]
+                    }
+            except Exception as e:
+                click.echo(f"Warning: GED failed: {e}", err=True)
+                results["ged"] = f"Error: {e}"
 
     # ── Format Output ────────────────────────────────────────────────────────
-    ext1 = path1.suffix.lower()
-    ext2 = path2.suffix.lower()
-
-    if format == "json":
+    if output_format == "json":
         json_output = {
             "files": {
                 "file1": {"name": path1.name, "type": ext1},
@@ -2233,7 +2338,7 @@ Provide actionable insights for choosing between or improving these files."""
         }
         output_content = _json.dumps(json_output, indent=2)
 
-    elif format == "text":
+    elif output_format == "text":
         output_parts = [f"Comparison of {path1.name} and {path2.name}"]
         for mode in active_modes:
             output_parts.append(f"\n--- {mode.upper()} ---")
@@ -2283,6 +2388,7 @@ Provide actionable insights for choosing between or improving these files."""
     # Output results
     if output:
         output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(output_content, encoding="utf-8")
         click.echo(f"Comparison report written to: {output_path}")
     else:
