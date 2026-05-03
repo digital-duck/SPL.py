@@ -1,0 +1,16 @@
+flowchart TD
+    A[Initialize Shared Context] --> B{{WHILE next_thought_needed IS true?}}
+    B -->|Yes| C[CREATE FUNCTION: GenerateReasoningStep]
+    C --> D[GENERATE: Call LLM]
+    D --> E{{YAML Parse & Schema Valid?}}
+    E -->|Valid| F[EVALUATE: Inspect Flags & Update State]
+    E -->|Invalid| G[Graceful Recovery]
+    G --> D
+    F --> H{{next_thought_needed == true?}}
+    H -->|Yes| I[Append Thought & Print Progress]
+    I --> B
+    H -->|No| J[Extract Final Conclusion]
+    J --> K[CALL Side-effect: Persist to Disk]
+    K --> L[RETURN Solution & Metadata]
+    B -->|No| J
+    L --> M[End]

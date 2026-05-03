@@ -1,0 +1,37 @@
+CREATE FUNCTION DecideAction(context TEXT, question TEXT) RETURNS TEXT AS $$
+Based on the question and current context, decide if more information is needed.
+Return 'search' if you need to look up more information.
+Return 'answer' if you have enough information to provide the final answer.
+Context: {{context}}
+Question: {{question}}
+$$;
+
+CREATE FUNCTION AnswerQuestion(context TEXT, question TEXT) RETURNS TEXT AS $$
+Provide a comprehensive answer to the question based on the provided context.
+Context: {{context}}
+Question: {{question}}
+$$;
+
+WORKFLOW SearchAndAnswer
+DO
+    INPUT @question TEXT;
+    @context := '';
+    @action := 'search';
+
+    WHILE contains(@action, 'search') DO
+        GENERATE DecideAction(@context, @question) INTO @action;
+        
+        EVALUATE @action
+            WHEN contains('search') THEN
+                CALL search_web_duckduckgo(query=@question) INTO @search_results;
+                @context := @context + '\n' + @search_results;
+            WHEN contains('answer') THEN
+                GENERATE AnswerQuestion(@context, @question) INTO @answer;
+            ELSE
+                @action := 'answer';
+                GENERATE AnswerQuestion(@context, @question) INTO @answer;
+        END;
+    END;
+
+    RETURN @answer WITH status = 'complete';
+END;

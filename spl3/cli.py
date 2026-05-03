@@ -711,7 +711,9 @@ def code_rag_stats(storage_dir):
               help="Validate generated SPL code.")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write generated SPL to FILE.")
-def cmd_text2spl(description, description_opt, adapter, model, mode, validate, output):
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_text2spl(description, description_opt, adapter, model, mode, validate, output, prompt_debug):
     """Compile natural language DESCRIPTION into SPL 3.0 code.
 
     DESCRIPTION may be:
@@ -768,6 +770,19 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
         raise click.ClickException(str(exc)) from exc
 
     compiler = Text2SPL(adapter=llm)
+
+    if prompt_debug:
+        system, user = compiler.build_prompt(raw, mode=mode)
+        click.echo("=" * 70)
+        click.echo("LLM SYSTEM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(system)
+        click.echo("\n" + "=" * 70)
+        click.echo("LLM USER PROMPT:")
+        click.echo("=" * 70)
+        click.echo(user)
+        return
+
     try:
         spl_code = asyncio.run(compiler.compile(raw, mode=mode))
     except Exception as exc:
@@ -912,7 +927,9 @@ def fix_node_syntax(text, node_map, node_id_counter):
               help="Output directory (default: $HOME/.spl/mermaid).")
 @click.option("--no-defaults", is_flag=True, default=False,
               help="Disable default --save-html, --save-markdown, --preview.")
-def cmd_text2mmd(description, description_opt, adapter, model, style, output, validate, preview, save_markdown, save_html, save_png, out_dir, no_defaults):
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_text2mmd(description, description_opt, adapter, model, style, output, validate, preview, save_markdown, save_html, save_png, out_dir, no_defaults, prompt_debug):
     """Generate Mermaid flowchart from natural language workflow description.
 
     This creates a visual representation of the workflow that can be reviewed
@@ -1009,6 +1026,13 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
     D --> F[End]
     E --> F[End]
 ```"""
+
+    if prompt_debug:
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(prompt)
+        return
 
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
     mermaid_text = result if isinstance(result, str) else getattr(result, "content", str(result))
@@ -1267,7 +1291,9 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
               help="Base SPL template type.")
 @click.option("--pattern-hints", default=None, metavar="HINTS",
               help="Comma-separated hints for SPL patterns (e.g., 'linear,parallel').")
-def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, pattern_hints):
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, pattern_hints, prompt_debug):
     """Generate SPL workflow from Mermaid flowchart diagram.
 
     Converts a Mermaid flowchart into executable SPL code, mapping visual
@@ -1297,10 +1323,17 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
             raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
 
         llm = get_adapter(adapter, **({"model": model} if model else {}))
-        prompt = _MMD2SPL_PROMPT.format(mermaid=mermaid_content)
+        prompt_text = _MMD2SPL_PROMPT.format(mermaid=mermaid_content)
         
+        if prompt_debug:
+            click.echo("=" * 70)
+            click.echo("LLM PROMPT:")
+            click.echo("=" * 70)
+            click.echo(prompt_text)
+            return
+
         click.echo(f"Generating SPL from {mermaid_file} using {adapter}...")
-        result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
+        result = asyncio.run(llm.generate(prompt_text, **({"model": model} if model else {})))
         spl_code = result if isinstance(result, str) else getattr(result, "content", str(result))
         
         # Strip markdown fences if present
@@ -1547,6 +1580,120 @@ def cmd_explain(spl_file):
         raise click.ClickException(str(exc)) from exc
 
 
+@main.command("vibe")
+@click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
+              help="Natural language requirement or file path.")
+@click.option("--target", "-t", "lang", default="python/pocketflow", show_default=True,
+              help="Target language/framework (e.g. go, ts, python/langgraph).")
+@click.option("--adapter", default="ollama", show_default=True,
+              help="LLM adapter to use for generation.")
+@click.option("--model", "-m", default=None, metavar="MODEL",
+              help="Model override for the adapter.")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write generated code to FILE.")
+@click.option("--rag/--no-rag", "use_rag", default=True, show_default=True,
+              help="Include RAG examples from the shared SPL recipe store.")
+@click.option("--references", multiple=True, metavar="URL_OR_PATH",
+              help="Reference codebase(s) to ground the output.")
+@click.option("--no-readme", is_flag=True, default=False,
+              help="Skip generating readme section.")
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_vibe(description_opt, lang, adapter, model, output, use_rag, references, no_readme, prompt_debug):
+    """Mimic 'vibe coding' in one shot.
+
+    Generates target code directly from a natural language description,
+    bypassing intermediate IR steps (Mermaid/SPL). Reuses splc's
+    compilation infrastructure (RAG few-shots, references).
+    """
+    import asyncio
+    from pathlib import Path
+    from spl3.splc.cli import (
+        SUPPORTED_LANGS, VIBE_SYSTEM_PROMPT, _fetch_rag_examples, 
+        _fetch_references, compile_llm_code
+    )
+
+    if lang not in SUPPORTED_LANGS:
+        available = ", ".join(SUPPORTED_LANGS.keys())
+        raise click.UsageError(f"Invalid target '{lang}'. Supported: {available}")
+
+    lang_meta = SUPPORTED_LANGS[lang]
+
+    # --description option takes precedence
+    if not description_opt:
+        raise click.UsageError("Provide a description via --description.")
+
+    # Check if it's a file path
+    candidate = Path(description_opt)
+    if candidate.exists() and candidate.is_file():
+        raw_desc = candidate.read_text(encoding="utf-8")
+    else:
+        raw_desc = description_opt
+
+    # ── Fetch references ──────────────────────────────────────────────────────
+    ref_context = _fetch_references(references, verbose=True)
+
+    # ── RAG few-shot examples ─────────────────────────────────────────────────
+    rag_context = ""
+    if use_rag:
+        # Use description directly as query for RAG lookup
+        rag_context = _fetch_rag_examples(raw_desc, lang, k=3, verbose=True)
+
+    # ── Build prompt ──────────────────────────────────────────────────────────
+    readme_instruction = (
+        "\n\nAfter the implementation, output a `readme.md` section "
+        "(starting with `--- README ---` on its own line) that includes: "
+        "setup instructions and a mapping table."
+        if not no_readme else ""
+    )
+
+    vibe_system = VIBE_SYSTEM_PROMPT.format(
+        lang_label = lang_meta["label"],
+        adapter    = adapter,
+        model      = model or "(default)",
+        readme_instr = readme_instruction,
+    )
+
+    prompt_parts = [vibe_system]
+    if rag_context:
+        prompt_parts.append(rag_context)
+    if ref_context:
+        prompt_parts.append(ref_context)
+    
+    prompt_parts.append(
+        f"# Requirement to Implement\n\n"
+        f"{raw_desc}\n\n"
+        f"Generate the {lang_meta['label']} code now."
+    )
+    
+    full_prompt = "\n\n---\n\n".join(prompt_parts)
+
+    if prompt_debug:
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(full_prompt)
+        return
+
+    click.echo(f"Vibing {lang} code using {adapter}...")
+    impl_code, readme_text = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=True)
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(impl_code, encoding="utf-8")
+        click.echo(f"Code written to: {output}")
+        if readme_text:
+            readme_path = out_path.parent / "readme_vibe.md"
+            readme_path.write_text(readme_text, encoding="utf-8")
+            click.echo(f"Readme written to: {readme_path}")
+    else:
+        click.echo(impl_code)
+        if readme_text:
+            click.echo("\n--- README ---\n")
+            click.echo(readme_text)
+
+
 # ------------------------------------------------------------------ #
 # spl3 describe                                                       #
 # ------------------------------------------------------------------ #
@@ -1571,7 +1718,8 @@ MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
 7. Branching: Use EVALUATE @<var> WHEN contains('string') THEN ... ELSE ... END;
    IMPORTANT: EVALUATE must target a variable with @ prefix.
    IMPORTANT: WHEN clauses must use the contains('...') function for string matching.
-8. Looping: Use WHILE <condition> DO ... END; (e.g., WHILE @iteration < 3 DO ... END;)
+8. Looping: Use WHILE <condition> DO ... END;
+   IMPORTANT: <condition> should include loop protection "@iteration < 3" to prevent infinite loops.
 9. Helper functions: Define CREATE FUNCTION <name>(<params>) RETURNS <type> AS $$ <prompt> $$; at the top of the file.
    Note: Function parameters in CREATE FUNCTION do NOT use @ prefix.
 10. Return: Use RETURN @<var> WITH status = 'complete';
@@ -1579,6 +1727,24 @@ MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
 The generated SPL must be complete, executable, and follow the logic of the diagram exactly.
 
 Return ONLY the raw SPL code. No explanations.
+"""
+
+
+_VIBE_PROMPT = """\
+You are an expert software engineer. Your task is to generate complete, production-ready source code
+for a {target} application based on the following requirement.
+
+Requirement:
+{description}
+
+MANDATORY CONSTRAINTS:
+1. Generate ONLY the source code. No explanations, no preambles, no markdown fences.
+2. The code must be complete and executable.
+3. If using Python/PocketFlow, ensure the workflow implements robust error handling and follows the
+   latest patterns for node-based orchestration.
+4. Include all necessary imports and a main execution block for testing.
+
+Generate the code now.
 """
 
 
@@ -1650,7 +1816,9 @@ Write the specification now.
               help="Model override for the adapter.")
 @click.option("--spec-dir", default=None, metavar="DIR",
               help="Directory to write the spec file (default: same dir as input).")
-def cmd_describe(spl_path, adapter, model, spec_dir):
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
     """Generate a plain-English functional specification for a .spl file or folder.
 
     \b
@@ -1691,6 +1859,13 @@ def cmd_describe(spl_path, adapter, model, spec_dir):
 
     prompt = _DESCRIBE_PROMPT.format(source=source)
 
+    if prompt_debug:
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(prompt)
+        return
+
     try:
         from spl3.adapters import get_adapter
     except ImportError:
@@ -1719,10 +1894,17 @@ def cmd_describe(spl_path, adapter, model, spec_dir):
 @main.command("compare")
 @click.argument("file1")
 @click.argument("file2")
+@click.option("--mode", "modes", multiple=True, 
+              type=click.Choice(["llm", "git-diff", "vector", "bert-score", "ged"]),
+              help="Comparison mode(s). Can be specified multiple times. Default is 'llm'.")
 @click.option("--adapter", default="ollama", show_default=True,
-              help="LLM adapter to use for semantic analysis.")
+              help="LLM adapter to use for semantic analysis (mode=llm).")
 @click.option("--model", default=None, metavar="MODEL",
               help="Model override for the adapter.")
+@click.option("--adapter-embed", default="ollama", show_default=True,
+              help="Adapter for embedding models (modes=vector, bert-score).")
+@click.option("--model-embed", default=None, metavar="MODEL",
+              help="Model for embedding.")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write comparison report to FILE.")
 @click.option("--format", default="markdown", show_default=True,
@@ -1730,35 +1912,34 @@ def cmd_describe(spl_path, adapter, model, spec_dir):
               help="Output format for comparison report.")
 @click.option("--focus", default="all", show_default=True,
               type=click.Choice(["all", "structure", "logic", "quality", "syntax"]),
-              help="Focus comparison on specific aspects.")
-@click.option("--diff", is_flag=True, default=False,
-              help="Include mechanical line-by-line diff (like git diff).")
-@click.option("--diff-only", is_flag=True, default=False,
-              help="Show only mechanical diff, skip semantic analysis.")
+              help="Focus comparison on specific aspects (mode=llm).")
 @click.option("--diff-style", default="unified", show_default=True,
               type=click.Choice(["unified", "context", "side-by-side"]),
-              help="Style for mechanical diff output.")
+              help="Style for mechanical diff output (mode=git-diff).")
 @click.option("--no-color", is_flag=True, default=False,
-              help="Disable colored diff output.")
-def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_only, diff_style, no_color):
+              help="Disable ANSI color in diff output.")
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the LLM prompt and exit.")
+def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed, output, format, focus, diff_style, no_color, prompt_debug):
+
     """Perform semantic and/or mechanical comparison between two files.
 
     Analyzes and compares the content, structure, logic, and quality
-    of two files using LLM-powered semantic analysis and/or traditional
-    line-by-line diff. Works with any text-based files including .mmd, .md, .spl, .txt, etc.
+    of two files using various methods: LLM, git-diff, vector similarity, etc.
+    Works with any text-based files including .mmd, .md, .spl, .txt, etc.
 
     \b
     Examples:
       spl3 compare workflow1.mmd workflow2.mmd
-      spl3 compare claude_output.md ollama_output.md --focus quality
-      spl3 compare old_spec.md new_spec.md -o comparison_report.md --diff
-      spl3 compare chart1.mmd chart2.mmd --diff-only --diff-style side-by-side
-      spl3 compare file1.spl file2.spl --adapter claude_cli --diff --format json
+      spl3 compare old.md new.md --mode vector --mode llm
+      spl3 compare chart1.mmd chart2.mmd --mode ged
+      spl3 compare file1.spl file2.spl --mode llm --mode git-diff --format json
     """
     from pathlib import Path
     import json as _json
     import difflib
     import sys
+    from datetime import datetime
 
     # Validate input files
     path1 = Path(file1)
@@ -1773,11 +1954,17 @@ def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_
     content1 = path1.read_text(encoding="utf-8")
     content2 = path2.read_text(encoding="utf-8")
 
-    # Generate mechanical diff if requested
-    mechanical_diff = ""
-    if diff or diff_only:
+    # Determine modes to run
+    active_modes = list(modes)
+    if not active_modes:
+        active_modes = ["llm", "git-diff"]
+
+    results = {}
+    # ── Git Diff Mode ────────────────────────────────────────────────────────
+    if "git-diff" in active_modes:
         lines1 = content1.splitlines(keepends=True)
         lines2 = content2.splitlines(keepends=True)
+        mechanical_diff = ""
 
         if diff_style == "unified":
             diff_lines = list(difflib.unified_diff(
@@ -1787,7 +1974,7 @@ def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_
                 lineterm=""
             ))
 
-            if not no_color and sys.stdout.isatty():
+            if not no_color and sys.stdout.isatty() and not output:
                 # Add ANSI color codes for terminal output
                 colored_diff = []
                 for line in diff_lines:
@@ -1816,7 +2003,6 @@ def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_
 
         elif diff_style == "side-by-side":
             # Create side-by-side diff
-            differ = difflib.HtmlDiff()
             if format == "markdown":
                 # For markdown, create a simple side-by-side table
                 side_by_side_lines = []
@@ -1824,27 +2010,27 @@ def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_
                 side_by_side_lines.append("|---|---|")
 
                 # Get line-by-line differences
-                for i, (line1, line2) in enumerate(zip(lines1, lines2)):
-                    line1_clean = line1.rstrip('\n\r').replace('|', '\\|')
-                    line2_clean = line2.rstrip('\n\r').replace('|', '\\|')
-                    if line1 != line2:
-                        side_by_side_lines.append(f"| **{line1_clean}** | **{line2_clean}** |")
+                for i, (l1, l2) in enumerate(zip(lines1, lines2)):
+                    l1_clean = l1.rstrip('\n\r').replace('|', '\\|')
+                    l2_clean = l2.rstrip('\n\r').replace('|', '\\|')
+                    if l1 != l2:
+                        side_by_side_lines.append(f"| **{l1_clean}** | **{l2_clean}** |")
                     else:
-                        side_by_side_lines.append(f"| {line1_clean} | {line2_clean} |")
+                        side_by_side_lines.append(f"| {l1_clean} | {l2_clean} |")
 
                 # Handle different file lengths
                 max_len = max(len(lines1), len(lines2))
                 for i in range(min(len(lines1), len(lines2)), max_len):
                     if i < len(lines1):
-                        line1_clean = lines1[i].rstrip('\n\r').replace('|', '\\|')
-                        side_by_side_lines.append(f"| **{line1_clean}** | *[missing]* |")
+                        l1_clean = lines1[i].rstrip('\n\r').replace('|', '\\|')
+                        side_by_side_lines.append(f"| **{l1_clean}** | *[missing]* |")
                     else:
-                        line2_clean = lines2[i].rstrip('\n\r').replace('|', '\\|')
-                        side_by_side_lines.append(f"| *[missing]* | **{line2_clean}** |")
+                        l2_clean = lines2[i].rstrip('\n\r').replace('|', '\\|')
+                        side_by_side_lines.append(f"| *[missing]* | **{l2_clean}** |")
 
                 mechanical_diff = "\n".join(side_by_side_lines)
             else:
-                # For other formats, use simple text side-by-side
+                differ = difflib.HtmlDiff()
                 mechanical_diff = differ.make_file(
                     lines1, lines2,
                     fromdesc=path1.name,
@@ -1854,31 +2040,35 @@ def cmd_compare(file1, file2, adapter, model, output, format, focus, diff, diff_
         # If no differences found
         if not mechanical_diff.strip() or mechanical_diff == "\n".join([f"--- a/{path1.name}", f"+++ b/{path2.name}"]):
             mechanical_diff = "No mechanical differences found - files are identical."
+        
+        results["git-diff"] = mechanical_diff
 
-    # Handle diff-only mode
+    # Handle diff-only mode (shorthand for mode=git-diff only)
     if diff_only:
         if output:
             output_path = Path(output)
-            output_path.write_text(mechanical_diff, encoding="utf-8")
+            output_path.write_text(results.get("git-diff", ""), encoding="utf-8")
             click.echo(f"Mechanical diff written to: {output_path}")
         else:
-            click.echo(mechanical_diff)
+            click.echo(results.get("git-diff", ""))
         return
 
-    # Determine file types for context
-    ext1 = path1.suffix.lower()
-    ext2 = path2.suffix.lower()
+    # ── LLM Semantic Mode ────────────────────────────────────────────────────
+    if "llm" in active_modes:
+        # Determine file types for context
+        ext1 = path1.suffix.lower()
+        ext2 = path2.suffix.lower()
 
-    # Build comparison prompt based on focus
-    focus_prompts = {
-        "all": "Provide a comprehensive comparison covering structure, logic, quality, and syntax.",
-        "structure": "Focus on architectural and organizational differences.",
-        "logic": "Focus on logical flow, decision points, and process sequences.",
-        "quality": "Focus on completeness, sophistication, and best practices.",
-        "syntax": "Focus on syntax correctness, formatting, and technical accuracy."
-    }
+        # Build comparison prompt based on focus
+        focus_prompts = {
+            "all": "Provide a comprehensive comparison covering structure, logic, quality, and syntax.",
+            "structure": "Focus on architectural and organizational differences.",
+            "logic": "Focus on logical flow, decision points, and process sequences.",
+            "quality": "Focus on completeness, sophistication, and best practices.",
+            "syntax": "Focus on syntax correctness, formatting, and technical accuracy."
+        }
 
-    prompt = f"""Compare these two files semantically and provide a detailed analysis.
+        prompt = f"""Compare these two files semantically and provide a detailed analysis.
 
 **File 1**: {path1.name} ({ext1})
 **File 2**: {path2.name} ({ext2})
@@ -1936,99 +2126,159 @@ Rate each file (1-10) on:
 
 Provide actionable insights for choosing between or improving these files."""
 
-    try:
-        from spl3.adapters import get_adapter
-    except ImportError:
-        raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
+        if prompt_debug:
+            click.echo("=" * 70)
+            click.echo("LLM PROMPT:")
+            click.echo("=" * 70)
+            click.echo(prompt)
+            if "llm" == active_modes[-1] or (len(active_modes) == 1):
+                return
 
-    llm = get_adapter(adapter, **{"model": model} if model else {})
+        try:
+            from spl3.adapters import get_adapter
+        except ImportError:
+            raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
 
-    if diff:
-        click.echo(f"Comparing {path1.name} vs {path2.name} using {adapter} (semantic + mechanical diff)...")
-    else:
-        click.echo(f"Comparing {path1.name} vs {path2.name} using {adapter}...")
+        llm = get_adapter(adapter, **({"model": model} if model else {}))
+        
+        click.echo(f"Performing semantic comparison using {adapter}...")
+        result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
+        comparison_text = result if isinstance(result, str) else getattr(result, "content", str(result))
+        results["llm"] = comparison_text
 
-    result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
-    comparison_text = result if isinstance(result, str) else getattr(result, "content", str(result))
+    # ── Vector Similarity Mode ───────────────────────────────────────────────
+    if "vector" in active_modes:
+        click.echo(f"Calculating vector similarity using {adapter_embed}...")
+        try:
+            from dd_embed import get_adapter as get_embed_adapter
+            embed_llm = get_embed_adapter(adapter_embed, model_name=model_embed)
+            
+            # Simple average embedding for files (might need chunking for large files)
+            emb1 = embed_llm.embed([content1]).embeddings[0]
+            emb2 = embed_llm.embed([content2]).embeddings[0]
+            
+            # Cosine similarity
+            import numpy as np
+            norm1 = np.linalg.norm(emb1)
+            norm2 = np.linalg.norm(emb2)
+            similarity = np.dot(emb1, emb2) / (norm1 * norm2) if norm1 > 0 and norm2 > 0 else 0.0
+            results["vector"] = similarity
+        except Exception as e:
+            click.echo(f"Warning: Vector similarity failed: {e}", err=True)
+            results["vector"] = f"Error: {e}"
 
-    # Format output based on requested format
+    # ── BERTScore Mode ───────────────────────────────────────────────────────
+    if "bert-score" in active_modes:
+        click.echo("Calculating BERTScore...")
+        try:
+            import bert_score
+            import torch
+            # Force CPU usage
+            device = "cpu"
+            # bert_score.score returns (P, R, F1) tensors
+            P, R, F1 = bert_score.score([content2], [content1], lang="en", verbose=False, device=device)
+            results["bert-score"] = {
+                "precision": float(P[0]),
+                "recall": float(R[0]),
+                "f1": float(F1[0])
+            }
+        except Exception as e:
+            click.echo(f"Warning: BERTScore failed: {e}", err=True)
+            results["bert-score"] = f"Error: {e}"
+
+    # ── GED Mode ─────────────────────────────────────────────────────────────
+    if "ged" in active_modes:
+        click.echo("Calculating Graph Edit Distance (GED)...")
+        try:
+            import networkx as nx
+            g1 = _parse_mermaid_to_nx(content1)
+            g2 = _parse_mermaid_to_nx(content2)
+            
+            # Simple GED (might be slow for large graphs)
+            # We use a heuristic or time-limited approach if needed
+            distance = nx.graph_edit_distance(g1, g2, timeout=10)
+            if distance is None:
+                # Timeout occurred
+                results["ged"] = "GED: Timeout (graph too complex)"
+            else:
+                results["ged"] = {
+                    "distance": float(distance),
+                    "node_count": [len(g1.nodes), len(g2.nodes)],
+                    "edge_count": [len(g1.edges), len(g2.edges)]
+                }
+        except Exception as e:
+            click.echo(f"Warning: GED failed: {e}", err=True)
+            results["ged"] = f"Error: {e}"
+
+    # ── Format Output ────────────────────────────────────────────────────────
+    ext1 = path1.suffix.lower()
+    ext2 = path2.suffix.lower()
+
     if format == "json":
-        # Extract key metrics for JSON (simplified structure)
         json_output = {
             "files": {
                 "file1": {"name": path1.name, "type": ext1},
                 "file2": {"name": path2.name, "type": ext2}
             },
-            "analysis": {
-                "summary": comparison_text.split("## Content Analysis")[0].replace("## Summary", "").strip(),
-                "full_report": comparison_text
-            },
+            "results": results,
             "metadata": {
                 "adapter": adapter,
                 "model": model or "default",
+                "adapter_embed": adapter_embed,
+                "model_embed": model_embed or "default",
                 "focus": focus,
                 "timestamp": datetime.now().isoformat(),
-                "includes_diff": diff,
-                "diff_style": diff_style if diff else None
+                "active_modes": active_modes
             }
         }
-
-        if diff and mechanical_diff:
-            json_output["mechanical_diff"] = {
-                "style": diff_style,
-                "content": mechanical_diff
-            }
-
         output_content = _json.dumps(json_output, indent=2)
 
     elif format == "text":
-        # Plain text without markdown formatting
-        output_content = comparison_text.replace("#", "").replace("**", "").replace("*", "")
-
-        if diff and mechanical_diff:
-            output_content = f"""MECHANICAL DIFF ({diff_style.upper()})
-{'=' * 60}
-
-{mechanical_diff}
-
-{'=' * 60}
-
-SEMANTIC ANALYSIS
-{'=' * 60}
-
-{output_content}"""
+        output_parts = [f"Comparison of {path1.name} and {path2.name}"]
+        for mode in active_modes:
+            output_parts.append(f"\n--- {mode.upper()} ---")
+            output_parts.append(str(results.get(mode, "N/A")))
+        output_content = "\n".join(output_parts)
 
     else:  # markdown (default)
-        # Add metadata header
-        output_content = f"""# File Comparison Report
+        header = f"""# File Comparison Report
 
 **Files Compared:**
 - File 1: `{path1.name}` ({ext1})
 - File 2: `{path2.name}` ({ext2})
-- **Adapter:** {adapter}
-- **Model:** {model or 'default'}
-- **Focus:** {focus}
-- **Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-{f"- **Includes Diff:** {diff_style} style" if diff else ""}
+- **Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- **Active Modes:** {', '.join(active_modes)}
 
 ---
-
-{comparison_text}
-
-{f'''
----
-
-## Mechanical Diff ({diff_style.title()} Style)
-
-```diff
-{mechanical_diff}
-```
-''' if diff and mechanical_diff else ""}
-
----
-
-*Generated by SPL semantic comparison tool*
 """
+        body_parts = []
+        
+        if "llm" in results:
+            body_parts.append(f"## LLM Semantic Analysis\n\n**Adapter:** {adapter}\n**Model:** {model or 'default'}\n\n{results['llm']}")
+            
+        if "vector" in results:
+            sim = results["vector"]
+            body_parts.append(f"## Vector Similarity\n\n**Adapter:** {adapter_embed}\n**Model:** {model_embed or 'default'}\n\nCosine Similarity: **{sim:.4f}**" if isinstance(sim, float) else f"## Vector Similarity\n\n{sim}")
+
+        if "bert-score" in results:
+            res = results["bert-score"]
+            if isinstance(res, dict):
+                body_parts.append(f"## BERTScore\n\n- **Precision:** {res['precision']:.4f}\n- **Recall:** {res['recall']:.4f}\n- **F1 Score:** **{res['f1']:.4f}**")
+            else:
+                body_parts.append(f"## BERTScore\n\n{res}")
+
+        if "ged" in results:
+            res = results["ged"]
+            if isinstance(res, dict):
+                body_parts.append(f"## Graph Edit Distance (GED)\n\n- **Distance:** **{res['distance']:.1f}**\n- **Nodes:** {res['node_count'][0]} vs {res['node_count'][1]}\n- **Edges:** {res['edge_count'][0]} vs {res['edge_count'][1]}\n\n*Note: Lower distance means higher topological symmetry.*")
+            else:
+                body_parts.append(f"## Graph Edit Distance (GED)\n\n{res}")
+
+        if "git-diff" in results:
+            body_parts.append(f"## Mechanical Diff ({diff_style.title()} Style)\n\n```diff\n{results['git-diff']}\n```")
+
+        footer = "\n---\n\n*Generated by SPL semantic comparison tool*"
+        output_content = header + "\n---\n\n".join(body_parts) + footer
 
     # Output results
     if output:
@@ -2037,6 +2287,42 @@ SEMANTIC ANALYSIS
         click.echo(f"Comparison report written to: {output_path}")
     else:
         click.echo(output_content)
+
+
+def _parse_mermaid_to_nx(mermaid_content: str):
+    """Parse Mermaid flowchart content into a NetworkX DiGraph."""
+    import re as _re
+    import networkx as nx
+    
+    g = nx.DiGraph()
+    
+    # Parse flowchart nodes: A[Label] or A{Decision} or A(Process)
+    node_pattern = r'(\w+)(?:\[(.*?)\]|\{(.*?)\}|\((.*?)\))'
+    for match in _re.finditer(node_pattern, mermaid_content):
+        node_id = match.group(1)
+        label = match.group(2) or match.group(3) or match.group(4) or node_id
+
+        # Determine node type from syntax
+        if match.group(3):  # {label} = decision
+            node_type = "decision"
+        elif any(keyword in label.lower() for keyword in ["start", "begin"]):
+            node_type = "start"
+        elif any(keyword in label.lower() for keyword in ["end", "finish", "return"]):
+            node_type = "end"
+        else:
+            node_type = "process"
+
+        g.add_node(node_id, label=label, type=node_type)
+
+    # Parse edges: A --> B or A -->|label| B
+    edge_pattern = r'(\w+)\s*(?:-->|->)\s*(?:\|([^|]*)\|\s*)?(\w+)'
+    for match in _re.finditer(edge_pattern, mermaid_content):
+        from_node = match.group(1)
+        edge_label = match.group(2)
+        to_node = match.group(3)
+        g.add_edge(from_node, to_node, label=edge_label)
+        
+    return g
 
 
 # ------------------------------------------------------------------ #

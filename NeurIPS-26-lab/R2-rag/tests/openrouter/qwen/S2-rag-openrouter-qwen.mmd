@@ -1,0 +1,19 @@
+flowchart TD
+    A[Start Workflow] --> B[Initialize @texts]
+    B --> C[WHILE: Chunk Documents via CALL]
+    C --> D[Embed Chunks via CALL]
+    D --> E[CALL: Construct FAISS @index]
+    E --> F[CALL: Embed User Query]
+    F --> G[CALL: Vector Similarity Search]
+    G --> H{{Distance Exceeds Threshold?}}
+    H -->|Yes| I[Trigger Fallback Response]
+    H -->|No| J[GENERATE via AnswerSynthesis]
+    J --> K[RETURN Answer & Metadata]
+    I --> K
+    C -->|Error| L[EXCEPTION Handler: Log & Degrade]
+    D -->|Error| L
+    F -->|Error| L
+    G -->|Error| L
+    J -->|Error| L
+    L --> K
+    K --> M[End Workflow]

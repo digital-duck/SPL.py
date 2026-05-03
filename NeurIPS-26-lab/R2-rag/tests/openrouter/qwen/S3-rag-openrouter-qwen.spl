@@ -1,0 +1,55 @@
+CREATE FUNCTION AnswerSynthesis(query TEXT, context TEXT) 
+RETURNS TEXT AS $$ 
+Generate a concise and accurate answer based strictly on the provided context. 
+
+$$;
+
+WORKFLOW DocumentRetrievalFlow
+INPUT @question TEXT
+OUTPUT @answer TEXT
+
+DO
+    @texts := [];
+    @chunks := [];
+    @embeddings := [];
+    @index := NULL;
+    @query_embedding := NULL;
+    @search_results := '';
+    @distance_check := '';
+    @response := '';
+    @metadata := {};
+    @iteration := 0;
+    @error_status := '';
+
+    @texts := ['doc1.txt', 'doc2.txt', 'doc3.txt'];
+
+    WHILE @iteration < 3 DO
+        CALL ChunkDocuments(@texts) INTO @chunks;
+        CALL EmbedChunks(@chunks) INTO @embeddings;
+        @iteration := @iteration + 1;
+    END;
+
+    CALL ConstructFAISSIndex(@embeddings) INTO @index;
+
+    CALL EmbedUserQuery(@question) INTO @query_embedding;
+
+    CALL VectorSimilaritySearch(@query_embedding, @index) INTO @search_results;
+
+    EVALUATE @search_results WHEN contains('exceeds_threshold') THEN
+        CALL FallbackResponse(@question) INTO @response;
+        @metadata := {'status': 'fallback'};
+    ELSE
+        GENERATE AnswerSynthesis(@question, @search_results) INTO @response;
+        @metadata := {'status': 'synthesized', 'context': @search_results};
+    END;
+
+    EVALUATE @error_status WHEN contains('error') THEN
+        CALL LogAndDegrade(@error_status) INTO @metadata;
+        CALL FallbackResponse(@question) INTO @response;
+        @answer := @response;
+    ELSE
+        @answer := @response;
+    END;
+
+    RETURN @answer WITH status = 'complete';
+END;

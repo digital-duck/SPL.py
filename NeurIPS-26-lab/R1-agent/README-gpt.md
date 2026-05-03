@@ -8,36 +8,29 @@ LLM-powered ReAct research agent. Iterative decide→search→accumulate loop us
 
 Set these 4 vars before running any step. Change ADAPTER / MODEL_ID / MODEL for each of the 4 runs.
 
+### 4 Model Configurations
+
+| Run | ADAPTER | MODEL_ID | MODEL |
+|-----|---------|----------|-------|
+| 1 | `claude_cli` | `claude-sonnet-4-6` | `sonnet` |
+| 2 | `ollama` | `gemma3` | `gemma3` |
+| 3 | `openrouter` | `google/gemini-3-flash-preview` | `gemini` |
+| 4 | `openrouter` | `deepseek/deepseek-v4-flash` | `deepseek` |
+
+
 ```bash
+conda activate spl123
+
 export RECIPE=agent
-export ADAPTER=claude_cli          # adapter name
-export MODEL_ID=claude-sonnet-4-6  # full model ID passed to --model
-export MODEL=sonnet                # short name used in output filenames
+export ADAPTER=openrouter   # ollama     #  claude_cli          #    
+export MODEL=deepseek         # gemma3     # sonnet  #  
+export MODEL_ID=deepseek/deepseek-v4-flash  # gemma3  # claude-sonnet-4-6  # 
 
 export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-agent
 export SRC=$BASE/src/pocketflow-agent
 export OUT=$BASE/tests/$ADAPTER/$MODEL
 ```
 
-### 4 Model Configurations
-
-see more models in `/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/shortlist-models.md`
-
-| Run | ADAPTER | MODEL_ID | MODEL | Note |
-|-----|---------|----------|-------|------|
-| 1 | `claude_cli` | 'claude-sonnet-4-6' | `sonnet` | OK  |
-| 2 | `ollama`     | 'gemma3' | `gemma3` |   |
-| 3 | `openrouter` | 'google/gemini-3-flash-preview' | `gemini` | OK  |
-| 4 | `openrouter` | 'deepseek/deepseek-v4-flash' | `deepseek` |   |
-| 5 | `openrouter` | 'anthropic/claude-sonnet-4.6' | `claude` |   |
-| 5 | `openrouter` | 'anthropic/claude-opus-4.6' | `claude` |   |
-| 6 | `openrouter` | 'openai/gpt-5.4' | `gpt` |   |
-| 7 | `openrouter` | 'qwen/qwen3.6-plus' | `qwen` | OK  |
-| 7 | `openrouter` | 'qwen/qwen3.6-flash' | `qwen` |   |
-| 7 | `openrouter` | 'qwen/qwen3.6-35b-a3b' | `qwen` |   |
-| 7 | `openrouter` | 'qwen/qwen3.6-max-preview' | `qwen` |   |
-| 7 | `openrouter` | 'qwen/qwen3.6-27b' | `qwen` |   |
-| 8 | `openrouter` | 'z-ai/glm-5.1' | `z-ai` |   |
 
 ---
 
@@ -46,6 +39,7 @@ see more models in `/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/s
 Convert original PocketFlow code to spec. `--include-docs` pulls in `README.md` for original intent context.
 
 ```bash
+
 spl3 splc describe $SRC \
   --include-docs \
   --adapter $ADAPTER --model $MODEL_ID \
@@ -84,10 +78,32 @@ spl3 mmd2spl $OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd \
   -o $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ```
 
+backup the original .spl script
+
+```bash
+cp $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl-orig
+```
+
 Validate before continuing:
+
 ```bash
 spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ```
+
+
+## ⚠️ CHECKPOINT
+
+Test the .spl
+
+```bash
+spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
+  --adapter $ADAPTER --model $MODEL_ID \
+  --claude-allowed-tools WebSearch \
+  --param question="what is machine learning" \
+    2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md 
+
+```
+
 
 ---
 
@@ -104,6 +120,8 @@ spl3 splc compile $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
 mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
 ```
+
+Gemini CLI made change to .py, 
 
 ---
 
@@ -129,6 +147,40 @@ spl3 compare \
   $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
   --adapter claude_cli --model claude-opus-4-6 \
   -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
+
+# use gemini as Judge
+spl3 compare \
+  $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
+  --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff-gemini.md
+
+```
+
+---
+
+## 🧪 ABLATION — `spl3 vibe` → One-Shot Baseline
+
+Mimic "vibe coding" by bypassing the Mermaid and SPL intermediate representations. This establishes the baseline **Intent Entropy** ($\Delta S$) for direct generation.
+
+```bash
+# Generate code directly from the S1 spec
+spl3 vibe --description $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  --target python/pocketflow \
+  --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL-vibe.py
+
+# Describe the vibe-coded result
+spl3 splc describe $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL-vibe.py \
+  --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/S5-$RECIPE-$ADAPTER-$MODEL-vibe-spec.md
+
+# Compare vibe-coded spec vs original spec
+spl3 compare \
+  $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  $OUT/S5-$RECIPE-$ADAPTER-$MODEL-vibe-spec.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-vibe-diff.md
 ```
 
 ---

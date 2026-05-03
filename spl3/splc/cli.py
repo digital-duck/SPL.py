@@ -229,6 +229,12 @@ def splc():
     default=False,
     help="Print progress and token counts.",
 )
+@click.option(
+    "--prompt", "prompt_debug",
+    is_flag=True,
+    default=False,
+    help="Display the LLM prompt and exit.",
+)
 def cmd_compile(
     spl_path:   Path,
     lang:       str,
@@ -243,6 +249,7 @@ def cmd_compile(
     no_readme:  bool,
     llm:        bool,
     verbose:    bool,
+    prompt_debug: bool,
 ) -> None:
     """splc — SPL Compiler: translate a .spl logical view into a physical implementation."""
 
@@ -377,9 +384,10 @@ def cmd_compile(
             gen_readme   = not no_readme,
         )
 
-        if dry_run:
+        if dry_run or prompt_debug:
+            label = "DRY RUN" if dry_run else "LLM PROMPT"
             click.echo("=" * 70)
-            click.echo("DRY RUN — prompt that would be sent to the LLM:")
+            click.echo(f"{label} — prompt that would be sent to the LLM:")
             click.echo("=" * 70)
             click.echo(prompt)
             click.echo(f"\n[Prompt length: {len(prompt)} chars / ~{len(prompt)//4} tokens]")
@@ -617,9 +625,29 @@ Source file: {spl_filename}\
 """
 
 
+VIBE_SYSTEM_PROMPT = """\
+You are an expert software engineer. Your task is to translate a natural language REQUIREMENT
+directly into a working {lang_label} implementation.
+
+Rules:
+1. The code must be complete, executable, and production-ready.
+2. Use only the target language's standard patterns for {lang_label}.
+3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct node wiring, 
+   shared state management, and robust error handling.
+4. Provide a main execution block that demonstrates the requirement.
+5. If the implementation requires LLM calls, use a pattern compatible with the `{adapter}` adapter
+   and the model `{model}`. For Python targets, prefer a `call_llm(prompt: str) -> str` helper.
+6. Output ONLY the implementation file content — no explanation before it.
+   The file should be ready to run without modification.
+{readme_instr}
+
+Target: {lang_label}
+"""
+
+
 # ── LLM caller ───────────────────────────────────────────────────────────────
 
-def _compile(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> tuple[str, str]:
+def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> tuple[str, str]:
     """Call the specified adapter and return (implementation, readme)."""
     import asyncio
     try:
@@ -646,11 +674,11 @@ def _compile(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> 
     # Split implementation from readme (if present)
     if "--- README ---" in raw:
         impl_part, _, readme_part = raw.partition("--- README ---")
-        return _strip_fences(impl_part), readme_part.strip()
-    return _strip_fences(raw), ""
+        return strip_fences(impl_part), readme_part.strip()
+    return strip_fences(raw), ""
 
 
-def _strip_fences(text: str) -> str:
+def strip_fences(text: str) -> str:
     """Remove leading/trailing markdown code fences from LLM output."""
     import re
     text = text.strip()
@@ -841,7 +869,13 @@ def _lang_label_from_path(path: Path) -> str:
     default=False,
     help="Also include README.md (if present) to give the LLM original intent context.",
 )
-def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool) -> None:
+@click.option(
+    "--prompt", "prompt_debug",
+    is_flag=True,
+    default=False,
+    help="Display the LLM prompt and exit.",
+)
+def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, prompt_debug: bool) -> None:
     """Describe a compiled target implementation as a -spec.md file.
 
     \b
@@ -912,6 +946,13 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
         lang_label=detected_label,
         source=source,
     )
+
+    if prompt_debug:
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(prompt)
+        return
 
     try:
         from spl3.adapters import get_adapter

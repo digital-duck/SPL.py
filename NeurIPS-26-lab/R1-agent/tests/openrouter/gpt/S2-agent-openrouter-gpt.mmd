@@ -1,0 +1,20 @@
+flowchart TD
+    A[Start] --> B[Initialize @question, @context, @search_query, @answer]
+    B --> C[GENERATE DecideAction with question and context]
+    C --> D[Parse and validate YAML output]
+    D --> E{{YAML valid?}}
+    E -->|No| F[EXCEPTION handle parse error or repair YAML]
+    F --> G{{Recovered?}}
+    G -->|Yes| D
+    G -->|No| N[RETURN failure status metadata]
+    E -->|Yes| H{{Action == search?}}
+    H -->|Yes| I[Store @search_query]
+    I --> J[CALL DuckDuckGo search_web max_results=5]
+    J --> K{{Tool call succeeded?}}
+    K -->|No| L[EXCEPTION handle tool failure]
+    L --> N
+    K -->|Yes| M[Append SEARCH and RESULTS block to @context]
+    M --> C
+    H -->|No| O[Store decision model answer into @context]
+    O --> P[GENERATE AnswerQuestion with question and context into @answer]
+    P --> Q[RETURN @answer with status done]

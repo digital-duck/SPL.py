@@ -1,0 +1,17 @@
+flowchart TD
+    A[Start: Initialize @task and @attempts=0] --> B[GENERATE @draft via Generator LLM]
+    B --> C[GENERATE @judgment via Judge LLM]
+    C --> D{{WHILE @attempts < 3 AND @score < 7}}
+    D -->|True| E{{EVALUATE @verdict == PASS OR @score >= 7}}
+    E -->|Yes| F[Assign @final_description and Break Loop]
+    E -->|No| G[Increment @attempts and Update @feedback]
+    G -->|Retry| B
+    F --> H[Loop Condition Met or Exhausted]
+    D -->|False| H
+    H --> I[RETURN @final_description WITH metadata]
+    I --> J[CALL write_file Optional SideEffect]
+    J --> K[End]
+    B -->|Error| L[EXCEPTION Handler: ParseError or Timeout]
+    C -->|Error| L
+    L --> M[Fallback: Return last valid @draft with status=degraded]
+    M --> K

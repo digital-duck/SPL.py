@@ -1,0 +1,13 @@
+flowchart TD
+    A[Initialize Workflow & Shared State] --> B[GENERATE decide_action]
+    B --> C[Parse YAML Output]
+    C --> D{{YAML Parsing Successful?}}
+    D -->|No| E[EXCEPTION: Repair Block Scalars & Retry]
+    E --> C
+    D -->|Yes| F{{Action == search?}}
+    F -->|Yes| G[CALL search_web]
+    G --> H[Append Results to @context]
+    H --> B
+    F -->|No| I[GENERATE answer_question]
+    I --> J[RETURN final answer & metadata]
+    J --> K[End]

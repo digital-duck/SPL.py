@@ -1,0 +1,71 @@
+CREATE FUNCTION plan_queries(question TEXT) RETURNS TEXT AS $$ Generate precise search directives to answer: {{question}}. Return as a comma-separated string. $$;
+CREATE FUNCTION extract_facts(search_results TEXT) RETURNS TEXT AS $$ Extract and aggregate factual notes from the search results into a structured summary. $$;
+CREATE FUNCTION assess_and_synthesize(question TEXT, facts TEXT, feedback TEXT) RETURNS TEXT AS $$ Assess the collected facts and feedback. Generate a YAML decision containing an 'action' field with value 'research' or 'finalize'. $$;
+CREATE FUNCTION write_report(question TEXT, facts TEXT, decision TEXT) RETURNS TEXT AS $$ Generate a comprehensive final Markdown report answering the question based on the facts and decision. $$;
+
+WORKFLOW ResearchWorkflow
+  INPUT @question TEXT
+  OUTPUT @answer TEXT
+
+DO
+
+  @loop_count := 0;
+  @iteration := 0;
+  @queries := '';
+  @search_results := '';
+  @facts := '';
+  @feedback := '';
+  @decision := '';
+  @report := '';
+
+  -- B: plan_queries
+  GENERATE plan_queries(@question) INTO @queries;
+
+  -- C: Parallel CALL Web Search for @queries
+  CALL web_search(@queries) INTO @search_results;
+
+  -- D: extract_facts
+  GENERATE extract_facts(@search_results) INTO @facts;
+
+  -- E: WHILE @loop_count < 2
+  WHILE @loop_count < 2 AND @iteration < 3 
+  DO
+    @iteration := @iteration + 1;
+
+    -- F: assess_and_synthesize
+    GENERATE assess_and_synthesize(@question, @facts, @feedback) INTO @decision;
+
+    -- G: EVALUATE Action Field
+    EVALUATE @decision WHEN contains('research') THEN
+      -- H: Update @feedback & Increment @loop_count -> B
+      @feedback := @decision;
+      @loop_count := @loop_count + 1;
+
+      -- Restart search cycle
+      GENERATE plan_queries(@question) INTO @queries;
+      CALL web_search(@queries) INTO @search_results;
+      GENERATE extract_facts(@search_results) INTO @facts;
+    ELSE
+      -- G -> finalize -> I
+      GENERATE write_report(@question, @facts, @decision) INTO @report;
+      @loop_count := 2;
+    END;
+  EXCEPTION
+    -- M: EXCEPTION WHEN Handler -> L
+    @report := 'Terminated due to API or parsing error.';
+    @loop_count := 2;
+  END;
+
+
+  -- E -> |No| -> I
+  WHEN @report == '' THEN
+    GENERATE write_report(@question, @facts, @decision) INTO @report;
+  END;
+
+  -- J: CALL Write File to Disk
+  CALL write_file_to_disk('final_report.md', @report) INTO @disk_status;
+
+  -- K -> L
+  @answer := @report;
+  RETURN @answer WITH status = 'complete';
+END;

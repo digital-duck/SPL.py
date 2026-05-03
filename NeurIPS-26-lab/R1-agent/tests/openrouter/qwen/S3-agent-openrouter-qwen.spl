@@ -1,0 +1,53 @@
+CREATE FUNCTION decide_action(ctx) 
+RETURNS TEXT AS $$
+Analyze the current context and determine the next step.
+Output valid YAML containing an 'action' field.
+Context: {{ctx}}
+$$;
+
+CREATE FUNCTION answer_question(ctx) 
+RETURNS TEXT AS $$
+Using the provided context, generate a comprehensive final answer to the user''s question.
+Context: {{ctx}}
+$$;
+
+CREATE FUNCTION repair_block_scalars(text) 
+RETURNS TEXT AS $$
+Fix malformed YAML block scalar formatting in the provided text.
+Input Text: {{text}}
+$$;
+
+WORKFLOW research_agent
+INPUT @question TEXT
+OUTPUT @answer TEXT
+
+DO  --BEGIN
+  @context := @question;
+  @iteration := 0;
+
+  WHILE @iteration < 3 DO
+    @iteration := @iteration + 1;
+    @parsed_success := FALSE;
+
+    GENERATE decide_action(@context) INTO @yaml_output;
+
+    WHILE @parsed_success = FALSE AND @iteration < 3 DO
+      EVALUATE @yaml_output WHEN contains('action:') THEN
+        @parsed_success := TRUE;
+      ELSE
+        @yaml_output := repair_block_scalars(@yaml_output);
+        @parsed_success := FALSE;
+      END;
+    END;
+
+    EVALUATE @yaml_output WHEN contains('action: search') THEN
+      CALL web_search(@context) INTO @search_results;
+      @context := CONCAT(@context, '\n', @search_results);
+    ELSE
+      GENERATE answer_question(@context) INTO @answer;
+      RETURN @answer WITH status = 'complete';
+    END;
+  END;
+
+  RETURN @answer WITH status = 'complete';
+END;

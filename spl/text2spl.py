@@ -274,36 +274,14 @@ class Text2SPL:
         self.auto_capture = auto_capture
 
     async def compile(self, description: str, mode: str = "auto") -> str:
-        """Convert a natural language task description into SPL 2.0 source code.
-
-        Args:
-            description: A plain-English description of the desired behaviour,
-                e.g. "summarize this document" or "build a review agent that
-                refines text until quality > 0.8".
-            mode: One of ``"prompt"`` (emit a PROMPT statement),
-                ``"workflow"`` (emit a WORKFLOW), or ``"auto"`` (let the LLM
-                choose the best form).
-
-        Returns:
-            A string containing valid SPL 2.0 source code.
-
-        Raises:
-            ValueError: If *mode* is not one of the accepted values.
-        """
+        """Convert a natural language task description into SPL 2.0 source code."""
         if mode not in _MODE_INSTRUCTIONS:
             raise ValueError(
                 f"Invalid mode {mode!r}. Must be one of: "
                 f"{', '.join(sorted(_MODE_INSTRUCTIONS))}"
             )
 
-        # Build system prompt — replace static examples with RAG hits when available
-        system = self._build_system_prompt(description)
-
-        user_prompt = (
-            f"Task: {description}\n\n"
-            f"Mode instruction: {_MODE_INSTRUCTIONS[mode]}\n\n"
-            "Generate the SPL 2.0 code now."
-        )
+        system, user_prompt = self.build_prompt(description, mode)
 
         result = await self.adapter.generate(
             prompt=user_prompt,
@@ -356,6 +334,23 @@ class Text2SPL:
                 _log.warning("Code-RAG auto-capture failed: %s", exc)
 
         return spl_code
+
+    def build_prompt(self, description: str, mode: str = "auto") -> tuple[str, str]:
+        """Construct the system and user prompts without calling the LLM.
+
+        Returns:
+            A (system_prompt, user_prompt) tuple.
+        """
+        if mode not in _MODE_INSTRUCTIONS:
+            raise ValueError(f"Invalid mode {mode!r}")
+
+        system = self._build_system_prompt(description)
+        user_prompt = (
+            f"Task: {description}\n\n"
+            f"Mode instruction: {_MODE_INSTRUCTIONS[mode]}\n\n"
+            "Generate the SPL 2.0 code now."
+        )
+        return system, user_prompt
 
     # ------------------------------------------------------------------
     # System prompt construction

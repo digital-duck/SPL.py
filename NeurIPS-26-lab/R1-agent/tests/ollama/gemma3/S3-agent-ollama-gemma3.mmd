@@ -1,9 +1,0 @@
-flowchart TD
-    A[Start with Question] --> B[Generate decide_action]
-    B --> C{{Action == 'search'?}}
-    C -->|Yes| D[Call search_web]
-    D --> E[Add Results to Context]
-    E --> B
-    C -->|No| F[Generate answer_question]
-    F --> G[Return Answer]
-    G --> H[End]

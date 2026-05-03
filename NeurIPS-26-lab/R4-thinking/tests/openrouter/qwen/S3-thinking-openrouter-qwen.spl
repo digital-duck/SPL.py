@@ -1,0 +1,50 @@
+CREATE FUNCTION GenerateReasoningStep(ctx TEXT, step INT) RETURNS TEXT AS $$
+Generate the next logical reasoning step in strict YAML format based on the provided context and step number.
+Context: {ctx}
+Step: {step}
+$$;
+
+WORKFLOW ChainOfThoughtOrchestrator
+  INPUT @question TEXT
+  OUTPUT @answer TEXT
+
+DO
+  @context := CONCAT('User Query: ', @question);
+  @next_thought_needed := 'true';
+  @iteration := 0;
+  @step_counter := 0;
+  @reasoning_trace := '';
+
+  WHILE @next_thought_needed == 'true' AND @iteration < 3 DO
+    @iteration := @iteration + 1;
+    @step_counter := @step_counter + 1;
+
+    GENERATE GenerateReasoningStep(@context, @step_counter) INTO @llm_output;
+
+    @yaml_validity := CALL validate_yaml_schema(@llm_output) INTO @yaml_validity;
+    EVALUATE @yaml_validity WHEN contains('INVALID') THEN
+      CALL handle_syntax_recovery(@llm_output) INTO @recovered_prompt;
+      GENERATE GenerateReasoningStep(@recovered_prompt, @step_counter) INTO @llm_output;
+      @next_thought_needed := 'true';
+    ELSE
+      @step_flags := CALL inspect_state_flags(@llm_output) INTO @step_flags;
+      EVALUATE @step_flags WHEN contains('CONTINUE') THEN
+        @next_thought_needed := 'true';
+      ELSE
+        @next_thought_needed := 'false';
+      END;
+    END;
+
+    EVALUATE @next_thought_needed WHEN contains('true') THEN
+      @reasoning_trace := CONCAT(@reasoning_trace, '\nStep ', @step_counter, ': ', @llm_output);
+    ELSE
+      @next_thought_needed := 'false';
+    END;
+  END;
+
+  @final_conclusion := CALL extract_conclusion(@reasoning_trace) INTO @final_conclusion;
+  CALL persist_to_disk(@final_conclusion, './output/solution.json') INTO @persist_result;
+
+  @answer := @final_conclusion;
+  RETURN @answer WITH status = 'complete';
+END;

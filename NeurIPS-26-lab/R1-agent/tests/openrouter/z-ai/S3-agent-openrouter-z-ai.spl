@@ -1,0 +1,46 @@
+```spl
+CREATE FUNCTION DecideAction(question TEXT, context TEXT) RETURNS TEXT AS $$
+You are an assistant that decides the next action based on the question and context.
+Respond with YAML containing 'action: search' or 'action: answer' and 'answer: ...' if answering.
+$$;
+
+CREATE FUNCTION AnswerQuestion(question TEXT, context TEXT) RETURNS TEXT AS $$
+You are an assistant that answers the question based on the provided context.
+$$;
+
+WORKFLOW DecideAndAnswer
+  INPUT @question TEXT;
+  OUTPUT @answer TEXT;
+
+  @context := '';
+  @iteration := 0;
+
+  WHILE @iteration < 3 DO
+    @iteration := @iteration + 1;
+
+    GENERATE DecideAction(@question, @context) INTO @decision;
+
+    @yaml_status := 'YAMLParseError';
+    EVALUATE @decision WHEN contains('action:') THEN
+      @yaml_status := 'OK';
+    END;
+
+    EVALUATE @yaml_status WHEN contains('YAMLParseError') THEN
+      @retry_decision := @decision + ' fix block-scalar formatting';
+      @retry_status := 'YAMLParseError';
+      EVALUATE @retry_decision WHEN contains('action:') THEN
+        @retry_status := 'OK';
+        @decision := @retry_decision;
+      END;
+      EVALUATE @retry_status WHEN contains('YAMLParseError') THEN
+        RETURN @decision WITH status = 'error';
+      END;
+    END;
+
+    EVALUATE @decision WHEN contains('search') THEN
+      CALL search_web_duckduckgo(@question) INTO @search_results;
+      @context := @context + @search_results;
+    WHEN contains('answer') THEN
+      @context := @context + @decision;
+      GENERATE AnswerQuestion(@question, @context) INTO @answer;
+      RETURN @answer WITH status = '

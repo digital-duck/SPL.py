@@ -1,0 +1,92 @@
+CREATE FUNCTION DecideAction(question TEXT, context TEXT) RETURNS TEXT AS $$
+You are a research assistant that decides whether to search the web or answer a question.
+
+Given the following question and context, decide what action to take next.
+
+Question: {question}
+Context: {context}
+
+Respond with a YAML object containing exactly one field called "action".
+The value must be either "search" or "answer".
+
+If you need more information to answer the question, respond with:
+action: search
+search_query: <your search query>
+
+If you have enough information to answer the question, respond with:
+action: answer
+
+Only output valid YAML. No explanation, no markdown fences.
+$$;
+
+CREATE FUNCTION AnswerQuestion(question TEXT, context TEXT) RETURNS TEXT AS $$
+You are a helpful research assistant. Using the context provided below, answer the user''s question in clear, plain prose.
+
+Question: {question}
+
+Context:
+{context}
+
+Provide a thorough, accurate, and well-structured answer based on the context. Do not include YAML or metadata. Just write the answer directly.
+$$;
+
+WORKFLOW ResearchAgent
+  INPUT @question TEXT;
+  OUTPUT @answer TEXT;
+
+  DO
+    @context := 'No previous search';
+    @action := '';
+    @iteration := 0;
+    @status := 'running';
+
+    WHILE @status != 'done' AND @iteration < 3 DO
+      @iteration := @iteration + 1;
+
+      GENERATE DecideAction(@question, @context) INTO @yaml_response;
+
+      CALL parse_yaml(@yaml_response) INTO @parsed_yaml;
+
+      EVALUATE @parsed_yaml
+        WHEN contains('ParseError') THEN
+          CALL repair_yaml_block_scalar(@yaml_response) INTO @repaired_yaml;
+
+          EVALUATE @repaired_yaml
+            WHEN contains('RepairFailed') THEN
+              RAISE ValueError 'EXCEPTION ParseError: Unable to parse or repair YAML response from DecideAction.';
+            ELSE
+              CALL parse_yaml(@repaired_yaml) INTO @parsed_yaml;
+          END;
+        ELSE
+          @parsed_yaml := @parsed_yaml;
+      END;
+
+      CALL extract_field(@parsed_yaml, 'action') INTO @action;
+
+      EVALUATE @action
+        WHEN contains('search') THEN
+          CALL extract_field(@parsed_yaml, 'search_query') INTO @search_query;
+
+          CALL search_web_duckduckgo(@search_query) INTO @search_results;
+
+          @context := @context + '\nSEARCH: ' + @search_query + '\nRESULTS: ' + @search_results;
+
+        ELSE
+          GENERATE AnswerQuestion(@question, @context) INTO @answer;
+
+          CALL check_output_path() INTO @output_path;
+
+          EVALUATE @output_path
+            WHEN contains('/') THEN
+              CALL write_file(@output_path, @answer) INTO @write_status;
+            ELSE
+              @write_status := 'no_file';
+          END;
+
+          @status := 'done';
+      END;
+    END;
+
+    RETURN @answer WITH status = 'complete';
+  END;
+END;

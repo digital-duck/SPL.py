@@ -1,0 +1,68 @@
+Traceback (most recent call last):
+  File "/home/papagame/anaconda3/envs/spl123/bin/spl3", line 6, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/core.py", line 1514, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/core.py", line 1435, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/core.py", line 1902, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/core.py", line 1298, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/core.py", line 853, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/site-packages/click/decorators.py", line 34, in new_func
+    return f(get_current_context(), *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/cli.py", line 150, in run
+    asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/anaconda3/envs/spl123/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/cli.py", line 169, in _run_workflow
+    local.load_dir(path.parent)
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/registry.py", line 111, in load_dir
+    total += self.load_file(spl_file)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/registry.py", line 90, in load_file
+    defns = load_workflows_from_file(path)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/_loader.py", line 57, in load_workflows_from_file
+    program = SPL3Parser(tokens).parse()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 43, in parse
+    stmt = self._parse_statement()
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/parser.py", line 54, in _parse_statement
+    return super()._parse_statement()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 71, in _parse_statement
+    return self._parse_workflow_statement()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 834, in _parse_workflow_statement
+    do_block = self._parse_do_block()
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 950, in _parse_do_block
+    statements.append(self._parse_body_statement())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 125, in _parse_body_statement
+    return self._parse_statement()
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl3/parser.py", line 54, in _parse_statement
+    return super()._parse_statement()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/papagame/projects/digital-duck/SPL.py/spl/parser.py", line 114, in _parse_statement
+    raise ParseError(
+spl.parser.ParseError: Parse error at 17:5: Expected statement keyword, got INPUT ('INPUT')

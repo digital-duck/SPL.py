@@ -20,7 +20,10 @@ stored in env var RECIPE
 
 create sub-folders for each recipe (DONE)
 ```bash
-mkdir -p src tests/claude_cli/sonnet tests/ollama/gemma3 tests/openrouter/gemini tests/openrouter/deepseek 
+mkdir -p src tests/claude_cli/sonnet tests/ollama/gemma3 \
+    tests/openrouter/gemini tests/openrouter/deepseek  tests/openrouter/claude \
+    tests/openrouter/gpt tests/openrouter/qwen  tests/openrouter/z-ai
+
 ```
 
 
@@ -36,6 +39,24 @@ stored in  env var ADAPTER
 	M : {sonnet, gemma3, gemini, deepseek}
 	Model_ID : {sonnet-4-6, gemma3, google/gemini-3-flash-preview, deepseek/deepseek-v4-flash}
 stored in  env var MODEL_ID
+
+see all available models in `/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/shortlist-models.md`
+
+| Run | ADAPTER | MODEL_ID | MODEL |
+|-----|---------|----------|-------|
+| 1 | `claude_cli` | 'claude-sonnet-4-6' | `sonnet` |
+| 2 | `ollama`     | 'gemma3' | `gemma3` |
+| 3 | `openrouter` | 'google/gemini-3-flash-preview' | `gemini` |
+| 4 | `openrouter` | 'deepseek/deepseek-v4-flash' | `deepseek` |
+| 5 | `openrouter` | 'anthropic/claude-sonnet-4.6' | `claude` |
+| 5 | `openrouter` | 'anthropic/claude-opus-4.6' | `claude` |
+| 6 | `openrouter` | 'openai/gpt-5.4' | `gpt` |
+| 7 | `openrouter` | 'qwen/qwen3.6-plus' | `qwen` |
+| 7 | `openrouter` | 'qwen/qwen3.6-flash' | `qwen` |
+| 7 | `openrouter` | 'qwen/qwen3.6-35b-a3b' | `qwen` |
+| 7 | `openrouter` | 'qwen/qwen3.6-max-preview' | `qwen` |
+| 7 | `openrouter` | 'qwen/qwen3.6-27b' | `qwen` |
+| 8 | `openrouter` | 'z-ai/glm-5.1' | `z-ai` |
 
 ## SPL round-trip pipeline steps:
 

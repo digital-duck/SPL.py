@@ -1,0 +1,139 @@
+CREATE FUNCTION DecideAction(question, context) 
+RETURNS TEXT AS $$
+You are a controller. Given the user''s question and the current context, decide the next action.
+
+Return ONLY valid YAML with this schema:
+action: search|answer
+search_query: <string or empty>
+model_answer: <string or empty>
+
+Rules:
+- Choose action: search if more web information is needed.
+- Choose action: answer if the context is sufficient.
+- If action is search, provide a concise search_query and leave model_answer empty.
+- If action is answer, provide a concise model_answer and leave search_query empty.
+$$;
+
+CREATE FUNCTION RepairYAML(raw_output) 
+RETURNS TEXT AS $$
+The following text was expected to be valid YAML but was not.
+
+Repair it into valid YAML using exactly this schema:
+action: search|answer
+search_query: <string or empty>
+model_answer: <string or empty>
+
+Return ONLY valid YAML.
+
+Text:
+{{raw_output}}
+$$;
+
+CREATE FUNCTION AnswerQuestion(question, context) 
+RETURNS TEXT AS $$
+Answer the user''s question using the provided context.
+
+Question:
+{{question}}
+
+Context:
+{{context}}
+
+Provide a clear and complete answer.
+$$;
+
+WORKFLOW MermaidFlowchartToSPL 
+    INPUT @question TEXT
+    OUTPUT @answer TEXT
+
+DO
+    @context := '';
+    @search_query := '';
+    @decision_yaml := '';
+    @parsed_state := '';
+    @decision_action := '';
+    @decision_model_answer := '';
+    @search_results := '';
+    @tool_status := '';
+    @recovered := 'no';
+    @status := '';
+    @iteration := 0;
+
+    WHILE @status = '' AND @iteration < 3 DO
+        @iteration := @iteration + 1;
+
+        GENERATE DecideAction(@question, @context) INTO @decision_yaml;
+
+        EVALUATE @decision_yaml
+            WHEN contains('action:') THEN
+                @parsed_state := 'valid';
+            ELSE
+                @parsed_state := 'invalid';
+        END;
+
+        EVALUATE @parsed_state
+            WHEN contains('invalid') THEN
+                GENERATE RepairYAML(@decision_yaml) INTO @decision_yaml;
+
+                EVALUATE @decision_yaml
+                    WHEN contains('action:') THEN
+                        @recovered := 'yes';
+                        @parsed_state := 'valid';
+                    ELSE
+                        @recovered := 'no';
+                END;
+
+                EVALUATE @recovered
+                    WHEN contains('yes') THEN
+                        @parsed_state := 'valid';
+                    ELSE
+                        @answer := 'failure status metadata';
+                        RETURN @answer WITH status = 'failure';
+                END;
+            ELSE
+                @parsed_state := 'valid';
+        END;
+
+        EVALUATE @decision_yaml
+            WHEN contains('action: search') THEN
+                @decision_action := 'search';
+            ELSE
+                @decision_action := 'answer';
+        END;
+
+        EVALUATE @decision_yaml
+            WHEN contains('search_query:') THEN
+                @search_query := @decision_yaml;
+            ELSE
+                @search_query := '';
+        END;
+
+        EVALUATE @decision_yaml
+            WHEN contains('model_answer:') THEN
+                @decision_model_answer := @decision_yaml;
+            ELSE
+                @decision_model_answer := '';
+        END;
+
+        EVALUATE @decision_action
+            WHEN contains('search') THEN
+                -- CALL DuckDuckGo search_web max_results=5 INTO @search_results;
+                CALL web_search(@question) INTO @search_results;
+
+                EVALUATE @search_results
+                    WHEN contains('error') THEN
+                        @answer := 'failure status metadata';
+                        RETURN @answer WITH status = 'failure';
+                    ELSE
+                        @context := @context + '\nSEARCH\n' + @search_query + '\nRESULTS\n' + @search_results;
+                END;
+            ELSE
+                @context := @context + '\n' + @decision_model_answer;
+                GENERATE AnswerQuestion(@question, @context) INTO @answer;
+                RETURN @answer WITH status = 'complete';
+        END;
+    END;
+
+    @answer := 'failure status metadata';
+    RETURN @answer WITH status = 'failure';
+END;

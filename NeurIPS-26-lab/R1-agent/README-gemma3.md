@@ -20,9 +20,9 @@ Set these 4 vars before running any step. Change ADAPTER / MODEL_ID / MODEL for 
 
 ```bash
 export RECIPE=agent
-export ADAPTER=claude_cli          # ollama         
-export MODEL_ID=claude-sonnet-4-6  # gemma3
-export MODEL=sonnet  #  gemma3   
+export ADAPTER=ollama   #  claude_cli          #    
+export MODEL_ID=gemma3  # claude-sonnet-4-6  # 
+export MODEL=gemma3     # sonnet  #  
 
 export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-agent
 export SRC=$BASE/src/pocketflow-agent
@@ -87,7 +87,10 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 Test the .spl
 
 ```bash
-
+spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
+  --adapter $ADAPTER --model $MODEL_ID \
+  --claude-allowed-tools WebSearch --tools cookbook/06_react_agent/tools.py country="China" \
+    2>&1 | tee cookbook/out/06_react_agent-$(date +%Y%m%d_%H%M%S).md 
 
 ```
 

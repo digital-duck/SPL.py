@@ -1,0 +1,32 @@
+CREATE FUNCTION decide_action(question TEXT) 
+RETURNS TEXT AS $$ 
+
+Analyze the question and decide if it requires web search or can be answered directly. Return "search" or "answer". 
+$$;
+
+CREATE FUNCTION answer_question(question TEXT) 
+RETURNS TEXT AS $$ 
+
+Provide a concise answer to the user''s question. 
+$$;
+
+WORKFLOW QuestionAnswering
+INPUT @question TEXT;
+OUTPUT @answer TEXT;
+
+@continue BOOLEAN := true;
+@action TEXT;
+@search_result TEXT;
+
+WHILE @continue DO
+    GENERATE decide_action(@question) INTO @action;
+    EVALUATE @action
+        WHEN contains('search') THEN
+            CALL SearchWeb(@question) INTO @search_result;
+        ELSE
+            GENERATE answer_question(@question) INTO @answer;
+            @continue := false;
+    END;
+END;
+
+RETURN @answer WITH status = 'complete';
