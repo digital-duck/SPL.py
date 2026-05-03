@@ -1,0 +1,18 @@
+    flowchart TD
+    A([Start]) --> B["planner(topic, feedback='')"]
+    B --> C["@queries: 3 search queries"]
+    C --> D{loop_count >= 2?}
+    D -->|Yes - force finalize| E["synthesizer forced:<br/>write_concise_report(topic, notes)"]
+    D -->|No| F["researcher batch:<br/>CALL search_web(query)"]
+    F --> G["GENERATE extract facts<br/>per query in parallel"]
+    G --> H["ACCUMULATE @note_set<br/>INTO @notes"]
+    H --> I["GENERATE synthesizer<br/>(topic, notes, loop_count)"]
+    I --> J{"EVALUATE @decision<br/>action?"}
+    J -->|action == research| K["loop_count += 1<br/>@feedback = decision.feedback"]
+    K --> L["GENERATE planner<br/>(topic, feedback)"]
+    L --> M["@queries updated"]
+    M --> D
+    J -->|action == finalize| N["@report = decision.content"]
+    E --> N
+    N --> O["CALL write_file<br/>(report, path=out)"]
+    O --> P(["RETURN @report<br/>status='complete'"])

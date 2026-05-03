@@ -788,18 +788,7 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
     except Exception as exc:
         raise click.ClickException(f"Compilation failed: {exc}") from exc
 
-    if validate:
-        valid, message = Text2SPL.validate_output(spl_code)
-        if not valid:
-            if output:
-                out_path = Path(output)
-                out_path.parent.mkdir(parents=True, exist_ok=True)
-                out_path.write_text(spl_code, encoding="utf-8")
-                click.echo(f"Written to {output} (with validation errors — review and fix)")
-            else:
-                click.echo(spl_code)
-            click.echo(f"Warning: {message}", err=True)
-            raise SystemExit(1)
+    spl_code = format_spl(spl_code)
 
     if output:
         out_path = Path(output)
@@ -808,6 +797,66 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
         click.echo(f"Written to {output}")
     else:
         click.echo(spl_code)
+
+    # Always validate the generated SPL using the real parser
+    try:
+        from spl.lexer import Lexer
+        from spl3.parser import SPL3Parser
+        tokens = Lexer(spl_code).tokenize()
+        SPL3Parser(tokens).parse()
+        click.echo("Validation: OK")
+    except Exception as exc:
+        click.echo(f"Validation: FAILED — {exc}", err=True)
+        click.echo("  Fix the .spl file or re-run text2spl.", err=True)
+
+
+# ------------------------------------------------------------------ #
+# SPL Formatter                                                        #
+# ------------------------------------------------------------------ #
+
+def format_spl(spl_code: str) -> str:
+    """Apply cosmetic formatting to generated SPL source.
+
+    Rules:
+    1. Put RETURNS <type> AS $$ on its own line after the closing paren
+       of a CREATE FUNCTION signature, for readability.
+    2. Escape bare single quotes inside $$ prompt bodies as '' so the SPL
+       lexer does not treat them as unterminated string literals.
+    """
+    import re as _re
+
+    # Rule 1: split RETURNS onto its own line
+    spl_code = _re.sub(
+        r'\)\s+(RETURNS\s+\S+\s+AS\s+[$][$])',
+        lambda m: ')\n' + m.group(1),
+        spl_code,
+    )
+
+    # Rule 1b: strip spurious TYPE keyword in INPUT/OUTPUT declarations
+    # LLMs sometimes emit "INPUT @var TYPE text" instead of "INPUT @var text"
+    spl_code = _re.sub(r'\bTYPE\s+(?=\w)', '', spl_code)
+
+    # Rule 1c: uppercase type names — LLMs emit lowercase (text, string, list…)
+    # Covers: RETURNS <type> AS $$  and  INPUT/OUTPUT @var <type>
+    _TYPES = r'(text|string|number|boolean|integer|float|list|matrix|vector|index|document|dict|any)'
+    spl_code = _re.sub(r'\bRETURNS\s+' + _TYPES + r'\b',
+                       lambda m: 'RETURNS ' + m.group(1).upper(), spl_code, flags=_re.IGNORECASE)
+    spl_code = _re.sub(r'(@\w+)\s+' + _TYPES + r'\b',
+                       lambda m: m.group(1) + ' ' + m.group(2).upper(), spl_code, flags=_re.IGNORECASE)
+
+    # Rule 2: inside each $$ ... $$ block, replace lone ' with ''
+    # A lone ' is one that is not already doubled (i.e. not preceded or
+    # followed by another single quote).
+    def _escape_quotes_in_body(m):
+        body = m.group(1)
+        # Replace single ' not already part of '' with ''
+        body = _re.sub(r"(?<!')'(?!')", "''", body)
+        return '$$' + body + '$$'
+
+    spl_code = _re.sub(r'[$][$](.*?)[$][$]', _escape_quotes_in_body, spl_code,
+                       flags=_re.DOTALL)
+
+    return spl_code
 
 
 # ------------------------------------------------------------------ #
@@ -850,6 +899,10 @@ def fix_mermaid_syntax(mermaid_text, style="flowchart"):
 
     # Pre-pass: fix actual newlines inside quoted strings before line-splitting
     mermaid_text = _join_multiline_quoted(mermaid_text)
+
+    # Strip trivial "RETURN default" edge labels — implicit linear advance, not a branch
+    mermaid_text = re.sub(r'\|"RETURN default"\|', '', mermaid_text)
+    mermaid_text = re.sub(r'\|RETURN default\|', '', mermaid_text)
 
     lines = mermaid_text.strip().split('\n')
 
@@ -1421,15 +1474,27 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
         result = asyncio.run(llm.generate(prompt_text, **({"model": model} if model else {})))
         spl_code = result if isinstance(result, str) else getattr(result, "content", str(result))
         
-        # Strip markdown fences if present
-        if "```spl" in spl_code:
-            match = _re.search(r"```spl\s*\n(.*?)\n```", spl_code, _re.DOTALL)
-            if match:
-                spl_code = match.group(1).strip()
-        elif "```" in spl_code:
-            match = _re.search(r"```\s*\n(.*?)\n```", spl_code, _re.DOTALL)
-            if match:
-                spl_code = match.group(1).strip()
+        # Extract SPL between custom markers (preferred) or markdown fences.
+        # Custom markers are robust: no inner-fence ambiguity, no preamble bleed.
+        lines = spl_code.splitlines()
+        SPL_BEGIN = "___SPL_BEGIN___"
+        SPL_END   = "___SPL_END___"
+        begin_idx = next((i for i, l in enumerate(lines) if l.strip() == SPL_BEGIN), None)
+        end_idx   = next((i for i, l in enumerate(lines) if l.strip() == SPL_END),   None)
+        if begin_idx is not None and end_idx is not None and end_idx > begin_idx:
+            lines = lines[begin_idx + 1:end_idx]
+        else:
+            # Fallback: strip markdown fences (search anywhere for opening fence)
+            open_idx = next(
+                (i for i, l in enumerate(lines) if _re.match(r"^```(spl)?\s*$", l.strip())),
+                None,
+            )
+            if open_idx is not None:
+                lines = lines[open_idx + 1:]
+            if lines and lines[-1].strip() == "```":
+                lines = lines[:-1]
+        spl_code = "\n".join(lines).strip()
+        spl_code = format_spl(spl_code)
     else:
         # Basic Mermaid parsing - extract nodes and connections
         nodes = {}
@@ -1586,15 +1651,6 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
 
         spl_code = "\n".join(spl_lines)
 
-    # Basic validation
-    if validate:
-        try:
-            # Simple syntax check
-            if not any(keyword in spl_code for keyword in ["WORKFLOW", "CREATE FUNCTION"]):
-                click.echo("Warning: Generated code may not be valid SPL", err=True)
-        except Exception as e:
-            click.echo(f"Validation warning: {e}", err=True)
-
     # Output
     if output:
         out_path = Path(output)
@@ -1609,29 +1665,54 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
     else:
         click.echo(spl_code)
 
+    # Always validate the generated SPL using the real parser
+    try:
+        from spl.lexer import Lexer
+        from spl3.parser import SPL3Parser
+        tokens = Lexer(spl_code).tokenize()
+        SPL3Parser(tokens).parse()
+        click.echo("Validation: OK")
+    except Exception as exc:
+        click.echo(f"Validation: FAILED — {exc}", err=True)
+        click.echo("  Fix the .spl file or re-run mmd2spl.", err=True)
+
 
 # ------------------------------------------------------------------ #
 # spl3 validate                                                       #
 # ------------------------------------------------------------------ #
 
 @main.command("validate")
-@click.argument("spl_file")
-def cmd_validate(spl_file):
-    """Validate SPL syntax of SPL_FILE."""
+@click.argument("spl_files", nargs=-1, required=True)
+def cmd_validate(spl_files):
+    """Validate SPL syntax of one or more SPL_FILES.
+
+    \b
+    Examples:
+      spl3 validate workflow.spl
+      spl3 validate tests/claude_cli/sonnet/*.spl
+    """
     from pathlib import Path
     from spl.lexer import Lexer
     from spl3.parser import SPL3Parser
 
-    path = Path(spl_file)
-    if not path.exists():
-        raise click.ClickException(f"File not found: {path}")
-    source = path.read_text(encoding="utf-8")
-    try:
-        tokens = Lexer(source).tokenize()
-        SPL3Parser(tokens).parse()
-        click.echo(f"OK: {path}")
-    except Exception as exc:
-        raise click.ClickException(f"Parse error: {exc}") from exc
+    errors = 0
+    for spl_file in spl_files:
+        path = Path(spl_file)
+        if not path.exists():
+            click.echo(f"MISSING: {path}", err=True)
+            errors += 1
+            continue
+        source = path.read_text(encoding="utf-8")
+        try:
+            tokens = Lexer(source).tokenize()
+            SPL3Parser(tokens).parse()
+            click.echo(f"OK: {path}")
+        except Exception as exc:
+            click.echo(f"FAILED: {path} — {exc}", err=True)
+            errors += 1
+
+    if errors:
+        raise SystemExit(errors)
 
 
 # ------------------------------------------------------------------ #
@@ -1811,26 +1892,37 @@ Mermaid Diagram:
 ```
 
 MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
-1. Use WORKFLOW <name> for the main orchestration logic.
-2. Inputs and Outputs (defined inside DO block or as params):
-   INPUT @question TEXT;
-   OUTPUT @answer TEXT;
-3. Variable sigils: Use @ for workflow variables (e.g., @input, @result, @temp).
-4. Variable assignment: Use := (e.g., @var := 'value';).
-5. LLM calls: Use GENERATE <fn>(<args>) INTO @<var>;
-6. Tool calls: Use CALL <tool>(<args>) INTO @<var>;
-7. Branching: Use EVALUATE @<var> WHEN contains('string') THEN ... ELSE ... END;
+1. WORKFLOW declaration syntax — INPUT/OUTPUT come BEFORE DO, no semicolons, one END;:
+   WORKFLOW <name>
+     INPUT @param1 TYPE, @param2 TYPE := default
+     OUTPUT @result TYPE
+   DO
+     ... statements ...
+   END;
+   IMPORTANT: Do NOT put semicolons after INPUT or OUTPUT lines.
+   IMPORTANT: Do NOT wrap the body in a nested DO...END; block — DO opens the body and END; closes the whole WORKFLOW.
+2. Variable sigils: Use @ for workflow variables (e.g., @input, @result, @temp).
+3. Variable assignment: Use := (e.g., @var := "value";).
+4. LLM calls: Use GENERATE <fn>(<args>) INTO @<var>;
+5. Tool calls: Use CALL <tool>(<args>) INTO @<var>;
+6. Branching: Use EVALUATE @<var> WHEN contains("string") THEN ... ELSE ... END;
    IMPORTANT: EVALUATE must target a variable with @ prefix.
-   IMPORTANT: WHEN clauses must use the contains('...') function for string matching.
-8. Looping: Use WHILE <condition> DO ... END;
+   IMPORTANT: WHEN clauses must use the contains("...") function for string matching.
+7. Looping: Use WHILE <condition> DO ... END;
    IMPORTANT: <condition> should include loop protection "@iteration < 3" to prevent infinite loops.
-9. Helper functions: Define CREATE FUNCTION <name>(<params>) RETURNS <type> AS $$ <prompt> $$; at the top of the file.
+8. Helper functions: Define CREATE FUNCTION <name>(<params>) RETURNS <type> AS $$ <prompt> $$; at the top of the file.
    Note: Function parameters in CREATE FUNCTION do NOT use @ prefix.
-10. Return: Use RETURN @<var> WITH status = 'complete';
+   IMPORTANT: Inside $$ prompt bodies, use '' (two single quotes) instead of ' (apostrophe/single quote)
+   to avoid string literal parsing errors. E.g. write "don''t" not "don't", "it''s" not "it's".
+9. Return: Use RETURN @<var> WITH status = "complete";
 
 The generated SPL must be complete, executable, and follow the logic of the diagram exactly.
 
-Return ONLY the raw SPL code. No explanations.
+OUTPUT FORMAT — REQUIRED:
+Wrap the SPL code between these exact markers (nothing outside them):
+___SPL_BEGIN___
+<spl code here>
+___SPL_END___
 """
 
 

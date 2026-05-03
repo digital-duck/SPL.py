@@ -755,6 +755,13 @@ SPL key constructs are:
   RETURN @<var> WITH <k>=<v>, ...  — return with metadata (status, iterations, etc.)
   EXCEPTION WHEN <Type> THEN ...   — named exception handler
 
+IMPORTANT — suppress trivial "default" transitions:
+  In PocketFlow and similar frameworks, nodes return a `"default"` action token simply
+  to advance to the next node in a linear chain. This is NOT a meaningful control-flow
+  decision and must NOT appear in the spec or construct mapping as "RETURN default".
+  Only mention RETURN when the status value is non-trivial (e.g. "done", "retry",
+  "error", "continue") AND it drives a real branch or loop condition.
+
 You are given a {lang_label} implementation of an LLM workflow.
 Your task is to produce a functional specification in plain English that:
   (a) is rich enough to regenerate the equivalent SPL workflow using text2spl
@@ -766,7 +773,9 @@ Structure your output as Markdown with these sections IN ORDER:
 Write 4-6 sentences of flowing prose (no bullet points).
 Describe what this workflow does using SPL construct names wherever they apply.
 Cover: pattern/technique, each logical function (and its prompt role), control flow
-expressed as WHILE/EVALUATE/RETURN, multi-model design, side-effects, exception handling.
+expressed as WHILE/EVALUATE/RETURN (only when non-trivial), multi-model design,
+side-effects, exception handling. Do NOT mention "default" action tokens — omit them
+entirely; they are implicit linear flow, not worth documenting.
 This section will be used directly as the text2spl input prompt — make it complete.
 
 ## 1. Purpose
@@ -775,7 +784,10 @@ One sentence: what this implementation accomplishes for the end user.
 ## 2. SPL ↔ {lang_label} Construct Mapping
 A Markdown table — columns: SPL Construct | {lang_label} Equivalent | Notes.
 Cover every major mapping: WORKFLOW→, CREATE FUNCTION→, GENERATE→, EVALUATE→,
-WHILE→, RETURN→, EXCEPTION→, shared state (SPL @vars)→.
+WHILE→, EXCEPTION→, shared state (SPL @vars)→.
+Only include RETURN→ if a non-default status token (e.g. "done", "retry") drives
+a real branch or terminates a loop. Skip it for linear chains where every node
+simply returns "default".
 
 ## 3. Logical Functions / Prompts
 For each logical function (prompt template) found in the implementation:
@@ -785,7 +797,8 @@ For each logical function (prompt template) found in the implementation:
 
 ## 4. Control Flow
 Describe the execution path: initial step → loop condition → branch logic → termination.
-Use SPL construct names (WHILE, EVALUATE, RETURN WITH status=).
+Use SPL construct names (WHILE, EVALUATE, RETURN WITH status=) only when non-trivial.
+Do NOT say "each step returns default" — that is implicit and adds no information.
 
 ## 5. How to Regenerate as SPL
 ```

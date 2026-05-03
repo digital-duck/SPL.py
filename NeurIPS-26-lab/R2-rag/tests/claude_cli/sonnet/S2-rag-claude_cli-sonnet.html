@@ -24,23 +24,46 @@
         <div id="mermaid-container" class="mermaid">
     flowchart TD
     START([Start]) --> A
-    subgraph PHASE1["Offline Indexing Workflow"]
-    A["ChunkDocuments<br/>(BatchNode)<br/>split texts -> chunks"] --> B["EmbedDocuments<br/>(BatchNode)<br/>chunks -> float32 vectors"]
-    B --> C["CreateIndex<br/>(Node)<br/>build FAISS IndexFlatL2"]
+    subgraph OFFLINE["Offline Indexing Workflow"]
+    A["ChunkDocuments<br/>(BatchNode)<br/>split texts -> 2000-char chunks"]
+    B["EmbedDocuments<br/>(BatchNode)<br/>text-embedding-ada-002 per chunk"]
+    C["CreateIndex<br/>(Node)<br/>faiss.IndexFlatL2 + index.add"]
+    A -->|"@texts (chunks)"| B
+    B -->|"@embeddings (float32 matrix)"| C
     end
-    C --> SHARED["@shared store<br/>@texts, @embeddings, @index"]
-    SHARED --> D
-    subgraph PHASE2["Online Query Workflow"]
-    D["EmbedQuery<br/>(Node)<br/>query -> query_embedding"] --> E["RetrieveDocument<br/>(Node)<br/>FAISS k=1 search"]
-    E --> F["GenerateAnswer<br/>(Node)<br/>LLM GENERATE call"]
-    F --> G{Output<br/>path set?}
-    G -->|Yes| H["write_file<br/>persist Q/A pair"]
-    G -->|No| I["Return<br/>@generated_answer"]
-    H --> I
+    subgraph SHARED["@shared Variable Store"]
+    S1["@texts"]
+    S2["@embeddings"]
+    S3["@index"]
+    S4["@query"]
+    S5["@query_embedding"]
+    S6["@retrieved_document"]
+    S7["@generated_answer"]
     end
-    D -.-->|"reads @index,<br/>@texts"| SHARED
-    START --> D
-    I --> END([End])
+    subgraph ONLINE["Online Query Workflow"]
+    D["EmbedQuery<br/>(Node)<br/>embed user query -> (1, dim)"]
+    E["RetrieveDocument<br/>(Node)<br/>index.search k=1 nearest neighbor"]
+    F["GenerateAnswer<br/>(Node)<br/>GENERATE via LLM prompt template"]
+    G{Output path<br/>supplied?}
+    H["write_file<br/>(side-effect)<br/>persist Q/A pair to disk"]
+    D -->|"@query_embedding"| E
+    E -->|"@retrieved_document<br/>{text, index, distance}"| F
+    F -->|"@generated_answer"| G
+    G -->|Yes| H
+    G -->|No| END
+    H --> END
+    end
+    START --> A
+    C -->|"@index stored"| S3
+    C -->|done| D
+    D --- S4
+    D --- S5
+    E --- S3
+    E --- S1
+    F --- S4
+    F --- S6
+    F --- S7
+    END([Return @generated_answer])
         </div>
         <div id="error-container" class="error-info" style="display: none;">
             <h3>⚠️ Mermaid Syntax Error</h3>
@@ -53,23 +76,46 @@
             <p><strong>Generated Code:</strong></p>
             <div class="raw-code">    flowchart TD
     START([Start]) --> A
-    subgraph PHASE1["Offline Indexing Workflow"]
-    A["ChunkDocuments<br/>(BatchNode)<br/>split texts -> chunks"] --> B["EmbedDocuments<br/>(BatchNode)<br/>chunks -> float32 vectors"]
-    B --> C["CreateIndex<br/>(Node)<br/>build FAISS IndexFlatL2"]
+    subgraph OFFLINE["Offline Indexing Workflow"]
+    A["ChunkDocuments<br/>(BatchNode)<br/>split texts -> 2000-char chunks"]
+    B["EmbedDocuments<br/>(BatchNode)<br/>text-embedding-ada-002 per chunk"]
+    C["CreateIndex<br/>(Node)<br/>faiss.IndexFlatL2 + index.add"]
+    A -->|"@texts (chunks)"| B
+    B -->|"@embeddings (float32 matrix)"| C
     end
-    C --> SHARED["@shared store<br/>@texts, @embeddings, @index"]
-    SHARED --> D
-    subgraph PHASE2["Online Query Workflow"]
-    D["EmbedQuery<br/>(Node)<br/>query -> query_embedding"] --> E["RetrieveDocument<br/>(Node)<br/>FAISS k=1 search"]
-    E --> F["GenerateAnswer<br/>(Node)<br/>LLM GENERATE call"]
-    F --> G{Output<br/>path set?}
-    G -->|Yes| H["write_file<br/>persist Q/A pair"]
-    G -->|No| I["Return<br/>@generated_answer"]
-    H --> I
+    subgraph SHARED["@shared Variable Store"]
+    S1["@texts"]
+    S2["@embeddings"]
+    S3["@index"]
+    S4["@query"]
+    S5["@query_embedding"]
+    S6["@retrieved_document"]
+    S7["@generated_answer"]
     end
-    D -.-->|"reads @index,<br/>@texts"| SHARED
-    START --> D
-    I --> END([End])</div>
+    subgraph ONLINE["Online Query Workflow"]
+    D["EmbedQuery<br/>(Node)<br/>embed user query -> (1, dim)"]
+    E["RetrieveDocument<br/>(Node)<br/>index.search k=1 nearest neighbor"]
+    F["GenerateAnswer<br/>(Node)<br/>GENERATE via LLM prompt template"]
+    G{Output path<br/>supplied?}
+    H["write_file<br/>(side-effect)<br/>persist Q/A pair to disk"]
+    D -->|"@query_embedding"| E
+    E -->|"@retrieved_document<br/>{text, index, distance}"| F
+    F -->|"@generated_answer"| G
+    G -->|Yes| H
+    G -->|No| END
+    H --> END
+    end
+    START --> A
+    C -->|"@index stored"| S3
+    C -->|done| D
+    D --- S4
+    D --- S5
+    E --- S3
+    E --- S1
+    F --- S4
+    F --- S6
+    F --- S7
+    END([Return @generated_answer])</div>
             <p>Please edit the <code>S2-rag-claude_cli-sonnet.mmd</code> file to fix syntax issues.</p>
         </div>
         <div class="footer">

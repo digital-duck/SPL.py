@@ -5,21 +5,22 @@ Generated with [SPL](https://github.com/digital-duck/SPL) using: `spl3 text2mmd 
 ## Mermaid Diagram
 
 ```mermaid
-flowchart TD
-    A[Start: Set @question from CLI\n@context = 'No previous search'] --> B[GENERATE decide_action\n@question + @context → YAML decision]
-    B --> C{{Parse YAML safely}}
-    C -->|Parse OK| D{{EVALUATE @decision action}}
-    C -->|YAMLError| E[Force block-scalar on known keys\nRewrite lines with pipe notation]
-    E --> F{{Retry yaml.safe_load}}
-    F -->|Parse OK| D
-    F -->|Still fails| G[Raise ValueError\nEXCEPTION: YAMLParseError]
-    D -->|action == search| H[Set @search_query from decision]
-    H --> I[CALL search_web_duckduckgo\n@search_query → up to 5 results]
-    I --> J[Append to @context\nSEARCH: query\nRESULTS: results]
-    J -->|return decide — loop back| B
-    D -->|action == answer| K[GENERATE answer_question\n@question + @context → prose answer]
-    K --> L[Store result in @answer]
-    L --> M[RETURN @answer\nstatus = done]
+    flowchart TD
+    A([Start]) --> B["Initialize<br/>@question from CLI<br/>@context = 'No previous search'"]
+    B --> C["GENERATE decide_action<br/>LLM produces fenced YAML block"]
+    C --> D{"YAML parse<br/>success?"}
+    D -->|No| E["Force block scalars<br/>on known keys, retry"]
+    E --> F{"Retry parse<br/>success?"}
+    F -->|No| Z([ValueError / Exception])
+    F -->|Yes| G{"EVALUATE<br/>@decision.action?"}
+    D -->|Yes| G
+    G -->|action == search| H["Set @search_query<br/>from @decision"]
+    H --> I["CALL search_web<br/>DuckDuckGo(@search_query)"]
+    I --> J["Append SEARCH + RESULTS<br/>block to @context"]
+    J -->|loop back| C
+    G -->|action == answer| K["GENERATE answer_question<br/>LLM synthesizes prose answer"]
+    K --> L["Store result<br/>as @answer"]
+    L --> M(["RETURN @answer<br/>status = done"])
 ```
 
 ## Usage Options

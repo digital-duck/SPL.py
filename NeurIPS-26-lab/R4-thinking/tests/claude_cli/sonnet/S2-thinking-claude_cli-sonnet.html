@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>S2 Agent Claude Cli Claude - Mermaid Workflow</title>
+    <title>S2 Thinking Claude Cli Sonnet - Mermaid Workflow</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -17,27 +17,33 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>S2 Agent Claude Cli Claude Workflow</h1>
+            <h1>S2 Thinking Claude Cli Sonnet Workflow</h1>
             <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>
-            <p><strong>File:</strong> S2-agent-claude_cli-claude.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> claude_cli</p>
+            <p><strong>File:</strong> S2-thinking-claude_cli-sonnet.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> claude_cli</p>
         </div>
         <div id="mermaid-container" class="mermaid">
     flowchart TD
-    A([Start]) --> B["Initialize<br/>@question from CLI<br/>@context = 'No previous search'"]
-    B --> C["GENERATE decide_action<br/>LLM produces fenced YAML block"]
-    C --> D{"YAML parse<br/>success?"}
-    D -->|No| E["Force block scalars<br/>on known keys, retry"]
-    E --> F{"Retry parse<br/>success?"}
-    F -->|No| Z([ValueError / Exception])
-    F -->|Yes| G{"EVALUATE<br/>@decision.action?"}
-    D -->|Yes| G
-    G -->|action == search| H["Set @search_query<br/>from @decision"]
-    H --> I["CALL search_web<br/>DuckDuckGo(@search_query)"]
-    I --> J["Append SEARCH + RESULTS<br/>block to @context"]
-    J -->|loop back| C
-    G -->|action == answer| K["GENERATE answer_question<br/>LLM synthesizes prose answer"]
-    K --> L["Store result<br/>as @answer"]
-    L --> M(["RETURN @answer<br/>status = done"])
+    A([Start]) --> B["Initialize shared state:<br/>@problem, @thoughts=[], @thought_number=0, @solution=None"]
+    B --> C
+    subgraph LOOP["ChainOfThought Loop (continue action)"]
+    C["prep():<br/>Format @thoughts to @thoughts_text<br/>Extract last plan to @last_plan_text<br/>Increment @current_thought_number"]
+    D["exec():<br/>GENERATE ChainOfThoughtStep<br/>(@problem, @thoughts_text,<br/>@last_plan_text, @thought_number)<br/>INTO @thought_data"]
+    E{Assert required<br/>YAML fields?}
+    F["Retry<br/>max_retries=3, wait=10s"]
+    G["post():<br/>Append @thought_data to @thoughts"]
+    H{next_thought_needed?}
+    J["Print current_thinking<br/>and updated plan"]
+    C --> D
+    D --> E
+    E -->|Fail - YAMLError| F
+    F --> D
+    E -->|Pass| G
+    G --> H
+    H -->|true - continue| J
+    J --> C
+    end
+    H -->|false - end| I["Set @solution = current_thinking<br/>RETURN status=complete<br/>iterations=thought_number"]
+    I --> K([End])
         </div>
         <div id="error-container" class="error-info" style="display: none;">
             <h3>⚠️ Mermaid Syntax Error</h3>
@@ -49,26 +55,32 @@
             </ul>
             <p><strong>Generated Code:</strong></p>
             <div class="raw-code">    flowchart TD
-    A([Start]) --> B["Initialize<br/>@question from CLI<br/>@context = 'No previous search'"]
-    B --> C["GENERATE decide_action<br/>LLM produces fenced YAML block"]
-    C --> D{"YAML parse<br/>success?"}
-    D -->|No| E["Force block scalars<br/>on known keys, retry"]
-    E --> F{"Retry parse<br/>success?"}
-    F -->|No| Z([ValueError / Exception])
-    F -->|Yes| G{"EVALUATE<br/>@decision.action?"}
-    D -->|Yes| G
-    G -->|action == search| H["Set @search_query<br/>from @decision"]
-    H --> I["CALL search_web<br/>DuckDuckGo(@search_query)"]
-    I --> J["Append SEARCH + RESULTS<br/>block to @context"]
-    J -->|loop back| C
-    G -->|action == answer| K["GENERATE answer_question<br/>LLM synthesizes prose answer"]
-    K --> L["Store result<br/>as @answer"]
-    L --> M(["RETURN @answer<br/>status = done"])</div>
-            <p>Please edit the <code>S2-agent-claude_cli-claude.mmd</code> file to fix syntax issues.</p>
+    A([Start]) --> B["Initialize shared state:<br/>@problem, @thoughts=[], @thought_number=0, @solution=None"]
+    B --> C
+    subgraph LOOP["ChainOfThought Loop (continue action)"]
+    C["prep():<br/>Format @thoughts to @thoughts_text<br/>Extract last plan to @last_plan_text<br/>Increment @current_thought_number"]
+    D["exec():<br/>GENERATE ChainOfThoughtStep<br/>(@problem, @thoughts_text,<br/>@last_plan_text, @thought_number)<br/>INTO @thought_data"]
+    E{Assert required<br/>YAML fields?}
+    F["Retry<br/>max_retries=3, wait=10s"]
+    G["post():<br/>Append @thought_data to @thoughts"]
+    H{next_thought_needed?}
+    J["Print current_thinking<br/>and updated plan"]
+    C --> D
+    D --> E
+    E -->|Fail - YAMLError| F
+    F --> D
+    E -->|Pass| G
+    G --> H
+    H -->|true - continue| J
+    J --> C
+    end
+    H -->|false - end| I["Set @solution = current_thinking<br/>RETURN status=complete<br/>iterations=thought_number"]
+    I --> K([End])</div>
+            <p>Please edit the <code>S2-thinking-claude_cli-sonnet.mmd</code> file to fix syntax issues.</p>
         </div>
         <div class="footer">
             <p><strong>Usage Options:</strong></p>
-            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-agent-claude_cli-claude.mmd -o S2-agent-claude_cli-claude.spl</code></p>
+            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-thinking-claude_cli-sonnet.mmd -o S2-thinking-claude_cli-sonnet.spl</code></p>
             <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>
             <hr style="margin: 20px 0;">
             <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |

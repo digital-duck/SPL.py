@@ -1,0 +1,22 @@
+    flowchart TD
+    A([Start]) --> B["Initialize shared state:<br/>@problem, @thoughts=[], @thought_number=0, @solution=None"]
+    B --> C
+    subgraph LOOP["ChainOfThought Loop (continue action)"]
+    C["prep():<br/>Format @thoughts to @thoughts_text<br/>Extract last plan to @last_plan_text<br/>Increment @current_thought_number"]
+    D["exec():<br/>GENERATE ChainOfThoughtStep<br/>(@problem, @thoughts_text,<br/>@last_plan_text, @thought_number)<br/>INTO @thought_data"]
+    E{Assert required<br/>YAML fields?}
+    F["Retry<br/>max_retries=3, wait=10s"]
+    G["post():<br/>Append @thought_data to @thoughts"]
+    H{next_thought_needed?}
+    J["Print current_thinking<br/>and updated plan"]
+    C --> D
+    D --> E
+    E -->|Fail - YAMLError| F
+    F --> D
+    E -->|Pass| G
+    G --> H
+    H -->|true - continue| J
+    J --> C
+    end
+    H -->|false - end| I["Set @solution = current_thinking<br/>RETURN status=complete<br/>iterations=thought_number"]
+    I --> K([End])
