@@ -432,6 +432,60 @@ Format:
 - Exit edge `H -->|False|` goes outside the sub-graph to J (Extract Final Solution)
 
 **Status:** fixed manually — structure now matches sonnet reference
+## [2026-05-04] splc / cli.py — `_compile` NameError on `spl3 splc compile`
+
+**Symptom:** `spl3 splc compile ... --lang python/pocketflow --llm` crashed with `NameError: name '_compile' is not defined. Did you mean: 'cmd_compile'?`
+
+**Root cause:** `cmd_compile` called `_compile(...)` at line 400, but the actual function is named `compile_llm_code` (defined at line 656). Name was wrong — likely a late rename during development.
+
+**Fix applied to source (`spl3/splc/cli.py` line 400):**
+- Replaced `_compile(...)` → `compile_llm_code(...)`
+
+**Status:** fixed at source
+
+---
+
+## [2026-05-04] splc python/pocketflow — readme wrong filename (all recipes)
+
+**Symptom:** `readme.md` script examples in R1-agent, R2-rag, R4-thinking, R5-research all referenced the wrong filename — missing the `_python_pocketflow` suffix that splc appends to compiled output files (e.g. `S3-agent-claude_cli-claude.py` instead of `S3-agent-claude_cli-claude_python_pocketflow.py`).
+
+**Root cause:** The LLM generating the readme dropped the `_python_pocketflow` suffix when constructing the run examples, likely using only the base SPL stem.
+
+**Fix applied to files (readme.md in each target dir):**
+- R1: `S3-agent-claude_cli-claude.py` → `S3-agent-claude_cli-claude_python_pocketflow.py`
+- R2: `S3-rag-claude_cli-sonnet.py` → `S3-rag-claude_cli-sonnet_python_pocketflow.py`
+- R4: `S3-thinking-claude_cli-sonnet.py` → `S3-thinking-claude_cli-sonnet_python_pocketflow.py`
+- R5: `S3-research-claude_cli-sonnet.py` → `S3-research-claude_cli-sonnet_python_pocketflow.py`
+
+**Status:** fixed
+
+---
+
+## [2026-05-04] splc python/pocketflow — readme programmatic import uses invalid hyphenated module name (R1, R2, R5)
+
+**Symptom:** readme "as a module" example used `from S3-...-... import run_*`, which is a Python syntax error — hyphens are not valid in module names for standard import statements.
+
+**Root cause:** LLM generated a `from X import Y` statement using the filename stem directly, not accounting for hyphens.
+
+**Fix applied to files (readme.md in R1, R2, R5 target dirs):**
+- Replaced `from S3-... import ...` with an `importlib.util.spec_from_file_location` pattern that works with hyphenated filenames
+
+**Status:** fixed
+
+---
+
+## [2026-05-04] R5-research / splc python/pocketflow — compiled .py starts with LLM preamble and markdown fence
+
+**Symptom:** `S3-research-claude_cli-sonnet_python_pocketflow.py` was not valid Python. Lines 1–3 contained LLM prose (`The SPL source was provided inline, so I'll compile directly from it.`) followed by an opening ` ```python ` fence, making the file unparseable.
+
+**Root cause:** The LLM generating the PocketFlow code included its own preamble sentence and a markdown code fence before the Python source. The `compile_llm_code` function passes the raw LLM response directly to `write_text` without stripping fences.
+
+**Fix applied to file:**
+- Stripped lines 1–3 (preamble + fence) from the compiled `.py` file; confirmed `ast.parse` passes clean
+
+**Note for source fix:** `compile_llm_code` in `spl3/splc/cli.py` should strip leading markdown fences from LLM output before writing — same issue as `mmd2spl` fixed on 2026-05-03.
+
+**Status:** file fixed; source-level fence-stripping still open
 
 ---
 

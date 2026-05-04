@@ -1,0 +1,21 @@
+{
+  "splc_version": "0.1.0",
+  "generated_at": "2026-05-04T08:10:22.817916+00:00",
+  "source": {
+    "spl_file": "/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/R5-research/tests/claude_cli/sonnet/S3-research-claude_cli-sonnet.spl",
+    "spl_sha256": "d7de0babddc61ab7"
+  },
+  "target": {
+    "lang": "python/pocketflow",
+    "label": "Python \u2014 PocketFlow (minimalist ETL-style LLM orchestration)",
+    "output_file": "/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/R5-research/tests/claude_cli/sonnet/targets/python_pocketflow/S3-research-claude_cli-sonnet_python_pocketflow.py"
+  },
+  "compilation": {
+    "adapter": "claude_cli",
+    "model": "claude-sonnet-4-6",
+    "references": [],
+    "rag_enabled": true,
+    "rag_k": 3
+  },
+  "doda_note": "This file is a splc-compiled physical artifact. The source .spl file is the invariant logical view. To retarget, run: splc --spl <source.spl> --lang <new-target>"
+}

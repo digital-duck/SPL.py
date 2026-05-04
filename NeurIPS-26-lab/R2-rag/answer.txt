@@ -1,0 +1,5 @@
+Based on the retrieved document context:
+
+**PocketFlow** is a minimalist LLM (Large Language Model) framework for Python, implemented in just 100 lines of code.
+
+That is the full extent of what the retrieved context provides. For more detail — such as its architecture, API, or use cases — you would need additional documentation or sources.
