@@ -132,6 +132,24 @@ mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
 ```
 
+> **2026-05-04 (openrouter/gemini run):** S4 file created manually via `cp`, preserving both `S3-rag-openrouter-gemini_python_pocketflow.py` and `S4-rag-openrouter-gemini.py`. Tools rewritten to use real ollama embeddings + FAISS via `../../tools.py`; stub implementations replaced.
+
+---
+
+## S4-run — validate compiled PocketFlow code
+
+```bash
+# copy to S4 convention if not already done
+cp $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
+   $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+
+# run — requires OPENROUTER_API_KEY; ollama must be running with qwen3-embedding:0.6b
+python $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py \
+  "PocketFlow is a minimalist LLM framework for building agentic pipelines." \
+  "What is PocketFlow and how do I install it?" \
+  2>&1 | tee $OUT/S4-$RECIPE-$ADAPTER-$MODEL-pf-$(date +%Y%m%d_%H%M%S).md
+```
+
 ---
 
 ## S5 — `spl3 splc describe` → spec2

@@ -90,7 +90,7 @@ Run the SPL workflow directly (no compilation) to verify the logic executes end-
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  -p "task=Write a one-paragraph description of the RAG pattern in AI systems" \
+  -p "topic=Write a one-paragraph description of the RAG pattern in AI systems" \
   2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
@@ -124,6 +124,23 @@ spl3 splc compile $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
 # rename to S4 convention (splc auto-names output from .spl stem)
 mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+```
+
+> **2026-05-04 (openrouter/gemini run):** S4 file created manually via `cp`. Model fixed to `google/gemini-3-flash-preview`; `draft_content` now passes feedback on retries; output format aligned to `PASS/FAIL` sentinel used in SPL.
+
+---
+
+## S4-run — validate compiled PocketFlow code
+
+```bash
+# copy to S4 convention if not already done
+cp $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
+   $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+
+# run — requires OPENROUTER_API_KEY
+python $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py \
+  "explain quantum entanglement for a high-school student" \
+  2>&1 | tee $OUT/S4-$RECIPE-$ADAPTER-$MODEL-pf-$(date +%Y%m%d_%H%M%S).md
 ```
 
 ---

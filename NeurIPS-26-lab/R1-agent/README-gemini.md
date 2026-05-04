@@ -137,7 +137,24 @@ mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
 ```
 
-Gemini CLI made change to .py, 
+Gemini CLI made change to .py,
+
+> **2026-05-04 (openrouter/gemini run):** S4 file created manually via `cp` instead of `mv`, preserving the original `S3-agent-openrouter-gemini_python_pocketflow.py` alongside `S4-agent-openrouter-gemini.py`. Both files are identical after code fixes; S4 is the canonical name for S5/S6 steps.
+
+---
+
+## S4-run — validate compiled PocketFlow code
+
+```bash
+# copy to S4 convention if not already done
+cp $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
+   $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+
+# run — requires OPENROUTER_API_KEY; duckduckgo_search provides real web results
+python $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py \
+  "What is PocketFlow and how do I install it?" \
+  2>&1 | tee $OUT/S4-$RECIPE-$ADAPTER-$MODEL-pf-$(date +%Y%m%d_%H%M%S).md
+```
 
 ---
 

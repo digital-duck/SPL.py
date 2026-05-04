@@ -607,3 +607,110 @@ RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! U
 **Root cause:** PocketFlow is a niche/minimal framework with limited public web indexing — not a bug. The workflow executed correctly: 2 iterations of query planning → DuckDuckGo search → fact extraction → synthesized report. The LLM appropriately diagnosed the absence of data rather than hallucinating.
 
 **Status:** expected — workflow logic validated; report.txt written (4163 chars), status=complete
+
+---
+
+## [2026-05-04] R1–R5 / openrouter / gemini — S3 run results
+
+All 5 recipes ran under `gemini-3-flash-preview` (openrouter). R1, R2, R3 passed; R4 and R5 required fixes. Summary:
+
+| Recipe | Result | Issue |
+|--------|--------|-------|
+| R1-agent | ✓ pass | `duckduckgo_search` deprecation warning (cosmetic; search works) |
+| R2-rag | ✓ pass | Clean; FAISS+ollama embeddings working |
+| R3-judge | ✓ pass | First draft passed judge (Score 9); no retry needed |
+| R4-thinking | ✗ degraded → fixed | `CALL append_text` not found (see below) |
+| R5-research | ✗ degraded → fixed | CALL PARALLEL + exact WHILE string equality (see below) |
+
+---
+
+## [2026-05-04] R4-thinking / openrouter / gemini — S3 `append_text` not in stdlib
+
+**Symptom:** `WARNING: Procedure 'append_text' not found — using LLM fallback`. Output contained two unrelated answers (sheep riddle + compound interest essay) — LLM fallback appended/generated incorrect content instead of concatenating strings.
+
+**Root cause:** Gemini generated `CALL append_text(@history, @raw_response) INTO @history` to append each CoT step to the accumulated trace. `append_text` is not an SPL stdlib function. The LLM fallback invoked an LLM call with `@history` and `@raw_response` as the prompt, returning unrelated hallucinated text as the "appended" result.
+
+**Fix applied to file (`S3-thinking-openrouter-gemini.spl`):**
+- `CALL append_text(@history, @raw_response) INTO @history` → `@history := @history + "\n---\n" + @raw_response;`
+- SPL `+` operator on TEXT vars performs string concatenation — no CALL needed.
+
+**Model performance note:** Gemini hallucinated a non-existent stdlib tool (`append_text`) for a pattern that SPL handles natively via `+`. Claude and Qwen both used `+` or `@var := @var + ...` correctly for the same pattern.
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R5-research / openrouter / gemini — S3 two runtime-breaking errors
+
+**Symptom 1 (CALL PARALLEL with CREATE FUNCTION):** Two `WARNING: Unknown statement type in workflow body: CallParallelStatement` log lines. Both CALL PARALLEL blocks silently skipped — `@raw1/2/3` and `@note1/2/3` were never populated. `AccumulateNotes` ran on empty variables, producing near-empty `@all_notes`. Finalizer hallucinated a generic PocketFlow report from training data rather than researched facts.
+
+**Root cause 1:** Gemini placed a `CREATE FUNCTION` (`Extractor`) inside a `CALL PARALLEL` block:
+```
+CALL PARALLEL
+  Extractor(@raw1) INTO @note1, ...
+END;
+```
+`CALL PARALLEL` is for tool CALL operations only; `Extractor` is an LLM GENERATE function. This caused the SPL executor to reject the `CallParallelStatement` type. The executor then also rejected the preceding search_web `CALL PARALLEL` block in the same pass.
+
+**Fix 1:** Replaced both CALL PARALLEL blocks with sequential CALL / GENERATE statements:
+- `CALL PARALLEL search_web(...)` → three sequential `CALL search_web(@searchN) INTO @rawN;`
+- `CALL PARALLEL Extractor(...)` → three sequential `GENERATE Extractor(@rawN) INTO @noteN;`
+
+**Symptom 2 (exact WHILE string equality):** Even if the parallel calls had worked, the WHILE condition `@status = "Need More Info"` would have exited after the first iteration. Synthesizer returned 285-char prose containing "Need More Info" alongside reasoning text. SPL `=` is exact equality, not substring match — condition evaluated false immediately.
+
+**Root cause 2:** Gemini used `WHILE @status = "Need More Info"` expecting the Synthesizer to return exactly the sentinel phrase. The Synthesizer prompt did not enforce single-phrase output, so it returned explanatory prose. Same `{{var}}` → `{var}` bug was already pre-fixed, but the WHILE condition design was fragile regardless.
+
+**Fix 2:** Changed `WHILE @status = "Need More Info" AND @loop_count < 2 DO` → `WHILE @loop_count < 2 DO`. Loop termination is now numeric-only (reliable). The EVALUATE block already handles early finalization via `WHEN contains("Sufficient Info")`.
+
+**Model performance note:** This entry documents two gemini-specific generation patterns that degrade output quality:
+1. **CALL PARALLEL misuse** — placing LLM functions (CREATE FUNCTION) inside CALL PARALLEL blocks, which only accepts tool CALLs. Claude and Qwen never made this error.
+2. **Fragile sentinel WHILE** — using exact string equality on free-form LLM output for loop control. The correct pattern (numeric guard + inner EVALUATE for semantic branching) was used correctly by Claude (R5-claude) but not by Gemini.
+Both errors passed `spl3 validate` (syntactically legal) but produced silently wrong runtime behavior — only detectable by running the workflow and inspecting the log.
+
+**Status:** fixed — `spl3 validate` passes; re-run required to confirm correct output
+
+---
+
+## [2026-05-04] All recipes / all models — S4 `spl3 splc compile` produces scaffolding only: environment-blind limitation
+
+**Observation:** `spl3 splc compile --lang python/pocketflow --llm` generates structurally plausible code but is fundamentally unable to know the target runtime environment. This manifests as a systematic class of issues across all 5 recipes and all 3 models tested:
+
+### Issues found (gemini S4 batch, 2026-05-04)
+
+| File | Issue | Category |
+|------|-------|----------|
+| R1-agent | `from pocketflow import Workflow` — class doesn't exist in PocketFlow (`Flow` is correct) | Wrong API |
+| R1-agent | `search_web()` returns hardcoded placeholder string | Stub tool |
+| R1-agent | Model hardcoded to `google/gemini-pro-1.5` (outdated) | Wrong model |
+| R2-rag | All 5 tool nodes are stubs: fake 100-char chunks, `[0.1]*1536` mock vectors, `"FAISS_INDEX_OBJECT"` string, hardcoded retrieved text, simulated LLM response | Stub tools |
+| R2-rag | Same `Workflow` ImportError | Wrong API |
+| R3-judge | Model hardcoded to `google/gemini-pro-1.5` | Wrong model |
+| R4-thinking | `generate_cot_step()` returns the prompt string instead of calling the LLM | Dead LLM call |
+| R4-thinking | `_mock_ll_call()` uses `random.random()` for termination | Mock LLM |
+| R4-thinking | Same `Workflow` ImportError | Wrong API |
+| R5-research | `search_web()` returns hardcoded placeholder | Stub tool |
+| R5-research | Model hardcoded to `google/gemini-pro-1.5` | Wrong model |
+| R5-research | Same `Workflow` ImportError | Wrong API |
+
+### Root cause: splc is a context-free transpiler
+
+`spl3 splc compile` translates SPL constructs to Python/PocketFlow patterns based on the `.spl` source alone. It has no access to:
+- **Target framework API details** — PocketFlow's actual class names (`Flow`, not `Workflow`), node lifecycle conventions, shared dict patterns
+- **Tool availability** — whether `search_web` should call DuckDuckGo, a real API, or a custom tools.py; which embedding model is running locally
+- **Adapter configuration** — which model ID is current for the given adapter (`gemini-3-flash-preview` vs `gemini-pro-1.5`); whether `OPENROUTER_API_KEY` is set
+- **Dependency chain** — whether to `import from tools.py` in the parent directory (R2), or use stdlib, or call an external API
+
+The LLM filling in these gaps produces the *most plausible* implementation given its training data, which is often a stub, an outdated API, or an incorrect framework class.
+
+### Implications for NDD round-trip evaluation (S4→S5→S6)
+
+**This limitation is structural, not a model quality defect.** No model (Claude, Qwen, or Gemini) can generate a runnable S4 file without human intervention for environment configuration. The S4 fixes applied in this experiment (replacing stubs with real tools, correcting model IDs, fixing framework API names) are always required regardless of model quality.
+
+**For S5/S6 scoring this means:** S5 `spl3 splc describe` runs on the *human-corrected* S4 file, not the raw LLM output. The S6 closure score therefore measures the round-trip fidelity of the *fixed* S4 code, not the raw LLM output. This is appropriate — the SPL pipeline is designed for human-in-the-loop correction at S4 — but it means the S6 score does not fully isolate model capability from human editing effort.
+
+**Operational mitigation already applied:**
+1. S4 target-specific fixes are tracked per-recipe in README-gemini.md (S4 section notes)
+2. All stub/mock/wrong-API issues are logged above per recipe
+3. `spl3 splc compile` should be treated as generating a *review-ready scaffold*, not a *production-ready artifact* — consistent with the Bicephalous Compiler model (human validates states, LLM handles mechanical translation)
+
+**Status:** structural limitation — expected behavior; human review of S4 output is a mandatory step in the NDD pipeline

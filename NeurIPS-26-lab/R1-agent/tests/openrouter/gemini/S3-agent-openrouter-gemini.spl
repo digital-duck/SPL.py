@@ -1,40 +1,42 @@
-CREATE FUNCTION DecideAction(question, context)
-RETURNS STRING AS $$
-Given the question: {{question}} and the current research context: {{context}}, 
-decide if you need to perform a web search to gather more information or if you have enough information to answer.
-Respond with exactly one word: ''search'' or ''answer''.
+CREATE FUNCTION DecideAction(user_query TEXT, context TEXT)
+RETURNS TEXT AS $$
+Given the question: {user_query}
+Current research context: {context}
+
+Decide if you need to perform a web search to gather more information, or if you have enough information to answer.
+Respond with exactly one word: 'search' or 'answer'.
 $$;
 
-CREATE FUNCTION AnswerQuestion(question, context)
-RETURNS STRING AS $$
-Based on the question: {{question}} and the gathered context: {{context}}, 
-synthesize a final comprehensive response.
+CREATE FUNCTION AnswerQuestion(user_query TEXT, context TEXT)
+RETURNS TEXT AS $$
+Based on the question: {user_query}
+And the gathered context: {context}
+
+Synthesize a final comprehensive response to the question.
 $$;
 
 WORKFLOW ResearchAssistant
-  INPUT @question STRING
-  OUTPUT @final_response STRING
+  INPUT @user_query TEXT
+  OUTPUT @final_response TEXT
 DO
-  @context := "No information gathered yet"
-  @action := "search"
-  @iteration := 0
+  @context := "No information gathered yet";
+  @action := "search";
+  @iteration := 0;
 
   WHILE @action = "search" AND @iteration < 5 DO
-    GENERATE DecideAction(@question, @context) INTO @action;
-    
+    GENERATE DecideAction(@user_query, @context) INTO @action;
+
     EVALUATE @action
       WHEN contains("search") THEN
-        CALL WebSearch(@question, @context) INTO @search_results;
+        CALL search_web(@user_query) INTO @search_results;
         @context := @context + "\nNew Findings: " + @search_results;
         @iteration := @iteration + 1;
-      WHEN contains("answer") THEN
-        @action := "done";
       ELSE
         @action := "done";
     END;
   END;
 
-  GENERATE AnswerQuestion(@question, @context) INTO @final_response;
+  GENERATE AnswerQuestion(@user_query, @context) INTO @final_response;
 
-  RETURN @final_response WITH status = "done"
+  RETURN @final_response WITH status = "complete";
 END;

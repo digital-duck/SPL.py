@@ -92,7 +92,7 @@ Run the SPL workflow directly (no compilation) to verify the logic executes end-
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  -p "problem=A farmer has 17 sheep. All but 9 die. How many sheep are left? Now explain step-by-step how compound interest works and why it matters for long-term investing." \
+  -p "initial_query=A farmer has 17 sheep. All but 9 die. How many sheep are left? Now explain step-by-step how compound interest works and why it matters for long-term investing." \
   2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
@@ -126,6 +126,23 @@ spl3 splc compile $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
 # rename to S4 convention (splc auto-names output from .spl stem)
 mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+```
+
+> **2026-05-04 (openrouter/gemini run):** S4 file created manually via `cp`. Critical fix: `generate_cot_step` was returning the prompt string instead of calling the LLM; `_mock_ll_call` using `random.random()` replaced with real `call_llm`; model fixed to `google/gemini-3-flash-preview`.
+
+---
+
+## S4-run — validate compiled PocketFlow code
+
+```bash
+# copy to S4 convention if not already done
+cp $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
+   $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
+
+# run — requires OPENROUTER_API_KEY
+python $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py \
+  "Why is the Fibonacci sequence important?" \
+  2>&1 | tee $OUT/S4-$RECIPE-$ADAPTER-$MODEL-pf-$(date +%Y%m%d_%H%M%S).md
 ```
 
 ---

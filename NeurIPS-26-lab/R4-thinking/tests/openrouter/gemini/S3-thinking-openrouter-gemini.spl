@@ -33,7 +33,7 @@ DO
 
     GENERATE parse_yaml(@raw_response) INTO @next_thought_needed;
 
-    CALL append_text(@history, @raw_response) INTO @history;
+    @history := @history + "\n---\n" + @raw_response;
     @iteration := @iteration + 1;
   END;
 
