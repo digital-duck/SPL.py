@@ -1,4 +1,4 @@
-# S3-thinking-openrouter-qwen
+# S4-thinking-openrouter-qwen
 
 A minimalist ETL-style LLM orchestration workflow implementing a Chain-of-Thought reasoning loop using OpenRouter's Qwen model.
 
@@ -8,11 +8,18 @@ A minimalist ETL-style LLM orchestration workflow implementing a Chain-of-Though
    ```bash
    export OPENROUTER_API_KEY="your_api_key_here"
    ```
-3. No additional Python packages are required (uses only standard library `urllib`, `json`, `os`).
+3. (Optional) Override the default model:
+   ```bash
+   export LLM_MODEL="qwen/qwen3.6-plus"
+   ```
+4. No additional Python packages are required (uses only standard library `urllib`, `json`, `os`).
 
 ## Run Command
 ```bash
-python S3-thinking-openrouter-qwen.py
+cd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow
+DT=$(date +%Y%m%d_%H%M%S) && python S4-thinking-openrouter-qwen.py \
+  --problem "How can we reduce latency in transformer-based NLP models?" \
+  2>&1 | tee S4-thinking-openrouter-qwen-run-${DT}.md
 ```
 
 ## Expected Output Pattern
@@ -25,8 +32,6 @@ The script will:
 
 Example stdout:
 ```
-Starting ChainOfThoughtLoop...
-Workflow completed. Final output:
 Extract Final Solution: step_1: profile_model
 step_2: apply_quantization
 FINAL: true

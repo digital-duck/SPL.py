@@ -140,11 +140,19 @@ class S3AgentOpenRouterQwen:
             # SPL:     END;
         # SPL:   END;
 
+        # max-iterations guard: synthesize with whatever context was gathered
+        if not ctx["@final_response"]:
+            ctx["@final_response"] = generate(prompt_generate_final(ctx["@shared_state"], ctx["@user_query"]))
+
         # SPL:   RETURN @final_response WITH status = "complete";
         return {"status": "complete", "final_response": ctx["@final_response"]}
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--query", required=True, help="User query")
+    args = parser.parse_args()
+
     agent = S3AgentOpenRouterQwen()
-    # Example execution
-    result = agent.run("What are the latest developments in quantum computing?")
+    result = agent.run(args.query)
     print(json.dumps(result, indent=2))

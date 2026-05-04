@@ -164,13 +164,11 @@ class S3ResearchOpenrouterQwenFlow:
 
 
 if __name__ == "__main__":
-    # Initialize and run the PocketFlow-style ETL workflow
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--topic", required=True, help="Research topic")
+    args = parser.parse_args()
+
     workflow = S3ResearchOpenrouterQwenFlow()
-    
-    # SPL: WORKFLOW invocation with default INPUT
-    final_report = workflow.run(topic="default_topic")
-    
-    print("\n" + "="*50)
-    print("FINAL OUTPUT PREVIEW:")
-    print(final_report[:300] + "..." if len(final_report) > 300 else final_report)
-    print("="*50)
+    final_report = workflow.run(topic=args.topic)
+    print(final_report)

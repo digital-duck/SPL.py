@@ -1,19 +1,26 @@
-# S3-agent-openrouter-qwen Implementation Guide
+# S4-agent-openrouter-qwen Implementation Guide
 
 ## Setup Instructions
 1. Ensure Python 3.8+ is installed.
-2. Set your OpenRouter API key in the environment:
+2. Install web search dependency:
+   ```bash
+   pip install ddgs duckduckgo_search
+   ```
+3. Set your OpenRouter API key in the environment:
    ```bash
    export OPENROUTER_API_KEY="your_api_key_here"
    ```
-3. (Optional) Override the default model:
+4. (Optional) Override the default model:
    ```bash
-   export LLM_MODEL="qwen/qwen-2.5-coder-32b-instruct"
+   export LLM_MODEL="qwen/qwen3.6-plus"
    ```
 
 ## Run Command
 ```bash
-python S3_agent_openrouter_qwen.py
+cd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-agent/tests/openrouter/qwen/targets/python_pocketflow
+DT=$(date +%Y%m%d_%H%M%S) && python S4-agent-openrouter-qwen.py \
+  --query "What are the latest developments in quantum computing?" \
+  2>&1 | tee S4-agent-openrouter-qwen-run-${DT}.md
 ```
 
 ## Expected Output Pattern

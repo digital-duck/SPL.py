@@ -1,22 +1,25 @@
-# Setup & Run Instructions for `S3-judge-openrouter-qwen`
+# Setup & Run Instructions for `S4-judge-openrouter-qwen`
 
-### 🔧 Setup
+## Setup
 1. Ensure Python 3.8+ is installed.
-2. Install the single required dependency:
-   ```bash
-   pip install requests
-   ```
-3. (Optional) Set your OpenRouter API key to enable real LLM calls:
+2. Set your OpenRouter API key to enable real LLM calls:
    ```bash
    export OPENROUTER_API_KEY="sk-or-v1-..."
    ```
+3. (Optional) Override the default model:
+   ```bash
+   export LLM_MODEL="qwen/qwen3.6-plus"
+   ```
 
-### ▶️ Run Command
+## Run Command
 ```bash
-python S3-judge-openrouter-qwen.py
+cd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R3-judge/tests/openrouter/qwen/targets/python_pocketflow
+DT=$(date +%Y%m%d_%H%M%S) && python S4-judge-openrouter-qwen.py \
+  --initial-state "a minimalist LLM orchestration framework" \
+  2>&1 | tee S4-judge-openrouter-qwen-run-${DT}.md
 ```
 
-### 📤 Expected Output Pattern
+## Expected Output Pattern
 If `OPENROUTER_API_KEY` is set, the script will hit OpenRouter with Qwen and return the refined description. If unset, it uses a built-in deterministic mock to guarantee successful execution:
 ```json
 {
@@ -25,7 +28,7 @@ If `OPENROUTER_API_KEY` is set, the script will hit OpenRouter with Qwen and ret
 }
 ```
 
-### 🗺️ SPL to Python/PocketFlow Mapping Table
+## SPL to Python/PocketFlow Mapping Table
 
 | SPL Construct | Python / PocketFlow Equivalent | Notes |
 |:---|:---|:---|

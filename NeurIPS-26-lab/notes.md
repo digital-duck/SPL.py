@@ -582,3 +582,28 @@ Format:
 - `S4-research-openrouter-qwen.py`
 
 **Status:** done
+
+---
+
+## [2026-05-04] R5 / openrouter / qwen — S4 run: `duckduckgo_search` deprecation warning
+
+**Symptom:** RuntimeWarning on every DDGS().text() call:
+```
+RuntimeWarning: This package (`duckduckgo_search`) has been renamed to `ddgs`! Use `pip install ddgs` instead.
+```
+
+**Root cause:** `ddgs` not installed in active env; code falls back to `duckduckgo_search` which now emits the warning itself. Both are listed in `pyproject.toml [dev]` but `ddgs` was not yet installed.
+
+**Fix:** `pip install ddgs` in the active conda/venv env. No code change needed — fallback logic is correct.
+
+**Status:** open — workaround: search still works via duckduckgo_search; warning is cosmetic
+
+---
+
+## [2026-05-04] R5 / openrouter / qwen — S4 run: PocketFlow not found in web search
+
+**Symptom:** Report concluded "zero verifiable information" about PocketFlow as an LLM orchestration framework. All search result rows marked ❌.
+
+**Root cause:** PocketFlow is a niche/minimal framework with limited public web indexing — not a bug. The workflow executed correctly: 2 iterations of query planning → DuckDuckGo search → fact extraction → synthesized report. The LLM appropriately diagnosed the absence of data rather than hallucinating.
+
+**Status:** expected — workflow logic validated; report.txt written (4163 chars), status=complete

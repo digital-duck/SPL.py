@@ -1,4 +1,5 @@
 import os
+import json
 import re
 import requests
 from typing import Dict, Any
@@ -102,7 +103,10 @@ def S3_judge_openrouter_qwen(initial_state: str = "default") -> Dict[str, Any]:
     return {"final_result": final_result, "status": context["status"]}
 
 if __name__ == "__main__":
-    # PocketFlow Workflow Runner
-    import json
-    result = S3_judge_openrouter_qwen(initial_state="default")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--initial-state", required=True, help="Initial state / subject to describe and evaluate")
+    args = parser.parse_args()
+
+    result = S3_judge_openrouter_qwen(initial_state=args.initial_state)
     print(json.dumps(result, indent=2))

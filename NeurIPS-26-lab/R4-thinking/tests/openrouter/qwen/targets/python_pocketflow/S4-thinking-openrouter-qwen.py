@@ -112,7 +112,12 @@ class S3ThinkingOpenrouterQwen:
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--problem", required=True, help="Problem to reason through")
+    parser.add_argument("--plan", default="default_plan", help="Optional reasoning plan")
+    args = parser.parse_args()
+
     workflow = S3ThinkingOpenrouterQwen()
-    print("Starting ChainOfThoughtLoop...")
-    output = workflow.run(problem="How can we reduce latency in transformer-based NLP models?")
-    print(f"Workflow completed. Final output:\n{output}")
+    output = workflow.run(problem=args.problem, plan=args.plan)
+    print(output)

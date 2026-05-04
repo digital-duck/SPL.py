@@ -149,12 +149,15 @@ class S3RagOpenrouterQwenPipeline:
 
 
 if __name__ == "__main__":
-    # Example execution matching SPL INPUT defaults
-    sample_doc = "PocketFlow is a minimalist ETL-style LLM orchestration framework. It simplifies workflow management."
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--raw-input", required=True, help="Raw document text to index")
+    parser.add_argument("--query", required=True, help="User query")
+    args = parser.parse_args()
+
     pipeline = S3RagOpenrouterQwenPipeline(
-        raw_input=sample_doc,
-        user_query="What is PocketFlow?"
+        raw_input=args.raw_input,
+        user_query=args.query,
     )
     result, status = pipeline.run()
-    print(f"\nExecution Status: {status}")
-    print(f"Final Output:\n{result}")
+    print(result)

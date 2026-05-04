@@ -1,36 +1,37 @@
-# S3-RAG-OpenRouter-Qwen Pipeline
+# S4-RAG-OpenRouter-Qwen Pipeline
 
 This implementation translates the `S3-rag-openrouter-qwen.spl` logical workflow into a runnable Python script using a minimalist ETL-style orchestration pattern (PocketFlow paradigm).
 
-## 🔧 Setup Instructions
+## Setup Instructions
 1. Ensure Python 3.8+ is installed.
-2. Install dependencies:
-   ```bash
-   pip install requests
-   ```
-3. Set your OpenRouter API key in your environment:
+2. Set your OpenRouter API key in your environment:
    ```bash
    export OPENROUTER_API_KEY="your-api-key-here"
    ```
-4. Save the implementation as `S3_rag_openrouter_qwen.py`.
+3. (Optional) Override the default model:
+   ```bash
+   export LLM_MODEL="qwen/qwen3.6-plus"
+   ```
 
-## 🚀 Run Command
+## Run Command
 ```bash
-python S3_rag_openrouter_qwen.py
+cd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag/tests/openrouter/qwen/targets/python_pocketflow
+DT=$(date +%Y%m%d_%H%M%S) && python S4-rag-openrouter-qwen.py \
+  --raw-input "PocketFlow is a minimalist ETL-style LLM orchestration framework. It simplifies workflow management." \
+  --query "What is PocketFlow?" \
+  2>&1 | tee S4-rag-openrouter-qwen-run-${DT}.md
 ```
 
-## 📤 Expected Output Pattern
+## Expected Output Pattern
 ```text
 [LOG] Index constructed: 3 vectors. Persisting to disk...
 [LOG] Output written to output.md
 
-Execution Status: {'status': 'complete'}
-Final Output:
 PocketFlow is a minimalist ETL-style LLM orchestration framework designed to simplify workflow management and pipeline execution.
 ```
 *(Note: If `OPENROUTER_API_KEY` is not set, a mock response will be generated and logged.)*
 
-## 🗺️ SPL to Python Mapping Table
+## SPL to Python Mapping Table
 
 | SPL Construct | Python / PocketFlow Equivalent |
 |---------------|--------------------------------|

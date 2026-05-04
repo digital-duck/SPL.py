@@ -1,28 +1,37 @@
-# S3-research-openrouter-qwen Workflow
+# S4-research-openrouter-qwen Workflow
 
 A Python PocketFlow (minimalist ETL-style LLM orchestration) implementation compiled from `S3-research-openrouter-qwen.spl`.
 
 ## Setup Instructions
 1. Ensure Python 3.8+ is installed.
-2. (Optional but recommended) Set your OpenRouter API key for real LLM responses:
+2. Install web search dependency:
+   ```bash
+   pip install ddgs duckduckgo_search
+   ```
+3. Set your OpenRouter API key for real LLM responses:
    ```bash
    export OPENROUTER_API_KEY="your-api-key-here"
    ```
-   If not set, the script gracefully falls back to mock responses and runs without modification.
-3. No external dependencies are required. The implementation uses only Python standard library (`os`, `json`, `logging`, `urllib`).
+4. (Optional) Override the default model:
+   ```bash
+   export LLM_MODEL="qwen/qwen3.6-plus"
+   ```
 
 ## Run Command
 ```bash
-python S3-research-openrouter-qwen.py
+cd /home/wengong/projects/digital-duck/SPL.py/NeurIPS-26-lab/R5-research/tests/openrouter/qwen/targets/python_pocketflow
+DT=$(date +%Y%m%d_%H%M%S) && python S4-research-openrouter-qwen.py \
+  --topic "PocketFlow LLM orchestration framework" \
+  2>&1 | tee S4-research-openrouter-qwen-run-${DT}.md
 ```
 
 ## Expected Output Pattern
 The script will:
 1. Log each ETL step (EXTRACT -> TRANSFORM -> GENERATE -> LOAD).
-2. Execute 2 iterations (capped by `loop_count < 2`) of query generation, web search, and fact extraction.
+2. Execute 2 iterations of query generation, web search, and fact extraction.
 3. Synthesize aggregated notes into a final report.
 4. Save the report to `report.txt` in the working directory.
-5. Print a preview of the final report to stdout.
+5. Print the final report to stdout.
 
 ## SPL to Python/PocketFlow Mapping Table
 
@@ -35,7 +44,7 @@ The script will:
 | `@var := value;` | `self.state["var"] = value` | State dictionary replaces SPL variable scope for ETL data passing. |
 | `WHILE <cond> DO ... END` | `while <cond>:` standard Python loop | Exact boolean logic preserved (`loop_count < 2 and iteration < 3`). |
 | `GENERATE <func>(@arg) INTO @out` | `self.state["out"] = _llm_generate(prompt)` | Maps to ETL "Transform" step using OpenRouter/Qwen API. |
-| `CALL search_web(...) INTO ...` | `self.state["web_results"] = _search_web(...)` | Maps to ETL "Extract" step. Placeholder for real search API. |
+| `CALL search_web(...) INTO ...` | `self.state["web_results"] = _search_web(...)` | Maps to ETL "Extract" step via ddgs DuckDuckGo search. |
 | `@notes := @notes + @extracted_facts;` | `self.state["notes"] += ...` | Standard string concatenation in Python. |
 | `CALL write_file("report.txt", @report);` | `_write_file("report.txt", self.state["report"])` | Maps to ETL "Load" step using standard file I/O. |
 | `RETURN @report WITH status = "complete"` | `logging.info(...); return self.state["report"]` | Status logged, final value returned to caller. |

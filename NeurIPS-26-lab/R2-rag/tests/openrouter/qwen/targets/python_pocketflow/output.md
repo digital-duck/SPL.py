@@ -1,0 +1,1 @@
+PocketFlow is a minimalist framework for orchestrating Large Language Model (LLM) workflows, structured around an ETL (Extract, Transform, Load) pipeline architecture. It emphasizes simplicity and efficiency in building, managing, and scaling LLM-driven applications.
