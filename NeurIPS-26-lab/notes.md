@@ -233,6 +233,208 @@ Format:
 
 ---
 
+## [2026-05-04] R5-research / openrouter / qwen3.6-plus — S3 mmd2spl undefined GENERATE functions + CONCAT
+
+**Symptom:** Validation passed but two GENERATE calls referenced undefined functions; string concat used non-existent builtin.
+
+**Root causes:**
+1. `GENERATE plan_queries(@topic)` and `GENERATE extract_facts(@web_results)` — neither declared as `CREATE FUNCTION`; would fail at runtime with undefined function error
+2. `@notes := CONCAT(@notes, @extracted_facts)` — `CONCAT` is not a stdlib SPL builtin; correct idiom is `+`
+3. `RETURNS STRING` → `RETURNS TEXT` (minor)
+
+**Fix applied to file (`S3-research-openrouter-qwen.spl`):**
+1. Added `CREATE FUNCTION plan_queries(topic)` and `CREATE FUNCTION extract_facts(web_results)` with appropriate prompt bodies using `{topic}` / `{web_results}` placeholders
+2. `CONCAT(@notes, @extracted_facts)` → `@notes + @extracted_facts`
+3. `RETURNS STRING` → `RETURNS TEXT` throughout
+4. Also simplified loop: removed dead `@synthesis_action` branch (was initialized to `"research"` and never updated, so finalize path inside loop was unreachable); final `GENERATE assess_and_report` after loop handles all cases
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R4-thinking / openrouter / qwen3.6-plus — S3 mmd2spl four semantic errors
+
+**Symptom:** Validation passed but file had four runtime-breaking issues.
+
+**Root causes:**
+1. `{{state}}` / `{{plan}}` double-braces in `assemble_prompt` body — variables never substituted (same pattern as R1, R2)
+2. `@iteration` used in WHILE condition `@next_thought_needed = true AND @iteration < 3` but never initialized — runtime crash
+3. `@next_thought_needed := true` (boolean literal) — WHILE condition `= true` does string comparison; should be `"true"` (string)
+4. `CALL print_and_save(@final_result)` — not a stdlib function
+
+**Fix applied to file (`S3-thinking-openrouter-qwen.spl`):**
+1. `{{state}}` → `{state}`, `{{plan}}` → `{plan}`; `RETURNS STRING` → `RETURNS TEXT`; `Don''t` → `Don't`
+2. Added `@iteration := 0;` initialization before WHILE loop; added `@iteration := @iteration + 1;` inside loop body
+3. `@next_thought_needed := true` → `@next_thought_needed := "true"`; exit sets `"false"`
+4. `CALL print_and_save(...)` → `CALL write_file("chain_of_thought.md", @final_result)`
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R3-judge / openrouter / qwen3.6-plus — S3 mmd2spl missing placeholders + three other errors
+
+**Symptom:** Validation passed but function bodies never injected actual values; WHILE used undefined variable; wrong type on a function return.
+
+**Root causes:**
+1. `generate_description(state, feedback)` body had no `{state}` or `{feedback}` placeholders; `evaluate_description(description)` body had no `{description}` placeholder — LLM received generic instructions with no actual input values
+2. `@iteration` in WHILE condition `@attempts <= 2 AND @iteration < 3 AND @status = "retry"` never initialized — runtime crash
+3. `RETURNS BOOL` on `persist_shared_state` — not a valid SPL type
+4. `CALL persist_shared_state(@shared_state, @verdict)` — invokes an LLM-backed `CREATE FUNCTION` using CALL (wrong verb; CALL is for stdlib tools)
+
+**Fix applied to file (`S3-judge-openrouter-qwen.spl`):**
+1. Added `{state}`, `{feedback}`, and `{description}` placeholders to function bodies; `RETURNS STRING` → `RETURNS TEXT`
+2. Removed `@iteration` from WHILE condition (guard is `@attempts <= 2 AND @status = "retry"`)
+3. Removed `persist_shared_state` function and its `CALL` invocation; final state stored in `@final_result := @description`
+4. `RETURN @final_result WITH status = @status` (was hardcoded `"complete"` — now reflects actual pass/retry outcome)
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R2-rag / openrouter / qwen3.6-plus — S3 mmd2spl three semantic errors
+
+**Symptom:** Validation passed but file had three runtime-breaking issues.
+
+**Root causes:**
+1. `{{doc}}` / `{{query}}` double-braces in `CREATE FUNCTION FormatPrompt` body — variables never substituted at runtime (same pattern as R1-agent)
+2. `@formatted_prompt := FormatPrompt(@retrieved_doc, @query)` followed by `GENERATE GenerateAnswer(@formatted_prompt) INTO @answer` — `GenerateAnswer` was never defined as a `CREATE FUNCTION`; would fail at runtime with undefined function error
+3. `CALL WriteMarkdownFile(@answer)` — not a stdlib function; correct stdlib call is `write_file(path, content)`
+
+**Fix applied to file (`S3-rag-openrouter-qwen.spl`):**
+1. `{{doc}}` / `{{query}}` → `{doc}` / `{query}` (single-braces), `RETURNS STRING` → `RETURNS TEXT`
+2. Dropped the intermediate `@formatted_prompt` variable; changed `GENERATE GenerateAnswer(...)` → `GENERATE FormatPrompt(@retrieved_doc, @query) INTO @result` (using the actually-defined function)
+3. `CALL WriteMarkdownFile(@answer)` → `CALL write_file("output.md", @result)`
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R1-agent / openrouter / qwen3.6-plus — S3 mmd2spl double-brace template variables
+
+**Symptom:** Validation passed but runtime would silently skip all variable substitution in every function prompt template. Prompts would send literal `{{query}}`, `{{context}}` etc. to the LLM instead of actual values.
+
+**Root cause:** qwen3.6-plus used `{{param}}` (double-braces) instead of `{param}` (single-braces) in `CREATE FUNCTION` body templates. The SPL executor substitutes via `body.replace("{" + key + "}", val)` — double-braces never match so variables are never injected. Also used `RETURNS STRING` (minor: accepted by validator) and `''text''` SQL-style quote escaping inside `$$...$$` delimiters (unnecessary).
+
+**Fix applied to file (`S3-agent-openrouter-qwen.spl`):**
+- All five `CREATE FUNCTION` bodies: `{{param}}` → `{param}` (single-braces)
+- `RETURNS STRING` → `RETURNS TEXT` (consistent with sonnet reference)
+- `''search''` / `''answer''` etc. → `'search'` / `'answer'` (clean up double-quote escaping)
+
+**Status:** fixed — `spl3 validate` still passes
+
+---
+
+## [2026-05-04] R5-research / openrouter / qwen3.6-plus — S3-run search_web returns error (ddgs not installed)
+
+**Symptom:** Run completed `status=complete` but output was a meta-report about search tool failure rather than research on the topic. `@web_results` received an installation error string instead of search results; `extract_facts` and `assess_and_report` faithfully processed the error as content.
+
+**Root cause:** `search_web` stdlib tool requires the `ddgs` (DuckDuckGo Search) Python package, which was not installed in the `spl123` conda env. The tool returned an error/installation prompt as a string rather than raising an exception, so the workflow ran to completion with no runtime error.
+
+**Fix:** `pip install ddgs` in the `spl123` env, then re-run.
+
+**Contrast with sonnet R5:** Sonnet R5 also retrieved no real web data, but via a different silent failure — `CALL PARALLEL` statements were silently skipped (`Unknown statement type: CallParallelStatement`), so `@result1/2/3` were never populated. Both models synthesized from parametric knowledge only; qwen's failure mode was at least visible in the output, sonnet's was invisible.
+
+**Significance for scoring:** Neither qwen nor sonnet R5 actually performed live web search during S3-run. Both closure scores will reflect parametric-knowledge synthesis, not retrieval-augmented research. This should be footnoted when comparing R5 scores across models.
+
+**Status:** workflow ran to completion; re-run pending after `pip install ddgs`
+
+---
+
+## [2026-05-04] R2-rag / openrouter / qwen3.6-plus — S3-run missing tools.py + texts not threaded to search
+
+**Symptom:** `spl3 run` crashed with `FileNotFoundError: .../tests/openrouter/qwen/tools.py`.
+
+**Root cause (1):** No `tools.py` existed in the qwen output directory. The qwen SPL uses PascalCase CALL function names (`ChunkRawTexts`, `GenerateVectorEmbeddings`, etc.) different from the sonnet `tools.py` (`chunk_documents`, `embed_documents`, etc.) — the sonnet tools.py could not be reused directly.
+
+**Root cause (2):** The qwen SPL passes `@texts` through `ChunkRawTexts → GenerateVectorEmbeddings → ConstructFAISSIndex` but never passes them to `NearestNeighborSearch(index, query_embedding)` — only 2 args, no `@texts`. The sonnet version explicitly passes texts as a third arg to `retrieve_document`. So at search time there is no way to return the actual chunk text through SPL variable flow.
+
+**Fix applied (`tools.py` created in `tests/openrouter/qwen/`):**
+- `ChunkRawTexts(raw_text)`: takes plain string (not JSON array), stores chunks in module-level `_chunks`
+- `GenerateVectorEmbeddings(texts_json)`: embeds via ollama `qwen3-embedding:0.6b`
+- `ConstructFAISSIndex(embeddings_json)`: builds FAISS index, writes `.chunks.json` sidecar alongside `.faiss` file using `_chunks` module state
+- `LogAndPersistIndex(index_path)`: no-op, returns status string
+- `EmbedQuery(query)`: embeds via ollama
+- `NearestNeighborSearch(index_path, query_embedding_json)`: reads `.chunks.json` sidecar to return actual chunk text
+
+**Status:** tools.py created — ready to re-run
+
+---
+
+## [2026-05-04] ALL RECIPES / openrouter / qwen3.6-plus — README S3-run section pointed at sonnet, not qwen
+
+**Symptom:** All five `README-qwen.md` files had S3-run commands hardcoded to the sonnet run (`export OUT=.../claude_cli/sonnet`, `--adapter claude_cli --model claude-sonnet-4-6`). Running them as written would smoke-test the sonnet SPL, not the qwen SPL.
+
+**Root cause:** README-qwen.md was copied from README-sonnet.md without updating the S3-run section to use the `$ADAPTER` / `$MODEL_ID` / `$OUT` vars already defined in the Environment section.
+
+**Fix applied to all five READMEs (pending):**
+- Remove hardcoded `export BASE=...` and `export OUT=.../claude_cli/sonnet` lines from S3-run (vars already set in Environment)
+- Change `$OUT/S3-<recipe>-claude_cli-sonnet.spl` → `$OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl`
+- Change `--adapter claude_cli --model claude-sonnet-4-6` → `--adapter $ADAPTER --model $MODEL_ID`
+
+**Recipe-specific fixes (pending):**
+- **R1-agent**: Remove `--claude-allowed-tools WebSearch` — openrouter adapter does not accept this flag
+- **R2-rag**: Change `-p` params `documents=` / `query=` → `raw_input=` / `user_query=` to match qwen SPL `INPUT` declarations; note that `tools.py` with qwen-named CALL functions (`ChunkRawTexts`, `EmbedQuery`, etc.) must exist in `$OUT` before running
+- **R3-judge**: Change `-p "task=..."` → `-p "initial_state=..."` — qwen SPL declares `INPUT @initial_state`, not `@task`
+- **R4-thinking**: Remove `--tools $OUT/tools.py` — qwen SPL only uses stdlib `write_file`, no helper tools needed
+- **R5-research**: Remove `-p "out=..."` — qwen SPL hardcodes `"report.txt"` output path; remove `--claude-allowed-tools WebSearch`
+
+**New checkpoint added between S3-run and S4 in all five READMEs (pending):** Explicit qwen silent-bug checklist:
+- `{param}` single-braces in all CREATE FUNCTION bodies (not `{{param}}`)
+- Every GENERATE call has a matching CREATE FUNCTION declaration
+- All WHILE loop variables initialized before the loop
+- CALL targets are stdlib tools, not LLM-backed CREATE FUNCTIONs
+
+**Significance for scoring:** These are all human interventions applied before S4 (splc compile). Even if qwen achieves a closure score close to sonnet, the score reflects a manually corrected SPL, not raw qwen output. The raw qwen S3 had systematic silent bugs that would have caused runtime failures or wrong behavior. This gap should be footnoted when comparing scores across models.
+
+**Status:** documented — README edits pending
+
+---
+
+## [2026-05-04] R5-research / openrouter / qwen3.6-plus — S3 mmd2spl invalid LOG statement
+
+**Symptom:** `Validation: FAILED — Parse error at 27:7: Expected statement keyword, got IDENTIFIER ('LOG')`. Generated SPL used `LOG "..."` as a statement on two lines (inside the EVALUATE THEN block and at the end of the workflow).
+
+**Root cause:** `LOG` is not a valid SPL keyword. qwen3.6-plus invented it as a pseudo-statement to represent "write to file / console" from the `.mmd` node label `WRITE @report to File — Console Log`.
+
+**Fix applied to file (`S3-research-openrouter-qwen.spl`):**
+- Removed `LOG "..."` inside the EVALUATE THEN block (redundant — loop exits via `@loop_count := 2`)
+- Replaced `LOG "..."` at workflow end with `CALL write_file("report.txt", @report)` — the correct SPL idiom for persisting output
+
+**Status:** fixed — `spl3 validate` passes
+
+---
+
+## [2026-05-04] R2-rag / openrouter / qwen3.6-plus — S2 text2mmd missing sub-graphs
+
+**Symptom:** Generated `.mmd` was a flat linear flowchart with no sub-graphs. All 13 nodes were strung together A→B→…→M with no grouping.
+
+**Root cause:** qwen3.6-plus did not spontaneously apply sub-graph grouping the way sonnet did. The RAG recipe has a natural two-phase structure (offline indexing + online query) plus a shared variable store, all of which benefit from sub-graph separation for clarity.
+
+**Fix applied to file (`S2-rag-openrouter-qwen.mmd` + `.md`):**
+- Added `OFFLINE` sub-graph: Chunk Raw Texts → Generate Vector Embeddings → Construct FAISS Index → Log & Persist Index
+- Added `SHARED` sub-graph: `@texts`, `@embeddings`, `@index`, `@query`, `@query_embedding`, `@retrieved_doc`, `@answer`
+- Added `ONLINE` sub-graph: Accept User Query → Embed Query → Nearest-Neighbor Search → Retrieve Top Document → Format Prompt → Execute GENERATE LLM Call → Write Markdown File
+- Added cross-subgraph edges showing shared state reads/writes (dotted `---` connections)
+
+**Status:** fixed manually — structure now matches sonnet reference
+
+---
+
+## [2026-05-04] R4-thinking / openrouter / qwen3.6-plus — S2 text2mmd missing LOOP sub-graph
+
+**Symptom:** Generated `.mmd` had the chain-of-thought loop body as a flat flowchart with no sub-graph wrapper. The iterative thinking loop (WHILE condition → assemble → generate → validate → update → repeat) was indistinguishable from linear top-level flow.
+
+**Root cause:** qwen3.6-plus did not group the WHILE loop body into a sub-graph. The sonnet reference wraps nodes C–I in a `ChainOfThought Loop` sub-graph, making the iterative structure visually explicit.
+
+**Fix applied to file (`S2-thinking-openrouter-qwen.mmd` + `.md`):**
+- Wrapped nodes C (`WHILE: next_thought_needed?`) through I (`Update State & Stream Progress`) in a `LOOP["ChainOfThought Loop"]` sub-graph
+- Exit edge `H -->|False|` goes outside the sub-graph to J (Extract Final Solution)
+
+**Status:** fixed manually — structure now matches sonnet reference
+
+---
+
 ## [2026-05-03] R4-thinking / tools.py — LLM wraps YAML in markdown code fences
 
 **Symptom:** `chain_of_thought_trace.md` showed `yaml_valid=false` for every retry and empty `@current_thinking` / `@next_thought_needed` at RETURN. Claude was producing valid YAML but wrapped in ` ```yaml ... ``` ` markdown fences, causing `yaml.safe_load` to throw a parse error.
@@ -247,3 +449,82 @@ Format:
 - Changed "Respond with valid YAML" → "Respond with PLAIN YAML only — do NOT wrap in code fences or markdown blocks."
 
 **Status:** fixed
+
+---
+
+## [2026-05-04] R1-R5 / openrouter / qwen — S4 splc compile: wrong model IDs in compiled Python
+
+**Symptom:** All 5 compiled S4 Python files hard-coded incorrect OpenRouter model IDs instead of the benchmark model `qwen/qwen3.6-plus`:
+- R1: `qwen/qwen-2.5-72b-instruct`
+- R2: `qwen/qwen-turbo`
+- R3: `qwen/qwen-2.5-72b-instruct`
+- R4: `qwen/qwen-max`
+- R5: `qwen/qwen2.5-72b-instruct`
+
+**Root cause:** splc compiler generates a hard-coded model string from its training data rather than propagating the adapter config.
+
+**Fix applied:** All 5 files updated to read `os.environ.get("LLM_MODEL", "qwen/qwen3.6-plus")`.
+
+**Status:** fixed — footnote: manual intervention required for benchmarking integrity
+
+---
+
+## [2026-05-04] R1, R5 / openrouter / qwen — S4 splc compile: web_search is a stub
+
+**Symptom:** R1 `web_search()` returned a fake string `f"[Search results for '{query}']"`. R5 `_search_web()` returned a hardcoded template string with no real query. Neither called any actual search API.
+
+**Root cause:** splc compiler does not know the runtime environment — emits a placeholder rather than the real `ddgs` implementation used in the sonnet S4 reference.
+
+**Fix applied:** Both functions replaced with the same ddgs-based implementation from the sonnet reference:
+- `try: from ddgs import DDGS; except ImportError: from duckduckgo_search import DDGS`
+- Extracts `search_query:` from YAML output (R1) or `QUERY:` lines (R5) before issuing search
+- Returns formatted result list or error string on exception
+
+**Status:** fixed — footnote: manual intervention; ddgs must be installed in env (`pip install ddgs`)
+
+---
+
+## [2026-05-04] R2 / openrouter / qwen — S4 splc compile: fake hash-based embeddings
+
+**Symptom:** `_call_generate_vector_embeddings` and `_call_embed_query` use `hash(chunk + str(i)) % 1000` as a mock embedding — no actual vector model called. This means semantic similarity search is non-functional even though the FAISS-style cosine search logic is correct.
+
+**Root cause:** splc compiler cannot introspect the runtime tools.py (ollama-backed) used in S3-run; emits a deterministic mock instead.
+
+**Fix:** Not applied — the tools.py RAG pipeline is the authoritative S3 run artifact; S4 documents the logical flow. Noted as compilation quality gap.
+
+**Status:** wontfix (S4 benchmarking note) — real embeddings are in tools.py (S3-run path)
+
+---
+
+## [2026-05-04] R2 / openrouter / qwen — S4 splc compile: `import requests` (non-stdlib)
+
+**Symptom:** Compiled file imported `requests` (not stdlib); `_generate_with_openrouter` used `requests.post`.
+
+**Fix applied:** Changed to `import urllib.request` + `json`; rewrote the HTTP call using `urllib.request.Request` / `urlopen`. Consistent with R1 / sonnet reference style.
+
+**Status:** fixed
+
+---
+
+## [2026-05-04] R1-R5 / openrouter / qwen — S4 splc compile: no PocketFlow Node/Flow classes
+
+**Symptom:** All 5 compiled files use plain Python classes or top-level functions — none import or use `pocketflow.Node` / `pocketflow.Flow`. The sonnet S4 reference uses `class DecideNode(Node)` with `prep/exec/post` methods and `build_flow()` with explicit edge wiring.
+
+**Root cause:** splc for qwen translated SPL into flat procedural Python; the PocketFlow ETL node pattern was not applied.
+
+**Fix:** Not applied — rewriting 5 files into PocketFlow Node/Flow structure would be a major manual rewrite beyond surgical fix scope. The procedural code is logically correct. Scoring this as a compilation quality gap vs. sonnet reference.
+
+**Status:** wontfix (S4 benchmarking note) — counts against qwen closure score vs. sonnet
+
+---
+
+## [2026-05-04] R1-R5 / openrouter / qwen — S4 file rename to S4-* convention
+
+**Action:** All 5 compiled files renamed from `S3-*_python_pocketflow.py` to `S4-*.py`:
+- `S4-agent-openrouter-qwen.py`
+- `S4-rag-openrouter-qwen.py`
+- `S4-judge-openrouter-qwen.py`
+- `S4-thinking-openrouter-qwen.py`
+- `S4-research-openrouter-qwen.py`
+
+**Status:** done

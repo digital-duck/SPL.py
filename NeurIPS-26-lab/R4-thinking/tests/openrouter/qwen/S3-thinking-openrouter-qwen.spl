@@ -1,0 +1,39 @@
+CREATE FUNCTION assemble_prompt(state, plan)
+RETURNS TEXT AS $$
+You are executing a chain of thought for: {state} based on the plan: {plan}.
+Generate the next logical step in strict YAML format.
+If you need to continue the reasoning process, add the field CONTINUE: true.
+If the solution is ready, add the field FINAL: true.
+Do not wrap output in markdown. Don't add conversational filler.
+$$;
+
+WORKFLOW ChainOfThoughtLoop
+  INPUT @problem STRING, @plan STRING := "default_plan"
+  OUTPUT @final_result STRING
+DO
+  @state := "Init State: " + @problem + "\n" + "Plan: " + @plan;
+  @next_thought_needed := "true";
+  @final_result := "";
+  @llm_output := "";
+  @iteration := 0;
+
+  WHILE @next_thought_needed = "true" AND @iteration < 3 DO
+    GENERATE assemble_prompt(@state, @plan) INTO @llm_output;
+    @iteration := @iteration + 1;
+
+    EVALUATE @llm_output WHEN contains("YAML_ERROR") THEN
+      @next_thought_needed := "true";
+    ELSE
+      EVALUATE @llm_output WHEN contains("CONTINUE: true") THEN
+        @state := "Update State & Stream Progress: " + @state + "\n" + @llm_output;
+        @next_thought_needed := "true";
+      ELSE
+        @final_result := "Extract Final Solution: " + @llm_output;
+        @next_thought_needed := "false";
+      END;
+    END;
+  END;
+
+  CALL write_file("chain_of_thought.md", @final_result);
+  RETURN @final_result WITH status = "complete";
+END;

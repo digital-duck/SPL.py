@@ -1,0 +1,23 @@
+CREATE FUNCTION FormatPrompt(doc, query)
+RETURNS TEXT AS $$ 
+Context: {doc}. Question: {query}. Provide a concise and accurate answer. 
+$$;
+
+WORKFLOW RAGPipeline
+  INPUT @raw_input STRING, @user_query STRING := "default query"
+  OUTPUT @result STRING
+DO
+  @texts := @raw_input;
+  CALL ChunkRawTexts(@texts) INTO @texts;
+  CALL GenerateVectorEmbeddings(@texts) INTO @embeddings;
+  CALL ConstructFAISSIndex(@embeddings) INTO @index;
+  CALL LogAndPersistIndex(@index) INTO @persist_status;
+
+  @query := @user_query;
+  CALL EmbedQuery(@query) INTO @query_embedding;
+  CALL NearestNeighborSearch(@index, @query_embedding) INTO @retrieved_doc;
+  GENERATE FormatPrompt(@retrieved_doc, @query) INTO @result;
+  CALL write_file("output.md", @result);
+
+  RETURN @result WITH status = "complete";
+END;

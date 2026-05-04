@@ -11,9 +11,9 @@ Set these 4 vars before running any step. Change ADAPTER / MODEL_ID / MODEL for 
 ```bash
 export RECIPE=thinking
 
-export ADAPTER=openrouter
-export MODEL=qwen
-export MODEL_ID=qwen3.6-plus
+export ADAPTER=openrouter                        # adapter name
+export MODEL=gemini                              # short name used in output filenames
+export MODEL_ID=google/gemini-3-flash-preview    # full model ID passed to --model
 
 export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R4-$RECIPE
 export SRC=$BASE/src/pocketflow-$RECIPE
@@ -84,7 +84,10 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ## S3-run — `spl3 run` → smoke-test the SPL workflow
 
 Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
-The qwen SPL only uses stdlib `write_file` — no `--tools` flag needed.
+
+> **Note:** If the generated `.spl` uses non-stdlib CALL functions (e.g. JSON/YAML helpers),
+> supply a `--tools $OUT/tools.py`. Check the WORKFLOW INPUT declarations and adjust `-p`
+> param names accordingly.
 
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
@@ -93,13 +96,13 @@ spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
-Expected: the workflow runs up to 3 chain-of-thought steps, stopping early when `CONTINUE: true` is absent from LLM output, writes trace to `chain_of_thought.md`, and returns `status=complete`.
+Expected: the workflow runs multiple chain-of-thought steps, stops when reasoning is complete, and returns the final solution with `status=complete`.
 
 ---
 
 ## ⚠️ HUMAN CHECKPOINT — verify SPL before S4
 
-Inspect the run output and the `.spl` file for qwen silent-bug patterns before compiling:
+Inspect the run output and the `.spl` file for common LLM failure patterns before compiling:
 
 - [ ] All `CREATE FUNCTION` bodies use `{param}` single-braces (not `{{param}}`)
 - [ ] Every function name in a `GENERATE` call has a matching `CREATE FUNCTION` declaration

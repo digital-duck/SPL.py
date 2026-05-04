@@ -1,0 +1,13 @@
+    flowchart TD
+    A([Start]) --> B["Initialize<br/>Shared State"]
+    B --> C["GENERATE<br/>generate_description"]
+    C --> D["GENERATE<br/>evaluate_description"]
+    D --> E{Score >= 7?}
+    E -->|Yes| F["RETURN<br/>pass status"]
+    E -->|No| G["Increment<br/>@attempts"]
+    G --> H["Store<br/>@feedback"]
+    H --> I{Attempts < 3?}
+    I -->|Yes| C
+    I -->|No| F
+    F --> J["Persist Shared<br/>State & Score"]
+    J --> K([End])

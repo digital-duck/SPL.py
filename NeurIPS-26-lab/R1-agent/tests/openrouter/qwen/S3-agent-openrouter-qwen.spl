@@ -1,0 +1,48 @@
+CREATE FUNCTION decide_action(query, context)
+RETURNS TEXT AS $$ Decide whether to 'search' or 'answer' based on query: {query} and context: {context}. Output YAML with an 'action' token and 'query' field. $$;
+CREATE FUNCTION validate_yaml(raw)
+RETURNS TEXT AS $$ Check if the following text is valid YAML: {raw}. Return only 'valid' or 'malformed'. $$;
+CREATE FUNCTION repair_output(bad_yaml)
+RETURNS TEXT AS $$ The following YAML is malformed. Repair it strictly into valid YAML: {bad_yaml} $$;
+CREATE FUNCTION extract_action(valid_yaml)
+RETURNS TEXT AS $$ Extract the 'action' value from the following valid YAML: {valid_yaml} $$;
+CREATE FUNCTION generate_final(state, query)
+RETURNS TEXT AS $$ Synthesize a comprehensive final answer using accumulated context: {state} to address the original query: {query} $$;
+
+WORKFLOW DecisionAgent
+  INPUT @user_query STRING
+  OUTPUT @final_response STRING
+DO
+  @shared_state := "";
+  @iteration := 0;
+  @done := false;
+
+  WHILE @done = false AND @iteration < 3 DO
+    GENERATE decide_action(@user_query, @shared_state) INTO @raw_yaml;
+
+    @parse_valid := false;
+    @parse_iter := 0;
+    WHILE @parse_valid = false AND @parse_iter < 3 DO
+      GENERATE validate_yaml(@raw_yaml) INTO @yaml_status;
+      EVALUATE @yaml_status WHEN contains("malformed") THEN
+        GENERATE repair_output(@raw_yaml) INTO @raw_yaml;
+        @parse_iter := @parse_iter + 1;
+      ELSE
+        @parse_valid := true;
+      END;
+    END;
+
+    GENERATE extract_action(@raw_yaml) INTO @action_token;
+
+    EVALUATE @action_token WHEN contains("search") THEN
+      CALL web_search(@user_query) INTO @search_results;
+      @shared_state := @shared_state + " " + @search_results;
+      @iteration := @iteration + 1;
+    ELSE
+      GENERATE generate_final(@shared_state, @user_query) INTO @final_response;
+      @done := true;
+    END;
+  END;
+
+  RETURN @final_response WITH status = "complete";
+END;

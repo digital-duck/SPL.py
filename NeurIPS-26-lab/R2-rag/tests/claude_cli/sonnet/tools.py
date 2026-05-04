@@ -19,8 +19,16 @@ _EMBED_MODEL = "qwen3-embedding:0.6b"
 
 
 def _get_embedding(text: str) -> list[float]:
-    resp = ollama.embed(model=_EMBED_MODEL, input=text)
-    return resp.embeddings[0]
+    """Embed text with retry to handle ollama cold-start (model runner EOF on first load)."""
+    last_err: Exception | None = None
+    for attempt in range(3):
+        try:
+            resp = ollama.embed(model=_EMBED_MODEL, input=text)
+            return resp.embeddings[0]
+        except Exception as e:
+            last_err = e
+            import time; time.sleep(2)
+    raise RuntimeError(f"ollama embed failed after 3 attempts: {last_err}") from last_err
 
 
 @spl_tool

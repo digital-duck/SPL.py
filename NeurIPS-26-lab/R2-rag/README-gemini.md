@@ -1,6 +1,6 @@
-# R4: pocketflow-thinking — NDD Round-Trip Experiment
+# R2: pocketflow-rag — NDD Round-Trip Experiment
 
-Chain-of-Thought orchestration. Enables LLMs to solve complex reasoning problems by thinking step-by-step. Structured reasoning is managed externally via PocketFlow nodes, improving accuracy on multi-step problems.
+Retrieval-Augmented Generation pipeline. Retrieves relevant documents based on user queries and generates answers using an LLM. Demonstrates the embed→retrieve→generate pattern in PocketFlow.
 
 ---
 
@@ -9,14 +9,13 @@ Chain-of-Thought orchestration. Enables LLMs to solve complex reasoning problems
 Set these 4 vars before running any step. Change ADAPTER / MODEL_ID / MODEL for each of the 4 runs.
 
 ```bash
-export RECIPE=thinking
+export RECIPE=rag
+export ADAPTER=openrouter                        # adapter name
+export MODEL_ID=google/gemini-3-flash-preview    # full model ID passed to --model
+export MODEL=gemini                              # short name used in output filenames
 
-export ADAPTER=openrouter
-export MODEL=qwen
-export MODEL_ID=qwen3.6-plus
-
-export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R4-$RECIPE
-export SRC=$BASE/src/pocketflow-$RECIPE
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag
+export SRC=$BASE/src/pocketflow-rag
 export OUT=$BASE/tests/$ADAPTER/$MODEL
 ```
 
@@ -57,9 +56,9 @@ spl3 text2mmd $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
 ## ⚠️ HUMAN CHECKPOINT — review diagram before S3
 
 Open `$OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd` and verify:
-- Think and Answer nodes (or equivalent) clearly present
-- Step-by-step reasoning flow captured
-- Any iterative refinement loops have back-edges
+- All nodes present and correctly labeled
+- Edges wired in correct direction
+- Retrieval and generation stages clearly separated
 - No dangling or duplicate nodes
 
 Fix any errors directly in the `.mmd` file, then proceed.
@@ -84,22 +83,30 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ## S3-run — `spl3 run` → smoke-test the SPL workflow
 
 Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
-The qwen SPL only uses stdlib `write_file` — no `--tools` flag needed.
+
+> **Prerequisite:** `$OUT/tools.py` must exist with implementations matching the CALL function
+> names in the generated `.spl`. Different models name these differently — inspect the `.spl`
+> first and create a model-specific `tools.py` in `$OUT` before running.
+
+> **Note:** Check the WORKFLOW INPUT declarations in the generated `.spl` and adjust `-p` param
+> names accordingly.
 
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  -p "problem=A farmer has 17 sheep. All but 9 die. How many sheep are left? Now explain step-by-step how compound interest works and why it matters for long-term investing." \
+  --tools $OUT/tools.py \
+  -p "raw_input=PocketFlow is a minimalist LLM framework for building agentic pipelines." \
+  -p "user_query=What is PocketFlow and how do I install it?" \
   2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
-Expected: the workflow runs up to 3 chain-of-thought steps, stopping early when `CONTINUE: true` is absent from LLM output, writes trace to `chain_of_thought.md`, and returns `status=complete`.
+Expected: chunks and embeds input text, retrieves the most relevant chunk, generates a grounded answer, returns `status=complete`.
 
 ---
 
 ## ⚠️ HUMAN CHECKPOINT — verify SPL before S4
 
-Inspect the run output and the `.spl` file for qwen silent-bug patterns before compiling:
+Inspect the run output and the `.spl` file for common LLM failure patterns before compiling:
 
 - [ ] All `CREATE FUNCTION` bodies use `{param}` single-braces (not `{{param}}`)
 - [ ] Every function name in a `GENERATE` call has a matching `CREATE FUNCTION` declaration

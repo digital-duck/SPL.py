@@ -397,7 +397,7 @@ def cmd_compile(
         if verbose:
             click.echo(f"Calling {adapter} / {model or '(default)'} ...")
 
-        impl_code, readme_text = _compile(prompt, adapter=adapter, model=model, verbose=verbose)
+        impl_code, readme_text = compile_llm_code(prompt, adapter=adapter, model=model, verbose=verbose)
 
     # ── Write output files ────────────────────────────────────────────────────
     impl_path.write_text(impl_code, encoding="utf-8")

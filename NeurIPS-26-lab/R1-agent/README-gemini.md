@@ -91,19 +91,35 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ```
 
 
-## ⚠️ CHECKPOINT
+## S3-run — `spl3 run` → smoke-test the SPL workflow
 
-Test the .spl
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+
+> **Note:** Check the WORKFLOW INPUT declarations in the generated `.spl` and adjust `-p` param
+> names accordingly — different models may name inputs differently.
 
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  --claude-allowed-tools WebSearch \
-  --param question="what is machine learning" \
-    2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md 
-
+  -p "user_query=What is PocketFlow and how do I install it?" \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
+Expected: the workflow runs up to 3 search-and-accumulate loops then returns a synthesized answer with `status=complete`.
+
+---
+
+## ⚠️ HUMAN CHECKPOINT — verify SPL before S4
+
+Inspect the run output and the `.spl` file for common LLM failure patterns before compiling:
+
+- [ ] All `CREATE FUNCTION` bodies use `{param}` single-braces (not `{{param}}`)
+- [ ] Every function name in a `GENERATE` call has a matching `CREATE FUNCTION` declaration
+- [ ] All `WHILE` loop variables are initialised before the loop
+- [ ] `CALL` targets are stdlib tools, not LLM-backed `CREATE FUNCTION`s
+- [ ] No invented statement keywords (`LOG`, etc.)
+
+Fix any issues in the `.spl` file, then proceed.
 
 ---
 

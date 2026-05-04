@@ -1,6 +1,6 @@
-# R4: pocketflow-thinking — NDD Round-Trip Experiment
+# R5: pocketflow-deep-research — NDD Round-Trip Experiment
 
-Chain-of-Thought orchestration. Enables LLMs to solve complex reasoning problems by thinking step-by-step. Structured reasoning is managed externally via PocketFlow nodes, improving accuracy on multi-step problems.
+Recursive map-reduce research agent. Plans search queries, gathers information in parallel via batch processing, extracts facts, and synthesizes a comprehensive report. Loops back to fill knowledge gaps until the report is complete.
 
 ---
 
@@ -9,13 +9,12 @@ Chain-of-Thought orchestration. Enables LLMs to solve complex reasoning problems
 Set these 4 vars before running any step. Change ADAPTER / MODEL_ID / MODEL for each of the 4 runs.
 
 ```bash
-export RECIPE=thinking
+export RECIPE=research
+export ADAPTER=openrouter                        # adapter name
+export MODEL=gemini                              # short name used in output filenames
+export MODEL_ID=google/gemini-3-flash-preview    # full model ID passed to --model
 
-export ADAPTER=openrouter
-export MODEL=qwen
-export MODEL_ID=qwen3.6-plus
-
-export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R4-$RECIPE
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R5-$RECIPE
 export SRC=$BASE/src/pocketflow-$RECIPE
 export OUT=$BASE/tests/$ADAPTER/$MODEL
 ```
@@ -57,9 +56,9 @@ spl3 text2mmd $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
 ## ⚠️ HUMAN CHECKPOINT — review diagram before S3
 
 Open `$OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd` and verify:
-- Think and Answer nodes (or equivalent) clearly present
-- Step-by-step reasoning flow captured
-- Any iterative refinement loops have back-edges
+- Plan, Search (parallel batch), Extract, Synthesize nodes all present
+- Parallel batch edges correctly shown
+- Gap-fill loop back-edge present
 - No dangling or duplicate nodes
 
 Fix any errors directly in the `.mmd` file, then proceed.
@@ -84,22 +83,25 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 ## S3-run — `spl3 run` → smoke-test the SPL workflow
 
 Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
-The qwen SPL only uses stdlib `write_file` — no `--tools` flag needed.
+Web searches use the stdlib `search_web` tool (DuckDuckGo, no API key needed).
+
+> **Note:** Check the WORKFLOW INPUT declarations in the generated `.spl` and adjust `-p` param
+> names accordingly. If the model added an output path param, supply it here.
 
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  -p "problem=A farmer has 17 sheep. All but 9 die. How many sheep are left? Now explain step-by-step how compound interest works and why it matters for long-term investing." \
+  -p "topic=PocketFlow minimalist LLM framework" \
   2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
 ```
 
-Expected: the workflow runs up to 3 chain-of-thought steps, stopping early when `CONTINUE: true` is absent from LLM output, writes trace to `chain_of_thought.md`, and returns `status=complete`.
+Expected: the workflow runs multiple research iterations (plan → search → extract → accumulate), synthesizes a final report, writes output, and returns `status=complete`.
 
 ---
 
 ## ⚠️ HUMAN CHECKPOINT — verify SPL before S4
 
-Inspect the run output and the `.spl` file for qwen silent-bug patterns before compiling:
+Inspect the run output and the `.spl` file for common LLM failure patterns before compiling:
 
 - [ ] All `CREATE FUNCTION` bodies use `{param}` single-braces (not `{{param}}`)
 - [ ] Every function name in a `GENERATE` call has a matching `CREATE FUNCTION` declaration
@@ -157,10 +159,10 @@ spl3 compare \
 
 Steps may not run perfectly on the first attempt — that is expected. Common failure points:
 
-- **S1**: Multi-file recipe; if spec is thin, check that all `.py` files were included
-- **S2**: LLM may generate invalid Mermaid syntax; fix manually before S3
-- **S3**: SPL may have syntax errors; run `spl3 validate` and fix before S4
-- **S4**: Compiled Python may have import errors or broken node wiring; fix and re-run
+- **S1**: This is the most complex recipe (parallel batch + recursive loop); spec may need a re-run with a stronger model if output is shallow
+- **S2**: Parallel batch structure is hard for LLMs to render in Mermaid; inspect carefully
+- **S3**: SPL parallel constructs (`CALL PARALLEL`) may need manual adjustment
+- **S4**: Parallel execution and recursive loop are the hardest to compile correctly; expect manual fixes
 - **S5**: If S4 output is functionally broken, S5 spec will be poor — fix S4 first
 
 Record issues and fixes in `$OUT/notes.md`.
