@@ -138,6 +138,8 @@ mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
    $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py
 ```
 
+> **2026-05-04 (claude_cli/claude run):** S4 file created manually via `cp` instead of `mv`, preserving the original `S3-agent-claude_cli-claude_python_pocketflow.py` alongside `S4-agent-claude_cli-claude.py`. Both files are identical; S4 is the canonical name for S5/S6 steps.
+
 Gemini CLI made change to .py, 
 
 ---
