@@ -490,8 +490,13 @@ def _github_to_raw_readme(url: str) -> str:
 
 # ── RAG examples ─────────────────────────────────────────────────────────────
 
-def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool) -> str:
-    """Retrieve k similar recipes already compiled to the target lang from the RAG store."""
+def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool, query: str | None = None) -> str:
+    """Retrieve k similar recipes already compiled to the target lang from the RAG store.
+
+    Args:
+        spl_source: SPL source text (used to derive query via _spl_to_query if query is None).
+        query:      Override the RAG query directly (e.g. when calling from vibe with natural language).
+    """
     if not RAG_STORE_DIR.exists():
         if verbose:
             click.echo("  RAG store not found — skipping few-shot examples.")
@@ -508,8 +513,8 @@ def _fetch_rag_examples(spl_source: str, lang: str, *, k: int, verbose: bool) ->
             click.echo("  WARN: spl.rag not importable — skipping RAG context.")
         return ""
 
-    # Use the SPL source as the query to find similar recipes
-    query = _spl_to_query(spl_source)
+    # Use the provided query directly, or derive one from the SPL source
+    query = query or _spl_to_query(spl_source)
     if verbose:
         click.echo(f"  RAG query: {query[:60]}...")
 
@@ -627,17 +632,18 @@ Source file: {spl_filename}\
 
 VIBE_SYSTEM_PROMPT = """\
 You are an expert software engineer. Your task is to translate a natural language REQUIREMENT
-directly into a working {lang_label} implementation.
+directly into a working {lang_label} implementation, bypassing any intermediate IR steps.
 
 Rules:
 1. The code must be complete, executable, and production-ready.
 2. Use only the target language's standard patterns for {lang_label}.
-3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct node wiring, 
-   shared state management, and robust error handling.
-4. Provide a main execution block that demonstrates the requirement.
-5. If the implementation requires LLM calls, use a pattern compatible with the `{adapter}` adapter
-   and the model `{model}`. For Python targets, prefer a `call_llm(prompt: str) -> str` helper.
-6. Output ONLY the implementation file content — no explanation before it.
+3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct
+   node wiring, shared state management, and robust error handling.
+4. Preserve ALL workflow semantics implied by the requirement: loops, conditional branches,
+   sub-workflow calls, exception handling, and logging.
+5. Provide a main execution block that demonstrates the requirement end-to-end.
+6. For LLM calls, use a `call_llm(prompt: str) -> str` helper that is easy to swap adapters.
+7. Output ONLY the implementation file content — no explanation before it.
    The file should be ready to run without modification.
 {readme_instr}
 
@@ -651,20 +657,20 @@ def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: b
     """Call the specified adapter and return (implementation, readme)."""
     import asyncio
     try:
-        from spl.adapters import get_adapter
+        from spl3.adapters import get_adapter
     except ImportError:
-        click.echo("ERROR: spl.adapters not found. Ensure SPL.py is installed.", err=True)
+        click.echo("ERROR: spl3.adapters not found. Ensure SPL.py is installed.", err=True)
         sys.exit(1)
 
     try:
-        llm = get_adapter(adapter, **{"model": model} if model else {})
+        llm = get_adapter(adapter, **({"model": model} if model else {}))
     except ValueError as exc:
         click.echo(f"ERROR: {exc}", err=True)
         sys.exit(1)
 
     async def _run() -> str:
-        result = await llm.generate(prompt)
-        return result.content
+        result = await llm.generate(prompt, **({"model": model} if model else {}))
+        return result if isinstance(result, str) else getattr(result, "content", str(result))
 
     raw = asyncio.run(_run())
 
@@ -749,6 +755,13 @@ SPL key constructs are:
   RETURN @<var> WITH <k>=<v>, ...  — return with metadata (status, iterations, etc.)
   EXCEPTION WHEN <Type> THEN ...   — named exception handler
 
+IMPORTANT — suppress trivial "default" transitions:
+  In PocketFlow and similar frameworks, nodes return a `"default"` action token simply
+  to advance to the next node in a linear chain. This is NOT a meaningful control-flow
+  decision and must NOT appear in the spec or construct mapping as "RETURN default".
+  Only mention RETURN when the status value is non-trivial (e.g. "done", "retry",
+  "error", "continue") AND it drives a real branch or loop condition.
+
 You are given a {lang_label} implementation of an LLM workflow.
 Your task is to produce a functional specification in plain English that:
   (a) is rich enough to regenerate the equivalent SPL workflow using text2spl
@@ -760,7 +773,9 @@ Structure your output as Markdown with these sections IN ORDER:
 Write 4-6 sentences of flowing prose (no bullet points).
 Describe what this workflow does using SPL construct names wherever they apply.
 Cover: pattern/technique, each logical function (and its prompt role), control flow
-expressed as WHILE/EVALUATE/RETURN, multi-model design, side-effects, exception handling.
+expressed as WHILE/EVALUATE/RETURN (only when non-trivial), multi-model design,
+side-effects, exception handling. Do NOT mention "default" action tokens — omit them
+entirely; they are implicit linear flow, not worth documenting.
 This section will be used directly as the text2spl input prompt — make it complete.
 
 ## 1. Purpose
@@ -769,7 +784,10 @@ One sentence: what this implementation accomplishes for the end user.
 ## 2. SPL ↔ {lang_label} Construct Mapping
 A Markdown table — columns: SPL Construct | {lang_label} Equivalent | Notes.
 Cover every major mapping: WORKFLOW→, CREATE FUNCTION→, GENERATE→, EVALUATE→,
-WHILE→, RETURN→, EXCEPTION→, shared state (SPL @vars)→.
+WHILE→, EXCEPTION→, shared state (SPL @vars)→.
+Only include RETURN→ if a non-default status token (e.g. "done", "retry") drives
+a real branch or terminates a loop. Skip it for linear chains where every node
+simply returns "default".
 
 ## 3. Logical Functions / Prompts
 For each logical function (prompt template) found in the implementation:
@@ -779,7 +797,8 @@ For each logical function (prompt template) found in the implementation:
 
 ## 4. Control Flow
 Describe the execution path: initial step → loop condition → branch logic → termination.
-Use SPL construct names (WHILE, EVALUATE, RETURN WITH status=).
+Use SPL construct names (WHILE, EVALUATE, RETURN WITH status=) only when non-trivial.
+Do NOT say "each step returns default" — that is implicit and adds no information.
 
 ## 5. How to Regenerate as SPL
 ```
@@ -959,7 +978,7 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
     except ImportError:
         raise click.ClickException("spl3 adapters not found: ensure spl3 is installed.")
 
-    llm = get_adapter(adapter, **{"model": model} if model else {})
+    llm = get_adapter(adapter, **({"model": model} if model else {}))
     result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
     spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
 

@@ -3,91 +3,148 @@
 
 see `/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab`
 
-Total number of experiments: 5 recipes x 4 models = 20
+## Philosophy
 
-## workflow
+- **Iterative and incremental** — not 1-shot. Expect issues; log them in `notes.md`, fix with Claude Code CLI, continue.
+- **Human-in-the-loop** — explicit review touchpoints to catch LLM drift before it propagates.
+- **Goal**: complete the NDD round-trip closure loop across 3 models × 5 recipes.
+
+## Experiment Plan
+
+**Phase 1 (today):** 5 recipes × 3 models = **15 runs** via the full IR pipeline (S1→S6).
+
+**Phase 2 (if time permits):** Ablation study — bypass the `.mmd` + `.spl` IR steps using `spl3 vibe` (text → target code directly), compare output quality against the full pipeline. This tests whether the intermediate representations add value.
+
+| Phase | Pipeline | Steps | Hypothesis |
+|-------|----------|-------|------------|
+| 1 | Full IR | S1→S2→S3→S4→S5→S6 | IR steps improve round-trip fidelity |
+| 2 (ablation) | Bypass IR | `spl3 vibe` (text→code) | Measure quality loss without .mmd/.spl |
+
+## Model Selection
+
+After initial experiments across gpt, deepseek, glm, gemma3, qwen, and gemini families,
+**3 models** selected based on .spl code generation quality (ranked):
+
+| Rank | ADAPTER | MODEL_ID | Alias | Assessment |
+|------|---------|----------|-------|------------|
+| 1 | `claude_cli`  | `claude-sonnet-4-6`             | `sonnet` | Strongest overall quality |
+| 2 | `openrouter`  | `qwen/qwen3.6-plus`             | `qwen`   | Very good .spl quality |
+| 3 | `openrouter`  | `google/gemini-3-flash-preview` | `gemini` | Reasonable quality; fast |
+
+Models eliminated: gemma3 (not worthy), deepseek, gpt, glm — quality issues in generated .spl scripts.
+
+If time permits, 1-2 additional models may be added (e.g. `qwen/qwen3.6-max-preview` or `anthropic/claude-opus-4.6`).
+
+<details>
+<summary>Full candidate model list (archive)</summary>
+
+| ADAPTER | MODEL_ID |
+|---------|----------|
+| `ollama`     | `gemma3` |
+| `openrouter` | `deepseek/deepseek-v4-flash` |
+| `openrouter` | `anthropic/claude-sonnet-4.6` |
+| `openrouter` | `anthropic/claude-opus-4.6` |
+| `openrouter` | `openai/gpt-5.4` |
+| `openrouter` | `qwen/qwen3.6-flash` |
+| `openrouter` | `qwen/qwen3.6-35b-a3b` |
+| `openrouter` | `qwen/qwen3.6-max-preview` |
+| `openrouter` | `qwen/qwen3.6-27b` |
+| `openrouter` | `z-ai/glm-5.1` |
+
+</details>
+
+## Recipes
 
 5 Recipes:
-	R : {
-        R1: agent, 
-        R2: rag, 
-        R3: judge, 
-        R4: thinking, 
-        R5: research
-    }
-
-stored in env var RECIPE
-
-create sub-folders for each recipe (DONE)
-```bash
-mkdir -p src tests/claude_cli/sonnet tests/ollama/gemma3 \
-    tests/openrouter/gemini tests/openrouter/deepseek  tests/openrouter/claude \
-    tests/openrouter/gpt tests/openrouter/qwen  tests/openrouter/z-ai
-
+```
+R1: agent
+R2: rag
+R3: judge
+R4: thinking
+R5: research
 ```
 
+stored in env var `RECIPE`. Sub-folders already created under each recipe dir:
+```bash
+mkdir -p src tests/claude_cli/sonnet \
+    tests/openrouter/qwen tests/openrouter/gemini
+```
 
-## LLM 
+## LLM Adapters
 
-LLM models are accessible via SPL adapters
+```
+ADAPTER=claude_cli   MODEL_ID=claude-sonnet-4-6
+ADAPTER=openrouter   MODEL_ID=qwen/qwen3.6-plus
+ADAPTER=openrouter   MODEL_ID=google/gemini-3-flash-preview
+```
 
-### 3 Adapters:
-	A : {claude_cli, ollama, openrouter}
-stored in  env var ADAPTER
+see all available models in `shortlist-models.md`
 
-### 4 Models:
-	M : {sonnet, gemma3, gemini, deepseek}
-	Model_ID : {sonnet-4-6, gemma3, google/gemini-3-flash-preview, deepseek/deepseek-v4-flash}
-stored in  env var MODEL_ID
+## Pipeline: Full IR path (Phase 1)
 
-see all available models in `/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/shortlist-models.md`
+7 steps with Human review touchpoints.
 
-| Run | ADAPTER | MODEL_ID | MODEL |
-|-----|---------|----------|-------|
-| 1 | `claude_cli` | 'claude-sonnet-4-6' | `sonnet` |
-| 2 | `ollama`     | 'gemma3' | `gemma3` |
-| 3 | `openrouter` | 'google/gemini-3-flash-preview' | `gemini` |
-| 4 | `openrouter` | 'deepseek/deepseek-v4-flash' | `deepseek` |
-| 5 | `openrouter` | 'anthropic/claude-sonnet-4.6' | `claude` |
-| 5 | `openrouter` | 'anthropic/claude-opus-4.6' | `claude` |
-| 6 | `openrouter` | 'openai/gpt-5.4' | `gpt` |
-| 7 | `openrouter` | 'qwen/qwen3.6-plus' | `qwen` |
-| 7 | `openrouter` | 'qwen/qwen3.6-flash' | `qwen` |
-| 7 | `openrouter` | 'qwen/qwen3.6-35b-a3b' | `qwen` |
-| 7 | `openrouter` | 'qwen/qwen3.6-max-preview' | `qwen` |
-| 7 | `openrouter` | 'qwen/qwen3.6-27b' | `qwen` |
-| 8 | `openrouter` | 'z-ai/glm-5.1' | `z-ai` |
+```
+S1: spl3 splc describe
+    - convert original pocketflow recipe to spec (--include-docs)
+    - output: S1-<recipe>-<model>-spec.md
 
-## SPL round-trip pipeline steps:
+    [Human] review spec
 
-7 steps including Human review of workflow chart
+S2: spl3 text2mmd
+    - generate Mermaid chart from Section 0 of spec
+    - output: S2-<recipe>-<model>.mmd
 
-S: {
-    S1: spl3 splc describe 
-        - convert original pocketflow recipe to spec (--include-docs)
-        - output: S1-<recipe>-<adapter>-<model>-1-spec.md
+    [Human] review workflow chart
 
-    S2: spl3 text2mmd
-        - generate Mermaid chart from Section 0 of spec.md
-        - output: S2-<recipe>-<adapter>-<model>.mmd
+S3: spl3 mmd2spl
+    - convert Mermaid chart to SPL workflow script
+    - output: S3-<recipe>-<model>.spl
 
-    Human: review workflow chart
+    [Human] spl3 validate + spl3 run
 
-    S3: spl3 mmd2spl
-        - convert Mermaid chart to SPL workflow script
-        - output: S3-<recipe>-<adapter>-<model>.spl
+S4: spl3 splc --target python/pocketflow --llm
+    - compile .spl → pocketflow python code
+    - output: S4-<recipe>-<model>.py (+ readme.md)
 
-    S4: spl3 splc --target python/pocketflow --llm
-        - compile from .spl into pocketflow python code
-        - output: targets/python_pocketflow/S4-<recipe>-<adapter>-<model>.py (there may be multiple files include readme.md)
+    [Human] validate .py with real test-cases
 
-    S5: spl3 splc describe 
-        - convert generated pocketflow python code to spec
-        - output: S5-<recipe>-<adapter>-<model>-2-spec.md
+S5: spl3 splc describe
+    - convert generated python code back to spec
+    - output: S5-<recipe>-<model>-spec.md
 
-    S6: spl3 compare 1-spec.md 2-spec.md
-        - semantic compare between 1st generated spec and 2nd generated spec
-        - output: S6-<recipe>-<adapter>-<model>-spec-diff.md
+S6: spl3 compare S1-spec.md S5-spec.md
+    - semantic compare: input spec vs round-trip spec
+    - output: S6-<recipe>-<model>-diff.md
 
-}
+    [Human] review diff; choose --mode per file type:
+      --mode ged        → best for .mmd (topological)
+      --mode llm,git-diff → best for .spl
+      --mode llm        → best for -spec.md
+```
+
+## Pipeline: Bypass IR / Ablation (Phase 2)
+
+```
+A1: spl3 vibe
+    - generate target code directly from recipe description (no .mmd/.spl IR)
+    - output: A1-<recipe>-<model>.py
+
+    [Human] validate .py with same test-cases as S4
+
+A2: spl3 splc describe
+    - convert vibe-generated python to spec
+    - output: A2-<recipe>-<model>-spec.md
+
+A3: spl3 compare S1-spec.md A2-spec.md
+    - compare full-pipeline spec vs bypass spec
+    - output: A3-<recipe>-<model>-ablation-diff.md
+
+    [Human] compare A3 vs S6 to quantify IR value-add
+```
+
+## Issue Log
+
+Issues encountered during experiments are logged in `notes.md`.
+Fixed iteratively with Claude Code CLI.
 

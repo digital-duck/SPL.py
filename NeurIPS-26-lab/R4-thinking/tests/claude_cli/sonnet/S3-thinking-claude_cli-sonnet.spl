@@ -1,0 +1,61 @@
+CREATE FUNCTION ChainOfThoughtStep(problem TEXT, thoughts_text TEXT, last_plan TEXT, thought_number INT)
+RETURNS TEXT AS $$
+You are performing step-by-step chain of thought reasoning.
+
+Problem: {problem}
+
+Previous thoughts:
+{thoughts_text}
+
+Last plan: {last_plan}
+
+This is thought number {thought_number}.
+
+Respond with valid YAML containing exactly these required fields:
+  current_thinking: your detailed analysis for this reasoning step
+  next_action_plan: your updated plan for the next step
+  next_thought_needed: true if more reasoning is needed, false if you have reached a complete conclusion
+$$;
+
+WORKFLOW ChainOfThought
+  INPUT @problem TEXT, @max_iterations INT := 5
+  OUTPUT @solution TEXT
+DO
+  @thoughts := "[]";
+  @thought_number := 0;
+  @solution := "";
+  @next_thought_needed := "true";
+  @current_thinking := "";
+  @updated_plan := "";
+  @iteration := 0;
+
+  WHILE @next_thought_needed = "true" AND @iteration < @max_iterations DO
+    @thought_number := @thought_number + 1;
+    @iteration := @iteration + 1;
+
+    CALL format_thoughts_to_text(@thoughts) INTO @thoughts_text;
+    CALL extract_last_plan(@thoughts) INTO @last_plan_text;
+
+    @retry_count := 0;
+    @yaml_valid := "false";
+
+    WHILE @yaml_valid = "false" AND @retry_count < 3 DO
+      GENERATE ChainOfThoughtStep(@problem, @thoughts_text, @last_plan_text, @thought_number) INTO @thought_data;
+      CALL validate_yaml_fields(@thought_data) INTO @yaml_valid;
+      @retry_count := @retry_count + 1;
+    END;
+
+    CALL append_thought(@thoughts, @thought_data) INTO @thoughts;
+    CALL extract_yaml_field(@thought_data, "next_thought_needed") INTO @next_thought_needed;
+    CALL extract_yaml_field(@thought_data, "current_thinking") INTO @current_thinking;
+    CALL extract_yaml_field(@thought_data, "next_action_plan") INTO @updated_plan;
+
+    EVALUATE @next_thought_needed WHEN contains("true") THEN
+      CALL print_thought_progress(@current_thinking, @updated_plan) INTO @print_result;
+    END;
+  END;
+
+  @solution := @current_thinking;
+
+  RETURN @solution WITH status = "complete";
+END;

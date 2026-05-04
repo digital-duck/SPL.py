@@ -619,6 +619,16 @@ def web_search(query: str) -> str:
         return f"Search error: {e}"
 
 
+@spl_tool(name="search_web")
+def search_web(query: str) -> str:
+    """SEARCH_WEB(query) — alias for web_search.
+
+    Usage in SPL:
+        CALL search_web(@query) INTO @results;
+    """
+    return web_search(query)
+
+
 @spl_tool(name="http_get")
 def http_get(url: str, timeout: str = "10") -> str:
     """HTTP_GET(url [, timeout]) — fetch a URL and return response body as text.

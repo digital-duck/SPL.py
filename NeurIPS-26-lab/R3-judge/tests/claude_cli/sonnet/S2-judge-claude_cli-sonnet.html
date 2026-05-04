@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>S2 Judge Claude Cli Sonnet - Mermaid Workflow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .mermaid { text-align: center; margin: 20px 0; min-height: 200px; }
+        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 0.9em; }
+        .raw-code { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; font-family: 'Courier New', monospace; white-space: pre-wrap; }
+        .error-info { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>S2 Judge Claude Cli Sonnet Workflow</h1>
+            <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>
+            <p><strong>File:</strong> S2-judge-claude_cli-sonnet.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> claude_cli</p>
+        </div>
+        <div id="mermaid-container" class="mermaid">
+    flowchart TD
+    A([Start]) --> B["Generator<br/>task, feedback=''"]
+    B --> C["Judge<br/>Evaluate draft"]
+    C --> D{Verdict PASS<br/>or score >= 7?}
+    D -->|Yes| E["Set final_description<br/>Set final_score"]
+    E --> F(["RETURN<br/>status=pass"])
+    D -->|No| G["attempts += 1<br/>Store feedback"]
+    G --> H{attempts >= 3?}
+    H -->|Yes| I["Set final_description<br/>Set final_score"]
+    I --> J(["RETURN<br/>status=max_attempts"])
+    H -->|No| K["Generator<br/>task + feedback"]
+    K --> C
+        </div>
+        <div id="error-container" class="error-info" style="display: none;">
+            <h3>⚠️ Mermaid Syntax Error</h3>
+            <p>The diagram couldn't be rendered. This often happens due to:</p>
+            <ul>
+                <li>Invalid node naming (spaces without brackets)</li>
+                <li>Incorrect edge syntax</li>
+                <li>Circular references</li>
+            </ul>
+            <p><strong>Generated Code:</strong></p>
+            <div class="raw-code">    flowchart TD
+    A([Start]) --> B["Generator<br/>task, feedback=''"]
+    B --> C["Judge<br/>Evaluate draft"]
+    C --> D{Verdict PASS<br/>or score >= 7?}
+    D -->|Yes| E["Set final_description<br/>Set final_score"]
+    E --> F(["RETURN<br/>status=pass"])
+    D -->|No| G["attempts += 1<br/>Store feedback"]
+    G --> H{attempts >= 3?}
+    H -->|Yes| I["Set final_description<br/>Set final_score"]
+    I --> J(["RETURN<br/>status=max_attempts"])
+    H -->|No| K["Generator<br/>task + feedback"]
+    K --> C</div>
+            <p>Please edit the <code>S2-judge-claude_cli-sonnet.mmd</code> file to fix syntax issues.</p>
+        </div>
+        <div class="footer">
+            <p><strong>Usage Options:</strong></p>
+            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-judge-claude_cli-sonnet.mmd -o S2-judge-claude_cli-sonnet.spl</code></p>
+            <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>
+            <hr style="margin: 20px 0;">
+            <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |
+               <a href="https://github.com/digital-duck/SPL#readme" target="_blank">Documentation</a></p>
+            <p><small>Visual workflow programming • General purpose workflow visualization tool</small></p>
+        </div>
+    </div>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            errorLevel: 'warn'
+        });
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.toLowerCase().includes('mermaid')) {
+                document.getElementById('mermaid-container').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+            }
+        });
+        setTimeout(function() {
+            const container = document.getElementById('mermaid-container');
+            if (container && (container.innerHTML.includes('Syntax error') || container.innerHTML.includes('Parse error'))) {
+                container.style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
