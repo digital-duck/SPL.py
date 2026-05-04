@@ -1,0 +1,37 @@
+CREATE FUNCTION GenerateAnswer(Context, Question)
+RETURNS STRING AS $$
+You are a helpful assistant. Based on the provided context:
+{{Context}}
+
+Please answer the following question:
+{{Question}}
+
+If the answer isn''t in the context, say you don''t know.
+$$;
+
+WORKFLOW RagIndexingAndQuery
+  INPUT @documents STRING, @user_query STRING
+  OUTPUT @final_response STRING
+DO
+  -- Offline Indexing Phase
+  -- Chunk Documents (fixed_size_chunk)
+  CALL fixed_size_chunk(@documents) INTO @chunked_docs;
+
+  -- Embed Documents
+  CALL EmbeddingService(@chunked_docs) INTO @doc_embeddings;
+
+  -- Create FAISS Index
+  CALL StoreVectors(@doc_embeddings) INTO @vector_index;
+
+  -- Online RAG Phase
+  -- Embed User Query
+  CALL EmbeddingService(@user_query) INTO @query_embedding;
+
+  -- Retrieve Document (Vector Search)
+  CALL VectorSearch(@vector_index, @query_embedding) INTO @retrieved_context;
+
+  -- Generate Response (LLM Synthesis)
+  GENERATE GenerateAnswer(@retrieved_context, @user_query) INTO @final_response;
+
+  RETURN @final_response WITH status = "complete";
+END;

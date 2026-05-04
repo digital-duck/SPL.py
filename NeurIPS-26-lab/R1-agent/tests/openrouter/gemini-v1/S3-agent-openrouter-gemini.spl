@@ -1,0 +1,41 @@
+CREATE FUNCTION DecideAction(context TEXT, question TEXT) RETURNS TEXT AS $$
+Based on the question and current context, decide if more information is needed.
+Return 'search' if you need to look up more information.
+Return 'answer' if you have enough information to provide the final answer.
+Context: {{context}}
+Question: {{question}}
+$$;
+
+CREATE FUNCTION AnswerQuestion(context TEXT, question TEXT) RETURNS TEXT AS $$
+Provide a comprehensive answer to the question based on the provided context.
+Context: {{context}}
+Question: {{question}}
+$$;
+
+WORKFLOW SearchAndAnswer
+    INPUT @question TEXT
+    OUTPUT @answer TEXT
+DO
+    @context := 'Original question: ' + @question;
+    @action := 'search';
+    @iteration := 0;
+    @max_iterations := 3;
+
+    WHILE @iteration < @max_iterations DO
+        GENERATE DecideAction(@context, @question) INTO @action;
+        
+        EVALUATE @action
+            WHEN contains('search') THEN
+                CALL web_search(@question) INTO @search_results;
+                @context := @context + '\n\nSearch Results:\n' + @search_results;
+                @iteration := @iteration + 1;
+            ELSE
+                GENERATE AnswerQuestion(@context, @question) INTO @answer;
+                RETURN @answer WITH status = 'complete', iterations = @iteration;
+        END;
+    END;
+
+    -- Fallback in case max iterations reached
+    GENERATE AnswerQuestion(@context, @question) INTO @answer;
+    RETURN @answer WITH status = 'max_iterations', iterations = @iteration;
+END;

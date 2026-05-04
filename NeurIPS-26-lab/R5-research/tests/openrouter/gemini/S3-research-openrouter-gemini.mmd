@@ -1,0 +1,15 @@
+    flowchart TD
+    Start([Start]) --> Planner[Planner: Generate Queries]
+    subgraph MapReduce[Research Phase]
+    Researcher["Researcher: Map Queries<br/>to Web Search"]
+    ToolCall["Tool: search_web()"]
+    Extractor["Extractor: Reduce Results<br/>to Fact Notes"]
+    Researcher --> ToolCall
+    ToolCall --> Extractor
+    end
+    Planner --> Researcher
+    Extractor --> Synthesizer{Synthesizer:<br/>Evaluate Info}
+    Synthesizer -->|Need More Info<br/>AND Loop < 2| Feedback[Generate Feedback]
+    Feedback --> Planner
+    Synthesizer -->|Sufficient Info<br/>OR Max Loops| Finalize[Finalize Markdown Report]
+    Finalize --> End([End])

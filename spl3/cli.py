@@ -859,6 +859,66 @@ def format_spl(spl_code: str) -> str:
     return spl_code
 
 
+def _rewrite_for_loops(spl_text: str) -> str:
+    """Rewrite FOR @var IN @collection DO...END to index-based WHILE loop.
+
+    Gemini (and some other LLMs) generate FOR loops for map-reduce patterns;
+    SPL has no FOR construct.  The rewrite produces a WHILE loop with a
+    fixed ceiling of 10 iterations — structurally equivalent for validation
+    and S4/S5 describe runs.
+    """
+    import re as _re
+
+    lines = spl_text.split('\n')
+    result = []
+    i = 0
+    for_counter = 0
+
+    while i < len(lines):
+        line = lines[i]
+        m = _re.match(r'^(\s*)FOR\s+(@\w+)\s+IN\s+(@\w+)\s+DO\s*$', line.rstrip(), _re.IGNORECASE)
+        if not m:
+            result.append(line)
+            i += 1
+            continue
+
+        indent = m.group(1)
+        loop_var = m.group(2)
+        collection = m.group(3)
+        for_counter += 1
+        idx_var = f'@_for_idx_{for_counter}'
+
+        # Collect body lines until the matching END, tracking nested blocks.
+        body_lines = []
+        i += 1
+        depth = 1
+        while i < len(lines):
+            bl = lines[i]
+            bs = bl.strip()
+            # WHILE/FOR lines end with DO and open a new block
+            if _re.search(r'\bDO\s*$', bs, _re.IGNORECASE):
+                depth += 1
+            # EVALUATE opens a block without DO
+            elif _re.match(r'^EVALUATE\b', bs, _re.IGNORECASE):
+                depth += 1
+            elif _re.match(r'^END[;]?\s*$', bs, _re.IGNORECASE):
+                depth -= 1
+                if depth == 0:
+                    i += 1   # consume END
+                    break
+            body_lines.append(bl)
+            i += 1
+
+        result.append(f'{indent}/* FOR {loop_var} IN {collection} — rewritten to WHILE */')
+        result.append(f'{indent}{idx_var} := 0;')
+        result.append(f'{indent}WHILE {idx_var} < 10 DO')
+        result.extend(body_lines)
+        result.append(f'{indent}    {idx_var} := {idx_var} + 1;')
+        result.append(f'{indent}END')
+
+    return '\n'.join(result)
+
+
 # ------------------------------------------------------------------ #
 # Mermaid Syntax Post-Processor                                        #
 # ------------------------------------------------------------------ #
@@ -892,8 +952,11 @@ def fix_mermaid_syntax(mermaid_text, style="flowchart"):
     - Unicode → inside labels  →  plain ->
     - Literal \\n inside unquoted node labels  →  quoted label with <br/>
     - Dotted edge with quoted label  -. "text" .-->  →  -.->|text|
+    - Malformed dotted arrows  -.-->  -.--->  →  -.->
+    - Unquoted node labels containing colons  [label: text]  →  ["label: text"]
     - Edge targeting a subgraph name  A --> SG  →  A --> first_node_inside_SG
     - Missing diagram declaration
+    - Diagram declaration (flowchart/graph) kept at column 0 (no indent)
     """
     import re
 
@@ -954,10 +1017,19 @@ def fix_mermaid_syntax(mermaid_text, style="flowchart"):
         if not line:
             continue
 
-        # Pass structural keywords through unchanged (just indent)
-        if line.startswith(('flowchart', 'graph', 'sequenceDiagram', 'subgraph', 'end', 'direction')):
+        # Diagram declaration: must be at column 0, no indent
+        if line.startswith(('flowchart', 'graph', 'sequenceDiagram')):
+            fixed_lines.append(line)
+            continue
+
+        # Other structural keywords: indent once
+        if line.startswith(('subgraph', 'end', 'direction')):
             fixed_lines.append("    " + line if not line.startswith('    ') else line)
             continue
+
+        # Fix malformed dotted arrows: -.-> variants with extra dashes
+        # e.g. -.-->, -.--> all normalise to -.->
+        line = re.sub(r'-\.(-*>)', '-.->',  line)
 
         # Fix dotted edge with quoted label:  -. "text" .-->  →  -.->|text|
         line = re.sub(r'-\.\s+"([^"]+)"\s+\.-->', r'-.->|\1|', line)
@@ -969,7 +1041,8 @@ def fix_mermaid_syntax(mermaid_text, style="flowchart"):
         line = re.sub(r"\[\('([^']+)'\)\]", r"['\1']", line)
 
         # Fix bare -> arrow (not part of --> or -.->)
-        line = re.sub(r'(?<![=\-!])->(?!>)', '-->', line)
+        # Lookbehind excludes . so that -.-> (dotted arrow) is not corrupted
+        line = re.sub(r'(?<![=\-!.])->(?!>)', '-->', line)
 
         # Replace Unicode → inside labels
         line = line.replace('→', '->')
@@ -977,6 +1050,15 @@ def fix_mermaid_syntax(mermaid_text, style="flowchart"):
         # Fix \n inside unquoted square-bracket and curly-brace labels
         line = re.sub(r'(\[)([^\]]+?)(\])', _fix_label_newlines, line)
         line = re.sub(r'(\{)([^}]+?)(\})', _fix_label_newlines, line)
+
+        # Auto-quote unquoted node labels that contain a colon (colon breaks Mermaid parser)
+        # Matches:  NodeId[label: with colon]  →  NodeId["label: with colon"]
+        def _quote_colon_label(m):
+            bracket, content, close = m.group(1), m.group(2), m.group(3)
+            if ':' in content and not (content.startswith('"') or content.startswith("'")):
+                content = f'"{content}"'
+            return f'{bracket}{content}{close}'
+        line = re.sub(r'(\[)([^\]"\']+:[^\]]+)(\])', _quote_colon_label, line)
 
         # Redirect edges that target a subgraph name to its first interior node
         # Handles:  A --> SG,  A -->|label| SG,  A -.-> SG
@@ -1651,6 +1733,9 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
             ])
 
         spl_code = "\n".join(spl_lines)
+
+    # Post-process: rewrite LLM-generated constructs not in SPL grammar
+    spl_code = _rewrite_for_loops(spl_code)
 
     # Output
     if output:

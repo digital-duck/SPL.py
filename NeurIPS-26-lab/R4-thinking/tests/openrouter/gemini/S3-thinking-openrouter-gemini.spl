@@ -1,0 +1,43 @@
+CREATE FUNCTION generate_cot_step(history TEXT, plan TEXT)
+RETURNS TEXT AS $$
+You are a reasoning engine. Review the current history and plan:
+History: {history}
+Plan: {plan}
+
+Generate a response in YAML format:
+thinking: |
+  (your current reasoning)
+plan: |
+  (updated plan for next steps)
+next_thought_needed: (true or false)
+$$;
+
+CREATE FUNCTION parse_yaml(raw_output TEXT)
+RETURNS TEXT AS $$
+Extract the 'next_thought_needed' boolean value from this YAML:
+{raw_output}
+Return only the value: 'true' or 'false'.
+$$;
+
+WORKFLOW chain_of_thought_process
+  INPUT @initial_query TEXT
+  OUTPUT @final_trace TEXT
+DO
+  @history := @initial_query;
+  @plan := "Initialize reasoning";
+  @next_thought_needed := "true";
+  @iteration := 0;
+
+  WHILE @next_thought_needed = "true" AND @iteration < 10 DO
+    GENERATE generate_cot_step(@history, @plan) INTO @raw_response;
+
+    GENERATE parse_yaml(@raw_response) INTO @next_thought_needed;
+
+    CALL append_text(@history, @raw_response) INTO @history;
+    @iteration := @iteration + 1;
+  END;
+
+  @final_trace := @history;
+
+  RETURN @final_trace WITH status = "complete";
+END;

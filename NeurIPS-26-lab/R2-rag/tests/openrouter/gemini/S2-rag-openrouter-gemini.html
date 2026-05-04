@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>S2 Agent Openrouter Gemini - Mermaid Workflow</title>
+    <title>S2 Rag Openrouter Gemini - Mermaid Workflow</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -17,21 +17,24 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>S2 Agent Openrouter Gemini Workflow</h1>
+            <h1>S2 Rag Openrouter Gemini Workflow</h1>
             <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>
-            <p><strong>File:</strong> S2-agent-openrouter-gemini.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> openrouter</p>
+            <p><strong>File:</strong> S2-rag-openrouter-gemini.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> openrouter</p>
         </div>
         <div id="mermaid-container" class="mermaid">
     flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])
+    Start([Start]) --> ChunkDocs["Chunk Documents<br/>(fixed_size_chunk)"]
+    subgraph Offline_Indexing["Offline Indexing Phase"]
+    ChunkDocs --> EmbedDocs["Embed Documents<br/>(CALL Embedding Service)"]
+    EmbedDocs --> CreateIndex["Create FAISS Index<br/>(Store Vectors)"]
+    end
+    CreateIndex --> EmbedQuery["Embed User Query<br/>(CALL Embedding Service)"]
+    subgraph Online_Query["Online RAG Phase"]
+    EmbedQuery --> Retrieve["Retrieve Document<br/>(Vector Search)"]
+    Retrieve --> GenerateAnswer["GenerateAnswer Function<br/>(Context + Question)"]
+    GenerateAnswer --> LLMCall["GENERATE Response<br/>(LLM Synthesis)"]
+    end
+    LLMCall --> End([End])
         </div>
         <div id="error-container" class="error-info" style="display: none;">
             <h3>⚠️ Mermaid Syntax Error</h3>
@@ -43,20 +46,23 @@
             </ul>
             <p><strong>Generated Code:</strong></p>
             <div class="raw-code">    flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])</div>
-            <p>Please edit the <code>S2-agent-openrouter-gemini.mmd</code> file to fix syntax issues.</p>
+    Start([Start]) --> ChunkDocs["Chunk Documents<br/>(fixed_size_chunk)"]
+    subgraph Offline_Indexing["Offline Indexing Phase"]
+    ChunkDocs --> EmbedDocs["Embed Documents<br/>(CALL Embedding Service)"]
+    EmbedDocs --> CreateIndex["Create FAISS Index<br/>(Store Vectors)"]
+    end
+    CreateIndex --> EmbedQuery["Embed User Query<br/>(CALL Embedding Service)"]
+    subgraph Online_Query["Online RAG Phase"]
+    EmbedQuery --> Retrieve["Retrieve Document<br/>(Vector Search)"]
+    Retrieve --> GenerateAnswer["GenerateAnswer Function<br/>(Context + Question)"]
+    GenerateAnswer --> LLMCall["GENERATE Response<br/>(LLM Synthesis)"]
+    end
+    LLMCall --> End([End])</div>
+            <p>Please edit the <code>S2-rag-openrouter-gemini.mmd</code> file to fix syntax issues.</p>
         </div>
         <div class="footer">
             <p><strong>Usage Options:</strong></p>
-            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-agent-openrouter-gemini.mmd -o S2-agent-openrouter-gemini.spl</code></p>
+            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-rag-openrouter-gemini.mmd -o S2-rag-openrouter-gemini.spl</code></p>
             <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>
             <hr style="margin: 20px 0;">
             <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |

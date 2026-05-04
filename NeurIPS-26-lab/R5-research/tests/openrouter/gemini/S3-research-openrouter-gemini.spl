@@ -1,0 +1,74 @@
+CREATE FUNCTION Planner(topic STRING)
+RETURNS LIST AS $$
+Generate a list of search queries to research the following topic: {{topic}}. 
+Output as a clean list of strings.
+$$;
+
+CREATE FUNCTION Researcher(query STRING)
+RETURNS STRING AS $$
+Convert the following query into a optimized search engine string: {{query}}
+$$;
+
+CREATE FUNCTION Extractor(raw_results STRING)
+RETURNS STRING AS $$
+Extract key facts and notes from the following search results. 
+Focus on accuracy and relevance. Don''t include fluff.
+$$;
+
+CREATE FUNCTION Synthesizer(topic STRING, notes LIST)
+RETURNS STRING AS $$
+Evaluate if the following research notes are sufficient to write a comprehensive report on "{{topic}}".
+If more info is needed, respond with "Need More Info". 
+If the information is sufficient, respond with "Sufficient Info".
+$$;
+
+CREATE FUNCTION FeedbackGenerator(topic STRING, notes LIST)
+RETURNS STRING AS $$
+Based on the current notes, what specific information is missing regarding "{{topic}}"? 
+Provide instructions for the planner to refine the next set of queries.
+$$;
+
+CREATE FUNCTION Finalizer(topic STRING, notes LIST)
+RETURNS STRING AS $$
+Create a final, polished Markdown report about {{topic}} using the provided research notes: {{notes}}.
+$$;
+
+WORKFLOW Research_Agent
+  INPUT @topic STRING
+  OUTPUT @report STRING
+DO
+  @loop_count := 0
+  @all_notes := []
+  @status := "Need More Info"
+  @feedback := "Initial planning"
+
+  WHILE @status = "Need More Info" AND @loop_count < 2 DO
+    GENERATE Planner(@topic, @feedback) INTO @queries
+    
+    @current_batch := []
+    
+    /* Research Phase (MapReduce) */
+    FOR @query IN @queries DO
+      GENERATE Researcher(@query) INTO @search_string
+      CALL search_web(@search_string) INTO @raw_html
+      GENERATE Extractor(@raw_html) INTO @fact_notes
+      @current_batch := @current_batch + [@fact_notes]
+    END
+
+    @all_notes := @all_notes + @current_batch
+    GENERATE Synthesizer(@topic, @all_notes) INTO @eval_result
+    @status := @eval_result
+    
+    EVALUATE @status
+      WHEN contains("Need More Info") THEN
+        GENERATE FeedbackGenerator(@topic, @all_notes) INTO @feedback
+      ELSE
+        @feedback := ""
+    END
+
+    @loop_count := @loop_count + 1
+  END
+
+  GENERATE Finalizer(@topic, @all_notes) INTO @report
+  RETURN @report WITH status = "complete"
+END;

@@ -1,49 +1,46 @@
 ## 0. High-level Description
-The Research Agent WORKFLOW orchestrates a cyclic search-and-reasoning loop to provide comprehensive answers to user queries. It begins by using a CREATE FUNCTION prompt named `DecideAction` which acts as the central controller, evaluating the current research context against the user question to determine if more information is needed. Using a WHILE loop, the workflow continues as long as the agent decides more research is required. If the agent chooses to search, it triggers a CALL to a web search tool and appends the results to a persistent context variable. When the agent evaluates that it has sufficient information, it breaks the loop and uses the `AnswerQuestion` CREATE FUNCTION to synthesize the gathered research into a final response. The workflow terminates by using RETURN to output the final answer along with the accumulated research context.
+This WORKFLOW implements a recursive Research Agent pattern that autonomously decides between gathering information and synthesizing a final response. The process begins with a WHILE loop that persists as long as the agent determines more information is required. Inside the loop, the `DecideAction` logical function evaluates the user's question against the current research context and produces a structured YAML response. An EVALUATE construct parses this decision: if the agent selects "search," it triggers a CALL to a web search tool and appends the results to the context before repeating the loop. If the agent selects "answer," it exits the loop to trigger the `AnswerQuestion` logical function, which generates the final comprehensive response. The workflow maintains a shared state for the research history and terminates by returning the final synthesized answer.
 
 ## 1. Purpose
-This implementation creates an autonomous research assistant that iteratively searches the web and synthesizes information until it can provide a complete answer to a specific question.
+Automates a multi-step research process where an LLM dynamically decides to perform web searches until it has sufficient information to provide a comprehensive answer.
 
 ## 2. SPL ↔ Python Construct Mapping
 
 | SPL Construct | Python Equivalent | Notes |
 | :--- | :--- | :--- |
-| **WORKFLOW** | `create_agent_flow()` / `Flow` | Defines the overall state machine and node connections. |
-| **CREATE FUNCTION** | `DecideAction.exec` / `AnswerQuestion.exec` | The raw prompt templates defined within the node methods. |
-| **GENERATE** | `call_llm(prompt)` | The actual execution of the LLM call within the nodes. |
+| **WORKFLOW** `ResearchAgent` | `create_agent_flow()` in `flow.py` | Defines the overall graph structure. |
+| **CREATE FUNCTION** | `DecideAction.exec` / `AnswerQuestion.exec` | Logical prompt templates for decision making and writing. |
+| **GENERATE** | `call_llm(prompt)` | LLM invocation within node execution. |
 | **CALL** | `search_web_duckduckgo(query)` | Side-effect tool call to fetch external data. |
-| **EVALUATE** | `if exec_res["action"] == "search":` | Logic branching based on the LLM's YAML "action" field. |
-| **WHILE** | `search - "decide" >> decide` | The cyclic graph connection creates a functional loop. |
-| **RETURN** | `shared["answer"]` in `main.py` | The final extraction and printing of the result. |
-| **@vars** | `shared` dictionary | Shared state passed between nodes (question, context, query). |
+| **WHILE** | `search - "decide" >> decide` (cycle) | The loop logic formed by the "search" vs "answer" branch. |
+| **EVALUATE** | `decide - "search" >> search` | Conditional branching based on the LLM's "action" field. |
+| **@vars** | `shared` dictionary | Shared state containing `question`, `context`, and `answer`. |
+| **RETURN WITH** | `return "done"` in `AnswerQuestion` | Signals the terminal state of the agent. |
 
 ## 3. Logical Functions / Prompts
 
-- **DecideAction**
-    - **Role**: The "Brain." Determines whether to perform a web search or generate the final answer.
-    - **Conventions**: Uses a YAML code block output format. Requires `thinking`, `action` (search/answer), `reason`, and `search_query` or `answer` fields.
-- **AnswerQuestion**
-    - **Role**: The "Writer." Synthesizes all gathered research into a polished final response.
-    - **Conventions**: Takes the original question and the accumulated `context` string; produces a comprehensive markdown-style answer.
+### `DecideAction`
+- **Role**: The "brain" of the agent; performs meta-cognition to determine if the current context is sufficient.
+- **Key Prompt Conventions**: Uses a strict YAML output format with block scalars (`|`) for reasoning and answers to ensure parsing robustness. It maps inputs to an "Action Space" consisting of `search` or `answer`.
+
+### `AnswerQuestion`
+- **Role**: The "writer"; synthesizes all gathered research into a final polished output.
+- **Key Prompt Conventions**: Context-heavy prompt that provides the original question and the accumulated `Research` context (concatenated search results).
 
 ## 4. Control Flow
-1. **Initial Step**: Initialize `@context` as "No previous search" and `@question` from user input.
-2. **Loop (WHILE)**: Enter a loop driven by the `DecideAction` function.
-3. **Branching (EVALUATE)**:
-    - If `action` is "search":
-        - **CALL** `search_web_duckduckgo` using the generated query.
-        - Append results to `@context`.
-        - Repeat loop.
-    - If `action` is "answer":
-        - **GENERATE** final response using `AnswerQuestion`.
-        - Exit loop.
-4. **Termination**: **RETURN** the final answer string and the research history.
+The workflow initializes with a user `question` and an empty `context`. It enters a cycle starting at **DecideAction**, which generates a decision. 
+- Using **EVALUATE** on the action field:
+    - If "search", it captures a `search_query`, performs a **CALL** to the search tool, updates the `@context` variable, and loops back (**WHILE** condition implicit in the "decide" transition).
+    - If "answer", it breaks the cycle.
+- Finally, it triggers **AnswerQuestion** to produce the final result and exits via **RETURN WITH** `status="done"`.
 
 ## 5. How to Regenerate as SPL
 ```bash
 # Step 1 — generate SPL from this spec (Section 0 above as text2spl input)
-spl3 text2spl --description "The Research Agent WORKFLOW orchestrates a cyclic search-and-reasoning loop to provide comprehensive answers to user queries. It begins by using a CREATE FUNCTION prompt named DecideAction which acts as the central controller, evaluating the current research context against the user question to determine if more information is needed. Using a WHILE loop, the workflow continues as long as the agent decides more research is required. If the agent chooses to search, it triggers a CALL to a web search tool and appends the results to a persistent context variable. When the agent evaluates that it has sufficient information, it breaks the loop and uses the AnswerQuestion CREATE FUNCTION to synthesize the gathered research into a final response. The workflow terminates by using RETURN to output the final answer along with the accumulated research context." --mode workflow
+spl3 text2spl --description "This WORKFLOW implements a recursive Research Agent pattern that autonomously decides between gathering information and synthesizing a final response. The process begins with a WHILE loop that persists as long as the agent determines more information is required. Inside the loop, the DecideAction logical function evaluates the user's question against the current research context and produces a structured YAML response. An EVALUATE construct parses this decision: if the agent selects 'search,' it triggers a CALL to a web search tool and appends the results to the context before repeating the loop. If the agent selects 'answer,' it exits the loop to trigger the AnswerQuestion logical function, which generates the final comprehensive response. The workflow maintains a shared state for the research history and terminates by returning the final synthesized answer." --mode workflow
 
 # Step 2 — compile to any target
-spl3 splc compile research_agent.spl --lang python/pocketflow
+spl3 splc compile <output.spl> --lang python/pocketflow
+spl3 splc compile <output.spl> --lang python/langgraph
+spl3 splc compile <output.spl> --lang go
 ```

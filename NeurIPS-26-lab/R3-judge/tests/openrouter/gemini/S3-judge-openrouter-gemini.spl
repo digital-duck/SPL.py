@@ -1,0 +1,37 @@
+CREATE FUNCTION draft_content(topic STRING)
+RETURNS STRING AS $$
+Draft a high-quality article about {{topic}}. Focus on clarity and technical accuracy.
+$$;
+
+CREATE FUNCTION evaluate_content(content STRING)
+RETURNS STRING AS $$
+Analyze the following content: {{content}}
+If it meets quality standards, respond with ''PASS''. 
+If it is insufficient, respond with ''FAIL'' and provide brief feedback on what to improve.
+$$;
+
+WORKFLOW content_refinement_process
+  INPUT @topic STRING
+  OUTPUT @final_result STRING
+DO
+  @attempts := 0
+  @verdict := "FAIL"
+  @content := ""
+  @feedback := "Initial draft"
+
+  WHILE @verdict = "FAIL" AND @attempts < 3 DO
+    @attempts := @attempts + 1
+    GENERATE draft_content(@topic) INTO @content;
+    GENERATE evaluate_content(@content) INTO @verdict;
+    
+    EVALUATE @verdict
+      WHEN contains("FAIL") THEN
+        @feedback := "Content needs improvement. Re-generating..."
+      ELSE
+        @feedback := "Content passed evaluation."
+    END;
+  END;
+
+  @final_result := @content
+  RETURN @final_result WITH status = "complete"
+END;

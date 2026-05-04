@@ -22,16 +22,16 @@
             <p><strong>File:</strong> S2-agent-openrouter-gemini.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> openrouter</p>
         </div>
         <div id="mermaid-container" class="mermaid">
-    flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])
+flowchart TD
+    Start[Start Workflow] --> Init[Initialize @context and @question]
+    Init --> Decide[GENERATE DecideAction]
+    Decide --> Eval{{EVALUATE action}}
+    Eval -->|search| Search[CALL search_web_duckduckgo]
+    Search --> Update[Append results to @context]
+    Update --> Decide
+    Eval -->|answer| Answer[GENERATE AnswerQuestion]
+    Answer --> Terminate[RETURN final answer and context]
+    Terminate --> End[End]
         </div>
         <div id="error-container" class="error-info" style="display: none;">
             <h3>⚠️ Mermaid Syntax Error</h3>
@@ -42,16 +42,16 @@
                 <li>Circular references</li>
             </ul>
             <p><strong>Generated Code:</strong></p>
-            <div class="raw-code">    flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])</div>
+            <div class="raw-code">flowchart TD
+    Start[Start Workflow] --> Init[Initialize @context and @question]
+    Init --> Decide[GENERATE DecideAction]
+    Decide --> Eval{{EVALUATE action}}
+    Eval -->|search| Search[CALL search_web_duckduckgo]
+    Search --> Update[Append results to @context]
+    Update --> Decide
+    Eval -->|answer| Answer[GENERATE AnswerQuestion]
+    Answer --> Terminate[RETURN final answer and context]
+    Terminate --> End[End]</div>
             <p>Please edit the <code>S2-agent-openrouter-gemini.mmd</code> file to fix syntax issues.</p>
         </div>
         <div class="footer">

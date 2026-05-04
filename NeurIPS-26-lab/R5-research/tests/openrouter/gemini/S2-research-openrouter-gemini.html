@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>S2 Agent Openrouter Gemini - Mermaid Workflow</title>
+    <title>S2 Research Openrouter Gemini - Mermaid Workflow</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
@@ -17,21 +17,26 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>S2 Agent Openrouter Gemini Workflow</h1>
+            <h1>S2 Research Openrouter Gemini Workflow</h1>
             <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>
-            <p><strong>File:</strong> S2-agent-openrouter-gemini.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> openrouter</p>
+            <p><strong>File:</strong> S2-research-openrouter-gemini.mmd | <strong>Style:</strong> flowchart | <strong>Adapter:</strong> openrouter</p>
         </div>
         <div id="mermaid-container" class="mermaid">
     flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])
+    Start([Start]) --> Planner[Planner: Generate Queries]
+    subgraph MapReduce[Research Phase]
+    Researcher["Researcher: Map Queries<br/>to Web Search"]
+    ToolCall["Tool: search_web()"]
+    Extractor["Extractor: Reduce Results<br/>to Fact Notes"]
+    Researcher --> ToolCall
+    ToolCall --> Extractor
+    end
+    Planner --> Researcher
+    Extractor --> Synthesizer{Synthesizer:<br/>Evaluate Info}
+    Synthesizer -->|Need More Info<br/>AND Loop < 2| Feedback[Generate Feedback]
+    Feedback --> Planner
+    Synthesizer -->|Sufficient Info<br/>OR Max Loops| Finalize[Finalize Markdown Report]
+    Finalize --> End([End])
         </div>
         <div id="error-container" class="error-info" style="display: none;">
             <h3>⚠️ Mermaid Syntax Error</h3>
@@ -43,20 +48,25 @@
             </ul>
             <p><strong>Generated Code:</strong></p>
             <div class="raw-code">    flowchart TD
-    Start([Start]) --> InitVars[Initialize Question and Context]
-    InitVars --> DecideAction[DecideAction Logical Function]
-    DecideAction --> EvaluateAction{Evaluate Action}
-    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
-    WebSearch --> UpdateContext[Update Research Context]
-    UpdateContext --> DecideAction
-    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
-    AnswerQuestion --> OutputResult[Synthesize Final Response]
-    OutputResult --> End([Return status=done])</div>
-            <p>Please edit the <code>S2-agent-openrouter-gemini.mmd</code> file to fix syntax issues.</p>
+    Start([Start]) --> Planner[Planner: Generate Queries]
+    subgraph MapReduce[Research Phase]
+    Researcher["Researcher: Map Queries<br/>to Web Search"]
+    ToolCall["Tool: search_web()"]
+    Extractor["Extractor: Reduce Results<br/>to Fact Notes"]
+    Researcher --> ToolCall
+    ToolCall --> Extractor
+    end
+    Planner --> Researcher
+    Extractor --> Synthesizer{Synthesizer:<br/>Evaluate Info}
+    Synthesizer -->|Need More Info<br/>AND Loop < 2| Feedback[Generate Feedback]
+    Feedback --> Planner
+    Synthesizer -->|Sufficient Info<br/>OR Max Loops| Finalize[Finalize Markdown Report]
+    Finalize --> End([End])</div>
+            <p>Please edit the <code>S2-research-openrouter-gemini.mmd</code> file to fix syntax issues.</p>
         </div>
         <div class="footer">
             <p><strong>Usage Options:</strong></p>
-            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-agent-openrouter-gemini.mmd -o S2-agent-openrouter-gemini.spl</code></p>
+            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl S2-research-openrouter-gemini.mmd -o S2-research-openrouter-gemini.spl</code></p>
             <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>
             <hr style="margin: 20px 0;">
             <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |

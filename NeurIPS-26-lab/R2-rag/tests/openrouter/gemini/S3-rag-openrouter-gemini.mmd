@@ -1,0 +1,13 @@
+    flowchart TD
+    Start([Start]) --> ChunkDocs["Chunk Documents<br/>(fixed_size_chunk)"]
+    subgraph Offline_Indexing["Offline Indexing Phase"]
+    ChunkDocs --> EmbedDocs["Embed Documents<br/>(CALL Embedding Service)"]
+    EmbedDocs --> CreateIndex["Create FAISS Index<br/>(Store Vectors)"]
+    end
+    CreateIndex --> EmbedQuery["Embed User Query<br/>(CALL Embedding Service)"]
+    subgraph Online_Query["Online RAG Phase"]
+    EmbedQuery --> Retrieve["Retrieve Document<br/>(Vector Search)"]
+    Retrieve --> GenerateAnswer["GenerateAnswer Function<br/>(Context + Question)"]
+    GenerateAnswer --> LLMCall["GENERATE Response<br/>(LLM Synthesis)"]
+    end
+    LLMCall --> End([End])

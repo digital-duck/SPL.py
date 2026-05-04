@@ -1,10 +1,10 @@
-flowchart TD
-    Start[Start Workflow] --> Init[Initialize @context and @question]
-    Init --> Decide[GENERATE DecideAction]
-    Decide --> Eval{{EVALUATE action}}
-    Eval -->|search| Search[CALL search_web_duckduckgo]
-    Search --> Update[Append results to @context]
-    Update --> Decide
-    Eval -->|answer| Answer[GENERATE AnswerQuestion]
-    Answer --> Terminate[RETURN final answer and context]
-    Terminate --> End[End]
+    flowchart TD
+    Start([Start]) --> InitVars[Initialize Question and Context]
+    InitVars --> DecideAction[DecideAction Logical Function]
+    DecideAction --> EvaluateAction{Evaluate Action}
+    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
+    WebSearch --> UpdateContext[Update Research Context]
+    UpdateContext --> DecideAction
+    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
+    AnswerQuestion --> OutputResult[Synthesize Final Response]
+    OutputResult --> End([Return status=done])
