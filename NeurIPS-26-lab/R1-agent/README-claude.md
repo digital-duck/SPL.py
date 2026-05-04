@@ -167,12 +167,12 @@ spl3 compare \
   --adapter claude_cli --model claude-opus-4-6 \
   -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
 
-# use gemini as Judge
+# use sonnet as Judge
 spl3 compare \
   $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
   $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
   --adapter $ADAPTER --model $MODEL_ID \
-  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff-gemini.md
+  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff-sonnet.md
 
 ```
 

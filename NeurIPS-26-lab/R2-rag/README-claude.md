@@ -185,11 +185,11 @@ spl3 compare \
   -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
 
 # use gemini as Judge
-spl3 compare \
+spl3 sonnet \
   $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
   $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
   --adapter $ADAPTER --model $MODEL_ID \
-  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff-gemini.md
+  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff-sonnet.md
 
 ```
 
