@@ -141,7 +141,7 @@ DO
     END;
   END;
 
-  CALL write_file(@report, @out) INTO @write_result;
+  CALL write_file(@out, @report) INTO @write_result;
 
   RETURN @report WITH status = "complete";
 END;

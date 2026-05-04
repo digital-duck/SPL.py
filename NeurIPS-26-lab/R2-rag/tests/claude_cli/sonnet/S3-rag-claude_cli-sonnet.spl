@@ -23,7 +23,7 @@ DO
   GENERATE generate_answer(@query, @retrieved_document) INTO @generated_answer;
   EVALUATE @output_path
     WHEN contains(".") THEN
-      CALL write_file(@output_path, @query, @generated_answer) INTO @write_result;
+      CALL write_file(@output_path, @generated_answer) INTO @write_result;
     ELSE
       @write_result := "skipped";
   END;

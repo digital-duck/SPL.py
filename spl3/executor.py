@@ -123,11 +123,15 @@ class SPL3Executor(SPL2Executor):
             return not self._eval_while_cond(cond.operand, state)
 
         if isinstance(cond, Condition):
+            ls = self._eval_expression(cond.left,  state)
+            rs = self._eval_expression(cond.right, state)
             try:
-                left_val  = float(self._eval_expression(cond.left,  state))
-                right_val = float(self._eval_expression(cond.right, state))
-                return self._compare(left_val, cond.operator, right_val)
+                return self._compare(float(ls), cond.operator, float(rs))
             except (ValueError, TypeError):
+                if cond.operator == "=":
+                    return ls == rs
+                if cond.operator in ("!=", "<>"):
+                    return ls != rs
                 return False
 
         # Plain expression — truthy string check

@@ -80,6 +80,26 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 
 ---
 
+## S3-run — `spl3 run` → smoke-test the SPL workflow
+
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+The `--tools` flag supplies the pure-Python helper functions for JSON/YAML manipulation.
+
+```bash
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R4-thinking
+export OUT=$BASE/tests/claude_cli/sonnet
+
+spl3 run $OUT/S3-thinking-claude_cli-sonnet.spl \
+  --adapter claude_cli --model claude-sonnet-4-6 \
+  --tools $OUT/tools.py \
+  -p "problem=A farmer has 17 sheep. All but 9 die. How many sheep are left? Now explain step-by-step how compound interest works and why it matters for long-term investing." \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
+```
+
+Expected: the workflow runs up to `@max_iterations` (default 5) chain-of-thought steps, stopping early when `next_thought_needed=false`, and returns the final `@solution` with `status=complete`.
+
+---
+
 ## S4 — `spl3 splc compile` → Python/PocketFlow
 
 ```bash

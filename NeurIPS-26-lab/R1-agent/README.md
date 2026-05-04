@@ -91,6 +91,25 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 
 ---
 
+## S3-run — `spl3 run` → smoke-test the SPL workflow
+
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+
+```bash
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-agent
+export OUT=$BASE/tests/claude_cli/sonnet
+
+spl3 run $OUT/S3-agent-claude_cli-sonnet.spl \
+  --adapter claude_cli --model claude-sonnet-4-6 \
+  --claude-allowed-tools WebSearch \
+  -p "question=What is PocketFlow and how do I install it?" \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
+```
+
+Expected: the workflow runs up to `@max_iterations` (default 3) search-and-accumulate loops then returns a synthesized answer with `status=done` or `status=max_iterations`.
+
+---
+
 ## S4 — `spl3 splc compile` → Python/PocketFlow
 
 ```bash

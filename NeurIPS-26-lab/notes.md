@@ -120,3 +120,130 @@ Format:
 - Added `re.sub` to strip `|"RETURN default"|` and `|RETURN default|` edge labels from any LLM-generated Mermaid
 
 **Status:** fixed at source
+
+---
+
+## [2026-05-03] R2-rag / claude_cli / sonnet — S3 write_file wrong arity
+
+**Symptom:** `CALL write_file(@output_path, @query, @generated_answer)` — stdlib `write_file` takes `(path, content)` not 3 args; `@query` would be written as content and `@generated_answer` silently passed as mode.
+
+**Root cause:** LLM-generated SPL passed both query and answer as separate positional args.
+
+**Fix applied to file (`S3-rag-claude_cli-sonnet.spl`):**
+- Removed `@query` arg: `CALL write_file(@output_path, @generated_answer)`
+
+**Status:** fixed
+
+---
+
+## [2026-05-03] R5-research / claude_cli / sonnet — S3 write_file args reversed
+
+**Symptom:** `CALL write_file(@report, @out)` — args in wrong order; `@report` (content) was passed as path and `@out` (path) as content.
+
+**Root cause:** LLM-generated SPL swapped the argument order.
+
+**Fix applied to file (`S3-research-claude_cli-sonnet.spl`):**
+- Swapped to correct order: `CALL write_file(@out, @report)`
+
+**Status:** fixed
+
+---
+
+## [2026-05-03] R2-rag / S3-run — RAG CALL functions missing from stdlib
+
+**Symptom:** `spl3 run` failed because `chunk_documents`, `embed_documents`, `create_faiss_index`, `embed_query`, `retrieve_document` are not stdlib tools.
+
+**Root cause:** These are deterministic data-transformation operations specific to the RAG recipe; correctly expressed as CALL (not GENERATE) in the SPL but have no stdlib implementation.
+
+**Fix applied:**
+- Created `tests/claude_cli/sonnet/tools.py` with all five functions using ollama `qwen3-embedding:0.6b` (local, no API key) for embeddings and FAISS for indexing/retrieval
+- Created `tests/claude_cli/sonnet/test_docs.txt` with 7 diverse test documents (one per line)
+- Installed `faiss-cpu` and `ollama` Python packages in `spl123` conda env
+
+**Status:** fixed — S3-run passes
+
+---
+
+## [2026-05-03] R4-thinking / S3-run — CoT helper CALL functions missing from stdlib
+
+**Symptom:** `spl3 run` failed because `format_thoughts_to_text`, `extract_last_plan`, `validate_yaml_fields`, `append_thought`, `extract_yaml_field`, `print_thought_progress` are not stdlib tools.
+
+**Root cause:** Pure data-manipulation helpers for managing the JSON thoughts array and YAML field extraction; correctly expressed as CALL but have no stdlib implementation.
+
+**Fix applied:**
+- Created `tests/claude_cli/sonnet/tools.py` with all six functions using Python `json` and `yaml` (PyYAML)
+
+**Status:** fixed
+
+---
+
+## [2026-05-03] R4-thinking / S3-run — WHILE loop never enters (LLM calls: 0)
+
+**Symptom:** Workflow reported `LLM calls: 0`, `RETURN: 0 chars | status=complete`. Loop body never executed.
+
+**Root cause (`spl/executor.py` `_exec_while`):** When a WHILE condition is a `Condition` node, the executor tried `float(left_val)` for numeric comparison. For string operands like `@next_thought_needed = "true"`, `float("true")` raises `ValueError` and the except block silently set `should_continue = False`. The loop never entered.
+
+**Fix applied to source (`spl/executor.py`):**
+- Added string comparison fallback after float conversion failure: `=` maps to `ls == rs`, `!=`/`<>` maps to `ls != rs`
+
+**Status:** fixed at source
+
+---
+
+## [2026-05-03] R4-thinking / S3-run — AND compound WHILE condition right-hand side discarded
+
+**Symptom:** `WHILE @yaml_valid = "false" AND @retry_count < 3 DO` — only the left side was evaluated; `@retry_count < 3` was silently dropped, allowing infinite retries.
+
+**Root cause (`spl/parser.py` `_parse_while_condition`):** The AND/OR handler called `_parse_expression()` for right-hand sub-conditions but discarded the result, returning only the initial left-side `Condition`.
+
+**Fix applied to source (`spl/parser.py` + `spl/ast_nodes.py`):**
+- Added `CompoundCondition` dataclass (`conditions: list`, `conjunctions: list`) to `spl/ast_nodes.py`
+- Rewrote AND/OR loop in `_parse_while_condition` to accumulate all arms into `CompoundCondition`
+- Added `CompoundCondition` evaluation branch in `spl/executor.py` `_exec_while`
+
+**Note:** spl3 already had its own `CompoundCondition` (binary `left/right/operator` tree) in `spl3/ast_nodes.py` with its own `_parse_while_condition` override — the spl2 path is fixed here; spl3 path fixed separately below.
+
+**Status:** fixed at source
+
+---
+
+## [2026-05-03] R4-thinking / S3-run — spl3 executor string equality in WHILE condition
+
+**Symptom:** After above fixes, R4 ran but produced only 3 LLM calls and empty `@current_thinking` at RETURN.
+
+**Root cause (`spl3/executor.py` `_eval_while_cond`):** The spl3 executor's own WHILE condition evaluator had the same `float()` silent-False fallback bug for `Condition` nodes. Since spl3 overrides `_exec_while` and intercepts `CompoundCondition` before delegating to spl2, the spl2 fix was never reached.
+
+**Fix applied to source (`spl3/executor.py`):**
+- Same string comparison fallback added to `_eval_while_cond` for the `Condition` case
+
+**Status:** fixed at source
+
+---
+
+## [2026-05-03] R4-thinking / tools.py — YAML bool coercion produces wrong-case string
+
+**Symptom:** `extract_yaml_field(@thought_data, "next_thought_needed")` returned `"True"` / `"False"` (capital first letter). WHILE condition `@next_thought_needed = "true"` then failed string equality, causing premature loop exit.
+
+**Root cause:** `yaml.safe_load` parses unquoted YAML `true`/`false` as Python `bool`. `str(True)` = `"True"` and `str(False)` = `"False"` — mismatched case against SPL string literals.
+
+**Fix applied to file (`tools.py` `extract_yaml_field`):**
+- Added explicit bool check: `if isinstance(value, bool): return "true" if value else "false"`
+
+**Status:** fixed
+
+---
+
+## [2026-05-03] R4-thinking / tools.py — LLM wraps YAML in markdown code fences
+
+**Symptom:** `chain_of_thought_trace.md` showed `yaml_valid=false` for every retry and empty `@current_thinking` / `@next_thought_needed` at RETURN. Claude was producing valid YAML but wrapped in ` ```yaml ... ``` ` markdown fences, causing `yaml.safe_load` to throw a parse error.
+
+**Root cause:** Claude defaults to fenced code blocks in chat responses. `validate_yaml_fields`, `extract_yaml_field`, and `append_thought` all called `yaml.safe_load` on the raw LLM output without stripping fences first.
+
+**Fix applied to file (`tools.py`):**
+- Added `_strip_fences(text)` helper using `re.match(r'^```(?:yaml)?\s*\n?(.*?)\n?```\s*$', ...)` with `re.DOTALL`
+- Applied `_strip_fences` in `validate_yaml_fields`, `extract_yaml_field`, and `append_thought` before parsing
+
+**Fix applied to SPL (`S3-thinking-claude_cli-sonnet.spl` prompt):**
+- Changed "Respond with valid YAML" → "Respond with PLAIN YAML only — do NOT wrap in code fences or markdown blocks."
+
+**Status:** fixed

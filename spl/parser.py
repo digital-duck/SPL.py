@@ -1145,7 +1145,10 @@ class Parser:
             condition = Condition(left=left, operator=op, right=right)
 
             # Check for AND/OR compound conditions
+            conditions = [condition]
+            conjunctions = []
             while self._check_any(TokenType.AND, TokenType.OR):
+                conj = "AND" if self._check(TokenType.AND) else "OR"
                 self._advance()  # AND/OR
                 if self._check(TokenType.NOT):
                     self._advance()
@@ -1159,14 +1162,20 @@ class Parser:
                             # Skip the FROM args until DO
                             while not self._check(TokenType.DO):
                                 self._advance()
-                        return condition
-                # Simple compound: AND expr op expr
-                self._parse_expression()
+                        break
+                # Simple compound: AND/OR expr op expr
+                next_left = self._parse_expression()
                 if self._current().type in op_map:
+                    next_op = op_map[self._current().type]
                     self._advance()
-                    self._parse_expression()
+                    next_right = self._parse_expression()
+                    conditions.append(Condition(left=next_left, operator=next_op, right=next_right))
+                    conjunctions.append(conj)
 
-            return condition
+            if len(conditions) == 1:
+                return conditions[0]
+            from spl.ast_nodes import CompoundCondition
+            return CompoundCondition(conditions=conditions, conjunctions=conjunctions)
 
         # If no operator, it could be a semantic condition in string form
         return left

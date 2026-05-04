@@ -80,6 +80,35 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 
 ---
 
+## S3-run — `spl3 run` → smoke-test the SPL workflow
+
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+Embeddings use the local ollama model `qwen3-embedding:0.6b` (no API key needed).
+Test documents are loaded from `test_docs.txt` — one document per line.
+
+```bash
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag
+export OUT=$BASE/tests/claude_cli/sonnet
+
+# Build the documents JSON param from test_docs.txt
+DOCS=$(python3 -c "
+import json, pathlib
+lines = [l for l in pathlib.Path('$OUT/test_docs.txt').read_text().splitlines() if l.strip()]
+print(json.dumps(lines))
+")
+
+spl3 run $OUT/S3-rag-claude_cli-sonnet.spl \
+  --adapter claude_cli --model claude-sonnet-4-6 \
+  --tools $OUT/tools.py \
+  -p "query=What is PocketFlow and how do I install it?" \
+  -p "documents=$DOCS" \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
+```
+
+Expected: retrieves the most relevant chunk from `test_docs.txt` and generates a grounded answer with `status=complete`.
+
+---
+
 ## S4 — `spl3 splc compile` → Python/PocketFlow
 
 ```bash

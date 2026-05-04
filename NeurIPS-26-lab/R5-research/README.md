@@ -80,6 +80,27 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 
 ---
 
+## S3-run — `spl3 run` → smoke-test the SPL workflow
+
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+Web searches use the stdlib `search_web` tool (DuckDuckGo, no API key needed).
+
+```bash
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R5-research
+export OUT=$BASE/tests/claude_cli/sonnet
+
+spl3 run $OUT/S3-research-claude_cli-sonnet.spl \
+  --adapter claude_cli --model claude-sonnet-4-6 \
+  --claude-allowed-tools WebSearch \
+  -p "topic=PocketFlow minimalist LLM framework" \
+  -p "out=$OUT/S3-research-claude_cli-sonnet-report.txt" \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
+```
+
+Expected: the workflow runs up to 3 research iterations (plan → parallel search → extract → synthesize), finalizes when coverage is sufficient, writes a report to the `--out` path, and returns `status=complete`.
+
+---
+
 ## S4 — `spl3 splc compile` → Python/PocketFlow
 
 ```bash

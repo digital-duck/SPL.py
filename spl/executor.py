@@ -27,7 +27,7 @@ from spl.ast_nodes import (
     EvaluateStatement, WhileStatement, DoBlock,
     LoggingStatement, AssignmentStatement, StoreStatement, GenerateIntoStatement,
     CommitStatement, RetryStatement, RaiseStatement, CallStatement, SelectIntoStatement,
-    SemanticCondition, ComparisonCondition, Condition, ExceptionHandler,
+    SemanticCondition, ComparisonCondition, Condition, CompoundCondition, ExceptionHandler,
     FStringLiteral, ListLiteral, MapLiteral,
     StorageSpec, StorageSubscript, StorageAssignStatement,
 )
@@ -1076,13 +1076,40 @@ class Executor:
             # Evaluate condition
             should_continue = False
 
-            if isinstance(cond, Condition):
+            if isinstance(cond, CompoundCondition):
+                def _eval_single(c):
+                    ls = self._eval_expression(c.left, state)
+                    rs = self._eval_expression(c.right, state)
+                    try:
+                        return self._compare(float(ls), c.operator, float(rs))
+                    except (ValueError, TypeError):
+                        if c.operator == "=":
+                            return ls == rs
+                        if c.operator in ("!=", "<>"):
+                            return ls != rs
+                        return False
+                result = _eval_single(cond.conditions[0])
+                for conj, sub in zip(cond.conjunctions, cond.conditions[1:]):
+                    if conj == "AND":
+                        result = result and _eval_single(sub)
+                    else:
+                        result = result or _eval_single(sub)
+                should_continue = result
+            elif isinstance(cond, Condition):
+                left_str = self._eval_expression(cond.left, state)
+                right_str = self._eval_expression(cond.right, state)
                 try:
-                    left_val = float(self._eval_expression(cond.left, state))
-                    right_val = float(self._eval_expression(cond.right, state))
+                    left_val = float(left_str)
+                    right_val = float(right_str)
                     should_continue = self._compare(left_val, cond.operator, right_val)
                 except (ValueError, TypeError):
-                    should_continue = False
+                    # Fall back to string comparison for non-numeric operands
+                    if cond.operator == "=":
+                        should_continue = left_str == right_str
+                    elif cond.operator in ("!=", "<>"):
+                        should_continue = left_str != right_str
+                    else:
+                        should_continue = False
             elif isinstance(cond, SemanticCondition):
                 # Semantic while condition — provide variable context for informed judgment
                 context_lines = []

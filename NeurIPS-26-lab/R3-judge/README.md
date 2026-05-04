@@ -80,6 +80,24 @@ spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 
 ---
 
+## S3-run — `spl3 run` → smoke-test the SPL workflow
+
+Run the SPL workflow directly (no compilation) to verify the logic executes end-to-end.
+
+```bash
+export BASE=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R3-judge
+export OUT=$BASE/tests/claude_cli/sonnet
+
+spl3 run $OUT/S3-judge-claude_cli-sonnet.spl \
+  --adapter claude_cli --model claude-sonnet-4-6 \
+  -p "task=Write a one-paragraph description of the RAG pattern in AI systems" \
+  2>&1 | tee $OUT/S3-$RECIPE-$ADAPTER-$MODEL-spl-$(date +%Y%m%d_%H%M%S).md
+```
+
+Expected: the Generator produces a draft, the Judge evaluates it; if score ≥ 7 returns `status=pass`, otherwise iterates up to 3 times and returns `status=max_attempts`.
+
+---
+
 ## S4 — `spl3 splc compile` → Python/PocketFlow
 
 ```bash

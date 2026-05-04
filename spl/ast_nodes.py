@@ -261,6 +261,13 @@ class SemanticCondition:
 
 
 @dataclass
+class CompoundCondition:
+    """AND/OR compound WHILE condition: cond1 AND cond2 [AND cond3 ...]"""
+    conditions: list  # list[Condition]
+    conjunctions: list  # list[str] — "AND" or "OR" between each adjacent pair
+
+
+@dataclass
 class WhenClause:
     """WHEN <condition> THEN <statements>"""
     condition: Condition | SemanticCondition | ComparisonCondition
