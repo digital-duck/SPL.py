@@ -13,7 +13,7 @@ Compare generated files against the claude_cli reference:
 
 ```bash
 conda activate spl123
-export OPENROUTER_API_KEY=<your-key>
+# export OPENROUTER_API_KEY=<your-key>
 
 export INIT_SPEC=/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/ablations/R1-agent/tests/openrouter/A1-agent-openrouter-init-spec.md
 export OUT_DIR=/home/papagame/projects/digital-duck/SPL.py/NeurIPS-26-lab/ablations/R1-agent/tests/openrouter
