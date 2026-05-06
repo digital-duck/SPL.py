@@ -397,7 +397,7 @@ def cmd_compile(
         if verbose:
             click.echo(f"Calling {adapter} / {model or '(default)'} ...")
 
-        impl_code, readme_text = compile_llm_code(prompt, adapter=adapter, model=model, verbose=verbose)
+        impl_code, readme_text, _test_data = compile_llm_code(prompt, adapter=adapter, model=model, verbose=verbose)
 
     # ── Write output files ────────────────────────────────────────────────────
     impl_path.write_text(impl_code, encoding="utf-8")
@@ -632,18 +632,24 @@ Source file: {spl_filename}\
 
 VIBE_SYSTEM_PROMPT = """\
 You are an expert software engineer. Your task is to translate a natural language REQUIREMENT
-directly into a working {lang_label} implementation, bypassing any intermediate IR steps.
+directly into a working {lang_label} implementation in a single pass.
 
 Rules:
-1. The code must be complete, executable, and production-ready.
+1. The code must be COMPLETE and EXECUTABLE — no placeholder functions, no "TODO" stubs,
+   no missing imports. A user must be able to run it immediately after reading the README.
 2. Use only the target language's standard patterns for {lang_label}.
-3. If using an orchestration framework (like PocketFlow, LangGraph, etc.), ensure correct
+3. If using an orchestration framework (PocketFlow, LangGraph, etc.), ensure correct
    node wiring, shared state management, and robust error handling.
 4. Preserve ALL workflow semantics implied by the requirement: loops, conditional branches,
    sub-workflow calls, exception handling, and logging.
-5. Provide a main execution block that demonstrates the requirement end-to-end.
-6. For LLM calls, use a `call_llm(prompt: str) -> str` helper that is easy to swap adapters.
-7. Output ONLY the implementation file content — no explanation before it.
+5. Provide a `__main__` block (or equivalent entry point) that demonstrates the workflow
+   end-to-end with a concrete example input.
+6. For LLM calls, use a `call_llm(prompt: str, model: str = None) -> str` helper at the
+   top of the file. Read the model from an environment variable (e.g. `LLM_MODEL`) with
+   a sensible default so users can swap models without editing code.
+7. Read API keys from environment variables (e.g. `OPENROUTER_API_KEY`, `OPENAI_API_KEY`).
+   Never hardcode credentials.
+8. Output ONLY the implementation file content first — no explanation, no preamble.
    The file should be ready to run without modification.
 {readme_instr}
 
@@ -651,10 +657,35 @@ Target: {lang_label}
 """
 
 
+VIBE_README_INSTRUCTION = """\
+
+
+MANDATORY OUTPUT STRUCTURE — you MUST include all three sections in this exact order:
+
+1. The complete implementation code (first, no preamble).
+
+2. A README section starting with exactly this line on its own:
+--- README ---
+   Include: overview, requirements (pip install ...), setup (env vars),
+   usage with example command and expected output, and a step-by-step
+   description of the workflow logic.
+
+3. A TEST DATA section starting with exactly this line on its own:
+--- TEST DATA ---
+   Provide 2-3 realistic test inputs as a Python dict or JSON array that
+   can be passed directly to the main entry point. If the workflow takes
+   a question or query, provide example queries. If it takes a document,
+   provide a short sample document. Omit only if the workflow has no
+   meaningful test inputs (e.g. it generates data from scratch).
+
+ALL THREE SECTIONS ARE REQUIRED. Do not omit any section even if the code is long.\
+"""
+
+
 # ── LLM caller ───────────────────────────────────────────────────────────────
 
-def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> tuple[str, str]:
-    """Call the specified adapter and return (implementation, readme)."""
+def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> tuple[str, str, str]:
+    """Call the specified adapter and return (implementation, readme, test_data)."""
     import asyncio
     try:
         from spl3.adapters import get_adapter
@@ -677,11 +708,15 @@ def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: b
     if verbose:
         click.echo(f"  LLM response: {len(raw)} chars")
 
-    # Split implementation from readme (if present)
+    # Split implementation, readme, and test data (all optional but requested)
+    test_data = ""
+    if "--- TEST DATA ---" in raw:
+        raw, _, test_data = raw.partition("--- TEST DATA ---")
+        test_data = test_data.strip()
     if "--- README ---" in raw:
         impl_part, _, readme_part = raw.partition("--- README ---")
-        return strip_fences(impl_part), readme_part.strip()
-    return strip_fences(raw), ""
+        return strip_fences(impl_part), readme_part.strip(), test_data
+    return strip_fences(raw), "", test_data
 
 
 def strip_fences(text: str) -> str:

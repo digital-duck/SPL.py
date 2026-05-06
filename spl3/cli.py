@@ -1843,7 +1843,9 @@ def cmd_explain(spl_file):
 @click.option("--model", "-m", default=None, metavar="MODEL",
               help="Model override for the adapter.")
 @click.option("--output", "-o", default=None, metavar="FILE",
-              help="Write generated code to FILE.")
+              help="Write generated code to FILE (single-file mode).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Write all outputs (code, README.md, test_data.py) to DIR (folder mode).")
 @click.option("--rag/--no-rag", "use_rag", default=True, show_default=True,
               help="Include RAG examples from the shared SPL recipe store.")
 @click.option("--rag-k", default=3, show_default=True, type=click.IntRange(1, 10),
@@ -1856,27 +1858,50 @@ def cmd_explain(spl_file):
               help="Print progress and token counts.")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
-def cmd_vibe(description, description_opt, lang, adapter, model, output, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
-    """Generate target code directly from a natural language description.
+def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
+    """One-shot prototype generator: NL description → working code + README + test data.
 
-    Bypasses the .mmd and .spl IR steps (vibe coding). Reuses splc's
-    compilation infrastructure: RAG few-shots, references, prompt structure.
+    Generates a complete, runnable implementation directly from a natural language
+    description or spec file — no .mmd or .spl IR steps required. Outputs code,
+    README.md, and test data in one pass. Works with any model available via
+    ollama (local) or openrouter (400+ cloud models).
 
     \b
-    Useful as an ablation baseline: compare output quality against the full
-    IR pipeline (text2mmd → mmd2spl → splc compile) to quantify the value
-    of intermediate representations.
+    Use cases:
+      • Rapid prototyping — get a working skeleton in seconds
+      • Multi-model comparison — run the same spec through claude, qwen, gemini
+      • Ablation baseline — compare against the full IR pipeline (S1→S6) to
+        quantify the value of the Mermaid + SPL intermediate representations
+
+    \b
+    Output (folder mode --out-dir):
+      {dir}/vibe_output.py     generated implementation
+      {dir}/README.md          setup, usage, expected output
+      {dir}/test_data.py       2-3 realistic test inputs
 
     \b
     Examples:
-      spl3 vibe "build a self-refine agent" -o out.py
-      spl3 vibe --description spec.md --target python/langgraph --adapter claude_cli
-      spl3 vibe "rag pipeline" --adapter openrouter -m qwen/qwen3.6-plus --prompt
+      # Quick prototype to a folder (recommended)
+      spl3 vibe "build a ReAct research agent" --out-dir ./out
+
+      # Against a spec file, specific model via openrouter
+      spl3 vibe --description spec.md --out-dir ./out \\
+        --adapter openrouter -m qwen/qwen3.6-plus
+
+      # Local model via ollama
+      spl3 vibe "self-refine writing agent" --out-dir ./out \\
+        --adapter ollama -m gemma3
+
+      # Single-file mode (legacy)
+      spl3 vibe "rag pipeline" -o out.py --adapter claude_cli
+
+      # Preview prompt before sending
+      spl3 vibe --description spec.md --adapter openrouter -m qwen/qwen3.6-plus --prompt
     """
     from pathlib import Path
     from spl3.splc.cli import (
-        SUPPORTED_LANGS, VIBE_SYSTEM_PROMPT, _fetch_rag_examples,
-        _fetch_references, compile_llm_code
+        SUPPORTED_LANGS, VIBE_SYSTEM_PROMPT, VIBE_README_INSTRUCTION,
+        _fetch_rag_examples, _fetch_references, compile_llm_code
     )
 
     if lang not in SUPPORTED_LANGS:
@@ -1911,13 +1936,7 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, use_rag
         rag_context = _fetch_rag_examples(raw_desc, lang, k=rag_k, verbose=verbose, query=raw_desc)
 
     # ── Build prompt ──────────────────────────────────────────────────────────
-    readme_instruction = (
-        "\n\nAfter the implementation, output a `readme.md` section "
-        "(starting with `--- README ---` on its own line) that includes: "
-        "setup instructions, run command, expected output pattern, "
-        "and a table mapping each logical step to its equivalent in the target."
-        if not no_readme else ""
-    )
+    readme_instruction = "" if no_readme else VIBE_README_INSTRUCTION
 
     vibe_system = VIBE_SYSTEM_PROMPT.format(
         lang_label   = lang_meta["label"],
@@ -1947,22 +1966,49 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, use_rag
         return
 
     click.echo(f"Vibing {lang} code using {adapter}...")
-    impl_code, readme_text = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=verbose)
+    impl_code, readme_text, test_data = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=verbose)
 
-    if output:
+    ext = lang_meta.get("ext", "py")
+
+    if out_dir:
+        # ── Folder mode: write code + README.md + test_data.py to out_dir ──
+        out_path = Path(out_dir)
+        out_path.mkdir(parents=True, exist_ok=True)
+        # derive a clean stem from the description or lang
+        stem = Path(output).stem if output else "vibe_output"
+        code_file = out_path / f"{stem}.{ext}"
+        code_file.write_text(impl_code, encoding="utf-8")
+        click.echo(f"Code    → {code_file}")
+        if readme_text and not no_readme:
+            readme_file = out_path / "README.md"
+            readme_file.write_text(readme_text, encoding="utf-8")
+            click.echo(f"Readme  → {readme_file}")
+        if test_data:
+            test_file = out_path / f"test_data.{ext}"
+            test_file.write_text(test_data, encoding="utf-8")
+            click.echo(f"Tests   → {test_file}")
+    elif output:
+        # ── Single-file mode ─────────────────────────────────────────────────
         out_path = Path(output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(impl_code, encoding="utf-8")
         click.echo(f"Code written to: {output}")
-        if readme_text:
+        if readme_text and not no_readme:
             readme_path = out_path.with_name(out_path.stem + "-readme.md")
             readme_path.write_text(readme_text, encoding="utf-8")
             click.echo(f"Readme written to: {readme_path}")
+        if test_data:
+            test_path = out_path.with_name(out_path.stem + f"-test_data.{ext}")
+            test_path.write_text(test_data, encoding="utf-8")
+            click.echo(f"Test data written to: {test_path}")
     else:
         click.echo(impl_code)
         if readme_text:
             click.echo("\n--- README ---\n")
             click.echo(readme_text)
+        if test_data:
+            click.echo("\n--- TEST DATA ---\n")
+            click.echo(test_data)
 
 
 # ------------------------------------------------------------------ #

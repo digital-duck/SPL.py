@@ -64,15 +64,18 @@ spl3 text2mmd $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
 
 ---
 
-## ⚠️ HUMAN CHECKPOINT — review diagram before S3
+## ⚠️ HUMAN CHECKPOINT — S2 Mermaid diagram
 
-Open `$OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd` and verify:
+Review `$OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd`:
 - All nodes present and correctly labeled
 - Edges wired in correct direction
-- Back-edge for the iterative loop is present
+- Loop back-edge is present
 - No dangling or duplicate nodes
 
-Fix any errors directly in the `.mmd` file, then proceed.
+Fix errors directly in the `.mmd` file.
+
+> **Human Checkpoint Protocol:** (1) Review artifact. (2) Run and test with real inputs — work with AI assistant to diagnose and fix all issues until working. (3) Document every issue and fix in `$OUT/notes.md` before proceeding.
+
 
 ---
 
@@ -136,6 +139,10 @@ mv $OUT/targets/python_pocketflow/S3-$RECIPE-$ADAPTER-$MODEL*.py \
 
 ---
 
+> **Human Checkpoint — S4 compiled code:** Run with real test inputs; verify the app works end-to-end.
+>
+> > **Human Checkpoint Protocol:** (1) Review artifact. (2) Run and test with real inputs — work with AI assistant to diagnose and fix all issues until working. (3) Document every issue and fix in `$OUT/notes.md` before proceeding.
+
 ## S5 — `spl3 splc describe` → spec2
 
 Convert reconstructed code to spec. No `--include-docs` — reconstructed directory has no README.
@@ -158,7 +165,82 @@ spl3 compare \
   $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
   --adapter claude_cli --model claude-opus-4-6 \
   -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
+
+> **Human Checkpoint — S6 closure score:** Review the diff report. Trace low scores back to S2 or S3. Document findings in `$OUT/notes.md`.
+
 ```
+
+---
+
+## S7 — `spl3 vibe` → direct code (ablation baseline)
+
+Generate code directly from the S1 spec, bypassing Mermaid and SPL IR. Output goes to the `vibe/` folder.
+
+```bash
+mkdir -p $OUT/vibe/python_pocketflow
+
+spl3 vibe \
+  --description $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  --target python/pocketflow \
+  --adapter $ADAPTER --model $MODEL_ID \
+  --out-dir $OUT/vibe/python_pocketflow
+```
+
+---
+
+## S8 — `spl3 splc describe` → spec3
+
+Convert vibe-generated folder to spec. Same task as S5 (which also describes a folder); spec index is 3 (S1=1, S5=2, S8=3).
+
+> **Human Checkpoint — S7 vibe output:** A model may generate multiple files (.py, README.md, test data). Run the generated code with the same test inputs used in S4.
+>
+> > **Human Checkpoint Protocol:** (1) Review artifact. (2) Run and test with real inputs — work with AI assistant to diagnose and fix all issues until working. (3) Document every issue and fix in `$OUT/notes.md` before proceeding.
+
+```bash
+spl3 splc describe $OUT/vibe/python_pocketflow \
+  --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/S8-$RECIPE-$ADAPTER-$MODEL-3-spec.md
+```
+
+---
+
+## S9 — `spl3 compare` → vibe drift score
+
+Compare original spec (S1) vs vibe-generated spec (S8). Judge fixed at claude-opus-4-6.
+
+```bash
+spl3 compare \
+  $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  $OUT/S8-$RECIPE-$ADAPTER-$MODEL-3-spec.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S9-$RECIPE-$ADAPTER-$MODEL-vibe-diff.md
+```
+
+> **Analysis:** Compare S9 vs S6 to quantify IR value-add:
+> - **S6 score** = round-trip fidelity **with** IR (full pipeline)
+> - **S9 score** = round-trip fidelity **without** IR (vibe baseline)
+> - **ΔIR = S6 − S9** = value added by the Mermaid + SPL intermediate representation
+
+---
+
+## S10 — `spl3 compare` → ablation summary
+
+Meta-comparison: full IR diff (S6) vs vibe diff (S9). The judge quantifies ΔIR and explains where the IR steps added value.
+
+```bash
+spl3 compare \
+  $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
+  $OUT/S9-$RECIPE-$ADAPTER-$MODEL-vibe-diff.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S10-$RECIPE-$ADAPTER-$MODEL-ablation.md
+```
+
+> **Result:** S10 report contains the structured ablation verdict:
+> - **S6 score** = round-trip fidelity with IR (full pipeline)
+> - **S9 score** = round-trip fidelity without IR (vibe baseline)
+> - **ΔIR = S6 − S9** = IR value-add
+>
+> Aggregate S10 reports across all 15 runs (5 recipes × 3 models) to produce the NeurIPS ablation table.
 
 ---
 

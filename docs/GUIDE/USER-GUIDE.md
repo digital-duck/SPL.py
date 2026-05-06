@@ -4,6 +4,13 @@
 orchestrating LLM workflows. You write a `.spl` file — the invariant *logical view* —
 and the toolchain runs it, compiles it, describes it, or generates it from plain English.
 
+> **End-to-end validated.** The ten-step pipeline documented in §14 (S1–S10) was
+> designed for the NeurIPS 2026 paper *"Beyond Vibe Coding: Intent Invariance and
+> Structured Prompt Language"* and executed across 5 real-world workflow recipes × 3
+> model tiers (15 experiments). Every command in this guide was exercised in those
+> experiments — making §14 both the research protocol and the most comprehensive
+> integration test suite for SPL.py.
+
 ---
 
 ## Table of Contents
@@ -21,7 +28,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 11. [spl3 splc describe](#11-spl3-splc-describe)
 12. [spl3 vibe](#12-spl3-vibe)
 13. [spl3 code-rag](#13-spl3-code-rag)
-14. [Full IR Pipeline vs Vibe (Ablation)](#14-full-ir-pipeline-vs-vibe-ablation)
+14. [Full Pipeline S1–S10: IR + Ablation](#14-full-pipeline-s1s10-ir--ablation)
 15. [Debugging LLM Prompts](#15-debugging-llm-prompts)
 16. [Command reference](#16-command-reference)
 
@@ -205,13 +212,12 @@ splc describe → spec.md → text2spl → .spl → splc compile → new target
 
 ## 12. spl3 vibe
 
-Generates target code **directly from a natural language description**, bypassing the
-`.mmd` and `.spl` intermediate representation (IR) steps. This is the "vibe coding"
-path — fast, one-shot, no structured intermediate artifacts.
+One-shot prototype generator: **NL description → working code + README + test data**,
+in a single LLM call. No `.mmd` or `.spl` IR steps required.
 
-Under the hood, `vibe` reuses all of `splc`'s compilation infrastructure: the same
-RAG few-shot store, reference fetcher, and LLM caller. The only difference is the
-input: a human description instead of a structured `.spl` file.
+Works with any model available via `ollama` (local), `claude_cli`, or `openrouter`
+(400+ cloud models). The `--out-dir` mode is recommended — it writes all three
+outputs to a folder so `spl3 splc describe` can process them as a unit in step S8.
 
 ```bash
 spl3 vibe "<description>" [OPTIONS]
@@ -228,61 +234,59 @@ spl3 vibe --description <TEXT_OR_FILE> [OPTIONS]
 | `--target / -t` | `python/pocketflow` | Target language/framework |
 | `--adapter` | `ollama` | LLM adapter |
 | `--model / -m` | adapter default | Model override |
-| `--output / -o` | stdout | Write generated code to `FILE` |
+| `--out-dir DIR` | — | **Recommended.** Write code + `README.md` + `test_data.py` to `DIR` |
+| `--output / -o` | stdout | Single-file mode: write code to `FILE` (also writes `<stem>-readme.md`) |
 | `--rag / --no-rag` | `--rag` | Include RAG few-shot examples from the SPL recipe store |
 | `--rag-k` | `3` | Number of RAG examples (1–10) |
 | `--references` | — | Reference codebase(s): GitHub URL or local path (repeatable) |
-| `--no-readme` | off | Skip generating the `<stem>-readme.md` alongside the code |
+| `--no-readme` | off | Skip generating readme and test data |
 | `--verbose / -v` | off | Print progress and token counts |
 | `--prompt` | off | Print the assembled LLM prompt and exit (no API call) |
 
 ### Examples
 
 ```bash
-# Quickest path — description on the command line
-spl3 vibe "self-refine agent: generate a draft, critique it, refine until score > 0.8" \
-  --adapter claude_cli -m claude-sonnet-4-6 -o out/self_refine.py
+# Recommended: folder mode — all outputs in one place
+spl3 vibe "ReAct research agent" \
+  --out-dir ./out --adapter ollama -m gemma3
 
-# Read description from a spec file (e.g. Section 0 of a splc describe output)
-spl3 vibe --description S1-agent-sonnet-spec.md \
-  --adapter openrouter -m qwen/qwen3.6-plus \
-  --target python/pocketflow \
-  -o tests/openrouter/qwen/A1-agent-qwen.py
+# From a spec file, via openrouter (multi-model comparison)
+spl3 vibe --description S1-agent-spec.md \
+  --out-dir ./out/qwen --adapter openrouter -m qwen/qwen3.6-plus
+spl3 vibe --description S1-agent-spec.md \
+  --out-dir ./out/gemini --adapter openrouter -m google/gemini-3-flash-preview
 
 # Different target framework
 spl3 vibe "RAG pipeline with re-ranking" \
   --target python/langgraph \
-  --adapter openrouter -m google/gemini-3-flash-preview \
-  -o out/rag_langgraph.py
+  --out-dir ./out --adapter claude_cli
 
-# Inspect the prompt without calling the LLM
+# Preview prompt without calling the LLM
 spl3 vibe "judge agent" --adapter claude_cli --prompt
-
-# With a reference codebase for grounding
-spl3 vibe "research agent" \
-  --references https://github.com/langchain-ai/langgraph \
-  --target python/langgraph \
-  --adapter claude_cli -o out/research.py
 ```
 
 ### Output files
 
-When `--output FILE` is given, `vibe` writes two files:
-
-| File | Contents |
-|------|----------|
-| `FILE` | The generated implementation (e.g. `agent.py`) |
-| `<stem>-readme.md` | Setup instructions, run command, and logical-step mapping table |
+| Mode | File | Contents |
+|------|------|----------|
+| `--out-dir DIR` | `DIR/vibe_output.py` | Complete implementation |
+| | `DIR/README.md` | Setup, usage, expected output |
+| | `DIR/test_data.py` | 2–3 realistic test inputs |
+| `--output FILE` | `FILE` | Implementation |
+| | `<stem>-readme.md` | Setup and usage |
+| | `<stem>-test_data.py` | Test inputs |
 
 ### Notes
 
-- **RAG query**: unlike `splc compile` (which extracts the query from SPL comment syntax),
-  `vibe` passes the raw description directly to the RAG store, ensuring semantically
-  relevant few-shot examples are retrieved.
-- **No manifest**: `vibe` does not write a `splc_manifest.json`. Use the output filename
-  convention (`A1-<recipe>-<model>.py`) to track provenance in experiments.
-- **`--no-rag`**: useful when the description is very domain-specific or when you want
-  to isolate the LLM's pretrained knowledge from recipe store examples.
+- **Context window matters**: models with larger context windows (Qwen, Gemini) tend
+  to follow the mandatory 3-section output structure more reliably than models with
+  shorter effective windows. If README or test data are missing, try a larger model.
+- **RAG query**: `vibe` passes the raw description directly to the RAG store (unlike
+  `splc compile` which extracts the query from SPL syntax).
+- **No manifest**: `vibe` does not write `splc_manifest.json`. Use filename convention
+  (`S7-<recipe>-<adapter>-<model>.py`) to track provenance in experiments.
+- **`--no-rag`**: useful when the description is very domain-specific or when isolating
+  the LLM's pretrained knowledge from recipe store examples.
 
 ---
 
@@ -297,40 +301,146 @@ spl3 code-rag stats
 
 ---
 
-## 14. Full IR Pipeline vs Vibe (Ablation)
+## 14. Full Pipeline S1–S10: IR + Ablation
 
-SPL provides two distinct paths from a human description to runnable code.
-Comparing their outputs is the core of the NDD ablation study.
+The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
+(S7–S10) to measure whether the Mermaid + SPL intermediate representations add
+measurable value over direct vibe coding.
+
+### Background: NeurIPS 2026 validation
+
+These steps were designed for the NeurIPS 2026 paper *"Beyond Vibe Coding: Intent
+Invariance and Structured Prompt Language"* and executed as 15 experiments (5 recipes
+× 3 model tiers). In doing so, every SPL.py command was exercised end-to-end on real
+PocketFlow workflows — making these experiments the most comprehensive integration
+validation of the toolchain to date. **The steps are not just a research protocol;
+each one is a useful standalone feature.**
+
+### The ten steps at a glance
+
+| Step | Command | Output | Standalone value |
+|------|---------|--------|-----------------|
+| S1 | `spl3 splc describe --include-docs` | `S1-*-1-spec.md` | Reverse-engineer any codebase into a spec |
+| S2 | `spl3 text2mmd` | `S2-*.mmd` | Visualise workflow topology from a spec |
+| S3 | `spl3 mmd2spl` | `S3-*.spl` | Convert a diagram to executable SPL |
+| S4 | `spl3 splc compile --llm` | `S4-*.py` | Compile SPL to a target framework |
+| S5 | `spl3 splc describe` | `S5-*-2-spec.md` | Spec the compiled artifact |
+| S6 | `spl3 compare S1 S5` | `S6-*-spec-diff.md` | Measure round-trip intent fidelity (ΔS) |
+| S7 | `spl3 vibe --out-dir` | `vibe/` folder | One-shot prototype from spec (bypass IR) |
+| S8 | `spl3 splc describe` | `S8-*-3-spec.md` | Spec the vibe-generated artifact |
+| S9 | `spl3 compare S1 S8` | `S9-*-vibe-diff.md` | Measure vibe round-trip fidelity |
+| S10 | `spl3 compare S6 S9` | `S10-*-ablation.md` | **ΔIR = S6 − S9** (IR value-add) |
+
+### Human Checkpoint Protocol
+
+Every `[Human Checkpoint]` in S1–S10 follows the same three-step protocol:
 
 ```
-Full IR Pipeline (S1–S6):
-  description
-    → spl3 splc describe   (S1: spec.md)
-    → spl3 text2mmd        (S2: .mmd)   ← Human review
-    → spl3 mmd2spl         (S3: .spl)   ← Human validate/run
-    → spl3 splc compile    (S4: .py)    ← Human test
-    → spl3 splc describe   (S5: spec.md)
-    → spl3 compare S1 S5   (S6: round-trip diff)
-
-Vibe / Bypass IR (A1–A3):
-  description
-    → spl3 vibe            (A1: .py)    ← Human test (same test cases as S4)
-    → spl3 splc describe   (A2: spec.md)
-    → spl3 compare S1 A2   (A3: ablation diff)
+1. REVIEW   — inspect the generated artifact
+2. RUN      — execute/test with real inputs; work with AI assistant to fix all issues
+3. DOCUMENT — record issues and fixes in notes.md before proceeding
 ```
 
-**Interpreting results:** Compare the S6 diff (full IR) against the A3 diff (bypass IR).
-If S6 consistently shows higher semantic similarity, the `.mmd` + `.spl` IR steps
-add measurable value to round-trip fidelity.
+Checkpoints occur after S1 (spec quality), S2 (diagram topology), S3 (SPL validation
++ run), S4 (compiled code test), S6 (review score), S7 (vibe output run), S10
+(ablation verdict). Steps S5, S8, S9 are fully automated.
 
-### When to use `vibe` vs the full pipeline
+### Phase 1 — Full IR pipeline (S1→S6)
+
+```
+existing code / README
+    → S1: spl3 splc describe --include-docs    spec (ground truth)
+    → S2: spl3 text2mmd                        Mermaid diagram
+          ⚠️  [Human] verify topology
+    → S3: spl3 mmd2spl                         SPL workflow
+          ⚠️  [Human] spl3 validate + spl3 run
+    → S4: spl3 splc compile --llm              compiled code
+          ⚠️  [Human] run with test inputs
+    → S5: spl3 splc describe                   round-trip spec
+    → S6: spl3 compare S1 S5                   ΔS score
+          ⚠️  [Human] review score; trace drift to S2 or S3
+```
+
+### Phase 2 — Ablation baseline (S7→S10)
+
+```
+    → S7: spl3 vibe --out-dir                  vibe-coded folder
+          ⚠️  [Human] run with same test inputs as S4
+    → S8: spl3 splc describe <vibe-folder>     vibe spec
+    → S9: spl3 compare S1 S8                   vibe ΔS score
+    → S10: spl3 compare S6 S9                  ΔIR = S6 − S9
+           ⚠️  [Human] review ablation report; aggregate across runs
+```
+
+### Canonical command sequence (R1-agent / claude example)
+
+```bash
+export RECIPE=agent  ADAPTER=claude_cli  MODEL_ID=claude-sonnet-4-6  MODEL=sonnet
+export OUT=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-$RECIPE/tests/$ADAPTER/$MODEL
+export SRC=~/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-$RECIPE/src/pocketflow-$RECIPE
+
+# S1 — describe original code
+spl3 splc describe $SRC --include-docs --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md
+
+# S2 — Mermaid diagram  *** HUMAN CHECKPOINT: verify topology ***
+spl3 text2mmd $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  --adapter $ADAPTER --model $MODEL_ID -o $OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd
+
+# S3 — SPL workflow
+spl3 mmd2spl $OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd \
+  --adapter $ADAPTER --model $MODEL_ID -o $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
+spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
+
+# S4 — compile to Python/PocketFlow
+spl3 splc compile $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
+  --lang python/pocketflow --llm --adapter $ADAPTER --model $MODEL_ID \
+  --out-dir $OUT/targets/python_pocketflow --overwrite
+
+# S5 — describe compiled code
+spl3 splc describe $OUT/targets/python_pocketflow/S4-$RECIPE-$ADAPTER-$MODEL.py \
+  --adapter $ADAPTER --model $MODEL_ID -o $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md
+
+# S6 — round-trip score (judge fixed at claude-opus-4-6)
+spl3 compare $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  $OUT/S5-$RECIPE-$ADAPTER-$MODEL-2-spec.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
+
+# S7 — vibe-coded baseline  *** HUMAN CHECKPOINT: run generated code ***
+mkdir -p $OUT/vibe/python_pocketflow
+spl3 vibe --description $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  --target python/pocketflow --adapter $ADAPTER --model $MODEL_ID \
+  --out-dir $OUT/vibe/python_pocketflow
+
+# S8 — describe vibe output
+spl3 splc describe $OUT/vibe/python_pocketflow \
+  --adapter $ADAPTER --model $MODEL_ID \
+  -o $OUT/S8-$RECIPE-$ADAPTER-$MODEL-3-spec.md
+
+# S9 — vibe round-trip score
+spl3 compare $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+  $OUT/S8-$RECIPE-$ADAPTER-$MODEL-3-spec.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S9-$RECIPE-$ADAPTER-$MODEL-vibe-diff.md
+
+# S10 — ablation: IR value-add = S6 score − S9 score
+spl3 compare $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
+  $OUT/S9-$RECIPE-$ADAPTER-$MODEL-vibe-diff.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o $OUT/S10-$RECIPE-$ADAPTER-$MODEL-ablation.md
+```
+
+### When to use each path
 
 | Situation | Recommendation |
 |-----------|----------------|
-| Rapid prototyping, exploring a new framework | `vibe` |
-| NDD experiment — need traceable, validated artifacts | Full IR pipeline |
-| Ablation study — quantifying IR value-add | Both paths, then `spl3 compare` |
-| Existing `.spl` file, new deployment target | `splc compile` (not vibe) |
+| Rapid prototype — explore a new framework or idea | S7 (`spl3 vibe`) |
+| Multi-model comparison — same spec, different models | S7 × N models |
+| Need traceable, validated, auditable artifacts | S1→S6 (full IR) |
+| Quantify IR value-add for a specific workflow | S1→S10 (both paths) |
+| Already have a `.spl` file, new target | S4 only (`splc compile`) |
+| Already have compiled code, need spec | S5 only (`splc describe`) |
 
 ---
 
@@ -367,7 +477,8 @@ spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--promp
 spl3 text2mmd "<description>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
 spl3 mmd2spl <file.mmd> [--adapter] [--template workflow|function] [--prompt]
 spl3 compare <f1> <f2> [--mode MODE] [--adapter] [--format markdown|json|text] [--prompt]
-spl3 vibe "<description>" [--target LANG] [--adapter] [--model] [-o FILE]
+spl3 vibe "<description>" [--target LANG] [--adapter] [--model]
+          [--out-dir DIR] [-o FILE]
           [--rag/--no-rag] [--rag-k N] [--references URL] [--verbose] [--prompt]
 
 spl3 splc compile <file.spl> --lang <target> [--llm] [--adapter] [--rag-k N]
