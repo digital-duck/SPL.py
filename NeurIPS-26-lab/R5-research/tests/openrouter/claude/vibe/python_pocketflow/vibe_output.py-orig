@@ -1,0 +1,406 @@
+I'll read the requirement file and implement it. Based on the file path suggesting a research/OpenRouter/Claude integration with PocketFlow, I'll implement a comprehensive research assistant workflow.
+
+```python
+#!/usr/bin/env python3
+"""
+PocketFlow Research Assistant with OpenRouter/Claude
+Implements a multi-stage research pipeline: query analysis → search planning →
+information synthesis → critical review → final report generation.
+"""
+
+import os
+import json
+import time
+import logging
+from typing import Any, Dict, List, Optional
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Logging
+# ─────────────────────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("research_pipeline")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PocketFlow micro-framework (self-contained, ~80 lines)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class Node:
+    """Base node: prep → exec → post lifecycle."""
+
+    def __init__(self, max_retries: int = 3, wait_seconds: float = 2.0):
+        self.max_retries = max_retries
+        self.wait_seconds = wait_seconds
+        self._successors: Dict[str, "Node"] = {}
+
+    # ── wiring ────────────────────────────────────────────────────────────────
+    def add_successor(self, node: "Node", action: str = "default") -> "Node":
+        self._successors[action] = node
+        return node
+
+    def __rshift__(self, other: "Node") -> "Node":
+        return self.add_successor(other, "default")
+
+    # ── lifecycle (override in subclasses) ────────────────────────────────────
+    def prep(self, shared: Dict[str, Any]) -> Any:
+        return None
+
+    def exec(self, prep_result: Any) -> Any:
+        return None
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Any) -> str:
+        return "default"
+
+    # ── internal runner with retry ────────────────────────────────────────────
+    def _run(self, shared: Dict[str, Any]) -> str:
+        prep_result = self.prep(shared)
+        last_exc: Optional[Exception] = None
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                exec_result = self.exec(prep_result)
+                return self.post(shared, prep_result, exec_result)
+            except Exception as exc:
+                last_exc = exc
+                logger.warning(
+                    "%s attempt %d/%d failed: %s",
+                    self.__class__.__name__, attempt, self.max_retries, exc,
+                )
+                if attempt < self.max_retries:
+                    time.sleep(self.wait_seconds)
+        raise RuntimeError(
+            f"{self.__class__.__name__} failed after {self.max_retries} retries"
+        ) from last_exc
+
+    def run(self, shared: Dict[str, Any]) -> str:
+        return self._run(shared)
+
+
+class Flow:
+    """Drives execution from a start node following action edges."""
+
+    def __init__(self, start: Node):
+        self.start = start
+
+    def run(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        current: Optional[Node] = self.start
+        while current is not None:
+            node_name = current.__class__.__name__
+            logger.info("▶  Running node: %s", node_name)
+            action = current.run(shared)
+            logger.info("   └─ action returned: %s", action)
+            current = current._successors.get(action)
+        return shared
+
+
+class BatchNode(Node):
+    """Iterates exec() over a list produced by prep()."""
+
+    def prep(self, shared: Dict[str, Any]) -> List[Any]:  # type: ignore[override]
+        return []
+
+    def exec(self, item: Any) -> Any:  # type: ignore[override]
+        return item
+
+    def post(  # type: ignore[override]
+        self,
+        shared: Dict[str, Any],
+        prep_result: List[Any],
+        exec_result: Any,
+    ) -> str:
+        return "default"
+
+    def _run(self, shared: Dict[str, Any]) -> str:
+        items = self.prep(shared)
+        results = []
+        for item in items:
+            last_exc: Optional[Exception] = None
+            for attempt in range(1, self.max_retries + 1):
+                try:
+                    results.append(self.exec(item))
+                    break
+                except Exception as exc:
+                    last_exc = exc
+                    logger.warning(
+                        "%s batch-item attempt %d/%d failed: %s",
+                        self.__class__.__name__, attempt, self.max_retries, exc,
+                    )
+                    if attempt < self.max_retries:
+                        time.sleep(self.wait_seconds)
+            else:
+                raise RuntimeError(
+                    f"{self.__class__.__name__} batch item failed after "
+                    f"{self.max_retries} retries"
+                ) from last_exc
+        return self.post(shared, items, results)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LLM helper — OpenRouter with Claude default
+# ─────────────────────────────────────────────────────────────────────────────
+
+def call_llm(
+    prompt: str,
+    model: Optional[str] = None,
+    system: str = "You are a rigorous scientific research assistant.",
+    temperature: float = 0.3,
+) -> str:
+    """
+    Call an LLM via OpenRouter.
+    Reads OPENROUTER_API_KEY and LLM_MODEL from environment.
+    Falls back to 'anthropic/claude-3-5-sonnet' if LLM_MODEL is not set.
+    """
+    try:
+        import openai  # openai>=1.0 SDK works with OpenRouter
+    except ImportError as exc:
+        raise ImportError("pip install openai>=1.0") from exc
+
+    api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise EnvironmentError(
+            "Set OPENROUTER_API_KEY (or OPENAI_API_KEY) before running."
+        )
+
+    resolved_model = model or os.environ.get("LLM_MODEL", "anthropic/claude-3-5-sonnet")
+
+    client = openai.OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+        default_headers={
+            "HTTP-Referer": os.environ.get("OPENROUTER_REFERER", "https://github.com/research-pipeline"),
+            "X-Title": "PocketFlow Research Assistant",
+        },
+    )
+
+    logger.debug("LLM call → model=%s, prompt_len=%d", resolved_model, len(prompt))
+    response = client.chat.completions.create(
+        model=resolved_model,
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=temperature,
+        max_tokens=4096,
+    )
+    content = response.choices[0].message.content or ""
+    logger.debug("LLM response len=%d", len(content))
+    return content.strip()
+
+
+def parse_json_from_llm(raw: str) -> Any:
+    """Extract JSON from LLM output that may be wrapped in markdown fences."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        lines = raw.splitlines()
+        # drop first and last fence lines
+        inner = "\n".join(lines[1:-1]) if lines[-1].strip() == "```" else "\n".join(lines[1:])
+        raw = inner.strip()
+    return json.loads(raw)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Workflow Nodes
+# ─────────────────────────────────────────────────────────────────────────────
+
+class QueryAnalysisNode(Node):
+    """
+    Stage 1 — Analyse the research question.
+    Outputs: research_goal, key_concepts, sub_questions, scope_constraints.
+    """
+
+    def prep(self, shared: Dict[str, Any]) -> str:
+        return shared["query"]
+
+    def exec(self, query: str) -> Dict[str, Any]:
+        prompt = f"""You are a senior research analyst.
+
+Analyse the following research question and produce a structured breakdown.
+
+Research Question:
+{query}
+
+Return ONLY valid JSON (no prose, no markdown fences) with this schema:
+{{
+  "research_goal": "<one-sentence goal>",
+  "key_concepts": ["<concept1>", "<concept2>", ...],
+  "sub_questions": ["<sub-q1>", "<sub-q2>", "<sub-q3>"],
+  "scope_constraints": ["<constraint1>", ...],
+  "complexity": "low|medium|high",
+  "domain": "<primary academic domain>"
+}}"""
+        raw = call_llm(prompt, temperature=0.2)
+        return parse_json_from_llm(raw)
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Any) -> str:
+        shared["analysis"] = exec_result
+        logger.info(
+            "   Analysis complete — domain=%s, complexity=%s, sub-questions=%d",
+            exec_result.get("domain"),
+            exec_result.get("complexity"),
+            len(exec_result.get("sub_questions", [])),
+        )
+        return "default"
+
+
+class SearchPlanningNode(Node):
+    """
+    Stage 2 — Create a structured search / investigation plan.
+    Outputs: search_queries, methodologies, expected_sources.
+    """
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "query": shared["query"],
+            "analysis": shared["analysis"],
+        }
+
+    def exec(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        analysis = context["analysis"]
+        prompt = f"""You are a research librarian and methodology expert.
+
+Original question: {context["query"]}
+Research goal: {analysis["research_goal"]}
+Key concepts: {json.dumps(analysis["key_concepts"])}
+Sub-questions: {json.dumps(analysis["sub_questions"])}
+Domain: {analysis["domain"]}
+
+Design a comprehensive search and investigation plan.
+
+Return ONLY valid JSON with this schema:
+{{
+  "search_queries": [
+    {{"query": "<search string>", "rationale": "<why>", "priority": "high|medium|low"}}
+  ],
+  "methodologies": [
+    {{"name": "<method>", "description": "<how to apply>", "applicable_to": "<which sub-question>"}}
+  ],
+  "expected_source_types": ["<source type1>", ...],
+  "evaluation_criteria": ["<criterion1>", ...],
+  "potential_challenges": ["<challenge1>", ...]
+}}"""
+        raw = call_llm(prompt, temperature=0.25)
+        return parse_json_from_llm(raw)
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Any) -> str:
+        shared["search_plan"] = exec_result
+        logger.info(
+            "   Search plan ready — %d queries, %d methodologies",
+            len(exec_result.get("search_queries", [])),
+            len(exec_result.get("methodologies", [])),
+        )
+        return "default"
+
+
+class SubQuestionResearchNode(BatchNode):
+    """
+    Stage 3 — Research each sub-question independently (batch).
+    Outputs: sub_question_findings (list of dicts).
+    """
+
+    def prep(self, shared: Dict[str, Any]) -> List[Dict[str, Any]]:  # type: ignore[override]
+        sub_questions = shared["analysis"].get("sub_questions", [])
+        search_plan = shared.get("search_plan", {})
+        return [
+            {
+                "index": i,
+                "sub_question": sq,
+                "analysis": shared["analysis"],
+                "search_plan": search_plan,
+                "original_query": shared["query"],
+            }
+            for i, sq in enumerate(sub_questions)
+        ]
+
+    def exec(self, item: Dict[str, Any]) -> Dict[str, Any]:  # type: ignore[override]
+        sq = item["sub_question"]
+        analysis = item["analysis"]
+        search_plan = item["search_plan"]
+
+        # Pick relevant search queries for this sub-question
+        relevant_queries = [
+            sq_info["query"]
+            for sq_info in search_plan.get("search_queries", [])
+            if sq_info.get("priority") == "high"
+        ][:3]
+
+        prompt = f"""You are an expert researcher in {analysis["domain"]}.
+
+Main research question: {item["original_query"]}
+Sub-question to investigate: {sq}
+
+Relevant search angles:
+{json.dumps(relevant_queries, indent=2)}
+
+Evaluation criteria:
+{json.dumps(search_plan.get("evaluation_criteria", []), indent=2)}
+
+Conduct a thorough investigation of this sub-question. Draw on your knowledge of
+current literature, established theories, empirical findings, and open debates.
+
+Return ONLY valid JSON with this schema:
+{{
+  "sub_question": "{sq}",
+  "key_findings": [
+    {{"finding": "<finding>", "confidence": "high|medium|low", "evidence_type": "<type>"}}
+  ],
+  "supporting_concepts": ["<concept1>", ...],
+  "contradictions_or_debates": ["<debate1>", ...],
+  "knowledge_gaps": ["<gap1>", ...],
+  "summary": "<2-3 sentence synthesis>"
+}}"""
+        raw = call_llm(prompt, temperature=0.3)
+        result = parse_json_from_llm(raw)
+        result["index"] = item["index"]
+        return result
+
+    def post(  # type: ignore[override]
+        self,
+        shared: Dict[str, Any],
+        prep_result: List[Any],
+        exec_result: List[Any],
+    ) -> str:
+        # Sort by original index to preserve order
+        exec_result.sort(key=lambda x: x.get("index", 0))
+        shared["sub_question_findings"] = exec_result
+        total_findings = sum(len(r.get("key_findings", [])) for r in exec_result)
+        logger.info(
+            "   Sub-question research complete — %d sub-questions, %d total findings",
+            len(exec_result),
+            total_findings,
+        )
+        return "default"
+
+
+class SynthesisNode(Node):
+    """
+    Stage 4 — Synthesise all sub-question findings into a coherent narrative.
+    Outputs: synthesis (structured dict with themes, evidence, gaps).
+    """
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "query": shared["query"],
+            "analysis": shared["analysis"],
+            "findings": shared["sub_question_findings"],
+        }
+
+    def exec(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        findings_json = json.dumps(context["findings"], indent=2)
+        prompt = f"""You are a senior research synthesiser.
+
+Original research question: {context["query"]}
+Domain: {context["analysis"]["domain"]}
+Research goal: {context["analysis"]["research_goal"]}
+
+Sub-question findings:
+{findings_json}
+
+Synthesise these findings into a coherent, integrated understanding.
+Identify cross-cutting themes, reconcile contradictions, and highlight
+the most important insights.
+
+Return ONLY valid JSON with this schema:
+{{
+  "main_thesis": "

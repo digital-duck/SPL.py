@@ -1,3 +1,6 @@
+The spec file doesn't exist yet — this is a new generation for the R2-RAG recipe. Based on the NeurIPS-26-lab structure and the `claude_cli/claude` adapter context, I'll generate the complete PocketFlow RAG implementation now.
+
+```python
 import os
 import re
 import logging

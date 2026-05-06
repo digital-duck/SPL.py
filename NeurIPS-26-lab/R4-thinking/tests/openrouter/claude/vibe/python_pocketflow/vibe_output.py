@@ -1,0 +1,413 @@
+#!/usr/bin/env python3
+"""
+PocketFlow-based Thinking Orchestration with OpenRouter Claude
+Implements a multi-stage reasoning pipeline: Think -> Reflect -> Synthesize -> Answer
+"""
+
+import os
+import json
+import time
+import logging
+from typing import Any, Dict, Optional
+
+# ── OpenAI-compatible client (OpenRouter) ────────────────────────────────────
+try:
+    from openai import OpenAI
+except ImportError:
+    raise ImportError("pip install openai")
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("thinking_flow")
+
+# ── LLM Configuration ────────────────────────────────────────────────────────
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENAI_API_KEY     = os.environ.get("OPENAI_API_KEY", "")
+LLM_MODEL          = os.environ.get(
+    "LLM_MODEL",
+    "anthropic/claude-3-5-sonnet"          # sensible default on OpenRouter
+)
+LLM_BASE_URL       = os.environ.get(
+    "LLM_BASE_URL",
+    "https://openrouter.ai/api/v1"
+)
+MAX_THINKING_ROUNDS = int(os.environ.get("MAX_THINKING_ROUNDS", "3"))
+TEMPERATURE         = float(os.environ.get("LLM_TEMPERATURE", "0.7"))
+
+
+def _get_client() -> OpenAI:
+    """Return an OpenAI-compatible client pointed at OpenRouter (or OpenAI)."""
+    api_key = OPENROUTER_API_KEY or OPENAI_API_KEY
+    if not api_key:
+        raise EnvironmentError(
+            "Set OPENROUTER_API_KEY (or OPENAI_API_KEY) before running."
+        )
+    return OpenAI(api_key=api_key, base_url=LLM_BASE_URL)
+
+
+def call_llm(
+    prompt: str,
+    model: Optional[str] = None,
+    system: Optional[str] = None,
+    temperature: float = TEMPERATURE,
+) -> str:
+    """
+    Call the LLM via OpenRouter (OpenAI-compatible endpoint).
+
+    Args:
+        prompt:      User-turn content.
+        model:       Model identifier; falls back to LLM_MODEL env var.
+        system:      Optional system prompt.
+        temperature: Sampling temperature.
+
+    Returns:
+        The assistant's reply as a plain string.
+    """
+    model = model or LLM_MODEL
+    client = _get_client()
+
+    messages = []
+    if system:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": prompt})
+
+    log.debug("call_llm | model=%s | prompt_chars=%d", model, len(prompt))
+
+    for attempt in range(1, 4):
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+            )
+            text = response.choices[0].message.content or ""
+            log.debug("call_llm | response_chars=%d", len(text))
+            return text.strip()
+        except Exception as exc:
+            log.warning("call_llm attempt %d failed: %s", attempt, exc)
+            if attempt == 3:
+                raise
+            time.sleep(2 ** attempt)
+
+    return ""   # unreachable, satisfies type checkers
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  PocketFlow — minimalist node base
+# ════════════════════════════════════════════════════════════════════════════
+
+class Node:
+    """
+    Base PocketFlow node.
+
+    Subclasses implement:
+        prep(shared)  → local context dict   (read shared state)
+        exec(context) → result               (do the work — no shared access)
+        post(shared, context, result) → str  (write shared state, return action)
+    """
+
+    def run(self, shared: Dict[str, Any]) -> str:
+        context = self.prep(shared)
+        result  = self.exec(context)
+        action  = self.post(shared, context, result)
+        return action
+
+    # ── override these ───────────────────────────────────────────────────────
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return {}
+
+    def exec(self, context: Dict[str, Any]) -> Any:
+        return None
+
+    def post(self, shared: Dict[str, Any], context: Dict[str, Any], result: Any) -> str:
+        return "default"
+
+
+class Flow:
+    """
+    Minimal PocketFlow Flow: a directed graph of nodes connected by action strings.
+
+    Usage:
+        flow = Flow(start_node)
+        flow.add_edge(node_a, "action_name", node_b)
+        flow.run(shared_dict)
+    """
+
+    def __init__(self, start: Node):
+        self.start   = start
+        self._edges: Dict[int, Dict[str, Node]] = {}   # id(node) -> {action -> next_node}
+
+    def add_edge(self, src: Node, action: str, dst: Node) -> "Flow":
+        self._edges.setdefault(id(src), {})[action] = dst
+        return self
+
+    def run(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        current = self.start
+        visited = 0
+        while current is not None:
+            visited += 1
+            if visited > 200:
+                raise RuntimeError("Flow exceeded 200 steps — possible infinite loop.")
+            node_name = current.__class__.__name__
+            log.info("▶ %s", node_name)
+            action = current.run(shared)
+            log.info("  ↳ action='%s'", action)
+            current = self._edges.get(id(current), {}).get(action)
+        log.info("Flow complete after %d steps.", visited)
+        return shared
+
+
+# ════════════════════════════════════════════════════════════════════════════
+#  Thinking Workflow Nodes
+# ════════════════════════════════════════════════════════════════════════════
+
+SYSTEM_THINKING = (
+    "You are a rigorous analytical thinker. "
+    "Break problems down step-by-step, surface assumptions, "
+    "and reason carefully before drawing conclusions."
+)
+
+SYSTEM_CRITIC = (
+    "You are a sharp critic and devil's advocate. "
+    "Identify flaws, gaps, and alternative interpretations in the reasoning provided."
+)
+
+SYSTEM_SYNTHESIZER = (
+    "You are a concise synthesizer. "
+    "Combine the original reasoning and the critique into a balanced, improved analysis."
+)
+
+SYSTEM_ANSWERER = (
+    "You are a helpful assistant. "
+    "Given a thorough analysis, produce a clear, direct, well-structured final answer "
+    "for the user. Use markdown formatting where helpful."
+)
+
+
+# ── 1. InitNode ──────────────────────────────────────────────────────────────
+class InitNode(Node):
+    """Validate input and initialize shared state."""
+
+    def prep(self, shared):
+        return {"question": shared.get("question", "").strip()}
+
+    def exec(self, ctx):
+        q = ctx["question"]
+        if not q:
+            raise ValueError("No question provided.")
+        return q
+
+    def post(self, shared, ctx, result):
+        shared["question"]       = result
+        shared["thinking_rounds"] = 0
+        shared["thoughts"]        = []          # list of {thought, critique, synthesis}
+        shared["final_answer"]    = ""
+        log.info("  Question: %s", result[:120])
+        return "default"
+
+
+# ── 2. ThinkNode ─────────────────────────────────────────────────────────────
+class ThinkNode(Node):
+    """Generate an initial chain-of-thought for the question."""
+
+    def prep(self, shared):
+        return {
+            "question":       shared["question"],
+            "round":          shared["thinking_rounds"],
+            "prior_thoughts": shared["thoughts"],
+        }
+
+    def exec(self, ctx):
+        q      = ctx["question"]
+        round_ = ctx["round"]
+        prior  = ctx["prior_thoughts"]
+
+        if prior:
+            last = prior[-1]
+            context_block = (
+                f"\n\n## Prior synthesis (round {round_}):\n{last['synthesis']}"
+                f"\n\nBuild on this — go deeper or explore a different angle."
+            )
+        else:
+            context_block = ""
+
+        prompt = (
+            f"## Question\n{q}"
+            f"{context_block}"
+            f"\n\n## Task\n"
+            f"Think step-by-step about this question. "
+            f"Show your reasoning clearly. Round {round_ + 1} of {MAX_THINKING_ROUNDS}."
+        )
+        return call_llm(prompt, system=SYSTEM_THINKING)
+
+    def post(self, shared, ctx, result):
+        shared["current_thought"] = result
+        log.info("  Thought length: %d chars", len(result))
+        return "default"
+
+
+# ── 3. CritiqueNode ──────────────────────────────────────────────────────────
+class CritiqueNode(Node):
+    """Critically evaluate the current thought."""
+
+    def prep(self, shared):
+        return {
+            "question": shared["question"],
+            "thought":  shared["current_thought"],
+        }
+
+    def exec(self, ctx):
+        prompt = (
+            f"## Original Question\n{ctx['question']}\n\n"
+            f"## Reasoning to Critique\n{ctx['thought']}\n\n"
+            f"## Task\n"
+            f"Critically evaluate this reasoning. Identify:\n"
+            f"1. Logical gaps or unsupported assumptions\n"
+            f"2. Missing perspectives or counterarguments\n"
+            f"3. Potential errors or overconfident claims\n"
+            f"4. What would strengthen this analysis?"
+        )
+        return call_llm(prompt, system=SYSTEM_CRITIC, temperature=0.6)
+
+    def post(self, shared, ctx, result):
+        shared["current_critique"] = result
+        log.info("  Critique length: %d chars", len(result))
+        return "default"
+
+
+# ── 4. SynthesizeNode ────────────────────────────────────────────────────────
+class SynthesizeNode(Node):
+    """Synthesize the thought and critique into an improved analysis."""
+
+    def prep(self, shared):
+        return {
+            "question": shared["question"],
+            "thought":  shared["current_thought"],
+            "critique": shared["current_critique"],
+            "round":    shared["thinking_rounds"],
+        }
+
+    def exec(self, ctx):
+        prompt = (
+            f"## Question\n{ctx['question']}\n\n"
+            f"## Initial Reasoning (Round {ctx['round'] + 1})\n{ctx['thought']}\n\n"
+            f"## Critique\n{ctx['critique']}\n\n"
+            f"## Task\n"
+            f"Synthesize the reasoning and critique into an improved, balanced analysis. "
+            f"Address the critique's valid points. Be concise but thorough."
+        )
+        return call_llm(prompt, system=SYSTEM_SYNTHESIZER, temperature=0.5)
+
+    def post(self, shared, ctx, result):
+        shared["thoughts"].append({
+            "round":     shared["thinking_rounds"] + 1,
+            "thought":   shared["current_thought"],
+            "critique":  shared["current_critique"],
+            "synthesis": result,
+        })
+        shared["thinking_rounds"] += 1
+        log.info(
+            "  Round %d/%d complete. Synthesis: %d chars",
+            shared["thinking_rounds"], MAX_THINKING_ROUNDS, len(result),
+        )
+        return "default"
+
+
+# ── 5. LoopGateNode ──────────────────────────────────────────────────────────
+class LoopGateNode(Node):
+    """
+    Decide whether to run another thinking round or proceed to final answer.
+    Checks both the round counter and an LLM-based 'is the analysis sufficient?' gate.
+    """
+
+    def prep(self, shared):
+        return {
+            "rounds_done": shared["thinking_rounds"],
+            "last_synthesis": shared["thoughts"][-1]["synthesis"] if shared["thoughts"] else "",
+            "question": shared["question"],
+        }
+
+    def exec(self, ctx):
+        if ctx["rounds_done"] >= MAX_THINKING_ROUNDS:
+            return "sufficient"
+
+        # Ask the LLM whether another round would add value
+        prompt = (
+            f"## Question\n{ctx['question']}\n\n"
+            f"## Current Analysis (after {ctx['rounds_done']} round(s))\n"
+            f"{ctx['last_synthesis']}\n\n"
+            f"## Task\n"
+            f"Is this analysis sufficiently thorough to answer the question well? "
+            f"Reply with exactly one word: YES or NO."
+        )
+        verdict = call_llm(prompt, temperature=0.0).strip().upper()
+        log.info("  Sufficiency verdict: %s", verdict)
+        return "sufficient" if verdict.startswith("Y") else "more_thinking"
+
+    def post(self, shared, ctx, result):
+        return result   # "sufficient" | "more_thinking"
+
+
+# ── 6. AnswerNode ────────────────────────────────────────────────────────────
+class AnswerNode(Node):
+    """Produce the final user-facing answer from all accumulated analysis."""
+
+    def prep(self, shared):
+        return {
+            "question": shared["question"],
+            "thoughts": shared["thoughts"],
+        }
+
+    def exec(self, ctx):
+        # Build a condensed analysis block for the final prompt
+        analysis_parts = []
+        for t in ctx["thoughts"]:
+            analysis_parts.append(
+                f"### Round {t['round']} Synthesis\n{t['synthesis']}"
+            )
+        analysis_block = "\n\n".join(analysis_parts)
+
+        prompt = (
+            f"## User Question\n{ctx['question']}\n\n"
+            f"## Multi-Round Analysis\n{analysis_block}\n\n"
+            f"## Task\n"
+            f"Write a clear, comprehensive, and well-structured final answer to the "
+            f"user's question. Draw on the full analysis above. "
+            f"Use markdown headers, bullet points, or numbered lists where appropriate."
+        )
+        return call_llm(prompt, system=SYSTEM_ANSWERER, temperature=0.4)
+
+    def post(self, shared, ctx, result):
+        shared["final_answer"] = result
+        log.info("  Final answer: %d chars", len(result))
+        return "default"
+
+
+# ── 7. OutputNode ────────────────────────────────────────────────────────────
+class OutputNode(Node):
+    """Format and persist the complete output."""
+
+    def prep(self, shared):
+        return dict(shared)
+
+    def exec(self, ctx):
+        output = {
+            "question":       ctx["question"],
+            "thinking_rounds": ctx["thinking_rounds"],
+            "thoughts":       ctx["thoughts"],
+            "final_answer":   ctx["final_answer"],
+        }
+        return output
+
+    def post(self, shared, ctx, result):
+        shared["output"] = result
+
+        # Pretty-print to console
+        sep = "═" * 70
+        print(f"\n{sep}")
+        print(f"  QUESTION: {result['question']}")
+        print(f"  THINKING ROUNDS: {result['thinking_rounds']}")

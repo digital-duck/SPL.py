@@ -1,0 +1,379 @@
+#!/usr/bin/env python3
+"""
+Judge Workflow — PocketFlow ETL-style LLM orchestration
+Evaluates LLM-generated responses using Claude as a judge via OpenRouter API.
+"""
+
+import os
+import json
+import logging
+import time
+from typing import Any, Dict, Optional
+
+import requests
+
+# ─────────────────────────────────────────────
+# Logging
+# ─────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+)
+logger = logging.getLogger("judge_workflow")
+
+# ─────────────────────────────────────────────
+# LLM Helper
+# ─────────────────────────────────────────────
+def call_llm(
+    prompt: str,
+    model: str = None,
+    temperature: float = 0.0,
+    max_tokens: int = 2048,
+    retries: int = 3,
+    backoff: float = 2.0,
+) -> str:
+    """
+    Call an LLM via OpenRouter API.
+    Model is read from LLM_MODEL env var; falls back to Claude 3.5 Sonnet.
+    API key is read from OPENROUTER_API_KEY env var.
+    """
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        raise EnvironmentError("OPENROUTER_API_KEY environment variable is not set.")
+
+    model = model or os.environ.get("LLM_MODEL", "anthropic/claude-3-5-sonnet")
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": os.environ.get("OPENROUTER_REFERER", "https://github.com/judge-workflow"),
+        "X-Title": "Judge Workflow",
+    }
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+
+    for attempt in range(1, retries + 1):
+        try:
+            logger.debug("LLM call attempt %d/%d — model=%s", attempt, retries, model)
+            resp = requests.post(url, headers=headers, json=payload, timeout=120)
+            resp.raise_for_status()
+            data = resp.json()
+            content = data["choices"][0]["message"]["content"]
+            logger.debug("LLM response received (%d chars)", len(content))
+            return content
+        except requests.exceptions.HTTPError as exc:
+            logger.warning("HTTP error on attempt %d: %s", attempt, exc)
+            if attempt == retries:
+                raise
+            time.sleep(backoff * attempt)
+        except (KeyError, IndexError) as exc:
+            logger.error("Unexpected LLM response structure: %s", exc)
+            raise
+        except requests.exceptions.RequestException as exc:
+            logger.warning("Request error on attempt %d: %s", attempt, exc)
+            if attempt == retries:
+                raise
+            time.sleep(backoff * attempt)
+
+    raise RuntimeError("LLM call failed after all retries.")
+
+
+# ─────────────────────────────────────────────
+# PocketFlow — minimal Node / Flow primitives
+# ─────────────────────────────────────────────
+class Node:
+    """Base PocketFlow node with prep → exec → post lifecycle."""
+
+    def __init__(self, name: str = None):
+        self.name = name or self.__class__.__name__
+        self._next: Dict[str, "Node"] = {}
+
+    # Wiring helpers
+    def on(self, action: str, node: "Node") -> "Node":
+        self._next[action] = node
+        return node
+
+    def then(self, node: "Node") -> "Node":
+        return self.on("default", node)
+
+    # Lifecycle — override in subclasses
+    def prep(self, shared: Dict[str, Any]) -> Any:
+        return None
+
+    def exec(self, prep_result: Any) -> Any:
+        return None
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Any) -> str:
+        return "default"
+
+    # Runner
+    def run(self, shared: Dict[str, Any]) -> str:
+        logger.info("[%s] prep", self.name)
+        prep_result = self.prep(shared)
+        logger.info("[%s] exec", self.name)
+        exec_result = self.exec(prep_result)
+        logger.info("[%s] post", self.name)
+        action = self.post(shared, prep_result, exec_result)
+        logger.info("[%s] → action=%s", self.name, action)
+        return action
+
+
+class Flow:
+    """Runs a directed graph of Nodes starting from `start`."""
+
+    def __init__(self, start: Node):
+        self.start = start
+
+    def run(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        node: Optional[Node] = self.start
+        while node is not None:
+            action = node.run(shared)
+            node = node._next.get(action) or node._next.get("default")
+            if node is None and action not in ("end", "default"):
+                logger.warning("No next node for action '%s' — stopping flow.", action)
+        return shared
+
+
+# ─────────────────────────────────────────────
+# Prompt Templates
+# ─────────────────────────────────────────────
+JUDGE_SYSTEM_PROMPT = """You are an expert AI judge evaluating the quality of an AI assistant's response.
+
+Your task is to assess the response on the following criteria:
+1. **Accuracy** — Is the information factually correct and relevant to the question?
+2. **Completeness** — Does the response fully address all aspects of the question?
+3. **Clarity** — Is the response well-structured, clear, and easy to understand?
+4. **Helpfulness** — Does the response genuinely help the user accomplish their goal?
+5. **Safety** — Does the response avoid harmful, misleading, or inappropriate content?
+
+For each criterion, assign a score from 1 (very poor) to 5 (excellent).
+Then provide an overall score (1–10) and a brief justification.
+
+Respond ONLY with valid JSON in this exact schema:
+{
+  "scores": {
+    "accuracy": <int 1-5>,
+    "completeness": <int 1-5>,
+    "clarity": <int 1-5>,
+    "helpfulness": <int 1-5>,
+    "safety": <int 1-5>
+  },
+  "overall_score": <int 1-10>,
+  "strengths": ["<strength 1>", "<strength 2>"],
+  "weaknesses": ["<weakness 1>", "<weakness 2>"],
+  "justification": "<2-4 sentence overall assessment>",
+  "verdict": "<PASS|FAIL>"
+}
+
+verdict is PASS if overall_score >= 7, otherwise FAIL.
+"""
+
+def build_judge_prompt(question: str, response: str, reference_answer: str = None) -> str:
+    parts = [
+        JUDGE_SYSTEM_PROMPT,
+        "\n\n---\n",
+        f"**Question / Prompt:**\n{question}\n",
+        f"\n**AI Response to Evaluate:**\n{response}\n",
+    ]
+    if reference_answer:
+        parts.append(f"\n**Reference / Gold Answer:**\n{reference_answer}\n")
+    parts.append("\nProvide your evaluation as JSON:")
+    return "".join(parts)
+
+
+RESPONSE_GENERATION_PROMPT = """You are a helpful AI assistant. Answer the following question thoroughly and accurately.
+
+Question: {question}
+
+Provide a clear, well-structured answer:"""
+
+
+# ─────────────────────────────────────────────
+# Nodes
+# ─────────────────────────────────────────────
+
+class InputValidationNode(Node):
+    """Validates and normalises the input shared state."""
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "question": shared.get("question", ""),
+            "candidate_response": shared.get("candidate_response"),
+            "reference_answer": shared.get("reference_answer"),
+            "generate_response": shared.get("generate_response", False),
+        }
+
+    def exec(self, prep_result: Dict[str, Any]) -> Dict[str, Any]:
+        errors = []
+        question = prep_result["question"].strip()
+        if not question:
+            errors.append("'question' field is required and must not be empty.")
+        if not prep_result["generate_response"] and not prep_result["candidate_response"]:
+            errors.append(
+                "Either 'candidate_response' must be provided or 'generate_response' must be True."
+            )
+        return {"valid": len(errors) == 0, "errors": errors, "question": question}
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Dict[str, Any]) -> str:
+        if not exec_result["valid"]:
+            shared["error"] = "; ".join(exec_result["errors"])
+            logger.error("Validation failed: %s", shared["error"])
+            return "invalid"
+        shared["question"] = exec_result["question"]
+        shared["generate_response"] = prep_result["generate_response"]
+        shared["candidate_response"] = prep_result["candidate_response"]
+        shared["reference_answer"] = prep_result["reference_answer"]
+        return "valid"
+
+
+class GenerateResponseNode(Node):
+    """Optionally generates a candidate response using the LLM."""
+
+    def prep(self, shared: Dict[str, Any]) -> str:
+        return shared["question"]
+
+    def exec(self, question: str) -> str:
+        prompt = RESPONSE_GENERATION_PROMPT.format(question=question)
+        logger.info("Generating candidate response for question: %s...", question[:80])
+        return call_llm(prompt, temperature=0.7)
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: str) -> str:
+        shared["candidate_response"] = exec_result
+        logger.info("Candidate response generated (%d chars).", len(exec_result))
+        return "default"
+
+
+class JudgeNode(Node):
+    """Core judge node — calls Claude to evaluate the candidate response."""
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, str]:
+        return {
+            "question": shared["question"],
+            "candidate_response": shared["candidate_response"],
+            "reference_answer": shared.get("reference_answer"),
+        }
+
+    def exec(self, prep_result: Dict[str, str]) -> str:
+        prompt = build_judge_prompt(
+            question=prep_result["question"],
+            response=prep_result["candidate_response"],
+            reference_answer=prep_result["reference_answer"],
+        )
+        logger.info("Calling judge LLM…")
+        return call_llm(prompt, temperature=0.0)
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: str) -> str:
+        shared["raw_judge_output"] = exec_result
+        return "default"
+
+
+class ParseJudgementNode(Node):
+    """Parses the JSON judgement returned by the judge LLM."""
+
+    def prep(self, shared: Dict[str, Any]) -> str:
+        return shared.get("raw_judge_output", "")
+
+    def exec(self, raw: str) -> Dict[str, Any]:
+        # Strip markdown code fences if present
+        cleaned = raw.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.split("\n")
+            # Remove first and last fence lines
+            lines = [l for l in lines if not l.startswith("```")]
+            cleaned = "\n".join(lines).strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError as exc:
+            logger.error("JSON parse error: %s\nRaw output:\n%s", exc, raw[:500])
+            raise ValueError(f"Judge returned non-JSON output: {exc}") from exc
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: Dict[str, Any]) -> str:
+        shared["judgement"] = exec_result
+        verdict = exec_result.get("verdict", "UNKNOWN")
+        overall = exec_result.get("overall_score", "N/A")
+        logger.info("Judgement parsed — overall_score=%s, verdict=%s", overall, verdict)
+        if verdict == "PASS":
+            return "pass"
+        return "fail"
+
+
+class PassNode(Node):
+    """Records a PASS result."""
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return shared.get("judgement", {})
+
+    def exec(self, judgement: Dict[str, Any]) -> str:
+        return f"✅ PASS — overall score: {judgement.get('overall_score', 'N/A')}/10"
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: str) -> str:
+        shared["result_summary"] = exec_result
+        logger.info(exec_result)
+        return "end"
+
+
+class FailNode(Node):
+    """Records a FAIL result."""
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return shared.get("judgement", {})
+
+    def exec(self, judgement: Dict[str, Any]) -> str:
+        weaknesses = judgement.get("weaknesses", [])
+        return (
+            f"❌ FAIL — overall score: {judgement.get('overall_score', 'N/A')}/10 | "
+            f"weaknesses: {'; '.join(weaknesses)}"
+        )
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: str) -> str:
+        shared["result_summary"] = exec_result
+        logger.warning(exec_result)
+        return "end"
+
+
+class ErrorNode(Node):
+    """Handles invalid-input terminal state."""
+
+    def prep(self, shared: Dict[str, Any]) -> str:
+        return shared.get("error", "Unknown error")
+
+    def exec(self, error: str) -> str:
+        return f"⛔ Workflow aborted: {error}"
+
+    def post(self, shared: Dict[str, Any], prep_result: Any, exec_result: str) -> str:
+        shared["result_summary"] = exec_result
+        logger.error(exec_result)
+        return "end"
+
+
+class ReportNode(Node):
+    """Formats and prints the final evaluation report."""
+
+    def prep(self, shared: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "question": shared.get("question", ""),
+            "candidate_response": shared.get("candidate_response", ""),
+            "judgement": shared.get("judgement", {}),
+            "result_summary": shared.get("result_summary", ""),
+        }
+
+    def exec(self, data: Dict[str, Any]) -> str:
+        j = data["judgement"]
+        if not j:
+            return data["result_summary"]
+
+        scores = j.get("scores", {})
+        lines = [
+            "\n" + "═" * 60,
+            "  JUDGE EVALUATION REPORT",
+            "═" * 60,
+            f"  Question : {data['question'][:100]}{'…' if len(data['question']) > 100 else ''}",
+            "─" * 60,
+            "  CRITERION SCORES (1–5):",
+            f"    Accuracy      : {scores.get('accuracy', 'N/A')}",
+            f"    Completeness  : {scores.

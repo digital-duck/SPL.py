@@ -714,3 +714,66 @@ The LLM filling in these gaps produces the *most plausible* implementation given
 3. `spl3 splc compile` should be treated as generating a *review-ready scaffold*, not a *production-ready artifact* — consistent with the Bicephalous Compiler model (human validates states, LLM handles mechanical translation)
 
 **Status:** structural limitation — expected behavior; human review of S4 output is a mandatory step in the NDD pipeline
+
+---
+
+## [2026-05-06] S7 — Vibe coding results across 20 experiments (5 recipes × 4 model combos)
+
+**Overview:** S7 (`spl3 vibe`) was run for all 20 experiments. Results fall into three tiers based on code quality and the fixes required.
+
+### Tier 1 — Clean (no fixes required): 2/20
+
+| Experiment | Notes |
+|------------|-------|
+| R1-agent / claude_cli / claude | Uses real `pocketflow` import; correct `DecideAction -"search">> SearchWeb -"decide">> DecideAction` + `DecideAction -"answer">> AnswerQuestion` topology; max-iteration cap; YAML block-scalar fallback |
+| R5-research / openrouter / qwen | Uses real `pocketflow` import + `BatchNode`; Wikipedia API for search; correct `PlanResearch → SearchAndGather → EvaluateCoverage → SynthesizeReport` flow with `need_more` back-edge to Planner |
+
+### Tier 2 — Preamble-only fixes (LLM output framing stripped, code intact): 7/20
+
+Preamble = non-Python text (prose description, markdown fence, XML tool-call blocks) prepended by the adapter before the actual code. The code after stripping is the model's true vibe coding output — quality issues within the code are preserved as ablation signal.
+
+| Experiment | Fix applied | Notes after strip |
+|------------|-------------|-------------------|
+| R2-rag / claude_cli / claude | Stripped 3 lines (prose + blank + ` ```python `) | Real pocketflow; sklearn TF-IDF (not FAISS); Anthropic SDK; single unified flow |
+| R3-judge / claude_cli / claude | Stripped 3 lines | Custom Node try/except with pocketflow import; LLM-as-judge evaluator (different interpretation vs reference Generator→Judge loop) |
+| R4-thinking / claude_cli / claude | Stripped 3 lines | Custom try/except pocketflow; multi-node pipeline (ProblemAnalysis→Thinking→Reflection→QualityGate→FinalAnswer) |
+| R5-research / claude_cli / claude | Extracted from line 226 (LLM emitted `<function_calls>` XML tool-call blocks; actual code duplicated inside XML and below it) | Uses real pocketflow + BatchNode + Wikipedia API; functionally identical to R5-openrouter/qwen (Tier 1) — missed Tier 1 only due to adapter framing |
+| R3-judge / openrouter / claude | Stripped 5 lines (prose + blank + ` ```python ` + blank + shebang comment block) | Custom Node with `on()/then()` wiring; **TRUNCATED** — `ReportNode.exec` cut off mid-method |
+| R4-thinking / openrouter / claude | Stripped 5 lines | Custom Node/Flow with `add_edge()`; **TRUNCATED** — `OutputNode.post` print block cut off |
+| R5-research / openrouter / claude | Stripped 3 lines (corrected from initial wrong offset of 5) | Custom Node/Flow with retry; **SEVERELY TRUNCATED** — `SynthesisNode.exec` prompt string cut off mid-sentence |
+
+**Observation:** The `claude_cli` adapter adds a 3-line markdown fence preamble; the `openrouter/claude` adapter adds a 5-line preamble with additional boilerplate prose. The `claude_cli` preamble issue affects R2-R5 only (not R1), suggesting R2-R5 had missing S1 spec inputs which caused the model to produce descriptive preamble before code. The `openrouter/claude` truncations in R3-R5 suggest the model hit a token limit or context issue mid-generation.
+
+### Tier 3 — Quality issues preserved for ablation integrity: 11/20
+
+These files contain substantive architecture deviations or code bugs. They are **intentionally left as-is** — fixing them would artificially inflate S9 scores and undermine the ablation's measurement of vibe coding quality.
+
+| Experiment | Issue category | Key observations |
+|------------|----------------|------------------|
+| R1-agent / openrouter / claude | Custom Node/Flow | `add_successor()` API; monkey-patches `SearchWebNode.post` to inject iteration counter |
+| R1-agent / openrouter / qwen | Incompatible framework | Custom dict-based Flow with node name routing; attempts `from pocketflow import` but falls back to incompatible implementation |
+| R1-agent / openrouter / gemini | No framework | `ResearchAgentFlow` as a plain class with manual `while` loop; no PocketFlow at all |
+| R2-rag / openrouter / claude | Custom Node | `next()` wiring method; global `DOC_STORE` singleton; no real embeddings |
+| R2-rag / openrouter / qwen | Function-based Node | `Node(name, fn)` constructor pattern; no PocketFlow; uses FAISS |
+| R2-rag / openrouter / gemini | Wrong interface + fake embeddings | Custom Node with wrong interface; `np.random.seed(sum(ord(c) for c in text) % 1000)` deterministic fake embeddings |
+| R3-judge / openrouter / qwen | Custom orchestrator | `PocketFlow` class with `route()` method; uses `httpx` library |
+| R3-judge / openrouter / gemini | Custom Flow | `add_transition()` wiring; correct Generator→Judge loop logic despite custom framework |
+| R4-thinking / openrouter / qwen | Wrong lifecycle | Custom Node with 2-arg `post(shared, result)` instead of 3-arg `post(shared, prep_res, exec_res)` |
+| R4-thinking / openrouter / gemini | Python bug | `ConnectionBuilder.__gt__` implements `>` instead of `__rshift__` needed for `>>`; `cot_node - "continue" >> cot_node` would raise `TypeError` at runtime |
+| R5-research / openrouter / gemini | Mocked search + custom orchestrator | Custom dict-based orchestrator; `search_web()` returns hardcoded fake string; no real search |
+
+### Summary table
+
+| Model combo | Clean | Preamble-only fix | Quality issues |
+|-------------|-------|-------------------|----------------|
+| claude_cli / claude | 1 (R1) | 4 (R2-R5) | 0 |
+| openrouter / claude | 0 | 3 (R3-R5 truncated) | 2 (R1-R2) |
+| openrouter / qwen | 1 (R5) | 0 | 4 (R1-R4) |
+| openrouter / gemini | 0 | 0 | 5 (R1-R5) |
+| **Total** | **2** | **7** | **11** |
+
+### Ablation signal interpretation
+
+Only 2/20 vibe outputs are fully usable out of the box. The remaining 18 required either adapter-framing cleanup (7) or have substantive quality issues (11). This raw vibe coding result — before S8/S9 scoring — already suggests that direct NL→Code generation without the IR pipeline produces inconsistent and often non-functional PocketFlow implementations. The S9 semantic spec comparison will quantify exactly how much fidelity is lost vs the reference S1 spec.
+
+**Status:** S7 human checkpoint complete — preamble fixes applied, quality issues documented
