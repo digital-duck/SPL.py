@@ -1832,6 +1832,23 @@ def cmd_explain(spl_file):
         raise click.ClickException(str(exc)) from exc
 
 
+def _extract_spec_intro(text: str, max_fallback: int = 1000) -> str:
+    """Extract sections 0 and 1 from a splc-describe spec file.
+
+    Sections are headings like '## 0. Title' or '## 1. Title'.
+    Returns sections 0+1 when found; falls back to first max_fallback chars.
+    """
+    import re
+    # Locate section 0 heading (any # level, number 0 followed by . or space)
+    sec0 = re.search(r'^#{1,6}\s+0[.\s]', text, re.MULTILINE)
+    if not sec0:
+        return text[:max_fallback].strip()
+    # Locate section 2 heading — that marks the end of what we need
+    sec2 = re.search(r'^#{1,6}\s+2[.\s]', text, re.MULTILINE)
+    end = sec2.start() if sec2 else len(text)
+    return text[sec0.start():end].strip()
+
+
 @main.command("vibe")
 @click.argument("description", default=None, required=False, metavar="DESCRIPTION")
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
@@ -1917,10 +1934,12 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
             "Provide a description as a positional argument or via --description."
         )
 
-    # If it looks like a file path, read it
+    # If it looks like a file path, read it and extract the relevant intro
     candidate = Path(raw)
     if candidate.exists() and candidate.is_file():
-        raw_desc = candidate.read_text(encoding="utf-8")
+        raw_desc = _extract_spec_intro(candidate.read_text(encoding="utf-8"))
+        if verbose:
+            click.echo(f"  Spec extracted: {len(raw_desc)} chars (sections 0+1 or first 1000)")
     else:
         raw_desc = raw
 
@@ -1966,9 +1985,12 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
         return
 
     click.echo(f"Vibing {lang} code using {adapter}...")
-    impl_code, readme_text, test_data = compile_llm_code(full_prompt, adapter=adapter, model=model, verbose=verbose)
+    # vibe prompts are large — double the default timeout for claude_cli
+    impl_code, readme_text, test_data = compile_llm_code(
+        full_prompt, adapter=adapter, model=model, verbose=verbose, timeout=600
+    )
 
-    ext = lang_meta.get("ext", "py")
+    ext = lang_meta.get("ext", ".py").lstrip(".")  # strip leading dot: ".py" → "py"
 
     if out_dir:
         # ── Folder mode: write code + README.md + test_data.py to out_dir ──

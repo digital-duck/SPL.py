@@ -684,7 +684,7 @@ ALL THREE SECTIONS ARE REQUIRED. Do not omit any section even if the code is lon
 
 # ── LLM caller ───────────────────────────────────────────────────────────────
 
-def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: bool) -> tuple[str, str, str]:
+def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: bool, timeout: int | None = None) -> tuple[str, str, str]:
     """Call the specified adapter and return (implementation, readme, test_data)."""
     import asyncio
     try:
@@ -693,8 +693,14 @@ def compile_llm_code(prompt: str, *, adapter: str, model: str | None, verbose: b
         click.echo("ERROR: spl3.adapters not found. Ensure SPL.py is installed.", err=True)
         sys.exit(1)
 
+    adapter_kwargs: dict = {}
+    if model:
+        adapter_kwargs["model"] = model
+    if timeout is not None:
+        adapter_kwargs["timeout"] = timeout
+
     try:
-        llm = get_adapter(adapter, **({"model": model} if model else {}))
+        llm = get_adapter(adapter, **adapter_kwargs)
     except ValueError as exc:
         click.echo(f"ERROR: {exc}", err=True)
         sys.exit(1)
