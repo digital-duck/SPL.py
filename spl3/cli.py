@@ -1490,6 +1490,117 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
 
 
 # ------------------------------------------------------------------ #
+# spl3 img2mmd / img2text                                             #
+# ------------------------------------------------------------------ #
+
+@main.command("img2mmd")
+@click.argument("image_path")
+@click.option("--adapter", default="google", show_default=True,
+              help="Multi-modal adapter to use (e.g. google, anthropic, openai, ollama).")
+@click.option("--model", default=None, help="Model name override.")
+@click.option("--out", "-o", default=None, help="Output .mmd file path.")
+@click.option("--out-dir", default=None, metavar="DIR", help="Output directory for the generated .mmd file.")
+def cmd_img2mmd(image_path, adapter, model, out, out_dir):
+    """Extract Mermaid logic from an image (uses multimodal LLM).
+
+    Analyzes the provided image (file path or URL) and generates a Mermaid
+    flowchart representing the logic found in the image.
+    """
+    from spl3.image_ops import img2mmd
+    try:
+        mmd = asyncio.run(img2mmd(image_path, adapter_name=adapter, model=model))
+        
+        target_path = None
+        if out:
+            # If path ends in / or is an existing directory, treat as out-dir
+            if out.endswith(("/", "\\")) or Path(out).is_dir():
+                odir = Path(out)
+                if odir.exists() and not odir.is_dir():
+                    raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
+                odir.mkdir(parents=True, exist_ok=True)
+                stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
+                target_path = odir / f"{stem}.mmd"
+            else:
+                target_path = Path(out)
+                if target_path.exists() and target_path.is_dir():
+                    # If it's an existing dir but they didn't use a slash, still treat as dir
+                    stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
+                    target_path = target_path / f"{stem}.mmd"
+                else:
+                    if not target_path.suffix:
+                        target_path = target_path.with_suffix(".mmd")
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+        elif out_dir:
+            odir = Path(out_dir)
+            if odir.exists() and not odir.is_dir():
+                raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
+            odir.mkdir(parents=True, exist_ok=True)
+            stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
+            target_path = odir / f"{stem}.mmd"
+
+        if target_path and mmd != "(No workflow logic detected)":
+            target_path.write_text(mmd, encoding="utf-8")
+            click.echo(f"Saved to {target_path}")
+        else:
+            click.echo(mmd)
+    except Exception as e:
+        raise click.ClickException(str(e))
+
+
+@main.command("img2text")
+@click.argument("image_path")
+@click.option("--adapter", default="google", show_default=True,
+              help="Multi-modal adapter to use (e.g. google, anthropic, openai, ollama).")
+@click.option("--model", default=None, help="Model name override.")
+@click.option("--out", "-o", default=None, help="Output .txt file path.")
+@click.option("--out-dir", default=None, metavar="DIR", help="Output directory for the generated .txt file.")
+def cmd_img2text(image_path, adapter, model, out, out_dir):
+    """Extract text and pseudo-code from an image (uses multimodal LLM).
+
+    Performs OCR on the provided image (file path or URL) and extracts all
+    text, pseudo-code, and code fragments while preserving structure.
+    """
+    from spl3.image_ops import img2text
+    try:
+        text = asyncio.run(img2text(image_path, adapter_name=adapter, model=model))
+        
+        target_path = None
+        if out:
+            # If path ends in / or is an existing directory, treat as out-dir
+            if out.endswith(("/", "\\")) or Path(out).is_dir():
+                odir = Path(out)
+                if odir.exists() and not odir.is_dir():
+                    raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
+                odir.mkdir(parents=True, exist_ok=True)
+                stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
+                target_path = odir / f"{stem}.txt"
+            else:
+                target_path = Path(out)
+                if target_path.exists() and target_path.is_dir():
+                    stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
+                    target_path = target_path / f"{stem}.txt"
+                else:
+                    if not target_path.suffix:
+                        target_path = target_path.with_suffix(".txt")
+                    target_path.parent.mkdir(parents=True, exist_ok=True)
+        elif out_dir:
+            odir = Path(out_dir)
+            if odir.exists() and not odir.is_dir():
+                raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
+            odir.mkdir(parents=True, exist_ok=True)
+            stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
+            target_path = odir / f"{stem}.txt"
+
+        if target_path and text != "(No text detected)":
+            target_path.write_text(text, encoding="utf-8")
+            click.echo(f"Saved to {target_path}")
+        else:
+            click.echo(text)
+    except Exception as e:
+        raise click.ClickException(str(e))
+
+
+# ------------------------------------------------------------------ #
 # spl3 spl2mmd                                                        #
 # ------------------------------------------------------------------ #
 

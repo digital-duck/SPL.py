@@ -22,16 +22,18 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
-8. [spl3 spl2mmd](#8-spl3-spl2mmd)
-9. [spl3 mmd2spl](#9-spl3-mmd2spl)
-10. [spl3 compare](#10-spl3-compare)
-11. [spl3 splc compile](#11-spl3-splc-compile)
-12. [spl3 splc describe](#12-spl3-splc-describe)
-13. [spl3 vibe](#13-spl3-vibe)
-14. [spl3 code-rag](#14-spl3-code-rag)
-15. [Full Pipeline S1–S10: IR + Ablation](#15-full-pipeline-s1s10-ir--ablation)
-16. [Debugging LLM Prompts](#16-debugging-llm-prompts)
-17. [Command reference](#17-command-reference)
+8. [spl3 img2mmd](#8-spl3-img2mmd)
+9. [spl3 img2text](#9-spl3-img2text)
+10. [spl3 spl2mmd](#10-spl3-spl2mmd)
+11. [spl3 mmd2spl](#11-spl3-mmd2spl)
+12. [spl3 compare](#12-spl3-compare)
+13. [spl3 splc compile](#13-spl3-splc-compile)
+14. [spl3 splc describe](#14-spl3-splc-describe)
+15. [spl3 vibe](#15-spl3-vibe)
+16. [spl3 code-rag](#16-spl3-code-rag)
+17. [Full Pipeline S1–S10: IR + Ablation](#17-full-pipeline-s1s10-ir--ablation)
+18. [Debugging LLM Prompts](#18-debugging-llm-prompts)
+19. [Command reference](#19-command-reference)
 
 ---
 
@@ -46,6 +48,9 @@ spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
 
 # Visualise a .spl file as a Mermaid diagram (no LLM needed)
 spl3 spl2mmd cookbook/05_self_refine/self_refine.spl --out-dir diagrams/
+
+# Extract Mermaid logic from an image
+spl3 img2mmd diagram.png --adapter gemini_cli -o logic.mmd
 
 # Compare two Mermaid diagrams — auto-selects GED, emits DIVERGED/DEGRADED/etc.
 spl3 compare orig.mmd roundtrip.mmd --adapter claude_cli --format html -o report.html
@@ -128,7 +133,27 @@ spl3 text2mmd "user onboarding workflow with approval gates"
 
 ---
 
-## 8. spl3 spl2mmd
+## 8. spl3 img2mmd
+
+Extracts Mermaid flowchart logic from an image using a multimodal LLM (Gemini, Claude 3.5, GPT-4o).
+
+```bash
+spl3 img2mmd diagram.png --adapter openrouter --model google/gemini-2.0-flash-001 --out-dir diagrams/
+```
+
+---
+
+## 9. spl3 img2text
+
+Extracts text, pseudo-code, and code fragments from a screenshot or image using a multimodal LLM.
+
+```bash
+spl3 img2text screenshot.png --adapter openrouter --model google/gemini-2.0-flash-001 --out-dir extracted/
+```
+
+---
+
+## 10. spl3 spl2mmd
 
 Generates a Mermaid flowchart **directly from a `.spl` file's AST** — no LLM
 required. Every workflow, procedure, loop, branch, and exception handler is
@@ -229,7 +254,7 @@ spl3 spl2mmd *.spl --out-dir diagrams/ --save-pdf
 
 ---
 
-## 9. spl3 mmd2spl
+## 11. spl3 mmd2spl
 
 Converts a Mermaid flowchart diagram into executable SPL workflow code.
 
@@ -239,7 +264,7 @@ spl3 mmd2spl workflow.mmd --adapter claude_cli -o workflow.spl
 
 ---
 
-## 10. spl3 compare
+## 12. spl3 compare
 
 A **multi-tier diff tool** that automatically selects the most appropriate comparison
 algorithm for each file type, then synthesises all tier results into a single verdict:
@@ -398,7 +423,7 @@ direct visual comparison.
 
 ---
 
-## 11. spl3 splc compile
+## 13. spl3 splc compile
 
 Deterministic or LLM-assisted compilation of a `.spl` logical view to a physical target.
 
@@ -425,7 +450,7 @@ spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m q
 
 ---
 
-## 12. spl3 splc describe
+## 14. spl3 splc describe
 
 Reverse-engineers a specification from a **compiled target implementation**. Used in step S5 of the NDD round-trip pipeline.
 
@@ -441,7 +466,7 @@ splc describe → spec.md → text2spl → .spl → splc compile → new target
 
 ---
 
-## 13. spl3 vibe
+## 15. spl3 vibe
 
 One-shot prototype generator: **NL description → working code + README + test data**,
 in a single LLM call. No `.mmd` or `.spl` IR steps required.
@@ -521,7 +546,7 @@ spl3 vibe "judge agent" --adapter claude_cli --prompt
 
 ---
 
-## 14. spl3 code-rag
+## 16. spl3 code-rag
 
 Manages the Code-RAG vector store that powers `text2spl` and `vibe` few-shot retrieval.
 
@@ -532,7 +557,7 @@ spl3 code-rag stats
 
 ---
 
-## 15. Full Pipeline S1–S10: IR + Ablation
+## 17. Full Pipeline S1–S10: IR + Ablation
 
 The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
 (S7–S10) to measure whether the Mermaid + SPL intermediate representations add
@@ -684,7 +709,7 @@ spl3 compare $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
 
 ---
 
-## 16. Debugging LLM Prompts
+## 18. Debugging LLM Prompts
 
 All LLM-powered commands support the `--prompt` flag. It prints the full assembled
 prompt — including RAG hits and reference context — then exits without calling the API.
@@ -707,7 +732,7 @@ The output includes prompt length in characters and approximate token count.
 
 ---
 
-## 17. Command reference
+## 19. Command reference
 
 ```
 spl3 validate <file.spl> [file.spl ...]
@@ -715,6 +740,8 @@ spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
 spl3 text2mmd "<description>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
+spl3 img2mmd <image_path> [--adapter] [--model] [-o FILE] [--out-dir DIR]
+spl3 img2text <image_path> [--adapter] [--model] [-o FILE] [--out-dir DIR]
 spl3 spl2mmd <file.spl> [file.spl ...]
               [--out-dir DIR]
               [--preview/--no-preview]      # default: on
