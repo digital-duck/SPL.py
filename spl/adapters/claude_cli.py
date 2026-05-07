@@ -137,6 +137,87 @@ class ClaudeCLIAdapter(LLMAdapter):
             cost_usd=0.0,  # Subscription billing
         )
 
+    async def generate_multimodal(
+        self,
+        content: list[dict],
+        model: str = "",
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+        system: str | None = None,
+    ) -> GenerationResult:
+        """Generate from content including images using the Anthropic SDK directly.
+
+        The `claude` CLI accepts only text via stdin and has no flag for binary
+        image data.  For vision calls this method bypasses the CLI and calls the
+        Anthropic Messages API via the Python SDK, which requires ANTHROPIC_API_KEY.
+        """
+        try:
+            import anthropic as _anthropic
+        except ImportError:
+            raise ImportError(
+                "pip install anthropic  — required for multimodal calls via claude_cli adapter"
+            )
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY is required for multimodal (vision) calls.\n"
+                "ClaudeCLIAdapter uses the Anthropic SDK for image input because the\n"
+                "claude CLI has no binary image flag.  Set ANTHROPIC_API_KEY, or use\n"
+                "--adapter anthropic / --adapter google instead."
+            )
+
+        effective_model = model or self.default_model
+
+        api_content: list[dict] = []
+        for part in content:
+            ptype = part.get("type")
+            if ptype == "text":
+                api_content.append({"type": "text", "text": part.get("text", "")})
+            elif ptype == "image":
+                if part.get("source") == "base64":
+                    api_content.append({
+                        "type": "image",
+                        "source": {
+                            "type":       "base64",
+                            "media_type": part.get("media_type", "image/png"),
+                            "data":       part.get("data", ""),
+                        },
+                    })
+                elif part.get("source") == "url":
+                    api_content.append({
+                        "type": "image",
+                        "source": {"type": "url", "url": part.get("url", "")},
+                    })
+
+        kwargs: dict = {
+            "model":      effective_model,
+            "max_tokens": max_tokens,
+            "messages":   [{"role": "user", "content": api_content}],
+        }
+        if system:
+            kwargs["system"] = system
+
+        start  = self._measure_time()
+        client = _anthropic.AsyncAnthropic(api_key=api_key)
+        try:
+            response = await client.messages.create(**kwargs)
+        finally:
+            await client.close()
+
+        latency = self._elapsed_ms(start)
+        text    = "".join(b.text for b in response.content if b.type == "text")
+
+        return GenerationResult(
+            content=text,
+            model=effective_model,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            total_tokens=response.usage.input_tokens + response.usage.output_tokens,
+            latency_ms=latency,
+            cost_usd=0.0,
+        )
+
     def count_tokens(self, text: str, model: str = "") -> int:
         """Estimate tokens using character-based heuristic (~3.5 chars/token for Claude)."""
         if not text:

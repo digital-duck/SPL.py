@@ -1493,54 +1493,63 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
 # spl3 img2mmd / img2text                                             #
 # ------------------------------------------------------------------ #
 
+def _resolve_output_path(
+    image_path: str,
+    out: str | None,
+    out_dir: str | None,
+    suffix: str,
+    default_stem: str,
+) -> "Path | None":
+    """Resolve the output file path from --out / --out-dir options."""
+    stem = Path(image_path).stem if not image_path.startswith("http") else default_stem
+    if out:
+        p = Path(out)
+        if p.is_dir() or out.endswith(("/", "\\")):
+            p.mkdir(parents=True, exist_ok=True)
+            return p / f"{stem}{suffix}"
+        p = p.with_suffix(p.suffix or suffix)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        return p
+    if out_dir:
+        d = Path(out_dir)
+        d.mkdir(parents=True, exist_ok=True)
+        return d / f"{stem}{suffix}"
+    return None
+
+
 @main.command("img2mmd")
 @click.argument("image_path")
-@click.option("--adapter", default="google", show_default=True,
-              help="Multi-modal adapter to use (e.g. google, anthropic, openai, ollama).")
+@click.option("--adapter", default="openrouter", show_default=True,
+              help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
 @click.option("--model", default=None, help="Model name override.")
-@click.option("--out", "-o", default=None, help="Output .mmd file path.")
-@click.option("--out-dir", default=None, metavar="DIR", help="Output directory for the generated .mmd file.")
+@click.option("--out", "-o", default=None, metavar="FILE",
+              help="Output .mmd file path (or directory).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory; filename derived from image stem.")
 def cmd_img2mmd(image_path, adapter, model, out, out_dir):
-    """Extract Mermaid logic from an image (uses multimodal LLM).
+    """Extract Mermaid flowchart logic from an image (multimodal LLM).
 
-    Analyzes the provided image (file path or URL) and generates a Mermaid
-    flowchart representing the logic found in the image.
+    Analyzes the image and reconstructs the workflow/diagram as valid Mermaid
+    code.  Handles flowcharts, architecture diagrams, pseudo-code sketches, etc.
+
+    \b
+    Default adapter: openrouter (requires OPENROUTER_API_KEY).
+    Alternatives:    --adapter google  --adapter anthropic  --adapter claude_cli
+
+    \b
+    Examples:
+      spl3 img2mmd workflow.png
+      spl3 img2mmd screenshot.png -o output.mmd
+      spl3 img2mmd diagram.jpg --out-dir ./diagrams --adapter google
     """
     from spl3.image_ops import img2mmd
     try:
+        click.echo(f"Extracting Mermaid logic via {adapter}...", err=True)
         mmd = asyncio.run(img2mmd(image_path, adapter_name=adapter, model=model))
-        
-        target_path = None
-        if out:
-            # If path ends in / or is an existing directory, treat as out-dir
-            if out.endswith(("/", "\\")) or Path(out).is_dir():
-                odir = Path(out)
-                if odir.exists() and not odir.is_dir():
-                    raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
-                odir.mkdir(parents=True, exist_ok=True)
-                stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
-                target_path = odir / f"{stem}.mmd"
-            else:
-                target_path = Path(out)
-                if target_path.exists() and target_path.is_dir():
-                    # If it's an existing dir but they didn't use a slash, still treat as dir
-                    stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
-                    target_path = target_path / f"{stem}.mmd"
-                else:
-                    if not target_path.suffix:
-                        target_path = target_path.with_suffix(".mmd")
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-        elif out_dir:
-            odir = Path(out_dir)
-            if odir.exists() and not odir.is_dir():
-                raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
-            odir.mkdir(parents=True, exist_ok=True)
-            stem = Path(image_path).stem if not image_path.startswith("http") else "logic"
-            target_path = odir / f"{stem}.mmd"
-
-        if target_path and mmd != "(No workflow logic detected)":
-            target_path.write_text(mmd, encoding="utf-8")
-            click.echo(f"Saved to {target_path}")
+        target = _resolve_output_path(image_path, out, out_dir, ".mmd", "logic")
+        if target and mmd != "(No workflow logic detected)":
+            target.write_text(mmd, encoding="utf-8")
+            click.echo(f"Saved to {target}")
         else:
             click.echo(mmd)
     except Exception as e:
@@ -1549,51 +1558,37 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
 
 @main.command("img2text")
 @click.argument("image_path")
-@click.option("--adapter", default="google", show_default=True,
-              help="Multi-modal adapter to use (e.g. google, anthropic, openai, ollama).")
+@click.option("--adapter", default="openrouter", show_default=True,
+              help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
 @click.option("--model", default=None, help="Model name override.")
-@click.option("--out", "-o", default=None, help="Output .txt file path.")
-@click.option("--out-dir", default=None, metavar="DIR", help="Output directory for the generated .txt file.")
+@click.option("--out", "-o", default=None, metavar="FILE",
+              help="Output .txt file path (or directory).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory; filename derived from image stem.")
 def cmd_img2text(image_path, adapter, model, out, out_dir):
-    """Extract text and pseudo-code from an image (uses multimodal LLM).
+    """Extract text and pseudo-code from an image (OCR via multimodal LLM).
 
-    Performs OCR on the provided image (file path or URL) and extracts all
-    text, pseudo-code, and code fragments while preserving structure.
+    Preserves indentation, code structure, headings, and formatting.
+    Wraps detected code in fenced code blocks with inferred language tags.
+
+    \b
+    Default adapter: openrouter (requires OPENROUTER_API_KEY).
+    Alternatives:    --adapter google  --adapter anthropic  --adapter claude_cli
+
+    \b
+    Examples:
+      spl3 img2text screenshot.png
+      spl3 img2text pseudocode.jpg -o extracted.txt
+      spl3 img2text notes.png --out-dir ./extracted --adapter google
     """
     from spl3.image_ops import img2text
     try:
+        click.echo(f"Extracting text via {adapter}...", err=True)
         text = asyncio.run(img2text(image_path, adapter_name=adapter, model=model))
-        
-        target_path = None
-        if out:
-            # If path ends in / or is an existing directory, treat as out-dir
-            if out.endswith(("/", "\\")) or Path(out).is_dir():
-                odir = Path(out)
-                if odir.exists() and not odir.is_dir():
-                    raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
-                odir.mkdir(parents=True, exist_ok=True)
-                stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
-                target_path = odir / f"{stem}.txt"
-            else:
-                target_path = Path(out)
-                if target_path.exists() and target_path.is_dir():
-                    stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
-                    target_path = target_path / f"{stem}.txt"
-                else:
-                    if not target_path.suffix:
-                        target_path = target_path.with_suffix(".txt")
-                    target_path.parent.mkdir(parents=True, exist_ok=True)
-        elif out_dir:
-            odir = Path(out_dir)
-            if odir.exists() and not odir.is_dir():
-                raise click.ClickException(f"Path '{odir}' exists but is a file. Cannot use as directory.")
-            odir.mkdir(parents=True, exist_ok=True)
-            stem = Path(image_path).stem if not image_path.startswith("http") else "extracted"
-            target_path = odir / f"{stem}.txt"
-
-        if target_path and text != "(No text detected)":
-            target_path.write_text(text, encoding="utf-8")
-            click.echo(f"Saved to {target_path}")
+        target = _resolve_output_path(image_path, out, out_dir, ".txt", "extracted")
+        if target and text != "(No text detected)":
+            target.write_text(text, encoding="utf-8")
+            click.echo(f"Saved to {target}")
         else:
             click.echo(text)
     except Exception as e:
@@ -2706,31 +2701,16 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
       spl3 compare a.png b.png --mode vision
       spl3 compare f1.md f2.md --mode llm --mode vector --format json
     """
-    from pathlib import Path
-    import json as _json
-    import difflib
     import sys
-    from datetime import datetime
 
-    # Validate input files
     path1 = Path(file1)
     path2 = Path(file2)
-
     if not path1.exists():
         raise click.ClickException(f"File not found: {file1}")
     if not path2.exists():
         raise click.ClickException(f"File not found: {file2}")
 
-    # Read file contents
-    content1 = path1.read_text(encoding="utf-8")
-    content2 = path2.read_text(encoding="utf-8")
-
     ext1 = path1.suffix.lower()
-    ext2 = path2.suffix.lower()
-
-    # Unspecified sub-adapters fall back to the main adapter — one setting covers most users.
-    _adapter_embed     = adapter_embed     or adapter
-    _adapter_synthesis = adapter_synthesis or adapter
 
     # ── Auto-detect comparison tier(s) from file extension ──────────────────
     _EXT_DEFAULTS: dict[str, list[str]] = {
@@ -2751,1060 +2731,51 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
     }
     active_modes = list(modes)
     if not active_modes:
-        primary_ext = ext1 if ext1 == ext2 else ext1
-        active_modes = _EXT_DEFAULTS.get(primary_ext, ["llm", "git-diff"])
-        click.echo(f"Auto-selected tier(s) for {primary_ext or 'unknown'}: {', '.join(active_modes)}")
+        active_modes = _EXT_DEFAULTS.get(ext1, ["llm", "git-diff"])
+        click.echo(f"Auto-selected tier(s) for {ext1 or 'unknown'}: {', '.join(active_modes)}", err=True)
+
+    # ── --prompt debug: show LLM prompt and exit ─────────────────────────────
+    if prompt_debug:
+        if "llm" not in active_modes:
+            raise click.UsageError("--prompt requires --mode llm (or a file type that auto-selects llm).")
+        from spl3.compare.tiers.semantic import build_semantic_prompt
+        content1 = path1.read_text(encoding="utf-8")
+        content2 = path2.read_text(encoding="utf-8")
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(build_semantic_prompt(content1, content2, path1, path2, focus))
+        return
+
+    from spl3.compare.engine import run_comparison
+    from spl3.compare.report import render_report
+
+    result_obj = asyncio.run(run_comparison(
+        path1=path1,
+        path2=path2,
+        active_modes=active_modes,
+        adapter_name=adapter,
+        model=model,
+        adapter_embed=adapter_embed,
+        model_embed=model_embed,
+        adapter_synthesis=adapter_synthesis,
+        focus=focus,
+        diff_style=diff_style,
+        no_color=no_color,
+        output_format=output_format,
+        is_terminal=sys.stdout.isatty() and not output,
+        synthesize=synthesize,
+    ))
+
+    output_content = render_report(result_obj, output_format)
 
-    results = {}
-    # ── Git Diff Mode ────────────────────────────────────────────────────────
-    if "git-diff" in active_modes:
-        lines1 = content1.splitlines(keepends=True)
-        lines2 = content2.splitlines(keepends=True)
-        mechanical_diff = ""
-
-        if diff_style == "unified":
-            diff_lines = list(difflib.unified_diff(
-                lines1, lines2,
-                fromfile=f"a/{path1.name}",
-                tofile=f"b/{path2.name}",
-                lineterm=""
-            ))
-
-            if not no_color and sys.stdout.isatty() and not output:
-                # Add ANSI color codes for terminal output
-                colored_diff = []
-                for line in diff_lines:
-                    if line.startswith('+++') or line.startswith('---'):
-                        colored_diff.append(f"\033[1m{line}\033[0m")  # Bold
-                    elif line.startswith('@@'):
-                        colored_diff.append(f"\033[36m{line}\033[0m")  # Cyan
-                    elif line.startswith('+'):
-                        colored_diff.append(f"\033[32m{line}\033[0m")  # Green
-                    elif line.startswith('-'):
-                        colored_diff.append(f"\033[31m{line}\033[0m")  # Red
-                    else:
-                        colored_diff.append(line)
-                mechanical_diff = "\n".join(colored_diff)
-            else:
-                mechanical_diff = "\n".join(diff_lines)
-
-        elif diff_style == "context":
-            diff_lines = list(difflib.context_diff(
-                lines1, lines2,
-                fromfile=f"a/{path1.name}",
-                tofile=f"b/{path2.name}",
-                lineterm=""
-            ))
-            mechanical_diff = "\n".join(diff_lines)
-
-        elif diff_style == "side-by-side":
-            # Create side-by-side diff
-            if output_format == "markdown":
-                # For markdown, create a simple side-by-side table
-                side_by_side_lines = []
-                side_by_side_lines.append(f"| {path1.name} | {path2.name} |")
-                side_by_side_lines.append("|---|---|")
-
-                # Get line-by-line differences
-                for i, (l1, l2) in enumerate(zip(lines1, lines2)):
-                    l1_clean = l1.rstrip('\n\r').replace('|', '\\|')
-                    l2_clean = l2.rstrip('\n\r').replace('|', '\\|')
-                    if l1 != l2:
-                        side_by_side_lines.append(f"| **{l1_clean}** | **{l2_clean}** |")
-                    else:
-                        side_by_side_lines.append(f"| {l1_clean} | {l2_clean} |")
-
-                # Handle different file lengths
-                max_len = max(len(lines1), len(lines2))
-                for i in range(min(len(lines1), len(lines2)), max_len):
-                    if i < len(lines1):
-                        l1_clean = lines1[i].rstrip('\n\r').replace('|', '\\|')
-                        side_by_side_lines.append(f"| **{l1_clean}** | *[missing]* |")
-                    else:
-                        l2_clean = lines2[i].rstrip('\n\r').replace('|', '\\|')
-                        side_by_side_lines.append(f"| *[missing]* | **{l2_clean}** |")
-
-                mechanical_diff = "\n".join(side_by_side_lines)
-            else:
-                # side-by-side is only supported for markdown; fall back to unified diff
-                click.echo("Warning: side-by-side diff is only supported with --format markdown. Falling back to unified.", err=True)
-                diff_lines = list(difflib.unified_diff(
-                    lines1, lines2,
-                    fromfile=f"a/{path1.name}",
-                    tofile=f"b/{path2.name}",
-                    lineterm=""
-                ))
-                mechanical_diff = "\n".join(diff_lines)
-
-        # If no differences found
-        if not mechanical_diff.strip():
-            mechanical_diff = "No mechanical differences found - files are identical."
-        
-        results["git-diff"] = mechanical_diff
-
-    # ── LLM Semantic Mode ────────────────────────────────────────────────────
-    if "llm" in active_modes:
-        # Build comparison prompt based on focus
-        focus_prompts = {
-            "all":      "Provide a comprehensive comparison covering structure, logic, quality, and syntax.",
-            "structure":"Focus on architectural and organizational differences.",
-            "logic":    "Focus on logical flow, decision points, and process sequences.",
-            "quality":  "Focus on completeness, sophistication, and best practices.",
-            "syntax":   "Focus on syntax correctness, formatting, and technical accuracy.",
-            "spl":      (
-                "Focus on SPL-specific semantics: "
-                "WORKFLOW/PROCEDURE identity (are the same workflows present?); "
-                "GENERATE function signatures — these are the semantic heart (what the LLM is asked to do); "
-                "CALL dependencies (which sub-workflows are invoked); "
-                "WHILE/EVALUATE conditions (control-flow logic); "
-                "EXCEPTION handlers (safety contracts — their presence or absence matters); "
-                "@variable names (consistency of data flow). "
-                "Treat operation signatures as primary evidence; syntax details as secondary."
-            ),
-        }
-
-        prompt = f"""Compare these two files semantically and provide a detailed analysis.
-
-**File 1**: {path1.name} ({ext1})
-**File 2**: {path2.name} ({ext2})
-**Focus**: {focus_prompts[focus]}
-
-**File 1 Content:**
-```
-{content1}
-```
-
-**File 2 Content:**
-```
-{content2}
-```
-
-Please provide a structured comparison analysis with the following sections:
-
-## Summary
-Brief overview of the main differences and which file is stronger overall.
-
-## Content Analysis
-### File 1 Strengths
-- Key advantages and well-implemented aspects
-
-### File 2 Strengths
-- Key advantages and well-implemented aspects
-
-### Common Elements
-- Shared concepts, structures, or approaches
-
-## Detailed Comparison
-### Structure & Organization
-Compare the overall structure, flow, and organization.
-
-### Logic & Completeness
-Analyze logical flow, decision points, error handling, and completeness.
-
-### Quality & Sophistication
-Evaluate complexity, depth, best practices, and professional quality.
-
-### Syntax & Technical Accuracy
-Review syntax correctness, formatting, and technical implementation.
-
-## Recommendations
-1. **Best Choice**: Which file is better and why
-2. **Improvements**: Specific suggestions to enhance the weaker file
-3. **Hybrid Approach**: How to combine strengths from both files
-
-## Scoring
-Rate each file (1-10) on:
-- Structure: [File1]/10, [File2]/10
-- Logic: [File1]/10, [File2]/10
-- Quality: [File1]/10, [File2]/10
-- Overall: [File1]/10, [File2]/10
-
-Provide actionable insights for choosing between or improving these files."""
-
-        if prompt_debug:
-            click.echo("=" * 70)
-            click.echo("LLM PROMPT:")
-            click.echo("=" * 70)
-            click.echo(prompt)
-            return
-
-        try:
-            from spl3.adapters import get_adapter
-        except ImportError:
-            raise click.ClickException("spl-llm 2.0 not installed: pip install spl-llm>=2.0.0")
-
-        llm = get_adapter(adapter, **({"model": model} if model else {}))
-        
-        click.echo(f"Performing semantic comparison using {adapter}...")
-        result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
-        comparison_text = result if isinstance(result, str) else getattr(result, "content", str(result))
-        results["llm"] = comparison_text
-
-    # ── Vector Similarity Mode ───────────────────────────────────────────────
-    if "vector" in active_modes:
-        click.echo(f"Calculating vector similarity using {adapter_embed}...")
-        try:
-            try:
-                from dd_embed import get_adapter as get_embed_adapter
-            except ImportError:
-                raise ImportError("dd-embed not installed: pip install dd-embed")
-            embed_llm = get_embed_adapter(_adapter_embed, model_name=model_embed)
-            
-            # Simple average embedding for files (might need chunking for large files)
-            emb1 = embed_llm.embed([content1]).embeddings[0]
-            emb2 = embed_llm.embed([content2]).embeddings[0]
-            
-            # Cosine similarity
-            import numpy as np
-            norm1 = np.linalg.norm(emb1)
-            norm2 = np.linalg.norm(emb2)
-            similarity = np.dot(emb1, emb2) / (norm1 * norm2) if norm1 > 0 and norm2 > 0 else 0.0
-            results["vector"] = similarity
-        except Exception as e:
-            click.echo(f"Warning: Vector similarity failed: {e}", err=True)
-            results["vector"] = f"Error: {e}"
-
-    # ── BERTScore Mode ───────────────────────────────────────────────────────
-    if "bert-score" in active_modes:
-        click.echo("Calculating BERTScore...")
-        try:
-            try:
-                import bert_score
-                import torch
-            except ImportError:
-                raise ImportError("bert-score not installed: pip install bert-score torch")
-            # Force CPU usage
-            device = "cpu"
-            # bert_score.score returns (P, R, F1) tensors
-            P, R, F1 = bert_score.score([content2], [content1], lang="en", verbose=False, device=device)
-            results["bert-score"] = {
-                "precision": float(P[0]),
-                "recall": float(R[0]),
-                "f1": float(F1[0])
-            }
-        except Exception as e:
-            click.echo(f"Warning: BERTScore failed: {e}", err=True)
-            results["bert-score"] = f"Error: {e}"
-
-    # ── GED Mode ─────────────────────────────────────────────────────────────
-    if "ged" in active_modes:
-        if ext1 != ".mmd" or ext2 != ".mmd":
-            click.echo("Warning: GED mode is only meaningful for .mmd files. Skipping.", err=True)
-            results["ged"] = "Skipped: GED requires .mmd input files."
-        else:
-            click.echo("Calculating Graph Edit Distance (GED)...")
-            try:
-                try:
-                    import networkx as nx
-                except ImportError:
-                    raise ImportError("networkx not installed: pip install networkx")
-                g1 = _parse_mermaid_to_nx(content1)
-                g2 = _parse_mermaid_to_nx(content2)
-
-                import difflib as _dl
-
-                def _node_subst_cost(a1: dict, a2: dict) -> float:
-                    """SPL-aware cost: type mismatch + label edit distance."""
-                    t1, t2 = a1.get("node_type", ""), a2.get("node_type", "")
-                    type_cost = (
-                        0.0 if t1 == t2 else
-                        0.5 if any(t1 in g and t2 in g
-                                   for g in ({"llm","proc"}, {"ctrl"}, {"term"}, {"assign","log"}))
-                        else 1.5
-                    )
-                    l1, l2 = a1.get("label", ""), a2.get("label", "")
-                    if l1 and l2:
-                        sim = _dl.SequenceMatcher(None, l1, l2).ratio()
-                        label_cost = (1.0 - sim) * 0.5
-                    else:
-                        label_cost = 0.0
-                    return type_cost + label_cost
-
-                def _edge_subst_cost(e1: dict, e2: dict) -> float:
-                    """Edge labels carry control-flow semantics (WHEN x, ELSE, True)."""
-                    l1 = (e1.get("label") or "").strip()
-                    l2 = (e2.get("label") or "").strip()
-                    if l1 == l2:
-                        return 0.0
-                    if bool(l1) != bool(l2):
-                        return 1.0
-                    return (1.0 - _dl.SequenceMatcher(None, l1, l2).ratio()) * 0.5
-
-                distance = nx.graph_edit_distance(
-                    g1, g2,
-                    node_subst_cost=_node_subst_cost,
-                    edge_subst_cost=_edge_subst_cost,
-                    timeout=15,
-                )
-                if distance is None:
-                    results["ged"] = "GED: Timeout (graph too complex)"
-                else:
-                    def _type_counts(g):
-                        counts: dict[str, int] = {}
-                        for _, attrs in g.nodes(data=True):
-                            t = attrs.get("node_type", "unknown")
-                            counts[t] = counts.get(t, 0) + 1
-                        return counts
-                    n1, n2 = len(g1.nodes), len(g2.nodes)
-                    results["ged"] = {
-                        "distance":            float(distance),
-                        "normalized_distance": round(float(distance) / (n1 + n2), 3) if (n1 + n2) > 0 else 0.0,
-                        "node_count":          [n1, n2],
-                        "edge_count":          [len(g1.edges), len(g2.edges)],
-                        "node_types":          [_type_counts(g1), _type_counts(g2)],
-                    }
-            except Exception as e:
-                click.echo(f"Warning: GED failed: {e}", err=True)
-                results["ged"] = f"Error: {e}"
-
-    # ── Structural Mode ──────────────────────────────────────────────────────
-    if "structural" in active_modes:
-        import re as _re_s
-
-        def _extract_structure(text: str, ext: str) -> dict:
-            if ext == ".md":
-                headings = _re_s.findall(r'^(#{1,6})\s+(.+)$', text, _re_s.MULTILINE)
-                return {"type": "markdown", "headings": [(len(h), t.strip()) for h, t in headings]}
-            elif ext == ".py":
-                import ast as _ast
-                try:
-                    tree = _ast.parse(text)
-                    return {
-                        "type":      "python",
-                        "classes":   [n.name for n in _ast.walk(tree) if isinstance(n, _ast.ClassDef)],
-                        "functions": [n.name for n in _ast.walk(tree) if isinstance(n, _ast.FunctionDef)],
-                    }
-                except SyntaxError as exc:
-                    return {"type": "python", "error": str(exc)}
-            elif ext in (".js", ".ts"):
-                fns = _re_s.findall(
-                    r'(?:function\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?\()', text
-                )
-                return {
-                    "type":      ext[1:],
-                    "classes":   _re_s.findall(r'class\s+(\w+)', text),
-                    "functions": [f[0] or f[1] for f in fns],
-                }
-            elif ext == ".spl":
-                return {
-                    "type":       "spl",
-                    "workflows":  _re_s.findall(r'^\s*WORKFLOW\s+(\w+)',  text, _re_s.MULTILINE | _re_s.IGNORECASE),
-                    "procedures": _re_s.findall(r'^\s*PROCEDURE\s+(\w+)', text, _re_s.MULTILINE | _re_s.IGNORECASE),
-                }
-            elif ext == ".mmd":
-                node_classes = _re_s.findall(r'^\s+class\s+\w+\s+(\w+)\s*$', text, _re_s.MULTILINE)
-                type_counts: dict[str, int] = {}
-                for t in node_classes:
-                    if t in ("llm", "ctrl", "term", "assign", "proc", "log"):
-                        type_counts[t] = type_counts.get(t, 0) + 1
-                return {
-                    "type":       "mermaid",
-                    "workflows":  _re_s.findall(r'subgraph\s+SG_\w+\["(?:WORKFLOW|PROCEDURE):\s+(\w+)"\]', text),
-                    "node_types": type_counts,
-                }
-            else:
-                lines = text.splitlines()
-                return {"type": "text", "lines": len(lines), "chars": len(text)}
-
-        s1 = _extract_structure(content1, ext1)
-        s2 = _extract_structure(content2, ext2)
-        results["structural"] = {"file1": s1, "file2": s2}
-
-    # ── AST-Diff Mode ────────────────────────────────────────────────────────
-    if "ast-diff" in active_modes:
-        import re as _re_a
-
-        def _ast_inventory(text: str, ext: str) -> dict:
-            if ext == ".py":
-                import ast as _ast
-                try:
-                    tree = _ast.parse(text)
-                    return {
-                        "classes":    [n.name for n in _ast.walk(tree) if isinstance(n, _ast.ClassDef)],
-                        "functions":  [n.name for n in _ast.walk(tree) if isinstance(n, _ast.FunctionDef)],
-                        "async_fns":  [n.name for n in _ast.walk(tree) if isinstance(n, _ast.AsyncFunctionDef)],
-                    }
-                except SyntaxError as exc:
-                    return {"error": str(exc)}
-            elif ext == ".spl":
-                try:
-                    from spl.lexer import Lexer as _Lex
-                    from spl3.parser import SPL3Parser as _P3
-                    from spl.ast_nodes import WorkflowStatement as _WS, ProcedureStatement as _PS
-                    _tokens = _Lex(text).tokenize()
-                    _tree   = _P3(_tokens).parse()
-                    return {
-                        "workflows":  [s.name for s in _tree.statements if isinstance(s, _WS)],
-                        "procedures": [s.name for s in _tree.statements if isinstance(s, _PS)],
-                        "generates":  _re_a.findall(r'\bGENERATE\s+(\w+)\s*\(', text, _re_a.IGNORECASE),
-                        "calls":      _re_a.findall(r'\bCALL\s+(\w+)\s*\(',      text, _re_a.IGNORECASE),
-                    }
-                except Exception as exc:
-                    return {"error": str(exc)}
-            else:
-                return {"note": f"ast-diff not supported for {ext}"}
-
-        inv1 = _ast_inventory(content1, ext1)
-        inv2 = _ast_inventory(content2, ext2)
-
-        ast_diff_result: dict[str, dict] = {}
-        for key in sorted((set(inv1) | set(inv2)) - {"error", "note"}):
-            v1 = sorted(set(inv1.get(key, [])))
-            v2 = sorted(set(inv2.get(key, [])))
-            ast_diff_result[key] = {
-                "common":  sorted(set(v1) & set(v2)),
-                "removed": sorted(set(v1) - set(v2)),
-                "added":   sorted(set(v2) - set(v1)),
-            }
-        results["ast-diff"] = ast_diff_result
-
-    # ── Vision Mode ──────────────────────────────────────────────────────────
-    if "vision" in active_modes:
-        _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
-        if ext1 not in _IMG_EXTS or ext2 not in _IMG_EXTS:
-            click.echo("Warning: vision mode expects image files. Skipping.", err=True)
-            results["vision"] = "Skipped: non-image files."
-        else:
-            click.echo("Performing vision comparison...")
-            vision_result: dict = {}
-            try:
-                from PIL import Image as _PIL_Image
-                import numpy as _np
-                im1 = _PIL_Image.open(path1)
-                im2 = _PIL_Image.open(path2)
-                vision_result["metadata"] = {
-                    "file1": {"size": list(im1.size), "mode": im1.mode},
-                    "file2": {"size": list(im2.size), "mode": im2.mode},
-                }
-                if im1.size == im2.size:
-                    arr1 = _np.array(im1.convert("RGB")).astype(float)
-                    arr2 = _np.array(im2.convert("RGB")).astype(float)
-                    diff = _np.abs(arr1 - arr2)
-                    vision_result["pixel_diff"] = {
-                        "mean_delta":          round(float(diff.mean()), 3),
-                        "max_delta":           round(float(diff.max()), 1),
-                        "changed_pixels_pct":  round(float((diff.sum(axis=2) > 10).mean() * 100), 2),
-                    }
-                    # Histogram cosine similarity (cheap semantic proxy)
-                    def _hist(arr):
-                        import numpy as _np2
-                        h = _np2.histogram(arr.ravel(), bins=64, range=(0, 256))[0].astype(float)
-                        n = _np2.linalg.norm(h)
-                        return h / n if n > 0 else h
-                    import numpy as _np2
-                    sim = float(_np2.dot(_hist(arr1), _hist(arr2)))
-                    vision_result["histogram_similarity"] = round(sim, 4)
-            except ImportError:
-                vision_result["note"] = "Install Pillow for pixel-level comparison: pip install Pillow"
-            except Exception as exc:
-                vision_result["error"] = str(exc)
-
-            # Try LLM vision if adapter available
-            if adapter:
-                try:
-                    import base64 as _b64
-                    _MIME = {".png": "image/png", ".jpg": "image/jpeg",
-                             ".jpeg": "image/jpeg", ".webp": "image/webp"}
-                    _img1_b64 = _b64.standard_b64encode(path1.read_bytes()).decode()
-                    _img2_b64 = _b64.standard_b64encode(path2.read_bytes()).decode()
-                    _vision_prompt = (
-                        f"Compare these two diagrams: '{path1.name}' (Image 1) vs '{path2.name}' (Image 2).\n\n"
-                        "Analyze: (1) structural elements present in one but absent in the other, "
-                        "(2) flow/control differences — loops, branches, exception handlers, "
-                        "(3) label/operation differences — function names, variable names, conditions, "
-                        "(4) overall verdict: EQUIVALENT, REFACTORED, DEGRADED, or DIVERGED.\n\n"
-                        "Focus on logical/semantic differences, not visual styling."
-                    )
-                    from spl3.adapters import get_adapter as _ga
-                    _llm_v = _ga(adapter, **({"model": model} if model else {}))
-                    if hasattr(_llm_v, "generate_vision"):
-                        _mime1 = _MIME.get(ext1, "image/png")
-                        _mime2 = _MIME.get(ext2, "image/png")
-                        _raw_v = asyncio.run(_llm_v.generate_vision(
-                            _vision_prompt,
-                            images=[(_img1_b64, _mime1), (_img2_b64, _mime2)],
-                        ))
-                        vision_result["llm_analysis"] = (
-                            _raw_v if isinstance(_raw_v, str)
-                            else getattr(_raw_v, "content", str(_raw_v))
-                        )
-                except Exception:
-                    pass  # vision LLM is best-effort
-
-            results["vision"] = vision_result
-
-    # ── LLM Fallback for failed/unavailable modes ────────────────────────────
-    # When a mode-specific tier fails (missing dep, wrong file type, etc.) and
-    # an LLM adapter is available, run a targeted LLM analysis covering those
-    # aspects rather than silently leaving them blank.
-    _FALLBACK_ASPECTS = {
-        "ged":        "topological graph structure — nodes, edges, and control-flow paths",
-        "vector":     "semantic similarity and embedding-space proximity",
-        "bert-score": "token-level semantic overlap and textual similarity",
-        "vision":     "visual layout and structural differences",
-        "structural": "document/code skeleton — sections, function names, workflow names",
-        "ast-diff":   "syntactic AST-level differences — renamed/added/removed constructs",
-    }
-    _failed = [
-        m for m in active_modes
-        if m in _FALLBACK_ASPECTS
-        and isinstance(results.get(m), str)
-        and (results[m].startswith("Error:") or results[m].startswith("Skipped:"))
-    ]
-    if _failed and adapter and "llm" not in active_modes:
-        _aspects = "; ".join(_FALLBACK_ASPECTS[m] for m in _failed)
-        _fb_prompt = (
-            f"The following comparison tiers were unavailable: {_failed}.\n\n"
-            f"As a fallback, compare these two {ext1} files focusing on: {_aspects}.\n\n"
-            f"File 1 ({path1.name}):\n{content1[:3000]}"
-            f"{'...(truncated)' if len(content1) > 3000 else ''}\n\n"
-            f"File 2 ({path2.name}):\n{content2[:3000]}"
-            f"{'...(truncated)' if len(content2) > 3000 else ''}\n\n"
-            "Provide a structured analysis covering what each failed tier would have measured."
-        )
-        try:
-            from spl3.adapters import get_adapter as _ga_fb
-            click.echo(f"Running LLM fallback for {_failed}...")
-            _llm_fb = _ga_fb(adapter, **({"model": model} if model else {}))
-            _raw_fb = asyncio.run(_llm_fb.generate(_fb_prompt))
-            results["llm_fallback"] = {
-                "covers_failed": _failed,
-                "analysis": (_raw_fb if isinstance(_raw_fb, str)
-                             else getattr(_raw_fb, "content", str(_raw_fb))),
-            }
-        except Exception:
-            pass  # best-effort
-
-    # ── Synthesis ────────────────────────────────────────────────────────────
-    # Integrate all tier results into a single verdict via LLM reasoning.
-    # Runs when synthesize=True and at least one tier produced a result.
-    if synthesize and results and _adapter_synthesis:
-        _TIER_LABELS = {
-            "ged":        "Tier 1 – Topological (GED)",
-            "llm":        "Tier 2 – Semantic (LLM)",
-            "vision":     "Tier 2 – Semantic (Vision)",
-            "ast-diff":   "Tier 3 – Syntactic (AST-diff)",
-            "structural": "Tier 4 – Structural",
-            "git-diff":   "Tier 5 – Character-level (git-diff)",
-            "vector":     "Tier 6 – Embedding (vector cosine)",
-            "bert-score": "Tier 6 – Embedding (BERTScore)",
-        }
-
-        def _tier_summary(results: dict, active_modes: list) -> str:
-            parts = []
-            for mode in active_modes:
-                r = results.get(mode)
-                if r is None:
-                    continue
-                label = _TIER_LABELS.get(mode, mode)
-                if mode == "ged" and isinstance(r, dict):
-                    nt = r.get("node_types", [{}, {}])
-                    parts.append(
-                        f"{label}: distance={r['distance']:.1f}, "
-                        f"nodes={r['node_count'][0]}→{r['node_count'][1]}, "
-                        f"edges={r['edge_count'][0]}→{r['edge_count'][1]}, "
-                        f"node_types: {nt[0]} → {nt[1]}"
-                    )
-                elif mode == "vector" and isinstance(r, float):
-                    parts.append(f"{label}: cosine_similarity={r:.4f}")
-                elif mode == "bert-score" and isinstance(r, dict):
-                    parts.append(f"{label}: F1={r['f1']:.4f}, precision={r['precision']:.4f}, recall={r['recall']:.4f}")
-                elif mode == "structural" and isinstance(r, dict):
-                    parts.append(f"{label}: file1={r.get('file1')}, file2={r.get('file2')}")
-                elif mode == "ast-diff" and isinstance(r, dict):
-                    diffs = []
-                    for key, d in r.items():
-                        if isinstance(d, dict):
-                            if d.get("removed"):
-                                diffs.append(f"{key} removed={d['removed']}")
-                            if d.get("added"):
-                                diffs.append(f"{key} added={d['added']}")
-                    parts.append(f"{label}: {'; '.join(diffs) or 'no differences'}")
-                elif mode == "git-diff" and isinstance(r, str):
-                    plus  = sum(1 for l in r.splitlines() if l.startswith('+') and not l.startswith('+++'))
-                    minus = sum(1 for l in r.splitlines() if l.startswith('-') and not l.startswith('---'))
-                    parts.append(f"{label}: +{plus} lines, -{minus} lines")
-                elif mode in ("llm", "vision") and isinstance(r, (str, dict)):
-                    excerpt = str(r)[:400].replace('\n', ' ')
-                    parts.append(f"{label}: {excerpt}...")
-                else:
-                    parts.append(f"{label}: {str(r)[:200]}")
-            return "\n".join(parts)
-
-        synthesis_prompt = f"""You are the synthesis layer of a multi-tier comparison system.
-Your task is NOT to summarize each tier independently — it is to reason ACROSS tiers:
-what do agreements reveal? what do contradictions expose?
-
-Files compared: "{path1.name}"  vs  "{path2.name}"  (type: {ext1})
-
-Tier measurements:
-{_tier_summary(results, active_modes)}
-
-Cross-tier interpretation guide:
-- GED low + semantic similar  → topologically and logically equivalent
-- GED high + semantic similar → same vocabulary, restructured control flow (refactor)
-- GED low + semantic diverges → structural copy but intent changed
-- Character diff large + AST diff small → style/rename refactor, logic unchanged
-- Embedding high + GED high  → familiar words, divergent structure — possible regression
-- Any tier shows node loss (node_count drops, ast-diff removes items) → DEGRADED
-
-Verdict options (choose exactly one):
-  EQUIVALENT  — functionally and semantically the same (surface noise allowed)
-  REFACTORED  — structure/intent preserved, presentation changed
-  DEGRADED    — one file is a lossy version of the other (information lost)
-  DIVERGED    — genuinely different intent, logic, or purpose
-
-Respond with JSON only — no prose before or after:
-{{
-  "verdict":           "EQUIVALENT|REFACTORED|DEGRADED|DIVERGED",
-  "confidence":        "HIGH|MEDIUM|LOW",
-  "key_finding":       "single sentence — the most important insight from across tiers",
-  "cross_tier_insight":"what the agreement or contradiction between tiers reveals that no single tier could",
-  "recommendation":    "concrete next step (or 'none needed' if EQUIVALENT)"
-}}"""
-
-        try:
-            from spl3.adapters import get_adapter as _ga_s
-            _llm_s = _ga_s(_adapter_synthesis, **({"model": model} if model else {}))
-            click.echo(f"Synthesizing tier results via {_adapter_synthesis}...")
-            _raw_s = asyncio.run(_llm_s.generate(synthesis_prompt))
-            _syn_text = _raw_s if isinstance(_raw_s, str) else getattr(_raw_s, "content", str(_raw_s))
-            # Extract JSON from response
-            import re as _re_syn
-            _json_m = _re_syn.search(r'\{[^{}]*\}', _syn_text, _re_syn.DOTALL)
-            if _json_m:
-                import json as _json_s
-                results["synthesis"] = _json_s.loads(_json_m.group())
-            else:
-                results["synthesis"] = {"raw": _syn_text}
-        except Exception as exc:
-            results["synthesis"] = {"error": str(exc)}
-
-    elif synthesize and results and not _adapter_synthesis:
-        # Rule-based verdict when no LLM is available — uses GED thresholds
-        _syn_rule: dict = {}
-        if "ged" in results and isinstance(results["ged"], dict):
-            nd = results["ged"].get("normalized_distance", 1.0)
-            _syn_rule = {
-                "verdict":     "EQUIVALENT"  if nd == 0.0
-                          else "REFACTORED"  if nd < 0.10
-                          else "DEGRADED"    if nd < 0.35
-                          else "DIVERGED",
-                "confidence":  "MEDIUM",
-                "key_finding": (
-                    f"Rule-based from GED: normalized distance = {nd:.3f} "
-                    f"(0 → EQUIVALENT, < 0.10 → REFACTORED, < 0.35 → DEGRADED, else DIVERGED)"
-                ),
-                "cross_tier_insight": "Single-tier rule-based — add --adapter for LLM synthesis.",
-                "recommendation":     "Add --adapter for richer multi-tier synthesis verdict.",
-            }
-        if _syn_rule:
-            results["synthesis"] = _syn_rule
-
-    # ── Format Output ────────────────────────────────────────────────────────
-    if output_format == "json":
-        json_output = {
-            "files": {
-                "file1": {"name": path1.name, "type": ext1},
-                "file2": {"name": path2.name, "type": ext2}
-            },
-            "results": results,
-            "metadata": {
-                "adapter":           adapter,
-                "model":             model or "default",
-                "adapter_embed":     _adapter_embed,
-                "adapter_synthesis": _adapter_synthesis,
-                "model_embed":       model_embed or "default",
-                "focus": focus,
-                "timestamp": datetime.now().isoformat(),
-                "active_modes": active_modes
-            }
-        }
-        output_content = _json.dumps(json_output, indent=2)
-
-    elif output_format == "text":
-        output_parts = [f"Comparison: {path1.name}  ↔  {path2.name}"]
-        if "synthesis" in results and isinstance(results["synthesis"], dict):
-            syn = results["synthesis"]
-            output_parts.append(f"\nVERDICT: {syn.get('verdict','?')} ({syn.get('confidence','?')})")
-            output_parts.append(f"  {syn.get('key_finding','')}")
-        for mode in active_modes:
-            output_parts.append(f"\n--- {mode.upper()} ---")
-            output_parts.append(str(results.get(mode, "N/A")))
-        output_content = "\n".join(output_parts)
-
-    elif output_format in ("markdown", None):  # markdown (default)
-        # ── Synthesis verdict banner (always first) ──────────────────────────
-        syn_section = ""
-        if "synthesis" in results:
-            syn = results["synthesis"]
-            if isinstance(syn, dict) and "verdict" in syn:
-                _VERDICT_ICON = {
-                    "EQUIVALENT": "✅", "REFACTORED": "🔄",
-                    "DEGRADED": "⚠️",  "DIVERGED": "❌",
-                }
-                icon = _VERDICT_ICON.get(syn["verdict"], "🔍")
-                syn_section = (
-                    f"\n## Synthesis Verdict: {icon} {syn['verdict']} "
-                    f"({syn.get('confidence','?')} confidence)\n\n"
-                    f"> **Key finding:** {syn.get('key_finding', '')}\n>\n"
-                    f"> **Cross-tier insight:** {syn.get('cross_tier_insight', '')}\n>\n"
-                    f"> **Recommendation:** {syn.get('recommendation', '')}\n\n---\n"
-                )
-            else:
-                syn_section = f"\n## Synthesis\n\n{syn}\n\n---\n"
-
-        header = (
-            f"# Comparison: `{path1.name}`  ↔  `{path2.name}`\n\n"
-            f"- **File 1:** `{path1.name}` ({ext1})\n"
-            f"- **File 2:** `{path2.name}` ({ext2})\n"
-            f"- **Tiers:** {', '.join(active_modes)}\n"
-            f"- **Timestamp:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-            f"{syn_section}"
-        )
-
-        body_parts = []
-
-        if "ged" in results:
-            res = results["ged"]
-            if isinstance(res, dict):
-                nt = res.get("node_types", [{}, {}])
-                _nt_fmt = lambda d: "  ".join(f"{k}×{v}" for k, v in sorted(d.items()))
-                body_parts.append(
-                    f"## Tier 1 – Topological (GED)\n\n"
-                    f"| Metric | File 1 | File 2 |\n|---|---|---|\n"
-                    f"| Nodes | {res['node_count'][0]} | {res['node_count'][1]} |\n"
-                    f"| Edges | {res['edge_count'][0]} | {res['edge_count'][1]} |\n"
-                    f"| Node types | {_nt_fmt(nt[0])} | {_nt_fmt(nt[1])} |\n\n"
-                    f"**Graph Edit Distance: {res['distance']:.1f}** "
-                    f"*(SPL-node-aware cost; lower = more similar)*"
-                )
-            else:
-                body_parts.append(f"## Tier 1 – Topological (GED)\n\n{res}")
-
-        if "llm" in results:
-            body_parts.append(
-                f"## Tier 2 – Semantic (LLM)\n\n"
-                f"*Adapter: {adapter}  |  Model: {model or 'default'}*\n\n"
-                f"{results['llm']}"
-            )
-
-        if "vision" in results:
-            res = results["vision"]
-            if isinstance(res, dict):
-                meta = res.get("metadata", {})
-                pdiff = res.get("pixel_diff", {})
-                hist_sim = res.get("histogram_similarity")
-                llm_a = res.get("llm_analysis", "")
-                lines = ["## Tier 2 – Semantic (Vision)\n"]
-                if meta:
-                    lines.append(
-                        f"| | File 1 | File 2 |\n|---|---|---|\n"
-                        f"| Size | {meta.get('file1',{}).get('size')} | {meta.get('file2',{}).get('size')} |\n"
-                        f"| Mode | {meta.get('file1',{}).get('mode')} | {meta.get('file2',{}).get('mode')} |"
-                    )
-                if pdiff:
-                    lines.append(
-                        f"\n**Pixel diff:** mean Δ={pdiff.get('mean_delta')}  "
-                        f"max Δ={pdiff.get('max_delta')}  "
-                        f"changed pixels={pdiff.get('changed_pixels_pct')}%"
-                    )
-                if hist_sim is not None:
-                    lines.append(f"\n**Histogram similarity:** {hist_sim:.4f}")
-                if llm_a:
-                    lines.append(f"\n**LLM vision analysis:**\n\n{llm_a}")
-                body_parts.append("\n".join(lines))
-            else:
-                body_parts.append(f"## Tier 2 – Semantic (Vision)\n\n{res}")
-
-        if "ast-diff" in results:
-            res = results["ast-diff"]
-            if isinstance(res, dict):
-                lines = ["## Tier 3 – Syntactic (AST-diff)\n"]
-                for key, d in res.items():
-                    if not isinstance(d, dict):
-                        continue
-                    common  = d.get("common",  [])
-                    removed = d.get("removed", [])
-                    added   = d.get("added",   [])
-                    status = "✓" if not removed and not added else "✗"
-                    lines.append(f"**{key}** {status}")
-                    if common:
-                        lines.append(f"  - common: {', '.join(f'`{x}`' for x in common)}")
-                    if removed:
-                        lines.append(f"  - removed (file1 only): {', '.join(f'`{x}`' for x in removed)}")
-                    if added:
-                        lines.append(f"  - added (file2 only): {', '.join(f'`{x}`' for x in added)}")
-                body_parts.append("\n".join(lines))
-            else:
-                body_parts.append(f"## Tier 3 – Syntactic (AST-diff)\n\n{res}")
-
-        if "structural" in results:
-            res = results["structural"]
-            if isinstance(res, dict):
-                s1 = res.get("file1", {})
-                s2 = res.get("file2", {})
-                lines = [f"## Tier 4 – Structural\n\n| | File 1 | File 2 |\n|---|---|---|"]
-                for key in sorted(set(s1) | set(s2)):
-                    if key == "type":
-                        continue
-                    v1 = s1.get(key, "—")
-                    v2 = s2.get(key, "—")
-                    lines.append(f"| {key} | {v1} | {v2} |")
-                body_parts.append("\n".join(lines))
-            else:
-                body_parts.append(f"## Tier 4 – Structural\n\n{res}")
-
-        if "git-diff" in results:
-            body_parts.append(
-                f"## Tier 5 – Character-level (git-diff)\n\n"
-                f"```diff\n{results['git-diff']}\n```"
-            )
-
-        if "vector" in results:
-            sim = results["vector"]
-            body_parts.append(
-                f"## Tier 6 – Embedding (Vector)\n\n"
-                f"Cosine similarity: **{sim:.4f}**" if isinstance(sim, float)
-                else f"## Tier 6 – Embedding (Vector)\n\n{sim}"
-            )
-
-        if "bert-score" in results:
-            res = results["bert-score"]
-            if isinstance(res, dict):
-                body_parts.append(
-                    f"## Tier 6 – Embedding (BERTScore)\n\n"
-                    f"- Precision: {res['precision']:.4f}\n"
-                    f"- Recall: {res['recall']:.4f}\n"
-                    f"- **F1: {res['f1']:.4f}**"
-                )
-            else:
-                body_parts.append(f"## Tier 6 – Embedding (BERTScore)\n\n{res}")
-
-        if "llm_fallback" in results:
-            fb = results["llm_fallback"]
-            body_parts.append(
-                f"## LLM Fallback\n\n"
-                f"*Covering failed tiers: {fb.get('covers_failed', [])}*\n\n"
-                f"{fb.get('analysis', '')}"
-            )
-
-        footer = "\n---\n\n*Generated by `spl3 compare` — multi-tier diff*"
-        output_content = header + "\n---\n\n".join(body_parts) + footer
-
-    elif output_format == "html":
-        import html as _html
-        import base64 as _b64
-
-        _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
-        _MIME_MAP  = {".png": "image/png", ".jpg": "image/jpeg",
-                      ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}
-
-        def _panel_content(path: "Path", content: str, ext: str) -> str:
-            if ext == ".mmd":
-                return f'<div class="mermaid">\n{_html.escape(content)}\n</div>'
-            elif ext in _IMG_EXTS:
-                try:
-                    _mime = _MIME_MAP.get(ext, "image/png")
-                    _data = _b64.standard_b64encode(path.read_bytes()).decode()
-                    return f'<img src="data:{_mime};base64,{_data}" style="max-width:100%;max-height:100%">'
-                except Exception:
-                    return f'<pre>{_html.escape(content[:2000])}</pre>'
-            else:
-                return f'<pre>{_html.escape(content)}</pre>'
-
-        def _synthesis_html(syn: dict) -> str:
-            if not isinstance(syn, dict) or "verdict" not in syn:
-                return f'<p>{_html.escape(str(syn))}</p>'
-            _V_ICON = {"EQUIVALENT": "✅", "REFACTORED": "🔄",
-                       "DEGRADED": "⚠️", "DIVERGED": "❌"}
-            icon  = _V_ICON.get(syn["verdict"], "🔍")
-            v     = _html.escape(syn.get("verdict", "?"))
-            conf  = _html.escape(syn.get("confidence", "?"))
-            kf    = _html.escape(syn.get("key_finding", ""))
-            cti   = _html.escape(syn.get("cross_tier_insight", ""))
-            rec   = _html.escape(syn.get("recommendation", ""))
-            return (
-                f'<div class="verdict {syn.get("verdict","")}">'
-                f'<div><h2>{icon} {v} <small>({conf} confidence)</small></h2>'
-                f'<p><strong>Key finding:</strong> {kf}</p>'
-                f'<p><strong>Cross-tier insight:</strong> {cti}</p>'
-                f'<p><strong>Recommendation:</strong> {rec}</p></div>'
-                f'</div>'
-            )
-
-        def _tiers_html(results: dict, active_modes: list) -> str:
-            _TIER_TITLES = {
-                "ged":        "Tier 1 – Topological (GED)",
-                "llm":        "Tier 2 – Semantic (LLM)",
-                "vision":     "Tier 2 – Semantic (Vision)",
-                "ast-diff":   "Tier 3 – Syntactic (AST-diff)",
-                "structural": "Tier 4 – Structural",
-                "git-diff":   "Tier 5 – Character-level (git-diff)",
-                "vector":     "Tier 6 – Embedding (vector)",
-                "bert-score": "Tier 6 – Embedding (BERTScore)",
-                "llm_fallback": "LLM Fallback",
-            }
-            parts = []
-            for mode in list(active_modes) + (["llm_fallback"] if "llm_fallback" in results else []):
-                r = results.get(mode)
-                if r is None:
-                    continue
-                title = _TIER_TITLES.get(mode, mode)
-                if mode == "ged" and isinstance(r, dict):
-                    nt = r.get("node_types", [{}, {}])
-                    _nt = lambda d: ", ".join(f"{k}×{v}" for k, v in sorted(d.items()))
-                    body = (
-                        f"<table><tr><th></th><th>File 1</th><th>File 2</th></tr>"
-                        f"<tr><td>Nodes</td><td>{r['node_count'][0]}</td><td>{r['node_count'][1]}</td></tr>"
-                        f"<tr><td>Edges</td><td>{r['edge_count'][0]}</td><td>{r['edge_count'][1]}</td></tr>"
-                        f"<tr><td>Node types</td><td>{_nt(nt[0])}</td><td>{_nt(nt[1])}</td></tr>"
-                        f"<tr><td>Normalized distance</td><td colspan='2'><strong>{r.get('normalized_distance','?')}</strong>"
-                        f" (raw: {r['distance']:.1f})</td></tr>"
-                        f"</table>"
-                    )
-                elif mode == "git-diff" and isinstance(r, str):
-                    body = f"<pre class='diff'>{_html.escape(r)}</pre>"
-                elif mode == "ast-diff" and isinstance(r, dict):
-                    rows = []
-                    for key, d in r.items():
-                        if not isinstance(d, dict):
-                            continue
-                        status = "✓" if not d.get("removed") and not d.get("added") else "✗"
-                        rows.append(f"<tr><td>{key}</td><td>{status}</td>"
-                                    f"<td>{', '.join(d.get('removed',[]))}</td>"
-                                    f"<td>{', '.join(d.get('added',[]))}</td></tr>")
-                    body = (
-                        "<table><tr><th>Key</th><th></th><th>Removed</th><th>Added</th></tr>"
-                        + "".join(rows) + "</table>"
-                    ) if rows else "<p>No differences</p>"
-                elif mode == "llm_fallback" and isinstance(r, dict):
-                    body = (
-                        f"<p><em>Covers failed tiers: {r.get('covers_failed', [])}</em></p>"
-                        f"<p>{_html.escape(r.get('analysis',''))}</p>"
-                    )
-                else:
-                    body = f"<p>{_html.escape(str(r)[:1000])}</p>"
-                parts.append(
-                    f'<details class="tier" open>'
-                    f'<summary>{title}</summary>'
-                    f'<div class="tier-content">{body}</div>'
-                    f'</details>'
-                )
-            return "\n".join(parts)
-
-        syn = results.get("synthesis", {})
-        from datetime import datetime as _dt
-        output_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Compare: {_html.escape(path1.name)} ↔ {_html.escape(path2.name)}</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
-  <style>
-    :root{{--gap:12px;--border:#d0d7de;--radius:6px}}
-    *{{box-sizing:border-box}}
-    body{{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f6f8fa;height:100vh;display:flex;flex-direction:column}}
-    .top-row{{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);padding:var(--gap);flex:0 0 58vh;min-height:0}}
-    .bottom-row{{padding:0 var(--gap) var(--gap);flex:1;overflow:auto}}
-    .panel{{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:auto;padding:12px;display:flex;flex-direction:column}}
-    .panel h3{{margin:0 0 8px;font-size:12px;color:#57606a;font-weight:600;border-bottom:1px solid var(--border);padding-bottom:6px;flex-shrink:0}}
-    .panel-inner{{flex:1;overflow:auto}}
-    .mermaid{{text-align:center}}
-    pre{{font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;line-height:1.5;white-space:pre-wrap;word-break:break-word;margin:0}}
-    pre.diff .add{{color:#1a7f37}} pre.diff .del{{color:#cf222e}}
-    .verdict{{padding:12px 16px;border-radius:var(--radius);margin-bottom:12px;border-left:4px solid}}
-    .verdict h2{{margin:0;font-size:16px}} .verdict p{{margin:3px 0 0;font-size:13px;opacity:.85}}
-    .EQUIVALENT{{background:#dafbe1;color:#1a7f37;border-color:#2da44e}}
-    .REFACTORED{{background:#ddf4ff;color:#0550ae;border-color:#0969da}}
-    .DEGRADED  {{background:#fff8c5;color:#9a6700;border-color:#bf8700}}
-    .DIVERGED  {{background:#ffebe9;color:#cf222e;border-color:#cf222e}}
-    .tier{{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}}
-    .tier summary{{padding:8px 12px;font-weight:600;cursor:pointer;background:#f6f8fa;list-style:none;display:flex;align-items:center;gap:6px}}
-    .tier summary:hover{{background:#eaeef2}}
-    .tier-content{{padding:12px}}
-    table{{border-collapse:collapse;width:100%}} th,td{{border:1px solid var(--border);padding:5px 9px;text-align:left;font-size:13px}} th{{background:#f6f8fa;font-weight:600}}
-    .meta{{font-size:11px;color:#57606a;margin-bottom:10px}}
-  </style>
-</head>
-<body>
-  <div class="top-row">
-    <div class="panel">
-      <h3>📄 {_html.escape(path1.name)}</h3>
-      <div class="panel-inner">{_panel_content(path1, content1, ext1)}</div>
-    </div>
-    <div class="panel">
-      <h3>📄 {_html.escape(path2.name)}</h3>
-      <div class="panel-inner">{_panel_content(path2, content2, ext2)}</div>
-    </div>
-  </div>
-  <div class="bottom-row">
-    <p class="meta">Tiers: {', '.join(active_modes)} &nbsp;|&nbsp; {_dt.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-    {_synthesis_html(syn)}
-    {_tiers_html(results, active_modes)}
-  </div>
-  <script>mermaid.initialize({{startOnLoad:true,theme:'default',securityLevel:'loose'}});</script>
-</body>
-</html>"""
-
-    # Output results
     if output:
-        output_path = Path(output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(output_content, encoding="utf-8")
-        click.echo(f"Comparison report written to: {output_path}")
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(output_content, encoding="utf-8")
+        click.echo(f"Comparison report written to: {out_path}")
     else:
         click.echo(output_content)
-
-
-def _parse_mermaid_to_nx(mermaid_content: str):
-    """Parse Mermaid flowchart into a NetworkX DiGraph with SPL-aware node types.
-
-    Reads the ``class <id> <type>`` annotations emitted by spl2mmd to attach
-    the SPL node type (llm, ctrl, term, assign, proc, log) as a node attribute,
-    enabling type-aware GED substitution costs.
-    """
-    import re as _re
-    import networkx as nx
-
-    g = nx.DiGraph()
-
-    # ── Pass 1: extract node labels from all Mermaid shape syntaxes ─────────
-    # Parallelogram: GEN3[/"label"/]  or  SUB5[/"label"/]
-    for m in _re.finditer(r'^\s+(\w+)\[/"(.*?)"/\]', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
-
-    # Diamond: WHILE4{"label"}  EVAL6{"label"}  EXC13{"label"}
-    for m in _re.finditer(r'^\s+(\w+)\{"(.*?)"\}', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
-
-    # Stadium/rounded terminal: START1(["label"])  RET8(["label"])
-    for m in _re.finditer(r'^\s+(\w+)\(\["(.*?)"\]\)', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
-
-    # Rectangle: A2["label"]  (assign, merge placeholders)
-    for m in _re.finditer(r'^\s+(\w+)\["(.*?)"\]', mermaid_content, _re.MULTILINE):
-        if m.group(1) not in g:
-            g.add_node(m.group(1), label=m.group(2), node_type="unknown")
-
-    # ── Pass 2: apply SPL node types from `class <id> <type>` annotations ───
-    _SPL_TYPES = {"llm", "ctrl", "term", "assign", "proc", "log"}
-    for m in _re.finditer(r'^\s+class\s+(\w+)\s+(\w+)\s*$', mermaid_content, _re.MULTILINE):
-        node_id, css_class = m.group(1), m.group(2)
-        if css_class in _SPL_TYPES and node_id in g:
-            g.nodes[node_id]["node_type"] = css_class
-
-    # ── Pass 3: edges  A --> B  or  A -->|label| B  or  A -.-> B ───────────
-    for m in _re.finditer(
-        r'(\w+)\s*(?:-->|-\.->)\s*(?:\|([^|]*)\|\s*)?(\w+)',
-        mermaid_content
-    ):
-        src, edge_label, dst = m.group(1), m.group(2), m.group(3)
-        if src in g and dst in g:
-            g.add_edge(src, dst, label=edge_label or "")
-
-    return g
-
 
 # ------------------------------------------------------------------ #
 # spl3 show                                                           #

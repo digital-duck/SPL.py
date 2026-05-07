@@ -50,7 +50,7 @@ spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
 spl3 spl2mmd cookbook/05_self_refine/self_refine.spl --out-dir diagrams/
 
 # Extract Mermaid logic from an image
-spl3 img2mmd diagram.png --adapter gemini_cli -o logic.mmd
+spl3 img2mmd diagram.png --adapter openrouter --model google/gemini-2.0-flash-001 -o logic.mmd
 
 # Compare two Mermaid diagrams — auto-selects GED, emits DIVERGED/DEGRADED/etc.
 spl3 compare orig.mmd roundtrip.mmd --adapter claude_cli --format html -o report.html
@@ -135,21 +135,114 @@ spl3 text2mmd "user onboarding workflow with approval gates"
 
 ## 8. spl3 img2mmd
 
-Extracts Mermaid flowchart logic from an image using a multimodal LLM (Gemini, Claude 3.5, GPT-4o).
+Analyzes an image with a multimodal LLM and reconstructs the workflow or diagram
+as valid **Mermaid flowchart code** (`.mmd`).
+
+Handles flowcharts, architecture diagrams, hand-drawn sketches, and
+pseudo-code diagrams.  When no diagram structure is detected (e.g. a regular
+photo), it returns `(No workflow logic detected)` instead of writing a file.
+
+### How it works
+
+1. The image is encoded as base64 and sent to the vision LLM alongside a structured
+   prompt with explicit Mermaid syntax rules.
+2. The LLM returns a `flowchart TD` block.
+3. The output is extracted from any markdown fences and written to a `.mmd` file.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--adapter` | `openrouter` | Multimodal adapter — requires `OPENROUTER_API_KEY` |
+| `--model` | adapter default | Model override, e.g. `google/gemini-2.0-flash-001` |
+| `-o / --out` | — | Output file path (or directory) |
+| `--out-dir` | — | Output directory; filename derived from image stem |
+
+### Examples
 
 ```bash
-spl3 img2mmd diagram.png --adapter openrouter --model google/gemini-2.0-flash-001 --out-dir diagrams/
+# Extract workflow from a pre-generated Mermaid PNG (round-trip verification)
+spl3 img2mmd \
+  /home/wengong/projects/digital-duck/Cookbook-of-SPL-Recipes/drafts/book-v0.5/mermaid/26_ab_test/26_ab_test.png \
+  --out-dir /tmp/spl3 \
+  --adapter openrouter \
+  --model google/gemini-2.0-flash-001
+
+# Try on an unrelated photo — returns "(No workflow logic detected)"
+spl3 img2mmd /home/wengong/Pictures/china-1.png \
+  --out-dir /tmp/spl3 \
+  --adapter openrouter \
+  --model google/gemini-2.0-flash-001
+
+# Save to a specific file
+spl3 img2mmd whiteboard.jpg -o logic.mmd --adapter openrouter
+```
+
+### Adapter notes
+
+| Adapter | Requirement | Notes |
+|---------|-------------|-------|
+| `openrouter` | `OPENROUTER_API_KEY` | Default; routes to any vision model on OpenRouter |
+| `google` | `GOOGLE_API_KEY` | Gemini models |
+| `anthropic` | `ANTHROPIC_API_KEY` | Claude 3+ models via Anthropic API |
+| `claude_cli` | `ANTHROPIC_API_KEY` | Uses Anthropic SDK directly for vision (CLI has no image flag) |
+
+### Round-trip use case
+
+`img2mmd` is the reverse of `spl2mmd`.  After generating a PNG diagram you can
+verify the LLM can reconstruct the original logic from the visual:
+
+```bash
+spl3 spl2mmd workflow.spl --out-dir diagrams/ --no-preview
+spl3 img2mmd diagrams/workflow.png -o roundtrip.mmd
+spl3 compare workflow.mmd roundtrip.mmd --mode ged
 ```
 
 ---
 
 ## 9. spl3 img2text
 
-Extracts text, pseudo-code, and code fragments from a screenshot or image using a multimodal LLM.
+Extracts **all text, pseudo-code, and code fragments** from a screenshot or image
+using a multimodal LLM (OCR + structure preservation).
+
+Preserves indentation and layout.  Detected code is wrapped in fenced code blocks
+with inferred language tags.  Mathematical notation is rendered in LaTeX or plain ASCII.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--adapter` | `openrouter` | Multimodal adapter — requires `OPENROUTER_API_KEY` |
+| `--model` | adapter default | Model override, e.g. `google/gemini-2.0-flash-001` |
+| `-o / --out` | — | Output file path (or directory) |
+| `--out-dir` | — | Output directory; filename derived from image stem |
+
+### Examples
 
 ```bash
-spl3 img2text screenshot.png --adapter openrouter --model google/gemini-2.0-flash-001 --out-dir extracted/
+# Extract text from a Mermaid diagram PNG (reads node labels, edge labels, subgraph titles)
+spl3 img2text \
+  /home/wengong/projects/digital-duck/Cookbook-of-SPL-Recipes/drafts/book-v0.5/mermaid/26_ab_test/26_ab_test.png \
+  --out-dir /tmp/spl3 \
+  --adapter openrouter \
+  --model google/gemini-2.0-flash-001
+
+# Extract text from any image (photo, screenshot, whiteboard)
+spl3 img2text /home/wengong/Pictures/china-1.png \
+  --out-dir /tmp/spl3 \
+  --adapter openrouter \
+  --model google/gemini-2.0-flash-001
+
+# Extract pseudo-code from a screenshot, save to a specific file
+spl3 img2text pseudocode.png -o extracted.txt --adapter openrouter
 ```
+
+### Typical use cases
+
+- **Pseudo-code on a whiteboard or slide** → extract to `.txt`, then pipe to `spl3 text2spl`
+- **Screenshot of a code snippet** → extract preserving indentation and language
+- **Diagram with labels** → extract all node text and annotations for review
+- **Scanned document** → OCR with structure preservation
 
 ---
 

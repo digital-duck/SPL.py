@@ -230,3 +230,88 @@ The second condition (checking for only header lines) can never be true: `diffli
 | 10 | Low | Dead code in identical-files detection | Fixed |
 | 11 | Low | Status echo before `prompt_debug` in `cmd_describe` | Fixed |
 | 12 | Low | `ext1`/`ext2` computed twice | Fixed |
+
+---
+
+## Code Review Findings (Gemini CLI Review — May 2026)
+
+Following a comprehensive review of the `spl3 compare` implementation, the following architectural strengths and opportunities for enhancement were identified.
+
+### Architectural Strengths
+- **Sophisticated Multi-Tier Strategy**: The 6-tier approach successfully moves beyond syntactic diffing to true semantic intent analysis.
+- **Cross-Tier Reasoning**: The synthesis pass effectively uses LLMs to interpret contradictions between tiers (e.g., restructured code with identical intent).
+- **Domain Awareness**: Deep integration with SPL semantics (signatures, handlers, workflows) via targeted prompts and node-type-aware GED.
+
+### Opportunities for Enhancement
+1.  **Modularity**: The ~1000 line `cmd_compare` in `cli.py` creates a maintenance bottleneck.
+2.  **Robustness**: Synthesis JSON extraction is currently regex-based and lacks schema validation.
+3.  **Dependency Handling**: Optional dependencies for heavy tiers (`networkx`, `bert-score`) are managed via inline imports rather than a registry.
+4.  **Test Coverage**: New comparison tiers lack dedicated unit tests.
+
+### Refactoring Plan (May 2026)
+To address these findings, the comparison logic is being refactored into a dedicated `spl3.compare` package:
+- **`spl3/compare/engine.py`**: High-level orchestrator and synthesis pass.
+- **`spl3/compare/tiers/`**: Individual modules for each comparison logic (GED, Semantic, AST, etc.).
+- **Improved Result Schema**: Structured data classes/types for each tier to ensure consistent reporting.
+- **Lazy Dependency Loading**: Centralized handler for optional libraries.
+- **Unit Testing**: Introduction of `tests/test_compare.py` covering deterministic tiers.
+
+---
+
+## Field Experience: Gemini CLI vs Claude Code CLI (May 2026)
+
+> **Context**: This section documents a real multi-session coding workflow and is intended as
+> field-level evidence. Generic benchmarks do not capture these dynamics.
+
+### Workflow
+
+The user adopted a deliberate handoff strategy after prior bad experiences with AI coding failures:
+
+1. **Gemini CLI** was tasked with the `spl3 compare` refactoring (extract inline logic into `spl3/compare/` package).
+2. Before Gemini began the destructive edit of `cli.py`, the user asked it to **document its plan in writing** — so that if it failed, the plan could be handed to Claude Code CLI to complete.
+3. Gemini stalled after ~48 minutes without completing the refactoring.
+4. **Claude Code CLI** received the written plan + Gemini's partial output and completed the work in one session.
+
+### What Gemini Did Well
+
+- **Architecture and ideation**: Designed a clean 6-tier package structure in one shot — `engine.py`, `report.py`, `types.py`, `utils.py`, and six tier modules under `tiers/`. The design was sound and required no restructuring.
+- **Additive work**: Created all new files without errors.
+- **`img2mmd` / `img2text`**: Both commands worked correctly on first test.
+
+### Where Gemini Stalled
+
+Gemini got stuck at the **destructive seam** — replacing the ~900-line `cmd_compare` body with calls to its own newly-created modules. It was blocked for 40+ minutes and never completed the edit.
+
+**Root causes identified by Claude Code post-mortem:**
+
+| # | Issue | Impact |
+|---|-------|--------|
+| 1 | **Missing `__init__.py`** — neither `spl3/compare/` nor `spl3/compare/tiers/` had package init files | The new modules were unimportable; any attempt to test would produce `ModuleNotFoundError`, potentially sending Gemini in circles |
+| 2 | **`compare_vision` used `generate_vision`** — a method that does not exist in any adapter | Would have caused runtime errors on any vision comparison |
+| 3 | **`_handle_fallbacks` missed `"Skipped:"` results** — only caught `"Error:"` prefix | Skipped tiers (e.g. GED on non-`.mmd` files) never triggered the LLM fallback |
+| 4 | **JSON extraction fragile** — `re.search(r'\{.*\}', ...)` without trying `json.loads()` first | Breaks when LLM returns clean JSON without markdown fences |
+| 5 | **`report.py` missing `Optional` import** | `TypeError` at runtime on any HTML report with no synthesis |
+| 6 | **`_render_markdown` stripped the rich GED table** | Nodes/edges/node-types lost from markdown output |
+
+None of these bugs blocked the *creation* of the files, but together they meant Gemini could not successfully run its own code — likely creating a feedback loop where it kept re-reading and re-attempting.
+
+### Hypothesis: Why Large Destructive Edits Stall LLM Coders
+
+Additive work (create new file, append section) is well-supported by how LLMs generate text — it flows forward. Destructive edits of large files require:
+
+1. Holding the full original file in working context
+2. Identifying an exact replacement range
+3. Generating the replacement
+4. Verifying nothing else in the file depended on the removed code
+
+Steps 1 and 4 are the failure modes. A 3900-line file with a 900-line function body to replace pushes the effective context limit even for large-window models, because the model must simultaneously track what it's removing *and* what it's inserting.
+
+Claude Code CLI used a Python script (`python3 -c ...`) to perform the splice at exact line numbers — bypassing the string-matching limitation entirely and completing the edit in one operation.
+
+### Lessons for AI-Assisted Development
+
+1. **Ask for a written plan before any destructive refactoring** — it creates a recoverable checkpoint and forces the AI to think before cutting.
+2. **Additive work first, destructive work last** — let one AI build the new structure, then hand the destructive swap to whichever tool handles it better.
+3. **Don't trust benchmarks alone** — the ability to handle large-file surgical edits is not measured by standard coding benchmarks (HumanEval, SWE-bench). Field testing on your actual codebase size and patterns is the only reliable signal.
+4. **Missing `__init__.py` is a silent killer** — when an AI creates a Python package without init files, the resulting `ModuleNotFoundError` looks like a code bug rather than a missing file, which can derail self-correction loops.
+5. **Verify imports before attempting integration** — a two-line smoke test (`python -c "from spl3.compare.engine import run_comparison"`) would have surfaced the missing `__init__.py` immediately.
