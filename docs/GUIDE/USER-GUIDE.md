@@ -4,11 +4,11 @@
 orchestrating LLM workflows. You write a `.spl` file — the invariant *logical view* —
 and the toolchain runs it, compiles it, describes it, or generates it from plain English.
 
-> **End-to-end validated.** The ten-step pipeline documented in §14 (S1–S10) was
+> **End-to-end validated.** The ten-step pipeline documented in §15 (S1–S10) was
 > designed for the NeurIPS 2026 paper *"Beyond Vibe Coding: Intent Invariance and
 > Structured Prompt Language"* and executed across 5 real-world workflow recipes × 3
 > model tiers (15 experiments). Every command in this guide was exercised in those
-> experiments — making §14 both the research protocol and the most comprehensive
+> experiments — making §15 both the research protocol and the most comprehensive
 > integration test suite for SPL.py.
 
 ---
@@ -21,16 +21,17 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 4. [spl3 run](#4-spl3-run)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
-7. [spl3 text2mermaid](#7-spl3-text2mermaid)
-8. [spl3 mermaid2spl](#8-spl3-mermaid2spl)
-9. [spl3 compare](#9-spl3-compare)
-10. [spl3 splc compile](#10-spl3-splc-compile)
-11. [spl3 splc describe](#11-spl3-splc-describe)
-12. [spl3 vibe](#12-spl3-vibe)
-13. [spl3 code-rag](#13-spl3-code-rag)
-14. [Full Pipeline S1–S10: IR + Ablation](#14-full-pipeline-s1s10-ir--ablation)
-15. [Debugging LLM Prompts](#15-debugging-llm-prompts)
-16. [Command reference](#16-command-reference)
+7. [spl3 text2mmd](#7-spl3-text2mmd)
+8. [spl3 spl2mmd](#8-spl3-spl2mmd)
+9. [spl3 mmd2spl](#9-spl3-mmd2spl)
+10. [spl3 compare](#10-spl3-compare)
+11. [spl3 splc compile](#11-spl3-splc-compile)
+12. [spl3 splc describe](#12-spl3-splc-describe)
+13. [spl3 vibe](#13-spl3-vibe)
+14. [spl3 code-rag](#14-spl3-code-rag)
+15. [Full Pipeline S1–S10: IR + Ablation](#15-full-pipeline-s1s10-ir--ablation)
+16. [Debugging LLM Prompts](#16-debugging-llm-prompts)
+17. [Command reference](#17-command-reference)
 
 ---
 
@@ -43,8 +44,11 @@ spl3 validate cookbook/05_self_refine/self_refine.spl
 # Run it with different adapters
 spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
 
-# Compare two specs using the "Physics Lens"
-spl3 compare spec1.md spec2.md --mode vector --mode llm
+# Visualise a .spl file as a Mermaid diagram (no LLM needed)
+spl3 spl2mmd cookbook/05_self_refine/self_refine.spl --out-dir diagrams/
+
+# Compare two Mermaid diagrams — auto-selects GED, emits DIVERGED/DEGRADED/etc.
+spl3 compare orig.mmd roundtrip.mmd --adapter claude_cli --format html -o report.html
 
 # Compile to Python/PocketFlow (deterministic — no LLM needed)
 spl3 splc compile cookbook/05_self_refine/self_refine.spl --lang python/pocketflow
@@ -112,9 +116,11 @@ spl3 text2spl "build a review agent that refines text until quality > 0.8" \
 
 ---
 
-## 7. spl3 text2mermaid
+## 7. spl3 text2mmd
 
-Converts natural language workflow descriptions into Mermaid flowchart diagrams.
+Converts natural language workflow descriptions into Mermaid flowchart diagrams
+using an LLM. The generated `.mmd` file can be reviewed and edited before
+converting to SPL with `mmd2spl`.
 
 ```bash
 spl3 text2mmd "user onboarding workflow with approval gates"
@@ -122,7 +128,108 @@ spl3 text2mmd "user onboarding workflow with approval gates"
 
 ---
 
-## 8. spl3 mermaid2spl
+## 8. spl3 spl2mmd
+
+Generates a Mermaid flowchart **directly from a `.spl` file's AST** — no LLM
+required. Every workflow, procedure, loop, branch, and exception handler is
+rendered deterministically from the parsed syntax tree, producing a diagram
+that faithfully mirrors the actual script structure.
+
+Use it to **visually review or validate** a `.spl` file at any point in the
+pipeline: after `mmd2spl` (S3) to verify the generated SPL matches the original
+diagram, when auditing a hand-written workflow, or to produce publication figures.
+
+```bash
+spl3 spl2mmd workflow.spl                             # defaults: .mmd + .html + .md + preview
+spl3 spl2mmd *.spl --out-dir diagrams/                # batch convert, all outputs in one folder
+spl3 spl2mmd workflow.spl --no-preview                # suppress browser auto-open
+spl3 spl2mmd workflow.spl --save-pdf --out-dir diagrams/  # add PDF for publication
+spl3 spl2mmd step1.spl step2.spl --save-pdf --save-png --out-dir diagrams/
+```
+
+### Node shapes by statement type
+
+| Shape | Mermaid syntax | SPL statement |
+|-------|----------------|---------------|
+| Parallelogram | `[/…/]` | `GENERATE … INTO` (LLM call) |
+| Subroutine | `[[…]]` | `CALL procedure()` |
+| Diamond | `{…}` | `WHILE`, `EVALUATE`, exception handler |
+| Cylinder | `[(…)]` | `STORE`, storage-assign |
+| Stadium | `([…])` | Start, End, `RETURN`, `RAISE` |
+| Flag | `>…]` | `LOGGING` |
+| Rectangle | `[…]` | Assignment, `SELECT INTO`, generic |
+
+Each workflow/procedure is wrapped in its own labelled subgraph. Nodes are
+colour-coded by type: **blue** = LLM call, **amber** = procedure call,
+**purple** = control flow, **green** = storage, **pink** = terminal, **grey** = log.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--out-dir DIR` | beside each input | All outputs written here; source `.spl` copied too |
+| `--preview / --no-preview` | **on** | Open `.html` in the browser immediately |
+| `--save-html / --no-save-html` | **on** | Write a browser-viewable `.html` |
+| `--save-markdown / --no-save-markdown` | **on** | Write a `.md` with fenced mermaid block |
+| `--save-spl / --no-save-spl` | **on** | Copy source `.spl` into `--out-dir` |
+| `--save-png` | off | Write `.png` via headless Chrome/Chromium |
+| `--save-pdf` | off | Write `.pdf` — tries `mmdc` first, then Chrome headless |
+
+### Output files (example with `--out-dir diagrams/`)
+
+```
+diagrams/
+  self_refine.mmd      ← raw Mermaid source (edit with any Mermaid tool)
+  self_refine.md       ← Markdown with fenced diagram (VS Code / GitHub preview)
+  self_refine.html     ← standalone browser page with live rendering
+  self_refine.spl      ← copy of the source script
+  self_refine.pdf      ← (--save-pdf) print-ready, A4 landscape, neutral theme
+  self_refine.png      ← (--save-png) rasterised full-page screenshot
+```
+
+### mmdc setup (recommended for `--save-pdf`)
+
+[`mmdc`](https://github.com/mermaid-js/mermaid-cli) is the official Mermaid CLI.
+When present, it produces a **native vector PDF** — the highest-quality output for
+paper figures, posters, and slides. If `mmdc` is not found, `spl2mmd` falls back
+to Chrome headless `--print-to-pdf` (A4 landscape, neutral theme, no headers).
+
+```bash
+# Install mmdc globally (requires Node.js ≥ 18)
+npm install -g @mermaid-js/mermaid-cli
+
+# Verify installation
+mmdc --version
+
+# What spl2mmd calls internally for PDF
+mmdc -i workflow.mmd -o workflow.pdf -t neutral -b white
+```
+
+> **Note:** `mmdc` downloads Chromium on first install (~200 MB via Puppeteer).
+> On headless CI/CD servers, supply a `puppeteerConfigFile` pointing to an
+> existing Chrome installation to avoid the download:
+> ```bash
+> mmdc -i workflow.mmd -o workflow.pdf \
+>   --puppeteerConfigFile /etc/mmdc-puppeteer.json
+> # /etc/mmdc-puppeteer.json: { "executablePath": "/usr/bin/google-chrome" }
+> ```
+
+### Multi-file projects
+
+When workflows `CALL` each other across files, run `spl2mmd` on all files
+together. Each produces its own diagram; cross-file calls appear as `CALL`
+subroutine nodes labelled with the procedure name — the callee is not inlined,
+keeping each diagram focused on a single file's logic.
+
+```bash
+spl3 spl2mmd step1.spl step2.spl step3.spl --out-dir diagrams/ --save-pdf
+# or with glob
+spl3 spl2mmd *.spl --out-dir diagrams/ --save-pdf
+```
+
+---
+
+## 9. spl3 mmd2spl
 
 Converts a Mermaid flowchart diagram into executable SPL workflow code.
 
@@ -132,42 +239,166 @@ spl3 mmd2spl workflow.mmd --adapter claude_cli -o workflow.spl
 
 ---
 
-## 9. spl3 compare
+## 10. spl3 compare
 
-Performs semantic and/or mechanical comparison between two files. This is the primary tool for measuring **Intent Invariance** in NDD round-trip experiments.
+A **multi-tier diff tool** that automatically selects the most appropriate comparison
+algorithm for each file type, then synthesises all tier results into a single verdict:
+
+> **EQUIVALENT** · **REFACTORED** · **DEGRADED** · **DIVERGED**
+
+The synthesis layer is not a summary — it reasons *across* tiers: agreements confirm
+confidence; contradictions expose subtler patterns (e.g. "same vocabulary, different
+control flow" = REFACTORED even when character-level diff is large).
 
 ```bash
 spl3 compare <file1> <file2> [OPTIONS]
 ```
 
-### Comparison Modes (`--mode`)
+### Six comparison tiers
 
-You can specify multiple modes to generate a comprehensive "Physics Lens" report:
+| # | Tier | Mode | Auto-default for | What it measures |
+|---|------|------|-----------------|-----------------|
+| 1 | Topological | `ged` | `.mmd` | SPL-node-aware Graph Edit Distance |
+| 2 | Semantic | `llm` / `vision` | `.md`, `.spl` / images | Intent, meaning, logical purpose |
+| 3 | Syntactic | `ast-diff` | (manual) | AST-level inventory: GENERATE/CALL/workflow names |
+| 4 | Structural | `structural` | (manual) | Document skeleton: headings, class/function names |
+| 5 | Character | `git-diff` | `.py`, `.js`, `.ts` | Line-level text diff |
+| 6 | Embedding | `vector` / `bert-score` | (manual) | Cosine similarity in embedding space |
 
-| Mode | Description | Metric | Best for |
-|------|-------------|--------|----------|
-| `llm` | LLM-powered semantic analysis (default) | 1-10 scores | `.md` spec files |
-| `vector` | Embedding-based cosine similarity | 0.0–1.0 | Any text files |
-| `bert-score` | Contextual alignment via BERTScore | F1 Score | Any text files |
-| `ged` | Graph Edit Distance | Topological distance | `.mmd` files only |
-| `git-diff` | Line-by-line difference | Unified/side-by-side diff | `.spl` files |
+**All modes are additive and composable.** The default tier is auto-selected from the
+file extension; override or add tiers with `--mode`.
+
+### File-type auto-dispatch
+
+```bash
+spl3 compare a.mmd b.mmd          # → ged  (no LLM needed)
+spl3 compare a.spl b.spl          # → llm
+spl3 compare a.md  b.md           # → llm
+spl3 compare a.py  b.py           # → git-diff
+spl3 compare a.png b.png          # → vision (PIL pixel-diff + LLM vision if available)
+```
+
+### Synthesis verdict
+
+When `--synthesize` is on (default) and `--adapter` is set, a final LLM pass
+integrates all tier results into a single structured verdict:
+
+| Verdict | Meaning |
+|---------|---------|
+| `EQUIVALENT` | Functionally and semantically the same (surface noise allowed) |
+| `REFACTORED` | Structure/intent preserved; presentation or style changed |
+| `DEGRADED` | One file is a lossy version of the other — information was lost |
+| `DIVERGED` | Genuinely different intent, logic, or purpose |
+
+When no LLM adapter is available, a **rule-based fallback** drives the verdict
+from GED normalized distance alone (0 → EQUIVALENT, < 0.10 → REFACTORED,
+< 0.35 → DEGRADED, else → DIVERGED).
+
+### LLM fallback for failed tiers
+
+If a mode-specific tier fails (e.g. `networkx` not installed for `ged`, or
+`dd-embed` not installed for `vector`) and `--adapter` is set, `compare`
+automatically runs a targeted LLM analysis covering the failed tier's aspects
+rather than leaving it blank.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--mode MODE` | auto (by ext) | Tier(s) to run. Repeatable. Choices: `llm git-diff vector bert-score ged vision ast-diff structural` |
+| `--adapter NAME` | `ollama` | LLM adapter for all analysis: semantic, vision, synthesis, fallback |
+| `--model MODEL` | adapter default | Model override |
+| `--adapter-embed NAME` | same as `--adapter` | Adapter for embedding modes (vector, bert-score) |
+| `--adapter-synthesis NAME` | same as `--adapter` | Adapter for synthesis pass |
+| `--format` | `markdown` | Output format: `markdown` · `json` · `text` · `html` |
+| `--focus` | `all` | LLM focus: `all` · `structure` · `logic` · `quality` · `syntax` · `spl` |
+| `--diff-style` | `unified` | git-diff style: `unified` · `context` · `side-by-side` |
+| `--synthesize / --no-synthesize` | on | Run synthesis LLM pass to produce verdict |
+| `--output / -o FILE` | stdout | Write report to file |
+| `--prompt` | off | Print LLM prompt and exit (mode=llm) |
+
+> **`--focus spl`** activates a domain-aware prompt that treats `GENERATE` function
+> signatures as the semantic heart, `EXCEPTION` handlers as safety contracts, and
+> `CALL` dependencies as primary evidence — rather than treating `.spl` as generic text.
+
+### Output formats
+
+**`--format markdown`** (default) — renders a structured report with the synthesis
+verdict banner at the top, followed by collapsible tier sections. Suitable for saving
+as `S6-*.md` or `S10-*.md` pipeline artifacts.
+
+**`--format html`** — renders a **3-panel side-by-side report**:
+- Top-left panel: File 1 (Mermaid diagrams rendered live via Mermaid JS; images embedded; code shown as-is)
+- Top-right panel: File 2 (same)
+- Bottom panel: synthesis verdict (colour-coded banner) + collapsible tier details
+
+**`--format json`** — machine-readable, includes all tier results and metadata.
+Useful for programmatic processing or aggregating results across experiments.
+
+**`--format text`** — compact terminal output, verdict first.
 
 ### Examples
 
 ```bash
-# Full scientific comparison
-spl3 compare spec1.md spec2.md --mode llm --mode vector --mode bert-score
+# .mmd round-trip check — GED auto-selected, HTML report with live diagrams
+spl3 compare orig.mmd roundtrip.mmd \
+  --adapter claude_cli --format html -o roundtrip.html
 
-# Compare topologies of two Mermaid charts
-spl3 compare chart1.mmd chart2.mmd --mode ged
+# .spl semantic comparison with SPL-domain prompt
+spl3 compare v1.spl v2.spl \
+  --adapter claude_cli --focus spl
 
-# Mechanical diff with side-by-side view (markdown output)
-spl3 compare file1.spl file2.spl --mode git-diff --diff-style side-by-side
+# Multi-tier: topology + semantics + syntax (for deep SPL diff)
+spl3 compare a.spl b.spl \
+  --mode llm --mode ast-diff --mode git-diff \
+  --adapter claude_cli --focus spl --format html -o diff.html
+
+# Spec round-trip fidelity — S6 in the NDD pipeline
+spl3 compare S1-spec.md S5-spec.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o S6-spec-diff.md
+
+# Compare two Python files with LLM-assisted logical diff (upgrade from git-diff)
+spl3 compare old.py new.py --mode llm --mode git-diff --adapter claude_cli
+
+# Image comparison (PNG Mermaid diagrams)
+spl3 compare orig.png roundtrip.png --mode vision --adapter claude_cli
+
+# No LLM — pure GED with rule-based verdict
+spl3 compare a.mmd b.mmd --adapter "" --format text
+
+# Full ablation comparison — S10 in the NDD pipeline
+spl3 compare S6-ir-diff.md S9-vibe-diff.md \
+  --adapter claude_cli --model claude-opus-4-6 \
+  -o S10-ablation.md
 ```
+
+### Round-trip consistency workflow
+
+`spl3 compare` is the natural quality gate for the `spl2mmd → mmd2spl → spl2mmd`
+round-trip. Compare the original `.mmd` against the re-generated `.mmd` to detect
+what `mmd2spl` lost:
+
+```bash
+# Generate original diagram (deterministic)
+spl3 spl2mmd workflow.spl --out-dir diagrams/ --no-preview
+
+# Round-trip: Mermaid → SPL → Mermaid
+spl3 mmd2spl diagrams/workflow.mmd --adapter claude_cli -o roundtrip.spl
+spl3 spl2mmd roundtrip.spl --out-dir roundtrip/ --no-preview
+
+# Semantic diff: topology (GED) + synthesis verdict
+spl3 compare diagrams/workflow.mmd roundtrip/roundtrip.mmd \
+  --adapter claude_cli --format html -o roundtrip-report.html
+```
+
+A `DEGRADED` verdict identifies specific lost nodes; `EQUIVALENT` confirms
+lossless round-trip. The HTML report renders both diagrams side-by-side for
+direct visual comparison.
 
 ---
 
-## 10. spl3 splc compile
+## 11. spl3 splc compile
 
 Deterministic or LLM-assisted compilation of a `.spl` logical view to a physical target.
 
@@ -194,7 +425,7 @@ spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m q
 
 ---
 
-## 11. spl3 splc describe
+## 12. spl3 splc describe
 
 Reverse-engineers a specification from a **compiled target implementation**. Used in step S5 of the NDD round-trip pipeline.
 
@@ -210,7 +441,7 @@ splc describe → spec.md → text2spl → .spl → splc compile → new target
 
 ---
 
-## 12. spl3 vibe
+## 13. spl3 vibe
 
 One-shot prototype generator: **NL description → working code + README + test data**,
 in a single LLM call. No `.mmd` or `.spl` IR steps required.
@@ -290,7 +521,7 @@ spl3 vibe "judge agent" --adapter claude_cli --prompt
 
 ---
 
-## 13. spl3 code-rag
+## 14. spl3 code-rag
 
 Manages the Code-RAG vector store that powers `text2spl` and `vibe` few-shot retrieval.
 
@@ -301,7 +532,7 @@ spl3 code-rag stats
 
 ---
 
-## 14. Full Pipeline S1–S10: IR + Ablation
+## 15. Full Pipeline S1–S10: IR + Ablation
 
 The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
 (S7–S10) to measure whether the Mermaid + SPL intermediate representations add
@@ -323,6 +554,7 @@ each one is a useful standalone feature.**
 | S1 | `spl3 splc describe --include-docs` | `S1-*-1-spec.md` | Reverse-engineer any codebase into a spec |
 | S2 | `spl3 text2mmd` | `S2-*.mmd` | Visualise workflow topology from a spec |
 | S3 | `spl3 mmd2spl` | `S3-*.spl` | Convert a diagram to executable SPL |
+| S3✓ | `spl3 spl2mmd` | `S3-*.mmd` | **Visual validation:** re-render S3 SPL as diagram, compare with S2 |
 | S4 | `spl3 splc compile --llm` | `S4-*.py` | Compile SPL to a target framework |
 | S5 | `spl3 splc describe` | `S5-*-2-spec.md` | Spec the compiled artifact |
 | S6 | `spl3 compare S1 S5` | `S6-*-spec-diff.md` | Measure round-trip intent fidelity (ΔS) |
@@ -342,8 +574,9 @@ Every `[Human Checkpoint]` in S1–S10 follows the same three-step protocol:
 ```
 
 Checkpoints occur after S1 (spec quality), S2 (diagram topology), S3 (SPL validation
-+ run), S4 (compiled code test), S6 (review score), S7 (vibe output run), S10
-(ablation verdict). Steps S5, S8, S9 are fully automated.
++ run), S3✓ (visual diff of re-rendered diagram vs. S2), S4 (compiled code test),
+S6 (review score), S7 (vibe output run), S10 (ablation verdict).
+Steps S5, S8, S9 are fully automated.
 
 ### Phase 1 — Full IR pipeline (S1→S6)
 
@@ -353,6 +586,7 @@ existing code / README
     → S2: spl3 text2mmd                        Mermaid diagram
           ⚠️  [Human] verify topology
     → S3: spl3 mmd2spl                         SPL workflow
+          spl3 spl2mmd S3-*.spl                re-render as diagram for visual diff vs S2
           ⚠️  [Human] spl3 validate + spl3 run
     → S4: spl3 splc compile --llm              compiled code
           ⚠️  [Human] run with test inputs
@@ -391,6 +625,10 @@ spl3 text2mmd $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
 spl3 mmd2spl $OUT/S2-$RECIPE-$ADAPTER-$MODEL.mmd \
   --adapter $ADAPTER --model $MODEL_ID -o $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
 spl3 validate $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl
+
+# S3✓ — visual validation: re-render S3 SPL as diagram, compare with S2
+spl3 spl2mmd $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
+  --out-dir $OUT/S3-check/ --no-preview --save-pdf
 
 # S4 — compile to Python/PocketFlow
 spl3 splc compile $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
@@ -441,10 +679,12 @@ spl3 compare $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
 | Quantify IR value-add for a specific workflow | S1→S10 (both paths) |
 | Already have a `.spl` file, new target | S4 only (`splc compile`) |
 | Already have compiled code, need spec | S5 only (`splc describe`) |
+| Visual audit of any `.spl` file (no LLM) | `spl3 spl2mmd` |
+| Publication-quality diagram from `.spl` | `spl3 spl2mmd --save-pdf` |
 
 ---
 
-## 15. Debugging LLM Prompts
+## 16. Debugging LLM Prompts
 
 All LLM-powered commands support the `--prompt` flag. It prints the full assembled
 prompt — including RAG hits and reference context — then exits without calling the API.
@@ -467,16 +707,32 @@ The output includes prompt length in characters and approximate token count.
 
 ---
 
-## 16. Command reference
+## 17. Command reference
 
 ```
-spl3 validate <file.spl>
+spl3 validate <file.spl> [file.spl ...]
 spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
 spl3 text2mmd "<description>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
+spl3 spl2mmd <file.spl> [file.spl ...]
+              [--out-dir DIR]
+              [--preview/--no-preview]      # default: on
+              [--save-html/--no-save-html]  # default: on
+              [--save-markdown/--no-save-markdown]  # default: on
+              [--save-spl/--no-save-spl]    # default: on
+              [--save-png]                  # default: off
+              [--save-pdf]                  # default: off; needs mmdc or Chrome
 spl3 mmd2spl <file.mmd> [--adapter] [--template workflow|function] [--prompt]
-spl3 compare <f1> <f2> [--mode MODE] [--adapter] [--format markdown|json|text] [--prompt]
+spl3 compare <f1> <f2>
+              [--mode llm|git-diff|vector|bert-score|ged|vision|ast-diff|structural]
+              [--adapter NAME] [--model MODEL]
+              [--adapter-embed NAME] [--adapter-synthesis NAME]
+              [--format markdown|json|text|html] [-o FILE]
+              [--focus all|structure|logic|quality|syntax|spl]
+              [--diff-style unified|context|side-by-side]
+              [--synthesize/--no-synthesize]
+              [--prompt]
 spl3 vibe "<description>" [--target LANG] [--adapter] [--model]
           [--out-dir DIR] [-o FILE]
           [--rag/--no-rag] [--rag-k N] [--references URL] [--verbose] [--prompt]

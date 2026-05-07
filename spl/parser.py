@@ -304,6 +304,13 @@ class Parser:
             self._expect(TokenType.RPAREN)
             return CTEClause(name=name, nested_prompt=nested_prompt)
 
+        # Shorthand: GENERATE directly without a PROMPT header (documentation style)
+        if self._check(TokenType.GENERATE):
+            generate_clause = self._parse_generate_clause()
+            nested_prompt = PromptStatement(name=name, generate_clause=generate_clause)
+            self._expect(TokenType.RPAREN)
+            return CTEClause(name=name, nested_prompt=nested_prompt)
+
         select_items = self._parse_select_clause()
 
         from_clause = None
@@ -367,7 +374,10 @@ class Parser:
             else:
                 min_vram_gb = float(self._expect(TokenType.INTEGER).value)
 
-        select_items = self._parse_select_clause()
+        if self._check(TokenType.SELECT):
+            select_items = self._parse_select_clause()
+        else:
+            select_items = []
 
         generate_clause = None
         if self._check(TokenType.GENERATE):
@@ -1621,6 +1631,12 @@ class Parser:
         if tok.type in keyword_as_expr:
             self._advance()
             return Identifier(name=tok.value)
+
+        # Unary minus: -expr  (e.g. -1.5, -@var)
+        if tok.type == TokenType.MINUS:
+            self._advance()
+            operand = self._parse_primary()
+            return BinaryOp(left=Literal(value=0, literal_type="int"), op="-", right=operand)
 
         # Parenthesized expression
         if tok.type == TokenType.LPAREN:
