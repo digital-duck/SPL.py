@@ -2,8 +2,7 @@
 -- General-purpose LLM query — proxy any prompt to any adapter/model.
 
 CREATE FUNCTION answer(prompt TEXT)
-RETURNS TEXT
-AS $$
+RETURNS TEXT AS $$
 {prompt}
 $$;
 

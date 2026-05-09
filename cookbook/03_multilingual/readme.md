@@ -12,10 +12,8 @@ Greet in any language — demonstrates parametric context passing via `user_inpu
 ## Usage
 
 ```bash
-spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model gemma3 \
-    --param user_input="Hello Wen-Guang" --param lang="Chinese"
+spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model phi4 \
+    --param user_input="What is Python"
 
-spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model gemma3 \
-    --param user_input="Hello Wen-Guang" --param lang="Spanish"
 
 ```

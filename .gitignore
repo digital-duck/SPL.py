@@ -9,6 +9,8 @@ go_git.log
 
 README.html
 
+neurips-experiments/
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
