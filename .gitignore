@@ -10,6 +10,7 @@ go_git.log
 README.html
 
 neurips-experiments/
+backup/
 
 
 # Byte-compiled / optimized / DLL files
