@@ -1,0 +1,1 @@
+{"nodes": [{"id": "splc_transpiler_ts_typescript_transpiler", "label": "TypeScriptTranspiler (deterministic SPL to TypeScript)", "file_type": "code", "source_file": "spl3/splc/transpiler_ts.py", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

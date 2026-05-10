@@ -1070,7 +1070,7 @@ def code_rag_import(cookbook_dir: str, catalog: str | None, from_file: str | Non
 
     if from_file:
         # ── JSONL import ──────────────────────────────────────────────────
-        from spl.text2spl import Text2SPL
+        from spl3.text2spl import Text2SPL
         path = Path(from_file)
         if not path.exists():
             raise click.ClickException(f"File not found: {from_file}")
@@ -1333,7 +1333,7 @@ def code_rag_parse_log(
       spl code-rag parse-log cookbook/out/run_all_20260320.md
       spl code-rag parse-log cookbook/out/run_all_20260320.md --dry-run
     """
-    from spl.text2spl import Text2SPL
+    from spl3.text2spl import Text2SPL
 
     catalog_map = _load_catalog_map(cookbook_dir)
     store = None if dry_run else _get_code_rag_store(storage_dir)
@@ -1445,7 +1445,7 @@ def cmd_text2spl(description: str, adapter: str | None, model: str | None,
     log = get_logger("cli.text2spl", "spl")
     log.info("spl text2spl %r --adapter %s --mode %s", description, adapter, mode)
 
-    from spl.text2spl import Text2SPL
+    from spl3.text2spl import Text2SPL
     from spl.adapters import get_adapter as _get_adapter
 
     try:

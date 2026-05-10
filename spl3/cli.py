@@ -729,7 +729,7 @@ def cmd_text2spl(description, description_opt, adapter, model, mode, validate, o
       spl3 text2spl "classify intent" --adapter ollama -m gemma3
     """
     import re as _re
-    from spl.text2spl import Text2SPL
+    from spl3.text2spl import Text2SPL
     from spl3.adapters import get_adapter
 
     # Resolve description: --description option takes precedence over positional arg
