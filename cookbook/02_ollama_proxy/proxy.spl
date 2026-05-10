@@ -11,8 +11,7 @@
 --   prompt  (required)  The user prompt / question
 
 CREATE FUNCTION answer(prompt TEXT)
-RETURNS TEXT
-AS $$
+RETURNS TEXT AS $$
 {prompt}
 $$;
 

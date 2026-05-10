@@ -14,11 +14,10 @@ spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama \
 
 Override the models:
 ```bash
-spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama \
+spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama --model gemma4:e2b \
     --param prompt="Write a poem about Spring season" \
     --param model_1=gemma3 \
-    --param model_2=phi3 \
-    --param model_3=qwen2.5
+    --param model_2=phi3
 ```
 
 ## Parameters
@@ -27,8 +26,8 @@ spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama \
 |-----------|---------|-------------|
 | `prompt`  | `What is the benefit of meditation?` | The question sent to all models |
 | `model_1` | `gemma3`   | First model  |
-| `model_2` | `llama3.2` | Second model |
-| `model_3` | `mistral`  | Third model  |
+| `model_2` | `llama3` | Second model |
+
 
 ## How it works
 

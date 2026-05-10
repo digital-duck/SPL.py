@@ -7,18 +7,16 @@
 --       prompt="What is the meaning of life?"
 
 CREATE FUNCTION answer(prompt TEXT)
-RETURNS TEXT
-AS $$
+RETURNS TEXT AS $$
 {prompt}
 $$;
 
 CREATE FUNCTION compare_responses(
     prompt TEXT,
     model_1 TEXT, answer_1 TEXT,
-    model_2 TEXT, answer_2 TEXT,
-    model_3 TEXT, answer_3 TEXT
-) RETURNS TEXT
-AS $$
+    model_2 TEXT, answer_2 TEXT
+) 
+RETURNS TEXT AS $$
 You are a neutral evaluator comparing responses from three AI models.
 
 Prompt given to all models: "{prompt}"
@@ -31,9 +29,6 @@ First, reproduce model raw response exactly as given, formatted like this:
 === {model_2} ===
 {answer_2}
 
-=== {model_3} ===
-{answer_3}
-
 Then provide your evaluation. For each model briefly assess:
 - Response quality
 - Key strengths or weaknesses
@@ -45,8 +40,8 @@ WORKFLOW model_showdown
     INPUT:
         @prompt  TEXT DEFAULT 'What is the meaning of life?',
         @model_1 TEXT DEFAULT 'gemma3',
-        @model_2 TEXT DEFAULT 'phi4',
-        @model_3 TEXT DEFAULT 'qwen2.5'
+        @model_2 TEXT DEFAULT 'phi3',
+        @log_dir TEXT := 'cookbook/04_model_showdown/logs-spl'
     OUTPUT: @comparison TEXT
 DO
     -- Run the same prompt against all three models in parallel CTEs
@@ -66,34 +61,27 @@ DO
                 @prompt AS prompt
             GENERATE answer(prompt)
             USING MODEL @model_2
-        ),
-        response_3 AS (
-            PROMPT ask_model_3
-            SELECT
-                system_role('You are a helpful, knowledgeable assistant.'),
-                @prompt AS prompt
-            GENERATE answer(prompt)
-            USING MODEL @model_3
         )
     SELECT
         response_1.answer AS answer_1,
-        response_2.answer AS answer_2,
-        response_3.answer AS answer_3
-    INTO @answer_1, @answer_2, @answer_3
+        response_2.answer AS answer_2
+    INTO @answer_1, @answer_2
 
     -- Judge all three responses together
     GENERATE compare_responses(
         @prompt,
         @model_1, @answer_1,
-        @model_2, @answer_2,
-        @model_3, @answer_3
+        @model_2, @answer_2
     ) INTO @comparison
+
+    CALL write_file(f'{@log_dir}/resp_{@model_1}.md', @answer_1) INTO NONE
+    CALL write_file(f'{@log_dir}/resp_{@model_2}.md', @answer_2) INTO NONE
+    CALL write_file(f'{@log_dir}/comparison.md', @comparison) INTO NONE
 
     RETURN @comparison WITH
         status   = 'complete',
         model_1  = @model_1,
-        model_2  = @model_2,
-        model_3  = @model_3
+        model_2  = @model_2
 
 EXCEPTION
     WHEN GenerationError THEN

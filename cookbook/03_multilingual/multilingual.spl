@@ -4,7 +4,7 @@
 -- Usage:
 --   spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama user_input="hello wen" lang="Chinese"
 
-CREATE FUNCTION greeting(input TEXT := 'hello', lang List := ['Chinese', 'English', 'Spanish', 'French', 'German'])
+CREATE FUNCTION greeting(input TEXT := 'hello', lang List := ['Chinese', 'English'])
 RETURNS TEXT
 AS $$
 You are a friendly assistant. 
