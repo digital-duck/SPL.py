@@ -26,7 +26,11 @@ _VERDICT_ICON = {
 }
 
 
-def render_report(res: ComparisonResult, output_format: str) -> str:
+def render_report(
+    res: ComparisonResult,
+    output_format: str,
+    panel_pngs: "tuple[bytes | None, bytes | None] | None" = None,
+) -> str:
     if output_format == "json":
         return json.dumps({
             "file1":      res.file1,
@@ -50,7 +54,7 @@ def render_report(res: ComparisonResult, output_format: str) -> str:
         return "\n".join(lines)
 
     if output_format == "html":
-        return _render_html(res)
+        return _render_html(res, panel_pngs=panel_pngs)
 
     return _render_markdown(res)
 
@@ -177,18 +181,30 @@ def _render_markdown(res: ComparisonResult) -> str:
 
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
-def _render_html(res: ComparisonResult) -> str:
+def _render_html(
+    res: ComparisonResult,
+    panel_pngs: "tuple[bytes | None, bytes | None] | None" = None,
+) -> str:
     path1, path2 = Path(res.file1), Path(res.file2)
     content1 = path1.read_text(encoding="utf-8")
     content2 = path2.read_text(encoding="utf-8")
     ext = res.ext
+    png1_bytes = panel_pngs[0] if panel_pngs else None
+    png2_bytes = panel_pngs[1] if panel_pngs else None
 
     _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
     _MIME_MAP  = {".png": "image/png", ".jpg": "image/jpeg",
                   ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp"}
 
-    def _panel(path: Path, content: str, ext: str) -> str:
+    def _panel(path: Path, content: str, ext: str, png_bytes: "bytes | None" = None) -> str:
         if ext == ".mmd":
+            if png_bytes:
+                data = _b64.standard_b64encode(png_bytes).decode()
+                return (
+                    f'<img src="data:image/png;base64,{data}" '
+                    f'style="max-width:100%;height:auto;cursor:zoom-in" '
+                    f'onclick="this.style.maxWidth=this.style.maxWidth?\'\':\' 100%\'">'
+                )
             return f'<div class="mermaid">\n{_html_mod.escape(content)}\n</div>'
         if ext in _IMG_EXTS:
             try:
@@ -328,11 +344,11 @@ def _render_html(res: ComparisonResult) -> str:
   <div class="top-row">
     <div class="panel">
       <h3>📄 {_html_mod.escape(path1.name)}</h3>
-      <div class="panel-inner">{_panel(path1, content1, ext)}</div>
+      <div class="panel-inner">{_panel(path1, content1, ext, png1_bytes)}</div>
     </div>
     <div class="panel">
       <h3>📄 {_html_mod.escape(path2.name)}</h3>
-      <div class="panel-inner">{_panel(path2, content2, path2.suffix.lower())}</div>
+      <div class="panel-inner">{_panel(path2, content2, path2.suffix.lower(), png2_bytes)}</div>
     </div>
   </div>
   <div class="bottom-row">

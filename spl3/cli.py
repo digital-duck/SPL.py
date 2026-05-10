@@ -1123,6 +1123,92 @@ def fix_node_syntax(text, node_map, node_id_counter):
 
 
 # ------------------------------------------------------------------ #
+# Mermaid rendering helpers (shared by text2mmd and compare)          #
+# ------------------------------------------------------------------ #
+
+def _mmd_single_html(mmd_text: str, title: str) -> str:
+    """Standalone HTML page that renders one mermaid diagram."""
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>{title}</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>
+    body{{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5}}
+    .container{{max-width:1400px;margin:0 auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1)}}
+    .mermaid{{text-align:center;margin:20px 0}}
+    pre{{background:#f8f9fa;border:1px solid #e9ecef;border-radius:4px;padding:15px;font-family:monospace;white-space:pre-wrap}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>{title}</h2>
+    <div class="mermaid">{mmd_text}</div>
+    <details style="margin-top:20px"><summary style="cursor:pointer;color:#57606a">Source</summary>
+      <pre>{mmd_text}</pre></details>
+  </div>
+  <script>mermaid.initialize({{startOnLoad:true,theme:'default',securityLevel:'loose',errorLevel:'warn'}});</script>
+</body>
+</html>"""
+
+
+def _save_mmd_formats(
+    mmd_path: "Path",
+    out_dir: "Path",
+    *,
+    save_html: bool = True,
+    save_png: bool = True,
+    save_md: bool = False,
+    save_pdf: bool = False,
+) -> list[str]:
+    """Save a .mmd file as HTML / PNG / MD / PDF. Returns saved-file descriptions."""
+    import shutil, subprocess
+    saved: list[str] = []
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stem = mmd_path.stem
+    mmd_text = mmd_path.read_text(encoding="utf-8")
+
+    if save_md:
+        md_path = out_dir / f"{stem}.md"
+        md_path.write_text(f"# {stem}\n\n```mermaid\n{mmd_text}\n```\n", encoding="utf-8")
+        saved.append(f"MD: {md_path}")
+
+    if save_html:
+        html_path = out_dir / f"{stem}.html"
+        html_path.write_text(_mmd_single_html(mmd_text, stem), encoding="utf-8")
+        saved.append(f"HTML: {html_path}")
+
+    # PNG and PDF both go through mmdc (supports -o *.png and -o *.pdf natively)
+    if save_png or save_pdf:
+        import json, tempfile
+        mmdc = shutil.which("mmdc")
+        mmdc_base = [mmdc] if mmdc else ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
+        # Puppeteer needs --no-sandbox on Linux systems with restricted user namespaces
+        puppet_cfg = Path(tempfile.mktemp(suffix=".json"))
+        puppet_cfg.write_text(json.dumps({"args": ["--no-sandbox"]}))
+        try:
+            for ext, flag in (("png", save_png), ("pdf", save_pdf)):
+                if not flag:
+                    continue
+                out_path = out_dir / f"{stem}.{ext}"
+                args = mmdc_base + ["-i", str(mmd_path), "-o", str(out_path), "-p", str(puppet_cfg)]
+                try:
+                    r = subprocess.run(args, capture_output=True, timeout=60)
+                    if r.returncode == 0:
+                        saved.append(f"{ext.upper()}: {out_path}")
+                    else:
+                        click.echo(f"Warning: mmdc failed for {mmd_path.name} → .{ext}", err=True)
+                except Exception as exc:
+                    click.echo(f"Warning: {ext.upper()} render error — {exc}", err=True)
+        finally:
+            puppet_cfg.unlink(missing_ok=True)
+
+    return saved
+
+
+# ------------------------------------------------------------------ #
 # spl3 text2mmd                                                       #
 # ------------------------------------------------------------------ #
 
@@ -1318,166 +1404,24 @@ Generate ONLY the diagram code. No explanations. Follow the format exactly:
     # Generate additional formats
     additional_files = []
 
-    # Markdown format for VS Code preview
-    if save_markdown:
-        cmd_line = ' '.join(['spl3', 'text2mmd'] + sys.argv[2:])
-        title = base_name.title().replace('_', ' ').replace('-', ' ')
+    # All rendering formats via shared helper
+    for desc in _save_mmd_formats(
+        output_path,
+        output_dir,
+        save_md=save_markdown,
+        save_html=(save_html or preview),
+        save_png=save_png,
+        save_pdf=False,
+    ):
+        label, _, path_str = desc.partition(": ")
+        additional_files.append(f"{label} (Browser): {path_str}" if label == "HTML" else desc)
 
-        markdown_content = "# " + title + " Workflow\n\n"
-        markdown_content += "Generated with [SPL](https://github.com/digital-duck/SPL) using: `" + cmd_line + "`\n\n"
-        markdown_content += "## Mermaid Diagram\n\n"
-        markdown_content += "```mermaid\n" + mermaid_text + "\n```\n\n"
-        markdown_content += "## Usage Options\n\n"
-        markdown_content += "### For SPL Development\n"
-        markdown_content += "1. Review the workflow diagram above\n"
-        markdown_content += "2. Edit the mermaid code if needed\n"
-        markdown_content += "3. Generate SPL code: `spl3 mmd2spl " + str(output) + " -o " + base_name + ".spl`\n"
-        markdown_content += "4. Validate: `spl3 validate " + base_name + ".spl`\n\n"
-        markdown_content += "### For General Use\n"
-        markdown_content += "1. Use the `.mmd` file with any Mermaid-compatible tool\n"
-        markdown_content += "2. Copy the diagram code for documentation, presentations, or websites\n"
-        markdown_content += "3. Edit the visual workflow and regenerate as needed\n\n"
-        markdown_content += "---\n\n"
-        markdown_content += "**Learn more**: [SPL Repository](https://github.com/digital-duck/SPL) | [Documentation](https://github.com/digital-duck/SPL#readme)\n"
-        md_path = output_dir / (base_name + ".md")
-        md_path.write_text(markdown_content, encoding="utf-8")
-        additional_files.append("Markdown (VS Code): " + str(md_path))
+    html_path = output_dir / (base_name + ".html") if (save_html or preview) else None
 
-    # HTML format for browser viewing
-    if save_html or preview:
-        title = base_name.title().replace('_', ' ').replace('-', ' ')
-        filename = Path(output).name
-
-        # Build HTML content with proper escaping
-        html_parts = [
-            "<!DOCTYPE html>",
-            "<html>",
-            "<head>",
-            '    <meta charset="UTF-8">',
-            '    <title>' + title + ' - Mermaid Workflow</title>',
-            '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
-            "    <style>",
-            "        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }",
-            "        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }",
-            "        .header { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }",
-            "        .mermaid { text-align: center; margin: 20px 0; min-height: 200px; }",
-            "        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #eee; color: #666; font-size: 0.9em; }",
-            "        .raw-code { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 15px; margin: 20px 0; font-family: 'Courier New', monospace; white-space: pre-wrap; }",
-            "        .error-info { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 15px; margin: 20px 0; }",
-            "    </style>",
-            "</head>",
-            "<body>",
-            '    <div class="container">',
-            '        <div class="header">',
-            "            <h1>" + title + " Workflow</h1>",
-            '            <p><strong>Generated with <a href="https://github.com/digital-duck/SPL" target="_blank">SPL</a></strong></p>',
-            "            <p><strong>File:</strong> " + filename + " | <strong>Style:</strong> " + style + " | <strong>Adapter:</strong> " + adapter + "</p>",
-            "        </div>",
-            '        <div id="mermaid-container" class="mermaid">',
-            mermaid_text,
-            "        </div>",
-            '        <div id="error-container" class="error-info" style="display: none;">',
-            "            <h3>⚠️ Mermaid Syntax Error</h3>",
-            "            <p>The diagram couldn't be rendered. This often happens due to:</p>",
-            "            <ul>",
-            "                <li>Invalid node naming (spaces without brackets)</li>",
-            "                <li>Incorrect edge syntax</li>",
-            "                <li>Circular references</li>",
-            "            </ul>",
-            "            <p><strong>Generated Code:</strong></p>",
-            '            <div class="raw-code">' + mermaid_text + "</div>",
-            "            <p>Please edit the <code>" + filename + "</code> file to fix syntax issues.</p>",
-            "        </div>",
-            '        <div class="footer">',
-            "            <p><strong>Usage Options:</strong></p>",
-            "            <p><strong>For SPL:</strong> Generate code with <code>spl3 mmd2spl " + filename + " -o " + base_name + ".spl</code></p>",
-            "            <p><strong>For General Use:</strong> Copy diagram code for documentation, presentations, or other Mermaid tools</p>",
-            '            <hr style="margin: 20px 0;">',
-            '            <p><strong>About SPL:</strong> <a href="https://github.com/digital-duck/SPL" target="_blank">GitHub Repository</a> |',
-            '               <a href="https://github.com/digital-duck/SPL#readme" target="_blank">Documentation</a></p>',
-            '            <p><small>Visual workflow programming • General purpose workflow visualization tool</small></p>',
-            "        </div>",
-            "    </div>",
-            "    <script>",
-            "        mermaid.initialize({",
-            "            startOnLoad: true,",
-            "            theme: 'default',",
-            "            securityLevel: 'loose',",
-            "            errorLevel: 'warn'",
-            "        });",
-            "        window.addEventListener('error', function(e) {",
-            "            if (e.message && e.message.toLowerCase().includes('mermaid')) {",
-            "                document.getElementById('mermaid-container').style.display = 'none';",
-            "                document.getElementById('error-container').style.display = 'block';",
-            "            }",
-            "        });",
-            "        setTimeout(function() {",
-            "            const container = document.getElementById('mermaid-container');",
-            "            if (container && (container.innerHTML.includes('Syntax error') || container.innerHTML.includes('Parse error'))) {",
-            "                container.style.display = 'none';",
-            "                document.getElementById('error-container').style.display = 'block';",
-            "            }",
-            "        }, 2000);",
-            "    </script>",
-            "</body>",
-            "</html>"
-        ]
-        html_content = "\n".join(html_parts)
-        html_path = output_dir / (base_name + ".html")
-        html_path.write_text(html_content, encoding="utf-8")
-        additional_files.append("HTML (Browser): " + str(html_path))
-
-        if preview:
-            import webbrowser
-            webbrowser.open("file://" + str(html_path.absolute()))
-            click.echo("Preview opened in browser: " + str(html_path))
-
-    # PNG format for images/presentations
-    if save_png:
-        png_path = output_dir / (base_name + ".png")
-        try:
-            png_generated = False
-            import subprocess
-
-            # Create a simple HTML for PNG generation
-            png_html = """<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-<style>body{margin:0;padding:20px;background:white;font-family:Arial,sans-serif}
-.mermaid{text-align:center}</style></head>
-<body><div class="mermaid">""" + mermaid_text + """</div>
-<script>mermaid.initialize({startOnLoad:true,theme:'default',securityLevel:'loose'});</script>
-</body></html>"""
-
-            png_html_path = output_dir / (base_name + "_temp.html")
-            png_html_path.write_text(png_html, encoding="utf-8")
-
-            # Try Chrome/Chromium browsers
-            for chrome_cmd in ["google-chrome", "chromium-browser", "chromium", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]:
-                try:
-                    result = subprocess.run([
-                        chrome_cmd, "--headless", "--disable-gpu",
-                        "--window-size=1200,800", "--screenshot=" + str(png_path),
-                        "file://" + str(png_html_path.absolute())
-                    ], capture_output=True, timeout=30)
-
-                    if result.returncode == 0 and png_path.exists():
-                        png_html_path.unlink()  # Clean up
-                        additional_files.append("PNG Image: " + str(png_path))
-                        png_generated = True
-                        break
-                except (subprocess.TimeoutExpired, FileNotFoundError):
-                    continue
-
-            # Clean up temp file
-            if png_html_path.exists():
-                png_html_path.unlink()
-
-            if not png_generated:
-                click.echo("Warning: PNG generation requires Chrome/Chromium browser", err=True)
-
-        except Exception as e:
-            click.echo("Warning: PNG generation failed: " + str(e), err=True)
+    if preview and html_path and html_path.exists():
+        import webbrowser
+        webbrowser.open("file://" + str(html_path.absolute()))
+        click.echo("Preview opened in browser: " + str(html_path))
 
     # Report additional files
     if additional_files:
@@ -2641,13 +2585,12 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 @main.command("compare")
 @click.argument("file1")
 @click.argument("file2")
-@click.option("--mode", "modes", multiple=True,
-              type=click.Choice(["llm", "git-diff", "vector", "bert-score", "ged",
-                                  "vision", "ast-diff", "structural"]),
+@click.option("--mode", "modes", multiple=True, metavar="MODE",
               help=(
-                  "Comparison tier(s). Repeatable. "
+                  "Comparison tier(s). Repeatable, or comma-separated: --mode llm,git-diff. "
+                  "Choices: llm, git-diff, vector, bert-score, ged, vision, ast-diff, structural. "
                   "Auto-detected from file extension when omitted: "
-                  ".mmd→ged  .md/.spl→llm  .py/.js/.ts→git-diff  .png/.jpg→vision"
+                  ".mmd/.json→ged  .md/.spl→llm  .py/.js/.ts→git-diff  .png/.jpg→vision"
               ))
 @click.option("--adapter", default="ollama", show_default=True,
               help="LLM adapter for all analysis (semantic, vision, synthesis, fallback).")
@@ -2661,6 +2604,8 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
               help="Adapter for synthesis pass. Defaults to --adapter.")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write comparison report to FILE.")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Write report to DIR/{stem1}_vs_{stem2}.{ext}. Mutually exclusive with --output.")
 @click.option("--format", "output_format", default="markdown", show_default=True,
               type=click.Choice(["markdown", "json", "text", "html"]),
               help="Output format. 'html' renders a 3-panel side-by-side report.")
@@ -2677,7 +2622,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit (mode=llm).")
 def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
-                adapter_synthesis, output, output_format, focus, diff_style,
+                adapter_synthesis, output, out_dir, output_format, focus, diff_style,
                 no_color, synthesize, prompt_debug):
 
     """Multi-tier diff: topology · semantic · syntactic · structural · character · embedding.
@@ -2688,7 +2633,7 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
 
     \b
     Tier mapping (auto-detected defaults):
-      .mmd            → ged          (graph edit distance, SPL-node-aware)
+      .mmd / .json    → ged          (graph edit distance, SPL-node-aware)
       .md / .spl      → llm          (semantic intent analysis)
       .py / .js / .ts → git-diff     (character-level, upgradeable with --mode llm)
       .png / .jpg     → vision       (PIL pixel-diff; LLM vision if adapter supports it)
@@ -2703,6 +2648,9 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
     """
     import sys
 
+    if output and out_dir:
+        raise click.UsageError("--output and --out-dir are mutually exclusive.")
+
     path1 = Path(file1)
     path2 = Path(file2)
     if not path1.exists():
@@ -2715,6 +2663,7 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
     # ── Auto-detect comparison tier(s) from file extension ──────────────────
     _EXT_DEFAULTS: dict[str, list[str]] = {
         ".mmd":  ["ged"],
+        ".json": ["ged"],
         ".md":   ["llm"],
         ".spl":  ["llm"],
         ".py":   ["git-diff"],
@@ -2729,7 +2678,15 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
         ".svg":  ["llm"],
         ".txt":  ["git-diff"],
     }
-    active_modes = list(modes)
+    _VALID_MODES = {"llm", "git-diff", "vector", "bert-score", "ged", "vision", "ast-diff", "structural"}
+    # Flatten comma-separated values: --mode llm,git-diff is equivalent to --mode llm --mode git-diff
+    active_modes = [m.strip() for raw in modes for m in raw.split(",") if m.strip()]
+    invalid = [m for m in active_modes if m not in _VALID_MODES]
+    if invalid:
+        raise click.UsageError(
+            f"Invalid mode(s): {', '.join(invalid)}. "
+            f"Choose from: {', '.join(sorted(_VALID_MODES))}"
+        )
     if not active_modes:
         active_modes = _EXT_DEFAULTS.get(ext1, ["llm", "git-diff"])
         click.echo(f"Auto-selected tier(s) for {ext1 or 'unknown'}: {', '.join(active_modes)}", err=True)
@@ -2763,13 +2720,65 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
         diff_style=diff_style,
         no_color=no_color,
         output_format=output_format,
-        is_terminal=sys.stdout.isatty() and not output,
+        is_terminal=sys.stdout.isatty() and not output and not out_dir,
         synthesize=synthesize,
     ))
 
-    output_content = render_report(result_obj, output_format)
+    _FMT_EXT = {"markdown": "md", "json": "json", "text": "txt", "html": "html"}
 
-    if output:
+    # Resolve destination directory first so per-file artifacts can be generated
+    # before the report (PNGs are embedded as base64 in the HTML comparison report)
+    if out_dir:
+        dest_dir = Path(out_dir)
+    elif output:
+        dest_dir = Path(output).parent
+    else:
+        dest_dir = None
+
+    # Copy original source files into dest_dir so the output folder is self-contained
+    if dest_dir is not None:
+        import shutil
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for src in (path1, path2):
+            dst = dest_dir / src.name
+            if dst.resolve() != src.resolve():
+                shutil.copy2(src, dst)
+                click.echo(f"  Copied: {dst}")
+
+    # For .mmd: generate per-file artifacts (MD / HTML / PNG / PDF) first so the
+    # PNG bytes are available for embedding in the HTML comparison report panels
+    panel_pngs: tuple = (None, None)
+    if dest_dir is not None and ext1 == ".mmd":
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for p in (path1, path2):
+            for desc in _save_mmd_formats(p, dest_dir, save_md=True, save_html=True, save_png=True, save_pdf=True):
+                click.echo(f"  {desc}")
+        png1 = dest_dir / f"{path1.stem}.png"
+        png2 = dest_dir / f"{path2.stem}.png"
+        panel_pngs = (
+            png1.read_bytes() if png1.exists() else None,
+            png2.read_bytes() if png2.exists() else None,
+        )
+
+    # Render the comparison report (PNG bytes embedded in HTML panels if available)
+    output_content = render_report(result_obj, output_format, panel_pngs=panel_pngs)
+
+    # Strip trailing dots from stems (guards against filenames like "vibe_output..py")
+    s1 = path1.stem.rstrip(".")
+    s2 = path2.stem.rstrip(".")
+    stem_vs = f"{s1}_vs_{s2}-{'+'.join(active_modes)}"
+
+    if out_dir:
+        out_path = dest_dir / f"{stem_vs}.{_FMT_EXT.get(output_format, 'md')}"
+        out_path.write_text(output_content, encoding="utf-8")
+        click.echo(f"Comparison report written to: {out_path}")
+        # Always write the HTML comparison report regardless of --format
+        if output_format != "html":
+            html_report = render_report(result_obj, "html", panel_pngs=panel_pngs)
+            html_path = dest_dir / f"{stem_vs}.html"
+            html_path.write_text(html_report, encoding="utf-8")
+            click.echo(f"Comparison report written to: {html_path}")
+    elif output:
         out_path = Path(output)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(output_content, encoding="utf-8")

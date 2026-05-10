@@ -3,11 +3,19 @@
 from __future__ import annotations
 import re as _re
 
+# Mermaid keywords that must never be treated as node IDs
+_MMD_KEYWORDS = {
+    "flowchart", "graph", "subgraph", "end", "direction", "class", "style",
+    "click", "linkStyle", "classDef", "sequenceDiagram", "participant",
+    "TD", "LR", "RL", "BT", "TB",
+}
+
+
 def parse_mermaid_to_nx(mermaid_content: str):
     """Parse Mermaid flowchart into a NetworkX DiGraph with SPL-aware node types.
 
-    Reads the ``class <id> <type>`` annotations emitted by spl2mmd to attach
-    the SPL node type (llm, ctrl, term, assign, proc, log) as a node attribute.
+    Handles both quoted and unquoted labels across all common Mermaid shape
+    syntaxes: rectangle, stadium, decision (single/double curly), trapezoid.
     """
     try:
         import networkx as nx
@@ -16,31 +24,66 @@ def parse_mermaid_to_nx(mermaid_content: str):
 
     g = nx.DiGraph()
 
-    # Pass 1: extract node labels from all Mermaid shape syntaxes
-    for m in _re.finditer(r'^\s+(\w+)\[/"(.*?)"/\]', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
+    def _add(node_id: str, label: str, ntype: str = "unknown") -> None:
+        if node_id in _MMD_KEYWORDS:
+            return
+        label = label.replace("\\n", " ").strip()
+        if node_id not in g:
+            g.add_node(node_id, label=label, node_type=ntype)
 
-    for m in _re.finditer(r'^\s+(\w+)\{"(.*?)"\}', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
+    # ── Pass 1: extract nodes from all Mermaid shape syntaxes ──────────────
+    # Order matters: most specific patterns first to avoid partial matches.
 
-    for m in _re.finditer(r'^\s+(\w+)\(\["(.*?)"\]\)', mermaid_content, _re.MULTILINE):
-        g.add_node(m.group(1), label=m.group(2), node_type="unknown")
+    # double-curly decision  E{{text}}  or  E{{"text"}}
+    for m in _re.finditer(r'\b(\w+)\{\{(?:"([^"]+)"|([^}]+))\}\}', mermaid_content):
+        _add(m.group(1), m.group(2) or m.group(3))
 
-    for m in _re.finditer(r'^\s+(\w+)\["(.*?)"\]', mermaid_content, _re.MULTILINE):
-        if m.group(1) not in g:
-            g.add_node(m.group(1), label=m.group(2), node_type="unknown")
+    # SPL trapezoid  A[/"text"/]
+    for m in _re.finditer(r'\b(\w+)\[/"([^"]+)"/\]', mermaid_content):
+        _add(m.group(1), m.group(2))
 
-    # Pass 2: apply SPL node types from `class <id> <type>` annotations
+    # stadium  A(["text"])  or  A([text])
+    for m in _re.finditer(r'\b(\w+)\(\[(?:"([^"]+)"|([^\]]+))\]\)', mermaid_content):
+        _add(m.group(1), m.group(2) or m.group(3))
+
+    # rectangle  A["text"]  or  A[text]
+    # Exclude { to avoid double-curly re-match; exclude /"] to avoid trapezoid re-match
+    for m in _re.finditer(r'\b(\w+)\[(?:"([^"]+)"|([^\]\[{"]+(?<!/")))\]', mermaid_content):
+        _add(m.group(1), m.group(2) or m.group(3))
+
+    # single-curly decision  A{"text"}  or  A{text}
+    for m in _re.finditer(r'\b(\w+)\{(?:"([^"]+)"|([^{}]+))\}', mermaid_content):
+        _add(m.group(1), m.group(2) or m.group(3))
+
+    # Fallback: pick up bare node IDs that appear only in edge lines
+    _EDGE_RE = _re.compile(
+        r'(\w+)(?:\s*[\[({]).*?(?:-->|-\.->|--\w*->)|(?:-->|-\.->|--\w*->)\s*(?:\|[^|]*\|\s*)?(\w+)'
+    )
+    for line in mermaid_content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith(('%', 'style', 'class', 'linkStyle', 'classDef')):
+            continue
+        # src node of an edge
+        m = _re.match(r'(\w+)\s*(?:-->|-\.->|--)', stripped)
+        if m and m.group(1) not in _MMD_KEYWORDS and m.group(1) not in g:
+            g.add_node(m.group(1), label=m.group(1), node_type="unknown")
+        # dst node of an edge
+        for m2 in _re.finditer(r'(?:-->|-\.->|--\w*->)\s*(?:\|[^|]*\|\s*)?(\w+)', stripped):
+            nid = m2.group(1)
+            if nid not in _MMD_KEYWORDS and nid not in g:
+                g.add_node(nid, label=nid, node_type="unknown")
+
+    # ── Pass 2: apply SPL node types from `class <id> <type>` annotations ──
     _SPL_TYPES = {"llm", "ctrl", "term", "assign", "proc", "log"}
-    for m in _re.finditer(r'^\s+class\s+(\w+)\s+(\w+)\s*$', mermaid_content, _re.MULTILINE):
+    for m in _re.finditer(r'^\s*class\s+(\w+)\s+(\w+)\s*$', mermaid_content, _re.MULTILINE):
         node_id, css_class = m.group(1), m.group(2)
         if css_class in _SPL_TYPES and node_id in g:
             g.nodes[node_id]["node_type"] = css_class
 
-    # Pass 3: edges
+    # ── Pass 3: edges ───────────────────────────────────────────────────────
     for m in _re.finditer(
-        r'(\w+)\s*(?:-->|-\.->)\s*(?:\|([^|]*)\|\s*)?(\w+)',
-        mermaid_content
+        r'(\w+)\s*(?:-->|-\.->|--\w*->)\s*(?:\|([^|]*)\|\s*)?(\w+)',
+        mermaid_content,
     ):
         src, edge_label, dst = m.group(1), m.group(2), m.group(3)
         if src in g and dst in g:
