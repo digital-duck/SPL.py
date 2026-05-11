@@ -4,7 +4,7 @@
 **Branch:** `intent-eng`  
 **Source:** `/home/papagame/projects/digital-duck/SPL30`  
 **Target:** `/home/papagame/projects/digital-duck/SPL.py`  
-**Status:** Pending — awaiting branch creation
+**Status:** ✅ Migration complete — all 4 tasks done on `intent-eng`
 
 ---
 
@@ -53,7 +53,7 @@ SPL.py's version of this page was stripped of this integration. Also, SPL30 call
 `spl` (v2 CLI) instead of `spl3` in the run command — SPL.py already has the correct
 `spl3` call.
 
-#### M3 — SPL_UI.py dashboard metric (low value)
+#### M3 — SPL_UI.py dashboard metric (high value)
 
 **File:** `spl3/ui/streamlit/SPL_UI.py`
 
@@ -99,65 +99,51 @@ file wholesale — SPL.py's base class path is `spl.adapters.base`, SPL30's was 
 
 ## Migration Tasks
 
-Work to be done on branch `intent-eng`.
+All tasks completed on branch `intent-eng` on 2026-05-11.
 
-### Task 1 — Copy Text2Mermaid page
+### Task 1 — Copy Text2Mermaid page ✅
 
-```bash
-cp /home/papagame/projects/digital-duck/SPL30/spl3/ui/streamlit/pages/0_🗺️_Text2Mermaid.py \
-   /home/papagame/projects/digital-duck/SPL.py/spl3/ui/streamlit/pages/
-```
+Copied `SPL30/spl3/ui/streamlit/pages/0_🗺️_Text2Mermaid.py` to
+`SPL.py/spl3/ui/streamlit/pages/`. No import fixes needed — the page already
+tries `spl3.adapters` first and falls back to `spl.adapters`, and contains no
+direct `spl` CLI calls.
 
-Verify imports: the page uses `spl3.adapters` and `spl` CLI commands — confirm these
-resolve correctly in the SPL.py package layout. The page calls `spl text2spl ...`; update
-to `spl3 text2spl ...`.
+### Task 2 — Re-add Mermaid context to Text2SPL page ✅
 
-### Task 2 — Re-add Mermaid context to Text2SPL page
+In `spl3/ui/streamlit/pages/1_⚡_Text2SPL.py`, re-added:
 
-In `spl3/ui/streamlit/pages/1_⚡_Text2SPL.py`, re-add:
+1. **Approved diagram banner** — shown above the compile button when a diagram
+   has been approved on the Text2Mermaid page; includes a "Clear diagram context"
+   button and a tip caption when no diagram is approved.
 
-1. Approved diagram banner section (~lines 207–217 in SPL30 version):
-   ```python
-   if st.session_state.get("mermaid_approved") and st.session_state.get("mermaid_diagram"):
-       with st.expander("✓ Approved Mermaid diagram will be used as structural context", expanded=False):
-           st.code(st.session_state["mermaid_diagram"], language="markdown")
-           if st.button("Clear diagram context", key="btn_clear_mermaid"):
-               st.session_state["mermaid_approved"] = False
-               st.rerun()
-   else:
-       st.caption("Tip: approve a diagram on the **Text2Mermaid** page to guide compilation.")
+2. **`compile_desc` augmentation** — at compile time, if `mermaid_approved` is set,
+   the description passed to `spl3 text2spl` is extended with the approved diagram
+   as a structural blueprint:
    ```
-
-2. Approved diagram augmentation at compile time (~lines 274–284 in SPL30 version):
-   ```python
-   approved_diagram = st.session_state.get("mermaid_approved") and st.session_state.get("mermaid_diagram", "")
-   if approved_diagram:
-       compile_desc = (
-           f"{desc}\n\n"
-           f"Use the following Mermaid diagram as the structural blueprint "
-           f"(nodes → SPL steps, diamonds → EVALUATE, back-edges → WHILE loops):\n\n"
-           f"{approved_diagram}"
-       )
-   else:
-       compile_desc = desc
+   Use the following Mermaid diagram as the structural blueprint
+   (nodes → SPL steps, diamonds → EVALUATE, back-edges → WHILE loops):
    ```
+   Otherwise `compile_desc = desc` (no change to existing behaviour).
 
-### Task 3 — Update SPL_UI.py dashboard
+### Task 3 — Update SPL_UI.py dashboard ✅
 
-Add the "Diagrams approved" metric column in `spl3/ui/streamlit/SPL_UI.py`:
-- Change `st.columns(5)` to `st.columns(6)`
-- Add `n_diagrams` count from `data/diagrams/*.mmd`
-- Insert `col1.metric("Diagrams approved", n_diagrams, ...)`
+In `spl3/ui/streamlit/SPL_UI.py`:
+- Added `n_diagrams` count from `data/diagrams/*.mmd`
+- Changed `st.columns(5)` → `st.columns(6)`
+- Inserted `col1.metric("Diagrams approved", n_diagrams, ...)` as the first column
+- Shifted existing metrics to `col2`–`col6`
 
-### Task 4 — Upgrade gemini_cli adapter
+### Task 4 — Upgrade gemini_cli adapter ✅
 
 In `spl/adapters/gemini_cli.py`:
-- Change base class from `LLMAdapter` to `MultiModalAdapter` (import from `spl3.adapters.base_multimodal`)
-  - Note: verify `MultiModalAdapter` is accessible from `spl/` — may need to import from `spl3`
-- Add `import time` and replace `self._measure_time()` with `time.perf_counter()`
-- Add `import logging` and `logger = logging.getLogger(__name__)`
-- Add `ModelOverloaded` raise on quota/rate-limit errors in stderr parsing
-- Keep SPL.py's `spl.adapters.base` import path (not SPL30's `spl3.adapters.base`)
+- Added `import logging` and `logger = logging.getLogger(__name__)`
+- Added `logger.warning(...)` on timeout and quota/rate-limit errors
+- Added `logger.error(...)` on non-zero exit code
+
+**Not changed:** base class remains `LLMAdapter` (consistent with all other `spl/`
+adapters — none use `MultiModalAdapter`). Timing already uses `time.perf_counter()`
+via `_measure_time()` / `_elapsed_ms()` in the base class. `ModelOverloaded` raise
+on quota errors was already present in SPL.py's version.
 
 ---
 
@@ -175,5 +161,6 @@ with no code value:
 
 ## Intent Engineering (next direction)
 
-To be documented once the detailed plan is shared. The `intent-eng` branch will serve
-as the working branch for both this migration and the new intent engineering features.
+To be documented once the detailed plan is shared. The `intent-eng` branch serves
+as the working branch for both this completed migration and upcoming intent engineering
+features.

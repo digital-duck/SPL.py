@@ -7,9 +7,12 @@ feeding the prompt through stdin.
 
 from __future__ import annotations
 import asyncio
+import logging
 import os
 import subprocess
 from spl.adapters.base import LLMAdapter, GenerationResult
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiCLIAdapter(LLMAdapter):
@@ -88,17 +91,18 @@ class GeminiCLIAdapter(LLMAdapter):
                 "Install Gemini CLI."
             )
         except asyncio.TimeoutError:
+            logger.warning("Gemini CLI timed out after %ds (model=%s)", self.timeout, effective_model)
             raise RuntimeError(f"Gemini CLI timed out after {self.timeout}s")
 
         stderr_text = stderr.decode('utf-8', errors='replace').strip()
 
         if proc.returncode != 0:
             low_stderr = stderr_text.lower()
-            # Detect rate limit or quota issues
             if any(m in low_stderr for m in ["rate limit", "quota", "exhausted"]):
                 from spl.executor import ModelOverloaded
+                logger.warning("Gemini CLI quota/rate-limit: %s", stderr_text[:200])
                 raise ModelOverloaded(f"Gemini CLI limit reached: {stderr_text}")
-            
+            logger.error("Gemini CLI exit %d: %s", proc.returncode, stderr_text[:200])
             raise RuntimeError(f"Gemini CLI error (exit {proc.returncode}): {stderr_text}")
 
         content = stdout.decode('utf-8', errors='replace').strip()
