@@ -159,6 +159,16 @@ with no code value:
 
 ---
 
+
+## Git commit
+
+```bash
+git add .
+git commit -m "migrate and deprecate SPL30 repo"
+
+git push --set-upstream origin intent-eng
+```
+
 ## Intent Engineering (next direction)
 
 To be documented once the detailed plan is shared. The `intent-eng` branch serves
