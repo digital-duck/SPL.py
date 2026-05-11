@@ -4,7 +4,16 @@ from __future__ import annotations
 
 import re
 import subprocess
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
+
+def get_memory_db():
+    """Return the shared MemoryDB singleton. Import deferred to avoid circular deps."""
+    from spl3.memory import get_memory_db as _get
+    return _get()
 
 
 def parse_run_output(stdout: str) -> dict:

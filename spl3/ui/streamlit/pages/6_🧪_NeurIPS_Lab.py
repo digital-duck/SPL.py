@@ -23,6 +23,7 @@ from ui_config import (
     NEURIPS_RECIPES, NEURIPS_RECIPE_DIRS, NEURIPS_MODELS,
     JUDGE_ADAPTER, JUDGE_MODEL,
 )
+from ui_utils import get_memory_db, extract_compare_score
 
 # ── Lab root ──────────────────────────────────────────────────────────────────
 
@@ -293,7 +294,31 @@ if run_btn and cmd and sel_alias:
         try:
             proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
             output = proc.stdout + ("\n" + proc.stderr if proc.stderr.strip() else "")
-            if proc.returncode == 0:
+            success = proc.returncode == 0
+
+            # Persist step result to MemoryDB
+            try:
+                mdb = get_memory_db()
+                run_id = mdb.pipeline_upsert(
+                    "neurips_ndd", f"{sel_recipe}/{sel_alias}",
+                    recipe=sel_recipe, model_alias=sel_alias,
+                    adapter=sel_model_cfg["adapter"], model_id=sel_model_cfg["model_id"],
+                    phase=STEPS[sel_step][1],
+                )
+                # Extract score from output for comparison steps
+                score = extract_compare_score(output) if sel_step in ("S6","S9","S10") else None
+                # Find artifact path (last -o argument)
+                artifact = next((cmd[i+1] for i, a in enumerate(cmd) if a == "-o"), None)
+                mdb.step_upsert(
+                    run_id, sel_step,
+                    status="complete" if success else "failed",
+                    score=score,
+                    artifact_path=artifact,
+                )
+            except Exception as e:
+                st.warning(f"MemoryDB write skipped: {e}")
+
+            if success:
                 st.success(f"{sel_step} completed successfully.")
             else:
                 st.error(f"{sel_step} failed (exit {proc.returncode}).")
@@ -407,6 +432,7 @@ notes_col1, notes_col2 = st.columns([2, 4])
 with notes_col1:
     note_recipe = st.selectbox("Recipe", NEURIPS_RECIPES, key="note_recipe")
     note_step   = st.selectbox("Step", [s for s, (_, _, chk) in STEPS.items() if chk], key="note_step")
+    st.selectbox("Model", aliases, key="note_model")
 with notes_col2:
     note_text = st.text_area(
         "Note (will be appended to notes.md)",
@@ -414,13 +440,28 @@ with notes_col2:
         height=100,
         key="note_text",
     )
-    if st.button("Append to notes.md", key="btn_append_note") and note_text.strip():
+    note_passed = st.checkbox("Mark checkpoint as passed", value=True, key="note_passed")
+    if st.button("Save checkpoint note", key="btn_append_note") and note_text.strip():
+        # Append to notes.md
         notes_file = LAB_ROOT / NEURIPS_RECIPE_DIRS[note_recipe] / "notes.md"
-        import time as _time
         entry = (
-            f"\n\n## [{_time.strftime('%Y-%m-%d')}] {note_recipe} / {note_step} — UI checkpoint\n"
+            f"\n\n## [{time.strftime('%Y-%m-%d')}] {note_recipe} / {note_step} — UI checkpoint\n"
             f"{note_text.strip()}\n"
         )
         with open(notes_file, "a", encoding="utf-8") as fh:
             fh.write(entry)
-        st.success(f"Appended to `{notes_file.name}`")
+        # Persist to MemoryDB
+        try:
+            note_model_cfg = next(
+                (m for m in NEURIPS_MODELS if m["alias"] == note_alias), NEURIPS_MODELS[0]
+            ) if (note_alias := st.session_state.get("note_model")) else NEURIPS_MODELS[0]
+            mdb = get_memory_db()
+            run_id = mdb.pipeline_upsert(
+                "neurips_ndd", f"{note_recipe}/{note_model_cfg['alias']}",
+                recipe=note_recipe, model_alias=note_model_cfg["alias"],
+                adapter=note_model_cfg["adapter"], model_id=note_model_cfg["model_id"],
+            )
+            mdb.step_checkpoint(run_id, note_step, passed=note_passed, note=note_text.strip())
+        except Exception as e:
+            st.warning(f"MemoryDB checkpoint skipped: {e}")
+        st.success(f"Saved to `{notes_file.name}` and MemoryDB")

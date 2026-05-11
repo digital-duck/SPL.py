@@ -18,7 +18,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from ui_config import NEURIPS_RECIPES, NEURIPS_RECIPE_DIRS, NEURIPS_MODELS
-from ui_utils import extract_compare_score
+from ui_utils import extract_compare_score, get_memory_db
 
 # ── Lab root ──────────────────────────────────────────────────────────────────
 
@@ -41,7 +41,18 @@ if not LAB_ROOT.exists():
 
 @st.cache_data(ttl=30)
 def _load_scores() -> dict:
-    """Scan all S6/S9/S10 files and return nested scores dict."""
+    """Scan S6/S9/S10 files and MemoryDB; merge results (filesystem wins on conflict)."""
+    # Pre-load DB scores as fallback
+    db_s6, db_s9 = {}, {}
+    try:
+        mdb = get_memory_db()
+        for row in mdb.pipeline_scores_matrix("neurips_ndd", "S6"):
+            db_s6[row["run_label"]] = row
+        for row in mdb.pipeline_scores_matrix("neurips_ndd", "S9"):
+            db_s9[row["run_label"]] = row
+    except Exception:
+        pass  # DB unavailable — filesystem-only mode
+
     scores: dict = {}
     for recipe in NEURIPS_RECIPES:
         scores[recipe] = {}
@@ -49,36 +60,43 @@ def _load_scores() -> dict:
         for m in NEURIPS_MODELS:
             alias = m["alias"]
             adapter = m["adapter"]
+            run_label = f"{recipe}/{alias}"
             out_dir = recipe_dir / "tests" / adapter / alias
-            if not out_dir.exists():
-                scores[recipe][alias] = {"s6": None, "s9": None, "s10_text": None, "s6_path": None, "s9_path": None}
-                continue
 
-            # S6: full IR pipeline score
-            s6_files = sorted(out_dir.glob("S6-*.md"), reverse=True)
+            # S6: filesystem first, then DB
             s6_score, s6_path = None, None
-            for f in s6_files:
-                if "ablation" in f.name or "vibe" in f.name:
-                    continue
-                text = f.read_text(encoding="utf-8", errors="replace")
-                s6_score = extract_compare_score(text)
-                s6_path = f
-                if s6_score is not None:
-                    break
+            if out_dir.exists():
+                for f in sorted(out_dir.glob("S6-*.md"), reverse=True):
+                    if "ablation" in f.name or "vibe" in f.name:
+                        continue
+                    text = f.read_text(encoding="utf-8", errors="replace")
+                    s6_score = extract_compare_score(text)
+                    s6_path = f
+                    if s6_score is not None:
+                        break
+            if s6_score is None and run_label in db_s6:
+                s6_score = db_s6[run_label].get("score")
 
-            # S9: vibe bypass score
-            s9_files = sorted(out_dir.glob("S9-*.md"), reverse=True)
+            # S9: filesystem first, then DB
             s9_score, s9_path = None, None
-            for f in s9_files:
-                text = f.read_text(encoding="utf-8", errors="replace")
-                s9_score = extract_compare_score(text)
-                s9_path = f
-                if s9_score is not None:
-                    break
+            if out_dir.exists():
+                for f in sorted(out_dir.glob("S9-*.md"), reverse=True):
+                    text = f.read_text(encoding="utf-8", errors="replace")
+                    s9_score = extract_compare_score(text)
+                    s9_path = f
+                    if s9_score is not None:
+                        break
+            if s9_score is None and run_label in db_s9:
+                s9_score = db_s9[run_label].get("score")
 
-            # S10: meta-comparison text
-            s10_files = sorted(out_dir.glob("S10-*.md"), reverse=True)
-            s10_text = s10_files[0].read_text(encoding="utf-8", errors="replace") if s10_files else None
+            # S10: filesystem only (narrative text, not just a score)
+            s10_text = None
+            if out_dir.exists():
+                s10_files = sorted(out_dir.glob("S10-*.md"), reverse=True)
+                s10_text = s10_files[0].read_text(encoding="utf-8", errors="replace") if s10_files else None
+
+            # Checkpoint status from DB
+            s6_checkpoint = db_s6.get(run_label, {}).get("checkpoint_passed", False)
 
             scores[recipe][alias] = {
                 "s6": s6_score,
@@ -86,6 +104,7 @@ def _load_scores() -> dict:
                 "s10_text": s10_text,
                 "s6_path": str(s6_path) if s6_path else None,
                 "s9_path": str(s9_path) if s9_path else None,
+                "s6_checkpoint": bool(s6_checkpoint),
             }
     return scores
 
