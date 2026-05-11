@@ -25,40 +25,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import db
 import code_rag_bridge as rag
 import spl3_rag_bridge as spl3_rag
+from ui_config import ADAPTERS, MODELS
+from ui_utils import parse_run_output
 
 db.init_db()
 
 SCRIPTS_DIR = Path(__file__).parent.parent / "data" / "scripts"
 SCRIPTS_DIR.mkdir(parents=True, exist_ok=True)
-
-ADAPTERS = [
-    "ollama",
-    "claude_cli",
-    "anthropic",
-    "openai",
-    "openrouter",
-    "google",
-    "deepseek",
-    "qwen",
-    "bedrock",
-    "vertex",
-    "azure_openai",
-]
-
-# Default model options per adapter (first entry = default)
-MODELS: dict[str, list[str]] = {
-    "ollama":      ["gemma3", "llama3.2", "mistral", "phi3", "qwen2.5-coder", "deepseek-coder"],
-    "claude_cli":  ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
-    "anthropic":   ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
-    "openai":      ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
-    "openrouter":  ["meta-llama/llama-3.3-70b-instruct", "google/gemini-2.0-flash-001", "anthropic/claude-sonnet-4-6"],
-    "google":      ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
-    "deepseek":    ["deepseek-chat", "deepseek-coder"],
-    "qwen":        ["qwen-max", "qwen-plus", "qwen-turbo"],
-    "bedrock":     ["us.amazon.nova-pro-v1:0", "us.anthropic.claude-3-5-sonnet-20241022-v2:0"],
-    "vertex":      ["gemini-2.0-flash-001", "gemini-1.5-pro-002", "gemini-1.5-flash-002"],
-    "azure_openai":["gpt-4o", "gpt-4o-mini"],
-}
 
 EXAMPLES = {
     "auto":     "classify user intent and route to the right handler",
@@ -67,44 +40,7 @@ EXAMPLES = {
 }
 
 
-def _parse_run_output(stdout: str) -> dict:
-    """Extract metrics and LLM output from spl run stdout."""
-    lines = stdout.splitlines()
-    meta: dict[str, str] = {}
-    output_lines: list[str] = []
-    in_output = False
-
-    for line in lines:
-        s = line.strip()
-        # Separator bars (60 = or - signs)
-        if s and all(c == "=" for c in s) and len(s) >= 20:
-            if in_output:
-                in_output = False
-            continue
-        if s and all(c == "-" for c in s) and len(s) >= 20:
-            in_output = True
-            continue
-        # Skip markdown code fences that spl run wraps output in
-        if s.startswith("```"):
-            continue
-        if in_output:
-            output_lines.append(line)
-        elif s.startswith("Model: "):
-            meta["model"] = s[7:]
-        elif s.startswith("Tokens: "):
-            parts = s[8:].split(" in / ")
-            meta["tokens_in"] = parts[0]
-            meta["tokens_out"] = parts[1].replace(" out", "") if len(parts) > 1 else ""
-        elif s.startswith("Latency: "):
-            meta["latency"] = s[9:]
-        elif s.startswith("Cost: "):
-            meta["cost"] = s[6:]
-        elif s.startswith("LLM Calls: "):
-            meta["llm_calls"] = s[11:]
-        elif s.startswith("Status: "):
-            meta["status"] = s[8:]
-
-    return {"meta": meta, "output": "\n".join(output_lines).strip()}
+_parse_run_output = parse_run_output
 
 
 def _slugify(text: str) -> str:

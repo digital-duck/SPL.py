@@ -11,26 +11,22 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import spl3_rag_bridge as spl3_rag
+from ui_config import ADAPTERS, MODELS
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 
 SPL30_ROOT = spl3_rag.spl3_root()
-SPL_DIR    = SPL30_ROOT / "spl"
-SPLC_CLI   = SPL_DIR / "splc" / "cli.py"
 
 SUPPORTED_LANGS = {
-    "go":               "Go (stdlib + Ollama REST API)",
-    "python":           "Python (plain, minimal deps)",
-    "python/langgraph": "Python — LangGraph",
-    "python/crewai":    "Python — CrewAI",
-    "python/autogen":   "Python — AutoGen",
-    "python/liquid":    "Python — Liquid AI (LFM via Ollama / OpenRouter)",
+    "python/pocketflow": "Python — PocketFlow (ETL-style, lightweight) ⭐",
+    "python/langgraph":  "Python — LangGraph",
+    "go":                "Go (stdlib + Ollama REST API)",
+    "ts":                "TypeScript",
+    "python":            "Python (plain, minimal deps)",
+    "python/crewai":     "Python — CrewAI",
+    "python/autogen":    "Python — AutoGen",
+    "python/liquid":     "Python — Liquid AI (LFM via Ollama / OpenRouter)",
 }
-
-SUPPORTED_MODELS = [
-    "claude-sonnet-4-6",
-    "claude-opus-4-6",
-]
 
 # ── Page config ────────────────────────────────────────────────────────────────
 
@@ -38,7 +34,7 @@ st.set_page_config(page_title="SPLc Compiler", layout="wide")
 st.header("SPLc — SPL Compiler")
 st.caption(
     "Translate a `.spl` logical-view script into a physical implementation "
-    "(Go, Python, LangGraph, CrewAI, AutoGen)."
+    "(PocketFlow, LangGraph, Go, TypeScript, CrewAI, AutoGen)."
 )
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -71,10 +67,11 @@ with st.sidebar:
 
     st.divider()
     st.markdown("**splc CLI**")
-    if SPLC_CLI.exists():
-        st.success(f"Found: `spl/splc/cli.py`")
+    probe = subprocess.run(["spl3", "splc", "--help"], capture_output=True)
+    if probe.returncode == 0:
+        st.success("`spl3 splc` available")
     else:
-        st.error(f"Not found: `{SPLC_CLI}`")
+        st.error("`spl3 splc` not found — is spl123 conda env active?")
 
 # ── Helper: find .spl files ────────────────────────────────────────────────────
 
@@ -166,7 +163,9 @@ with left:
     st.divider()
     st.subheader("Options")
 
-    model = st.selectbox("Model", SUPPORTED_MODELS, key="model_select")
+    adapter = st.selectbox("Adapter", ADAPTERS, index=ADAPTERS.index("claude_cli"), key="splc_adapter")
+    model_opts = MODELS.get(adapter or "", [])
+    model = st.selectbox("Model", model_opts, key="splc_model") if model_opts else st.text_input("Model", key="splc_model")
 
     col_rag, col_k = st.columns([1, 1])
     with col_rag:
@@ -210,12 +209,12 @@ with left:
             splc_dry_run_prompt=None,
         )
 
-        # Build command
+        # Build command using installed spl3 splc compile
         cmd = [
-            "conda", "run", "-n", "spl2", "--no-capture-output",
-            "python", str(SPLC_CLI),
-            "--spl", spl_path_str,
+            "spl3", "splc", "compile",
+            spl_path_str,
             "--lang", lang,
+            "--adapter", adapter,
             "--model", model,
         ]
 

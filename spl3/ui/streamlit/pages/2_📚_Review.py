@@ -12,46 +12,11 @@ from streamlit_ace import st_ace
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import db
+from ui_utils import parse_run_output
 
 db.init_db()
 
-
-def _parse_run_output(stdout: str) -> dict:
-    """Extract metrics and LLM output from spl run stdout."""
-    lines = stdout.splitlines()
-    meta: dict[str, str] = {}
-    output_lines: list[str] = []
-    in_output = False
-
-    for line in lines:
-        s = line.strip()
-        if s and all(c == "=" for c in s) and len(s) >= 20:
-            if in_output:
-                in_output = False
-            continue
-        if s and all(c == "-" for c in s) and len(s) >= 20:
-            in_output = True
-            continue
-        if s.startswith("```"):
-            continue
-        if in_output:
-            output_lines.append(line)
-        elif s.startswith("Model: "):
-            meta["model"] = s[7:]
-        elif s.startswith("Tokens: "):
-            parts = s[8:].split(" in / ")
-            meta["tokens_in"] = parts[0]
-            meta["tokens_out"] = parts[1].replace(" out", "") if len(parts) > 1 else ""
-        elif s.startswith("Latency: "):
-            meta["latency"] = s[9:]
-        elif s.startswith("Cost: "):
-            meta["cost"] = s[6:]
-        elif s.startswith("LLM Calls: "):
-            meta["llm_calls"] = s[11:]
-        elif s.startswith("Status: "):
-            meta["status"] = s[8:]
-
-    return {"meta": meta, "output": "\n".join(output_lines).strip()}
+_parse_run_output = parse_run_output
 
 # ── Page config ────────────────────────────────────────────────────────────────
 
