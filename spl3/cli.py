@@ -397,12 +397,14 @@ def peers_add(ctx, peer_url):
 # ------------------------------------------------------------------ #
 
 @main.command("test")
-@click.argument("spl_file_or_dir")
+@click.argument("spl_file_or_dir", required=False, default=None)
 @click.option("--adapter", default="ollama", show_default=True)
 @click.option("--model", default=None, show_default=True)
 @click.option("--verbose", "-v", is_flag=True)
+@click.option("--list", "list_only", is_flag=True, default=False,
+              help="List .spl files and their fixture coverage, then exit.")
 @click.pass_context
-def cmd_test(ctx, spl_file_or_dir, adapter, model, verbose):
+def cmd_test(ctx, spl_file_or_dir, adapter, model, verbose, list_only):
     """LLM-executed end-to-end test against .test.yaml fixtures.
 
     Distinct from 'spl3 validate' (syntax only, no LLM). This command
@@ -421,16 +423,38 @@ def cmd_test(ctx, spl_file_or_dir, adapter, model, verbose):
         assert:
           contains: ["def ", "print"]
           status: complete
+
+    \b
+    Examples:
+      spl3 test --list                         # show fixture coverage for cwd
+      spl3 test --list cookbook/               # show fixture coverage for a dir
+      spl3 test self_refine.spl                # run tests for one file
     """
     from pathlib import Path
-    path = Path(spl_file_or_dir)
-    if path.is_dir():
-        spl_files = list(path.rglob("*.spl"))
+    search_root = Path(spl_file_or_dir) if spl_file_or_dir else Path.cwd()
+
+    if search_root.is_dir():
+        spl_files = sorted(search_root.rglob("*.spl"))
+    elif search_root.is_file():
+        spl_files = [search_root]
     else:
-        spl_files = [path]
+        click.echo(f"Not found: {search_root}", err=True)
+        raise SystemExit(1)
 
     if not spl_files:
         click.echo("No .spl files found.")
+        return
+
+    if list_only:
+        has = [f for f in spl_files if f.with_suffix(".test.yaml").exists()]
+        missing = [f for f in spl_files if not f.with_suffix(".test.yaml").exists()]
+        click.echo(f"\nFixture coverage: {len(has)}/{len(spl_files)} files\n")
+        for f in spl_files:
+            fixture = f.with_suffix(".test.yaml")
+            mark = "✓" if fixture.exists() else "✗"
+            click.echo(f"  {mark}  {f}")
+        if missing:
+            click.echo(f"\n  {len(missing)} file(s) missing .test.yaml fixtures.")
         return
 
     asyncio.run(_run_tests(spl_files, adapter, model, verbose))
@@ -2185,8 +2209,12 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
 # ------------------------------------------------------------------ #
 
 @main.command("validate")
-@click.argument("spl_files", nargs=-1, required=True)
-def cmd_validate(spl_files):
+@click.argument("spl_files", nargs=-1, required=False)
+@click.option("--check-coverage", is_flag=True, default=False,
+              help="Report which files lack .test.yaml fixtures and exit.")
+@click.option("--dir", "search_dir", default=None, metavar="DIR",
+              help="Directory to scan (used with --check-coverage when no files given).")
+def cmd_validate(spl_files, check_coverage, search_dir):
     """Syntax-check .spl file(s) — fast parse only, no LLM call.
 
     Distinct from 'spl3 test' which runs the full workflow against test fixtures.
@@ -2196,8 +2224,35 @@ def cmd_validate(spl_files):
     Examples:
       spl3 validate workflow.spl
       spl3 validate tests/claude_cli/sonnet/*.spl
+      spl3 validate --check-coverage --dir cookbook/
     """
     from pathlib import Path
+
+    if check_coverage:
+        root = Path(search_dir) if search_dir else Path.cwd()
+        if spl_files:
+            all_spl = [Path(f) for f in spl_files]
+        else:
+            all_spl = sorted(root.rglob("*.spl"))
+        if not all_spl:
+            click.echo("No .spl files found.")
+            return
+        has     = [f for f in all_spl if f.with_suffix(".test.yaml").exists()]
+        missing = [f for f in all_spl if not f.with_suffix(".test.yaml").exists()]
+        click.echo(f"\nTest fixture coverage: {len(has)}/{len(all_spl)} files\n")
+        for f in all_spl:
+            mark = "✓" if f.with_suffix(".test.yaml").exists() else "✗"
+            click.echo(f"  {mark}  {f}")
+        if missing:
+            click.echo(f"\n  Missing fixtures ({len(missing)}):")
+            for f in missing:
+                click.echo(f"    → {f.with_suffix('.test.yaml')}")
+        raise SystemExit(len(missing))
+
+    if not spl_files:
+        click.echo("Error: provide SPL_FILES or use --check-coverage --dir <dir>", err=True)
+        raise SystemExit(1)
+
     from spl.lexer import Lexer
     from spl3.parser import SPL3Parser
 
@@ -3038,6 +3093,413 @@ def cmd_show(adapter, model, tool):
 
 from spl3.splc.cli import splc as _splc_command
 main.add_command(_splc_command, name="splc")
+
+
+# ------------------------------------------------------------------ #
+# spl3 diff                                                           #
+# ------------------------------------------------------------------ #
+
+@main.command("diff")
+@click.argument("spl_a", type=click.Path(exists=True))
+@click.argument("spl_b", type=click.Path(exists=True))
+@click.option("--format", "fmt", default="table",
+              type=click.Choice(["table", "json", "mermaid"]),
+              show_default=True, help="Output format.")
+def cmd_diff(spl_a, spl_b, fmt):
+    """Semantic diff between two .spl files at the workflow/node/edge level.
+
+    Parses both files to Mermaid AST graphs and reports which nodes and edges
+    were added, removed, or changed — plus the Graph Edit Distance score.
+
+    \b
+    Examples:
+      spl3 diff self_refine.spl self_refine-product_gen.spl
+      spl3 diff v1.spl v2.spl --format json
+    """
+    from spl3.spl2mmd import spl_to_mermaid, NoWorkflowError
+    from spl3.compare.utils import parse_mermaid_to_nx
+    from spl3.compare.tiers.ged import compare_ged
+    import json as _json
+
+    path_a, path_b = Path(spl_a), Path(spl_b)
+
+    def _load(p: Path):
+        try:
+            mmd = spl_to_mermaid(p.read_text(encoding="utf-8"))
+            g = parse_mermaid_to_nx(mmd)
+            return mmd, g
+        except NoWorkflowError as exc:
+            raise click.ClickException(f"{p.name}: {exc}")
+
+    mmd_a, g_a = _load(path_a)
+    mmd_b, g_b = _load(path_b)
+
+    nodes_a = set(g_a.nodes)
+    nodes_b = set(g_b.nodes)
+    edges_a = set((u, v) for u, v in g_a.edges)
+    edges_b = set((u, v) for u, v in g_b.edges)
+
+    added_nodes   = sorted(nodes_b - nodes_a)
+    removed_nodes = sorted(nodes_a - nodes_b)
+    kept_nodes    = sorted(nodes_a & nodes_b)
+    added_edges   = sorted(edges_b - edges_a)
+    removed_edges = sorted(edges_a - edges_b)
+
+    ged_result = compare_ged(mmd_a, mmd_b)
+    if isinstance(ged_result, str):
+        ged_info = {"error": ged_result}
+        score = None
+    else:
+        score = round((1.0 - ged_result.normalized_distance) * 10, 2)
+        ged_info = {
+            "distance": ged_result.distance,
+            "normalized": ged_result.normalized_distance,
+            "intent_invariance_score": score,
+        }
+
+    if fmt == "json":
+        click.echo(_json.dumps({
+            "a": str(path_a), "b": str(path_b),
+            "nodes": {"added": added_nodes, "removed": removed_nodes, "kept": kept_nodes},
+            "edges": {
+                "added":   [f"{u}→{v}" for u, v in added_edges],
+                "removed": [f"{u}→{v}" for u, v in removed_edges],
+            },
+            "ged": ged_info,
+        }, indent=2))
+        return
+
+    if fmt == "mermaid":
+        # Emit a combined Mermaid with colour-coded diff
+        lines = ["flowchart TD"]
+        for n in kept_nodes:
+            lines.append(f'    {n}["{n}"]')
+        for n in added_nodes:
+            lines.append(f'    {n}["+{n}"]:::added')
+        for n in removed_nodes:
+            lines.append(f'    {n}["-{n}"]:::removed')
+        for u, v in sorted(edges_a | edges_b):
+            if (u, v) in added_edges:
+                lines.append(f"    {u} -->|added| {v}")
+            elif (u, v) in removed_edges:
+                lines.append(f"    {u} -.->|removed| {v}")
+            else:
+                lines.append(f"    {u} --> {v}")
+        lines += [
+            "    classDef added   fill:#d1fae5,stroke:#10b981,color:#064e3b",
+            "    classDef removed fill:#fee2e2,stroke:#ef4444,color:#7f1d1d",
+        ]
+        click.echo("\n".join(lines))
+        return
+
+    # ── table (default) ────────────────────────────────────────────────────
+    click.echo(f"\nSPL Semantic Diff")
+    click.echo(f"  A: {path_a}")
+    click.echo(f"  B: {path_b}")
+    click.echo(f"\nNodes  A={len(nodes_a)}  B={len(nodes_b)}")
+    if added_nodes:
+        click.echo(f"  + added   ({len(added_nodes)}): {', '.join(added_nodes)}")
+    if removed_nodes:
+        click.echo(f"  - removed ({len(removed_nodes)}): {', '.join(removed_nodes)}")
+    if not added_nodes and not removed_nodes:
+        click.echo("  = identical node set")
+
+    click.echo(f"\nEdges  A={len(edges_a)}  B={len(edges_b)}")
+    if added_edges:
+        click.echo(f"  + added   ({len(added_edges)}): " +
+                   ", ".join(f"{u}→{v}" for u, v in added_edges))
+    if removed_edges:
+        click.echo(f"  - removed ({len(removed_edges)}): " +
+                   ", ".join(f"{u}→{v}" for u, v in removed_edges))
+    if not added_edges and not removed_edges:
+        click.echo("  = identical edge set")
+
+    click.echo(f"\nGraph Edit Distance: {ged_info.get('distance', '?')}"
+               f"  (normalized: {ged_info.get('normalized', '?')})")
+    if score is not None:
+        bar = "█" * int(score) + "░" * (10 - int(score))
+        click.echo(f"Similarity Score:    {score:.1f}/10  {bar}\n")
+
+
+# ------------------------------------------------------------------ #
+# spl3 pipeline                                                       #
+# ------------------------------------------------------------------ #
+
+@main.command("pipeline")
+@click.argument("spl_file", type=click.Path(exists=True))
+@click.option("--target", "-t", default="python_pocketflow", show_default=True,
+              metavar="TARGET",
+              help="Compile target (python_pocketflow, python_langgraph, go, ts).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory for all artefacts (default: <spl_file_dir>/pipeline_out).")
+@click.option("--adapter", default=None, help="LLM adapter for splc compile step.")
+@click.option("--model", default=None, help="LLM model for splc compile step.")
+@click.option("--no-compile", is_flag=True, default=False,
+              help="Skip compile step — use existing .py in --out-dir.")
+@click.option("--no-png", is_flag=True, default=False,
+              help="Skip PNG/SVG diagram generation.")
+def cmd_pipeline(spl_file, target, out_dir, adapter, model, no_compile, no_png):
+    """Run all Intent Engineering gates for a .spl file.
+
+    Gates executed in sequence:
+
+    \b
+      Gate 1b  spl2mmd      → SPL Mermaid diagram (PNG + SVG)
+      Gate 2   splc compile → target implementation
+      Gate 3   rt-inspect   → runtime topology JSON
+      Gate 4   compare ged  → Intent Invariance score
+
+    Prints a gate summary table at the end.
+
+    \b
+    Examples:
+      spl3 pipeline self_refine.spl
+      spl3 pipeline self_refine.spl --target python_langgraph
+      spl3 pipeline self_refine.spl --no-compile --out-dir targets/python_pocketflow
+    """
+    import json, shutil, subprocess, tempfile, time
+    from spl3.spl2mmd import spl_to_mermaid, NoWorkflowError
+    from spl3.compare.utils import parse_mermaid_to_nx
+
+    spl_path = Path(spl_file).resolve()
+    base = spl_path.stem
+    out = Path(out_dir).resolve() if out_dir else spl_path.parent / "pipeline_out"
+    out.mkdir(parents=True, exist_ok=True)
+
+    results: list[tuple[str, str, str]] = []  # (gate, artefact, status)
+    t0 = time.monotonic()
+
+    def _ok(gate, artefact): results.append((gate, artefact, "✓"))
+    def _fail(gate, artefact, reason):
+        results.append((gate, artefact, f"✗  {reason}"))
+
+    click.echo(f"\n{'─'*60}")
+    click.echo(f"  SPL Pipeline: {spl_path.name}  →  {target}")
+    click.echo(f"  Output dir:   {out}")
+    click.echo(f"{'─'*60}")
+
+    # ── Gate 1b: spl2mmd ──────────────────────────────────────────────
+    click.echo("\n[Gate 1b] spl2mmd …")
+    mmd_path = out / f"{base}.mmd"
+    spl_mmd_text: str | None = None
+    try:
+        spl_mmd_text = spl_to_mermaid(spl_path.read_text(encoding="utf-8"))
+        mmd_path.write_text(spl_mmd_text, encoding="utf-8")
+        _ok("1b spl2mmd", str(mmd_path))
+        click.echo(f"  ✓ MMD: {mmd_path}")
+    except NoWorkflowError as exc:
+        _fail("1b spl2mmd", "mmd", str(exc))
+        click.echo(f"  ✗ {exc}", err=True)
+    except Exception as exc:
+        _fail("1b spl2mmd", "mmd", str(exc))
+        click.echo(f"  ✗ {exc}", err=True)
+
+    # Optional diagram images
+    if not no_png and mmd_path.exists():
+        import json as _j, tempfile as _tf, os as _os
+        _pcfg = _tf.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+        _pcfg.write(_j.dumps({"args": ["--no-sandbox", "--disable-setuid-sandbox"]}))
+        _pcfg.close()
+        mmdc_exe = shutil.which("mmdc")
+        if mmdc_exe:
+            for ext in ("png", "svg"):
+                op = out / f"{base}.{ext}"
+                r = subprocess.run(
+                    [mmdc_exe, "-i", str(mmd_path), "-o", str(op),
+                     "-p", _pcfg.name, "-t", "default", "-b", "white"],
+                    capture_output=True, timeout=60,
+                )
+                if r.returncode == 0:
+                    _ok(f"1b {ext}", str(op))
+                    click.echo(f"  ✓ {ext.upper()}: {op}")
+        _os.unlink(_pcfg.name)
+
+    # ── Gate 2: splc compile ──────────────────────────────────────────
+    impl_path: Path | None = None
+    if not no_compile:
+        click.echo("\n[Gate 2] splc compile …")
+        target_dir = out / target
+        target_dir.mkdir(parents=True, exist_ok=True)
+        splc_args = [
+            "spl3", "splc", "compile", str(spl_path),
+            "--target", target, "--out-dir", str(target_dir),
+        ]
+        if adapter: splc_args += ["--adapter", adapter]
+        if model:   splc_args += ["--model", model]
+        try:
+            r = subprocess.run(splc_args, capture_output=True, timeout=300)
+            if r.returncode == 0:
+                # Find the generated .py / .go / .ts file
+                suffixes = {"python_pocketflow": ".py", "python_langgraph": ".py",
+                            "go": ".go", "ts": ".ts"}
+                suf = suffixes.get(target, ".py")
+                candidates = list(target_dir.glob(f"*{suf}"))
+                impl_path = candidates[0] if candidates else None
+                _ok("2  compile", str(impl_path or target_dir))
+                click.echo(f"  ✓ impl: {impl_path or target_dir}")
+            else:
+                err = r.stderr.decode(errors="replace").strip()
+                _fail("2  compile", target, err[:120])
+                click.echo(f"  ✗ compile failed: {err[:200]}", err=True)
+        except Exception as exc:
+            _fail("2  compile", target, str(exc))
+            click.echo(f"  ✗ {exc}", err=True)
+    else:
+        # --no-compile: look for an existing impl in out_dir
+        for suf in (".py", ".go", ".ts"):
+            candidates = list(out.rglob(f"*{suf}"))
+            if candidates:
+                impl_path = candidates[0]
+                break
+        if impl_path:
+            _ok("2  compile", f"skipped — using {impl_path}")
+            click.echo(f"\n[Gate 2] skipped — using {impl_path}")
+        else:
+            _fail("2  compile", "skipped", "no impl found in --out-dir")
+
+    # ── Gate 3: rt-inspect ────────────────────────────────────────────
+    topology_json: str | None = None
+    rt_mmd_text:   str | None = None
+    click.echo("\n[Gate 3] rt-inspect …")
+    if impl_path and impl_path.suffix == ".py":
+        try:
+            from spl3.splc.rt_inspect import inspect_pocketflow_file, canonicalize_node_id, topology_to_mermaid
+            result = inspect_pocketflow_file(impl_path)
+            nodes, edges, entry = result["nodes"], result["edges"], result["entry"]
+            # canonicalize for GED alignment
+            id_map = {nid: canonicalize_node_id(nid) for nid in nodes}
+            c_nodes = {id_map[nid]: meta for nid, meta in nodes.items()}
+            c_edges = [{"source": id_map.get(e["source"], e["source"]),
+                        "target": id_map.get(e["target"], e["target"]),
+                        "label": e.get("label", "")} for e in edges]
+            c_entry = id_map.get(entry, entry) if entry else entry
+            topo = {"entry": c_entry, "nodes": c_nodes, "edges": c_edges}
+            topo_path = out / f"{base}-topology.json"
+            topo_path.write_text(json.dumps(topo, indent=2), encoding="utf-8")
+            topology_json = json.dumps(topo)
+            rt_mmd_text = topology_to_mermaid(c_nodes, c_edges, c_entry)
+            rt_mmd_path = out / f"{base}-topology.mmd"
+            rt_mmd_path.write_text(rt_mmd_text, encoding="utf-8")
+            _ok("3  rt-inspect", str(topo_path))
+            click.echo(f"  ✓ {len(c_nodes)} nodes, {len(c_edges)} edges → {topo_path}")
+        except Exception as exc:
+            _fail("3  rt-inspect", "topology", str(exc))
+            click.echo(f"  ✗ rt-inspect failed: {exc}", err=True)
+    elif impl_path:
+        _fail("3  rt-inspect", str(impl_path), f"rt-inspect supports .py only (got {impl_path.suffix})")
+        click.echo(f"  ✗ rt-inspect supports Python/PocketFlow only (got {impl_path.suffix})", err=True)
+    else:
+        _fail("3  rt-inspect", "skipped", "no implementation from Gate 2")
+        click.echo("  ✗ skipped — no implementation available", err=True)
+
+    # ── Gate 4: GED compare ───────────────────────────────────────────
+    click.echo("\n[Gate 4] compare ged …")
+    score: float | None = None
+    if spl_mmd_text and (topology_json or rt_mmd_text):
+        try:
+            from spl3.compare.tiers.ged import compare_ged
+            ref  = spl_mmd_text
+            impl = topology_json or rt_mmd_text
+            ged_result = compare_ged(ref, impl)
+            if isinstance(ged_result, str):
+                _fail("4  ged", "score", ged_result)
+                click.echo(f"  ✗ {ged_result}", err=True)
+            else:
+                dist  = ged_result.distance
+                norm  = ged_result.normalized_distance
+                score = round((1.0 - norm) * 10, 2)
+                _ok("4  ged", f"GED={dist:.1f}  norm={norm:.3f}  score={score}/10")
+                click.echo(f"  ✓ GED={dist:.1f}  normalized={norm:.3f}  "
+                           f"Intent Invariance Score = {score:.1f}/10")
+        except Exception as exc:
+            _fail("4  ged", "score", str(exc))
+            click.echo(f"  ✗ GED failed: {exc}", err=True)
+    else:
+        missing = []
+        if not spl_mmd_text: missing.append("SPL Mermaid (Gate 1b failed)")
+        if not topology_json and not rt_mmd_text: missing.append("topology (Gate 3 failed)")
+        reason = ", ".join(missing)
+        _fail("4  ged", "skipped", reason)
+        click.echo(f"  ✗ skipped — {reason}", err=True)
+
+    # ── Summary table ─────────────────────────────────────────────────
+    elapsed = time.monotonic() - t0
+    click.echo(f"\n{'─'*60}")
+    click.echo("  Gate Summary")
+    click.echo(f"{'─'*60}")
+    for gate, artefact, status in results:
+        short = Path(artefact).name if "/" in artefact else artefact
+        click.echo(f"  [{gate}]  {status}  {short}")
+    click.echo(f"{'─'*60}")
+    if score is not None:
+        bar = "█" * int(score) + "░" * (10 - int(score))
+        click.echo(f"  Intent Invariance Score:  {score:4.1f}/10  {bar}")
+    click.echo(f"  Elapsed: {elapsed:.1f}s   Output: {out}")
+    click.echo(f"{'─'*60}\n")
+
+
+# ------------------------------------------------------------------ #
+# spl3 ui  (also exposed as standalone `spl3-ui` entry point)        #
+# ------------------------------------------------------------------ #
+
+@main.command("ui")
+@click.option("--port", "-p", default=8501, show_default=True, help="Streamlit server port.")
+@click.option("--browser/--no-browser", default=True, show_default=True,
+              help="Open browser automatically after startup.")
+@click.option("--page", default=None, metavar="PAGE",
+              help="Jump directly to a page by number or name fragment, e.g. '8' or 'rt_inspect'.")
+def cmd_ui(port, browser, page):
+    """Launch the SPL Knowledge Studio (Streamlit UI).
+
+    \b
+    Examples:
+      spl3 ui                     # open on default port 8501
+      spl3 ui --port 8888         # custom port
+      spl3 ui --no-browser        # headless / server mode
+      spl3 ui --page 8            # open directly on RT-Inspect page
+    """
+    import subprocess, sys, shutil
+    ui_entry = Path(__file__).parent / "ui" / "streamlit" / "SPL_UI.py"
+    if not ui_entry.exists():
+        click.echo(f"Error: UI entry point not found: {ui_entry}", err=True)
+        raise SystemExit(1)
+
+    st = shutil.which("streamlit")
+    if not st:
+        click.echo("Error: streamlit not found — run: pip install streamlit", err=True)
+        raise SystemExit(1)
+
+    args = [
+        st, "run", str(ui_entry),
+        "--server.port", str(port),
+        "--server.headless", "false" if browser else "true",
+    ]
+    if page:
+        # Pass page as query param so SPL_UI.py can read st.query_params["page"]
+        args += ["--", f"--page={page}"]
+
+    url = f"http://localhost:{port}"
+    if page:
+        url += f"?page={page}"
+    click.echo(f"Starting SPL Knowledge Studio on {url}")
+
+    if browser:
+        # Open browser after a short delay to let Streamlit start
+        import threading, time, webbrowser
+        def _open():
+            time.sleep(2.5)
+            webbrowser.open(url)
+        threading.Thread(target=_open, daemon=True).start()
+
+    try:
+        subprocess.run(args)
+    except KeyboardInterrupt:
+        pass
+
+
+def _ui_entry() -> None:
+    """Standalone entry point for the `spl3-ui` script."""
+    cmd_ui()
 
 
 if __name__ == "__main__":

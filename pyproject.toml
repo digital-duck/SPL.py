@@ -70,7 +70,8 @@ Documentation = "https://github.com/digital-duck/SPL.py/blob/main/README.md"
 "arXiv Paper" = "https://arxiv.org/abs/2602.21257"
 
 [project.scripts]
-spl3 = "spl3.cli:main"
+spl3    = "spl3.cli:main"
+spl3-ui = "spl3.cli:_ui_entry"
 
 [tool.setuptools.packages.find]
 where = ["."]

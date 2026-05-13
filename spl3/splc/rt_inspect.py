@@ -33,12 +33,30 @@ from typing import Any
 
 # ── Public entry point ────────────────────────────────────────────────────────
 
+_SUPPORTED_SUFFIXES = {".py"}
+_UNSUPPORTED_MSG = {
+    ".go": (
+        "rt-inspect does not yet support Go targets. "
+        "Planned: static AST analysis via go/ast. "
+        "Workaround: inspect the Python/PocketFlow target instead."
+    ),
+    ".ts": (
+        "rt-inspect does not yet support TypeScript targets. "
+        "Planned: ts-morph AST analysis. "
+        "Workaround: inspect the Python/PocketFlow target instead."
+    ),
+}
+
+
 def inspect_pocketflow_file(py_path: Path) -> dict[str, Any]:
     """Load a PocketFlow Python file and extract its graph topology.
 
     The file is imported via importlib (not subprocess) so the PocketFlow
     graph object is available in-memory for traversal. The ``__main__`` guard
     prevents CLI entry points from executing.
+
+    Currently supports Python/PocketFlow only (.py).
+    Go and TypeScript targets are not yet supported — see _UNSUPPORTED_MSG.
 
     Args:
         py_path: Path to a compiled Python/PocketFlow implementation file.
@@ -53,10 +71,16 @@ def inspect_pocketflow_file(py_path: Path) -> dict[str, Any]:
             mmd      — Mermaid diagram string (graph TD)
 
     Raises:
+        NotImplementedError: If the file is not a supported target language.
         ValueError: If no PocketFlow Flow object can be found in the module.
         ImportError: If pocketflow is not installed.
     """
     py_path = py_path.resolve()
+    suffix = py_path.suffix.lower()
+    if suffix not in _SUPPORTED_SUFFIXES:
+        msg = _UNSUPPORTED_MSG.get(suffix,
+            f"rt-inspect supports Python/PocketFlow (.py) only; got '{suffix}'.")
+        raise NotImplementedError(msg)
 
     # ── 1. Import the module without running __main__ ─────────────────────────
     spec = importlib.util.spec_from_file_location("_rt_inspect_target", py_path)

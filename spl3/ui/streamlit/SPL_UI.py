@@ -18,6 +18,25 @@ db.init_db()
 
 st.set_page_config(page_title="text2SPL Studio", layout="wide")
 
+# ── Page navigation via ?page= query param (set by `spl3 ui --page N`) ────────
+_PAGE_MAP = {
+    "0": "0_🗺️_Text2Mermaid",  "text2mermaid": "0_🗺️_Text2Mermaid",
+    "1": "1_⚡_Text2SPL",       "text2spl": "1_⚡_Text2SPL",
+    "2": "2_📚_Review",          "review": "2_📚_Review",
+    "3": "3_🔍_Code_RAG",        "code_rag": "3_🔍_Code_RAG",
+    "4": "4_🔧_SPLc",            "splc": "4_🔧_SPLc",
+    "5": "5_📄_Target_Review",   "target_review": "5_📄_Target_Review",
+    "6": "6_🧪_NeurIPS_Lab",     "neurips": "6_🧪_NeurIPS_Lab",
+    "7": "7_📊_Ablation_Results","ablation": "7_📊_Ablation_Results",
+    "8": "8_🔍_RT_Inspect",      "rt_inspect": "8_🔍_RT_Inspect",
+    "9": "9_🔬_Compare",         "compare": "9_🔬_Compare",
+}
+_qp = st.query_params.get("page", "")
+if _qp:
+    _target = _PAGE_MAP.get(str(_qp).lower())
+    if _target:
+        st.sidebar.info(f"💡 Tip: click **{_target}** in the sidebar to go directly to that page.")
+
 st.title("text2SPL Knowledge Studio")
 st.caption("Natural language → SPL 2.0 · Interactive compiler + knowledge accumulator")
 

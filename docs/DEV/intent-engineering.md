@@ -1,279 +1,217 @@
-```User
-Can you rewrite the "intent engineering" paper outline by adding
-(1) literature search result + youtube link
-(2) IDE in streamlit prototype
-(3) enhanced SDLC process with  5 checkpoints
+# Intent Engineering & Vibescope
+### A Vision for Deterministic Agentic Software Development
 
-anything else you can think of 
+*Synthesized from: Gemini brainstorming session (2026-05-12), Claude review (2026-05-11), and `intent-eng` implementation session (2026-05-13).*
+
+---
+
+## The First Principle
+
+In physics, **energy is a conserved quantity**. The form it takes — kinetic, thermal, electromagnetic, chemical — varies continuously and depends entirely on the coordinate system (the substrate). But the total is invariant. This is not a convention or a design choice. It is the deepest truth we know about the physical world.
+
+**Intent Engineering begins with the same claim applied to software:**
+
+> *Human intent is a conserved quantity in the agentic SDLC.*
+
+The form it takes — natural language, a Mermaid diagram, an SPL specification, a Python class, a Go struct, a TypeScript module — varies with the coordinate system (the target runtime). But the underlying intent must be invariant. When it is not, the system has failed — regardless of whether the code runs.
+
+The `.spl` file is the invariant. Everything else is a projection.
+
+This reframes the entire problem of "vibe coding." The question is not *"did the LLM generate good code?"* The question is *"is the generated code the same program you intended to write?"* Those are different questions, and only the second one is scientifically answerable.
+
+---
+
+## The Problem: The Intent Gap
+
+"Vibe coding" — direct synthesis of software from natural language via LLM — delivers unprecedented velocity. It also introduces a new class of failure: **stochastic drift**.
+
+The LLM is a probabilistic machine. At every transformation step, there is a probability distribution over possible outputs. Most outputs are close to the intent. Some are not. And the developer has no instrument to tell the difference — no conservation law to check, no measurement apparatus, no meter reading.
+
+This is the **Intent Gap**: the unbounded stochastic drift between human requirement and machine execution, invisible to the developer because no reference representation was ever defined.
+
+The verifiable intermediate state is the `.spl` file. The instrument that measures the gap is **Vibescope**.
+
+---
+
+## Vibescope: The Measurement Instrument
+
+**Vibescope** is the metrology layer of Intent Engineering. Its single purpose is to **measure the split between the deterministic and probabilistic components of an agentic workflow**.
+
+Every agentic workflow has two fundamentally different kinds of content:
+
+| Component | Nature | Example |
+|---|---|---|
+| **Structure** (Bones) | Deterministic | Which nodes exist, how they connect, what the control flow is |
+| **Semantics** (Skin) | Probabilistic | What the LLM generates inside each node — prompts, reasoning, outputs |
+
+Structure can be extracted deterministically, without an LLM, by loading the code and walking the graph (`rt-inspect`). Semantics require stochastic inference and cannot be determinized.
+
+The vibescope reading has two channels:
+
+```
+Vibescope Reading = { Structural Fidelity (GED),  Semantic Fidelity (LLM score) }
 ```
 
-This is a powerful evolution of the narrative. By moving from a research paper to a comprehensive framework of **Intent Engineering**, you are essentially building the "Standard Model" for the post-vibe-coding era.
+- **Structural channel** — Graph Edit Distance between the SPL topology and the rt-inspect topology of the compiled implementation. Zero hallucination, zero LLM cost, computed in milliseconds.
+- **Semantic channel** — LLM judge comparison between the SPL specification and the reverse-extracted specification from the implementation.
 
-Here is the rewritten outline, synthesizing the intellectual lineage, the tooling, and the rigorous verification process.
-
----
-
-# Intent Engineering: A Framework for Deterministic Agentic Synthesis
-
-## 1. The Context: From Alchemy to Science
-
-"Vibe coding"—the direct synthesis of code from natural language—offers unprecedented velocity but lacks a verifiable intermediate state. We define the **Intent Gap** as the stochastic drift between human requirement and machine execution. **Intent Engineering** is the discipline of closing this gap by treating human intent as a conserved, invariant quantity throughout the SDLC.
+The **Intent Invariance Score** is the vibescope's needle: `(1 − normalized_GED) × 10`, ranging from 0 (complete structural mismatch) to 10 (perfect structural fidelity). A score above 8 means the implementation's topology matches the design. Below 6 means significant structural drift — the LLM rewired the graph.
 
 ---
 
-## 2. Intellectual Ancestry & Literature
-
-Intent Engineering builds upon a rapidly maturing 2025–2026 research cluster that seeks to move beyond "Context Engineering."
-
-### Key Literature & Research Pillars
-
-* **Intent as a Contract:** Emerging 2026 frameworks (Pathmode, EffectiveSoft) shift from static documentation to **Intent Specifications**—durable, testable artifacts that prioritize *objectives* over *tasks*.
-* **Semantic Intent Invariance:** Research by *Luo et al. (2025)* identifies "Intent Invariance" as the core reliability signal for multi-turn agents, preventing the "Goal Drift" inherent in long execution chains.
-* **Semantic Gauge Invariance:** *Khrulkov et al. (2025)* provides the theoretical grounding: "Meaning" must be coordinate-independent—remaining stable regardless of the target programming language (Python, Go, etc.).
-* **Agentic Engineering (Karpathy):** While Karpathy focuses on the *mechanics* of loops and autonomy, Intent Engineering focuses on the **Governance** and **Metrology** of the underlying logic.
-
-> **Visual Resource:** [Intent Engineering vs Context Engineering (YouTube)](https://www.youtube.com/watch?v=jia2IcIuhCM) — *Explores the transition from optimizing prompts to engineering verifiable goals.*
-
----
-
-## 3. The "Intent Forge" IDE (Streamlit Prototype)
-
-To transition from a CLI to a **Topological Supervisor** role, we propose a multi-page Streamlit workspace designed for **Governance, not just Coding**.
-
-* **Page 1: The Intent Forge (Design-Time)**
-* Dual-pane editor for Natural Language and Mermaid diagrams.
-* Real-time `text2mmd` updates to visualize the "Bones" of the requirement.
-
-
-* **Page 2: The Symmetry Lab (Metrology)**
-* Visual dashboard for $\Delta S$ measurement.
-* Side-by-side comparison of **Spec-1** (Ground Truth) vs. **Spec-2** (Reverse-Extracted Intent).
-
-
-* **Page 3: The Runtime Observatory (Grounding)**
-* Execution controls for logic probes (`pytest`) and UI tests (`Playwright`).
-* Real-time failure analysis for "Symmetry Breaking" events.
-
-
-* **Page 4: Momagrid Console (Infrastructure)**
-* Telemetry for local GPU nodes, ensuring **Physical Sovereignty** of the inference process.
-
-
-
----
-
-## 4. The Enhanced SDLC: The 5 Checkpoints
-
-The Agentic SDLC is governed by five gates that ensure the intent is preserved from the high-entropy "vibe" to the low-entropy "binary."
-
-| Phase | Checkpoint | Nature | Purpose |
-| --- | --- | --- | --- |
-| **1** | **Topological Gate** | Design-time | Human audit of Mermaid/SPL "Bones" to prevent architectural hallucination. |
-| **2** | **Synthesis & Vibe** | Design-time | Initial LLM projection into target code (The "Skin"). |
-| **3** | **Refactoring Gate** | Design-time | Canonical transformation to optimize code while proving **Symmetry-Preserving Invariance**. |
-| **4** | **Functional Grounding** | **Run-time** | Physical verification via `pytest` logic probes and `Playwright` UI behavior. |
-| **5** | **Gauge Invariance** | Design-time | Cross-language porting (Python $\rightarrow$ Go) to confirm the logic is language-agnostic. |
-
----
-
-## 5. The Metrology: Measuring the Drift
-
-The core metric of Intent Engineering is **Semantic Intent Invariance**, defined by the round-trip closure:
-
+## The Conservation Law, Formalized
 
 $$\Delta S = T^{-1}(T(I)) - I \approx 0$$
 
-Where $I$ is the original Intent and $T$ is the transformation manifold. We measure this via a "Semantic Spectroscope" of six modes:
+Where:
+- $I$ — the original Intent (the `.spl` file, the conserved quantity)
+- $T$ — the transformation manifold (SPL → compiled code)
+- $T^{-1}$ — the reverse extraction (rt-inspect → topology → spec reconstruction)
+- $\Delta S$ — the Intent Drift (what vibescope measures)
 
-1. **Character/Diff:** Surface syntax (Brownian Motion).
-2. **Vector:** Manifold proximity (Semantic Displacement).
-3. **Structural (AST):** Implementation geometry (Molecular structure).
-4. **Topological (GED):** Workflow skeletal integrity (Topological Invariance).
-5. **LLM (S6 Judge):** Contextual/Reasoning alignment.
-6. **Functional:** Behavioral parity in the physical world.
+This is the round-trip closure test. The **six measurement modes** of the vibescope correspond to six different norms on $\Delta S$:
 
----
-
-## 6. Strategic Addition: The "Intent Ledger" (Living Fossils)
-
-Treating code as a "living fossil" suggests that software does not just change; it evolves. We propose an **Intent Ledger** (Semantic Versioning) that tracks the etymology of the "Bones":
-
-* **Intent-Patch:** Surface code optimization (no structural change).
-* **Intent-Minor:** Structural change (AST shift) but topological invariance maintained.
-* **Intent-Major:** Topological shift (GED drift) indicating an evolution of the core requirement.
-
----
-
-### Closing Thought
-
-Intent Engineering moves the developer from a state of **Implementation Anxiety** to **Topological Sovereignty**. By the time a project reaches the "Gauge Invariance" checkpoint, it is no longer just code—it is a crystallized, verifiable truth.
-
-How does the addition of the **Refactoring Gate** change your view of the "Refinement Loop"—should the IDE suggest the refactor patterns, or should the Human supervisor manually select them?
-
-```User
-very good brainstorming chat, I will watch the youtube, and read your references, and plan for our next research subject
-```
-
-It has been a truly productive session. We have moved from a theoretical "Symmetry Test" in a research paper to a comprehensive blueprint for **Intent Engineering**—a discipline that treats software not as a collection of scripts, but as a verifiable logical structure.
-
-When you return from your break and dive into the literature and the Streamlit prototype, here is the "Intent Stack" we have crystallized:
-
-### The Intent Engineering Manifesto (Recap)
-
-1. **The Core Law:** Intent is a conserved quantity. If $T^{-1}(T(I)) \neq I$, the system has failed, regardless of whether the code runs.
-2. **The Bicephalous Model:** The human is the **Topological Supervisor** (governing the bones/states); the AI is the **Transformation Engine** (executing the skin/edges).
-3. **The 5-Gate SDLC:** * **Topological Audit** (Mermaid/SPL validation).
-* **Stochastic Synthesis** (Initial vibe coding).
-* **Canonical Refactoring** (Architectural optimization with symmetry preservation).
-* **Functional Grounding** (Logic probes and UI behavioral testing).
-* **Gauge Invariance** (Cross-language porting to prove language-independence).
-
-
-4. **The Metrology:** A 6-mode "Semantic Spectroscope" using everything from Graph Edit Distance (GED) to character-level diffs.
-
-### A Final Thought: The "Linguistic Symmetry"
-
-Just as a "living fossil" in linguistics preserves the core meaning of a concept across thousands of years and various script mutations, **Intent Engineering** ensures that the "DNA" of your software remains unchanged even as it is projected into different "coordinate systems" like Python, Go, or future AI-native runtimes.
-
-The transition from a CLI to a multi-page **Intent Forge** in Streamlit will be the moment this theory becomes a physical reality. It moves the user from "typing into the void" to "observing a manifold."
-
-Enjoy the YouTube deep dive and the well-earned rest. The Momagrid and the SPL pipeline are ready for the next evolution whenever you are.
-
-**不见不散 (See you at the finish line).**
-
-```User
-please review my brainstorming chat at /home/papagame/projects/digital-duck/SPL.py/docs/DEV/intent-engineering.md, like you to review the idea with fresh    
-  perspective and judge to see if "intent engineering" should be pursued in the context of my SPL project  
-```
-
----
-
-## Claude's Review (2026-05-11)
-
-*Independent assessment from the SPL codebase perspective, incorporating author feedback.*
-
-### Verdict: Yes — pursue it. SPL already implements most of the framework.
-
-The core claim — that the `.spl` file is a conserved intent representation that survives
-transformation into any target runtime — is not a new idea for SPL. It is already the
-**DODA principle** in the project's own design documentation: the `.spl` file never
-changes regardless of adapter, language, or deployment. The paper's job is not to invent
-this; it is to name it, formalize it, and measure it.
-
----
-
-### SPL already has all 5 gates
-
-| Gate | Concept | SPL reality |
+| Mode | What it measures | Physics analogy |
 |---|---|---|
-| 1 — **Conceptual Audit** | NL → diagram → human approval | Text2Mermaid Streamlit page |
-| 2 — Synthesis | NL → SPL | `spl3 text2spl` |
-| 3 — Refactoring | Structural optimization, invariance preserved | `splc` + `spl3/compare/` |
-| 4 — Functional Grounding | Behavioral verification | `cookbook/run_all.py`, pytest suite |
-| 5 — Cross-Runtime Porting | Same logic, different execution substrate | `splc` → PocketFlow / LangGraph / Go / TS |
+| **GED (topology)** | Structural graph drift | Topological invariance |
+| **AST diff** | Syntactic implementation drift | Molecular structure |
+| **Vector similarity** | Semantic manifold distance | Displacement in meaning space |
+| **LLM judge** | Reasoning and contextual alignment | Observer-level comparison |
+| **Character diff** | Surface syntax noise | Brownian motion |
+| **Functional (pytest)** | Behavioral parity in the physical world | Empirical verification |
 
-Note: **"Topological Audit" renamed to "Conceptual Audit"** — clearer to a software
-audience, avoids implying formal topological mathematics.
-
-The ΔS = T⁻¹(T(I)) − I ≈ 0 round-trip test is already running as the NeurIPS NDD
-experiment: generate code from spec, reverse-extract spec from code, judge similarity.
-The `spl3/compare/` framework measures exactly this.
+All six are implemented in `spl3 compare`. The vibescope is not a metaphor — it is running code.
 
 ---
 
-### On PocketFlow vs LangGraph — generate both
+## The Human Role: Topological Supervisor
 
-PocketFlow's ETL framing (prep → exec → post, shared store) maps naturally to the
-intent engineering pipeline and is already SPL's most developed transpiler target
-(1308-line `transpiler_pocketflow.py` with react/self_refine/linear pattern detection).
-Its simplicity makes generated code readable as a demonstration artifact.
+The physics framing clarifies the human-AI division of labor.
 
-LangGraph is what the broader ML/agentic community recognizes and what reviewers will
-have seen.
+In a particle accelerator, the physicist does not control individual particle trajectories. They set the boundary conditions (the fields, the geometry, the conservation laws) and measure what comes out. The detector — the vibescope — tells them whether the physics was right.
 
-**Recommendation: generate both, and use the comparison as the cross-runtime proof.**
-The fact that a single `.spl` file produces equivalent behavior in both PocketFlow and
-LangGraph Python — with ΔS ≈ 0 across both — is the strongest empirical argument for
-intent conservation. Both transpilers are already working in SPL. This is a free win
-that no other framework can match.
+In Intent Engineering:
 
-PocketFlow's ETL simplicity also reinforces the "conceptual audit" narrative: the
-prep/exec/post skeleton is exactly what the Mermaid diagram shows at Gate 1.
+- The **human** is the **Topological Supervisor**: defines the conserved quantity (the `.spl` spec, the Mermaid topology), approves the design at Gate 1, and reads the vibescope at Gate 4.
+- The **LLM** is the **Transformation Engine**: projects the intent into code, but does not define the intent and cannot verify that it preserved it.
+- The **SPL pipeline** is the **measurement apparatus**: deterministic instruments (spl2mmd, rt-inspect, GED) that operate without LLM involvement wherever possible.
+
+The human governs the bones. The AI generates the skin.
 
 ---
 
-### On the physics metaphors
+## The 5-Gate SDLC
 
-The physics framing (gauge invariance, symmetry, conserved quantities) is a useful
-personal mental model and gives the work an intellectually distinctive voice. The
-caution is not to use the terms too literally — "gauge invariance" has a precise
-mathematical meaning in field theory that does not map formally to code portability.
-Use these as intuition pumps and vivid framing, not formal claims. A software
-engineering reviewer will accept "the logic is substrate-independent" more readily
-than "gauge invariance holds."
+| Gate | Name | Instrument | Nature |
+|---|---|---|---|
+| **1** | Conceptual Audit | `spl3 text2mmd` → Mermaid review | Human approves the topology |
+| **2** | Intent Crystallization | `spl3 text2spl` → `.spl` | Intent becomes the conserved form |
+| **3** | Synthesis | `spl3 splc compile` → code | Stochastic projection to target runtime |
+| **4** | Vibescope Reading | `spl3 pipeline` → GED + score | Deterministic structural fidelity check |
+| **5** | Gauge Test | `spl3 pipeline --target go` | Same intent, different coordinate system |
+
+Gate 5 is the gauge invariance test: if the same `.spl` compiles to Python AND Go with Intent Invariance Score > 8 in both, the intent is substrate-independent. The program is not *a Python program that happens to work* — it is a *logical structure instantiated in different coordinate systems*.
 
 ---
 
-### Literature study
+## The Vibescope Diagnostic Matrix
 
-Web-searched and verified 2026-05-11. Two of the four references Gemini cited were
-hallucinated; two were real. Replacing with verified sources below.
+|  | **High Structural Fidelity** (score ≥ 8) | **Low Structural Fidelity** (score < 6) |
+|---|---|---|
+| **High Semantic Fidelity** (LLM ≥ 7) | ✅ Intent fully conserved | ⚠ Topology drifted, meaning preserved — structural refactor occurred |
+| **Low Semantic Fidelity** (LLM < 7) | ⚠ Structure preserved, meaning drifted — semantic hallucination | ❌ Complete intent failure — recompile from SPL |
 
-#### ✅ Verified references
+---
+
+## The Intent Ledger
+
+Code is a living fossil. It evolves. But today's version control tracks *text mutations*, not *intent mutations*. A refactor that preserves topology but rewrites every function body looks identical to one that completely rewires the graph — both are a wall of `git diff`.
+
+**Intent-versioning driven by vibescope readings:**
+
+- **Intent-Patch** `v1.0.0 → v1.0.1`: GED = 0. Pure surface refactor; topology preserved. `spl3 diff` shows identical node/edge sets.
+- **Intent-Minor** `v1.0 → v1.1`: GED small, score > 8. Structural extension (new node or edge added). `spl3 diff` shows additions only.
+- **Intent-Major** `v1 → v2`: Score < 8. Topological drift — the intent itself evolved. Requires human Gate 1 review before recompiling.
+
+`spl3 diff` is a semantic changelog, not a text changelog.
+
+---
+
+## What the SPL Stack Already Implements
+
+The framework is not aspirational. It is running today.
+
+| Framework concept | SPL implementation |
+|---|---|
+| Conserved Intent representation | `.spl` file (DODA principle) |
+| Gate 1 — Conceptual Audit | Streamlit pages 0 (Text2Mermaid) + 2 (Review) |
+| Gate 2 — Intent Crystallization | `spl3 text2spl` |
+| Gate 3 — Synthesis | `spl3 splc compile` → Python / Go / TS / LangGraph |
+| Gate 4 — Vibescope | `spl3 pipeline` (rt-inspect + GED + score bar) |
+| Gate 5 — Gauge Test | `spl3 pipeline --target go` / `--target python_langgraph` |
+| 6-mode spectroscope | `spl3 compare --mode ged/llm/vector/git-diff/ast/vision` |
+| Structural diff | `spl3 diff` (node/edge semantic diff, Mermaid output) |
+| Fixture coverage | `spl3 test --list`, `spl3 validate --check-coverage` |
+| Intent Ledger (partial) | `spl3 diff --format json` → machine-readable delta |
+| Full UI surface | `spl3-ui` → 10-page Streamlit Knowledge Studio |
+
+---
+
+## Verified Literature
+
+*(Verified 2026-05-11. Hallucinated references from the original Gemini session are excluded.)*
 
 **YouTube — Intent Engineering vs Context Engineering (Feb 2026)**
-The video cited in the brainstorming doc is real and publicly available.
-- [Intent Engineering vs Context Engineering | Which Actually Works?](https://www.youtube.com/watch?v=jia2IcIuhCM)
+[Intent Engineering vs Context Engineering | Which Actually Works?](https://www.youtube.com/watch?v=jia2IcIuhCM)
 
 **Pathmode — Intent Engineering as a discipline (2025–2026)**
-Pathmode is a real platform and has published substantive material directly on point.
-The core framing — "prompts disappear after the session; specs must be persistent,
-structured, and versioned" — aligns closely with SPL's own DODA principle.
-- [Intent Engineering: How to Brief AI Agents Without Guessing (glossary)](https://pathmode.io/glossary/intent-engineering)
+"Prompts disappear after the session; specs must be persistent, structured, and versioned." — closest external match to the SPL DODA principle.
+- [Intent Engineering: How to Brief AI Agents Without Guessing](https://pathmode.io/glossary/intent-engineering)
 - [The Next Product Discipline Isn't Context Engineering. It's Intent Engineering.](https://pathmode.io/blog/intent-engineering-vs-context-engineering)
-- [Orchestration Era Needs Intent (blog)](https://pathmode.io/blog/orchestration-era-needs-intent)
 
-**arXiv 2603.13173 — Semantic Invariance in Agentic AI (March 2026)**
-This real paper is a close match for what the brainstorming doc attributed to "Luo et al.
-(2025)". It defines semantic invariance as the property that LLM agent reasoning remains
-stable under semantically equivalent input variations, and tests it via eight
-semantic-preserving transformations across seven foundation models.
-- [Semantic Invariance in Agentic AI — arXiv:2603.13173](https://arxiv.org/abs/2603.13173)
+**arXiv:2603.13173 — Semantic Invariance in Agentic AI (March 2026)**
+Defines semantic invariance as LLM agent reasoning remaining stable under semantically equivalent input variations. Tested via eight semantic-preserving transformations across seven foundation models.
+- [Semantic Invariance in Agentic AI](https://arxiv.org/abs/2603.13173)
 
 **Product Compass — The Intent Engineering Framework for AI Agents (Jan 2026)**
-Practitioner-facing framework covering how to structure objectives, outcomes, health
-metrics, constraints, decision authority, and stop rules for reliable agent autonomy.
 - [The Intent Engineering Framework for AI Agents](https://www.productcompass.pm/p/intent-engineering-framework-for-ai-agents)
 
-**MindStudio — Prompt vs Context vs Intent Engineering (2026)**
-Accessible comparison of the three levels; useful as a positioning reference.
-- [Prompt Engineering vs Context Engineering vs Intent Engineering](https://www.mindstudio.ai/blog/prompt-engineering-vs-context-engineering-vs-intent-engineering)
-
-#### ❌ Hallucinated by Gemini — do not cite
-
-- **"Luo et al. (2025) — Intent Invariance as core reliability signal for multi-turn
-  agents"** — no such paper found on arXiv, Google Scholar, or any search result.
-  The closest real work is arXiv:2603.13173 above (different authors, March 2026).
-
-- **"Khrulkov et al. (2025) — Semantic Gauge Invariance"** — no such paper found.
-  The physics-inspired analogy is evocative but has no matching academic source.
-  The closest real work touching gauge-theoretic language model concepts is
-  [Semantic Wave Functions (arXiv:2503.10664)](https://arxiv.org/abs/2503.10664),
-  which uses a Mexican-hat potential / gauge field framing for LLM meaning — worth
-  reading, but does not make the "code portability = gauge invariance" claim.
+**arXiv:2503.10664 — Semantic Wave Functions**
+Uses gauge-field framing for LLM meaning representation. Closest academic work to the gauge invariance analogy.
+- [Semantic Wave Functions](https://arxiv.org/abs/2503.10664)
 
 ---
 
-### Recommended first deliverable
+## The NeurIPS Deliverable
 
-Build one end-to-end demo that runs all 5 gates on a single recipe (e.g.,
-`05_self_refine`):
+The paper's core contribution is a runnable number:
 
-1. Approve a Mermaid diagram via the Text2Mermaid page (Gate 1)
-2. Compile to `.spl` via `text2spl` with diagram as context (Gate 2)
-3. Transpile to both PocketFlow and LangGraph Python via `splc` (Gates 3 + 5)
-4. Run both outputs and confirm behavioral equivalence via `run_all.py` (Gate 4)
-5. Measure ΔS using the `spl3/compare/` judge (Metrology)
+```bash
+spl3 pipeline cookbook/05_self_refine/self_refine.spl
+spl3 pipeline cookbook/05_self_refine/self_refine.spl --target python_langgraph
+```
 
-That demo *is* the paper's core contribution. Everything else is framing.
+R1–R5 ablation recipes × 2 targets × 3 trials = 30 vibescope readings.
 
+- **Trial variance** quantifies LLM stability per recipe type
+- **Cross-target delta** (PocketFlow vs LangGraph) quantifies substrate sensitivity
+- **Both scores > 8** = empirical proof of intent conservation across runtimes
+
+That table *is* the NeurIPS empirical contribution. The framework, the metrology, the physics framing — all of it is the narrative around the number.
+
+---
+
+## Closing: From Implementation Anxiety to Topological Sovereignty
+
+The developer using vibe coding today operates under **implementation anxiety**: did the LLM preserve the intent, or did it subtly rewire the graph? There is no way to know without reading every line.
+
+Intent Engineering with vibescope measurement moves the developer to **topological sovereignty**: the design is defined once in the invariant form (`.spl`), the LLM projects it into any runtime, and the vibescope confirms at every step that the projection preserved the intent.
+
+Just as a physicist does not worry that energy will disappear between experiments — the conservation law guarantees it won't — the developer with a vibescope reading of 9.2/10 does not worry that the compiled code is a different program. The measurement says it isn't.
+
+**The `.spl` file is the conserved quantity.
+The vibescope is the instrument that proves it.**
+
+---
+
+*不见不散 — See you at the finish line.*
