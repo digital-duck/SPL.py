@@ -1,0 +1,44 @@
+{
+  "source": "/home/gong2/projects/digital-duck/SPL.py/cookbook/05_self_refine/targets/python_pocketflow/self_refine_python_pocketflow.py",
+  "entry": "DraftNode",
+  "nodes": {
+    "DraftNode": {
+      "type": "DraftNode",
+      "base": "Node"
+    },
+    "CritiqueNode": {
+      "type": "CritiqueNode",
+      "base": "Node"
+    },
+    "CommitNode": {
+      "type": "CommitNode",
+      "base": "Node"
+    },
+    "RefineNode": {
+      "type": "RefineNode",
+      "base": "Node"
+    }
+  },
+  "edges": [
+    {
+      "source": "DraftNode",
+      "target": "CritiqueNode",
+      "label": "critique"
+    },
+    {
+      "source": "CritiqueNode",
+      "target": "CommitNode",
+      "label": "commit"
+    },
+    {
+      "source": "CritiqueNode",
+      "target": "RefineNode",
+      "label": "refine"
+    },
+    {
+      "source": "RefineNode",
+      "target": "CritiqueNode",
+      "label": "critique"
+    }
+  ]
+}

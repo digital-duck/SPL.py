@@ -1,9 +1,29 @@
-"""Topological comparison using Graph Edit Distance (GED)."""
+"""Topological comparison using Graph Edit Distance (GED).
+
+Accepts two Mermaid (.mmd) strings OR two rt-inspect topology JSON strings.
+JSON topology files (produced by spl3 splc describe --mode rt-inspect) are
+automatically detected and converted to nx.DiGraph via parse_topology_json_to_nx,
+which applies canonical node name normalization for accurate comparison.
+"""
 
 from __future__ import annotations
 import difflib as _dl
-from spl3.compare.utils import parse_mermaid_to_nx
+from spl3.compare.utils import parse_mermaid_to_nx, parse_topology_json_to_nx
 from spl3.compare.types import GEDResult
+
+
+def _is_topology_json(content: str) -> bool:
+    """Return True if content looks like a rt-inspect topology JSON."""
+    stripped = content.strip()
+    if not (stripped.startswith("{") and stripped.endswith("}")):
+        return False
+    import json
+    try:
+        data = json.loads(stripped)
+        return "nodes" in data and "edges" in data
+    except Exception:
+        return False
+
 
 def compare_ged(content1: str, content2: str) -> GEDResult | str:
     try:
@@ -12,8 +32,16 @@ def compare_ged(content1: str, content2: str) -> GEDResult | str:
         return "Error: networkx not installed: pip install networkx"
 
     try:
-        g1 = parse_mermaid_to_nx(content1)
-        g2 = parse_mermaid_to_nx(content2)
+        # Auto-detect input format: topology JSON or Mermaid
+        if _is_topology_json(content1):
+            g1 = parse_topology_json_to_nx(content1)
+        else:
+            g1 = parse_mermaid_to_nx(content1)
+
+        if _is_topology_json(content2):
+            g2 = parse_topology_json_to_nx(content2)
+        else:
+            g2 = parse_mermaid_to_nx(content2)
 
         def _node_subst_cost(a1: dict, a2: dict) -> float:
             """SPL-aware cost: type mismatch + label edit distance."""

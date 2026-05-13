@@ -1,0 +1,8 @@
+graph TD
+    DecideAction(["▶ DecideAction"])
+    SearchWeb[SearchWeb]
+    AnswerQuestion[AnswerQuestion]
+
+    DecideAction -->|"search"| SearchWeb
+    DecideAction -->|"answer"| AnswerQuestion
+    SearchWeb -->|"decide"| DecideAction

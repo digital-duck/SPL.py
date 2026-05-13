@@ -113,13 +113,14 @@ RAG_STORE_DIR = SPL30_ROOT / "spl" / "rag" / ".chroma"
 
 @click.group(name="splc", context_settings={"help_option_names": ["-h", "--help"]})
 def splc():
-    """splc — SPL Compiler: translate .spl logical views into physical implementations.
+    """Compile .spl to target code or describe any SPL artifact.
 
     \b
     Subcommands:
-      compile   Compile a .spl file to a target language / framework.
-      describe  Describe a compiled target implementation as a -spec.md file.
-                The spec feeds back into text2spl → .spl → splc (reverse pipeline).
+      compile   .spl → target implementation (forward pipeline).
+      describe  Any artifact → spec.md or topology JSON (forward + reverse).
+                Accepts .spl, .py, .ts, .go files, or directories.
+                --mode rt-inspect: deterministic PocketFlow topology extraction.
     """
 
 
@@ -251,7 +252,7 @@ def cmd_compile(
     verbose:    bool,
     prompt_debug: bool,
 ) -> None:
-    """splc — SPL Compiler: translate a .spl logical view into a physical implementation."""
+    """Translate a .spl logical view into a physical implementation."""
 
     lang_meta = SUPPORTED_LANGS[lang]
 
@@ -930,30 +931,77 @@ def _lang_label_from_path(path: Path) -> str:
     help="Also include README.md (if present) to give the LLM original intent context.",
 )
 @click.option(
+    "--mode",
+    default="llm",
+    show_default=True,
+    type=click.Choice(["llm", "rt-inspect"], case_sensitive=False),
+    help=(
+        "Describe mode. "
+        "'llm' (default): send source to an LLM → -spec.md. "
+        "'rt-inspect': load and run the Python/PocketFlow file, extract graph topology "
+        "deterministically → -topology.json + -topology.mmd (no LLM required)."
+    ),
+)
+@click.option(
     "--prompt", "prompt_debug",
     is_flag=True,
     default=False,
-    help="Display the LLM prompt and exit.",
+    help="Display the LLM prompt and exit (only applies to --mode llm).",
 )
-def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, prompt_debug: bool) -> None:
-    """Describe a compiled target implementation as a -spec.md file.
+def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, mode: str, prompt_debug: bool) -> None:
+    """Unified describe: .spl → spec, .py → spec or topology JSON.
 
     \b
-    IMPL_PATH can be:
-      - a single implementation file (e.g. self_refine_python_pocketflow.py)
-      - a directory — all recognised source files are gathered and described together
+    INPUT can be any artifact in the SPL pipeline:
+      .spl file / folder        Forward direction — describe SPL logic → spec.md
+      .py / .ts / .go file      Reverse direction — describe a compiled implementation
+      directory of impl files   All recognised source files gathered and described together
+
+    \b
+    Modes (for compiled implementation files only):
+      --mode llm         LLM reads the source → <stem>-spec.md  (default)
+      --mode rt-inspect  Runtime graph introspection → <stem>-topology.json + .mmd
+                         Deterministic: loads the PocketFlow .py, traverses node.successors.
+                         No LLM required. Use output with: spl3 compare --mode ged
+                                                     and: spl3 json2mmd <topology.json>
 
     \b
     The generated spec feeds into the reverse pipeline:
-      text2spl (Section 0 → .spl) → splc compile → any target
+      spl3 splc describe <impl.py>     → <stem>-spec.md (Section 0)
+      spl3 text2spl --description "…"  → <stem>.spl
+      spl3 splc compile <stem>.spl     → new implementation
 
     \b
     Examples:
-      spl3 splc describe targets/python_pocketflow/self_refine_python_pocketflow.py
-      spl3 splc describe targets/python_pocketflow/  --lang "Python — PocketFlow"
-      spl3 splc describe langgraph/self_refine_langgraph.py --adapter claude_cli
+      spl3 splc describe self_refine.spl                       # forward: SPL → spec
+      spl3 splc describe cookbook/05_self_refine/              # forward: folder of .spl
+      spl3 splc describe self_refine_python_pocketflow.py      # reverse: impl → spec
+      spl3 splc describe targets/python_pocketflow/            # reverse: impl folder
+      spl3 splc describe self_refine_python_pocketflow.py --mode rt-inspect  # topology
     """
     import asyncio
+
+    # ── SPL source file(s) — forward direction ────────────────────────────────
+    # If the input is a .spl file or a directory containing only .spl files,
+    # use the SPL describe prompt (same as the legacy 'spl3 describe' command).
+    _is_spl_input = (
+        impl_path.is_file() and impl_path.suffix.lower() == ".spl"
+    ) or (
+        impl_path.is_dir()
+        and any(impl_path.glob("*.spl"))
+        and not any(f.suffix.lower() in _IMPL_EXTENSIONS for f in impl_path.iterdir() if f.is_file())
+    )
+
+    if _is_spl_input:
+        _cmd_describe_spl(impl_path, adapter=adapter, model=model,
+                          spec_dir=spec_dir, output_path=output_path,
+                          prompt_debug=prompt_debug)
+        return
+
+    # ── rt-inspect mode — deterministic runtime graph extraction ─────────────
+    if mode == "rt-inspect":
+        _cmd_describe_rt_inspect(impl_path, spec_dir=spec_dir, output_path=output_path)
+        return
 
     if impl_path.is_dir():
         impl_files = sorted(
@@ -1047,6 +1095,167 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
     click.echo("Reverse pipeline:")
     click.echo(f"  spl3 text2spl --description \"<Section 0 from {spec_path.name}>\" --mode workflow")
     click.echo(f"  spl3 splc compile <output.spl> --lang python/pocketflow")
+
+
+# ── SPL forward-describe implementation ───────────────────────────────────────
+
+# Imported from spl3.cli to avoid duplicating the prompt string
+def _get_spl_describe_prompt() -> str:
+    """Lazily import the _DESCRIBE_PROMPT from spl3.cli."""
+    import importlib
+    mod = importlib.import_module("spl3.cli")
+    return mod._DESCRIBE_PROMPT
+
+
+def _cmd_describe_spl(
+    spl_path:    Path,
+    adapter:     str = "ollama",
+    model:       str | None = None,
+    spec_dir:    Path | None = None,
+    output_path: Path | None = None,
+    prompt_debug: bool = False,
+) -> None:
+    """Describe a .spl file or folder as a plain-English spec (forward direction).
+
+    Same as the legacy 'spl3 describe' command, but unified under 'spl3 splc describe'.
+    """
+    import asyncio
+
+    if spl_path.is_dir():
+        spl_files = sorted(spl_path.glob("*.spl"))
+        if not spl_files:
+            raise click.ClickException(f"No .spl files found in {spl_path}")
+        parts = [f"-- File: {f.name}\n{f.read_text(encoding='utf-8')}" for f in spl_files]
+        source = "\n\n".join(parts)
+        stem = spl_path.resolve().name
+        spec_parent = spl_path
+        click.echo(f"Describing {len(spl_files)} .spl file(s) in {spl_path.name}/: "
+                   f"{', '.join(f.name for f in spl_files)}")
+    else:
+        source = spl_path.read_text(encoding="utf-8")
+        stem = spl_path.stem
+        spec_parent = spl_path.parent
+        click.echo(f"Generating spec for {spl_path.name} ...")
+
+    prompt = _get_spl_describe_prompt().format(source=source)
+
+    if prompt_debug:
+        click.echo("=" * 70)
+        click.echo("LLM PROMPT:")
+        click.echo("=" * 70)
+        click.echo(prompt)
+        return
+
+    try:
+        from spl3.adapters import get_adapter
+    except ImportError:
+        raise click.ClickException("spl3 adapters not found: ensure spl3 is installed.")
+
+    llm = get_adapter(adapter, **({"model": model} if model else {}))
+    result = asyncio.run(llm.generate(prompt, **({"model": model} if model else {})))
+    spec_text = result if isinstance(result, str) else getattr(result, "content", str(result))
+
+    spec_filename = f"{stem}-spec.md"
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path = output_path
+    elif spec_dir:
+        spec_dir.mkdir(parents=True, exist_ok=True)
+        spec_path = spec_dir / spec_filename
+    else:
+        spec_path = spec_parent / spec_filename
+
+    spec_path.write_text(spec_text, encoding="utf-8")
+    click.echo(f"Spec written to: {spec_path}")
+    click.echo()
+    click.echo("Reverse pipeline:")
+    click.echo(f"  spl3 text2spl --description \"<Section 0 from {spec_path.name}>\" --mode workflow")
+
+
+# ── rt-inspect implementation ─────────────────────────────────────────────────
+
+def _cmd_describe_rt_inspect(
+    impl_path:   Path,
+    spec_dir:    Path | None = None,
+    output_path: Path | None = None,
+) -> None:
+    """Runtime introspection mode: load a PocketFlow .py and extract topology.
+
+    Outputs:
+      <stem>-topology.json  — canonical graph JSON (nodes + edges)
+      <stem>-topology.mmd   — Mermaid flowchart diagram
+
+    The JSON can be fed directly into:
+      spl3 compare --mode ged <spl.json> <stem>-topology.json
+    """
+    from spl3.splc.rt_inspect import inspect_pocketflow_file
+
+    # ── Resolve the target file ───────────────────────────────────────────────
+    if impl_path.is_dir():
+        # Find the first .py file in the directory
+        py_files = sorted(
+            f for f in impl_path.iterdir()
+            if f.suffix == ".py" and not f.name.startswith("_")
+        )
+        if not py_files:
+            raise click.ClickException(
+                f"No .py files found in {impl_path}. "
+                "Provide a directory containing a PocketFlow implementation."
+            )
+        py_path = py_files[0]
+        click.echo(f"rt-inspect: found {len(py_files)} .py file(s), inspecting {py_path.name}")
+    else:
+        if impl_path.suffix != ".py":
+            raise click.ClickException(
+                f"--mode rt-inspect requires a Python (.py) file, got: {impl_path.name}"
+            )
+        py_path = impl_path
+
+    click.echo(f"rt-inspect: loading {py_path.name} ...")
+
+    try:
+        result = inspect_pocketflow_file(py_path)
+    except ImportError as exc:
+        raise click.ClickException(str(exc))
+    except ValueError as exc:
+        raise click.ClickException(str(exc))
+    except Exception as exc:
+        raise click.ClickException(f"Introspection failed: {exc}")
+
+    # ── Derive stem ───────────────────────────────────────────────────────────
+    stem = py_path.stem
+    for suffix in ("_python_pocketflow", "_python_langgraph", "_pocketflow", "_langgraph"):
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+            break
+
+    # ── Resolve output directory ──────────────────────────────────────────────
+    if output_path:
+        out_dir = output_path.parent
+        json_path = output_path.with_suffix(".json")
+        mmd_path  = output_path.with_suffix(".mmd")
+    elif spec_dir:
+        spec_dir.mkdir(parents=True, exist_ok=True)
+        json_path = spec_dir / f"{stem}-topology.json"
+        mmd_path  = spec_dir / f"{stem}-topology.mmd"
+    else:
+        parent = py_path.parent
+        json_path = parent / f"{stem}-topology.json"
+        mmd_path  = parent / f"{stem}-topology.mmd"
+
+    # ── Write outputs ─────────────────────────────────────────────────────────
+    json_path.write_text(result["json"], encoding="utf-8")
+    mmd_path.write_text(result["mmd"],  encoding="utf-8")
+
+    n_nodes = len(result["nodes"])
+    n_edges = len(result["edges"])
+    click.echo(f"  Topology: {n_nodes} nodes, {n_edges} edges  (entry: {result['entry']})")
+    click.echo(f"  Written:  {json_path}")
+    click.echo(f"  Written:  {mmd_path}")
+    click.echo()
+    click.echo("Next steps:")
+    click.echo(f"  spl3 compare --mode ged <spl-topology.json> {json_path.name}")
+    click.echo(f"  cat {mmd_path.name}   # paste into https://mermaid.live to visualise")
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────

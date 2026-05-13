@@ -403,14 +403,18 @@ def peers_add(ctx, peer_url):
 @click.option("--verbose", "-v", is_flag=True)
 @click.pass_context
 def cmd_test(ctx, spl_file_or_dir, adapter, model, verbose):
-    """Run pipeline-level tests for .spl workflows.
+    """LLM-executed end-to-end test against .test.yaml fixtures.
 
+    Distinct from 'spl3 validate' (syntax only, no LLM). This command
+    actually runs the workflow and asserts on the LLM output.
+
+    \b
     Looks for test fixtures alongside .spl files:
       generate_code.spl          — workflow under test
       generate_code.test.yaml    — test cases (inputs + expected assertions)
 
-    Test YAML format:
     \b
+    Test YAML format:
       - name: "basic generation"
         params:
           spec: "Write a hello-world function in Python"
@@ -1126,29 +1130,53 @@ def fix_node_syntax(text, node_map, node_id_counter):
 # Mermaid rendering helpers (shared by text2mmd and compare)          #
 # ------------------------------------------------------------------ #
 
-def _mmd_single_html(mmd_text: str, title: str) -> str:
-    """Standalone HTML page that renders one mermaid diagram."""
+def _mmd_single_html(mmd_text: str, title: str, *, png_name: str | None = None) -> str:
+    """Standalone HTML page for one Mermaid diagram.
+
+    If png_name is provided the HTML embeds a static <img> tag (no CDN JS
+    required, no browser-side Mermaid parse errors).  Falls back to inline
+    Mermaid rendering only when png_name is None.
+    """
+    if png_name:
+        diagram_block = (
+            f'<div class="diagram"><img src="{png_name}" '
+            f'alt="{title} diagram" style="max-width:100%;height:auto;'
+            f'border:1px solid #eee;border-radius:4px"></div>'
+        )
+        script_block = ""
+        mermaid_script = ""
+    else:
+        diagram_block = f'<div class="mermaid">{mmd_text}</div>'
+        script_block = (
+            '<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>'
+        )
+        mermaid_script = (
+            "<script>mermaid.initialize({"
+            "startOnLoad:true,theme:'default',securityLevel:'loose',errorLevel:'warn'"
+            "});</script>"
+        )
+
     return f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>{title}</title>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  {script_block}
   <style>
     body{{font-family:Arial,sans-serif;margin:20px;background:#f5f5f5}}
     .container{{max-width:1400px;margin:0 auto;background:white;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1)}}
-    .mermaid{{text-align:center;margin:20px 0}}
+    .diagram,.mermaid{{text-align:center;margin:20px 0}}
     pre{{background:#f8f9fa;border:1px solid #e9ecef;border-radius:4px;padding:15px;font-family:monospace;white-space:pre-wrap}}
   </style>
 </head>
 <body>
   <div class="container">
     <h2>{title}</h2>
-    <div class="mermaid">{mmd_text}</div>
-    <details style="margin-top:20px"><summary style="cursor:pointer;color:#57606a">Source</summary>
+    {diagram_block}
+    <details style="margin-top:20px"><summary style="cursor:pointer;color:#57606a">Source (.mmd)</summary>
       <pre>{mmd_text}</pre></details>
   </div>
-  <script>mermaid.initialize({{startOnLoad:true,theme:'default',securityLevel:'loose',errorLevel:'warn'}});</script>
+  {mermaid_script}
 </body>
 </html>"""
 
@@ -1162,8 +1190,12 @@ def _save_mmd_formats(
     save_md: bool = False,
     save_pdf: bool = False,
 ) -> list[str]:
-    """Save a .mmd file as HTML / PNG / MD / PDF. Returns saved-file descriptions."""
-    import shutil, subprocess
+    """Save a .mmd file as HTML / PNG / MD / PDF. Returns saved-file descriptions.
+
+    PNG is rendered first (via mmdc) so the HTML can reference the static image
+    rather than embedding inline Mermaid — avoiding CDN parse errors at runtime.
+    """
+    import json, shutil, subprocess, tempfile
     saved: list[str] = []
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = mmd_path.stem
@@ -1174,36 +1206,43 @@ def _save_mmd_formats(
         md_path.write_text(f"# {stem}\n\n```mermaid\n{mmd_text}\n```\n", encoding="utf-8")
         saved.append(f"MD: {md_path}")
 
+    # ── Render PNG / PDF via mmdc first so HTML can reference the PNG ──────
+    png_generated: bool = False
+    if save_png or save_pdf:
+        mmdc = shutil.which("mmdc")
+        if not mmdc:
+            click.echo("! PNG skipped: mmdc not found (install @mermaid-js/mermaid-cli)", err=True)
+        else:
+            mmdc_base = [mmdc]
+            # Puppeteer needs --no-sandbox on Linux with restricted user namespaces
+            puppet_cfg = Path(tempfile.mktemp(suffix=".json"))
+            puppet_cfg.write_text(json.dumps({"args": ["--no-sandbox"]}))
+            try:
+                for ext, flag in (("png", save_png), ("pdf", save_pdf)):
+                    if not flag:
+                        continue
+                    out_path = out_dir / f"{stem}.{ext}"
+                    args = mmdc_base + ["-i", str(mmd_path), "-o", str(out_path), "-p", str(puppet_cfg)]
+                    try:
+                        r = subprocess.run(args, capture_output=True, timeout=60)
+                        if r.returncode == 0:
+                            saved.append(f"{ext.upper()}: {out_path}")
+                            if ext == "png":
+                                png_generated = True
+                        else:
+                            err_text = r.stderr.decode(errors="replace").strip()
+                            click.echo(f"Warning: mmdc failed for {mmd_path.name} → .{ext}: {err_text[:200]}", err=True)
+                    except Exception as exc:
+                        click.echo(f"Warning: {ext.upper()} render error — {exc}", err=True)
+            finally:
+                puppet_cfg.unlink(missing_ok=True)
+
+    # ── HTML: embed PNG if available, else fall back to inline Mermaid ─────
     if save_html:
         html_path = out_dir / f"{stem}.html"
-        html_path.write_text(_mmd_single_html(mmd_text, stem), encoding="utf-8")
+        png_name = f"{stem}.png" if png_generated else None
+        html_path.write_text(_mmd_single_html(mmd_text, stem, png_name=png_name), encoding="utf-8")
         saved.append(f"HTML: {html_path}")
-
-    # PNG and PDF both go through mmdc (supports -o *.png and -o *.pdf natively)
-    if save_png or save_pdf:
-        import json, tempfile
-        mmdc = shutil.which("mmdc")
-        mmdc_base = [mmdc] if mmdc else ["npx", "--yes", "@mermaid-js/mermaid-cli"]
-
-        # Puppeteer needs --no-sandbox on Linux systems with restricted user namespaces
-        puppet_cfg = Path(tempfile.mktemp(suffix=".json"))
-        puppet_cfg.write_text(json.dumps({"args": ["--no-sandbox"]}))
-        try:
-            for ext, flag in (("png", save_png), ("pdf", save_pdf)):
-                if not flag:
-                    continue
-                out_path = out_dir / f"{stem}.{ext}"
-                args = mmdc_base + ["-i", str(mmd_path), "-o", str(out_path), "-p", str(puppet_cfg)]
-                try:
-                    r = subprocess.run(args, capture_output=True, timeout=60)
-                    if r.returncode == 0:
-                        saved.append(f"{ext.upper()}: {out_path}")
-                    else:
-                        click.echo(f"Warning: mmdc failed for {mmd_path.name} → .{ext}", err=True)
-                except Exception as exc:
-                    click.echo(f"Warning: {ext.upper()} render error — {exc}", err=True)
-        finally:
-            puppet_cfg.unlink(missing_ok=True)
 
     return saved
 
@@ -1242,9 +1281,9 @@ def _save_mmd_formats(
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
 def cmd_text2mmd(description, description_opt, adapter, model, style, output, validate, preview, save_markdown, save_html, save_png, out_dir, no_defaults, prompt_debug):
-    """Generate Mermaid flowchart from natural language workflow description.
+    """NL description → Mermaid flowchart (for review before text2spl).
 
-    This creates a visual representation of the workflow that can be reviewed
+    Creates a visual representation of the workflow that can be reviewed
     and edited before converting to SPL code.
 
     \b
@@ -1510,7 +1549,7 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
 @click.option("--out-dir", default=None, metavar="DIR",
               help="Output directory; filename derived from image stem.")
 def cmd_img2text(image_path, adapter, model, out, out_dir):
-    """Extract text and pseudo-code from an image (OCR via multimodal LLM).
+    """Extract text / pseudo-code from an image (multimodal LLM OCR).
 
     Preserves indentation, code structure, headings, and formatting.
     Wraps detected code in fenced code blocks with inferred language tags.
@@ -1556,12 +1595,17 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
               help="Save a .md file with a fenced mermaid code block.")
 @click.option("--save-png/--no-save-png", default=True, show_default=True,
               help="Save a .png image via headless Chrome/Chromium (requires browser).")
+@click.option("--save-svg/--no-save-svg", default=False, show_default=True,
+              help="Save a vector .svg via mmdc (lossless, ideal for papers/zoom).")
 @click.option("--save-pdf/--no-save-pdf", default=False, show_default=True,
-              help="Save a print-ready .pdf (tries mmdc then Chrome headless).")
+              help="Save a print-ready .pdf via mmdc.")
+@click.option("--paper", default="letter", show_default=True,
+              type=click.Choice(["letter", "a4", "a3", "tabloid"], case_sensitive=False),
+              help="Paper size for --save-pdf (letter=US default).")
 @click.option("--save-spl/--no-save-spl", default=True, show_default=True,
               help="Copy the source .spl file into --out-dir alongside the other outputs.")
-def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png, save_pdf, save_spl):
-    """Generate a Mermaid flowchart for each SPL_FILE (AST-direct, no LLM).
+def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png, save_svg, save_pdf, paper, save_spl):
+    """Generate Mermaid flowchart from .spl file (AST-direct, no LLM).
 
     Each .spl file is parsed and its workflow/procedure AST nodes are converted
     to a standalone Mermaid flowchart.  Multi-file projects (workflows that CALL
@@ -1640,23 +1684,71 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
             md_path.write_text(md_content, encoding="utf-8")
             click.echo(f"  + Markdown: {md_path}")
 
-        # ── .html ─────────────────────────────────────────────────────────
+        # ── .png (rendered before .html so HTML can reference the image) ───
+        png_path = output_dir / (base_name + ".png")
+        png_generated = False
+        if save_png:
+            import json as _json, tempfile as _tempfile
+            _pup_cfg = _json.dumps({"args": ["--no-sandbox", "--disable-setuid-sandbox"]})
+            _pup_file = _tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+            _pup_file.write(_pup_cfg)
+            _pup_file.close()
+
+            mmdc_exe = shutil.which("mmdc")
+            if mmdc_exe:
+                cmd_args = [mmdc_exe, "-i", str(mmd_path), "-o", str(png_path),
+                            "-p", _pup_file.name, "-t", "default", "-b", "white"]
+                try:
+                    result = subprocess.run(cmd_args, capture_output=True, timeout=60)
+                    if result.returncode == 0 and png_path.exists():
+                        click.echo(f"  + PNG:      {png_path}")
+                        png_generated = True
+                    else:
+                        err_text = result.stderr.decode(errors="replace").strip()
+                        click.echo(f"  ! PNG failed: {err_text[:200]}", err=True)
+                except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
+                    click.echo(f"  ! PNG error: {exc}", err=True)
+            else:
+                click.echo("  ! PNG skipped: mmdc not found (install @mermaid-js/mermaid-cli)", err=True)
+
+            import os as _os
+            _os.unlink(_pup_file.name)
+
+        # ── .html (uses PNG if available, else inline Mermaid) ────────────
         html_path = output_dir / (base_name + ".html")
-        if save_html or preview or save_png or save_pdf:
+        if save_html or preview:
             title = base_name.replace("_", " ").replace("-", " ").title()
+            if png_generated:
+                diagram_block = (
+                    f'        <div class="diagram">'
+                    f'<img src="{base_name}.png" alt="{title} Workflow diagram" '
+                    f'style="max-width:100%;height:auto;border:1px solid #eee;border-radius:4px">'
+                    f'</div>'
+                )
+                script_tag = ""
+                init_script = ""
+            else:
+                diagram_block = f'        <div class="mermaid">\n{mermaid_text}\n        </div>'
+                script_tag = '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>'
+                init_script = (
+                    "    <script>\n"
+                    "        mermaid.initialize({startOnLoad:true,theme:'default',securityLevel:'loose'});\n"
+                    "    </script>"
+                )
+            rendered_by = "mmdc" if png_generated else "mermaid CDN"
             html_content = "\n".join([
                 "<!DOCTYPE html>",
                 "<html>",
                 "<head>",
                 '    <meta charset="UTF-8">',
                 f"    <title>{title} — SPL Workflow</title>",
-                '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
+                script_tag,
                 "    <style>",
                 "        body{font-family:Arial,sans-serif;margin:30px;background:#f5f5f5}",
                 "        .box{max-width:1200px;margin:0 auto;background:white;padding:24px;",
                 "             border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1)}",
                 "        h1{border-bottom:2px solid #eee;padding-bottom:8px}",
-                "        .mermaid{text-align:center;margin:20px 0}",
+                "        .diagram,.mermaid{text-align:center;margin:20px 0}",
                 "        .meta{color:#666;font-size:.9em}",
                 "    </style>",
                 "</head>",
@@ -1664,14 +1756,10 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
                 '    <div class="box">',
                 f"        <h1>{title} Workflow</h1>",
                 f'        <p class="meta">Source: <code>{path.name}</code> &nbsp;|&nbsp; '
-                "Generated by <code>spl3 spl2mmd</code> (AST-direct)</p>",
-                '        <div class="mermaid">',
-                mermaid_text,
-                "        </div>",
+                f"Generated by <code>spl3 spl2mmd</code> (AST-direct) &nbsp;|&nbsp; Rendered by <code>{rendered_by}</code></p>",
+                diagram_block,
                 "    </div>",
-                "    <script>",
-                "        mermaid.initialize({startOnLoad:true,theme:'default',securityLevel:'loose'});",
-                "    </script>",
+                init_script,
                 "</body>",
                 "</html>",
             ])
@@ -1682,139 +1770,140 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
                 import webbrowser
                 webbrowser.open("file://" + str(html_path))
 
-        # ── .png ─────────────────────────────────────────────────────────
-        if save_png:
-            png_path = output_dir / (base_name + ".png")
-            png_generated = False
+        # ── .svg / .pdf — both via mmdc (vector, lossless zoom) ─────────────
+        # SVG and PDF share the same mmdc puppeteer config; render together.
+        if save_svg or save_pdf:
+            import json as _json2, tempfile as _tempfile2, os as _os2
+            _pup_cfg2 = _json2.dumps({
+                "args": ["--no-sandbox", "--disable-setuid-sandbox"],
+                "pdf": {"format": paper.capitalize()},
+            })
+            _pup_file2 = _tempfile2.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+            _pup_file2.write(_pup_cfg2)
+            _pup_file2.close()
 
-            # Build a puppeteer config for mmdc that enables --no-sandbox
-            # (required on Linux when not running as root).
-            import json as _json, tempfile as _tempfile
-            _pup_cfg = _json.dumps({"args": ["--no-sandbox", "--disable-setuid-sandbox"]})
-            _pup_file = _tempfile.NamedTemporaryFile(
-                mode="w", suffix=".json", delete=False
-            )
-            _pup_file.write(_pup_cfg)
-            _pup_file.close()
-
-            # Try mmdc first — renders the full diagram at natural size.
-            for mmdc_cmd in ["mmdc", "npx", "@mermaid-js/mermaid-cli"]:
-                try:
-                    cmd_args = (
-                        [mmdc_cmd, "-i", str(mmd_path), "-o", str(png_path),
-                         "-p", _pup_file.name, "-t", "default", "-b", "white"]
-                        if mmdc_cmd == "mmdc"
-                        else ["npx", "--yes", "@mermaid-js/mermaid-cli",
-                              "-i", str(mmd_path), "-o", str(png_path),
-                              "-p", _pup_file.name, "-t", "default", "-b", "white"]
-                    )
-                    result = subprocess.run(cmd_args, capture_output=True, timeout=60)
-                    if result.returncode == 0 and png_path.exists():
-                        click.echo(f"  + PNG:      {png_path}")
-                        png_generated = True
-                        break
-                    if mmdc_cmd == "npx":
-                        break
-                except (subprocess.TimeoutExpired, FileNotFoundError):
-                    if mmdc_cmd == "npx":
-                        break
-                    continue
-
-            import os as _os
-            _os.unlink(_pup_file.name)
-
-            if not png_generated:
-                click.echo("  ! PNG skipped: mmdc not found (install @mermaid-js/mermaid-cli)", err=True)
-
-        # ── .pdf ─────────────────────────────────────────────────────────
-        if save_pdf:
-            pdf_path = output_dir / (base_name + ".pdf")
-            pdf_generated = False
-
-            # Build a print-optimised HTML page (A4 landscape, neutral theme,
-            # no interactive chrome — suited for paper/publication).
-            title = base_name.replace("_", " ").replace("-", " ").title()
-            print_html = "\n".join([
-                "<!DOCTYPE html>",
-                "<html>",
-                "<head>",
-                '    <meta charset="UTF-8">',
-                f"    <title>{title} — SPL Workflow</title>",
-                '    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>',
-                "    <style>",
-                "        @page { size: A4 landscape; margin: 1.5cm; }",
-                "        body { font-family: Arial, sans-serif; margin: 0; background: white; }",
-                "        h2 { font-size: 14pt; margin: 0 0 4px 0; }",
-                "        .meta { font-size: 9pt; color: #555; margin-bottom: 14px; }",
-                "        .mermaid { text-align: center; }",
-                "        svg { max-width: 100%; height: auto; }",
-                "    </style>",
-                "</head>",
-                "<body>",
-                f"    <h2>{title} Workflow</h2>",
-                f'    <p class="meta">Source: {path.name} &nbsp;|&nbsp; '
-                "Generated by spl3 spl2mmd (AST-direct)</p>",
-                '    <div class="mermaid">',
-                mermaid_text,
-                "    </div>",
-                "    <script>",
-                "        mermaid.initialize({startOnLoad: true, theme: 'neutral', securityLevel: 'loose'});",
-                "    </script>",
-                "</body>",
-                "</html>",
-            ])
-            print_html_path = output_dir / (base_name + "_print.html")
-            print_html_path.write_text(print_html, encoding="utf-8")
-
-            # 1. Try mmdc (mermaid-cli) — native vector PDF, best quality
-            try:
-                result = subprocess.run(
-                    ["mmdc", "-i", str(mmd_path), "-o", str(pdf_path),
-                     "-t", "neutral", "-b", "white"],
-                    capture_output=True, timeout=60,
-                )
-                if result.returncode == 0 and pdf_path.exists():
-                    click.echo(f"  + PDF:      {pdf_path}  (via mmdc)")
-                    pdf_generated = True
-            except (subprocess.TimeoutExpired, FileNotFoundError):
-                pass
-
-            # 2. Fall back to Chrome headless --print-to-pdf
-            if not pdf_generated:
-                for chrome_cmd in [
-                    "google-chrome", "chromium-browser", "chromium",
-                    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-                ]:
-                    try:
-                        result = subprocess.run(
-                            [chrome_cmd, "--headless", "--disable-gpu",
-                             "--no-sandbox",
-                             f"--print-to-pdf={pdf_path}",
-                             "--print-to-pdf-no-header",
-                             "--virtual-time-budget=8000",
-                             "file://" + str(print_html_path)],
-                            capture_output=True, timeout=60,
-                        )
-                        if result.returncode == 0 and pdf_path.exists():
-                            click.echo(f"  + PDF:      {pdf_path}  (via Chrome)")
-                            pdf_generated = True
-                            break
-                    except (subprocess.TimeoutExpired, FileNotFoundError):
+            mmdc_exe2 = shutil.which("mmdc")
+            if not mmdc_exe2:
+                click.echo("  ! SVG/PDF skipped: mmdc not found (install @mermaid-js/mermaid-cli)", err=True)
+            else:
+                for ext, flag, theme in (("svg", save_svg, "default"), ("pdf", save_pdf, "neutral")):
+                    if not flag:
                         continue
+                    out_path = output_dir / f"{base_name}.{ext}"
+                    cmd_args = [mmdc_exe2, "-i", str(mmd_path), "-o", str(out_path),
+                                "-p", _pup_file2.name, "-t", theme, "-b", "white"]
+                    try:
+                        result = subprocess.run(cmd_args, capture_output=True, timeout=90)
+                        if result.returncode == 0 and out_path.exists():
+                            size = out_path.stat().st_size
+                            click.echo(f"  + {ext.upper():3s}:      {out_path}  ({size//1024}K)")
+                        else:
+                            err_text = result.stderr.decode(errors="replace").strip()
+                            click.echo(f"  ! {ext.upper()} failed: {err_text[:200]}", err=True)
+                    except (subprocess.TimeoutExpired, FileNotFoundError) as exc:
+                        click.echo(f"  ! {ext.upper()} error: {exc}", err=True)
 
-            # Clean up the temporary print HTML
-            if print_html_path.exists():
-                print_html_path.unlink()
-
-            if not pdf_generated:
-                click.echo(
-                    "  ! PDF skipped: install mmdc (`npm i -g @mermaid-js/mermaid-cli`) "
-                    "or Chrome/Chromium",
-                    err=True,
-                )
+            _os2.unlink(_pup_file2.name)
 
     if errors:
         raise SystemExit(errors)
+
+
+# ------------------------------------------------------------------ #
+# spl3 json2mmd                                                       #
+# ------------------------------------------------------------------ #
+
+@main.command("json2mmd")
+@click.argument(
+    "json_path",
+    type=click.Path(exists=True, dir_okay=False, readable=True, path_type=Path),
+)
+@click.option(
+    "-o", "--output",
+    default=None,
+    type=click.Path(dir_okay=False, writable=True, path_type=Path),
+    help="Write Mermaid output to FILE (default: <stem>-topology.mmd alongside the JSON).",
+)
+@click.option(
+    "--stdout",
+    is_flag=True,
+    default=False,
+    help="Print Mermaid to stdout instead of writing a file.",
+)
+@click.option(
+    "--no-canonicalize",
+    is_flag=True,
+    default=False,
+    help=(
+        "Keep raw class names (e.g. DraftNode) instead of canonicalizing "
+        "to snake_case (e.g. draft). Canonicalization is on by default so "
+        "that GED comparison aligns with SPL node labels."
+    ),
+)
+def cmd_json2mmd(json_path: Path, output: Path | None, stdout: bool, no_canonicalize: bool) -> None:
+    """Convert a rt-inspect topology JSON file to a Mermaid flowchart.
+
+    \b
+    The topology JSON is produced by:
+      spl3 splc describe <file.py> --mode rt-inspect
+
+    Node names are canonicalized by default (DraftNode → draft, SearchWeb → search_web)
+    so that GED comparison against SPL-derived Mermaid aligns on node labels.
+
+    \b
+    Examples:
+      spl3 json2mmd self_refine-topology.json
+      spl3 json2mmd self_refine-topology.json --stdout
+      spl3 json2mmd self_refine-topology.json -o self_refine-rt.mmd --no-canonicalize
+    """
+    import json as _json
+
+    try:
+        data = _json.loads(json_path.read_text(encoding="utf-8"))
+    except _json.JSONDecodeError as exc:
+        raise click.ClickException(f"Invalid JSON in {json_path.name}: {exc}")
+
+    nodes = data.get("nodes", {})
+    edges = data.get("edges", [])
+    entry = data.get("entry")
+
+    if not nodes:
+        raise click.ClickException(f"No nodes found in {json_path.name}. Is this a topology JSON?")
+
+    from spl3.splc.rt_inspect import topology_to_mermaid, canonicalize_node_id
+
+    if not no_canonicalize:
+        # Remap node IDs to canonical snake_case names
+        id_map = {nid: canonicalize_node_id(nid) for nid in nodes}
+        nodes = {id_map[nid]: meta for nid, meta in nodes.items()}
+        edges = [
+            {"source": id_map.get(e["source"], e["source"]),
+             "target": id_map.get(e["target"], e["target"]),
+             "label":  e.get("label", "")}
+            for e in edges
+        ]
+        entry = id_map.get(entry, entry) if entry else entry
+
+    mmd = topology_to_mermaid(nodes, edges, entry)
+
+    if stdout:
+        click.echo(mmd)
+        return
+
+    if output:
+        out_path = output
+    else:
+        stem = json_path.stem
+        if stem.endswith("-topology"):
+            stem = stem[: -len("-topology")]
+        out_path = json_path.parent / f"{stem}-topology.mmd"
+
+    out_path.write_text(mmd, encoding="utf-8")
+    click.echo(f"Mermaid written to: {out_path}")
+    click.echo()
+    click.echo("Next steps:")
+    click.echo(f"  spl3 compare --mode ged <spl.mmd> {out_path.name}")
+    click.echo(f"  # Or paste into https://mermaid.live to visualise")
 
 
 # ------------------------------------------------------------------ #
@@ -2098,7 +2187,10 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
 @main.command("validate")
 @click.argument("spl_files", nargs=-1, required=True)
 def cmd_validate(spl_files):
-    """Validate SPL syntax of one or more SPL_FILES.
+    """Syntax-check .spl file(s) — fast parse only, no LLM call.
+
+    Distinct from 'spl3 test' which runs the full workflow against test fixtures.
+    Use this for quick CI checks and pre-commit validation.
 
     \b
     Examples:
@@ -2204,12 +2296,11 @@ def _extract_spec_intro(text: str, max_fallback: int = 1000) -> str:
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
 def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
-    """One-shot prototype generator: NL description → working code + README + test data.
+    """NL → working code + README + test data in one pass (no IR).
 
-    Generates a complete, runnable implementation directly from a natural language
-    description or spec file — no .mmd or .spl IR steps required. Outputs code,
-    README.md, and test data in one pass. Works with any model available via
-    ollama (local) or openrouter (400+ cloud models).
+    Produces a complete, runnable implementation directly from a natural language
+    description — no .mmd or .spl intermediate representations required. Works
+    with any model via ollama (local) or openrouter (400+ cloud models).
 
     \b
     Use cases:
@@ -2507,21 +2598,26 @@ Write the specification now.
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
 def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
-    """Generate a plain-English functional specification for a .spl file or folder.
+    """Deprecated — use 'spl3 splc describe' instead.
 
     \b
-    SPL_PATH can be:
-      - a single .spl file  → spec named <stem>-spec.md
-      - a folder            → all *.spl files in the folder are gathered and
-                              described together as one recipe unit;
-                              spec named <folder>-spec.md
+    DEPRECATED: This command is consolidated into 'spl3 splc describe'.
+    It still works, but prefer the unified form going forward:
+
+      spl3 splc describe <file.spl>          # describe an SPL source file
+      spl3 splc describe <file.py>           # describe a compiled implementation
+      spl3 splc describe <file.py> --mode rt-inspect  # deterministic topology extraction
 
     \b
-    Examples:
+    Examples (legacy — still work):
       spl3 describe cookbook/05_self_refine/self_refine.spl
       spl3 describe cookbook/63_parallel_code_review/
-      spl3 describe my_workflow.spl --adapter claude_cli --spec-dir docs/specs
     """
+    click.echo(
+        "NOTE: 'spl3 describe' is deprecated. "
+        "Use 'spl3 splc describe' for all describe operations.",
+        err=True,
+    )
     path = Path(spl_path)
     if not path.exists():
         raise click.ClickException(f"Path not found: {path}")
@@ -2530,12 +2626,11 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
         spl_files = sorted(path.glob("*.spl"))
         if not spl_files:
             raise click.ClickException(f"No .spl files found in {path}")
-        # Concatenate all sources with file headers so the LLM sees the full recipe
         parts = []
         for f in spl_files:
             parts.append(f"-- File: {f.name}\n" + f.read_text(encoding="utf-8"))
         source = "\n\n".join(parts)
-        stem = path.resolve().name          # folder name → spec stem
+        stem = path.resolve().name
         spec_parent = path
     else:
         source = path.read_text(encoding="utf-8")
@@ -2625,7 +2720,7 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
                 adapter_synthesis, output, out_dir, output_format, focus, diff_style,
                 no_color, synthesize, prompt_debug):
 
-    """Multi-tier diff: topology · semantic · syntactic · structural · character · embedding.
+    """Multi-tier diff: GED, LLM, vector, git-diff, AST, vision.
 
     Automatically picks the best default tier(s) for each file type, then
     synthesizes all tier results into a single verdict:

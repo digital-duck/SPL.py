@@ -1,0 +1,10 @@
+graph TD
+    DraftNode(["▶ DraftNode"])
+    CritiqueNode[CritiqueNode]
+    CommitNode[CommitNode]
+    RefineNode[RefineNode]
+
+    DraftNode -->|"critique"| CritiqueNode
+    CritiqueNode -->|"commit"| CommitNode
+    CritiqueNode -->|"refine"| RefineNode
+    RefineNode -->|"critique"| CritiqueNode

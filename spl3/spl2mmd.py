@@ -106,6 +106,20 @@ def _mmd_label(text: str) -> str:
     return text
 
 
+def _mmd_edge_label(text: str) -> str:
+    """Escape text for use inside a Mermaid edge label (between pipes).
+
+    All bracket/paren chars are parsed as node-shape delimiters by Mermaid
+    and must be stripped from edge labels.
+    """
+    text = text.replace('"', "'")
+    text = text.replace("\n", " ")
+    # Remove all shape-delimiter characters — they break Mermaid edge parsing
+    for ch in "()[]{}":
+        text = text.replace(ch, "")
+    return text
+
+
 def _is_terminal(stmt) -> bool:
     return isinstance(stmt, (CommitStatement, RaiseStatement))
 
@@ -176,7 +190,7 @@ class ASTToMermaid:
 
     def _edge(self, src: str, dst: str, lbl: str = ""):
         if lbl:
-            self._lines.append(f"{_IND}{src} -->|{_mmd_label(lbl)}| {dst}")
+            self._lines.append(f"{_IND}{src} -->|{_mmd_edge_label(lbl)}| {dst}")
         else:
             self._lines.append(f"{_IND}{src} --> {dst}")
 

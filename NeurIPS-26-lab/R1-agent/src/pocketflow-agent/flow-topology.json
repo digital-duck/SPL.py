@@ -1,0 +1,35 @@
+{
+  "source": "/home/gong2/projects/digital-duck/SPL.py/NeurIPS-26-lab/R1-agent/src/pocketflow-agent/flow.py",
+  "entry": "DecideAction",
+  "nodes": {
+    "DecideAction": {
+      "type": "DecideAction",
+      "base": "Node"
+    },
+    "SearchWeb": {
+      "type": "SearchWeb",
+      "base": "Node"
+    },
+    "AnswerQuestion": {
+      "type": "AnswerQuestion",
+      "base": "Node"
+    }
+  },
+  "edges": [
+    {
+      "source": "DecideAction",
+      "target": "SearchWeb",
+      "label": "search"
+    },
+    {
+      "source": "DecideAction",
+      "target": "AnswerQuestion",
+      "label": "answer"
+    },
+    {
+      "source": "SearchWeb",
+      "target": "DecideAction",
+      "label": "decide"
+    }
+  ]
+}

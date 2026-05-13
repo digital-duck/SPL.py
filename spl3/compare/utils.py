@@ -1,6 +1,7 @@
 """Helper utilities for spl3 compare."""
 
 from __future__ import annotations
+import json as _json
 import re as _re
 
 # Mermaid keywords that must never be treated as node IDs
@@ -88,5 +89,61 @@ def parse_mermaid_to_nx(mermaid_content: str):
         src, edge_label, dst = m.group(1), m.group(2), m.group(3)
         if src in g and dst in g:
             g.add_edge(src, dst, label=edge_label or "")
+
+    return g
+
+
+def parse_topology_json_to_nx(json_content: str, *, canonicalize: bool = True):
+    """Parse a rt-inspect topology JSON into a NetworkX DiGraph.
+
+    The topology JSON is produced by:
+      spl3 splc describe <file.py> --mode rt-inspect
+
+    Args:
+        json_content: JSON string with keys: nodes, edges, entry.
+        canonicalize: Strip 'Node' suffix and lowercase node IDs so they align
+                      with SPL node labels for accurate GED comparison.
+
+    Returns:
+        nx.DiGraph with node attrs: label, node_type; edge attrs: label.
+    """
+    try:
+        import networkx as nx
+    except ImportError:
+        raise ImportError("networkx not installed: pip install networkx")
+
+    try:
+        from spl3.splc.rt_inspect import canonicalize_node_id
+    except ImportError:
+        def canonicalize_node_id(s):
+            return _re.sub(r"Node$", "", s).lower()
+
+    data = _json.loads(json_content)
+    nodes: dict = data.get("nodes", {})
+    edges: list = data.get("edges", [])
+
+    g = nx.DiGraph()
+
+    id_map: dict[str, str] = {}
+    for nid, meta in nodes.items():
+        canonical = canonicalize_node_id(nid) if canonicalize else nid
+        id_map[nid] = canonical
+        base = meta.get("base", "Node")
+        # Map PocketFlow base classes to SPL node types for cost computation
+        ntype = {
+            "Node": "llm",
+            "BatchNode": "proc",
+            "Flow": "ctrl",
+            "AsyncNode": "llm",
+            "AsyncFlow": "ctrl",
+        }.get(base, "llm")
+        g.add_node(canonical, label=canonical, node_type=ntype)
+
+    for edge in edges:
+        src = id_map.get(edge["source"], edge["source"])
+        tgt = id_map.get(edge["target"], edge["target"])
+        lbl = edge.get("label", "")
+        if src in g and tgt in g:
+            g.add_edge(src, tgt, label=lbl)
 
     return g
