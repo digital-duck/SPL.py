@@ -292,6 +292,16 @@ class SPL3Executor(SPL2Executor):
                       segment_count, current_gen.function_name,
                       gen_result.output_tokens, gen_result.latency_ms)
 
+            if self.on_generate is not None:
+                self.on_generate({
+                    "step": segment_count,
+                    "function": current_gen.function_name,
+                    "tokens_in": gen_result.input_tokens,
+                    "tokens_out": gen_result.output_tokens,
+                    "latency_ms": gen_result.latency_ms,
+                    "preview": gen_result.content[:200],
+                })
+
             current_gen = current_gen.next_segment
 
         if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):

@@ -273,6 +273,10 @@ class Executor:
         # to write each assembled prompt to a numbered .md file before LLM dispatch.
         self.prompt_log_dir: str | None = None
         self._prompt_counter: int = 0
+        # Progress callback — set to a callable(dict) to receive per-GENERATE events.
+        # Fired after each LLM call with keys: step, function, tokens_in, tokens_out,
+        # latency_ms, preview. Used by the VibeSCOPE backend for SSE streaming.
+        self.on_generate: object = None
 
     def register_tool(self, name: str, fn) -> "Executor":
         """Register a Python callable as a CALL-able tool. Returns self for chaining."""
@@ -962,6 +966,16 @@ class Executor:
             _log.info("GENERATE segment %d (%s) -> %d tokens, %.0fms",
                       segment_count, gen_function_name,
                       gen_result.output_tokens, gen_result.latency_ms)
+
+            if self.on_generate is not None:
+                self.on_generate({
+                    "step": segment_count,
+                    "function": gen_function_name,
+                    "tokens_in": gen_result.input_tokens,
+                    "tokens_out": gen_result.output_tokens,
+                    "latency_ms": gen_result.latency_ms,
+                    "preview": gen_result.content[:200],
+                })
 
             current_gen = current_gen.next_segment
 

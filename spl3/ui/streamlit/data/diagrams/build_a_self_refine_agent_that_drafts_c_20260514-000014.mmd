@@ -1,0 +1,16 @@
+---
+description: build a self-refine agent that drafts, critiques, and refines until approved or 5 iterations
+adapter: claude_cli
+model: claude-sonnet-4-6
+rounds: 2
+approved: 2026-05-14T00:00:14.791512
+---
+
+flowchart TD
+    A[/draft_topic/] --> B[Draft response]
+    B -- @draft --> C{Critique draft}
+    C -- approved --> G[/Return final draft/]
+    C -- needs_revision --> D{iter < 3?}
+    D -- yes --> E[Refine draft]
+    E -- @draft --> C
+    D -- no --> F[/Return best draft/]

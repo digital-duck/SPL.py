@@ -1,0 +1,38 @@
+CREATE FUNCTION draft(topic TEXT)
+RETURNS TEXT AS $$
+  Write a thorough and well-structured response on the following topic:
+  Topic: {topic}
+$$;
+
+CREATE FUNCTION critique(current TEXT)
+RETURNS TEXT AS $$
+  Review the following draft critically. Reply with exactly [APPROVED] if it needs no further improvement.
+  Otherwise, reply with [NEEDS_REVISION] followed by specific, actionable feedback.
+  Draft: {current}
+$$;
+
+CREATE FUNCTION refine(current TEXT, feedback TEXT)
+RETURNS TEXT AS $$
+  Revise the following draft based on the feedback provided. Improve clarity, accuracy, and completeness.
+  Draft: {current}
+  Feedback: {feedback}
+$$;
+
+WORKFLOW draft_critique_loop
+  INPUT @draft_topic TEXT, @max_iterations INTEGER := 3
+  OUTPUT @result TEXT
+DO
+  @iteration := 0;
+  GENERATE draft(@draft_topic) INTO @draft;
+  WHILE @iteration < @max_iterations DO
+    GENERATE critique(@draft) INTO @feedback;
+    EVALUATE @feedback
+      WHEN contains('[APPROVED]') THEN
+        RETURN @draft WITH status = 'approved', iterations = @iteration;
+      ELSE
+        @iteration := @iteration + 1;
+        GENERATE refine(@draft, @feedback) INTO @draft;
+    END;
+  END;
+  RETURN @draft WITH status = 'max_iterations', iterations = @iteration;
+END;
