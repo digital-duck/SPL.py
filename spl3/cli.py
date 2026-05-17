@@ -1546,7 +1546,7 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 @main.command("spl2mmd")
 @click.argument("spl_files", nargs=-1, required=True, metavar="SPL_FILE...")
 @click.option("--out-dir", default=None, metavar="DIR",
-              help="Output directory for all generated files (default: same directory as each input).")
+              help="Output directory for all generated files (default: mermaid/ subdir of each input's parent).")
 @click.option("--preview/--no-preview", default=True, show_default=True,
               help="Open each diagram in the browser after generation.")
 @click.option("--save-html/--no-save-html", default=True, show_default=True,
@@ -1554,13 +1554,17 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 @click.option("--save-markdown/--no-save-markdown", "--save-md/--no-save-md",
               default=True, show_default=True,
               help="Save a .md file with a fenced mermaid code block.")
+@click.option("--save-svg/--no-save-svg", default=True, show_default=True,
+              help="Save a .svg vector image via mmdc.")
 @click.option("--save-png/--no-save-png", default=True, show_default=True,
-              help="Save a .png image via headless Chrome/Chromium (requires browser).")
-@click.option("--save-pdf/--no-save-pdf", default=False, show_default=True,
-              help="Save a print-ready .pdf (tries mmdc then Chrome headless).")
+              help="Save a .png raster image via mmdc.")
+@click.option("--save-pdf/--no-save-pdf", default=True, show_default=True,
+              help="Save a print-ready .pdf via mmdc or Chrome headless.")
 @click.option("--save-spl/--no-save-spl", default=True, show_default=True,
               help="Copy the source .spl file into --out-dir alongside the other outputs.")
-def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png, save_pdf, save_spl):
+@click.option("--remove-function-nodes/--keep-function-nodes", default=False, show_default=True,
+              help="Strip FUNCTION definition nodes from the diagram (post-processor).")
+def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg, save_png, save_pdf, save_spl, remove_function_nodes):
     """Generate a Mermaid flowchart for each SPL_FILE (AST-direct, no LLM).
 
     Each .spl file is parsed and its workflow/procedure AST nodes are converted
@@ -1581,11 +1585,10 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
 
     \b
     Examples:
-      spl3 spl2mmd workflow.spl
-      spl3 spl2mmd *.spl --out-dir diagrams/
-      spl3 spl2mmd workflow.spl --no-preview --no-save-html
-      spl3 spl2mmd workflow.spl --save-pdf --out-dir diagrams/
-      spl3 spl2mmd workflow.spl --save-png --save-pdf --out-dir diagrams/
+      spl3 spl2mmd workflow.spl                   # → workflow/mermaid/{svg,png,pdf,html,md,mmd}
+      spl3 spl2mmd *.spl --out-dir diagrams/      # → diagrams/{svg,png,pdf,...}
+      spl3 spl2mmd workflow.spl --no-preview      # all formats, no browser open
+      spl3 spl2mmd workflow.spl --no-save-pdf     # skip pdf only
     """
     import shutil
     import subprocess
@@ -1603,6 +1606,9 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
         source = path.read_text(encoding="utf-8")
         try:
             mermaid_text = spl_to_mermaid(source)
+            if remove_function_nodes:
+                from spl3.spl2mmd import remove_function_nodes as _remove_fn
+                mermaid_text = _remove_fn(mermaid_text)
         except NoWorkflowError as exc:
             click.echo(f"WARN: {path.name} — {exc}", err=True)
             continue
@@ -1611,7 +1617,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
             errors += 1
             continue
 
-        output_dir = Path(out_dir).resolve() if out_dir else path.parent
+        output_dir = Path(out_dir).resolve() if out_dir else path.parent / "mermaid"
         output_dir.mkdir(parents=True, exist_ok=True)
         base_name = path.stem
 
@@ -1681,6 +1687,41 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_png,
             if preview:
                 import webbrowser
                 webbrowser.open("file://" + str(html_path))
+
+        # ── .svg ─────────────────────────────────────────────────────────
+        if save_svg:
+            svg_path = output_dir / (base_name + ".svg")
+            import json as _json, tempfile as _tempfile
+            _pup_cfg_svg = _json.dumps({"args": ["--no-sandbox", "--disable-setuid-sandbox"]})
+            _pup_file_svg = _tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+            _pup_file_svg.write(_pup_cfg_svg)
+            _pup_file_svg.close()
+            svg_generated = False
+            for mmdc_cmd in ["mmdc", "npx"]:
+                try:
+                    cmd_args = (
+                        [mmdc_cmd, "-i", str(mmd_path), "-o", str(svg_path),
+                         "-p", _pup_file_svg.name, "-t", "default", "-b", "white"]
+                        if mmdc_cmd == "mmdc"
+                        else ["npx", "--yes", "@mermaid-js/mermaid-cli",
+                              "-i", str(mmd_path), "-o", str(svg_path),
+                              "-p", _pup_file_svg.name, "-t", "default", "-b", "white"]
+                    )
+                    result = subprocess.run(cmd_args, capture_output=True, timeout=60)
+                    if result.returncode == 0 and svg_path.exists():
+                        click.echo(f"  + SVG:      {svg_path}")
+                        svg_generated = True
+                        break
+                    if mmdc_cmd == "npx":
+                        break
+                except (subprocess.TimeoutExpired, FileNotFoundError):
+                    if mmdc_cmd == "npx":
+                        break
+                    continue
+            import os as _os
+            _os.unlink(_pup_file_svg.name)
+            if not svg_generated:
+                click.echo("  ! SVG skipped: mmdc not found (install @mermaid-js/mermaid-cli)", err=True)
 
         # ── .png ─────────────────────────────────────────────────────────
         if save_png:
@@ -2407,6 +2448,26 @@ MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
    IMPORTANT: Inside $$ prompt bodies, use '' (two single quotes) instead of ' (apostrophe/single quote)
    to avoid string literal parsing errors. E.g. write "don''t" not "don't", "it''s" not "it's".
 10. Return: Use RETURN @<var> WITH status = "complete";
+    IMPORTANT: RETURN must only appear at the TOP LEVEL of the WORKFLOW body — NEVER inside a WHILE loop
+    or EVALUATE block. To exit early based on a quality score or condition, use a binary gate function
+    that returns "done" or "continue", check it with EVALUATE AFTER the loop ends, then RETURN there.
+    Correct pattern for quality-gated loops:
+      WHILE @iteration < @max_iterations DO
+        GENERATE score_fn(@draft) INTO @score
+        GENERATE gate_fn(@score) INTO @gate       -- returns "done" if score >= threshold
+        EVALUATE @gate
+          WHEN contains("done") THEN
+            @iteration := @max_iterations         -- force loop exit next condition check
+          ELSE
+            GENERATE refine_fn(@draft) INTO @draft
+        END
+        @iteration := @iteration + 1
+      END
+      RETURN @draft WITH status = "complete";
+11. Score comparisons: Never use EVALUATE to compare numeric scores directly with contains("0.8") etc.
+    LLM score outputs vary in format ("0.80", "0.8", "Score: 0.8"). Always extract the score with a
+    dedicated CREATE FUNCTION that returns a categorical token like "high", "low", or "done"/"continue",
+    then use EVALUATE ... WHEN contains("done") ... to branch on that token.
 
 The generated SPL must be complete, executable, and follow the logic of the diagram exactly.
 

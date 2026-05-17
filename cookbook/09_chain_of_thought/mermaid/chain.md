@@ -1,0 +1,29 @@
+# Chain Workflow
+
+Generated from `chain.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_chain_of_thought["WORKFLOW: chain_of_thought"]
+    direction TB
+    START1(["Start"])
+    GEN2[/"GENERATE research(@topic) -> @research"/]
+    GEN3[/"GENERATE analyze(@research) -> @analysis"/]
+    GEN2 --> GEN3
+    GEN4[/"GENERATE summarize_analysis(@analysis) -> @summary"/]
+    GEN3 --> GEN4
+    RET5(["RETURN @summary (status='comp...)"])
+    GEN4 --> RET5
+    START1 --> GEN2
+    end
+    class START1 term
+    class GEN2 llm
+    class GEN3 llm
+    class GEN4 llm
+    class RET5 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+```

@@ -1,1 +1,0 @@
-{"nodes": [{"id": "splc_transpiler_langgraph_langgraph_transpiler", "label": "LangGraphTranspiler (deterministic SPL to Python/LangGraph)", "file_type": "code", "source_file": "spl3/splc/transpiler_langgraph.py", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}

@@ -1,0 +1,116 @@
+# Debate Workflow
+
+Generated from `debate.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_debate_arena["WORKFLOW: debate_arena"]
+    direction TB
+    START1(["Start"])
+    A2["@round := 0"]
+    A3["@pro_history := ''"]
+    A2 --> A3
+    A4["@con_history := ''"]
+    A3 --> A4
+    LOG5>"LOG(INFO) f'Debate started | t...'"]
+    A4 --> LOG5
+    GEN6[/"GENERATE pro_argument(@topic, 'opening ...) -> @pro"/]
+    LOG5 --> GEN6
+    GEN7[/"GENERATE con_argument(@topic, 'opening ...) -> @con"/]
+    GEN6 --> GEN7
+    A8["@pro_history := @pro"]
+    GEN7 --> A8
+    A9["@con_history := @con"]
+    A8 --> A9
+    LOG10>"LOG(INFO) 'Opening statements c...'"]
+    A9 --> LOG10
+    SUB11[["CALL write_file(f'(@log_d..., @pro)"]]
+    LOG10 --> SUB11
+    SUB12[["CALL write_file(f'(@log_d..., @con)"]]
+    SUB11 --> SUB12
+    WHILE13{"WHILE: @round < @max_rounds"}
+    LOG14>"LOG(DEBUG) f'Round (@round) | p...'"]
+    GEN15[/"GENERATE pro_argument(@topic, @con_history) -> @pro_rebuttal"/]
+    LOG14 --> GEN15
+    A16["@pro_history := @pro_hist... || @pro_rebu..."]
+    GEN15 --> A16
+    SUB17[["CALL write_file(f'(@log_d..., @pro_rebu...)"]]
+    A16 --> SUB17
+    LOG18>"LOG(DEBUG) f'Round (@round) | c...'"]
+    SUB17 --> LOG18
+    GEN19[/"GENERATE con_argument(@topic, @pro_history) -> @con_rebuttal"/]
+    LOG18 --> GEN19
+    A20["@con_history := @con_hist... || @con_rebu..."]
+    GEN19 --> A20
+    SUB21[["CALL write_file(f'(@log_d..., @con_rebu...)"]]
+    A20 --> SUB21
+    A22["@round := @round + 1"]
+    SUB21 --> A22
+    LOG23>"LOG(INFO) f'Round (@round) com...'"]
+    A22 --> LOG23
+    WHILE13 -->|"True"| LOG14
+    LOG23 -.-> WHILE13
+    SUB12 --> WHILE13
+    LOG24>"LOG(INFO) 'All rounds done — ju...'"]
+    WHILE13 --> LOG24
+    GEN25[/"GENERATE judge_debate(@topic, @pro_history, ...) -> @verdict"/]
+    LOG24 --> GEN25
+    LOG26>"LOG(INFO) f'Verdict ready | ro...'"]
+    GEN25 --> LOG26
+    SUB27[["CALL write_file(f'(@log_d..., @verdict)"]]
+    LOG26 --> SUB27
+    RET28(["RETURN @verdict (status='comp..., rounds=@round)"])
+    SUB27 --> RET28
+    START1 --> A2
+    EXC29{"EXCEPTION MaxIterationsReached"}
+    GEN30[/"GENERATE judge_debate(@topic, @pro_history, ...) -> @verdict"/]
+    RET31(["RETURN @verdict (status='part...)"])
+    GEN30 --> RET31
+    EXC29 --> GEN30
+    EXC32{"EXCEPTION BudgetExceeded"}
+    RET33(["RETURN @pro_history (status='budg...)"])
+    EXC32 --> RET33
+    end
+    class START1 term
+    class A2 assign
+    class A3 assign
+    class A4 assign
+    class LOG5 log
+    class GEN6 llm
+    class GEN7 llm
+    class A8 assign
+    class A9 assign
+    class LOG10 log
+    class SUB11 proc
+    class SUB12 proc
+    class WHILE13 ctrl
+    class LOG14 log
+    class GEN15 llm
+    class A16 assign
+    class SUB17 proc
+    class LOG18 log
+    class GEN19 llm
+    class A20 assign
+    class SUB21 proc
+    class A22 assign
+    class LOG23 log
+    class LOG24 log
+    class GEN25 llm
+    class LOG26 log
+    class SUB27 proc
+    class RET28 term
+    class EXC29 ctrl
+    class GEN30 llm
+    class RET31 term
+    class EXC32 ctrl
+    class RET33 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

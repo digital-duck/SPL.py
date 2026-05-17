@@ -1,4 +1,0 @@
-  warning: could not transcribe /home/gong-mini/projects/digital-duck/SPL.py/cookbook/52_audio_summary/sample/harvard.wav: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
-  warning: could not transcribe /home/gong-mini/projects/digital-duck/SPL.py/cookbook/52_audio_summary/sample/short-conversation.mp3: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
-  warning: could not transcribe /home/gong-mini/projects/digital-duck/SPL.py/cookbook/55_text_to_speech/outputs/speech_1776561734.mp3: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
-[]

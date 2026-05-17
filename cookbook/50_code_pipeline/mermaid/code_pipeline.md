@@ -1,0 +1,251 @@
+# Code Pipeline Workflow
+
+Generated from `code_pipeline.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_code_pipeline["WORKFLOW: code_pipeline"]
+    direction TB
+    START1(["Start"])
+    A2["@m_analyze := @task_models('analyze')"]
+    EVAL3{"EVALUATE: @m_analyze"}
+    A5["@m_analyze := @pipeline_model"]
+    EVAL3 -->|"WHEN = ''"| A5
+    A5 --> MERGE4
+    EVAL3 -->|"ELSE"| MERGE4
+    MERGE4[" "]
+    A2 --> EVAL3
+    A6["@m_generate := @task_models('generate')"]
+    MERGE4 --> A6
+    EVAL7{"EVALUATE: @m_generate"}
+    A9["@m_generate := @pipeline_model"]
+    EVAL7 -->|"WHEN = ''"| A9
+    A9 --> MERGE8
+    EVAL7 -->|"ELSE"| MERGE8
+    MERGE8[" "]
+    A6 --> EVAL7
+    A10["@m_review := @task_models('review')"]
+    MERGE8 --> A10
+    EVAL11{"EVALUATE: @m_review"}
+    A13["@m_review := @pipeline_model"]
+    EVAL11 -->|"WHEN = ''"| A13
+    A13 --> MERGE12
+    EVAL11 -->|"ELSE"| MERGE12
+    MERGE12[" "]
+    A10 --> EVAL11
+    A14["@m_improve := @task_models('improve')"]
+    MERGE12 --> A14
+    EVAL15{"EVALUATE: @m_improve"}
+    A17["@m_improve := @pipeline_model"]
+    EVAL15 -->|"WHEN = ''"| A17
+    A17 --> MERGE16
+    EVAL15 -->|"ELSE"| MERGE16
+    MERGE16[" "]
+    A14 --> EVAL15
+    A18["@m_test := @task_models('test')"]
+    MERGE16 --> A18
+    EVAL19{"EVALUATE: @m_test"}
+    A21["@m_test := @pipeline_model"]
+    EVAL19 -->|"WHEN = ''"| A21
+    A21 --> MERGE20
+    EVAL19 -->|"ELSE"| MERGE20
+    MERGE20[" "]
+    A18 --> EVAL19
+    A22["@m_document := @task_models('document')"]
+    MERGE20 --> A22
+    EVAL23{"EVALUATE: @m_document"}
+    A25["@m_document := @pipeline_model"]
+    EVAL23 -->|"WHEN = ''"| A25
+    A25 --> MERGE24
+    EVAL23 -->|"ELSE"| MERGE24
+    MERGE24[" "]
+    A22 --> EVAL23
+    A26["@m_extract := @task_models('extract')"]
+    MERGE24 --> A26
+    EVAL27{"EVALUATE: @m_extract"}
+    A29["@m_extract := @pipeline_model"]
+    EVAL27 -->|"WHEN = ''"| A29
+    A29 --> MERGE28
+    EVAL27 -->|"ELSE"| MERGE28
+    MERGE28[" "]
+    A26 --> EVAL27
+    A30["@m_judge := @task_models('judge')"]
+    MERGE28 --> A30
+    EVAL31{"EVALUATE: @m_judge"}
+    A33["@m_judge := @pipeline_model"]
+    EVAL31 -->|"WHEN = ''"| A33
+    A33 --> MERGE32
+    EVAL31 -->|"ELSE"| MERGE32
+    MERGE32[" "]
+    A30 --> EVAL31
+    LOG34>"LOG(INFO) f'(code_pipeline) st...'"]
+    MERGE32 --> LOG34
+    LOG35>"LOG(INFO) f'(code_pipeline) sp...'"]
+    LOG34 --> LOG35
+    LOG36>"LOG(DEBUG) f'(code_pipeline) mo...'"]
+    LOG35 --> LOG36
+    LOG37>"LOG(INFO) '(code_pipeline) step...'"]
+    LOG36 --> LOG37
+    SUB38[["CALL analyze_spec(@spec, @m_analyze, ...) -> @analysis"]]
+    LOG37 --> SUB38
+    EVAL39{"EVALUATE: @analysis"}
+    LOG41>"LOG(INFO) '(code_pipeline) spec...'"]
+    EVAL39 -->|"WHEN contains:(READY)"| LOG41
+    LOG41 --> MERGE40
+    LOG42>"LOG(WARN) '(code_pipeline) spec...'"]
+    RET43(["RETURN @analysis (status='vagu...)"])
+    LOG42 --> RET43
+    EVAL39 -->|"ELSE"| LOG42
+    MERGE40[" "]
+    SUB38 --> EVAL39
+    SUB44[["CALL write_file(f'(@log_d..., @spec)"]]
+    MERGE40 --> SUB44
+    A45["@cycle := 0"]
+    SUB44 --> A45
+    A46["@test_passed := False"]
+    A45 --> A46
+    WHILE47{"WHILE: CompoundCondition"}
+    A48["@cycle := @cycle + 1"]
+    LOG49>"LOG(INFO) f'(code_pipeline) cy...'"]
+    A48 --> LOG49
+    SUB50[["CALL generate_code(@spec, @lang, ...) -> @code"]]
+    LOG49 --> SUB50
+    LOG51>"LOG(INFO) f'(code_pipeline) cy...'"]
+    SUB50 --> LOG51
+    SUB52[["CALL review_code(@code, @lang, ...) -> @feedback"]]
+    LOG51 --> SUB52
+    LOG53>"LOG(INFO) f'(code_pipeline) cy...'"]
+    SUB52 --> LOG53
+    SUB54[["CALL improve_code(@code, @feedback, ...) -> @code"]]
+    LOG53 --> SUB54
+    LOG55>"LOG(INFO) f'(code_pipeline) cy...'"]
+    SUB54 --> LOG55
+    SUB56[["CALL test_code(@code, @spec, ...) -> @test_result"]]
+    LOG55 --> SUB56
+    EVAL57{"EVALUATE: @test_result"}
+    LOG59>"LOG(INFO) f'(code_pipeline) te...'"]
+    A60["@test_passed := True"]
+    LOG59 --> A60
+    EVAL57 -->|"WHEN contains:(PASSED)"| LOG59
+    A60 --> MERGE58
+    LOG61>"LOG(WARN) f'(code_pipeline) te...'"]
+    EVAL57 -->|"ELSE"| LOG61
+    LOG61 --> MERGE58
+    MERGE58[" "]
+    SUB56 --> EVAL57
+    WHILE47 -->|"True"| A48
+    MERGE58 -.-> WHILE47
+    A46 --> WHILE47
+    LOG62>"LOG(INFO) '(code_pipeline) step...'"]
+    WHILE47 --> LOG62
+    SUB63[["CALL document_code(@code, @spec, ...) -> @docs"]]
+    LOG62 --> SUB63
+    LOG64>"LOG(INFO) '(code_pipeline) step...'"]
+    SUB63 --> LOG64
+    SUB65[["CALL extract_spec(@code, @m_extract, ...) -> @out_spec"]]
+    LOG64 --> SUB65
+    EVAL66{"EVALUATE: @check_closure"}
+    LOG68>"LOG(INFO) '(code_pipeline) step...'"]
+    SUB69[["CALL spec_judge(@spec, @out_spec, ...) -> @closure_report"]]
+    LOG68 --> SUB69
+    A70["@docs := @docs || ... || @closure_..."]
+    SUB69 --> A70
+    EVAL66 -->|"WHEN = True"| LOG68
+    A70 --> MERGE67
+    LOG71>"LOG(DEBUG) '(code_pipeline) clos...'"]
+    EVAL66 -->|"ELSE"| LOG71
+    LOG71 --> MERGE67
+    MERGE67[" "]
+    SUB65 --> EVAL66
+    LOG72>"LOG(INFO) f'(code_pipeline) do...'"]
+    MERGE67 --> LOG72
+    RET73(["RETURN @docs"])
+    LOG72 --> RET73
+    START1 --> A2
+    EXC74{"EXCEPTION RefusalToAnswer"}
+    LOG75>"LOG(WARN) '(code_pipeline) gene...'"]
+    RET76(["RETURN 'Refused.' (status='refu...)"])
+    LOG75 --> RET76
+    EXC74 --> LOG75
+    EXC77{"EXCEPTION ModelUnavailable"}
+    LOG78>"LOG(ERROR) '(code_pipeline) mode...'"]
+    RET79(["RETURN '(ERROR) Model unavai...' (status='failed')"])
+    LOG78 --> RET79
+    EXC77 --> LOG78
+    end
+    class START1 term
+    class A2 assign
+    class EVAL3 ctrl
+    class A5 assign
+    class A6 assign
+    class EVAL7 ctrl
+    class A9 assign
+    class A10 assign
+    class EVAL11 ctrl
+    class A13 assign
+    class A14 assign
+    class EVAL15 ctrl
+    class A17 assign
+    class A18 assign
+    class EVAL19 ctrl
+    class A21 assign
+    class A22 assign
+    class EVAL23 ctrl
+    class A25 assign
+    class A26 assign
+    class EVAL27 ctrl
+    class A29 assign
+    class A30 assign
+    class EVAL31 ctrl
+    class A33 assign
+    class LOG34 log
+    class LOG35 log
+    class LOG36 log
+    class LOG37 log
+    class SUB38 proc
+    class EVAL39 ctrl
+    class LOG41 log
+    class LOG42 log
+    class RET43 term
+    class SUB44 proc
+    class A45 assign
+    class A46 assign
+    class WHILE47 ctrl
+    class A48 assign
+    class LOG49 log
+    class SUB50 proc
+    class LOG51 log
+    class SUB52 proc
+    class LOG53 log
+    class SUB54 proc
+    class LOG55 log
+    class SUB56 proc
+    class EVAL57 ctrl
+    class LOG59 log
+    class A60 assign
+    class LOG61 log
+    class LOG62 log
+    class SUB63 proc
+    class LOG64 log
+    class SUB65 proc
+    class EVAL66 ctrl
+    class LOG68 log
+    class SUB69 proc
+    class A70 assign
+    class LOG71 log
+    class LOG72 log
+    class RET73 term
+    class EXC74 ctrl
+    class LOG75 log
+    class RET76 term
+    class EXC77 ctrl
+    class LOG78 log
+    class RET79 term
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

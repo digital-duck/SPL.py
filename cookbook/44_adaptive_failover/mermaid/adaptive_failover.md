@@ -1,0 +1,71 @@
+# Adaptive Failover Workflow
+
+Generated from `adaptive_failover.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_adaptive_failover["WORKFLOW: adaptive_failover"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Attempting generat...'"]
+    SUB3[["CALL write_file(f'(@log_d..., @query)"]]
+    LOG2 --> SUB3
+    GEN4[/"GENERATE summarize(@query) -> @primary_output"/]
+    SUB3 --> GEN4
+    LOG5>"LOG(DEBUG) 'Primary model genera...'"]
+    GEN4 --> LOG5
+    SUB6[["CALL check_quality(@primary_...) -> @quality_status"]]
+    LOG5 --> SUB6
+    LOG7>"LOG(DEBUG) f'Quality check: (@q...'"]
+    SUB6 --> LOG7
+    EVAL8{"EVALUATE: @quality_status"}
+    LOG10>"LOG(INFO) 'Primary model passed...'"]
+    A11["@final_response := @primary_output"]
+    LOG10 --> A11
+    EVAL8 -->|"WHEN contains:pass"| LOG10
+    A11 --> MERGE9
+    LOG12>"LOG(WARN) f'Quality insufficie...'"]
+    GEN13[/"GENERATE summarize(@query) -> @final_response"/]
+    LOG12 --> GEN13
+    LOG14>"LOG(INFO) 'Fallback model gener...'"]
+    GEN13 --> LOG14
+    EVAL8 -->|"ELSE"| LOG12
+    LOG14 --> MERGE9
+    MERGE9[" "]
+    LOG7 --> EVAL8
+    SUB15[["CALL write_file(f'(@log_d..., @final_re...)"]]
+    MERGE9 --> SUB15
+    RET16(["RETURN @final_response (status='comp..., quality=@qual...)"])
+    SUB15 --> RET16
+    START1 --> LOG2
+    EXC17{"EXCEPTION GenerationError"}
+    RET18(["RETURN @query (status='error', reason='both...)"])
+    EXC17 --> RET18
+    end
+    class START1 term
+    class LOG2 log
+    class SUB3 proc
+    class GEN4 llm
+    class LOG5 log
+    class SUB6 proc
+    class LOG7 log
+    class EVAL8 ctrl
+    class LOG10 log
+    class A11 assign
+    class LOG12 log
+    class GEN13 llm
+    class LOG14 log
+    class SUB15 proc
+    class RET16 term
+    class EXC17 ctrl
+    class RET18 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

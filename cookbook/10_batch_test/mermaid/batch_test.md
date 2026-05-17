@@ -1,0 +1,59 @@
+# Batch Test Workflow
+
+Generated from `batch_test.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_batch_test["WORKFLOW: batch_test"]
+    direction TB
+    START1(["Start"])
+    FORK2[" "]
+    SYNC3["SELECT -> @hello_m1, @hello_m2, @proxy_m1, @proxy_m2, @multi_m1, @multi_m2"]
+    CTE4[/"GENERATE greeting() (@model_1)"/]
+    FORK2 --> CTE4
+    CTE4 --> SYNC3
+    CTE5[/"GENERATE greeting() (@model_2)"/]
+    FORK2 --> CTE5
+    CTE5 --> SYNC3
+    CTE6[/"GENERATE answer(prompt) (@model_1)"/]
+    FORK2 --> CTE6
+    CTE6 --> SYNC3
+    CTE7[/"GENERATE answer(prompt) (@model_2)"/]
+    FORK2 --> CTE7
+    CTE7 --> SYNC3
+    CTE8[/"GENERATE response(user_input, lang) (@model_1)"/]
+    FORK2 --> CTE8
+    CTE8 --> SYNC3
+    CTE9[/"GENERATE response(user_input, lang) (@model_2)"/]
+    FORK2 --> CTE9
+    CTE9 --> SYNC3
+    GEN10[/"GENERATE summarize_results(@model_1, @model_2, ...) -> @report"/]
+    SYNC3 --> GEN10
+    RET11(["RETURN @report (status='comp..., model_1=@model_1)"])
+    GEN10 --> RET11
+    START1 --> FORK2
+    EXC12{"EXCEPTION GenerationError"}
+    RET13(["RETURN 'Batch test failed du...' (status='error')"])
+    EXC12 --> RET13
+    end
+    class START1 term
+    class FORK2 assign
+    class SYNC3 assign
+    class CTE4 llm
+    class CTE5 llm
+    class CTE6 llm
+    class CTE7 llm
+    class CTE8 llm
+    class CTE9 llm
+    class GEN10 llm
+    class RET11 term
+    class EXC12 ctrl
+    class RET13 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

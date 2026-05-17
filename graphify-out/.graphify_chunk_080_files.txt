@@ -1,1 +1,0 @@
-/home/gong-mini/projects/digital-duck/SPL.py/NeurIPS-26-lab/R2-rag/tests/openrouter/qwen/S2-rag-openrouter-qwen.png

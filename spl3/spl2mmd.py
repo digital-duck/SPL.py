@@ -16,10 +16,12 @@ Node shapes by type:
 """
 
 from __future__ import annotations
+import re
 from typing import Optional
 
 from spl.ast_nodes import (
     Program, WorkflowStatement, ProcedureStatement, CreateFunctionStatement,
+    PromptStatement,
     AssignmentStatement, GenerateIntoStatement, CallStatement,
     WhileStatement, EvaluateStatement, DoBlock,
     CommitStatement, RaiseStatement, LoggingStatement,
@@ -176,7 +178,7 @@ class ASTToMermaid:
 
     def _edge(self, src: str, dst: str, lbl: str = ""):
         if lbl:
-            self._lines.append(f"{_IND}{src} -->|{_mmd_label(lbl)}| {dst}")
+            self._lines.append(f'{_IND}{src} -->|"{_mmd_label(lbl)}"| {dst}')
         else:
             self._lines.append(f"{_IND}{src} --> {dst}")
 
@@ -191,12 +193,20 @@ class ASTToMermaid:
         self._class_assigns = []
         self._used_classes = set()
 
+        fn_stmts = [s for s in program.statements if isinstance(s, CreateFunctionStatement)]
         for stmt in program.statements:
             if isinstance(stmt, (WorkflowStatement, ProcedureStatement)):
                 self._top_def(stmt)
-            elif isinstance(stmt, CreateFunctionStatement):
+            elif isinstance(stmt, PromptStatement):
+                self._prompt_def(stmt)
+
+        if fn_stmts:
+            self._lines.append(f'{_IND}subgraph FUNCTIONS["Function Definitions"]')
+            self._lines.append(f"{_IND}direction TB")
+            for stmt in fn_stmts:
                 nid = self._id("FN")
-                self._node(nid, "rect", f"FUNCTION {stmt.name}()", "fn")
+                self._node(nid, "rect", f"FUNCTION: {stmt.name}()", "fn")
+            self._lines.append(f"{_IND}end")
 
         # Class assignments and defs go outside any subgraph
         self._lines.extend(self._class_assigns)
@@ -225,9 +235,15 @@ class ASTToMermaid:
         if entry:
             self._edge(start, entry)
 
-        end = self._id("END")
-        self._node(end, "stadium", "End", "term")
-        if exit_ and not _last_is_terminal(body):
+        # Determine whether any path needs an End node before declaring it
+        needs_end = (exit_ and not _last_is_terminal(body)) or any(
+            h.statements and not _last_is_terminal(h.statements)
+            for h in exc
+        )
+        end = self._id("END") if needs_end else None
+        if end:
+            self._node(end, "stadium", "End", "term")
+        if exit_ and not _last_is_terminal(body) and end:
             self._edge(exit_, end)
 
         for h in exc:
@@ -237,8 +253,47 @@ class ASTToMermaid:
                 h_entry, h_exit = self._stmts(h.statements)
                 if h_entry:
                     self._edge(h_id, h_entry)
-                if h_exit and not _last_is_terminal(h.statements):
+                if h_exit and not _last_is_terminal(h.statements) and end:
                     self._edge(h_exit, end)
+
+        self._lines.append(f"{_IND}end")
+
+    # ── SPL 1.0 PROMPT rendering ────────────────────────────────────────────
+
+    def _prompt_def(self, stmt: PromptStatement):
+        sg = f"SG_{stmt.name}"
+        self._lines.append(f'{_IND}subgraph {sg}["PROMPT: {stmt.name}"]')
+        self._lines.append(f"{_IND}direction TB")
+
+        start = self._id("START")
+        self._node(start, "stadium", "Start", "term")
+        prev = start
+
+        # SELECT inputs → one rect node per item with a visible alias/expression
+        if stmt.select_items:
+            aliases = []
+            for item in stmt.select_items:
+                alias = item.alias or _expr_str(item.expression, 20)
+                aliases.append(alias)
+            sel_id = self._id("SEL")
+            label = "SELECT  " + ",  ".join(aliases[:4]) + ("  …" if len(aliases) > 4 else "")
+            self._node(sel_id, "rect", label, "assign")
+            self._edge(prev, sel_id)
+            prev = sel_id
+
+        # GENERATE → parallelogram (LLM call)
+        if stmt.generate_clause:
+            gc = stmt.generate_clause
+            args = ", ".join(_expr_str(a, 12) for a in gc.arguments[:2])
+            sfx = ", ..." if len(gc.arguments) > 2 else ""
+            gen_id = self._id("GEN")
+            self._node(gen_id, "para", f"GENERATE {gc.function_name}({args}{sfx})", "llm")
+            self._edge(prev, gen_id)
+            prev = gen_id
+
+        end = self._id("END")
+        self._node(end, "stadium", "End", "term")
+        self._edge(prev, end)
 
         self._lines.append(f"{_IND}end")
 
@@ -386,10 +441,11 @@ class ASTToMermaid:
             self._lines.append(f'{_IND}{merge_id}[" "]')
             return eval_id, merge_id
 
-        return eval_id, eval_id
+        # All branches are terminal — no live exit from this EVALUATE
+        return eval_id, None
 
     def _do(self, stmt: DoBlock) -> tuple[Optional[str], Optional[str]]:
-        entry, exit_ = self._stmts(stmt.body)
+        entry, exit_ = self._stmts(stmt.statements)
         for h in stmt.exception_handlers:
             h_id = self._id("EXC")
             self._node(h_id, "diamond", f"EXCEPTION {h.exception_type}", "ctrl")
@@ -451,10 +507,42 @@ def spl_to_mermaid(source: str) -> str:
     tokens = Lexer(source).tokenize()
     ast = SPL3Parser(tokens).parse()
 
-    if not any(isinstance(s, (WorkflowStatement, ProcedureStatement)) for s in ast.statements):
+    if not any(isinstance(s, (WorkflowStatement, ProcedureStatement, PromptStatement)) for s in ast.statements):
         raise NoWorkflowError(
             "no WORKFLOW or PROCEDURE found — script uses PROMPT/SELECT/GENERATE (SPL 1.0). "
             "spl2mmd renders agentic workflow logic only."
         )
 
     return ASTToMermaid().convert(ast)
+
+
+def remove_function_nodes(mmd: str) -> str:
+    """Remove the FUNCTIONS subgraph (and any stray FUNCTION: nodes) from a Mermaid diagram."""
+    # Remove the entire subgraph FUNCTIONS[...] ... end block
+    mmd = re.sub(
+        r'\n?\s*subgraph FUNCTIONS\[.*?\].*?end\n?',
+        '\n',
+        mmd,
+        flags=re.DOTALL,
+    )
+    # Collect IDs of any stray FUNCTION: node definitions outside a subgraph
+    lines = mmd.splitlines()
+    fn_node_ids: set[str] = set()
+    for line in lines:
+        m = re.search(r'(\w+)\s*\[.*?FUNCTION:.*?\]', line)
+        if m:
+            fn_node_ids.add(m.group(1))
+    if fn_node_ids:
+        new_lines = []
+        for line in lines:
+            skip = any(
+                re.search(r'(\w+)\s*\[.*?FUNCTION:.*?\]', line) or
+                re.search(r'\b' + re.escape(nid) + r'\b', line)
+                for nid in fn_node_ids
+            )
+            if not skip:
+                new_lines.append(line)
+        mmd = '\n'.join(new_lines)
+    # Remove orphaned `class <id> fn` classDef assignments for fn-class nodes
+    mmd = re.sub(r'\n\s*class \w+ fn\b', '', mmd)
+    return mmd

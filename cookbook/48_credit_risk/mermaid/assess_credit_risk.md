@@ -1,0 +1,82 @@
+# Assess Credit Risk Workflow
+
+Generated from `assess_credit_risk.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_credit_risk_assessment["WORKFLOW: credit_risk_assessment"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Assessing applican...'"]
+    EVAL3{"EVALUATE: @credit_score"}
+    LOG5>"LOG(WARN) 'Auto-reject: credit ...'"]
+    RET6(["RETURN 'REJECTED' (reason='scor..., score=@cred...)"])
+    LOG5 --> RET6
+    EVAL3 -->|"WHEN < 600"| LOG5
+    LOG7>"LOG(INFO) 'Auto-approve: excell...'"]
+    RET8(["RETURN 'APPROVED' (reason='scor..., score=@cred...)"])
+    LOG7 --> RET8
+    EVAL3 -->|"WHEN >= 750"| LOG7
+    LOG9>"LOG(INFO) 'Score in gray zone —...'"]
+    EVAL3 -->|"ELSE"| LOG9
+    LOG9 --> MERGE4
+    MERGE4[" "]
+    LOG2 --> EVAL3
+    GEN10[/"GENERATE analyze_risk_factors(@applican...) -> @risk_report"/]
+    MERGE4 --> GEN10
+    SUB11[["CALL write_file(f'(@log_d..., @risk_report)"]]
+    GEN10 --> SUB11
+    SUB12[["CALL extract_risk_rating(@risk_report) -> @risk_rating"]]
+    SUB11 --> SUB12
+    LOG13>"LOG(DEBUG) f'Extracted risk rat...'"]
+    SUB12 --> LOG13
+    SUB14[["CALL write_file(f'(@log_d..., @risk_rating)"]]
+    LOG13 --> SUB14
+    EVAL15{"EVALUATE: @risk_rating"}
+    RET17(["RETURN @risk_report (reason='REJE...)"])
+    EVAL15 -->|"WHEN high"| RET17
+    RET18(["RETURN @risk_report (reason='MANU...)"])
+    EVAL15 -->|"WHEN medium"| RET18
+    RET19(["RETURN @risk_report (reason='APPR...)"])
+    EVAL15 -->|"ELSE"| RET19
+    SUB14 --> EVAL15
+    START1 --> LOG2
+    EXC20{"EXCEPTION ConnectionError"}
+    A21["@error_message := 'Failed to connect to...'"]
+    LOG22>"LOG(ERROR) @error_message"]
+    A21 --> LOG22
+    RET23(["RETURN @error_message (reason='PEND...)"])
+    LOG22 --> RET23
+    EXC20 --> A21
+    end
+    class START1 term
+    class LOG2 log
+    class EVAL3 ctrl
+    class LOG5 log
+    class RET6 term
+    class LOG7 log
+    class RET8 term
+    class LOG9 log
+    class GEN10 llm
+    class SUB11 proc
+    class SUB12 proc
+    class LOG13 log
+    class SUB14 proc
+    class EVAL15 ctrl
+    class RET17 term
+    class RET18 term
+    class RET19 term
+    class EXC20 ctrl
+    class A21 assign
+    class LOG22 log
+    class RET23 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

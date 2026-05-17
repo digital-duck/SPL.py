@@ -1,1 +1,0 @@
-/home/gong-mini/projects/digital-duck/SPL.py/cookbook/54_text_to_image/outputs/generated_1776561500.png

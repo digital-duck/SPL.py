@@ -7,6 +7,8 @@ CLAUDE.md
 **/out/
 go_git.log
 
+graphify-out/
+
 README.html
 
 neurips-experiments/
