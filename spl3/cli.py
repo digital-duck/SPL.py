@@ -2448,6 +2448,26 @@ MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
    IMPORTANT: Inside $$ prompt bodies, use '' (two single quotes) instead of ' (apostrophe/single quote)
    to avoid string literal parsing errors. E.g. write "don''t" not "don't", "it''s" not "it's".
 10. Return: Use RETURN @<var> WITH status = "complete";
+    IMPORTANT: RETURN must only appear at the TOP LEVEL of the WORKFLOW body — NEVER inside a WHILE loop
+    or EVALUATE block. To exit early based on a quality score or condition, use a binary gate function
+    that returns "done" or "continue", check it with EVALUATE AFTER the loop ends, then RETURN there.
+    Correct pattern for quality-gated loops:
+      WHILE @iteration < @max_iterations DO
+        GENERATE score_fn(@draft) INTO @score
+        GENERATE gate_fn(@score) INTO @gate       -- returns "done" if score >= threshold
+        EVALUATE @gate
+          WHEN contains("done") THEN
+            @iteration := @max_iterations         -- force loop exit next condition check
+          ELSE
+            GENERATE refine_fn(@draft) INTO @draft
+        END
+        @iteration := @iteration + 1
+      END
+      RETURN @draft WITH status = "complete";
+11. Score comparisons: Never use EVALUATE to compare numeric scores directly with contains("0.8") etc.
+    LLM score outputs vary in format ("0.80", "0.8", "Score: 0.8"). Always extract the score with a
+    dedicated CREATE FUNCTION that returns a categorical token like "high", "low", or "done"/"continue",
+    then use EVALUATE ... WHEN contains("done") ... to branch on that token.
 
 The generated SPL must be complete, executable, and follow the logic of the diagram exactly.
 
