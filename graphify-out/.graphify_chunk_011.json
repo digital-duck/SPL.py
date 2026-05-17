@@ -1,0 +1,852 @@
+{
+  "nodes": [
+    {
+      "id": "qwen_s5_thinking_openrouter_qwen_2_spec",
+      "label": "S5 Thinking OpenRouter Qwen Spec (v2)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S5-thinking-openrouter-qwen-2-spec.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qwen_s6_thinking_openrouter_qwen_spec_diff",
+      "label": "S6 Thinking OpenRouter Qwen Spec Diff (Comparison Report)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S6-thinking-openrouter-qwen-spec-diff.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": "2026-05-04T11:08:05",
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qwen_v1_s1_thinking_openrouter_qwen_1_spec",
+      "label": "S1 Thinking OpenRouter Qwen Spec v1",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S1-thinking-openrouter-qwen-1-spec.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qwen_v1_s2_thinking_openrouter_qwen_mmd",
+      "label": "S2 Thinking OpenRouter Qwen Mermaid Diagram (v1)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S2-thinking-openrouter-qwen.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "qwen_v1_s2_thinking_openrouter_qwen_html",
+      "label": "S2 Thinking OpenRouter Qwen Mermaid HTML (v1)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S2-thinking-openrouter-qwen.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "python_pocketflow_s4_thinking_qwen_run",
+      "label": "S4 Thinking OpenRouter Qwen Run Output (2026-05-04)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/S4-thinking-openrouter-qwen-run-20260504_074013.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": "2026-05-04T07:40:13",
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "python_pocketflow_chain_of_thought_md",
+      "label": "Chain of Thought Output (chain_of_thought.md)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/chain_of_thought.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "python_pocketflow_readme",
+      "label": "README: S4 Thinking OpenRouter Qwen PocketFlow Target",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/readme.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "vibe_python_pocketflow_readme",
+      "label": "README: Vibe Python PocketFlow Chain-of-Thought",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/vibe/python_pocketflow/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_readme_claude",
+      "label": "R5 Research Experiment README (Claude variant)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_readme_gemini",
+      "label": "R5 Research Experiment README (Gemini variant)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/README-gemini.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_readme_qwen_v1",
+      "label": "R5 Research Experiment README (Qwen v1 variant)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen-v1.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_readme_qwen",
+      "label": "R5 Research Experiment README (Qwen variant)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_readme",
+      "label": "R5 Research Experiment README (main)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "r5_research_report_txt",
+      "label": "R5 Research Report (PocketFlow Framework report.txt)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/report.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pocketflow_research_readme",
+      "label": "PocketFlow Deep Research Source README",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pocketflow_research_flow_spec",
+      "label": "PocketFlow Research Flow SPL Spec",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/flow-splc-python_pocketflow-spec.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pocketflow_research_requirements",
+      "label": "PocketFlow Research Requirements (requirements.txt)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/requirements.txt",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "pocketflow_research_output_report",
+      "label": "PocketFlow Research Output Report (report.md)",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/output/report.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_cli_s1_research_spec",
+      "label": "S1 Research Claude CLI Sonnet Spec",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S1-research-claude_cli-sonnet-1-spec.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_cli_s2_research_mermaid_html",
+      "label": "S2 Research Claude CLI Sonnet Mermaid HTML",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S2-research-claude_cli-sonnet.html",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "claude_cli_s2_research_mermaid_md",
+      "label": "S2 Research Claude CLI Sonnet Mermaid Diagram",
+      "file_type": "document",
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S2-research-claude_cli-sonnet.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_chain_of_thought_reasoning",
+      "label": "Chain-of-Thought Reasoning (iterative LLM loop)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S5-thinking-openrouter-qwen-2-spec.md",
+      "source_location": "Section 0",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_ndd_round_trip_experiment",
+      "label": "NDD Round-Trip Experiment (S1→S2→S3→S4→S5→S6 pipeline)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_pocketflow_framework",
+      "label": "PocketFlow Framework (minimalist LLM orchestration)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_spl_workflow",
+      "label": "SPL Workflow (Structured Prompt Language construct)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S1-thinking-openrouter-qwen-1-spec.md",
+      "source_location": "Section 2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_react_research_agent",
+      "label": "ReAct Research Agent (decide→search→accumulate loop)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_deep_research_workflow",
+      "label": "Deep Research Workflow (recursive map-reduce agent)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_spl_ir_ablation",
+      "label": "SPL IR Ablation Study (ΔIR = S6 - S9 value-add measurement)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S10 section",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_openrouter_qwen_model",
+      "label": "OpenRouter Qwen Model (qwen3.6-plus)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S5-thinking-openrouter-qwen-2-spec.md",
+      "source_location": "Section 0",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_splc_compile_pipeline",
+      "label": "SPL Compiler Pipeline (splc describe→text2mmd→mmd2spl→compile)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": "S1–S4 steps",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_vibe_coding_baseline",
+      "label": "Vibe Coding Baseline (direct code generation without SPL IR)",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S7 section",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    },
+    {
+      "id": "concept_planner_researcher_synthesizer",
+      "label": "Planner-Researcher-Synthesizer Node Architecture",
+      "file_type": "concept",
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "How It Works section",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "qwen_s6_thinking_openrouter_qwen_spec_diff",
+      "target": "qwen_v1_s1_thinking_openrouter_qwen_1_spec",
+      "relation": "compares",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S6-thinking-openrouter-qwen-spec-diff.md",
+      "source_location": "Files Compared section",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_s6_thinking_openrouter_qwen_spec_diff",
+      "target": "qwen_s5_thinking_openrouter_qwen_2_spec",
+      "relation": "compares",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S6-thinking-openrouter-qwen-spec-diff.md",
+      "source_location": "Files Compared section",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_s5_thinking_openrouter_qwen_2_spec",
+      "target": "concept_chain_of_thought_reasoning",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S5-thinking-openrouter-qwen-2-spec.md",
+      "source_location": "Section 0",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_v1_s1_thinking_openrouter_qwen_1_spec",
+      "target": "concept_chain_of_thought_reasoning",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S1-thinking-openrouter-qwen-1-spec.md",
+      "source_location": "Section 0",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_v1_s1_thinking_openrouter_qwen_1_spec",
+      "target": "concept_spl_workflow",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S1-thinking-openrouter-qwen-1-spec.md",
+      "source_location": "Section 2",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_v1_s2_thinking_openrouter_qwen_mmd",
+      "target": "qwen_v1_s1_thinking_openrouter_qwen_1_spec",
+      "relation": "generated_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S2-thinking-openrouter-qwen.md",
+      "source_location": "line 3 (spl3 text2mmd command)",
+      "weight": 1.0
+    },
+    {
+      "source": "qwen_v1_s2_thinking_openrouter_qwen_html",
+      "target": "qwen_v1_s2_thinking_openrouter_qwen_mmd",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen-v1/S2-thinking-openrouter-qwen.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "python_pocketflow_s4_thinking_qwen_run",
+      "target": "python_pocketflow_chain_of_thought_md",
+      "relation": "produces",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/S4-thinking-openrouter-qwen-run-20260504_074013.md",
+      "source_location": "FINAL: true line",
+      "weight": 1.0
+    },
+    {
+      "source": "python_pocketflow_readme",
+      "target": "concept_chain_of_thought_reasoning",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/readme.md",
+      "source_location": "Overview section",
+      "weight": 1.0
+    },
+    {
+      "source": "python_pocketflow_readme",
+      "target": "concept_openrouter_qwen_model",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/readme.md",
+      "source_location": "Setup section",
+      "weight": 1.0
+    },
+    {
+      "source": "vibe_python_pocketflow_readme",
+      "target": "concept_chain_of_thought_reasoning",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/vibe/python_pocketflow/README.md",
+      "source_location": "Overview section",
+      "weight": 1.0
+    },
+    {
+      "source": "vibe_python_pocketflow_readme",
+      "target": "concept_pocketflow_framework",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/vibe/python_pocketflow/README.md",
+      "source_location": "Overview section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "concept_ndd_round_trip_experiment",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "title section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "concept_react_research_agent",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "opening description",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "concept_spl_ir_ablation",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S10 section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "concept_vibe_coding_baseline",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S7 section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "concept_splc_compile_pipeline",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S1-S4 sections",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_gemini",
+      "target": "concept_ndd_round_trip_experiment",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-gemini.md",
+      "source_location": "title section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_gemini",
+      "target": "concept_deep_research_workflow",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-gemini.md",
+      "source_location": "opening description",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_qwen_v1",
+      "target": "concept_ndd_round_trip_experiment",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen-v1.md",
+      "source_location": "title section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme_qwen",
+      "target": "concept_ndd_round_trip_experiment",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen.md",
+      "source_location": "title section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme",
+      "target": "concept_ndd_round_trip_experiment",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": "title section",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_readme",
+      "target": "concept_deep_research_workflow",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": "opening description",
+      "weight": 1.0
+    },
+    {
+      "source": "r5_research_report_txt",
+      "target": "concept_pocketflow_framework",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/report.txt",
+      "source_location": "Executive Summary",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_readme",
+      "target": "concept_deep_research_workflow",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "How It Works section",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_readme",
+      "target": "concept_planner_researcher_synthesizer",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "How It Works section",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_readme",
+      "target": "concept_pocketflow_framework",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "Features section",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_flow_spec",
+      "target": "concept_deep_research_workflow",
+      "relation": "specifies",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/flow-splc-python_pocketflow-spec.md",
+      "source_location": "Section 0",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_flow_spec",
+      "target": "concept_spl_workflow",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/flow-splc-python_pocketflow-spec.md",
+      "source_location": "Section 2",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_flow_spec",
+      "target": "concept_planner_researcher_synthesizer",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/flow-splc-python_pocketflow-spec.md",
+      "source_location": "Section 3",
+      "weight": 1.0
+    },
+    {
+      "source": "pocketflow_research_requirements",
+      "target": "pocketflow_research_readme",
+      "relation": "supports",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/requirements.txt",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "claude_cli_s1_research_spec",
+      "target": "concept_deep_research_workflow",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S1-research-claude_cli-sonnet-1-spec.md",
+      "source_location": "Section 0",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_cli_s1_research_spec",
+      "target": "concept_spl_workflow",
+      "relation": "documents",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S1-research-claude_cli-sonnet-1-spec.md",
+      "source_location": "Section 2",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_cli_s1_research_spec",
+      "target": "concept_planner_researcher_synthesizer",
+      "relation": "describes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S1-research-claude_cli-sonnet-1-spec.md",
+      "source_location": "Section 3",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_cli_s2_research_mermaid_md",
+      "target": "claude_cli_s1_research_spec",
+      "relation": "generated_from",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S2-research-claude_cli-sonnet.md",
+      "source_location": "line 3 (spl3 text2mmd command)",
+      "weight": 1.0
+    },
+    {
+      "source": "claude_cli_s2_research_mermaid_html",
+      "target": "claude_cli_s2_research_mermaid_md",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "NeurIPS-26-lab/R5-research/tests/claude_cli/claude/S2-research-claude_cli-sonnet.html",
+      "source_location": null,
+      "weight": 0.95
+    },
+    {
+      "source": "r5_research_readme_claude",
+      "target": "pocketflow_research_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "Environment section (SRC path)",
+      "weight": 0.85
+    },
+    {
+      "source": "r5_research_readme_gemini",
+      "target": "pocketflow_research_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "NeurIPS-26-lab/R5-research/README-gemini.md",
+      "source_location": "Environment section (SRC path)",
+      "weight": 0.85
+    },
+    {
+      "source": "r5_research_readme_qwen",
+      "target": "pocketflow_research_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen.md",
+      "source_location": "Environment section (SRC path)",
+      "weight": 0.85
+    },
+    {
+      "source": "r5_research_readme_qwen_v1",
+      "target": "pocketflow_research_readme",
+      "relation": "references",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "NeurIPS-26-lab/R5-research/README-qwen-v1.md",
+      "source_location": "Environment section (SRC path)",
+      "weight": 0.85
+    },
+    {
+      "source": "qwen_s6_thinking_openrouter_qwen_spec_diff",
+      "target": "concept_chain_of_thought_reasoning",
+      "relation": "evaluates",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/S6-thinking-openrouter-qwen-spec-diff.md",
+      "source_location": "Summary section",
+      "weight": 1.0
+    },
+    {
+      "source": "python_pocketflow_readme",
+      "target": "qwen_s5_thinking_openrouter_qwen_2_spec",
+      "relation": "implements",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/targets/python_pocketflow/readme.md",
+      "source_location": "SPL to Python/PocketFlow Mapping Table",
+      "weight": 0.85
+    },
+    {
+      "source": "concept_ndd_round_trip_experiment",
+      "target": "concept_spl_ir_ablation",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S10 section",
+      "weight": 1.0
+    },
+    {
+      "source": "concept_ndd_round_trip_experiment",
+      "target": "concept_vibe_coding_baseline",
+      "relation": "includes",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README-claude.md",
+      "source_location": "S7 section",
+      "weight": 1.0
+    },
+    {
+      "source": "concept_ndd_round_trip_experiment",
+      "target": "concept_splc_compile_pipeline",
+      "relation": "uses",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/README.md",
+      "source_location": "S1-S4 sections",
+      "weight": 1.0
+    },
+    {
+      "source": "concept_deep_research_workflow",
+      "target": "concept_planner_researcher_synthesizer",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "How It Works section",
+      "weight": 1.0
+    },
+    {
+      "source": "concept_deep_research_workflow",
+      "target": "concept_pocketflow_framework",
+      "relation": "built_on",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R5-research/src/pocketflow-research/README.md",
+      "source_location": "Overview section",
+      "weight": 1.0
+    },
+    {
+      "source": "concept_chain_of_thought_reasoning",
+      "target": "concept_pocketflow_framework",
+      "relation": "implemented_with",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "NeurIPS-26-lab/R4-thinking/tests/openrouter/qwen/vibe/python_pocketflow/README.md",
+      "source_location": "Overview section",
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

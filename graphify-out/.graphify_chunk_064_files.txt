@@ -1,0 +1,1 @@
+/home/gong-mini/projects/digital-duck/SPL.py/cookbook/51_image_caption/sample/photo.jpg
