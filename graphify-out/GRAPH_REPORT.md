@@ -1,13 +1,18 @@
-# Graph Report - .  (2026-05-09)
+# Graph Report - SPL.py  (2026-05-17)
 
 ## Corpus Check
-- 106 files · ~106,209 words
+- 1808 files · ~2,129,364 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2101 nodes · 5289 edges · 161 communities (87 shown, 74 thin omitted)
-- Extraction: 60% EXTRACTED · 40% INFERRED · 0% AMBIGUOUS · INFERRED: 2127 edges (avg confidence: 0.56)
-- Token cost: 46,200 input · 8,250 output
+- 2340 nodes · 5487 edges · 195 communities (132 shown, 63 thin omitted)
+- Extraction: 61% EXTRACTED · 39% INFERRED · 0% AMBIGUOUS · INFERRED: 2127 edges (avg confidence: 0.56)
+- Token cost: 0 input · 0 output
+
+## Graph Freshness
+- Built from commit: `75ed58a6`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_LLM Adapter Layer|LLM Adapter Layer]]
@@ -169,6 +174,40 @@
 - [[_COMMUNITY_Module Group 158|Module Group 158]]
 - [[_COMMUNITY_Module Group 159|Module Group 159]]
 - [[_COMMUNITY_Module Group 160|Module Group 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
+- [[_COMMUNITY_Community 162|Community 162]]
+- [[_COMMUNITY_Community 163|Community 163]]
+- [[_COMMUNITY_Community 164|Community 164]]
+- [[_COMMUNITY_Community 165|Community 165]]
+- [[_COMMUNITY_Community 166|Community 166]]
+- [[_COMMUNITY_Community 167|Community 167]]
+- [[_COMMUNITY_Community 168|Community 168]]
+- [[_COMMUNITY_Community 169|Community 169]]
+- [[_COMMUNITY_Community 170|Community 170]]
+- [[_COMMUNITY_Community 171|Community 171]]
+- [[_COMMUNITY_Community 172|Community 172]]
+- [[_COMMUNITY_Community 173|Community 173]]
+- [[_COMMUNITY_Community 174|Community 174]]
+- [[_COMMUNITY_Community 175|Community 175]]
+- [[_COMMUNITY_Community 176|Community 176]]
+- [[_COMMUNITY_Community 177|Community 177]]
+- [[_COMMUNITY_Community 178|Community 178]]
+- [[_COMMUNITY_Community 179|Community 179]]
+- [[_COMMUNITY_Community 180|Community 180]]
+- [[_COMMUNITY_Community 181|Community 181]]
+- [[_COMMUNITY_Community 182|Community 182]]
+- [[_COMMUNITY_Community 183|Community 183]]
+- [[_COMMUNITY_Community 184|Community 184]]
+- [[_COMMUNITY_Community 185|Community 185]]
+- [[_COMMUNITY_Community 186|Community 186]]
+- [[_COMMUNITY_Community 187|Community 187]]
+- [[_COMMUNITY_Community 188|Community 188]]
+- [[_COMMUNITY_Community 189|Community 189]]
+- [[_COMMUNITY_Community 190|Community 190]]
+- [[_COMMUNITY_Community 191|Community 191]]
+- [[_COMMUNITY_Community 192|Community 192]]
+- [[_COMMUNITY_Community 193|Community 193]]
+- [[_COMMUNITY_Community 194|Community 194]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Parser` - 120 edges
@@ -183,16 +222,16 @@
 10. `WorkflowState` - 61 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `_run_workflow()` --calls--> `load_tools_module()`  [INFERRED]
-  spl3/cli.py → spl/tools.py
+- `main()` --calls--> `spl_to_mermaid()`  [INFERRED]
+  cookbook/spl2mmd_batch.py → spl3/spl2mmd.py
 - `_CapturingAdapter` --uses--> `Analyzer`  [INFERRED]
   spl3/cli.py → spl/analyzer.py
-- `_run_workflow()` --calls--> `Analyzer`  [INFERRED]
-  spl3/cli.py → spl/analyzer.py
-- `cmd_explain()` --calls--> `Analyzer`  [INFERRED]
-  spl3/cli.py → spl/analyzer.py
-- `Text2SPL` --uses--> `SPL3Parser`  [INFERRED]
-  spl/text2spl.py → spl3/parser.py
+- `_CapturingAdapter` --uses--> `Text2SPL`  [INFERRED]
+  spl3/cli.py → spl/text2spl.py
+- `_CapturingAdapter` --uses--> `Lexer`  [INFERRED]
+  spl3/cli.py → spl/lexer.py
+- `_CapturingAdapter` --uses--> `Optimizer`  [INFERRED]
+  spl3/cli.py → spl/optimizer.py
 
 ## Hyperedges (group relationships)
 - **SPL compile pipeline: Lexer → Parser → Analyzer** — lexer_lexer, parser_parser, analyzer_analyzer [EXTRACTED 1.00]
@@ -211,27 +250,27 @@
 - **text2spl, splc, and Streamlit UI collectively implement the full DODA pipeline from human intent to physical artifact** — text2spl_readme_nl_to_spl_pipeline, splc_readme_splc_compiler, streamlit_readme_text2spl_studio, text2spl_readme_shared_rag_store [INFERRED 0.95]
 - **ComparisonResult, GEDResult, and BERTScoreResult form the shared data type layer consumed by engine and report** — compare_types_comparisonresult, compare_types_gedresult, compare_types_bertscoreresult, engine_run_comparison, report_render_report [INFERRED 0.85]
 
-## Communities (161 total, 74 thin omitted)
+## Communities (195 total, 63 thin omitted)
 
 ### Community 0 - "LLM Adapter Layer"
-Cohesion: 0.07
-Nodes (173): LLMAdapter, Abstract interface for LLM providers., DiskCache (dd-cache), CompoundCondition, <cond> AND/OR <cond> — compound boolean WHILE condition.      Allows boolean con, ASTToMermaid, NoWorkflowError, Walk a parsed SPL Program and produce a Mermaid flowchart string. (+165 more)
+Cohesion: 0.06
+Nodes (189): DiskCache (dd-cache), CompoundCondition, <cond> AND/OR <cond> — compound boolean WHILE condition.      Allows boolean con, Parse @name [type] [DEFAULT value].          Extends SPL 2.0 to recognise TokenT, ASTToMermaid, NoWorkflowError, Walk a parsed SPL Program and produce a Mermaid flowchart string., Raised when no WORKFLOW or PROCEDURE is found (PROMPT-only SPL 1.0 script). (+181 more)
 
 ### Community 1 - "SPL Query Clauses & AST"
 Cohesion: 0.06
-Nodes (55): FromClause, GenerateClause, OrderByItem, Parameter, WHERE clause with conditions joined by AND/OR., Single item in ORDER BY., GENERATE function(args) WITH options [| next_clause]., STORE RESULT IN memory.<key>. (+47 more)
+Nodes (51): FromClause, GenerateClause, OrderByItem, Single item in ORDER BY., GENERATE function(args) WITH options [| next_clause]., STORE RESULT IN memory.<key>., FROM source AS alias., StoreClause (+43 more)
 
 ### Community 2 - "SPL Executor Runtime"
 Cohesion: 0.06
 Nodes (31): Exception, Executor, Execute WHILE condition DO ... END, Execute COMMIT expr WITH options, Execute RAISE exception_type, Execute LOGGING expr [LEVEL DEBUG|INFO|WARN|ERROR] [TO 'file_path']         Supp, Execute STORE @var IN memory.<key> — persist variable to the memory store., Execute @var['key'] := expr — write to a STORAGE-typed or MAP variable. (+23 more)
 
 ### Community 3 - "CLI & Explain Tools"
-Cohesion: 0.05
-Nodes (46): cmd_explain(), Show execution plan for SPL_FILE (no LLM call)., explain_plan(), explain_plans(), _explain_prompt(), _explain_workflow(), SPL 2.0 EXPLAIN: render execution plans in human-readable format.  Supports both, Render an execution plan as a formatted string. (+38 more)
+Cohesion: 0.12
+Nodes (17): Lexer, LexerError, SPL 2.0 Lexer: character-by-character scanner producing a token stream.  Extends, Raised when the lexer encounters an invalid character sequence., Advance position by one character and return it., Peek at a character at current position + offset without advancing., Emit a token at the current position., Skip whitespace and comments (-- line, # line, /* block */). (+9 more)
 
 ### Community 4 - "Standard Library Functions"
-Cohesion: 0.03
-Nodes (65): abs_val(), ceil_val(), clamp(), concat(), contains(), floor_val(), instr(), isblank() (+57 more)
+Cohesion: 0.02
+Nodes (137): peers_add(), Add a peer Hub (peering handshake)., cmd_ui(), Launch the text2SPL Knowledge Studio (Streamlit app)., abs_val(), ceil_val(), char_count(), clamp() (+129 more)
 
 ### Community 5 - "LangGraph Transpiler"
 Cohesion: 0.07
@@ -242,68 +281,68 @@ Cohesion: 0.08
 Nodes (21): PocketFlowTranspiler, splc — deterministic SPL 3.0 → Python/PocketFlow transpiler.  No LLM required. C, Split workflow body into: init / pre_eval / when_stmts / else_stmts / post., Find the default value for an INPUT parameter by key name., Convert SPL expression to Python — uses shared["x"] for @vars., Detect workflow pattern from AST structure.          react:       WHILE + EVALUA, Convert SPL expression to Python — uses local var names (for main() init)., {@log_dir}/draft_{@iteration}.md' → f\"{shared['log_dir']}/draft_{shared['iterat (+13 more)
 
 ### Community 7 - "Code RAG & Describe CLI"
-Cohesion: 0.05
-Nodes (55): cmd_code_rag(), cmd_describe(), cmd_img2mmd(), cmd_img2text(), cmd_mmd2spl(), cmd_spl2mmd(), cmd_test(), cmd_text2mmd() (+47 more)
+Cohesion: 0.04
+Nodes (75): SPL2Parser, _CapturingAdapter, cmd_code_rag(), cmd_compare(), cmd_describe(), cmd_explain(), cmd_img2mmd(), cmd_img2text() (+67 more)
 
 ### Community 8 - "Built-in Runtime Functions"
-Cohesion: 0.04
-Nodes (34): _builtin_count(), _builtin_get(), _builtin_join(), _builtin_len(), _builtin_map_get(), SPL 2.0 built-in and user-defined function registry., coalesce(), date_format_val() (+26 more)
+Cohesion: 0.07
+Nodes (10): _builtin_count(), _builtin_get(), _builtin_join(), _builtin_len(), _builtin_map(), _builtin_map_get(), SPL 2.0 built-in and user-defined function registry., Get a user-defined function by name. (+2 more)
 
 ### Community 9 - "Multimodal Adapter Layer"
 Cohesion: 0.06
-Nodes (42): Backwards Compatibility Design Principle, Codec-Agnostic Layer Separation Principle, MultiModalMixin, MultiModalAdapter, _handle_fallbacks(), Comparison engine — orchestrator for multi-tier comparison., _rule_based_synthesis(), run_comparison() (+34 more)
+Nodes (40): Backwards Compatibility Design Principle, Codec-Agnostic Layer Separation Principle, MultiModalMixin, MultiModalAdapter, _handle_fallbacks(), Comparison engine — orchestrator for multi-tier comparison., _rule_based_synthesis(), run_comparison() (+32 more)
 
 ### Community 10 - "Azure/OpenAI Adapter"
 Cohesion: 0.06
-Nodes (21): AzureOpenAIAdapter, Azure OpenAI LLM adapter for SPL 2.0.  Uses the openai SDK with the AzureOpenAI, Count tokens using TokenCounter (with tiktoken if available)., List common Azure OpenAI deployment names.          These must match the deploym, Close the underlying client., LLM adapter for Azure OpenAI Service via the Chat Completions API., Generate a response via Azure OpenAI Chat Completions.          `model` is the A, OpenAIAdapter (+13 more)
+Nodes (20): AzureOpenAIAdapter, Azure OpenAI LLM adapter for SPL 2.0.  Uses the openai SDK with the AzureOpenAI, Count tokens using TokenCounter (with tiktoken if available)., List common Azure OpenAI deployment names.          These must match the deploym, Close the underlying client., LLM adapter for Azure OpenAI Service via the Chat Completions API., Generate a response via Azure OpenAI Chat Completions.          `model` is the A, OpenAIAdapter (+12 more)
 
 ### Community 11 - "Workflow Event System"
 Cohesion: 0.06
 Nodes (22): Enum, build(), EventCallTree, EventStatus, from_task_response(), WorkflowInvocationEvent: the runtime unit of execution in SPL 3.0.  Key design p, Serialize to Hub POST /tasks request body.          Extends the SPL 2.0 task pay, A tree of WorkflowInvocationEvents rooted at a top-level invocation.      Built (+14 more)
 
 ### Community 12 - "LLM Response Types"
-Cohesion: 0.08
-Nodes (24): GenerationResult, AudioPart, ImagePart, MultiModalAdapter, MultiModalMixin, SPL 3.0 multi-modal adapter extension.  Extends the SPL 2.0 LLMAdapter base clas, Generate from a list of structured content parts.          Default implementatio, Base class for SPL 3.0 adapters that support multi-modal input.      Subclass th (+16 more)
+Cohesion: 0.09
+Nodes (20): ABC, GenerationResult, LLMAdapter, AudioPart, ImagePart, MultiModalAdapter, MultiModalMixin, SPL 3.0 multi-modal adapter extension.  Extends the SPL 2.0 LLMAdapter base clas (+12 more)
 
 ### Community 13 - "CLI & Storage Options"
-Cohesion: 0.06
-Nodes (29): cli(), cmd_adapters(), cmd_cache(), cmd_code_rag(), cmd_config(), cmd_memory(), cmd_parse(), cmd_rag() (+21 more)
+Cohesion: 0.03
+Nodes (96): _analyze_source(), cache_clear(), cache_list(), _caller_label(), _cfg_default(), cli(), cmd_adapters(), cmd_cache() (+88 more)
 
 ### Community 14 - "Parallel Execution AST"
-Cohesion: 0.09
-Nodes (33): CallParallelBranch, CallParallelStatement, CompoundCondition, ImportStatement, NoneLiteral, SetLiteral, UnaryOp, run (CLI command) (+25 more)
+Cohesion: 0.1
+Nodes (27): CallParallelBranch, CallParallelStatement, CompoundCondition, ImportStatement, NoneLiteral, SetLiteral, UnaryOp, SubWorkflowResult (+19 more)
 
 ### Community 15 - "Vector Storage (FAISS)"
-Cohesion: 0.1
-Nodes (15): dd-embed adapter, FAISSVectorDB (dd-vectordb), FAISS vector store for SPL 2.0 RAG support — backed by dd-vectordb + dd-embed., Embed *text*, store in the FAISS index, and return the document count., Bulk-add multiple documents. Returns list of sequential position numbers., Search for the *top_k* most similar documents.          Returns a list of dicts, Return the number of stored documents., Remove a document by its ID. Returns True if a document was removed. (+7 more)
+Cohesion: 0.07
+Nodes (25): dd-embed adapter, FAISSVectorDB (dd-vectordb), rag_add(), rag_count(), rag_query(), Add TEXT (or a file path) to the vector store.      When TEXT is a file path, th, Search the vector store for QUERY., Show the number of indexed documents. (+17 more)
 
 ### Community 16 - "Config & RAG Bridge"
-Cohesion: 0.13
-Nodes (26): config_show(), Show current configuration., load_config(), Load SPL config from ~/.spl/config.yaml, creating defaults if missing., add(), _collection(), count(), _doc_id() (+18 more)
+Cohesion: 0.08
+Nodes (39): config_get(), config_init(), config_reset(), config_set(), config_show(), Show current configuration., Get a configuration value (supports dot-path like 'adapters.ollama.timeout')., Set configuration value(s). Supports KEY VALUE or KEY=VALUE syntax.      \b (+31 more)
 
 ### Community 17 - "Cache Management"
-Cohesion: 0.08
-Nodes (25): cache_clear(), cache_list(), _caller_label(), _CapturingAdapter, _cfg_default(), cmd_execute(), cmd_text2spl(), _get_cfg() (+17 more)
+Cohesion: 0.13
+Nodes (11): _CapturingAdapter, Thin wrapper that records the last prompt/model sent to the LLM., _escape_dollar_string_quotes(), Natural language to SPL 2.0 source code compiler.  Uses an LLM adapter to conver, Compile natural language descriptions into SPL 2.0 source code., Convert a natural language task description into SPL 2.0 source code., Construct the system and user prompts without calling the LLM.          Returns:, Build the system prompt, replacing static examples with RAG hits. (+3 more)
 
 ### Community 18 - "Type Analysis"
-Cohesion: 0.09
-Nodes (14): infer_condition_type(), _norm(), SPL 2.0 Semantic Analyzer: validates AST for correctness.  Extends SPL 1.0 analy, Validate a WORKFLOW statement., Validate a PROCEDURE statement., Validate statements inside a workflow/procedure body.          type_scope: {var_, Normalise a param_type string to upper-case, treating None as TEXT., Validate exception handler types. (+6 more)
+Cohesion: 0.15
+Nodes (8): DeepSeekAdapter, QwenAdapter, Qwen (Alibaba Cloud) LLM adapter for SPL 2.0.  Uses the DashScope API (OpenAI-co, Count tokens using TokenCounter., List available Qwen models., Close the underlying httpx client., LLM adapter for Qwen models via Alibaba's DashScope API (OpenAI-compatible)., Generate a response via DashScope OpenAI-compatible API.
 
 ### Community 19 - "Database Layer"
 Cohesion: 0.16
 Nodes (25): _conn(), current_version(), decode_params(), encode_params(), export_knowledge(), get_all_executions(), get_executions(), get_script() (+17 more)
 
 ### Community 20 - "Vibe/Prototype CLI"
-Cohesion: 0.1
-Nodes (26): cmd_vibe(), One-shot prototype generator: NL description → working code + README + test data, cmd_describe(), compile_llm_code(), _fetch_one_reference(), _fetch_rag_examples(), _fetch_references(), _github_to_raw_readme() (+18 more)
+Cohesion: 0.15
+Nodes (16): cmd_describe(), _fetch_one_reference(), _fetch_references(), _github_to_raw_readme(), _lang_label_from_path(), splc — SPL Compiler CLI Translates a .spl logical-view script into a physical im, splc — SPL Compiler: translate .spl logical views into physical implementations., Fetch reference content from URLs or local paths.      GitHub repo URLs: fetch R (+8 more)
 
 ### Community 21 - "IR Serialization"
 Cohesion: 0.18
 Nodes (13): _cond_raw(), _cond_str(), _expr_raw(), _expr_str(), _is_terminal(), _last_is_terminal(), _mmd_label(), AST-direct Mermaid diagram generator for SPL scripts.  Converts a parsed SPL Pro (+5 more)
 
 ### Community 22 - "SPL2 Parser Core"
-Cohesion: 0.1
-Nodes (17): SPL2Parser, CallParallelBranch, CallParallelStatement, ImportStatement, Single branch inside a CALL PARALLEL block.      workflow_name : name of the wor, CALL PARALLEL workflow_a(@x) INTO @a, workflow_b(@y) INTO @b END      Dispatches, IMPORT 'file.spl' — load workflow definitions from an external .spl file.      R, SPL 3.0 Parser — extends SPL 2.0 parser with new type system and syntax.  New ca (+9 more)
+Cohesion: 0.25
+Nodes (5): CallParallelBranch, Single branch inside a CALL PARALLEL block.      workflow_name : name of the wor, Parse the branch list after CALL PARALLEL ... END, Parse a single  workflow_name(@args) INTO @var  branch., Parse CALL [PARALLEL] ...          CALL workflow(@args) INTO @var              →
 
 ### Community 23 - "TypeScript Transpiler"
 Cohesion: 0.18
@@ -326,8 +365,8 @@ Cohesion: 0.12
 Nodes (10): HubPeeringSession, PeerInfo, PeeringTable, Hub-to-Hub peering: the Internet of AI Agents.  Each Momagrid Hub is an autonomo, Perform peering handshake with a remote Hub.          GET /peer/handshake → {wor, Re-handshake all peers in the table to refresh workflow lists., Metadata about a peer Hub, populated during peering handshake., Routing table: workflow name → peer Hub URL.      Analogous to a BGP routing tab (+2 more)
 
 ### Community 28 - "Registry & Hub Peers"
-Cohesion: 0.13
-Nodes (14): List all registered workflows., registry_list(), HubPeer, HubRegistry, Hub-backed WorkflowRegistry.  The Momagrid Hub is the 'OS kernel' of the compute, List all workflows registered on this Hub., Push a workflow definition to the Hub registry.          Called by `spl register, A peer Hub entry in the local Hub's routing table.      Analogous to an entry in (+6 more)
+Cohesion: 0.14
+Nodes (13): List all registered workflows., registry_list(), HubRegistry, List all workflows registered on this Hub., Queries the Momagrid Hub for remote workflow definitions.      Used as the remot, Fetch a workflow definition from the Hub (with local cache)., _extract_workflow_source(), load_workflows_from_file() (+5 more)
 
 ### Community 29 - "Code RAG Store (spl3)"
 Cohesion: 0.16
@@ -335,7 +374,7 @@ Nodes (10): CodeRAGStore, _now(), Code-RAG store for text2SPL generation — bac
 
 ### Community 30 - "OpenRouter Adapter"
 Cohesion: 0.12
-Nodes (11): OpenRouterAdapter, _parse_response (OpenRouter), OpenRouter LLM adapter for SPL 2.0., Parse JSON response with 3-pass error recovery.          Pass 1: Normal JSON par, Count tokens using TokenCounter., List common OpenRouter models., Close the underlying httpx client., LLM adapter that routes requests through OpenRouter. (+3 more)
+Nodes (10): OpenRouterAdapter, _parse_response (OpenRouter), OpenRouter LLM adapter for SPL 2.0., Parse JSON response with 3-pass error recovery.          Pass 1: Normal JSON par, Count tokens using TokenCounter., List common OpenRouter models., Close the underlying httpx client., LLM adapter that routes requests through OpenRouter. (+2 more)
 
 ### Community 31 - "SPL2 Executor"
 Cohesion: 0.14
@@ -362,8 +401,8 @@ Cohesion: 0.15
 Nodes (15): cmd_ui / spl ui, Code-RAG Page, DODA Design Once Deploy Anywhere, _parse_run_output (Review), Review Page, _find_spl_files, SPLc Compiler Page, _parse_assignments (+7 more)
 
 ### Community 37 - "Config Init & Reset"
-Cohesion: 0.13
-Nodes (15): cmd_init(), config_init(), config_reset(), config_set(), _ensure_workspace(), Create workspace directory and memory DB if they don't exist., Initialise .spl/ workspace in the current directory., Set configuration value(s). Supports KEY VALUE or KEY=VALUE syntax.      \b (+7 more)
+Cohesion: 0.17
+Nodes (12): cmd_vibe(), _extract_spec_intro(), Extract sections 0 and 1 from a splc-describe spec file.      Sections are headi, One-shot prototype generator: NL description → working code + README + test data, compile_llm_code(), _fetch_rag_examples(), Retrieve k similar recipes already compiled to the target lang from the RAG stor, Extract a short natural-language query from a .spl file for RAG retrieval. (+4 more)
 
 ### Community 38 - "Claude CLI Adapter"
 Cohesion: 0.13
@@ -378,12 +417,12 @@ Cohesion: 0.18
 Nodes (14): Page 1: Text2SPL (NL to SPL compiler UI), Page 2: Review (browse text2SPL knowledge base), Page 3: Code-RAG UI (manage text2SPL RAG store), Page 4: SPLc Compiler UI, Page 5: Target Review (browse compiled target language artifacts), RecipeHit (dataclass for single RAG retrieval result), main(), spl/rag/search.py — Retrieval interface for the text2SPL code-RAG store.  This i (+6 more)
 
 ### Community 41 - "SPL Optimizer"
-Cohesion: 0.2
-Nodes (7): Generate execution plans for all statements., Plan execution of a WORKFLOW statement., Plan execution of a PROCEDURE statement., Plan a list of body statements., Plan exception handler blocks., Estimate total LLM calls across all steps., Estimate total tokens across all steps.
+Cohesion: 0.13
+Nodes (8): Generate execution plans for all statements., Optimize a single prompt statement., Plan execution of a WORKFLOW statement., Plan execution of a PROCEDURE statement., Plan a list of body statements., Plan exception handler blocks., Estimate total LLM calls across all steps., Estimate total tokens across all steps.
 
 ### Community 42 - "Local Workflow Registry"
-Cohesion: 0.16
-Nodes (6): LocalRegistry, Return the definition for a workflow name.          Raises RegistryError if not, In-process workflow registry backed by parsed .spl files.      Thread-safe for r, Register a workflow definition. Overwrites on name collision., Parse a .spl file and register all WORKFLOW definitions found.          Returns, Load all .spl files in a directory (non-recursive).          Non-recursive by de
+Cohesion: 0.09
+Nodes (14): HubPeer, Hub-backed WorkflowRegistry.  The Momagrid Hub is the 'OS kernel' of the compute, Push a workflow definition to the Hub registry.          Called by `spl register, A peer Hub entry in the local Hub's routing table.      Analogous to an entry in, FederatedRegistry, LocalRegistry, WorkflowRegistry: maps workflow names to their parsed definitions.  In SPL 3.0,, Return the definition for a workflow name.          Raises RegistryError if not (+6 more)
 
 ### Community 43 - "SPL3 RAG Bridge"
 Cohesion: 0.25
@@ -406,24 +445,24 @@ Cohesion: 0.15
 Nodes (7): GoogleAdapter, Google Gemini LLM adapter for SPL 2.0.  Uses the Google GenAI SDK (google-genai), List available Google Gemini models., Close the underlying client., LLM adapter for Google Gemini models via the GenAI SDK., Generate a response via Google Gemini API., Count tokens using TokenCounter.
 
 ### Community 48 - "Image Codec"
-Cohesion: 0.22
-Nodes (11): encode_image(), _encode_pil(), _infer_mime(), _make_part(), Image codec — encode images as base64 ImagePart dicts.  Accepts PIL Images, file, Encode an image as a base64 ``ImagePart`` dict.      Args:         source:, img2mmd(), img2text() (+3 more)
+Cohesion: 0.48
+Nodes (6): encode_image(), _encode_pil(), _infer_mime(), _make_part(), Image codec — encode images as base64 ImagePart dicts.  Accepts PIL Images, file, Encode an image as a base64 ``ImagePart`` dict.      Args:         source:
 
 ### Community 49 - "SPL3 AST Nodes"
-Cohesion: 0.21
-Nodes (10): Expression, NoneLiteral, SPL 3.0 AST node additions over SPL 2.0.  New nodes:   SetLiteral         — {a,, NOT <expr> — boolean negation.      operator : currently always 'NOT'     operan, NONE or NULL literal — first-class null value.      SPL 2.0's Literal node only, { expr, expr, ... } — unordered unique collection literal.      Parsed when { }, SetLiteral, UnaryOp (+2 more)
+Cohesion: 0.15
+Nodes (13): Expression, CallParallelStatement, NoneLiteral, SPL 3.0 AST node additions over SPL 2.0.  New nodes:   SetLiteral         — {a,, CALL PARALLEL workflow_a(@x) INTO @a, workflow_b(@y) INTO @b END      Dispatches, NOT <expr> — boolean negation.      operator : currently always 'NOT'     operan, NONE or NULL literal — first-class null value.      SPL 2.0's Literal node only, { expr, expr, ... } — unordered unique collection literal.      Parsed when { } (+5 more)
 
 ### Community 50 - "Module Group 50"
-Cohesion: 0.19
-Nodes (12): AnalysisResult, Analyzer, CallStatement, EvaluateStatement, Program (top-level AST node), cmd_execute / spl run, cmd_validate / spl validate, ast_to_json() (+4 more)
+Cohesion: 0.25
+Nodes (8): Program (top-level AST node), cmd_execute / spl run, cmd_validate / spl validate, ast_to_json(), Lexer, spl.stdlib (standard library tools), load_tools_module(), spl_tool (decorator)
 
 ### Community 51 - "Module Group 51"
-Cohesion: 0.19
-Nodes (13): CreateFunctionStatement, ProcedureStatement, PromptStatement, WorkflowStatement, _CapturingAdapter, Executor, SPLResult, SPLWorkflowError (exception hierarchy) (+5 more)
+Cohesion: 0.15
+Nodes (17): AnalysisResult, Analyzer, CallStatement, CreateFunctionStatement, EvaluateStatement, ProcedureStatement, PromptStatement, WorkflowStatement (+9 more)
 
 ### Community 52 - "Module Group 52"
-Cohesion: 0.18
-Nodes (12): _analyze_source(), cmd_explain(), cmd_validate(), code_rag_add(), _parse_source(), Read a file and raise ClickException if not found., Add a (DESCRIPTION, SPL_FILE) pair to the Code-RAG store., Lex → Parse → return AST. (+4 more)
+Cohesion: 0.26
+Nodes (11): explain_plan(), explain_plans(), _explain_prompt(), _explain_workflow(), SPL 2.0 EXPLAIN: render execution plans in human-readable format.  Supports both, Render an execution plan as a formatted string., Recursively render a workflow step., Render multiple execution plans. (+3 more)
 
 ### Community 53 - "Module Group 53"
 Cohesion: 0.18
@@ -435,35 +474,35 @@ Nodes (6): Ubuntu AI Inference Snap adapter for SPL 3.0.  [PLACEHOLDER]  Target 
 
 ### Community 55 - "Module Group 55"
 Cohesion: 0.2
-Nodes (8): WorkflowComposer: extends SPL 2.0 executor with workflow-to-workflow CALL.  When, Execute multiple sub-workflows concurrently (CALL PARALLEL).          calls: lis, Result of a single sub-workflow CALL., Executes CALL workflow_name(@args) INTO @var statements.      Instantiated by th, registry: spl.registry.LocalRegistry | FederatedRegistry         executor: spl.e, Execute a named workflow and return its OUTPUT binding.          args:     calle, SubWorkflowResult, WorkflowComposer
+Nodes (9): 1. Purpose, 2. High-level Description, 3. SPL ↔ SPL Construct Mapping, 4. Logical Functions / Prompts, 5. Control Flow, 6. How to Regenerate as SPL, code:bash (# Step 1 — generate SPL from this spec (use Section 2 above ), Detailed Specification (+1 more)
 
 ### Community 56 - "Module Group 56"
-Cohesion: 0.18
-Nodes (10): rag_add(), rag_count(), rag_query(), Add TEXT (or a file path) to the vector store.      When TEXT is a file path, th, Search the vector store for QUERY., Show the number of indexed documents., vector_store(), get_vector_store() (+2 more)
+Cohesion: 0.2
+Nodes (9): 1. Purpose, 2. High-level Description, 3. SPL ↔ SPL Construct Mapping, 4. Logical Functions / Prompts, 5. Control Flow, 6. How to Regenerate as SPL, code:block1 (# Step 1 — generate SPL from this spec), Detailed Specification (+1 more)
 
 ### Community 57 - "Module Group 57"
-Cohesion: 0.18
-Nodes (6): GeminiCLIAdapter, Gemini CLI adapter: wraps the `gemini` CLI for development use.  Leverages Gemin, Estimate tokens using character-based heuristic (~4 chars/token)., Return available Gemini models., LLM adapter that wraps the Gemini CLI.      Usage:         adapter = GeminiCLIAd, Generate response by invoking gemini CLI.
+Cohesion: 0.17
+Nodes (7): GeminiCLIAdapter, Gemini CLI adapter: wraps the `gemini` CLI for development use.  Leverages Gemin, Estimate tokens using character-based heuristic (~4 chars/token)., Return available Gemini models., LLM adapter that wraps the Gemini CLI.      Usage:         adapter = GeminiCLIAd, Generate response by invoking gemini CLI., LLMAdapter
 
 ### Community 58 - "Module Group 58"
 Cohesion: 0.18
 Nodes (6): Google Vertex AI LLM adapter for SPL 2.0.  Uses the google-genai SDK pointed at, Count tokens using TokenCounter., List available Gemini models on Vertex AI., LLM adapter for Google Vertex AI (Gemini models via google-genai SDK)., Generate a response via Google Vertex AI., VertexAdapter
 
 ### Community 59 - "Module Group 59"
-Cohesion: 0.18
-Nodes (9): cmd_show(), List available adapters, models, and stdlib tools.      \b     Examples:       s, get_global_tools(), load_tools_module(), SPL 2.0 Python tool registry.  Tools are plain Python callables (sync or async), Decorator that registers a Python callable in the global SPL tool registry., Import a Python module from a file path and return all @spl_tool functions., Return a copy of the global tool registry. (+1 more)
+Cohesion: 0.22
+Nodes (7): cmd_show(), List available adapters, models, and stdlib tools.      \b     Examples:       s, get_global_tools(), SPL 2.0 Python tool registry.  Tools are plain Python callables (sync or async), Decorator that registers a Python callable in the global SPL tool registry., Return a copy of the global tool registry., spl_tool()
 
 ### Community 60 - "Module Group 60"
-Cohesion: 0.2
-Nodes (10): code_rag_count(), code_rag_export(), code_rag_import(), code_rag_query(), _get_code_rag_store(), Return a CodeRAGStore using config defaults., Prime the Code-RAG store with (description, SPL) pairs.      Without --from: imp, Retrieve the top-k most similar SPL examples for DESCRIPTION. (+2 more)
+Cohesion: 0.29
+Nodes (9): _filter_recipes(), _find_spl(), _load_catalog(), main(), spl2spec_batch.py — Generate functional specs from SPL cookbook recipes.  Calls, Generate functional specs from SPL cookbook recipes via `spl3 splc describe`., Return the primary .spl file in a recipe directory.      Preference order:     1, Check if a spec file already exists for this adapter/model combo. (+1 more)
 
 ### Community 61 - "Module Group 61"
-Cohesion: 0.2
-Nodes (10): memory_delete(), memory_get(), memory_list(), memory_set(), _memory_store(), Resolve the memory store path and return an open StorageConnection + resolved pa, List all memory keys., Print the value stored under KEY. (+2 more)
+Cohesion: 0.36
+Nodes (7): _filter_recipes(), _find_spl(), _load_catalog(), main(), spl2mmd_batch.py — Generate Mermaid diagrams from SPL cookbook recipes.  Delegat, Generate Mermaid diagrams (mmd/svg/png/pdf/html/md) from SPL cookbook recipes., Return the primary .spl file in a recipe directory.      Preference order:     1
 
 ### Community 62 - "Module Group 62"
-Cohesion: 0.2
-Nodes (10): code_rag_parse_log(), _description_from_command(), _description_from_spl(), _load_catalog_map(), _parse_log_for_pairs(), Extract (command, spl_source) pairs from a spl run log.      Scans for ```bash a, Return {recipe_dir_or_stem → description} from cookbook catalog., Derive a description from a PROMPT or WORKFLOW name in SPL source. (+2 more)
+Cohesion: 0.32
+Nodes (7): optimize(), parse(), SPL 2.0 - Structured Prompt Language for Agentic Workflow Orchestration  Extends, Parse SPL 2.0 source into AST., Parse and semantically validate SPL 2.0 source., Parse, validate, and generate execution plans., validate()
 
 ### Community 63 - "Module Group 63"
 Cohesion: 0.29
@@ -478,12 +517,12 @@ Cohesion: 0.31
 Nodes (7): _parse_assignments(), _parse_run_output(), Page 1: Text-to-SPL compiler.  Compile a natural language description into SPL 2, Derive a snake_case name from a description (first 4 meaningful words)., Parse '@name := value' lines into a dict., Extract metrics and LLM output from spl run stdout., _slugify()
 
 ### Community 66 - "Module Group 66"
-Cohesion: 0.22
-Nodes (7): _CapturingAdapter, Thin wrapper that records the last prompt/model sent to the LLM., Register workflows from a .spl file or directory into the Hub., Write a rich markdown run log matching spl-go / spl-ts format. Returns the log p, register(), _run_workflow(), _write_run_log()
+Cohesion: 0.33
+Nodes (4): ImportStatement, IMPORT 'file.spl' — load workflow definitions from an external .spl file.      R, Dispatch to the appropriate statement parser.          Handles SPL 3.0 additions, Parse IMPORT 'file.spl
 
 ### Community 67 - "Module Group 67"
-Cohesion: 0.28
-Nodes (7): raise_if_failed(), COMMIT status → EXCEPTION mapping for workflow composition.  In SPL 3.0, OUTPUT, Return the SPL exception type name for a given COMMIT status.      Returns None, Raise a workflow composition error if status is non-successful.      Called by W, Raised when a sub-workflow completes with a non-successful COMMIT status.      C, status_to_exception_type(), WorkflowCompositionError
+Cohesion: 0.13
+Nodes (12): WorkflowComposer: extends SPL 2.0 executor with workflow-to-workflow CALL.  When, Execute multiple sub-workflows concurrently (CALL PARALLEL).          calls: lis, Result of a single sub-workflow CALL., Execute a named workflow and return its OUTPUT binding.          args:     calle, SubWorkflowResult, raise_if_failed(), COMMIT status → EXCEPTION mapping for workflow composition.  In SPL 3.0, OUTPUT, Return the SPL exception type name for a given COMMIT status.      Returns None (+4 more)
 
 ### Community 68 - "Module Group 68"
 Cohesion: 0.31
@@ -498,8 +537,8 @@ Cohesion: 0.28
 Nodes (8): cmd_text2spl / spl text2spl, code_rag_bridge (Streamlit wrapper), CodeRAGStore, DEFAULTS (SPL config schema), load_config(), SQLite knowledge DB, text2SPL Studio (Streamlit UI), Text2SPL
 
 ### Community 71 - "Module Group 71"
-Cohesion: 0.25
-Nodes (8): iif(), lower(), IIF(condition, true_val, false_val) — inline if.     Condition is true when: '1', WRITE_FILE(file_path, content [, mode]) — write text to a file.      mode: 'w' (, CAST(value AS BOOLEAN) — returns 'true' or 'false'.     Truthy: '1', 'true', 'ye, LOWER(value) — convert to lowercase., to_bool(), write_file()
+Cohesion: 0.33
+Nodes (5): img2mmd(), img2text(), SPL 3.0 Image Operations — img2mmd and img2text.  Uses multimodal LLMs (Claude,, Extract text and pseudo-code from an image (OCR + structure preservation)., Extract Mermaid flowchart logic from an image.      Args:         image_path:
 
 ### Community 72 - "Module Group 72"
 Cohesion: 0.43
@@ -510,20 +549,28 @@ Cohesion: 0.36
 Nodes (8): _build_prompt(), cmd_compile(), splc — SPL Compiler: translate a .spl logical view into a physical implementatio, Construct the full compilation prompt sent to the LLM., GoTranspiler (deterministic SPL to Go), LangGraphTranspiler (deterministic SPL to Python/LangGraph), PocketFlowTranspiler (deterministic SPL to Python/PocketFlow), TypeScriptTranspiler (deterministic SPL to TypeScript)
 
 ### Community 74 - "Module Group 74"
-Cohesion: 0.29
-Nodes (3): Get a user-defined function by name., Get a user-defined procedure by name., Get a registered Python tool by name.
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Hello Workflow, Mermaid Diagram
+
+### Community 75 - "Module Group 75"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Proxy Workflow
+
+### Community 76 - "Module Group 76"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Multilingual Workflow
 
 ### Community 77 - "Module Group 77"
 Cohesion: 0.53
 Nodes (5): Report rendering for spl3 compare., _render_html(), _render_markdown(), render_report(), _serialize()
 
 ### Community 78 - "Module Group 78"
-Cohesion: 0.33
-Nodes (6): endswith(), len_val(), LEN(value) — polymorphic length: string chars, JSON array items, or JSON object, STARTSWITH(value, prefix) — returns 'true' or 'false'., ENDSWITH(value, suffix) — returns 'true' or 'false'., startswith()
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Showdown Workflow
 
 ### Community 79 - "Module Group 79"
-Cohesion: 0.4
-Nodes (5): _extract_workflow_source(), load_workflows_from_file(), Internal helper: parse a .spl file and extract WORKFLOW definitions.  Uses the S, Parse path and return a list of WorkflowDefinition objects.      Handles IMPORT, Best-effort extraction of the raw SPL source for a named WORKFLOW block.
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Self Refine Workflow
 
 ### Community 80 - "Module Group 80"
 Cohesion: 0.47
@@ -543,35 +590,207 @@ Nodes (5): GenerationResult, LLMAdapter, BedrockAdapter, _estimate_bedrock_cost,
 
 ### Community 85 - "Module Group 85"
 Cohesion: 0.5
-Nodes (4): char_count(), REPLACE(value, old, new) — replace all occurrences of old with new., Character count excluding whitespace., replace()
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, React Agent Workflow
 
 ### Community 86 - "Module Group 86"
 Cohesion: 0.5
-Nodes (4): WEB_SEARCH(query) — search the web via DuckDuckGo, return top-5 results.      Ac, SEARCH_WEB(query) — alias for web_search.      Usage in SPL:         CALL search, search_web(), web_search()
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Safe Generation Workflow
 
 ### Community 88 - "Module Group 88"
 Cohesion: 0.5
 Nodes (4): DuckDB (dd-db), PostgresDB (dd-db), SQLiteDB (dd-db), StorageConnection
 
+### Community 92 - "Module Group 92"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Rag Query Workflow
+
+### Community 93 - "Module Group 93"
+Cohesion: 0.5
+Nodes (3): Chain Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 94 - "Module Group 94"
+Cohesion: 0.5
+Nodes (3): Batch Test Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 95 - "Module Group 95"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Debate Workflow, Mermaid Diagram
+
+### Community 96 - "Module Group 96"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Plan Execute V1 Workflow
+
+### Community 97 - "Module Group 97"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Map Reduce Workflow, Mermaid Diagram
+
+### Community 98 - "Module Group 98"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Multi Agent Workflow
+
+### Community 99 - "Module Group 99"
+Cohesion: 0.5
+Nodes (3): Code Review Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 100 - "Module Group 100"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Reflection Workflow
+
+### Community 157 - "Module Group 157"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Tree Of Thought Workflow
+
+### Community 161 - "Community 161"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Guardrails Workflow, Mermaid Diagram
+
+### Community 162 - "Community 162"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Memory Chat Workflow, Mermaid Diagram
+
+### Community 163 - "Community 163"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Ensemble Workflow, Mermaid Diagram
+
+### Community 164 - "Community 164"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Multi Model Workflow
+
+### Community 165 - "Community 165"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Structured Output Workflow
+
+### Community 166 - "Community 166"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Few Shot Workflow, Mermaid Diagram
+
+### Community 167 - "Community 167"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Nested Procs Workflow
+
+### Community 168 - "Community 168"
+Cohesion: 0.5
+Nodes (3): Ab Test Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 169 - "Community 169"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Data Extraction Workflow, Mermaid Diagram
+
+### Community 170 - "Community 170"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Support Triage Workflow
+
+### Community 171 - "Community 171"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Meeting Actions Workflow, Mermaid Diagram
+
+### Community 172 - "Community 172"
+Cohesion: 0.5
+Nodes (3): Code Gen Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 173 - "Community 173"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Sentiment Workflow
+
+### Community 174 - "Community 174"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Socratic Tutor Workflow
+
+### Community 175 - "Community 175"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Interview Sim Workflow, Mermaid Diagram
+
+### Community 176 - "Community 176"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Progressive Summary Workflow
+
+### Community 177 - "Community 177"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Hypothesis Workflow, Mermaid Diagram
+
+### Community 178 - "Community 178"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Tool Use Workflow
+
+### Community 179 - "Community 179"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Headline News Workflow, Mermaid Diagram
+
+### Community 180 - "Community 180"
+Cohesion: 0.5
+Nodes (3): Bedrock Quickstart Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 181 - "Community 181"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Vertex Quickstart Workflow
+
+### Community 182 - "Community 182"
+Cohesion: 0.5
+Nodes (3): Azure Openai Quickstart Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 183 - "Community 183"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Human Steering Workflow, Mermaid Diagram
+
+### Community 184 - "Community 184"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Knowledge Synthesis Workflow, Mermaid Diagram
+
+### Community 185 - "Community 185"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Prompt Self Tuning Workflow
+
+### Community 186 - "Community 186"
+Cohesion: 0.5
+Nodes (3): Adaptive Failover Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 187 - "Community 187"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Vision To Action Workflow
+
+### Community 188 - "Community 188"
+Cohesion: 0.5
+Nodes (3): Arxiv Morning Brief Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 189 - "Community 189"
+Cohesion: 0.5
+Nodes (3): Assess Credit Risk Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 190 - "Community 190"
+Cohesion: 0.5
+Nodes (3): Audit News Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 191 - "Community 191"
+Cohesion: 0.5
+Nodes (3): Code Pipeline Workflow, code:mermaid (flowchart TD), Mermaid Diagram
+
+### Community 192 - "Community 192"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Parallel Code Review Workflow
+
+### Community 193 - "Community 193"
+Cohesion: 0.5
+Nodes (3): code:mermaid (flowchart TD), Mermaid Diagram, Parallel News Digest Workflow
+
 ## Knowledge Gaps
-- **862 isolated node(s):** `SPL 2.0 built-in and user-defined function registry.`, `Registry for SPL functions and procedures (built-in and user-defined).`, `Register built-in SPL functions.`, `Register a user-defined function.`, `Register a user-defined procedure.` (+857 more)
+- **932 isolated node(s):** `code:mermaid (flowchart TD)`, `code:mermaid (flowchart TD)`, `code:mermaid (flowchart TD)`, `code:mermaid (flowchart TD)`, `code:mermaid (flowchart TD)` (+927 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **74 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **63 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GenerationResult` connect `LLM Response Types` to `LLM Adapter Layer`, `DD-LLM Bridge Adapter`, `SPL Executor Runtime`, `Claude CLI Adapter`, `Liquid AI Adapter`, `Azure/OpenAI Adapter`, `Module Group 76`, `DeepSeek Adapter`, `Anthropic Adapter`, `Google Adapter`, `Ollama Adapter`, `Module Group 53`, `Module Group 54`, `Momagrid Adapter`, `Module Group 57`, `Module Group 58`, `OpenRouter Adapter`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
-- **Why does `Executor` connect `SPL Executor Runtime` to `LLM Adapter Layer`, `Module Group 66`, `Code RAG & Describe CLI`, `Azure/OpenAI Adapter`, `LLM Response Types`, `Cache Management`, `SPL2 Executor`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
-- **Why does `TokenCounter` connect `Azure/OpenAI Adapter` to `LLM Adapter Layer`, `DD-LLM Bridge Adapter`, `SPL Executor Runtime`, `LLM Response Types`, `DeepSeek Adapter`, `Anthropic Adapter`, `Google Adapter`, `Ollama Adapter`, `Module Group 53`, `Momagrid Adapter`, `Module Group 58`, `OpenRouter Adapter`?**
-  _High betweenness centrality (0.070) - this node is a cross-community bridge._
+- **Why does `GenerationResult` connect `LLM Response Types` to `LLM Adapter Layer`, `DD-LLM Bridge Adapter`, `SPL Executor Runtime`, `Claude CLI Adapter`, `Liquid AI Adapter`, `Azure/OpenAI Adapter`, `Ollama Adapter`, `DeepSeek Adapter`, `Anthropic Adapter`, `Google Adapter`, `Type Analysis`, `Module Group 53`, `Module Group 54`, `Momagrid Adapter`, `Module Group 57`, `Module Group 58`, `OpenRouter Adapter`?**
+  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+- **Why does `Executor` connect `SPL Executor Runtime` to `LLM Adapter Layer`, `Code RAG & Describe CLI`, `Azure/OpenAI Adapter`, `LLM Response Types`, `CLI & Storage Options`, `Cache Management`, `SPL2 Executor`?**
+  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+- **Why does `Parser` connect `SPL Query Clauses & AST` to `LLM Adapter Layer`, `Code RAG & Describe CLI`, `CLI & Storage Options`, `Cache Management`, `Module Group 62`?**
+  _High betweenness centrality (0.050) - this node is a cross-community bridge._
 - **Are the 151 inferred relationships involving `str` (e.g. with `_builtin_len()` and `_builtin_get()`) actually correct?**
   _`str` has 151 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 56 inferred relationships involving `Parser` (e.g. with `Text2SPL` and `Program`) actually correct?**
+- **Are the 56 inferred relationships involving `Parser` (e.g. with `parse()` and `Text2SPL`) actually correct?**
   _`Parser` has 56 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 56 inferred relationships involving `Executor` (e.g. with `_CapturingAdapter` and `PromptStatement`) actually correct?**
+- **Are the 56 inferred relationships involving `Executor` (e.g. with `FunctionRegistry` and `TokenCounter`) actually correct?**
   _`Executor` has 56 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 63 inferred relationships involving `TokenCounter` (e.g. with `ExecutionStep` and `ExecutionPlan`) actually correct?**
   _`TokenCounter` has 63 INFERRED edges - model-reasoned connections that need verification._
