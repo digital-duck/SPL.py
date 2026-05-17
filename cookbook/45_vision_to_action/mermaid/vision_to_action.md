@@ -1,0 +1,65 @@
+# Vision To Action Workflow
+
+Generated from `vision_to_action.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_vision_to_action["WORKFLOW: vision_to_action"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Analyzing image: (...'"]
+    GEN3[/"GENERATE classify(@image_de...) -> @scene_label"/]
+    LOG2 --> GEN3
+    LOG4>"LOG(DEBUG) f'Classification: (@...'"]
+    GEN3 --> LOG4
+    EVAL5{"EVALUATE: @scene_label"}
+    LOG7>"LOG(WARN) 'Intrusion detected —...'"]
+    A8["@action_taken := 'SOUND_ALARM_CALL_POL...'"]
+    LOG7 --> A8
+    EVAL5 -->|"WHEN contains:INTRUSION"| LOG7
+    A8 --> MERGE6
+    LOG9>"LOG(INFO) 'Delivery detected — ...'"]
+    A10["@action_taken := 'NOTIFY_HOMEOWNER_DEL...'"]
+    LOG9 --> A10
+    EVAL5 -->|"WHEN contains:DELIVERY"| LOG9
+    A10 --> MERGE6
+    LOG11>"LOG(DEBUG) 'Routine activity — n...'"]
+    A12["@action_taken := 'IGNORE'"]
+    LOG11 --> A12
+    EVAL5 -->|"ELSE"| LOG11
+    A12 --> MERGE6
+    MERGE6[" "]
+    LOG4 --> EVAL5
+    RET13(["RETURN f'Action taken: (@ac...' (status='comp..., label=@scen...)"])
+    MERGE6 --> RET13
+    START1 --> LOG2
+    EXC14{"EXCEPTION GenerationError"}
+    LOG15>"LOG(WARN) 'Classification faile...'"]
+    RET16(["RETURN 'Action taken: IGNORE' (status='error', reason='clas...)"])
+    LOG15 --> RET16
+    EXC14 --> LOG15
+    end
+    class START1 term
+    class LOG2 log
+    class GEN3 llm
+    class LOG4 log
+    class EVAL5 ctrl
+    class LOG7 log
+    class A8 assign
+    class LOG9 log
+    class A10 assign
+    class LOG11 log
+    class A12 assign
+    class RET13 term
+    class EXC14 ctrl
+    class LOG15 log
+    class RET16 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

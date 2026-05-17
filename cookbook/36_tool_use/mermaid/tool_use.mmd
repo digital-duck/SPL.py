@@ -1,0 +1,45 @@
+flowchart TD
+    subgraph SG_sales_analysis["WORKFLOW: sales_analysis"]
+    direction TB
+    START1(["Start"])
+    SUB2[["CALL sum_values(@sales) -> @total"]]
+    SUB3[["CALL average_values(@sales) -> @avg"]]
+    SUB2 --> SUB3
+    SUB4[["CALL min_value(@sales) -> @low"]]
+    SUB3 --> SUB4
+    SUB5[["CALL max_value(@sales) -> @high"]]
+    SUB4 --> SUB5
+    SUB6[["CALL percentage_change(@prev_total, @total) -> @growth"]]
+    SUB5 --> SUB6
+    SUB7[["CALL format_currency(@total) -> @total_fmt"]]
+    SUB6 --> SUB7
+    SUB8[["CALL format_currency(@avg) -> @avg_fmt"]]
+    SUB7 --> SUB8
+    GEN9[/"GENERATE sales_report(@period, @sales, ...) -> @report"/]
+    SUB8 --> GEN9
+    RET10(["RETURN @report (status='comp...)"])
+    GEN9 --> RET10
+    START1 --> SUB2
+    EXC11{"EXCEPTION OTHERS"}
+    GEN12[/"GENERATE error_summary(@period) -> @report"/]
+    RET13(["RETURN @report (status='error')"])
+    GEN12 --> RET13
+    EXC11 --> GEN12
+    end
+    class START1 term
+    class SUB2 proc
+    class SUB3 proc
+    class SUB4 proc
+    class SUB5 proc
+    class SUB6 proc
+    class SUB7 proc
+    class SUB8 proc
+    class GEN9 llm
+    class RET10 term
+    class EXC11 ctrl
+    class GEN12 llm
+    class RET13 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

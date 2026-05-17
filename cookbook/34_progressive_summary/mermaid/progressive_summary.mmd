@@ -1,0 +1,68 @@
+flowchart TD
+    subgraph SG_progressive_summarizer["WORKFLOW: progressive_summarizer"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Progressive summar...'"]
+    GEN3[/"GENERATE summarize(@text, summary_c..., ...) -> @sentence_summary"/]
+    LOG2 --> GEN3
+    LOG4>"LOG(DEBUG) f'Layer 1 done | sen...'"]
+    GEN3 --> LOG4
+    GEN5[/"GENERATE expand_summary(@text, @sentence..., ...) -> @paragraph_summary"/]
+    LOG4 --> GEN5
+    LOG6>"LOG(DEBUG) f'Layer 2 done | par...'"]
+    GEN5 --> LOG6
+    EVAL7{"EVALUATE: @layers"}
+    GEN9[/"GENERATE expand_summary(@text, @paragrap..., ...) -> @page_summary"/]
+    LOG10>"LOG(DEBUG) 'Layer 3 done | page ...'"]
+    GEN9 --> LOG10
+    EVAL7 -->|"WHEN >= 3"| GEN9
+    LOG10 --> MERGE8
+    A11["@page_summary := ''"]
+    EVAL7 -->|"ELSE"| A11
+    A11 --> MERGE8
+    MERGE8[" "]
+    LOG6 --> EVAL7
+    GEN12[/"GENERATE verify_summary_fidelity(@text, @sentence..., ...) -> @fidelity_score"/]
+    MERGE8 --> GEN12
+    LOG13>"LOG(INFO) f'Fidelity score: (@...'"]
+    GEN12 --> LOG13
+    GEN14[/"GENERATE assemble_summary_package(@sentence..., @paragrap..., ...) -> @summary_package"/]
+    LOG13 --> GEN14
+    RET15(["RETURN @summary_package (status='comp..., layers_generated=@layers)"])
+    GEN14 --> RET15
+    START1 --> LOG2
+    EXC16{"EXCEPTION ContextLengthExceeded"}
+    GEN17[/"GENERATE chunk_and_summarize(@text, summary_c...) -> @paragraph_summary"/]
+    GEN18[/"GENERATE summarize(@paragrap..., summary_c..., ...) -> @sentence_summary"/]
+    GEN17 --> GEN18
+    GEN19[/"GENERATE assemble_summary_package(@sentence..., @paragrap..., ...) -> @summary_package"/]
+    GEN18 --> GEN19
+    RET20(["RETURN @summary_package (status='comp...)"])
+    GEN19 --> RET20
+    EXC16 --> GEN17
+    end
+    class START1 term
+    class LOG2 log
+    class GEN3 llm
+    class LOG4 log
+    class GEN5 llm
+    class LOG6 log
+    class EVAL7 ctrl
+    class GEN9 llm
+    class LOG10 log
+    class A11 assign
+    class GEN12 llm
+    class LOG13 log
+    class GEN14 llm
+    class RET15 term
+    class EXC16 ctrl
+    class GEN17 llm
+    class GEN18 llm
+    class GEN19 llm
+    class RET20 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b

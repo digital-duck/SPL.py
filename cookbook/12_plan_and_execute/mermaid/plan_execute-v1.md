@@ -1,0 +1,86 @@
+# Plan Execute V1 Workflow
+
+Generated from `plan_execute-v1.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_plan_and_execute["WORKFLOW: plan_and_execute"]
+    direction TB
+    START1(["Start"])
+    A2["@step_index := 0"]
+    A3["@results := ''"]
+    A2 --> A3
+    GEN4[/"GENERATE plan(@task) -> @plan"/]
+    A3 --> GEN4
+    GEN5[/"GENERATE count_steps(@plan) -> @step_count"/]
+    GEN4 --> GEN5
+    WHILE6{"WHILE: @step_index < @step_count"}
+    GEN7[/"GENERATE extract_step(@plan, @step_index) -> @current_step"/]
+    GEN8[/"GENERATE execute_step(@current_..., @results) -> @step_result"/]
+    GEN7 --> GEN8
+    GEN9[/"GENERATE validate_step(@current_..., @step_result) -> @validation"/]
+    GEN8 --> GEN9
+    EVAL10{"EVALUATE: @validation"}
+    GEN12[/"GENERATE replan(@task, @plan, ...) -> @plan"/]
+    GEN13[/"GENERATE count_steps(@plan) -> @step_count"/]
+    GEN12 --> GEN13
+    A14["@step_index := 0"]
+    GEN13 --> A14
+    A15["@results := ''"]
+    A14 --> A15
+    EVAL10 -->|"WHEN failed"| GEN12
+    A15 --> MERGE11
+    A16["@results := @results ... + @step_result"]
+    A17["@step_index := @step_index + 1"]
+    A16 --> A17
+    EVAL10 -->|"ELSE"| A16
+    A17 --> MERGE11
+    MERGE11[" "]
+    GEN9 --> EVAL10
+    WHILE6 -->|"True"| GEN7
+    MERGE11 -.-> WHILE6
+    GEN5 --> WHILE6
+    GEN18[/"GENERATE synthesize(@task, @results) -> @final_report"/]
+    WHILE6 --> GEN18
+    RET19(["RETURN @final_report (status='comp..., steps_executed=@step...)"])
+    GEN18 --> RET19
+    START1 --> A2
+    EXC20{"EXCEPTION MaxIterationsReached"}
+    GEN21[/"GENERATE synthesize(@task, @results) -> @final_report"/]
+    RET22(["RETURN @final_report (status='part...)"])
+    GEN21 --> RET22
+    EXC20 --> GEN21
+    EXC23{"EXCEPTION BudgetExceeded"}
+    RET24(["RETURN @results (status='budg...)"])
+    EXC23 --> RET24
+    end
+    class START1 term
+    class A2 assign
+    class A3 assign
+    class GEN4 llm
+    class GEN5 llm
+    class WHILE6 ctrl
+    class GEN7 llm
+    class GEN8 llm
+    class GEN9 llm
+    class EVAL10 ctrl
+    class GEN12 llm
+    class GEN13 llm
+    class A14 assign
+    class A15 assign
+    class A16 assign
+    class A17 assign
+    class GEN18 llm
+    class RET19 term
+    class EXC20 ctrl
+    class GEN21 llm
+    class RET22 term
+    class EXC23 ctrl
+    class RET24 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

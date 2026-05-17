@@ -810,7 +810,16 @@ Your task is to produce a functional specification in plain English that:
 
 Structure your output as Markdown with these sections IN ORDER:
 
-## 0. High-level Description
+## Summary
+2-3 sentences of plain English. What this does, why it exists, and who benefits.
+No jargon, no bullet points. Readable by a non-technical stakeholder.
+
+## Detailed Specification
+
+### 1. Purpose
+One sentence: what this implementation accomplishes for the end user.
+
+### 2. High-level Description
 Write 4-6 sentences of flowing prose (no bullet points).
 Describe what this workflow does using SPL construct names wherever they apply.
 Cover: pattern/technique, each logical function (and its prompt role), control flow
@@ -819,10 +828,7 @@ side-effects, exception handling. Do NOT mention "default" action tokens — omi
 entirely; they are implicit linear flow, not worth documenting.
 This section will be used directly as the text2spl input prompt — make it complete.
 
-## 1. Purpose
-One sentence: what this implementation accomplishes for the end user.
-
-## 2. SPL ↔ {lang_label} Construct Mapping
+### 3. SPL ↔ {lang_label} Construct Mapping
 A Markdown table — columns: SPL Construct | {lang_label} Equivalent | Notes.
 Cover every major mapping: WORKFLOW→, CREATE FUNCTION→, GENERATE→, EVALUATE→,
 WHILE→, EXCEPTION→, shared state (SPL @vars)→.
@@ -830,21 +836,21 @@ Only include RETURN→ if a non-default status token (e.g. "done", "retry") driv
 a real branch or terminates a loop. Skip it for linear chains where every node
 simply returns "default".
 
-## 3. Logical Functions / Prompts
+### 4. Logical Functions / Prompts
 For each logical function (prompt template) found in the implementation:
   - Name
   - Role in the workflow
   - Key prompt conventions (sentinel tokens, scoring, output format)
 
-## 4. Control Flow
+### 5. Control Flow
 Describe the execution path: initial step → loop condition → branch logic → termination.
 Use SPL construct names (WHILE, EVALUATE, RETURN WITH status=) only when non-trivial.
 Do NOT say "each step returns default" — that is implicit and adds no information.
 
-## 5. How to Regenerate as SPL
+### 6. How to Regenerate as SPL
 ```
-# Step 1 — generate SPL from this spec (Section 0 above as text2spl input)
-spl3 text2spl --description "<paste Section 0 here>" --mode workflow
+# Step 1 — generate SPL from this spec (Section 1 above as text2spl input)
+spl3 text2spl --description "<paste Section 1 here>" --mode workflow
 
 # Step 2 — compile to any target
 spl3 splc compile <output.spl> --lang python/pocketflow
@@ -860,7 +866,59 @@ spl3 splc compile <output.spl> --lang go
 Write the specification now.
 """
 
-# File extensions we recognise as target implementations
+_DESCRIBE_TEXT_PROMPT = """\
+You are a precise and concise technical writer.
+
+Your task is to read the following text and produce a well-structured summary and analysis.
+
+Structure your output as Markdown with these sections IN ORDER:
+
+## Summary
+2-3 sentences of plain English capturing the core message, argument, or finding.
+Readable by a non-technical audience. No jargon unless essential.
+
+## Key Points
+Bullet list of 3-7 most important ideas, facts, or conclusions from the text.
+
+## Details
+A more thorough analysis covering:
+- Main themes or topics
+- Supporting evidence or methodology (if applicable)
+- Any notable structure, framing, or rhetorical choices
+- Gaps, limitations, or open questions (if applicable)
+
+## One-line Takeaway
+A single sentence someone could tweet.
+
+Text to analyse:
+```
+{source}
+```
+
+Write the summary and analysis now.
+"""
+
+# File extensions we recognise as source code (use code prompt)
+_CODE_EXTENSIONS = {
+    ".py":   "Python",
+    ".ts":   "TypeScript",
+    ".go":   "Go",
+    ".js":   "JavaScript",
+    ".spl":  "SPL",
+    ".mmd":  "Mermaid",
+    ".cpp":  "C++",
+    ".c":    "C",
+    ".java": "Java",
+    ".rs":   "Rust",
+    ".rb":   "Ruby",
+    ".cs":   "C#",
+    ".kt":   "Kotlin",
+    ".swift": "Swift",
+    ".sql":  "SQL",
+    ".sh":   "Shell",
+}
+
+# File extensions we recognise as target implementations (for splc describe CLI)
 _IMPL_EXTENSIONS = {
     ".py":  "Python",
     ".ts":  "TypeScript",
@@ -881,7 +939,8 @@ def _lang_label_from_path(path: Path) -> str:
     if "autogen" in name:
         return "Python — AutoGen"
     ext = path.suffix.lower()
-    return _IMPL_EXTENSIONS.get(ext, "Unknown")
+    # Prefer broader _CODE_EXTENSIONS so .spl, .mmd, .rs, etc. get proper labels
+    return _CODE_EXTENSIONS.get(ext, _IMPL_EXTENSIONS.get(ext, "Unknown"))
 
 
 @splc.command(name="describe", context_settings={"help_option_names": ["-h", "--help"]})
@@ -936,34 +995,38 @@ def _lang_label_from_path(path: Path) -> str:
     help="Display the LLM prompt and exit.",
 )
 def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, prompt_debug: bool) -> None:
-    """Describe a compiled target implementation as a -spec.md file.
+    """Describe any source file or folder as a structured spec / summary.
 
     \b
-    IMPL_PATH can be:
-      - a single implementation file (e.g. self_refine_python_pocketflow.py)
+    SOURCE can be:
+      - a single file: .spl, .mmd, .py, .ts, .go, .js, .cpp, .java, .rs, and more
       - a directory — all recognised source files are gathered and described together
+      - code files  → functional spec (Summary + Detailed Specification)
+      - other files → structured summary (Summary + Key Points + …)
 
     \b
     The generated spec feeds into the reverse pipeline:
-      text2spl (Section 0 → .spl) → splc compile → any target
+      text2spl (Section 1 → .spl) → splc compile → any target
 
     \b
     Examples:
+      spl3 splc describe cookbook/05_self_refine/self_refine.spl
       spl3 splc describe targets/python_pocketflow/self_refine_python_pocketflow.py
       spl3 splc describe targets/python_pocketflow/  --lang "Python — PocketFlow"
       spl3 splc describe langgraph/self_refine_langgraph.py --adapter claude_cli
+      spl3 splc describe paper.pdf --spec-dir spec/
     """
     import asyncio
 
     if impl_path.is_dir():
         impl_files = sorted(
             f for f in impl_path.iterdir()
-            if f.suffix.lower() in _IMPL_EXTENSIONS and not f.name.startswith(".")
+            if f.suffix.lower() in _CODE_EXTENSIONS and not f.name.startswith(".")
         )
         if not impl_files:
             raise click.ClickException(
-                f"No recognised implementation files found in {impl_path}. "
-                f"Expected extensions: {', '.join(_IMPL_EXTENSIONS)}"
+                f"No recognised source files found in {impl_path}. "
+                f"Expected extensions: {', '.join(_CODE_EXTENSIONS)}"
             )
         parts = []
         if include_docs:
@@ -1002,10 +1065,15 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
         spec_parent = impl_path.parent
         click.echo(f"Generating splc spec for {impl_path.name} ({detected_label}) ...")
 
-    prompt = _SPLC_DESCRIBE_PROMPT.format(
-        lang_label=detected_label,
-        source=source,
+    # Route to code spec or general text summary based on file extension
+    is_code = (
+        impl_path.is_dir()
+        or impl_path.suffix.lower() in _CODE_EXTENSIONS
     )
+    if is_code:
+        prompt = _SPLC_DESCRIBE_PROMPT.format(lang_label=detected_label, source=source)
+    else:
+        prompt = _DESCRIBE_TEXT_PROMPT.format(source=source)
 
     if prompt_debug:
         click.echo("=" * 70)

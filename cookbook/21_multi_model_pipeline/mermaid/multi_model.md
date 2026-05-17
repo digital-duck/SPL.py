@@ -1,0 +1,112 @@
+# Multi Model Workflow
+
+Generated from `multi_model.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_multi_model_pipeline["WORKFLOW: multi_model_pipeline"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Multi-model pipeli...'"]
+    GEN3[/"GENERATE research(@topic) -> @facts"/]
+    LOG2 --> GEN3
+    LOG4>"LOG(DEBUG) 'Research complete'"]
+    GEN3 --> LOG4
+    SUB5[["CALL write_file(f'(@log_d..., @facts)"]]
+    LOG4 --> SUB5
+    GEN6[/"GENERATE analyze(@facts) -> @analysis"/]
+    SUB5 --> GEN6
+    LOG7>"LOG(DEBUG) 'Analysis complete'"]
+    GEN6 --> LOG7
+    SUB8[["CALL write_file(f'(@log_d..., @analysis)"]]
+    LOG7 --> SUB8
+    GEN9[/"GENERATE write_summary(@analysis) -> @draft"/]
+    SUB8 --> GEN9
+    LOG10>"LOG(INFO) 'Initial draft ready'"]
+    GEN9 --> LOG10
+    SUB11[["CALL write_file(f'(@log_d..., @draft)"]]
+    LOG10 --> SUB11
+    A12["@iteration := 0"]
+    SUB11 --> A12
+    A13["@quality := 0"]
+    A12 --> A13
+    WHILE14{"WHILE: @iteration < @max_iterations"}
+    LOG15>"LOG(DEBUG) f'Quality check | it...'"]
+    GEN16[/"GENERATE quality_check(@draft) -> @quality"/]
+    LOG15 --> GEN16
+    LOG17>"LOG(DEBUG) f'Quality score: (@q...'"]
+    GEN16 --> LOG17
+    EVAL18{"EVALUATE: @quality"}
+    LOG20>"LOG(INFO) f'Quality threshold ...'"]
+    SUB21[["CALL write_file(f'(@log_d..., @draft)"]]
+    LOG20 --> SUB21
+    RET22(["RETURN @draft (status='high..., score=@quality)"])
+    SUB21 --> RET22
+    EVAL18 -->|"WHEN > 0.7"| LOG20
+    GEN23[/"GENERATE write_summary(@analysis) -> @draft"/]
+    A24["@iteration := @iteration + 1"]
+    GEN23 --> A24
+    SUB25[["CALL write_file(f'(@log_d..., @draft)"]]
+    A24 --> SUB25
+    EVAL18 -->|"ELSE"| GEN23
+    SUB25 --> MERGE19
+    MERGE19[" "]
+    LOG17 --> EVAL18
+    WHILE14 -->|"True"| LOG15
+    MERGE19 -.-> WHILE14
+    A13 --> WHILE14
+    LOG26>"LOG(WARN) f'Max iterations rea...'"]
+    WHILE14 --> LOG26
+    SUB27[["CALL write_file(f'(@log_d..., @draft)"]]
+    LOG26 --> SUB27
+    RET28(["RETURN @draft (status='max_..., score=@quality)"])
+    SUB27 --> RET28
+    START1 --> LOG2
+    EXC29{"EXCEPTION MaxIterationsReached"}
+    RET30(["RETURN @draft (status='part...)"])
+    EXC29 --> RET30
+    EXC31{"EXCEPTION ModelOverloaded"}
+    RET32(["RETURN @draft (status='mode...)"])
+    EXC31 --> RET32
+    end
+    class START1 term
+    class LOG2 log
+    class GEN3 llm
+    class LOG4 log
+    class SUB5 proc
+    class GEN6 llm
+    class LOG7 log
+    class SUB8 proc
+    class GEN9 llm
+    class LOG10 log
+    class SUB11 proc
+    class A12 assign
+    class A13 assign
+    class WHILE14 ctrl
+    class LOG15 log
+    class GEN16 llm
+    class LOG17 log
+    class EVAL18 ctrl
+    class LOG20 log
+    class SUB21 proc
+    class RET22 term
+    class GEN23 llm
+    class A24 assign
+    class SUB25 proc
+    class LOG26 log
+    class SUB27 proc
+    class RET28 term
+    class EXC29 ctrl
+    class RET30 term
+    class EXC31 ctrl
+    class RET32 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

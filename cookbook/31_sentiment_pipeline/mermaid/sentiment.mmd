@@ -1,0 +1,72 @@
+flowchart TD
+    subgraph SG_sentiment_pipeline["WORKFLOW: sentiment_pipeline"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Sentiment pipeline...'"]
+    SUB3[["CALL load_items(@filename) -> @file_content"]]
+    LOG2 --> SUB3
+    SUB4[["CALL split_items(@file_con..., @items, ...) -> @item_list"]]
+    SUB3 --> SUB4
+    LOG5>"LOG(DEBUG) f'Items loaded and s...'"]
+    SUB4 --> LOG5
+    LOG6>"LOG(INFO) 'Running batch sentim...'"]
+    LOG5 --> LOG6
+    GEN7[/"GENERATE batch_sentiment(@item_list, sentiment..., ...) -> @sentiment_results"/]
+    LOG6 --> GEN7
+    SUB8[["CALL compute_stats(@sentimen...) -> @stats_json"]]
+    GEN7 --> SUB8
+    LOG9>"LOG(DEBUG) f'Stats computed: (@...'"]
+    SUB8 --> LOG9
+    SUB10[["CALL find_extremes(@sentimen...) -> @extremes"]]
+    LOG9 --> SUB10
+    GEN11[/"GENERATE summarize_sentiment_trends(@stats_json, @extremes, ...) -> @trend_summary"/]
+    SUB10 --> GEN11
+    LOG12>"LOG(DEBUG) 'Trend narrative read...'"]
+    GEN11 --> LOG12
+    GEN13[/"GENERATE assemble_sentiment_report(@sentimen..., @stats_json, ...) -> @report"/]
+    LOG12 --> GEN13
+    LOG14>"LOG(INFO) f'Sentiment report c...'"]
+    GEN13 --> LOG14
+    RET15(["RETURN @report (status='comp..., domain=@domain)"])
+    LOG14 --> RET15
+    START1 --> LOG2
+    EXC16{"EXCEPTION ContextLengthExceeded"}
+    SUB17[["CALL compute_stats(@sentimen...) -> @stats_json"]]
+    SUB18[["CALL find_extremes(@sentimen...) -> @extremes"]]
+    SUB17 --> SUB18
+    GEN19[/"GENERATE summarize_sentiment_trends(@stats_json, @extremes, ...) -> @trend_summary"/]
+    SUB18 --> GEN19
+    A20["@report := @trend_summary"]
+    GEN19 --> A20
+    RET21(["RETURN @report (status='stat..., reason='cont...)"])
+    A20 --> RET21
+    EXC16 --> SUB17
+    end
+    class START1 term
+    class LOG2 log
+    class SUB3 proc
+    class SUB4 proc
+    class LOG5 log
+    class LOG6 log
+    class GEN7 llm
+    class SUB8 proc
+    class LOG9 log
+    class SUB10 proc
+    class GEN11 llm
+    class LOG12 log
+    class GEN13 llm
+    class LOG14 log
+    class RET15 term
+    class EXC16 ctrl
+    class SUB17 proc
+    class SUB18 proc
+    class GEN19 llm
+    class A20 assign
+    class RET21 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
