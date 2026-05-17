@@ -2441,7 +2441,12 @@ MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
    IMPORTANT: Do NOT write CALL or GENERATE before branch names inside CALL PARALLEL.
    IMPORTANT: Separate branches with commas, not semicolons. No semicolon on the last branch.
 8. Looping: Use WHILE <condition> DO ... END;
-   IMPORTANT: <condition> should include loop protection "@iteration < 3" to prevent infinite loops.
+   IMPORTANT: Never hardcode an iteration limit as a literal number (e.g. NEVER write "@iteration < 3").
+   Always declare @max_iterations as a WORKFLOW INPUT with a sensible default, then reference it:
+     INPUT @max_iterations INTEGER := 3
+     ...
+     WHILE @iteration < @max_iterations DO ... END;
+   This keeps the limit configurable without editing the workflow.
    IMPORTANT: Use = (single equals) for comparisons, NOT == (double equals). SPL has no == operator.
 9. Helper functions: Define CREATE FUNCTION <name>(<params>) RETURNS <type> AS $$ <prompt> $$; at the top of the file.
    Note: Function parameters in CREATE FUNCTION do NOT use @ prefix.
