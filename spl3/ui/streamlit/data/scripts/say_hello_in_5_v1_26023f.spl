@@ -1,3 +1,0 @@
-PROMPT hello_world_languages
-SELECT 'English, Mandarin Chinese, Hindi, Spanish, French' AS languages
-GENERATE answer('Say hello in each of the following languages: ' || languages) WITH OUTPUT BUDGET 200 TOKENS;
