@@ -6,6 +6,7 @@ CLAUDE.md
 # **/logs/
 **/out/
 go_git.log
+graphify-out/
 
 README.html
 
