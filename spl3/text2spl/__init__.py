@@ -133,6 +133,10 @@ TEXT, NUMBER, BOOLEAN, LIST, JSON
    Use WHILE for loop termination:   WHILE @iteration < @max_iterations DO ... END;
    Use EVALUATE inside the loop for branching on LLM output content.
    Never put comparison operators (>=, <=, !=) inside EVALUATE WHEN clauses.
+   NEVER hardcode the iteration limit as a literal number (e.g. NEVER write "WHILE @iteration < 3 DO").
+   Always declare @max_iterations as a WORKFLOW INPUT with a default, e.g.:
+     INPUT @max_iterations INTEGER := 3
+   This keeps the limit configurable without editing the workflow.
 
 4. RETURN can carry metadata using WITH:
    RETURN @result WITH status = 'complete', iterations = @iteration

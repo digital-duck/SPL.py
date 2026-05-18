@@ -60,6 +60,23 @@ def _load_catalog(catalog_path: Path) -> list[dict]:
     return data["recipes"]
 
 
+def _expand_ids(ids: list[str]) -> set[str]:
+    """Expand tokens like '33-66' into zero-padded IDs; plain tokens pass through."""
+    result: set[str] = set()
+    for token in ids:
+        if "-" in token:
+            parts = token.split("-", 1)
+            try:
+                lo, hi = int(parts[0]), int(parts[1])
+                width = max(len(parts[0]), len(parts[1]))
+                result.update(str(n).zfill(width) for n in range(lo, hi + 1))
+                continue
+            except ValueError:
+                pass
+        result.add(token)
+    return result
+
+
 def _filter_recipes(recipes: list[dict], ids: list[str] | None) -> list[dict]:
     if not ids:
         return [
@@ -67,7 +84,7 @@ def _filter_recipes(recipes: list[dict], ids: list[str] | None) -> list[dict]:
             if r.get("approval_status") in ("approved", "new")
             and r.get("args", [""])[0] == "spl3"
         ]
-    id_set = {i.strip() for i in ids}
+    id_set = _expand_ids(ids)
     return [r for r in recipes if r["id"] in id_set]
 
 
@@ -91,7 +108,7 @@ def _spec_exists(spec_dir: Path, spl_stem: str, adapter: str, model: str | None)
 @click.option(
     "--ids",
     default=None,
-    help="Comma-separated recipe IDs (e.g. '05,09,16'). Omit to use --all.",
+    help="Comma-separated recipe IDs or ranges (e.g. '05,09,16' or '33-66'). Omit to use --all.",
 )
 @click.option(
     "--all", "run_all",
