@@ -131,6 +131,30 @@ converting to SPL with `mmd2spl`.
 spl3 text2mmd "user onboarding workflow with approval gates"
 ```
 
+### File input and section extraction
+
+When the argument is a file path, `text2mmd` pre-processes the content before
+sending it to the LLM:
+
+1. **Named sections** — if `## Summary` and/or `### 1. Purpose` exist, only those
+   sections are used as the prompt. The rest of the file is ignored.
+2. **Numbered sections** — if `## 0. ...` / `## 1. ...` headings exist (e.g. from
+   `splc describe`), sections 0 and 1 are extracted.
+3. **Fallback** — if neither convention is found, the LLM is asked to produce a
+   concise 3–6 sentence workflow description from the full file, and that summary
+   becomes the prompt.
+
+This keeps the Mermaid prompt focused on intent rather than implementation detail,
+and avoids context-window overload from large spec files.
+
+```bash
+# File input: only ## Summary and ### 1. Purpose sent to LLM
+spl3 text2mmd S1-agent-spec.md --adapter claude_cli -o S2-agent.mmd
+
+# Preview what will be sent to the LLM (--prompt exits before any API call)
+spl3 text2mmd S1-agent-spec.md --adapter claude_cli --prompt
+```
+
 ---
 
 ## 8. spl3 img2mmd
@@ -572,14 +596,32 @@ outputs to a folder so `spl3 splc describe` can process them as a unit in step S
 spl3 vibe "<description>" [OPTIONS]
 # or
 spl3 vibe --description <TEXT_OR_FILE> [OPTIONS]
+# or (spec-driven mode)
+spl3 vibe --spec <SPEC_FILE> [OPTIONS]
 ```
+
+### Input modes
+
+`vibe` supports two mutually exclusive input modes that differ in how the spec is
+consumed before being sent to the LLM:
+
+| Mode | Option | Behaviour |
+|------|--------|-----------|
+| **Description** | positional / `--description` | Free text or file. If a file, extracts `## Summary` / `### 1. Purpose` sections (or numbered sections 0–1, or LLM-summarizes as fallback). Prompt header: `# Requirement to Implement`. |
+| **Spec-driven** | `--spec SPEC_FILE` | Full spec file used verbatim — no section filtering, no summarization. The complete document is the authoritative requirement. Prompt header: `# Functional Specification`. |
+
+Use `--description` for rapid prototyping from a short description or when you want
+the LLM to focus on the high-level intent. Use `--spec` when you have a complete
+reverse-engineered spec (e.g. `S1-*-spec.md` from `splc describe`) and want the LLM
+to implement every detail — this is the NeurIPS S7 ablation mode.
 
 ### Options
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `DESCRIPTION` | (required) | Natural language requirement or path to a `.md` spec file |
+| `DESCRIPTION` | — | Natural language requirement or path to a `.md` spec file |
 | `--description / -d` | — | Same as positional arg; takes precedence if both given |
+| `--spec` | — | Full spec file (e.g. `S1-spec.md`). Mutually exclusive with `--description`. |
 | `--target / -t` | `python/pocketflow` | Target language/framework |
 | `--adapter` | `ollama` | LLM adapter |
 | `--model / -m` | adapter default | Model override |
@@ -599,19 +641,23 @@ spl3 vibe --description <TEXT_OR_FILE> [OPTIONS]
 spl3 vibe "ReAct research agent" \
   --out-dir ./out --adapter ollama -m gemma3
 
-# From a spec file, via openrouter (multi-model comparison)
+# From a spec file via --description (extracts Summary/Purpose sections)
 spl3 vibe --description S1-agent-spec.md \
   --out-dir ./out/qwen --adapter openrouter -m qwen/qwen3.6-plus
 spl3 vibe --description S1-agent-spec.md \
   --out-dir ./out/gemini --adapter openrouter -m google/gemini-3-flash-preview
+
+# Spec-driven (NeurIPS S7 ablation): full spec → code, no .mmd or .spl IR
+spl3 vibe --spec S1-agent-spec.md \
+  --out-dir ./out/vibe --adapter claude_cli --model claude-sonnet-4-6
 
 # Different target framework
 spl3 vibe "RAG pipeline with re-ranking" \
   --target python/langgraph \
   --out-dir ./out --adapter claude_cli
 
-# Preview prompt without calling the LLM
-spl3 vibe "judge agent" --adapter claude_cli --prompt
+# Preview the assembled prompt without calling the LLM
+spl3 vibe --spec S1-agent-spec.md --adapter claude_cli --prompt
 ```
 
 ### Output files
@@ -764,8 +810,9 @@ spl3 compare $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
   -o $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md
 
 # S7 — vibe-coded baseline  *** HUMAN CHECKPOINT: run generated code ***
+# --spec uses the full S1 spec verbatim (no section filtering) — same input as IR pipeline
 mkdir -p $OUT/vibe/python_pocketflow
-spl3 vibe --description $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
+spl3 vibe --spec $OUT/S1-$RECIPE-$ADAPTER-$MODEL-1-spec.md \
   --target python/pocketflow --adapter $ADAPTER --model $MODEL_ID \
   --out-dir $OUT/vibe/python_pocketflow
 
@@ -832,7 +879,8 @@ spl3 validate <file.spl> [file.spl ...]
 spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
-spl3 text2mmd "<description>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
+spl3 text2mmd "<description>|<file.md>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
+              # file input: extracts ## Summary / ### 1. Purpose sections, or LLM-summarizes
 spl3 img2mmd <image_path> [--adapter] [--model] [-o FILE] [--out-dir DIR]
 spl3 img2text <image_path> [--adapter] [--model] [-o FILE] [--out-dir DIR]
 spl3 spl2mmd <file.spl> [file.spl ...]
@@ -856,6 +904,10 @@ spl3 compare <f1> <f2>
 spl3 vibe "<description>" [--target LANG] [--adapter] [--model]
           [--out-dir DIR] [-o FILE]
           [--rag/--no-rag] [--rag-k N] [--references URL] [--verbose] [--prompt]
+# or spec-driven (full spec, no section filtering — NeurIPS S7 ablation mode):
+spl3 vibe --spec <SPEC_FILE> [--target LANG] [--adapter] [--model]
+          [--out-dir DIR] [-o FILE]
+          [--rag/--no-rag] [--rag-k N] [--verbose] [--prompt]
 
 spl3 splc compile <file.spl> --lang <target> [--llm] [--adapter] [--rag-k N]
                   [--references URL] [--out-dir DIR] [--overwrite] [--prompt]

@@ -1212,6 +1212,11 @@ def _save_mmd_formats(
 # spl3 text2mmd                                                       #
 # ------------------------------------------------------------------ #
 
+def _extract_mmd_sections(text: str, llm, model) -> str:
+    """Delegate to _extract_spec_intro for consistent section extraction across commands."""
+    return _extract_spec_intro(text, llm=llm, model=model)
+
+
 @main.command("text2mmd")
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
@@ -1297,14 +1302,15 @@ def cmd_text2mmd(description, description_opt, adapter, model, style, output, va
     if not raw:
         raise click.ClickException("DESCRIPTION is required (positional arg or --description)")
 
-    # Check if it's a file path
-    if Path(raw).exists():
-        desc_text = Path(raw).read_text(encoding="utf-8")
-    else:
-        desc_text = raw
-
     # Generate Mermaid diagram
     llm = get_adapter(adapter, **({"model": model} if model else {}))
+
+    # Check if it's a file path
+    if Path(raw).exists():
+        full_text = Path(raw).read_text(encoding="utf-8")
+        desc_text = _extract_mmd_sections(full_text, llm, model)
+    else:
+        desc_text = raw
 
     prompt = f"""Create a valid Mermaid {style} diagram from this workflow description.
 
@@ -2201,27 +2207,71 @@ def cmd_explain(spl_file):
         raise click.ClickException(str(exc)) from exc
 
 
-def _extract_spec_intro(text: str, max_fallback: int = 1000) -> str:
-    """Extract sections 0 and 1 from a splc-describe spec file.
+def _extract_spec_intro(text: str, llm=None, model=None) -> str:
+    """Extract the workflow-relevant intro from a spec file.
 
-    Sections are headings like '## 0. Title' or '## 1. Title'.
-    Returns sections 0+1 when found; falls back to first max_fallback chars.
+    Tries two naming conventions in order:
+      1. Named sections: '## Summary' and/or '### 1. Purpose'
+      2. Numbered sections: '## 0. ...' through end of '## 1. ...'
+    If neither is found, falls back to LLM summarization (when llm is
+    provided) or the first 1000 chars (when no llm is available).
     """
     import re
-    # Locate section 0 heading (any # level, number 0 followed by . or space)
+
+    def _extract_block(pattern: str, src: str) -> str | None:
+        """Return the heading block matching pattern up to the next same-or-higher heading."""
+        lines = src.splitlines(keepends=True)
+        heading_re = re.compile(pattern, re.IGNORECASE)
+        level = len(re.match(r"^(#+)", pattern.lstrip("^")).group(1))
+        stop_re = re.compile(r"^#{1," + str(level) + r"}\s", re.MULTILINE)
+        start = None
+        for i, line in enumerate(lines):
+            if heading_re.match(line.rstrip()):
+                start = i
+                break
+        if start is None:
+            return None
+        for i, line in enumerate(lines[start + 1:], start + 1):
+            if stop_re.match(line):
+                return "".join(lines[start:i]).strip()
+        return "".join(lines[start:]).strip()
+
+    # Convention 1: named sections (## Summary, ### 1. Purpose)
+    named_patterns = [r"^##\s+Summary\b", r"^###\s+1\.\s+Purpose\b"]
+    named_blocks = [b for p in named_patterns if (b := _extract_block(p, text))]
+    if named_blocks:
+        return "\n\n".join(named_blocks)
+
+    # Convention 2: numbered sections (## 0. ... ## 1. ...)
     sec0 = re.search(r'^#{1,6}\s+0[.\s]', text, re.MULTILINE)
-    if not sec0:
-        return text[:max_fallback].strip()
-    # Locate section 2 heading — that marks the end of what we need
-    sec2 = re.search(r'^#{1,6}\s+2[.\s]', text, re.MULTILINE)
-    end = sec2.start() if sec2 else len(text)
-    return text[sec0.start():end].strip()
+    if sec0:
+        sec2 = re.search(r'^#{1,6}\s+2[.\s]', text, re.MULTILINE)
+        end = sec2.start() if sec2 else len(text)
+        return text[sec0.start():end].strip()
+
+    # Fallback: LLM summarization or first 1000 chars
+    if llm is not None:
+        import asyncio as _asyncio
+        summary_prompt = (
+            "Read the following document and write a concise (3–6 sentence) "
+            "workflow description suitable for code generation. "
+            "Focus on the steps, decisions, and data flow. Output ONLY the description.\n\n"
+            f"{text}"
+        )
+        result = _asyncio.run(llm.generate(summary_prompt, **({"model": model} if model else {})))
+        return result if isinstance(result, str) else getattr(result, "content", str(result))
+
+    return text[:1000].strip()
 
 
 @main.command("vibe")
 @click.argument("description", default=None, required=False, metavar="DESCRIPTION")
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language requirement or file path (overrides positional arg).")
+@click.option("--spec", "spec_file", default=None, metavar="SPEC_FILE",
+              help="Reverse-engineered spec file (e.g. S1-spec.md). Uses the full spec as the "
+                   "authoritative requirement — bypasses Mermaid and SPL IR steps. "
+                   "Mutually exclusive with --description / positional arg.")
 @click.option("--target", "-t", "lang", default="python/pocketflow", show_default=True,
               help="Target language/framework (e.g. go, ts, python/langgraph).")
 @click.option("--adapter", default="ollama", show_default=True,
@@ -2244,7 +2294,7 @@ def _extract_spec_intro(text: str, max_fallback: int = 1000) -> str:
               help="Print progress and token counts.")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
-def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
+def cmd_vibe(description, description_opt, spec_file, lang, adapter, model, output, out_dir, use_rag, rag_k, references, no_readme, verbose, prompt_debug):
     """One-shot prototype generator: NL description → working code + README + test data.
 
     Generates a complete, runnable implementation directly from a natural language
@@ -2253,11 +2303,13 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
     ollama (local) or openrouter (400+ cloud models).
 
     \b
-    Use cases:
-      • Rapid prototyping — get a working skeleton in seconds
-      • Multi-model comparison — run the same spec through claude, qwen, gemini
-      • Ablation baseline — compare against the full IR pipeline (S1→S6) to
-        quantify the value of the Mermaid + SPL intermediate representations
+    Input modes (mutually exclusive):
+      positional / --description   Free-form NL or file; extracts Summary/Purpose
+                                   sections if present, otherwise summarizes.
+      --spec SPEC_FILE             Full spec file (e.g. S1-spec.md from splc describe).
+                                   Uses the complete content as the authoritative
+                                   requirement — no section filtering. Intended for
+                                   the NeurIPS S7 ablation step (bypass .mmd + .spl IR).
 
     \b
     Output (folder mode --out-dir):
@@ -2274,15 +2326,12 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
       spl3 vibe --description spec.md --out-dir ./out \\
         --adapter openrouter -m qwen/qwen3.6-plus
 
-      # Local model via ollama
-      spl3 vibe "self-refine writing agent" --out-dir ./out \\
-        --adapter ollama -m gemma3
-
-      # Single-file mode (legacy)
-      spl3 vibe "rag pipeline" -o out.py --adapter claude_cli
+      # Spec-driven (ablation S7): full spec → code, bypassing .mmd and .spl IR
+      spl3 vibe --spec S1-agent-spec.md --out-dir ./out \\
+        --adapter claude_cli --model claude-sonnet-4-6
 
       # Preview prompt before sending
-      spl3 vibe --description spec.md --adapter openrouter -m qwen/qwen3.6-plus --prompt
+      spl3 vibe --spec S1-spec.md --adapter claude_cli --prompt
     """
     from pathlib import Path
     from spl3.splc.cli import (
@@ -2296,21 +2345,39 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
 
     lang_meta = SUPPORTED_LANGS[lang]
 
-    # --description option takes precedence over positional arg
-    raw = description_opt or description
-    if not raw:
-        raise click.UsageError(
-            "Provide a description as a positional argument or via --description."
-        )
+    # ── Resolve input ─────────────────────────────────────────────────────────
+    # --spec: full spec file, used as-is (spec-driven coding, NeurIPS S7 ablation)
+    # --description / positional: free text or file with section extraction
+    if spec_file and (description_opt or description):
+        raise click.UsageError("--spec is mutually exclusive with --description / positional arg.")
 
-    # If it looks like a file path, read it and extract the relevant intro
-    candidate = Path(raw)
-    if candidate.exists() and candidate.is_file():
-        raw_desc = _extract_spec_intro(candidate.read_text(encoding="utf-8"))
+    if spec_file:
+        spec_path = Path(spec_file)
+        if not spec_path.exists() or not spec_path.is_file():
+            raise click.UsageError(f"--spec file not found: {spec_file}")
+        raw_desc = spec_path.read_text(encoding="utf-8")
+        prompt_label = "Functional Specification"
         if verbose:
-            click.echo(f"  Spec extracted: {len(raw_desc)} chars (sections 0+1 or first 1000)")
+            click.echo(f"  Spec-driven mode: {spec_path.name} ({len(raw_desc)} chars) — full content used, no IR steps")
     else:
-        raw_desc = raw
+        raw = description_opt or description
+        if not raw:
+            raise click.UsageError(
+                "Provide a description as a positional argument, --description, or --spec."
+            )
+        candidate = Path(raw)
+        if candidate.exists() and candidate.is_file():
+            try:
+                from spl3.adapters import get_adapter as _get_adapter
+                _llm = _get_adapter(adapter, **({"model": model} if model else {}))
+            except Exception:
+                _llm = None
+            raw_desc = _extract_spec_intro(candidate.read_text(encoding="utf-8"), llm=_llm, model=model)
+            if verbose:
+                click.echo(f"  Spec extracted: {len(raw_desc)} chars (Summary/Purpose sections, numbered sections, or LLM summary)")
+        else:
+            raw_desc = raw
+        prompt_label = "Requirement to Implement"
 
     # ── Fetch references ──────────────────────────────────────────────────────
     ref_context = _fetch_references(references, verbose=verbose)
@@ -2338,7 +2405,7 @@ def cmd_vibe(description, description_opt, lang, adapter, model, output, out_dir
         prompt_parts.append(ref_context)
 
     prompt_parts.append(
-        f"# Requirement to Implement\n\n"
+        f"# {prompt_label}\n\n"
         f"{raw_desc}\n\n"
         f"Generate the {lang_meta['label']} code now."
     )
