@@ -109,6 +109,13 @@ SPL30_ROOT    = Path(__file__).resolve().parents[2]   # spl/splc/cli.py → SPL3
 RAG_STORE_DIR = SPL30_ROOT / "spl" / "rag" / ".chroma"
 
 
+def _make_out_stem(alias: str, input_stem: str) -> str:
+    """Return a timestamped stem: <alias>-<input_stem>-<YYYYMMDD_HHMMSS>."""
+    from datetime import datetime
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{alias}-{input_stem}-{ts}"
+
+
 # ── CLI group ─────────────────────────────────────────────────────────────────
 
 @click.group(name="splc", context_settings={"help_option_names": ["-h", "--help"]})
@@ -970,7 +977,8 @@ def _lang_label_from_path(path: Path) -> str:
     help="Model override for the adapter.",
 )
 @click.option(
-    "--spec-dir",
+    "--out-dir",
+    "spec_dir",
     default=None,
     type=click.Path(file_okay=False, writable=True, path_type=Path),
     help="Output directory for the spec file (default: same directory as IMPL_PATH).",
@@ -1014,7 +1022,7 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
       spl3 splc describe targets/python_pocketflow/self_refine_python_pocketflow.py
       spl3 splc describe targets/python_pocketflow/  --lang "Python — PocketFlow"
       spl3 splc describe langgraph/self_refine_langgraph.py --adapter claude_cli
-      spl3 splc describe paper.pdf --spec-dir spec/
+      spl3 splc describe paper.pdf --out-dir spec/
     """
     import asyncio
 
@@ -1105,7 +1113,7 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
         spec_path = output_path
     elif spec_dir:
         spec_dir.mkdir(parents=True, exist_ok=True)
-        spec_path = spec_dir / spec_filename
+        spec_path = spec_dir / (_make_out_stem("spl2spec", stem) + "-spec.md")
     else:
         spec_path = spec_parent / spec_filename
 

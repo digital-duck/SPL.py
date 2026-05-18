@@ -21,6 +21,12 @@ _log = logging.getLogger("spl.cli")
 _SPL_LOG_DIR = Path.home() / ".spl" / "logs"
 
 
+def _make_out_stem(alias: str, input_stem: str) -> str:
+    """Return a timestamped stem: <alias>-<input_stem>-<YYYYMMDD_HHMMSS>."""
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return f"{alias}-{input_stem}-{ts}"
+
+
 # ---------------------------------------------------------------------------
 # Run-log helpers (parity with spl-go / spl-ts)
 # ---------------------------------------------------------------------------
@@ -585,7 +591,7 @@ def code_rag_query(query_text, storage_dir, top_k):
 @click.option("--adapter", default="ollama", show_default=True,
               help="LLM adapter used to generate each spec.")
 @click.option("--model", default=None, metavar="MODEL")
-@click.option("--spec-dir", default=None, metavar="DIR",
+@click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
               help="Write all spec files to DIR instead of alongside each .spl file.")
 @click.option("--catalog", default=None,
               help="Restrict to active recipes listed in cookbook_catalog.json.")
@@ -1625,7 +1631,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
 
         output_dir = Path(out_dir).resolve() if out_dir else path.parent / "mermaid"
         output_dir.mkdir(parents=True, exist_ok=True)
-        base_name = path.stem
+        base_name = _make_out_stem("spl2mmd", path.stem) if out_dir else path.stem
 
         # ── .mmd ──────────────────────────────────────────────────────────
         mmd_path = output_dir / (base_name + ".mmd")
@@ -1871,7 +1877,9 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
 @main.command("mmd2spl")
 @click.argument("mermaid_file")
 @click.option("--output", "-o", default=None, metavar="FILE",
-              help="Write generated SPL to FILE.")
+              help="Write generated SPL to FILE (overrides --out-dir).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory; file named mmd2spl-<stem>-<datetime>.spl.")
 @click.option("--adapter", default=None, metavar="NAME",
               help="LLM adapter to use for generation (e.g. claude_cli, ollama).")
 @click.option("--model", "-m", default=None, metavar="MODEL",
@@ -1887,7 +1895,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
               help="Display the LLM prompt and exit.")
 @click.option("--timeout", default=600, show_default=True, metavar="SECONDS",
               help="LLM call timeout in seconds.")
-def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, pattern_hints, prompt_debug, timeout):
+def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, template, pattern_hints, prompt_debug, timeout):
     """Generate SPL workflow from Mermaid flowchart diagram.
 
     Converts a Mermaid flowchart into executable SPL code, mapping visual
@@ -2115,12 +2123,19 @@ def cmd_mmd2spl(mermaid_file, output, adapter, model, validate, template, patter
     # Output
     if output:
         out_path = Path(output)
+    elif out_dir:
+        d = Path(out_dir).expanduser()
+        d.mkdir(parents=True, exist_ok=True)
+        stem = Path(mermaid_file).stem
+        out_path = d / (_make_out_stem("mmd2spl", stem) + ".spl")
+    else:
+        out_path = None
+
+    if out_path:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(spl_code, encoding="utf-8")
-        click.echo(f"SPL code written to: {output}")
-
-        # Also generate .mmd file for reference
-        mmd_output = out_path.with_suffix('.mmd')
+        click.echo(f"SPL code written to: {out_path}")
+        mmd_output = out_path.with_suffix(".mmd")
         mmd_output.write_text(mermaid_content, encoding="utf-8")
         click.echo(f"Mermaid reference saved to: {mmd_output}")
     else:
@@ -2635,7 +2650,7 @@ Write the specification now.
               help="LLM adapter to use for generation.")
 @click.option("--model", default=None, metavar="MODEL",
               help="Model override for the adapter.")
-@click.option("--spec-dir", default=None, metavar="DIR",
+@click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
               help="Directory to write the spec file (default: same dir as input).")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the LLM prompt and exit.")
@@ -2653,7 +2668,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
     Examples:
       spl3 describe cookbook/05_self_refine/self_refine.spl
       spl3 describe cookbook/63_parallel_code_review/
-      spl3 describe my_workflow.spl --adapter claude_cli --spec-dir docs/specs
+      spl3 describe my_workflow.spl --adapter claude_cli --out-dir docs/specs
     """
     path = Path(spl_path)
     if not path.exists():
@@ -2703,7 +2718,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
     if spec_dir:
         out_dir = Path(spec_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
-        spec_path = out_dir / spec_filename
+        spec_path = out_dir / (_make_out_stem("spl2spec", stem) + "-spec.md")
     else:
         spec_path = spec_parent / spec_filename
 
@@ -2902,13 +2917,14 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
     stem_vs = f"{s1}_vs_{s2}-{'+'.join(active_modes)}"
 
     if out_dir:
-        out_path = dest_dir / f"{stem_vs}.{_FMT_EXT.get(output_format, 'md')}"
+        out_stem = _make_out_stem("compare", f"{s1}-vs-{s2}")
+        out_path = dest_dir / f"{out_stem}.{_FMT_EXT.get(output_format, 'md')}"
         out_path.write_text(output_content, encoding="utf-8")
         click.echo(f"Comparison report written to: {out_path}")
         # Always write the HTML comparison report regardless of --format
         if output_format != "html":
             html_report = render_report(result_obj, "html", panel_pngs=panel_pngs)
-            html_path = dest_dir / f"{stem_vs}.html"
+            html_path = dest_dir / f"{out_stem}.html"
             html_path.write_text(html_report, encoding="utf-8")
             click.echo(f"Comparison report written to: {html_path}")
     elif output:
