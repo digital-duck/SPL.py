@@ -295,9 +295,13 @@ class SPL3Executor(SPL2Executor):
             current_gen = current_gen.next_segment
 
         if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
-            state.set_var(stmt.target_variable, last_content)
-            _log.info("GENERATE chain done -> @%s (%d chars total)",
-                      stmt.target_variable, len(last_content))
+            if last_content:
+                state.set_var(stmt.target_variable, last_content)
+                _log.info("GENERATE chain done -> @%s (%d chars total)",
+                          stmt.target_variable, len(last_content))
+            else:
+                _log.warning("GENERATE chain returned empty content for @%s — variable unchanged",
+                             stmt.target_variable)
         else:
             _log.info("GENERATE chain done -> [DISCARDED] (%d chars)", len(last_content))
 
