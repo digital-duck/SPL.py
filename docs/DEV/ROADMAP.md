@@ -281,15 +281,15 @@ All checks are static AST passes — no LLM involved.
 
 ## 5. Developer Experience
 
-### 5.1 VS Code extension — SPL syntax highlighting + validate-on-save
+### ✅ 5.1 VS Code extension — SPL syntax highlighting + validate-on-save
 
-A `vscode-spl` extension providing:
-- `.spl` syntax highlighting (keywords, string literals, `@variables`, `-- comments`)
-- `spl3 validate` on save with inline error squiggles
-- Hover docs for SPL keywords
-
-The grammar is simple enough for a TextMate grammar file. No language server needed
-for v1.
+The `spl-llm` VS Code extension (`SPL-LLM/spl-llm/`) provides:
+- `.spl` syntax highlighting via TextMate grammar (keywords, `@variables`, `$$...$$` prompt bodies, f-strings, `-- comments`)
+- `spl3 validate` on save with inline error squiggles (severity: ERROR / WARNING)
+- Hover docs for all SPL 3.0 keywords (WORKFLOW, IMPORT, GENERATE, CALL PARALLEL, COMMIT, EVALUATE, WHILE, EXCEPTION, …)
+- Two commands: **SPL: Validate Current File** and **SPL: Validate Current File (with semantic checks)**
+- Settings: `spl-llm.validateOnSave`, `spl-llm.semanticValidation`, `spl-llm.spl3Path`
+- Packaged as `spl-llm-0.0.4.vsix` — install with `code --install-extension spl-llm-0.0.4.vsix`
 
 ---
 
@@ -357,7 +357,7 @@ target. This strengthens the DODA claim empirically.
 
 ---
 
-### 7.2 Migration pipeline tooling
+### ✅ 7.2 Migration pipeline tooling
 
 Currently, porting an existing codebase to a new runtime requires manually chaining:
 `splc describe` → `text2mmd` → `mmd2spl` → `splc compile`. A dedicated
@@ -607,25 +607,12 @@ Live monitoring catches this before users report it.
 
 ## 14. AI Workflow Version Control (Semantic git diff)
 
-### 14.1 `spl3 diff` — intent-aware diff between workflow versions
+### ~~14.1 `spl3 diff`~~ [Descoped]
 
-`git diff my-agent.spl` shows textual changes. `spl3 diff` shows *semantic* changes:
-
-```bash
-spl3 diff v1.0/my-agent.spl v1.1/my-agent.spl
-```
-
-Output:
-```
-+ Added: EXCEPTION handler for @llm_call
-~ Changed: LOOP condition (max_iter: 3 → 5)
-~ Renamed: @draft_output → @refined_output
-  Intent drift ΔS: 0.04  (low — structural refactor, semantic preserved)
-```
-
-**Why:** In a team setting, reviewing a PR to a `.spl` file today requires understanding
-SPL syntax. An intent-aware diff summarizes *what changed in the workflow's behavior*,
-not just what bytes changed — making SPL PRs reviewable by non-experts.
+`spl3 compare file1.spl file2.spl` already covers this — it runs character-level
+(`--mode git-diff`), semantic (`--mode llm`), syntactic (`--mode ast-diff`), and
+structural tiers, then synthesizes a verdict (EQUIVALENT / REFACTORED / DEGRADED /
+DIVERGED). A dedicated `spl3 diff` command would add no distinct value.
 
 ---
 
@@ -638,23 +625,8 @@ not just what bytes changed — making SPL PRs reviewable by non-experts.
 | — | `compare --format html` | Reporting | — | — | ✅ Done |
 | — | `text2mmd` / `vibe` file preprocessing | Pipeline | — | — | ✅ Done |
 | — | `vibe --spec` (spec-driven) | Pipeline | — | — | ✅ Done |
-| 8.1 | DBOS execution backend (`--target python/dbos`) | Reliability | High | Very High | **Priority 1** |
-| 8.3 | Momagrid persistent task queues | Reliability | Medium | Very High | **Priority 1** |
-| 9 | `spl3 migrate` verified migration service | DODA | Medium | Very High | **Priority 2** |
-| 10.1 | SPL Standard Library | Standardization | Medium | Very High | **Priority 3** |
 | 1.1 | `spl3 experiment run` | Automation | — | — | ✅ Done |
-| 8.2 | Time-travel debugging via DBOS | Reliability | Medium | High | Planned |
-| 10.2 | SPL Registry | Standardization | High | High | Planned |
-| 11.1 | Policy-gated CI/CD deployment | Governance | Medium | High | Planned |
-| 11.2 | Audit trail / lineage manifest | Governance | Low | High | Planned |
-| 13.1 | Live intent monitoring (operational ΔS) | Reliability | High | High | Planned |
-| 14.1 | `spl3 diff` semantic workflow diff | DX | Medium | High | Planned |
 | 1.2 | `spl3 experiment report` | Automation | — | — | ✅ Done |
-| 4.3 | SPL `IMPORT` statement | Language | — | — | ✅ Done |
-| 4.4 | Semantic linting in `validate` | Quality | — | — | ✅ Done |
-| 7.1 | Cross-runtime round-trip tests | DODA | Low | High | Planned |
-| 7.2 | `spl3 migrate` pipeline command | DODA | Medium | High | Planned |
-| 12.1 | Federated experiment sharing | Research | High | Medium | Planned |
 | 1.3 | `compare --batch` | Automation | Low | Medium | Planned |
 | 2.1 | `spl3 pipeline` | Pipeline | High | Medium | Planned |
 | 2.2 | Streaming LLM output | DX | Low | Medium | Planned |
@@ -662,9 +634,24 @@ not just what bytes changed — making SPL PRs reviewable by non-experts.
 | 3.2 | Composite Δ*S* score | Metrics | Low | Medium | Planned |
 | 3.3 | Structured JSON diff taxonomy | Metrics | Medium | Medium | Planned |
 | 4.1 | Deterministic crewai/autogen | Compiler | High | Medium | Planned |
+| 4.2 | swift/snap/edge targets | Compiler | High | Low | Planned |
+| 4.3 | SPL `IMPORT` statement | Language | — | — | ✅ Done |
+| 4.4 | Semantic linting in `validate` | Quality | — | — | ✅ Done |
+| 5.1 | VS Code extension | DX | — | — | ✅ Done |
+| ~~5.2~~ | ~~`spl3 serve`~~ | DX | — | — | **Descoped** (VibeSCOPE FastAPI covers this) |
 | 5.3 | `vibe` provenance manifest | Quality | Low | Medium | Planned |
 | 6.1 | Golden-file regression tests | Testing | Medium | Medium | Planned |
+| 7.1 | Cross-runtime round-trip tests | DODA | Low | High | Planned |
+| 7.2 | `spl3 migrate` pipeline command | DODA | Medium | High | ✅ Done |
 | 7.3 | Multi-judge evaluation | Research | Medium | Medium | Planned |
-| 5.1 | VS Code extension | DX | High | Medium | Planned |
-| ~~5.2~~ | ~~`spl3 serve`~~ | DX | — | — | **Descoped** (VibeSCOPE FastAPI covers this) |
-| 4.2 | swift/snap/edge targets | Compiler | High | Low | Planned |
+| 8.1 | DBOS execution backend (`--target python/dbos`) | Reliability | High | Very High | **Priority 1** |
+| 8.2 | Time-travel debugging via DBOS | Reliability | Medium | High | Planned |
+| 8.3 | Momagrid persistent task queues | Reliability | Medium | Very High | **Priority 1** |
+| 9 | `spl3 migrate` verified migration service | DODA | Medium | Very High | **Priority 2** |
+| 10.1 | SPL Standard Library | Standardization | Medium | Very High | **Priority 3** |
+| 10.2 | SPL Registry | Standardization | High | High | Planned |
+| 11.1 | Policy-gated CI/CD deployment | Governance | Medium | High | Planned |
+| 11.2 | Audit trail / lineage manifest | Governance | Low | High | Planned |
+| 12.1 | Federated experiment sharing | Research | High | Medium | Planned |
+| 13.1 | Live intent monitoring (operational ΔS) | Reliability | High | High | Planned |
+| ~~14.1~~ | ~~`spl3 diff`~~ | DX | — | — | **Descoped** (`spl3 compare` covers this) |

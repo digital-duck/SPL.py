@@ -110,6 +110,328 @@ def main(ctx, hub, verbose):
     ctx.obj["hub"] = hub
 
 
+@main.command("help")
+@click.pass_context
+def cmd_help(ctx):
+    """Show this help message and exit."""
+    click.echo(ctx.parent.get_help())
+
+
+# ------------------------------------------------------------------ #
+# spl3 configure                                                      #
+# ------------------------------------------------------------------ #
+
+_SPL_CONFIG_FILE = Path.home() / ".spl" / "config"
+
+# Named config sources.  "vibescope" path is discovered at runtime.
+_CONFIG_SOURCES = {
+    "spl":       _SPL_CONFIG_FILE,
+}
+
+# Candidate locations for the VibeSCOPE project .env, tried in order.
+_VIBESCOPE_CANDIDATES = [
+    Path.home() / "projects" / "digital-duck" / "vibescope" / ".env",
+    Path.home() / "vibescope" / ".env",
+    Path.home() / ".vibescope" / ".env",
+]
+
+
+def _resolve_source(name_or_path: str) -> Path:
+    """Resolve a source name ('spl', 'vibescope') or a literal path to a Path."""
+    if name_or_path == "spl":
+        return _SPL_CONFIG_FILE
+    if name_or_path == "vibescope":
+        # Check VIBESCOPE_PROJECT_DIR env var or configured key first
+        env_dir = (
+            import_os().environ.get("VIBESCOPE_PROJECT_DIR")
+            or _config_read_file(_SPL_CONFIG_FILE).get("VIBESCOPE_PROJECT_DIR")
+        )
+        if env_dir:
+            p = Path(env_dir).expanduser() / ".env"
+            if p.exists():
+                return p
+        for candidate in _VIBESCOPE_CANDIDATES:
+            if candidate.exists():
+                return candidate
+        raise click.ClickException(
+            "Cannot find VibeSCOPE .env file.\n"
+            "Set VIBESCOPE_PROJECT_DIR in ~/.spl/config or as an env var, "
+            "or pass the path directly: spl3 configure export --source path/to/.env"
+        )
+    # Treat as a literal file path
+    p = Path(name_or_path).expanduser()
+    if not p.exists():
+        raise click.ClickException(f"Config file not found: {p}")
+    return p
+
+
+def import_os():
+    import os
+    return os
+
+
+def _dotenv_parse(text: str) -> dict[str, str]:
+    """Parse a .env / KEY=VALUE file, skipping comments and blank lines.
+    Strips inline comments (# ...) and optional surrounding quotes from values.
+    """
+    result: dict[str, str] = {}
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k = k.strip()
+        # Strip inline comment
+        if " #" in v:
+            v = v[: v.index(" #")]
+        v = v.strip().strip('"').strip("'")
+        if k:
+            result[k] = v
+    return result
+
+
+def _config_read_file(path: Path) -> dict[str, str]:
+    """Read a KEY=VALUE config file. Returns {} if the file doesn't exist."""
+    if not path.exists():
+        return {}
+    return _dotenv_parse(path.read_text(encoding="utf-8"))
+
+
+def _config_read() -> dict[str, str]:
+    """Read ~/.spl/config."""
+    return _config_read_file(_SPL_CONFIG_FILE)
+
+
+def _config_write_file(path: Path, data: dict[str, str]) -> None:
+    """Upsert key=value pairs into path, preserving comments and key order."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    remaining = dict(data)  # keys yet to be written
+    lines: list[str] = []
+    if path.exists():
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            stripped = raw.strip()
+            if stripped and not stripped.startswith("#") and "=" in stripped:
+                k = stripped.partition("=")[0].strip()
+                if k in remaining:
+                    lines.append(f"{k}={remaining.pop(k)}")
+                    continue
+            lines.append(raw)
+    # Append keys not already present in the file
+    for k, v in remaining.items():
+        lines.append(f"{k}={v}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _config_write(data: dict[str, str]) -> None:
+    """Write to the default SPL config file."""
+    _config_write_file(_SPL_CONFIG_FILE, data)
+
+
+def _dotenv_format(data: dict[str, str], header: str = "") -> str:
+    """Render a dict as .env-format text."""
+    lines = []
+    if header:
+        lines.append(header)
+        lines.append("")
+    for k, v in data.items():
+        lines.append(f"{k}={v}")
+    return "\n".join(lines) + "\n"
+
+
+@main.group("configure", short_help="Read and write persistent SPL configuration.")
+def cmd_configure():
+    """Read and write persistent SPL configuration stored in ~/.spl/config.
+
+    \b
+    Named config sources:
+      spl        ~/.spl/config          (SPL runtime defaults, adapter keys)
+      vibescope  <project>/.env         (VibeSCOPE server and UI settings)
+      <path>     any explicit file path
+
+    The VibeSCOPE .env is auto-discovered from VIBESCOPE_PROJECT_DIR or
+    common locations. Override by setting VIBESCOPE_PROJECT_DIR in ~/.spl/config.
+    """
+
+
+@cmd_configure.command("set")
+@click.argument("pairs", nargs=-1, required=True, metavar="KEY=VALUE [KEY=VALUE ...]")
+@click.option("--dest", default="spl", metavar="SOURCE",
+              help="Config destination: spl (default), vibescope, or a file path.")
+def cmd_configure_set(pairs, dest):
+    """Set one or more configuration values.
+
+    Accepts KEY=VALUE pairs as separate arguments or comma-separated in a
+    single argument:
+
+    \b
+      spl3 configure set SPL_DEFAULT_ADAPTER=claude_cli
+      spl3 configure set SPL_DEFAULT_ADAPTER=ollama SPL_DEFAULT_MODEL=gemma3
+      spl3 configure set SPL_DEFAULT_ADAPTER=openrouter,SPL_DEFAULT_MODEL=qwen/qwen3-235b-a22b
+      spl3 configure set VIBESCOPE_LOG_LEVEL=DEBUG --dest vibescope
+    """
+    updates: dict[str, str] = {}
+    for token in pairs:
+        for item in token.split(","):
+            item = item.strip()
+            if not item:
+                continue
+            if "=" not in item:
+                raise click.BadParameter(
+                    f"Expected KEY=VALUE, got: {item!r}", param_hint="pairs"
+                )
+            k, _, v = item.partition("=")
+            k, v = k.strip(), v.strip()
+            if not k:
+                raise click.BadParameter(
+                    f"Empty key in: {item!r}", param_hint="pairs"
+                )
+            updates[k] = v
+
+    target = _resolve_source(dest) if dest != "spl" else _SPL_CONFIG_FILE
+    _config_write_file(target, dict(updates))
+
+    for k, v in updates.items():
+        click.echo(f"  set  {k}={v}")
+    click.echo(f"\nSaved to {target}")
+
+
+@cmd_configure.command("get")
+@click.argument("keys", nargs=-1, metavar="[KEY [KEY ...]]")
+@click.option("--source", default="spl", metavar="SOURCE",
+              help="Config source: spl (default), vibescope, or a file path.")
+def cmd_configure_get(keys, source):
+    """Show configuration values.
+
+    With no arguments, prints all keys in a table.
+    With one or more KEY names, prints only those keys.
+
+    \b
+      spl3 configure get
+      spl3 configure get SPL_DEFAULT_ADAPTER
+      spl3 configure get SPL_DEFAULT_ADAPTER SPL_DEFAULT_MODEL
+      spl3 configure get --source vibescope
+      spl3 configure get VIBESCOPE_LOG_LEVEL --source vibescope
+    """
+    src_path = _resolve_source(source) if source != "spl" else _SPL_CONFIG_FILE
+    data = _config_read_file(src_path)
+
+    if not data:
+        click.echo(f"No configuration found in {src_path}")
+        return
+
+    if keys:
+        requested: dict[str, str] = {}
+        for k in keys:
+            for k2 in k.split(","):
+                k2 = k2.strip()
+                if k2:
+                    requested[k2] = data.get(k2, "(not set)")
+        data = requested
+
+    col_w = max(len(k) for k in data) + 2
+    click.echo(f"\n  {'KEY'.ljust(col_w)}  VALUE")
+    click.echo(f"  {'-' * col_w}  -----")
+    for k, v in data.items():
+        click.echo(f"  {k.ljust(col_w)}  {v}")
+    click.echo(f"\n  Source: {src_path}")
+
+
+@cmd_configure.command("export")
+@click.option("--source", default="spl", metavar="SOURCE",
+              help="Config source: spl (default), vibescope, or a file path.")
+@click.option("-o", "--output", default=None, metavar="FILE",
+              help="Write to FILE instead of stdout.")
+@click.option("--keys", default=None, metavar="KEY[,KEY...]",
+              help="Export only these comma-separated keys.")
+def cmd_configure_export(source, output, keys):
+    """Export configuration as a .env file.
+
+    Reads from the named source and writes valid KEY=VALUE lines that can be
+    sourced by a shell or consumed by dotenv-aware tools.
+
+    \b
+      spl3 configure export                         # SPL config → stdout
+      spl3 configure export -o backup.env           # SPL config → file
+      spl3 configure export --source vibescope      # VibeSCOPE .env → stdout
+      spl3 configure export --source vibescope -o combined.env
+      spl3 configure export --keys SPL_DEFAULT_ADAPTER,SPL_DEFAULT_MODEL
+    """
+    src_path = _resolve_source(source) if source != "spl" else _SPL_CONFIG_FILE
+    data = _config_read_file(src_path)
+
+    if not data:
+        raise click.ClickException(f"No configuration found in {src_path}")
+
+    if keys:
+        wanted = {k.strip() for k in keys.split(",") if k.strip()}
+        data = {k: v for k, v in data.items() if k in wanted}
+
+    header = f"# Exported from {src_path}"
+    text = _dotenv_format(data, header=header)
+
+    if output:
+        out_path = Path(output).expanduser()
+        out_path.write_text(text, encoding="utf-8")
+        click.echo(f"Exported {len(data)} key(s) → {out_path}")
+    else:
+        click.echo(text, nl=False)
+
+
+@cmd_configure.command("import")
+@click.argument("file", metavar="FILE")
+@click.option("--dest", default="spl", metavar="SOURCE",
+              help="Config destination: spl (default), vibescope, or a file path.")
+@click.option("--keys", default=None, metavar="KEY[,KEY...]",
+              help="Import only these comma-separated keys.")
+@click.option("--dry-run", is_flag=True,
+              help="Show what would be written without modifying any file.")
+def cmd_configure_import(file, dest, keys, dry_run):
+    """Import configuration from a .env file.
+
+    Reads KEY=VALUE pairs from FILE (comments and blank lines are ignored)
+    and merges them into the destination config, preserving existing keys
+    and comments.
+
+    \b
+      spl3 configure import backup.env
+      spl3 configure import .env.example --dest vibescope
+      spl3 configure import combined.env --keys SPL_DEFAULT_ADAPTER,OPENROUTER_API_KEY
+      spl3 configure import production.env --dry-run
+    """
+    src = Path(file).expanduser()
+    if not src.exists():
+        raise click.ClickException(f"File not found: {src}")
+
+    data = _config_read_file(src)
+    if not data:
+        raise click.ClickException(f"No KEY=VALUE pairs found in {src}")
+
+    if keys:
+        wanted = {k.strip() for k in keys.split(",") if k.strip()}
+        data = {k: v for k, v in data.items() if k in wanted}
+
+    if not data:
+        raise click.ClickException("No matching keys to import.")
+
+    dest_path = _resolve_source(dest) if dest != "spl" else _SPL_CONFIG_FILE
+
+    col_w = max(len(k) for k in data) + 2
+    tag = "  (dry-run)" if dry_run else ""
+    click.echo(f"\n  Importing {len(data)} key(s) from {src} → {dest_path}{tag}\n")
+    click.echo(f"  {'KEY'.ljust(col_w)}  VALUE")
+    click.echo(f"  {'-' * col_w}  -----")
+    for k, v in data.items():
+        click.echo(f"  {k.ljust(col_w)}  {v}")
+
+    if not dry_run:
+        _config_write_file(dest_path, data)
+        click.echo(f"\n  Saved to {dest_path}")
+    else:
+        click.echo("\n  (dry-run: no files written)")
+
+
 # ------------------------------------------------------------------ #
 # spl run                                                             #
 # ------------------------------------------------------------------ #
@@ -134,7 +456,7 @@ def main(ctx, hub, verbose):
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
-    """Run an orchestrator .spl workflow with workflow composition."""
+    """Execute an .spl file."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
     from spl3._loader import load_workflows_from_file
@@ -518,7 +840,7 @@ async def _run_tests(spl_files, adapter_name, model, verbose):
 
 @main.group("code-rag")
 def cmd_code_rag():
-    """Manage the Code-RAG index for Text2SPL."""
+    """Manage the Code-RAG index (used by text2spl and text2mmd)."""
 
 
 @cmd_code_rag.command("seed")
@@ -701,7 +1023,7 @@ def code_rag_stats(storage_dir):
 # spl3 text2spl                                                       #
 # ------------------------------------------------------------------ #
 
-@main.command("text2spl")
+@main.command("text2spl", short_help="Compile workflow description in natural language into SPL code.")
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language description, a file path, or a -spec.md file "
@@ -1223,7 +1545,7 @@ def _extract_mmd_sections(text: str, llm, model) -> str:
     return _extract_spec_intro(text, llm=llm, model=model)
 
 
-@main.command("text2mmd")
+@main.command("text2mmd", short_help="Generate a Mermaid flowchart from natural language.")
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language workflow description or file path.")
@@ -1473,7 +1795,7 @@ def _resolve_output_path(
     return None
 
 
-@main.command("img2mmd")
+@main.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
 @click.argument("image_path")
 @click.option("--adapter", default="openrouter", show_default=True,
               help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
@@ -1512,7 +1834,7 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
         raise click.ClickException(str(e))
 
 
-@main.command("img2text")
+@main.command("img2text", short_help="Extract text and pseudo-code from an image.")
 @click.argument("image_path")
 @click.option("--adapter", default="openrouter", show_default=True,
               help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
@@ -1555,7 +1877,7 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 # spl3 spl2mmd                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("spl2mmd")
+@main.command("spl2mmd", short_help="Generate a Mermaid flowchart for each .spl file.")
 @click.argument("spl_files", nargs=-1, required=True, metavar="SPL_FILE...")
 @click.option("--out-dir", default=None, metavar="DIR",
               help="Output directory for all generated files (default: mermaid/ subdir of each input's parent).")
@@ -1577,7 +1899,7 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 @click.option("--remove-function-nodes/--keep-function-nodes", default=False, show_default=True,
               help="Strip FUNCTION definition nodes from the diagram (post-processor).")
 def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg, save_png, save_pdf, save_spl, remove_function_nodes):
-    """Generate a Mermaid flowchart for each SPL_FILE (AST-direct, no LLM).
+    """Generate a Mermaid flowchart for each .spl file (AST-direct, no LLM).
 
     Each .spl file is parsed and its workflow/procedure AST nodes are converted
     to a standalone Mermaid flowchart.  Multi-file projects (workflows that CALL
@@ -2164,7 +2486,7 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 @click.option("--strict", is_flag=True, default=False,
               help="Exit non-zero if any WARN-level issues are found (default: only ERRORs count)")
 def cmd_validate(spl_files, semantic, strict):
-    """Validate SPL syntax and semantics of one or more SPL_FILES.
+    """Validate SPL syntax and semantics of one or more .spl files.
 
     \b
     Syntax checks (always):
@@ -2235,7 +2557,7 @@ def cmd_validate(spl_files, semantic, strict):
 @main.command("explain")
 @click.argument("spl_file")
 def cmd_explain(spl_file):
-    """Show execution plan for SPL_FILE (no LLM call)."""
+    """Show execution plan for an .spl file (no LLM call)."""
     from pathlib import Path
     from spl.lexer import Lexer
     from spl.analyzer import Analyzer
@@ -2316,7 +2638,7 @@ def _extract_spec_intro(text: str, llm=None, model=None) -> str:
     return text[:1000].strip()
 
 
-@main.command("vibe")
+@main.command("vibe", short_help="One-shot: NL description → working code + README.")
 @click.argument("description", default=None, required=False, metavar="DESCRIPTION")
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language requirement or file path (overrides positional arg).")
@@ -2681,7 +3003,7 @@ Write the specification now.
 """
 
 
-@main.command("describe")
+@main.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
 @click.argument("spl_path")
 @click.option("--adapter", default="ollama", show_default=True,
               help="LLM adapter to use for generation.")
@@ -2767,7 +3089,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 # spl3 compare                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("compare")
+@main.command("compare", short_help="Multi-tier file diff with verdict synthesis.")
 @click.argument("file1")
 @click.argument("file2")
 @click.option("--mode", "modes", multiple=True, metavar="MODE",
@@ -3135,7 +3457,7 @@ main.add_command(_splc_command, name="splc")
 # spl3 experiment                                                      #
 # ------------------------------------------------------------------ #
 
-@main.group("experiment")
+@main.group("experiment", short_help="Batch runner and reporting for ablation studies.")
 def cmd_experiment():
     """Batch experiment runner and reporting for NeurIPS-style ablation studies."""
 
@@ -3549,7 +3871,7 @@ def cmd_experiment_report(base_dir, steps, output_format, output):
 # spl3 migrate                                                         #
 # ------------------------------------------------------------------ #
 
-@main.command("migrate")
+@main.command("migrate", short_help="Migrate a codebase to a new runtime via the DODA pipeline.")
 @click.argument("source", metavar="SOURCE")
 @click.option("--target", "-t", required=True,
               type=click.Choice(["python/pocketflow", "python/langgraph", "python/crewai",

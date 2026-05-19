@@ -828,7 +828,76 @@ spl3 experiment report --steps S6
 
 ---
 
-## 18. Full Pipeline S1–S10: IR + Ablation
+## 18. spl3 migrate — DODA Migration Pipeline `[To-Test]`
+
+`spl3 migrate` automates the full pipeline for porting an existing codebase into SPL
+and re-compiling to a new target runtime. It wraps four steps into a single command
+with human checkpoints at the two IR stages (`.mmd` and `.spl`).
+
+**Primary use case:** migrate PocketFlow cookbook recipes into SPL IR so they can run
+on any supported runtime (LangGraph, Go, TypeScript, etc.).
+
+```bash
+spl3 migrate ./cookbook/05_self_refine/ \
+  --target python/langgraph \
+  --name self_refine \
+  --adapter claude_cli
+```
+
+### Steps executed
+
+| Step | Command | Output | Checkpoint? |
+|------|---------|--------|-------------|
+| 1 | `splc describe <source>` | `<name>-spec.md` | — |
+| 2 | `spl3 text2mmd <name>-spec.md` | `<name>.mmd` | ✅ Review Mermaid |
+| 3 | `spl3 mmd2spl <name>.mmd` + `spl3 validate` | `<name>.spl` | ✅ Review SPL IR |
+| 4 | `splc compile <name>.spl --target <target>` | `out/<name>/<target>/` | — |
+
+Optional fidelity compare (skip with `--skip-compare`):
+```bash
+splc describe out/<name>/<target>/   # → spec2.md
+spl3 compare <name>-spec.md spec2.md --mode llm
+```
+
+### Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--target` | required | Target runtime (`python/pocketflow`, `python/langgraph`, `go`, `ts`, …) |
+| `--adapter` | `claude_cli` | LLM adapter for text2mmd and mmd2spl |
+| `--model` | adapter default | Model override |
+| `--judge-adapter` | `claude_cli` | Adapter for fidelity compare synthesis |
+| `--judge-model` | `claude-opus-4-6` | Model for synthesis |
+| `--out-dir` | `./migrate-out` | Root output directory |
+| `--name` | source basename | Name prefix for all artifacts |
+| `--no-rag` | off | Disable Code-RAG context injection |
+| `--skip-compare` | off | Skip fidelity compare step |
+| `--auto` | off | Skip human checkpoints (CI/batch mode) |
+| `--dry-run` | off | Print commands without executing |
+
+### Checkpoints
+
+By default the pipeline pauses at two points for human review:
+
+1. **After Mermaid generation** — inspect the `.mmd` flow diagram; edit if needed before generating SPL IR.
+2. **After SPL IR generation** — inspect the `.spl` file and `spl3 validate` output; edit if needed before compilation.
+
+Use `--auto` to skip both checkpoints for automated pipelines. Use `--dry-run` to print all commands without running anything.
+
+### Example: dry run
+
+```bash
+spl3 migrate cookbook/05_self_refine/ \
+  --target python/langgraph \
+  --name self_refine \
+  --dry-run
+```
+
+Output shows all 4 steps + fidelity compare commands with artifact paths, so you can verify the plan before execution.
+
+---
+
+## 19. Full Pipeline S1–S10: IR + Ablation
 
 The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
 (S7–S10) to measure whether the Mermaid + SPL intermediate representations add
@@ -981,7 +1050,7 @@ spl3 compare $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
 
 ---
 
-## 18. Debugging LLM Prompts
+## 19. Debugging LLM Prompts
 
 All LLM-powered commands support the `--prompt` flag. It prints the full assembled
 prompt — including RAG hits and reference context — then exits without calling the API.
@@ -1004,7 +1073,7 @@ The output includes prompt length in characters and approximate token count.
 
 ---
 
-## 19. Command reference
+## 20. Command reference
 
 ```
 spl3 validate <file.spl> [file.spl ...]        # syntax check
@@ -1069,4 +1138,18 @@ spl3 experiment report                              # leaderboard from completed
               [--steps S6,S9,S10]
               [--format markdown|csv|json]
               [-o FILE]
+
+# DODA migration pipeline  [To-Test]
+spl3 migrate <source>
+              --target <runtime>                        # required: python/langgraph, go, ts, …
+              [--adapter claude_cli]
+              [--model MODEL]
+              [--judge-adapter claude_cli]
+              [--judge-model claude-opus-4-6]
+              [--out-dir ./migrate-out]
+              [--name NAME]                             # default: source basename
+              [--no-rag]                                # disable Code-RAG
+              [--skip-compare]                         # skip fidelity compare
+              [--auto]                                  # skip human checkpoints
+              [--dry-run]                               # print commands only
 ```

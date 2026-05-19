@@ -118,7 +118,8 @@ def _make_out_stem(alias: str, input_stem: str) -> str:
 
 # ── CLI group ─────────────────────────────────────────────────────────────────
 
-@click.group(name="splc", context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(name="splc", context_settings={"help_option_names": ["-h", "--help"]},
+             short_help="Compile .spl logical views into physical implementations.")
 def splc():
     """splc — SPL Compiler: translate .spl logical views into physical implementations.
 
