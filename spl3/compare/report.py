@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Optional
 
-from spl3.compare.types import ComparisonResult, GEDResult, BERTScoreResult
+from spl3.compare.types import ComparisonResult, GEDResult, BERTScoreResult, RougeResult
 
 _TIER_TITLES = {
     "ged":          "Tier 1 – Topological (GED)",
@@ -18,6 +18,7 @@ _TIER_TITLES = {
     "git-diff":     "Tier 5 – Character-level (git-diff)",
     "vector":       "Tier 6 – Embedding (vector)",
     "bert-score":   "Tier 6 – Embedding (BERTScore)",
+    "rouge":        "Tier 6 – N-gram Overlap (ROUGE)",
     "llm_fallback": "LLM Fallback",
 }
 
@@ -60,7 +61,7 @@ def render_report(
 
 
 def _serialize(obj):
-    if isinstance(obj, (GEDResult, BERTScoreResult)):
+    if isinstance(obj, (GEDResult, BERTScoreResult, RougeResult)):
         return obj.__dict__
     if hasattr(obj, "__dict__"):
         return obj.__dict__
@@ -129,6 +130,15 @@ def _render_markdown(res: ComparisonResult) -> str:
                 f"- Precision: {val.precision:.4f}",
                 f"- Recall:    {val.recall:.4f}",
                 f"- **F1:      {val.f1:.4f}**",
+            ]
+
+        elif isinstance(val, RougeResult):
+            section += [
+                f"| Metric   | Precision | Recall | **F1** |",
+                f"|----------|-----------|--------|--------|",
+                f"| ROUGE-1  | {val.rouge1_precision:.4f} | {val.rouge1_recall:.4f} | **{val.rouge1_f1:.4f}** |",
+                f"| ROUGE-2  | {val.rouge2_precision:.4f} | {val.rouge2_recall:.4f} | **{val.rouge2_f1:.4f}** |",
+                f"| ROUGE-L  | {val.rougeL_precision:.4f} | {val.rougeL_recall:.4f} | **{val.rougeL_f1:.4f}** |",
             ]
 
         elif mode == "git-diff" and isinstance(val, str):

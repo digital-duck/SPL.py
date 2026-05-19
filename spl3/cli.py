@@ -2159,19 +2159,36 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 
 @main.command("validate")
 @click.argument("spl_files", nargs=-1, required=True)
-def cmd_validate(spl_files):
-    """Validate SPL syntax of one or more SPL_FILES.
+@click.option("--semantic/--no-semantic", default=True, show_default=True,
+              help="Run semantic lint checks (undefined vars, unreachable code, WHILE exits, CALL targets)")
+@click.option("--strict", is_flag=True, default=False,
+              help="Exit non-zero if any WARN-level issues are found (default: only ERRORs count)")
+def cmd_validate(spl_files, semantic, strict):
+    """Validate SPL syntax and semantics of one or more SPL_FILES.
 
     \b
+    Syntax checks (always):
+      - Lexer + parser — catches malformed tokens, unclosed blocks, unknown keywords
+
+    Semantic checks (--semantic, on by default):
+      - Undefined variable  @x used before GENERATE/CALL/assignment defines it
+      - Unreachable code    statements after RETURN inside a workflow
+      - Potential infinite  WHILE loop with no RETURN inside body and no max_iterations
+      - Undefined CALL      procedure not in CREATE FUNCTION declarations or stdlib
+
     Examples:
       spl3 validate workflow.spl
-      spl3 validate tests/claude_cli/sonnet/*.spl
+      spl3 validate tests/claude_cli/sonnet/*.spl --strict
+      spl3 validate workflow.spl --no-semantic
     """
     from pathlib import Path
     from spl.lexer import Lexer
     from spl3.parser import SPL3Parser
+    from spl3.linter import lint_program
 
     errors = 0
+    warnings = 0
+
     for spl_file in spl_files:
         path = Path(spl_file)
         if not path.exists():
@@ -2181,14 +2198,34 @@ def cmd_validate(spl_files):
         source = path.read_text(encoding="utf-8")
         try:
             tokens = Lexer(source).tokenize()
-            SPL3Parser(tokens).parse()
-            click.echo(f"OK: {path}")
+            program = SPL3Parser(tokens).parse()
         except Exception as exc:
-            click.echo(f"FAILED: {path} — {exc}", err=True)
+            click.echo(f"SYNTAX ERROR: {path} — {exc}", err=True)
             errors += 1
+            continue
 
-    if errors:
-        raise SystemExit(errors)
+        # Semantic lint pass
+        file_warns = 0
+        if semantic:
+            try:
+                issues = lint_program(program)
+                for issue in issues:
+                    click.echo(f"  {issue}  ({path})", err=(issue.level == "ERROR"))
+                    if issue.level == "ERROR":
+                        errors += 1
+                    else:
+                        file_warns += 1
+                        warnings += 1
+            except Exception as exc:
+                click.echo(f"  LINT ERROR: {path} — {exc}", err=True)
+
+        if file_warns == 0 and errors == 0:
+            click.echo(f"OK: {path}")
+        elif file_warns > 0:
+            click.echo(f"OK (with {file_warns} warning(s)): {path}")
+
+    if errors or (strict and warnings):
+        raise SystemExit(errors or 1)
 
 
 # ------------------------------------------------------------------ #
@@ -2736,7 +2773,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 @click.option("--mode", "modes", multiple=True, metavar="MODE",
               help=(
                   "Comparison tier(s). Repeatable, or comma-separated: --mode llm,git-diff. "
-                  "Choices: llm, git-diff, vector, bert-score, ged, vision, ast-diff, structural. "
+                  "Choices: llm, git-diff, vector, bert-score, ged, vision, ast-diff, structural, rouge. "
                   "Auto-detected from file extension when omitted: "
                   ".mmd/.json→ged  .md/.spl→llm  .py/.js/.ts→git-diff  .png/.jpg→vision"
               ))
@@ -2826,7 +2863,7 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
         ".svg":  ["llm"],
         ".txt":  ["git-diff"],
     }
-    _VALID_MODES = {"llm", "git-diff", "vector", "bert-score", "ged", "vision", "ast-diff", "structural"}
+    _VALID_MODES = {"llm", "git-diff", "vector", "bert-score", "ged", "vision", "ast-diff", "structural", "rouge"}
     # Flatten comma-separated values: --mode llm,git-diff is equivalent to --mode llm --mode git-diff
     active_modes = [m.strip() for raw in modes for m in raw.split(",") if m.strip()]
     invalid = [m for m in active_modes if m not in _VALID_MODES]
@@ -3092,6 +3129,627 @@ def cmd_show(adapter, model, tool):
 
 from spl3.splc.cli import splc as _splc_command
 main.add_command(_splc_command, name="splc")
+
+
+# ------------------------------------------------------------------ #
+# spl3 experiment                                                      #
+# ------------------------------------------------------------------ #
+
+@main.group("experiment")
+def cmd_experiment():
+    """Batch experiment runner and reporting for NeurIPS-style ablation studies."""
+
+
+# ── Helpers shared by run + report ────────────────────────────────────────────
+
+def _exp_auto_alias(model: str) -> str:
+    m = model.split(":")[0].split("/")[-1]
+    parts = m.split("-")
+    if parts[0] == "claude" and len(parts) > 1:
+        return parts[1]
+    if parts[0] == "gpt":
+        return "".join(parts[:2])
+    if parts[0] == "gemini":
+        return parts[0]
+    return parts[0]
+
+
+def _exp_slug(recipe: str, adapter: str, model_alias: str) -> str:
+    return f"{recipe}-{adapter}-{model_alias}"
+
+
+def _exp_out(base: Path, step: str, slug: str, ts: str, suffix: str) -> Path:
+    return base / f"{step}-{slug}-{ts}{suffix}"
+
+
+def _exp_dir(base: Path, step: str, slug: str) -> Path:
+    return base / f"{step}-{slug}"
+
+
+def _exp_completed(base: Path, step: str, slug: str, ts: str, suffix: str) -> "Path | None":
+    """Return the output path if the step is already done (any timestamp), else None."""
+    # Exact-ts match first (fastest)
+    exact = _exp_out(base, step, slug, ts, suffix)
+    if exact.exists():
+        return exact
+    # Any existing file with this step+slug pattern (prior run checkpoint)
+    pattern = f"{step}-{slug}-*{suffix}"
+    matches = sorted(base.glob(pattern))
+    return matches[-1] if matches else None
+
+
+def _exp_dir_completed(base: Path, step: str, slug: str) -> "Path | None":
+    d = _exp_dir(base, step, slug)
+    if d.exists() and d.is_dir() and any(d.iterdir()):
+        return d
+    return None
+
+
+# ── spl3 experiment run ────────────────────────────────────────────────────────
+
+@cmd_experiment.command("run")
+@click.option("--recipes", "-r", multiple=True, required=True, metavar="RECIPE",
+              help="Recipe name(s). Repeatable. E.g. --recipes self_refine react")
+@click.option("--spl-paths", multiple=True, metavar="PATH",
+              help="Explicit .spl file paths matching --recipes order. "
+                   "If omitted, looks for <recipe>.spl in --spl-root.")
+@click.option("--spl-root", default=None, metavar="DIR",
+              help="Root directory to search for <recipe>.spl files.")
+@click.option("--adapters", "-a", multiple=True, required=True, metavar="ADAPTER",
+              help="Adapter name(s). E.g. --adapters claude_cli openrouter")
+@click.option("--models", "-m", multiple=True, required=True, metavar="MODEL",
+              help="Model ID(s) matching --adapters order. E.g. --models claude-sonnet-4-6 google/gemini-3-flash-preview")
+@click.option("--pipeline", default="S1,S2,S3,S4,S5,S6", show_default=True, metavar="STEPS",
+              help="Comma-separated pipeline steps to run. E.g. S1,S2,S3,S4,S5,S6 or S1,S2,S3,S4,S5,S6,S7,S8,S9,S10")
+@click.option("--judge-adapter", default="claude_cli", show_default=True,
+              help="Adapter for compare (S6/S9/S10) judge steps.")
+@click.option("--judge-model", default="claude-opus-4-6", show_default=True,
+              help="Model for compare (S6/S9/S10) judge steps.")
+@click.option("--base-dir", default="~/.vibescope/neurips", show_default=True, metavar="DIR",
+              help="Output base directory.")
+@click.option("--overwrite/--no-overwrite", default=False, show_default=True,
+              help="Overwrite existing step outputs (skip checkpoint logic).")
+@click.option("--dry-run", is_flag=True, default=False,
+              help="Print commands without executing.")
+def cmd_experiment_run(recipes, spl_paths, spl_root, adapters, models, pipeline,
+                       judge_adapter, judge_model, base_dir, overwrite, dry_run):
+    """Run a batch of NDD pipeline experiments across recipes × adapters × models.
+
+    \b
+    Each (recipe, adapter, model) combination runs the requested pipeline steps
+    in sequence. Steps already completed are skipped (checkpoint/resume).
+
+    \b
+    Examples:
+      spl3 experiment run \\
+        --recipes self_refine react \\
+        --adapters claude_cli openrouter \\
+        --models claude-sonnet-4-6 google/gemini-3-flash-preview \\
+        --pipeline S1,S2,S3,S4,S5,S6
+
+      spl3 experiment run --recipes self_refine --adapters claude_cli \\
+        --models claude-sonnet-4-6 --pipeline S7,S8,S9,S10 --dry-run
+    """
+    import subprocess
+    from datetime import datetime as _dt
+
+    if len(adapters) != len(models):
+        raise click.UsageError(
+            f"--adapters and --models must have the same count "
+            f"(got {len(adapters)} adapters, {len(models)} models)"
+        )
+
+    steps = [s.strip() for s in pipeline.split(",") if s.strip()]
+    base = Path(base_dir).expanduser()
+    base.mkdir(parents=True, exist_ok=True)
+
+    ts = _dt.now().strftime("%Y%m%d_%H%M%S")
+
+    # Build recipe → spl path map
+    recipe_spl: dict[str, Path | None] = {}
+    for i, recipe in enumerate(recipes):
+        if spl_paths and i < len(spl_paths):
+            recipe_spl[recipe] = Path(spl_paths[i])
+        elif spl_root:
+            root = Path(spl_root).expanduser()
+            candidates = list(root.rglob(f"{recipe}.spl")) + list(root.rglob(f"*{recipe}*.spl"))
+            recipe_spl[recipe] = candidates[0] if candidates else None
+        else:
+            recipe_spl[recipe] = None
+
+    total = len(recipes) * len(adapters)
+    run_num = 0
+
+    for recipe in recipes:
+        spl_file = recipe_spl.get(recipe)
+        for adapter, model in zip(adapters, models):
+            run_num += 1
+            model_alias = _exp_auto_alias(model)
+            slug = _exp_slug(recipe, adapter, model_alias)
+            click.echo(f"\n{'='*60}")
+            click.echo(f"Run {run_num}/{total}: {recipe} / {adapter} / {model_alias}")
+            click.echo(f"{'='*60}")
+
+            # Resolve step input/output paths (updated as steps complete)
+            paths: dict[str, Path] = {}
+
+            def _resolve_input(step: str) -> str:
+                """Return the best available input path for a step."""
+                dep = {"S2": "S1", "S3": "S2", "S4": "S3", "S5": "S4",
+                       "S6": ("S1", "S5"), "S7": "S1", "S8": "S7",
+                       "S9": ("S1", "S8"), "S10": ("S6", "S9")}
+                d = dep.get(step)
+                if isinstance(d, tuple):
+                    return tuple(str(paths.get(x, f"<{x}-missing>")) for x in d)
+                return str(paths.get(d, f"<{d}-missing>")) if d else ""
+
+            spl_arg = str(spl_file) if spl_file else f"{recipe}.spl"
+
+            for step in steps:
+                # Build the command for this step
+                out_suffix = {
+                    "S1": "-spec.md", "S2": ".mmd", "S3": ".spl",
+                    "S5": "-spec.md", "S6": "-compare.md",
+                    "S8": "-spec.md", "S9": "-compare.md", "S10": "-compare.md",
+                }.get(step)
+                is_dir_step = step in ("S4", "S7")
+
+                # Checkpoint: skip if already done
+                if not overwrite:
+                    if is_dir_step:
+                        done = _exp_dir_completed(base, step, slug)
+                    else:
+                        done = _exp_completed(base, step, slug, ts, out_suffix or "")
+                    if done:
+                        paths[step] = done
+                        click.echo(f"  ✓ {step} already done → {done.name}")
+                        continue
+
+                # Build CLI command
+                llm_flags = f"--adapter {adapter} --model {model}"
+                judge_flags = f"--adapter {judge_adapter} --model {judge_model}"
+                out_path = _exp_out(base, step, slug, ts, out_suffix or "")
+                dir_path = _exp_dir(base, step, slug)
+
+                if step == "S1":
+                    cmd = (f"spl3 splc describe {spl_arg} --include-docs "
+                           f"{llm_flags} -o {out_path}")
+                elif step == "S2":
+                    s1 = _resolve_input("S2")
+                    cmd = f"spl3 text2mmd {s1} {llm_flags} -o {out_path}"
+                elif step == "S3":
+                    s2 = _resolve_input("S3")
+                    cmd = f"spl3 mmd2spl {s2} {llm_flags} -o {out_path}"
+                elif step == "S4":
+                    s3 = _resolve_input("S4")
+                    ow = "--overwrite" if overwrite else ""
+                    cmd = (f"spl3 splc compile {s3} --lang python/pocketflow --llm "
+                           f"{llm_flags} --out-dir {dir_path} {ow}").strip()
+                elif step == "S5":
+                    s4d = paths.get("S4", _exp_dir(base, "S4", slug))
+                    cmd = f"spl3 splc describe {s4d}/ {llm_flags} -o {out_path}"
+                elif step == "S6":
+                    s1, s5 = _resolve_input("S6")
+                    cmd = f"spl3 compare {s1} {s5} {judge_flags} -o {out_path}"
+                elif step == "S7":
+                    s1 = _resolve_input("S7")
+                    cmd = f"spl3 vibe --spec {s1} {llm_flags} --out-dir {dir_path}"
+                elif step == "S8":
+                    s7d = paths.get("S7", _exp_dir(base, "S7", slug))
+                    cmd = f"spl3 splc describe {s7d}/ {llm_flags} -o {out_path}"
+                elif step == "S9":
+                    s1, s8 = _resolve_input("S9")
+                    cmd = f"spl3 compare {s1} {s8} {judge_flags} -o {out_path}"
+                elif step == "S10":
+                    s6, s9 = _resolve_input("S10")
+                    cmd = f"spl3 compare {s6} {s9} {judge_flags} -o {out_path}"
+                else:
+                    click.echo(f"  ⚠ Unknown step {step} — skipping", err=True)
+                    continue
+
+                click.echo(f"  → {step}: {cmd}")
+                if dry_run:
+                    if is_dir_step:
+                        paths[step] = dir_path
+                    else:
+                        paths[step] = out_path
+                    continue
+
+                result = subprocess.run(cmd, shell=True, text=True, cwd=str(Path.home()))
+                if result.returncode != 0:
+                    click.echo(f"  ✗ {step} FAILED (exit {result.returncode}) — stopping this run", err=True)
+                    break
+
+                # Record completed path
+                if is_dir_step:
+                    paths[step] = dir_path
+                else:
+                    # Find the actual output file (in case name differs slightly)
+                    if out_path.exists():
+                        paths[step] = out_path
+                    else:
+                        matches = sorted(base.glob(f"{step}-{slug}-*{out_suffix}"))
+                        if matches:
+                            paths[step] = matches[-1]
+                        else:
+                            paths[step] = out_path
+                click.echo(f"  ✓ {step} done → {paths[step].name}")
+
+    click.echo(f"\n✅ Experiment batch complete. Results in: {base}")
+
+
+# ── spl3 experiment report ─────────────────────────────────────────────────────
+
+@cmd_experiment.command("report")
+@click.option("--base-dir", default="~/.vibescope/neurips", show_default=True, metavar="DIR",
+              help="Directory to scan for compare results.")
+@click.option("--steps", default="S6,S9,S10", show_default=True, metavar="STEPS",
+              help="Comma-separated compare steps to include in the report.")
+@click.option("--format", "output_format", default="markdown", show_default=True,
+              type=click.Choice(["markdown", "csv", "json"]),
+              help="Output format.")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write report to FILE instead of stdout.")
+def cmd_experiment_report(base_dir, steps, output_format, output):
+    """Aggregate compare scores from completed experiments into a leaderboard.
+
+    \b
+    Scans --base-dir for S6/S9/S10 compare files, extracts Structure/Logic/Quality/Overall
+    scores, and renders a ranked leaderboard table.
+
+    \b
+    Examples:
+      spl3 experiment report
+      spl3 experiment report --format csv -o leaderboard.csv
+      spl3 experiment report --steps S6 --format json
+    """
+    import csv as _csv
+    import io
+    import re
+
+    base = Path(base_dir).expanduser()
+    if not base.exists():
+        raise click.ClickException(f"Directory not found: {base}")
+
+    target_steps = [s.strip() for s in steps.split(",") if s.strip()]
+
+    # Filename: S{N}-{recipe}-{adapter}-{model_alias}-{ts}-compare.md
+    FNAME_RE = re.compile(r"^(S\d+)-(.+?)-([^-]+)-([^-]+)-(\d{8}_\d{6})-compare\.md$")
+    DIM_RE   = re.compile(
+        r"\|\s*\*{0,2}(Structure|Logic|Quality|Overall)\*{0,2}\s*\|"
+        r"\s*\*{0,2}([\d.]+)\*{0,2}\s*\|\s*\*{0,2}([\d.]+)\*{0,2}",
+        re.IGNORECASE,
+    )
+
+    def _parse_scores(path: Path) -> dict:
+        text = path.read_text(encoding="utf-8")
+        dims: dict[str, tuple] = {}
+        for m in DIM_RE.finditer(text):
+            dim = m.group(1).capitalize()
+            try:
+                dims[dim] = (float(m.group(2)), float(m.group(3)))
+            except ValueError:
+                pass
+        overall = dims.get("Overall")
+        avg = round(sum(overall) / 2, 2) if overall else None
+        return {"dims": dims, "overall_avg": avg}
+
+    # Scan files, keep latest timestamp per (step, recipe, adapter, model_alias)
+    runs: dict[tuple, dict] = {}
+    for f in sorted(base.glob("S*-compare.md")):
+        m = FNAME_RE.match(f.name)
+        if not m:
+            continue
+        step, recipe, adapter, model_alias, ts = m.groups()
+        if step not in target_steps:
+            continue
+        key = (recipe, adapter, model_alias)
+        runs.setdefault(key, {})
+        existing = runs[key].get(step)
+        if existing is None or ts > existing["ts"]:
+            runs[key][step] = {"ts": ts, "file": f, **_parse_scores(f)}
+
+    if not runs:
+        raise click.ClickException(
+            f"No compare files found for steps {target_steps} in {base}\n"
+            "Run the pipeline first with: spl3 experiment run ..."
+        )
+
+    def _score(run_step: dict, dim: str) -> str:
+        if not run_step:
+            return "—"
+        pair = run_step.get("dims", {}).get(dim)
+        return f"{pair[0]:.1f}/{pair[1]:.1f}" if pair else "—"
+
+    def _overall(run_step: dict) -> float | None:
+        return run_step.get("overall_avg") if run_step else None
+
+    # Build rows
+    rows = []
+    for (recipe, adapter, model_alias), step_data in sorted(runs.items()):
+        row: dict = {"recipe": recipe, "adapter": adapter, "model": model_alias}
+        for step in target_steps:
+            sd = step_data.get(step, {})
+            row[f"{step}_structure"] = _score(sd, "Structure")
+            row[f"{step}_logic"]     = _score(sd, "Logic")
+            row[f"{step}_quality"]   = _score(sd, "Quality")
+            row[f"{step}_overall"]   = f"{_overall(sd):.2f}" if _overall(sd) else "—"
+
+        # ΔIR if both S6 and S9 available
+        s6o = _overall(step_data.get("S6", {}))
+        s9o = _overall(step_data.get("S9", {}))
+        row["delta_ir"] = f"{s6o - s9o:+.2f}" if (s6o is not None and s9o is not None) else "—"
+        row["_s6o"] = s6o
+        row["_s9o"] = s9o
+        row["_delta"] = (s6o - s9o) if (s6o is not None and s9o is not None) else None
+        rows.append(row)
+
+    # Sort by S6 overall desc, then ΔIR desc
+    rows.sort(key=lambda r: (-(r["_s6o"] or 0), -(r["_delta"] or 0)))
+
+    # ── Format ────────────────────────────────────────────────────────────────
+    if output_format == "json":
+        import json as _json
+        clean = [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]
+        text = _json.dumps(clean, indent=2)
+
+    elif output_format == "csv":
+        buf = io.StringIO()
+        if rows:
+            fieldnames = [k for k in rows[0] if not k.startswith("_")]
+            writer = _csv.DictWriter(buf, fieldnames=fieldnames, extrasaction="ignore")
+            writer.writeheader()
+            writer.writerows(rows)
+        text = buf.getvalue()
+
+    else:  # markdown
+        # Build header
+        step_cols = []
+        for step in target_steps:
+            step_cols += [f"{step} S", f"{step} L", f"{step} Q", f"{step} Ovr"]
+        header = ["Recipe", "Adapter", "Model"] + step_cols
+        if "S6" in target_steps and "S9" in target_steps:
+            header.append("ΔIR")
+
+        sep = ["---"] * len(header)
+        md_rows = [header, sep]
+        for r in rows:
+            cells = [r["recipe"], r["adapter"], r["model"]]
+            for step in target_steps:
+                cells += [r[f"{step}_structure"], r[f"{step}_logic"],
+                           r[f"{step}_quality"], r[f"{step}_overall"]]
+            if "S6" in target_steps and "S9" in target_steps:
+                cells.append(r["delta_ir"])
+            md_rows.append(cells)
+
+        # Summary
+        delta_vals = [r["_delta"] for r in rows if r["_delta"] is not None]
+        lines = ["# NeurIPS Experiment Leaderboard", ""]
+        if delta_vals:
+            avg_ir = sum(delta_vals) / len(delta_vals)
+            ir_wins = sum(1 for d in delta_vals if d > 0)
+            lines += [
+                f"**Runs:** {len(rows)}  |  "
+                f"**Avg ΔIR:** {avg_ir:+.2f}  |  "
+                f"**IR wins:** {ir_wins}/{len(delta_vals)}  |  "
+                f"**Max ΔIR:** {max(delta_vals):+.2f}",
+                "",
+            ]
+        lines += [" | ".join(row) for row in md_rows]
+        text = "\n".join(lines)
+
+    if output:
+        Path(output).write_text(text, encoding="utf-8")
+        click.echo(f"Report written to: {output}")
+    else:
+        click.echo(text)
+
+
+# ------------------------------------------------------------------ #
+# spl3 migrate                                                         #
+# ------------------------------------------------------------------ #
+
+@main.command("migrate")
+@click.argument("source", metavar="SOURCE")
+@click.option("--target", "-t", required=True,
+              type=click.Choice(["python/pocketflow", "python/langgraph", "python/crewai",
+                                 "python/autogen", "python/liquid", "go", "ts", "python"]),
+              help="Target runtime to compile to.")
+@click.option("--adapter", default="claude_cli", show_default=True,
+              help="LLM adapter for describe / text2mmd / mmd2spl / compile steps.")
+@click.option("--model", default=None, metavar="MODEL",
+              help="Model override for the adapter.")
+@click.option("--judge-adapter", default="claude_cli", show_default=True,
+              help="Adapter for the final fidelity compare step.")
+@click.option("--judge-model", default="claude-opus-4-6", show_default=True,
+              help="Model for the final fidelity compare step.")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory for all artifacts. Defaults to ./migrate-<stem>-<ts>/")
+@click.option("--name", default=None, metavar="NAME",
+              help="Short name used in filenames (default: stem of SOURCE path).")
+@click.option("--include-docs/--no-include-docs", default=True, show_default=True,
+              help="Pass --include-docs to splc describe (pulls in README if present).")
+@click.option("--no-rag", is_flag=True, default=False,
+              help="Disable RAG context for compile and vibe steps.")
+@click.option("--skip-compare", is_flag=True, default=False,
+              help="Skip the final fidelity compare step.")
+@click.option("--auto", is_flag=True, default=False,
+              help="Non-interactive: skip human checkpoint prompts (CI / dry-run use).")
+@click.option("--dry-run", is_flag=True, default=False,
+              help="Print commands without executing.")
+def cmd_migrate(source, target, adapter, model, judge_adapter, judge_model,
+                out_dir, name, include_docs, no_rag, skip_compare, auto, dry_run):
+    """Migrate an existing implementation to a new runtime via the DODA pipeline.
+
+    \b
+    Chains four steps with human checkpoints at the two IR stages:
+
+      SOURCE  →  splc describe  →  spec.md
+              →  text2mmd       →  .mmd       ⚠️  HUMAN CHECKPOINT: review topology
+              →  mmd2spl        →  .spl       ⚠️  HUMAN CHECKPOINT: review IR + validate
+              →  splc compile   →  target code
+              →  spl3 compare   →  fidelity score
+
+    \b
+    Human checkpoints are interactive pauses (press Enter to continue, Ctrl-C to abort).
+    Use --auto to skip them (non-interactive / CI mode).
+
+    \b
+    Examples:
+      # Migrate a PocketFlow recipe to LangGraph
+      spl3 migrate cookbook/05_self_refine/ --target python/langgraph \\
+        --adapter claude_cli --model claude-sonnet-4-6 --out-dir ./migrate-self_refine/
+
+      # Migrate single file, dry-run to preview commands
+      spl3 migrate agent.py --target go --adapter claude_cli --dry-run
+
+      # Non-interactive (e.g. batch migration script)
+      spl3 migrate src/ --target python/pocketflow --adapter openrouter \\
+        --model google/gemini-3-flash-preview --auto
+    """
+    import subprocess
+    from datetime import datetime as _dt
+
+    src_path = Path(source).expanduser().resolve()
+    if not src_path.exists():
+        raise click.ClickException(f"SOURCE not found: {src_path}")
+
+    stem = name or src_path.stem
+    ts   = _dt.now().strftime("%Y%m%d_%H%M%S")
+
+    if out_dir:
+        work = Path(out_dir).expanduser()
+    else:
+        work = Path.cwd() / f"migrate-{stem}-{ts}"
+    work.mkdir(parents=True, exist_ok=True)
+
+    llm_flags   = f"--adapter {adapter}" + (f" --model {model}" if model else "")
+    judge_flags = f"--adapter {judge_adapter} --model {judge_model}"
+    rag_flag    = "--no-rag" if no_rag else ""
+
+    def _run(cmd: str, label: str) -> bool:
+        click.echo(f"\n  → {cmd}")
+        if dry_run:
+            return True
+        result = subprocess.run(cmd, shell=True, text=True)
+        if result.returncode != 0:
+            click.echo(f"  ✗ {label} failed (exit {result.returncode})", err=True)
+            return False
+        return True
+
+    def _checkpoint(step: str, path: str, instruction: str) -> None:
+        """Pause for human review. Skipped in --auto mode."""
+        click.echo(f"\n{'='*60}")
+        click.echo(f"  ⚠️  HUMAN CHECKPOINT — {step}")
+        click.echo(f"{'='*60}")
+        click.echo(f"  File : {path}")
+        click.echo(f"  Task : {instruction}")
+        click.echo()
+        if not auto and not dry_run:
+            click.prompt(
+                "  Review the file, make any edits, then press Enter to continue "
+                "(Ctrl-C to abort)",
+                default="", show_default=False,
+            )
+
+    # ── Step 1: splc describe → spec.md ──────────────────────────────────────
+    spec_file = work / f"{stem}-spec.md"
+    click.echo(f"\n{'='*60}")
+    click.echo(f"  MIGRATE: {src_path.name}  →  {target}")
+    click.echo(f"  Output : {work}")
+    click.echo(f"{'='*60}")
+
+    click.echo("\n[ Step 1/4 ] splc describe → spec.md")
+    docs_flag = "--include-docs" if include_docs else ""
+    cmd1 = f"spl3 splc describe {src_path} {docs_flag} {llm_flags} -o {spec_file}".strip()
+    if not _run(cmd1, "splc describe"):
+        raise SystemExit(1)
+
+    # ── Step 2: text2mmd → .mmd  (HUMAN CHECKPOINT) ──────────────────────────
+    mmd_file = work / f"{stem}.mmd"
+    click.echo("\n[ Step 2/4 ] text2mmd → Mermaid diagram")
+    cmd2 = f"spl3 text2mmd {spec_file} {llm_flags} -o {mmd_file}"
+    if not _run(cmd2, "text2mmd"):
+        raise SystemExit(1)
+
+    _checkpoint(
+        "Mermaid diagram",
+        str(mmd_file),
+        "Verify: all nodes present, edges correct, loop back-edge present, no dangling nodes.\n"
+        "  Edit the .mmd file directly to fix any issues before continuing.",
+    )
+
+    # ── Step 3: mmd2spl → .spl  (HUMAN CHECKPOINT) ───────────────────────────
+    spl_file = work / f"{stem}.spl"
+    click.echo("\n[ Step 3/4 ] mmd2spl → SPL IR")
+    cmd3 = f"spl3 mmd2spl {mmd_file} {llm_flags} -o {spl_file}"
+    if not _run(cmd3, "mmd2spl"):
+        raise SystemExit(1)
+
+    # Auto-validate after mmd2spl
+    click.echo(f"  Validating {spl_file.name} …")
+    val_cmd = f"spl3 validate {spl_file}"
+    click.echo(f"  → {val_cmd}")
+    if not dry_run:
+        subprocess.run(val_cmd, shell=True, text=True)  # non-fatal — user reviews next
+
+    _checkpoint(
+        "SPL IR",
+        str(spl_file),
+        "Check: CREATE FUNCTION bodies use {{param}} single-braces, WHILE loops have exits,\n"
+        "  all GENERATE calls reference declared functions, no invented keywords.\n"
+        "  Fix any issues in the .spl file before continuing.",
+    )
+
+    # ── Step 4: splc compile → target ─────────────────────────────────────────
+    target_dir = work / "target"
+    target_dir.mkdir(exist_ok=True)
+    click.echo(f"\n[ Step 4/4 ] splc compile → {target}")
+    llm_compile = "--llm" if target not in ("python/pocketflow", "python/langgraph", "go", "ts") else ""
+    cmd4 = (
+        f"spl3 splc compile {spl_file} --lang {target} {llm_compile} "
+        f"{llm_flags} --out-dir {target_dir} {rag_flag} --overwrite"
+    ).strip()
+    if not _run(cmd4, "splc compile"):
+        raise SystemExit(1)
+
+    # ── Optional: fidelity compare ────────────────────────────────────────────
+    if not skip_compare:
+        # Describe the target output to get spec2, then compare spec1 vs spec2
+        spec2_file  = work / f"{stem}-spec2.md"
+        score_file  = work / f"{stem}-migration-score.md"
+        click.echo("\n[ Bonus ] Fidelity compare: describe target → compare specs")
+        cmd5a = f"spl3 splc describe {target_dir}/ {llm_flags} -o {spec2_file}"
+        if _run(cmd5a, "splc describe target"):
+            cmd5b = (
+                f"spl3 compare {spec_file} {spec2_file} "
+                f"{judge_flags} -o {score_file}"
+            )
+            _run(cmd5b, "compare fidelity")
+
+    # ── Summary ───────────────────────────────────────────────────────────────
+    click.echo(f"\n{'='*60}")
+    click.echo(f"  ✅ Migration complete")
+    click.echo(f"{'='*60}")
+    artifacts = [
+        ("Spec (source)",  spec_file),
+        ("Mermaid IR",     mmd_file),
+        ("SPL IR",         spl_file),
+        ("Target code",    target_dir),
+    ]
+    if not skip_compare:
+        artifacts += [
+            ("Spec (target)",  work / f"{stem}-spec2.md"),
+            ("Fidelity score", work / f"{stem}-migration-score.md"),
+        ]
+    for label, path in artifacts:
+        exists = "✓" if (dry_run or Path(path).exists()) else "✗"
+        click.echo(f"  {exists}  {label:16}  {path}")
+
+    if not skip_compare and not dry_run:
+        score_path = work / f"{stem}-migration-score.md"
+        if score_path.exists():
+            click.echo(f"\n  Fidelity report → {score_path}")
 
 
 if __name__ == "__main__":

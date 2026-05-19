@@ -82,11 +82,36 @@ SPL 3.0 supports multiple LLM adapters for different deployment scenarios and co
 
 ## 3. spl3 validate
 
-Checks lexer → parser → semantic analyser. No LLM call.
+> **[To-Test]** Semantic linting (4.4) — new in this release.
+
+Checks lexer → parser → semantic linter. No LLM call.
 
 ```bash
-spl3 validate <file.spl>
+# Syntax + semantic checks (default)
+spl3 validate workflow.spl
+
+# Multiple files
+spl3 validate tests/claude_cli/sonnet/*.spl
+
+# Strict mode — warnings become errors (non-zero exit)
+spl3 validate workflow.spl --strict
+
+# Syntax only — skip semantic analysis
+spl3 validate workflow.spl --no-semantic
 ```
+
+### Semantic checks (`--semantic`, default on)
+
+| Check | What it catches |
+|-------|----------------|
+| Undefined variable | `@x` read before any `GENERATE … INTO @x`, `CALL … INTO @x`, or `@x :=` |
+| Unreachable code | Statements after `RETURN` inside a workflow body |
+| Potential infinite loop | `WHILE` with no `RETURN` inside body and no `max_iterations` declared |
+| Undefined CALL target | `CALL proc(…)` where `proc` is not in `CREATE FUNCTION` or stdlib tools |
+
+All checks are static AST passes — no LLM involved. Issues are printed as
+`WARN [workflow_name] message`. Exit code is non-zero only on parse errors by default;
+add `--strict` to make warnings fatal too.
 
 ---
 
@@ -513,7 +538,35 @@ spl3 compare a.mmd b.mmd --adapter "" --format text
 spl3 compare S6-ir-diff.md S9-vibe-diff.md \
   --adapter claude_cli --model claude-opus-4-6 \
   -o S10-ablation.md
+
+# ROUGE score — fast deterministic n-gram overlap (no LLM, no model download)  [To-Test]
+spl3 compare S1-spec.md S5-spec.md --mode rouge
+# Requires: pip install rouge-score
 ```
+
+### `--mode rouge` — ROUGE score
+
+> **[To-Test]** New in this release (3.1).
+
+ROUGE-1, ROUGE-2, and ROUGE-L measure n-gram overlap between two documents.
+Faster and lighter than `llm` or `bert-score` — fully deterministic, no API call.
+Suitable as a quick baseline check on spec similarity before running LLM comparison.
+
+```bash
+spl3 compare spec1.md spec2.md --mode rouge
+```
+
+Output (markdown):
+
+```
+| Metric   | Precision | Recall | F1     |
+|----------|-----------|--------|--------|
+| ROUGE-1  | 0.7200    | 0.6800 | 0.6994 |
+| ROUGE-2  | 0.4100    | 0.3900 | 0.3998 |
+| ROUGE-L  | 0.6500    | 0.6200 | 0.6347 |
+```
+
+Optional dependency: `pip install rouge-score`.
 
 ### Round-trip consistency workflow
 
@@ -696,7 +749,86 @@ spl3 code-rag stats
 
 ---
 
-## 17. Full Pipeline S1–S10: IR + Ablation
+## 17. spl3 experiment — Batch Experiment Runner
+
+> **[To-Test]** New in this release (1.1, 1.2).
+
+Two subcommands for running and reporting on NeurIPS-style ablation experiments across
+multiple recipes, adapters, and models without manually chaining 90+ CLI calls.
+
+### `spl3 experiment run`
+
+Runs a full pipeline matrix across `recipes × (adapter, model)` pairs. Skips steps
+already completed (checkpoint/resume).
+
+```bash
+# Run S1–S6 for two recipes across two adapter/model pairs
+spl3 experiment run \
+  --recipes self_refine react \
+  --adapters claude_cli openrouter \
+  --models claude-sonnet-4-6 google/gemini-3-flash-preview \
+  --pipeline S1,S2,S3,S4,S5,S6 \
+  --spl-root ~/projects/digital-duck/SPL.py/cookbook
+
+# Run ablation steps only (S7–S10) — resumes from completed S1
+spl3 experiment run \
+  --recipes self_refine \
+  --adapters claude_cli \
+  --models claude-sonnet-4-6 \
+  --pipeline S7,S8,S9,S10
+
+# Dry run — print all commands without executing
+spl3 experiment run \
+  --recipes self_refine react \
+  --adapters claude_cli openrouter \
+  --models claude-sonnet-4-6 google/gemini-3-flash-preview \
+  --pipeline S1,S2,S3,S4,S5,S6 --dry-run
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--recipes` | required | Recipe name(s), repeatable |
+| `--adapters` | required | Adapter name(s), must match `--models` count |
+| `--models` | required | Model ID(s), matched 1:1 with adapters |
+| `--pipeline` | `S1,S2,S3,S4,S5,S6` | Steps to run |
+| `--spl-root DIR` | — | Search for `<recipe>.spl` under this directory |
+| `--spl-paths PATH` | — | Explicit `.spl` paths matching recipes order |
+| `--judge-adapter` | `claude_cli` | Adapter for S6/S9/S10 compare steps |
+| `--judge-model` | `claude-opus-4-6` | Model for compare steps |
+| `--base-dir DIR` | `~/.vibescope/neurips` | Output directory |
+| `--overwrite` | off | Overwrite existing outputs (disables checkpoint) |
+| `--dry-run` | off | Print commands without executing |
+
+### `spl3 experiment report`
+
+Aggregates compare scores from completed experiments into a ranked leaderboard.
+Scans `--base-dir` for `S6/S9/S10-*-compare.md` files, extracts
+Structure/Logic/Quality/Overall scores, computes ΔIR = S6 − S9.
+
+```bash
+# Markdown leaderboard to stdout (default)
+spl3 experiment report
+
+# Save as CSV for spreadsheet import
+spl3 experiment report --format csv -o leaderboard.csv
+
+# JSON for programmatic processing
+spl3 experiment report --format json -o leaderboard.json
+
+# S6 only (no ablation steps run yet)
+spl3 experiment report --steps S6
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--base-dir DIR` | `~/.vibescope/neurips` | Directory to scan |
+| `--steps STEPS` | `S6,S9,S10` | Compare steps to include |
+| `--format` | `markdown` | `markdown`, `csv`, or `json` |
+| `-o FILE` | stdout | Write report to file |
+
+---
+
+## 18. Full Pipeline S1–S10: IR + Ablation
 
 The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
 (S7–S10) to measure whether the Mermaid + SPL intermediate representations add
@@ -875,7 +1007,9 @@ The output includes prompt length in characters and approximate token count.
 ## 19. Command reference
 
 ```
-spl3 validate <file.spl> [file.spl ...]
+spl3 validate <file.spl> [file.spl ...]        # syntax check
+              [--semantic/--no-semantic]             # semantic lint (default: on)  [To-Test]
+              [--strict]                             # warnings → errors            [To-Test]
 spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
@@ -893,7 +1027,7 @@ spl3 spl2mmd <file.spl> [file.spl ...]
               [--save-pdf]                  # default: off; needs mmdc or Chrome
 spl3 mmd2spl <file.mmd> [--adapter] [--template workflow|function] [--prompt]
 spl3 compare <f1> <f2>
-              [--mode llm|git-diff|vector|bert-score|ged|vision|ast-diff|structural]
+              [--mode llm|git-diff|vector|bert-score|ged|vision|ast-diff|structural|rouge]  # rouge: [To-Test]
               [--adapter NAME] [--model MODEL]
               [--adapter-embed NAME] [--adapter-synthesis NAME]
               [--format markdown|json|text|html] [-o FILE]
@@ -916,4 +1050,23 @@ spl3 splc describe <impl.py | folder/> [--lang LABEL] [--adapter] [--spec-dir DI
 
 spl3 code-rag seed [cookbook/] [--from-specs]
 spl3 code-rag stats
+
+# Batch experiment runner  [To-Test]
+spl3 experiment run
+              --recipes RECIPE [RECIPE ...]          # recipe name(s)
+              --adapters ADAPTER [ADAPTER ...]       # adapter name(s)
+              --models MODEL [MODEL ...]             # model IDs (matched 1:1 with adapters)
+              [--pipeline S1,S2,S3,S4,S5,S6]        # default: S1–S6
+              [--spl-root DIR]                       # search dir for <recipe>.spl
+              [--spl-paths PATH [PATH ...]]          # explicit .spl paths
+              [--judge-adapter claude_cli]           # adapter for S6/S9/S10
+              [--judge-model claude-opus-4-6]        # model for compare steps
+              [--base-dir ~/.vibescope/neurips]      # output directory
+              [--overwrite] [--dry-run]
+
+spl3 experiment report                              # leaderboard from completed runs  [To-Test]
+              [--base-dir ~/.vibescope/neurips]
+              [--steps S6,S9,S10]
+              [--format markdown|csv|json]
+              [-o FILE]
 ```

@@ -28,3 +28,15 @@ class BERTScoreResult:
     precision: float
     recall: float
     f1: float
+
+@dataclass
+class RougeResult:
+    rouge1_precision: float
+    rouge1_recall: float
+    rouge1_f1: float
+    rouge2_precision: float
+    rouge2_recall: float
+    rouge2_f1: float
+    rougeL_precision: float
+    rougeL_recall: float
+    rougeL_f1: float

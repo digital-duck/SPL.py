@@ -8,13 +8,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from spl3.compare.types import ComparisonResult, GEDResult, BERTScoreResult
+from spl3.compare.types import ComparisonResult, GEDResult, BERTScoreResult, RougeResult
 from spl3.compare.tiers.character import compare_character
 from spl3.compare.tiers.ged import compare_ged
 from spl3.compare.tiers.semantic import compare_semantic, compare_vision
 from spl3.compare.tiers.syntactic import compare_syntactic
 from spl3.compare.tiers.structural import compare_structural
 from spl3.compare.tiers.embedding import compare_vector, compare_bert_score
+from spl3.compare.tiers.rouge import compare_rouge
 
 _TIER_LABELS = {
     "ged":        "Tier 1 – Topological (GED)",
@@ -25,6 +26,7 @@ _TIER_LABELS = {
     "git-diff":   "Tier 5 – Character-level (git-diff)",
     "vector":     "Tier 6 – Embedding (vector cosine)",
     "bert-score": "Tier 6 – Embedding (BERTScore)",
+    "rouge":      "Tier 6 – N-gram Overlap (ROUGE)",
 }
 
 async def run_comparison(
@@ -98,6 +100,10 @@ async def run_comparison(
     if "bert-score" in active_modes:
         result_obj.results["bert-score"] = compare_bert_score(content1, content2)
 
+    # ROUGE
+    if "rouge" in active_modes:
+        result_obj.results["rouge"] = compare_rouge(content1, content2)
+
     # Fallback logic for failed tiers
     await _handle_fallbacks(result_obj, active_modes, content1, content2, llm, model)
 
@@ -145,6 +151,8 @@ async def synthesize_results(res: ComparisonResult, llm: Any, model: Optional[st
             summary.append(f"{label}: distance={r.distance}, norm={r.normalized_distance}")
         elif isinstance(r, BERTScoreResult):
             summary.append(f"{label}: F1={r.f1:.4f}")
+        elif isinstance(r, RougeResult):
+            summary.append(f"{label}: ROUGE-1={r.rouge1_f1:.4f}, ROUGE-2={r.rouge2_f1:.4f}, ROUGE-L={r.rougeL_f1:.4f}")
         elif mode == "git-diff" and isinstance(r, str):
             summary.append(f"{label}: {len(r.splitlines())} lines in diff")
         else:

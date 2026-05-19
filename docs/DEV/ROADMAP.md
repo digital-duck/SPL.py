@@ -28,7 +28,7 @@ is implemented and running. Key commands:
 
 ---
 
-### 1.1 `spl3 experiment run` — batch experiment runner
+### ✅ 1.1 `spl3 experiment run` — batch experiment runner
 
 Running 15 (5 recipes × 3 models) experiments today requires manually invoking each
 pipeline step. A single command could drive the whole matrix:
@@ -39,7 +39,7 @@ spl3 experiment run \
   --adapters claude_cli openrouter \
   --models claude-sonnet-4-6 qwen/qwen3.6-plus google/gemini-3-flash-preview \
   --pipeline S1,S2,S3,S4,S5,S6 \
-  --base-dir NeurIPS-26-lab
+  --out-dir NeurIPS-26-lab
 ```
 
 Outputs follow the established directory convention:
@@ -57,7 +57,7 @@ while S1–S3, S5–S6 are flat. The runner must handle this as a known exceptio
 
 ---
 
-### 1.2 `spl3 experiment report` — aggregate compare scores into a leaderboard
+### ✅ 1.2 `spl3 experiment report` — aggregate compare scores into a leaderboard
 
 The experiment is already parameterized as `{recipes}` × `{models}` × `{pipeline-steps}`,
 and the file naming convention encodes all three dimensions directly in the path:
@@ -85,6 +85,8 @@ Supports `--format markdown|csv|json`. Directly feeds NeurIPS paper tables.
 
 ### 1.3 `spl3 compare --batch` — one baseline, many targets
 
+** [Put-Off] **
+
 ```bash
 spl3 compare S1-agent-spec.md tests/*/S5-agent-*-spec.md --mode llm --format csv
 ```
@@ -99,7 +101,7 @@ Currently requires running `spl3 compare` once per pair.
 ### ✅ `spl3 spl2mmd` — `.spl` → Mermaid diagram
 
 Fully implemented. Deterministic AST-driven transpiler — no LLM required. Generates
-`.mmd`, `.md`, `.html`, `.png` (optional), and `.pdf` (optional via `mmdc`).
+`.mmd`, `.md`, `.html`, `.svg`, `.png` (optional), and `.pdf` (optional via `mmdc`).
 Every workflow, procedure, loop, branch, and exception handler is rendered from the
 parsed syntax tree. See §10 of the USER-GUIDE for full documentation.
 
@@ -135,6 +137,8 @@ and vibing to a new target.
 
 ### 2.1 `spl3 pipeline` — run a named multi-step pipeline in one command
 
+** [Put-Off] **
+
 Rather than chaining shell commands, let the user define a named pipeline in a config
 file and execute it:
 
@@ -148,6 +152,8 @@ and passed between steps. Supports `--from-step S3` to resume from a checkpoint.
 ---
 
 ### 2.2 Streaming output for long LLM calls
+
+** [Put-Off] **
 
 All `spl3` commands that call an LLM block until the full response arrives. For large
 files (`splc compile`, `vibe` on a long spec), this can feel like a hang.
@@ -171,7 +177,7 @@ See §12 of the USER-GUIDE for full documentation.
 
 ---
 
-### 3.1 `--mode rouge` — ROUGE score
+### ✅ 3.1 `--mode rouge` — ROUGE score
 
 ROUGE-L and ROUGE-1/2 are standard summarisation metrics, well-suited to comparing
 spec documents where semantic overlap at the n-gram level matters. Lighter than
@@ -181,11 +187,13 @@ spec documents where semantic overlap at the n-gram level matters. Lighter than
 spl3 compare spec1.md spec2.md --mode rouge
 ```
 
-Optional dependency: `pip install rouge-score`.
+Optional dependency: `pip install rouge-score` (installed in `spl123` env).
 
 ---
 
 ### 3.2 Composite `--mode all` with weighted score
+
+** [Put-Off] **
 
 When multiple modes are requested, compute a single **composite Intent Entropy score**
 Δ*S* as a weighted average of the individual metrics. Weights configurable via
@@ -195,6 +203,8 @@ leaderboards without losing the per-mode breakdown.
 ---
 
 ### 3.3 `spl3 compare` — structured JSON diff with change taxonomy
+
+** [Put-Off] **
 
 Beyond raw metrics, classify the differences into a taxonomy:
 
@@ -216,6 +226,8 @@ just *how much*.
 
 ### 4.1 Deterministic transpiler for `python/crewai` and `python/autogen`
 
+** [Put-Off] **
+
 Currently these targets require `--llm`. A deterministic transpiler would:
 - lower LLM cost (no API call for compilation)
 - produce consistent, auditable output
@@ -228,13 +240,15 @@ stable enough APIs to map SPL constructs deterministically.
 
 ### 4.2 `splc` targets: `swift`, `snap`, `edge`
 
+** [Put-Off] **
+
 Already stubs in `SUPPORTED_LANGS` (commented out). Filling these in would widen
 deployment targets for mobile and edge use cases. LLM-only transpiler first, then
 deterministic if the framework stabilises.
 
 ---
 
-### 4.3 SPL `IMPORT` statement — reusable function libraries
+### ✅ 4.3 SPL `IMPORT` statement — reusable function libraries
 
 ```spl
 IMPORT "lib/common_prompts.spl"
@@ -244,21 +258,24 @@ WORKFLOW my_agent
   ...
 ```
 
-Allows sharing `CREATE FUNCTION` definitions across workflows without copy-paste.
-Requires a small parser change and a file resolver in the runtime. No LLM changes.
+Fully implemented. Parser (`parser.py`), AST node (`ImportStatement`), recursive loader
+with circular-import detection (`_loader.py`), transpiler inlining (`transpiler_langgraph.py`),
+and registry dedup (`registry.py`) all handle `IMPORT` transparently. The `.spl` extension
+is optional in the import path.
 
 ---
 
-### 4.4 `spl3 validate` — semantic linting beyond syntax
+### ✅ 4.4 `spl3 validate` — semantic linting beyond syntax
 
-Current `validate` checks parse-level correctness. Add semantic checks:
+Implemented in `spl3/linter.py`. `validate` now runs both parse-level and semantic checks:
 
 - Undefined variable reference (`@x` used before `GENERATE ... INTO @x`)
 - Unreachable code after `RETURN`
-- `WHILE` loops with no reachable exit condition
-- `CALL` targets that reference undefined sub-workflows
+- `WHILE` loops with no exit-capable statement and no `max_iterations`
+- `CALL` targets not found in `CREATE FUNCTION` declarations or stdlib tools
 
-These are static analysis passes on the AST — no LLM involved.
+New options: `--semantic/--no-semantic` (default on), `--strict` (WARNs become fatal).
+All checks are static AST passes — no LLM involved.
 
 ---
 
@@ -276,15 +293,12 @@ for v1.
 
 ---
 
-### 5.2 `spl3 serve` — expose a `.spl` workflow as an HTTP API
+### ~~5.2 `spl3 serve` — expose a `.spl` workflow as an HTTP API~~ [Descoped]
 
-```bash
-spl3 serve workflow.spl --port 8080
-```
-
-Wraps `spl3 run` in a FastAPI/Flask handler. `POST /run` with a JSON body maps to
-`-p key=val` parameters. Useful for embedding SPL workflows into larger applications
-without writing a Python wrapper each time.
+VibeSCOPE's FastAPI backend already exposes SPL workflows as HTTP endpoints with
+full route, auth, and UI integration. A standalone `spl3 serve` would duplicate
+this without adding meaningful value. Descoped in favour of VibeSCOPE as the
+canonical HTTP deployment surface.
 
 ---
 
@@ -628,23 +642,23 @@ not just what bytes changed — making SPL PRs reviewable by non-experts.
 | 8.3 | Momagrid persistent task queues | Reliability | Medium | Very High | **Priority 1** |
 | 9 | `spl3 migrate` verified migration service | DODA | Medium | Very High | **Priority 2** |
 | 10.1 | SPL Standard Library | Standardization | Medium | Very High | **Priority 3** |
-| 1.1 | `spl3 experiment run` | Automation | Medium | Very High | Planned |
+| 1.1 | `spl3 experiment run` | Automation | — | — | ✅ Done |
 | 8.2 | Time-travel debugging via DBOS | Reliability | Medium | High | Planned |
 | 10.2 | SPL Registry | Standardization | High | High | Planned |
 | 11.1 | Policy-gated CI/CD deployment | Governance | Medium | High | Planned |
 | 11.2 | Audit trail / lineage manifest | Governance | Low | High | Planned |
 | 13.1 | Live intent monitoring (operational ΔS) | Reliability | High | High | Planned |
 | 14.1 | `spl3 diff` semantic workflow diff | DX | Medium | High | Planned |
-| 1.2 | `spl3 experiment report` | Automation | Low | High | Planned |
-| 4.3 | SPL `IMPORT` statement | Language | Low | High | Planned |
-| 4.4 | Semantic linting in `validate` | Quality | Medium | High | Planned |
+| 1.2 | `spl3 experiment report` | Automation | — | — | ✅ Done |
+| 4.3 | SPL `IMPORT` statement | Language | — | — | ✅ Done |
+| 4.4 | Semantic linting in `validate` | Quality | — | — | ✅ Done |
 | 7.1 | Cross-runtime round-trip tests | DODA | Low | High | Planned |
 | 7.2 | `spl3 migrate` pipeline command | DODA | Medium | High | Planned |
 | 12.1 | Federated experiment sharing | Research | High | Medium | Planned |
 | 1.3 | `compare --batch` | Automation | Low | Medium | Planned |
 | 2.1 | `spl3 pipeline` | Pipeline | High | Medium | Planned |
 | 2.2 | Streaming LLM output | DX | Low | Medium | Planned |
-| 3.1 | `--mode rouge` | Metrics | Low | Medium | Planned |
+| 3.1 | `--mode rouge` | Metrics | — | — | ✅ Done |
 | 3.2 | Composite Δ*S* score | Metrics | Low | Medium | Planned |
 | 3.3 | Structured JSON diff taxonomy | Metrics | Medium | Medium | Planned |
 | 4.1 | Deterministic crewai/autogen | Compiler | High | Medium | Planned |
@@ -652,5 +666,5 @@ not just what bytes changed — making SPL PRs reviewable by non-experts.
 | 6.1 | Golden-file regression tests | Testing | Medium | Medium | Planned |
 | 7.3 | Multi-judge evaluation | Research | Medium | Medium | Planned |
 | 5.1 | VS Code extension | DX | High | Medium | Planned |
-| 5.2 | `spl3 serve` | DX | Medium | Low | Planned |
+| ~~5.2~~ | ~~`spl3 serve`~~ | DX | — | — | **Descoped** (VibeSCOPE FastAPI covers this) |
 | 4.2 | swift/snap/edge targets | Compiler | High | Low | Planned |
