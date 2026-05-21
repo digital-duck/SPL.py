@@ -76,6 +76,9 @@ spl3 = "spl3.cli:main"
 where = ["."]
 include = ["spl*"]
 
+[tool.setuptools.package-data]
+"spl3" = ["_skill/SKILL.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

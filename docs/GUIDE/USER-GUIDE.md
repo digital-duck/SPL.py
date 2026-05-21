@@ -33,7 +33,8 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 16. [spl3 code-rag](#16-spl3-code-rag)
 17. [Full Pipeline S1–S10: IR + Ablation](#17-full-pipeline-s1s10-ir--ablation)
 18. [Debugging LLM Prompts](#18-debugging-llm-prompts)
-19. [Command reference](#19-command-reference)
+19. [Claude Code `/spl3` Skill](#19-claude-code-spl3-skill)
+20. [Command reference](#20-command-reference)
 
 ---
 
@@ -1073,6 +1074,82 @@ The output includes prompt length in characters and approximate token count.
 
 ---
 
+## 19. Claude Code `/spl3` Skill
+
+The `/spl3` skill lets you invoke any `spl3` command directly from the Claude
+Code chat prompt — no terminal switching required.
+
+### Install
+
+The skill ships inside the `spl-llm` package.  Run once after `pip install`:
+
+```bash
+spl3 install-skill            # global install (~/.claude)
+spl3 install-skill --local    # project-local install (./.claude)
+spl3 install-skill --dry-run  # preview what will change
+```
+
+This copies `SKILL.md` to `~/.claude/skills/spl3/` and registers the skill
+in `~/.claude/CLAUDE.md`.  The command is idempotent — safe to re-run after
+upgrading `spl-llm`.
+
+### Verify
+
+Open a new Claude Code session (or type `/clear`), then:
+
+```
+/spl3 --help
+```
+
+Claude prints the full `spl3` command table, alphabetically sorted.
+
+### Usage inside Claude Code
+
+Prefix any `spl3` command with `/spl3`:
+
+| What you type | What runs |
+|---|---|
+| `/spl3 --help` | `spl3 --help` |
+| `/spl3 run hello.spl --adapter ollama` | `spl3 run hello.spl --adapter ollama` |
+| `/spl3 text2spl "a parallel news digest"` | `spl3 text2spl --description "a parallel news digest"` |
+| `/spl3 validate my_workflow.spl` | `spl3 validate my_workflow.spl` |
+| `/spl3 splc compile agent.spl --lang go` | `spl3 splc compile agent.spl --lang go` |
+| `/spl3 show` | `spl3 show` |
+
+Claude also assists with authoring: if you ask it to write or edit an `.spl`
+workflow it automatically validates after each edit and suggests `spl3 explain`
+before the first run.
+
+### How it works
+
+```
+/spl3 run hello.spl
+       │
+       ▼  Claude Code reads ~/.claude/skills/spl3/SKILL.md
+       │
+       ▼  Claude follows the skill instructions
+       │
+       ▼  Bash tool executes: spl3 run hello.spl
+       │
+       ▼  Output shown in the session
+```
+
+The skill is pure Markdown — no Python code, no entry-point wiring.
+
+### Uninstall
+
+```bash
+rm -rf ~/.claude/skills/spl3
+# then remove the 3-line "# spl3" block from ~/.claude/CLAUDE.md
+```
+
+### Developer reference
+
+See `docs/DEV/spl3-plugin.md` for the full plugin architecture, project-scoped
+install, and how to extend the skill with new commands.
+
+---
+
 ## 20. Command reference
 
 ```
@@ -1152,4 +1229,9 @@ spl3 migrate <source>
               [--skip-compare]                         # skip fidelity compare
               [--auto]                                  # skip human checkpoints
               [--dry-run]                               # print commands only
+
+# Claude Code skill
+spl3 install-skill            # install /spl3 skill to ~/.claude (global)
+              [--local]       # install to ./.claude (project-scoped)
+              [--dry-run]     # preview changes without writing files
 ```

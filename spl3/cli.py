@@ -118,6 +118,75 @@ def cmd_help(ctx):
 
 
 # ------------------------------------------------------------------ #
+# spl3 install-skill                                                  #
+# ------------------------------------------------------------------ #
+
+@main.command("install-skill", short_help="Install the /spl3 Claude Code skill.")
+@click.option(
+    "--global/--local", "global_", default=True,
+    help="Install to ~/.claude (global, default) or ./.claude (project-local).",
+)
+@click.option("--dry-run", is_flag=True, help="Show what would be done without making changes.")
+def cmd_install_skill(global_: bool, dry_run: bool):
+    """Install the /spl3 Claude Code skill so you can type /spl3 in Claude Code.
+
+    This copies SKILL.md to the Claude Code skills directory and adds the
+    required registration block to CLAUDE.md.  Safe to re-run — it is
+    idempotent.
+
+    \b
+    After installing, open a new Claude Code session and type:
+        /spl3 --help
+    """
+    import shutil
+
+    skill_src = Path(__file__).parent / "_skill" / "SKILL.md"
+    if not skill_src.exists():
+        raise click.ClickException(
+            f"SKILL.md not found at {skill_src}. "
+            "Re-install spl-llm: pip install --force-reinstall spl-llm"
+        )
+
+    claude_dir = Path.home() / ".claude" if global_ else Path.cwd() / ".claude"
+    skill_dst  = claude_dir / "skills" / "spl3" / "SKILL.md"
+    claude_md  = claude_dir / "CLAUDE.md"
+
+    registration = (
+        "\n# spl3\n"
+        "- **spl3** (`~/.claude/skills/spl3/SKILL.md`) - Run, author, and manage SPL 3.0 workflows. Trigger: `/spl3`\n"
+        'When the user types `/spl3`, invoke the Skill tool with `skill: "spl3"` before doing anything else.\n'
+    )
+
+    tag = "  (dry run)" if dry_run else ""
+
+    # 1. Copy SKILL.md
+    if dry_run:
+        click.echo(f"  would create  {skill_dst}")
+    else:
+        skill_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(skill_src, skill_dst)
+        click.echo(f"  ✓  {skill_dst}")
+
+    # 2. Patch CLAUDE.md (idempotent)
+    existing = claude_md.read_text(encoding="utf-8") if claude_md.exists() else ""
+    if 'skill: "spl3"' in existing or "skill: 'spl3'" in existing:
+        click.echo(f"  ✓  {claude_md}  (already registered){tag}")
+    else:
+        if dry_run:
+            click.echo(f"  would append registration block to  {claude_md}")
+        else:
+            with claude_md.open("a", encoding="utf-8") as f:
+                f.write(registration)
+            click.echo(f"  ✓  {claude_md}  (registration added)")
+
+    click.echo("")
+    if not dry_run:
+        click.echo("Done. Open a new Claude Code session and type /spl3 --help to verify.")
+    else:
+        click.echo("Dry run complete — no files were changed.")
+
+
+# ------------------------------------------------------------------ #
 # spl3 configure                                                      #
 # ------------------------------------------------------------------ #
 
