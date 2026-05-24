@@ -91,6 +91,10 @@ flowchart TD
     SUB42 --> RET43
     EXC41 --> SUB42
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN44["FUNCTION: detect_lang()"]
+    end
     class START1 term
     class SUB2 proc
     class EVAL3 ctrl
@@ -132,6 +136,7 @@ flowchart TD
     class EXC41 ctrl
     class SUB42 proc
     class RET43 term
+    class FN44 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

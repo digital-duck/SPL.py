@@ -48,6 +48,10 @@ flowchart TD
     GEN19 --> RET20
     EXC16 --> GEN17
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN21["FUNCTION: summary_constraints()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -67,6 +71,7 @@ flowchart TD
     class GEN18 llm
     class GEN19 llm
     class RET20 term
+    class FN21 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

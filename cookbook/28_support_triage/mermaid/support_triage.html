@@ -70,6 +70,12 @@ flowchart TD
     GEN26 --> RET27
     EXC25 --> GEN26
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN28["FUNCTION: support_categories()"]
+    FN29["FUNCTION: response_tone_guide()"]
+    FN30["FUNCTION: order_context_prompt()"]
+    end
     class START1 term
     class LOG2 log
     class SUB3 proc
@@ -95,6 +101,9 @@ flowchart TD
     class EXC25 ctrl
     class GEN26 llm
     class RET27 term
+    class FN28 fn
+    class FN29 fn
+    class FN30 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

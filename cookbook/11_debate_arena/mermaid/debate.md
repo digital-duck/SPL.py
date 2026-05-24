@@ -73,6 +73,12 @@ flowchart TD
     RET33(["RETURN @pro_history (status='budg...)"])
     EXC32 --> RET33
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN34["FUNCTION: pro_argument()"]
+    FN35["FUNCTION: con_argument()"]
+    FN36["FUNCTION: judge_debate()"]
+    end
     class START1 term
     class A2 assign
     class A3 assign
@@ -106,6 +112,9 @@ flowchart TD
     class RET31 term
     class EXC32 ctrl
     class RET33 term
+    class FN34 fn
+    class FN35 fn
+    class FN36 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

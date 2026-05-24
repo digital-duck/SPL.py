@@ -79,6 +79,11 @@ flowchart TD
     LOG28 --> RET29
     EXC27 --> LOG28
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN30["FUNCTION: language_conventions()"]
+    FN31["FUNCTION: test_framework_guide()"]
+    end
     class START1 term
     class LOG2 log
     class SUB3 proc
@@ -107,6 +112,8 @@ flowchart TD
     class EXC27 ctrl
     class LOG28 log
     class RET29 term
+    class FN30 fn
+    class FN31 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

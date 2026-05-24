@@ -76,6 +76,11 @@ flowchart TD
     RET27(["RETURN @baseline_prompt (status='base..., reason='gene...)"])
     EXC26 --> RET27
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN28["FUNCTION: variation_prompt()"]
+    FN29["FUNCTION: test_prompt()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -101,6 +106,8 @@ flowchart TD
     class RET25 term
     class EXC26 ctrl
     class RET27 term
+    class FN28 fn
+    class FN29 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

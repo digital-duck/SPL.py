@@ -64,6 +64,13 @@ flowchart TD
     RET32(["RETURN @draft (status='mode...)"])
     EXC31 --> RET32
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN33["FUNCTION: research()"]
+    FN34["FUNCTION: analyze()"]
+    FN35["FUNCTION: write_summary()"]
+    FN36["FUNCTION: quality_check()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -95,6 +102,10 @@ flowchart TD
     class RET30 term
     class EXC31 ctrl
     class RET32 term
+    class FN33 fn
+    class FN34 fn
+    class FN35 fn
+    class FN36 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

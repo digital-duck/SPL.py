@@ -51,6 +51,10 @@ flowchart TD
     WHILE11 --> RET24
     START1 --> LOG2
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN25["FUNCTION: audit_news()"]
+    end
     class START1 term
     class LOG2 log
     class SUB3 proc
@@ -73,6 +77,7 @@ flowchart TD
     class LOG22 log
     class A23 assign
     class RET24 term
+    class FN25 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

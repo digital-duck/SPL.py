@@ -85,7 +85,21 @@ def _filter_recipes(recipes: list[dict], ids: list[str] | None) -> list[dict]:
             and r.get("args", [""])[0] == "spl3"
         ]
     id_set = _expand_ids(ids)
-    return [r for r in recipes if r["id"] in id_set]
+    # Also build a numeric set to handle zero-padding mismatches (e.g. "031" vs "31")
+    numeric_set: set[int] = set()
+    for token in id_set:
+        try:
+            numeric_set.add(int(token))
+        except ValueError:
+            pass
+    def _matches(r: dict) -> bool:
+        if r["id"] in id_set:
+            return True
+        try:
+            return int(r["id"]) in numeric_set
+        except ValueError:
+            return False
+    return [r for r in recipes if _matches(r)]
 
 
 def _spec_exists(spec_dir: Path, spl_stem: str, adapter: str, model: str | None) -> bool:
@@ -118,13 +132,14 @@ def _spec_exists(spec_dir: Path, spl_stem: str, adapter: str, model: str | None)
 )
 @click.option(
     "--adapter",
-    default="ollama",
+    default="claude_cli",
     show_default=True,
     help="LLM adapter for spec generation.",
 )
 @click.option(
     "--model",
-    default=None,
+    default="claude-sonnet-4-6",
+    show_default=True,
     metavar="MODEL",
     help="Model override (adapter default if omitted).",
 )
@@ -208,7 +223,7 @@ def main(
         cmd = [
             sys.executable, "-m", "spl3.cli",
             "splc", "describe", str(spl_path),
-            "--spec-dir", str(spec_dir),
+            "--out-dir", str(spec_dir),
             "--adapter", adapter,
         ]
         if model:
@@ -220,16 +235,17 @@ def main(
         try:
             proc = subprocess.run(cmd, capture_output=True, text=True)
             if proc.returncode == 0:
-                # Find the written spec file to report its path
-                spec_files = sorted(spec_dir.glob(f"{spl_path.stem}-*-spec.md"))
-                spec_path = str(spec_files[-1]) if spec_files else str(spec_dir)
+                import re as _re
+                m = _re.search(r"Spec written to:\s*(\S+)", proc.stdout)
+                spec_path = m.group(1) if m else str(spec_dir)
                 results.append({"id": rid, "name": name, "status": "OK", "path": spec_path})
                 if proc.stdout.strip():
                     for line in proc.stdout.strip().splitlines():
                         click.echo(f"      {line}")
             else:
-                err = (proc.stderr or proc.stdout).strip().splitlines()
-                err_msg = err[0] if err else "unknown error"
+                lines = (proc.stderr or proc.stdout).strip().splitlines()
+                # Skip the usage line (starts with "Usage:") to show the real error
+                err_msg = next((l for l in lines if not l.startswith("Usage:")), lines[0] if lines else "unknown error")
                 results.append({"id": rid, "name": name, "status": f"ERROR: {err_msg}", "path": ""})
                 click.echo(f"      ERROR: {err_msg}", err=True)
         except Exception as exc:

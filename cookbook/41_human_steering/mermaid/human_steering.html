@@ -55,6 +55,11 @@ flowchart TD
     RET17(["RETURN @draft (status='draf..., reason='gene...)"])
     EXC16 --> RET17
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN18["FUNCTION: draft()"]
+    FN19["FUNCTION: refine()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -71,6 +76,8 @@ flowchart TD
     class RET15 term
     class EXC16 ctrl
     class RET17 term
+    class FN18 fn
+    class FN19 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

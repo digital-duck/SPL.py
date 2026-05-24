@@ -55,6 +55,12 @@ flowchart TD
     RET24(["RETURN @transcript (status='part..., reason='eval...)"])
     EXC23 --> RET24
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN25["FUNCTION: interviewer_persona()"]
+    FN26["FUNCTION: candidate_persona()"]
+    FN27["FUNCTION: evaluation_rubric()"]
+    end
     class START1 term
     class LOG2 log
     class SUB3 proc
@@ -79,6 +85,9 @@ flowchart TD
     class RET22 term
     class EXC23 ctrl
     class RET24 term
+    class FN25 fn
+    class FN26 fn
+    class FN27 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

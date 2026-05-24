@@ -63,6 +63,12 @@ flowchart TD
     RET21(["RETURN 'I remember you! But ...' (status='budg...)"])
     EXC20 --> RET21
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN22["FUNCTION: extract_facts()"]
+    FN23["FUNCTION: merge_profile()"]
+    FN24["FUNCTION: contextual_reply()"]
+    end
     class START1 term
     class LOG2 log
     class A3 assign
@@ -83,6 +89,9 @@ flowchart TD
     class RET19 term
     class EXC20 ctrl
     class RET21 term
+    class FN22 fn
+    class FN23 fn
+    class FN24 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

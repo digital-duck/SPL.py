@@ -44,6 +44,11 @@ flowchart TD
     LOG17 --> RET18
     EXC16 --> LOG17
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN19["FUNCTION: summarise_topic()"]
+    FN20["FUNCTION: morning_briefing()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -62,6 +67,8 @@ flowchart TD
     class EXC16 ctrl
     class LOG17 log
     class RET18 term
+    class FN19 fn
+    class FN20 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

@@ -36,6 +36,10 @@ flowchart TD
     RET14(["RETURN 'synthesis_failed' (status='error', reason='gene...)"])
     EXC13 --> RET14
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN15["FUNCTION: synthesize()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -49,6 +53,7 @@ flowchart TD
     class RET12 term
     class EXC13 ctrl
     class RET14 term
+    class FN15 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

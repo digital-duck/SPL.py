@@ -45,6 +45,11 @@ flowchart TD
     RET20(["RETURN @hypotheses (status='hypo..., reason='evid...)"])
     EXC19 --> RET20
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN21["FUNCTION: hypothesis_framework()"]
+    FN22["FUNCTION: evidence_schema()"]
+    end
     class START1 term
     class LOG2 log
     class GEN3 llm
@@ -64,6 +69,8 @@ flowchart TD
     class RET18 term
     class EXC19 ctrl
     class RET20 term
+    class FN21 fn
+    class FN22 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

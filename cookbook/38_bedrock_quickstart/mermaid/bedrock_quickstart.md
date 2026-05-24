@@ -29,6 +29,10 @@ flowchart TD
     RET10(["RETURN 'One or more Bedrock ...' (status='error')"])
     EXC9 --> RET10
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN11["FUNCTION: compare_models()"]
+    end
     class START1 term
     class FORK2 assign
     class SYNC3 assign
@@ -39,6 +43,7 @@ flowchart TD
     class RET8 term
     class EXC9 ctrl
     class RET10 term
+    class FN11 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

@@ -64,6 +64,10 @@ flowchart TD
     LOG22 --> RET23
     EXC20 --> A21
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN24["FUNCTION: analyze_risk_factors()"]
+    end
     class START1 term
     class LOG2 log
     class EVAL3 ctrl
@@ -85,6 +89,7 @@ flowchart TD
     class A21 assign
     class LOG22 log
     class RET23 term
+    class FN24 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764

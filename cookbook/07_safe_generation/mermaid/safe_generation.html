@@ -53,6 +53,12 @@ flowchart TD
     RET19(["RETURN @result (status='trun...)"])
     EXC18 --> RET19
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN20["FUNCTION: response()"]
+    FN21["FUNCTION: quality_assess()"]
+    FN22["FUNCTION: improved()"]
+    end
     class START1 term
     class GEN2 llm
     class GEN3 llm
@@ -71,6 +77,9 @@ flowchart TD
     class RET17 term
     class EXC18 ctrl
     class RET19 term
+    class FN20 fn
+    class FN21 fn
+    class FN22 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

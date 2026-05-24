@@ -51,6 +51,10 @@ flowchart TD
     RET13(["RETURN 'Batch test failed du...' (status='error')"])
     EXC12 --> RET13
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN14["FUNCTION: summarize_results()"]
+    end
     class START1 term
     class FORK2 assign
     class SYNC3 assign
@@ -64,6 +68,7 @@ flowchart TD
     class RET11 term
     class EXC12 ctrl
     class RET13 term
+    class FN14 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
     classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

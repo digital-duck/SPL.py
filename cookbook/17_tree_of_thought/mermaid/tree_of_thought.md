@@ -75,6 +75,16 @@ flowchart TD
     EXC34 --> S35
     S35 --> END31
     end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN36["FUNCTION: initial_approach()"]
+    FN37["FUNCTION: develop()"]
+    FN38["FUNCTION: evaluate_path()"]
+    FN39["FUNCTION: select_best()"]
+    FN40["FUNCTION: refine_solution()"]
+    FN41["FUNCTION: verify()"]
+    FN42["FUNCTION: synthesize_all()"]
+    end
     class START1 term
     class LOG2 log
     class A3 assign
@@ -109,6 +119,13 @@ flowchart TD
     class RET33 term
     class EXC34 ctrl
     class S35 assign
+    class FN36 fn
+    class FN37 fn
+    class FN38 fn
+    class FN39 fn
+    class FN40 fn
+    class FN41 fn
+    class FN42 fn
     classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
     classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
     classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
