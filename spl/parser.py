@@ -811,21 +811,22 @@ class Parser:
         self._expect(TokenType.WORKFLOW)
         name = self._expect(TokenType.IDENTIFIER).value
 
-        # INPUT: @param type, ...
+        # INPUT: supports both compact  "INPUT @p1 type, @p2 type"
+        # and per-line  "INPUT @p1 type := val\nINPUT @p2 type := val"
         inputs = []
-        if self._check(TokenType.INPUT):
+        while self._check(TokenType.INPUT):
             self._advance()
             if self._check(TokenType.COLON):
                 self._advance()
-            inputs = self._parse_workflow_param_list()
+            inputs.extend(self._parse_workflow_param_list())
 
-        # OUTPUT: @param type, ...
+        # OUTPUT: same dual-syntax support as INPUT
         outputs = []
-        if self._check(TokenType.OUTPUT):
+        while self._check(TokenType.OUTPUT):
             self._advance()
             if self._check(TokenType.COLON):
                 self._advance()
-            outputs = self._parse_workflow_param_list()
+            outputs.extend(self._parse_workflow_param_list())
 
         # Optional metadata blocks
         security = None
@@ -891,8 +892,8 @@ class Parser:
             else:
                 param_type = self._advance().value
 
-        # Optional DEFAULT
-        if self._check(TokenType.DEFAULT):
+        # Optional DEFAULT or := (both introduce a default value expression)
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
 

@@ -1269,7 +1269,8 @@ class Executor:
             args_text = [self._eval_expression(a, state) for a in stmt.arguments]
             prompt = f"Execute procedure: {stmt.procedure_name}({', '.join(args_text)})"
             self._check_budget(state)
-            result = await self.adapter.generate(prompt=prompt, max_tokens=1000)
+            result = await self.adapter.generate(prompt=prompt, max_tokens=1000,
+                                                 model=self.default_model)
             state.record_llm_call(result)
             if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
                 state.set_var(stmt.target_variable, result.content)
