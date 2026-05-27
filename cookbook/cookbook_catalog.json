@@ -1245,14 +1245,40 @@
     },
     {
       "id": "65",
+      "name": "LLM-powered SPL Compiler (vibe-splc)",
+      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler — run both and cross-compare to surface gaps",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/65_llm_splc/llm_splc.spl",
+        "--tools",
+        "cookbook/65_llm_splc/tools.py",
+        "--param",
+        "spl_file=cookbook/05_self_refine/self_refine.spl",
+        "--param",
+        "target=langgraph"
+      ],
+      "dir": "65_llm_splc",
+      "log": "llm_splc",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "claude_cli"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "66",
       "name": "Mixed-Regime Stock Analysis",
       "description": "Demonstrates CREATE TOOL_API: deterministic Python tools (fetch_ohlcv, compute_metrics) + LLM analysis (interpret_metrics, synthesize_report) in one self-contained .spl file",
       "args": [
         "spl3",
         "run",
-        "cookbook/65_stock_analysis/stock_analysis.spl"
+        "cookbook/66_stock_analysis/stock_analysis.spl"
       ],
-      "dir": "65_stock_analysis",
+      "dir": "66_stock_analysis",
       "log": "stock_analysis",
       "is_active": true,
       "approval_status": "new",

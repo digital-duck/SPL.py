@@ -30,19 +30,22 @@ GENERATE synthesize_report() → probabilistic: LLM synthesis  (uses LLM)
 
 ```bash
 # Default: AAPL, MSFT, GOOGL — last 30 days
-spl3 run cookbook/65_stock_analysis/stock_analysis.spl \
-    --adapter ollama -m gemma3
+spl3 run cookbook/66_stock_analysis/stock_analysis.spl \
+    --adapter ollama --model gemma3
 
 # Custom tickers and window
-spl3 run cookbook/65_stock_analysis/stock_analysis.spl \
-    --adapter ollama -m gemma3 \
-    --param tickers="TSLA,NVDA,AMD" \
-    --param days="60" \
-    --param max_tickers=3
+spl3 run cookbook/66_stock_analysis/stock_analysis.spl \
+    --adapter ollama --model gemma3 \
+    --param tickers="TSLA, NVDA, AMD" \
+    --param days=60 
 
 # Using cloud adapter
-spl3 run cookbook/65_stock_analysis/stock_analysis.spl \
-    --adapter openrouter -m qwen/qwen3-235b-a22b \
+spl3 run cookbook/66_stock_analysis/stock_analysis.spl \
+    --adapter claude_cli --param tickers="GDX,SILJ, WEAT,UNG"
+
+# Using cloud adapter
+spl3 run cookbook/66_stock_analysis/stock_analysis.spl \
+    --adapter openrouter --model qwen/qwen3-235b-a22b \
     --param tickers="SPY,QQQ,IWM"
 ```
 
@@ -50,13 +53,13 @@ spl3 run cookbook/65_stock_analysis/stock_analysis.spl \
 
 ```bash
 # LangGraph (Python) — TOOL_API bodies emitted verbatim as module-level helpers
-spl3 splc cookbook/65_stock_analysis/stock_analysis.spl --target langgraph
+spl3 splc cookbook/66_stock_analysis/stock_analysis.spl --target langgraph
 
 # Go — TOOL_API stubs with Python reference comment (port manually)
-spl3 splc cookbook/65_stock_analysis/stock_analysis.spl --target go
+spl3 splc cookbook/66_stock_analysis/stock_analysis.spl --target go
 
 # TypeScript — TOOL_API stubs with Python reference comment
-spl3 splc cookbook/65_stock_analysis/stock_analysis.spl --target ts
+spl3 splc cookbook/66_stock_analysis/stock_analysis.spl --target ts
 ```
 
 ## Key learning points
@@ -74,6 +77,6 @@ spl3 splc cookbook/65_stock_analysis/stock_analysis.spl --target ts
 4. **Promotion to library** — promote `fetch_ohlcv` and `compute_metrics` to the shared
    library so any workflow can reuse them without copy-pasting:
    ```bash
-   spl3 tool-api promote cookbook/65_stock_analysis/stock_analysis.spl --name finance_tools
+   spl3 tool-api promote cookbook/66_stock_analysis/stock_analysis.spl --name finance_tools
    spl3 tool-api list
    ```

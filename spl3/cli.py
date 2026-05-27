@@ -623,6 +623,9 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
         if isinstance(_stmt, CreateFunctionStatement):
             executor.functions.register(_stmt)
 
+    # Register CREATE TOOL_API definitions (exec + register as tools)
+    executor._load_tool_apis(_program)
+
     stem = path.stem.replace("-", "_")
     defns = load_workflows_from_file(path)
 

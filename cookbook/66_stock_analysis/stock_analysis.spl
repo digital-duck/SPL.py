@@ -1,5 +1,5 @@
 -- ============================================================
--- Recipe 65: Mixed-Regime Stock Analysis
+-- Recipe 66: Mixed-Regime Stock Analysis
 --
 -- Demonstrates the 2×2 hybrid matrix:
 --   Deterministic (TOOL_API) — data fetch + numeric filter
@@ -11,7 +11,8 @@
 
 -- ── Deterministic regime: Python tools ───────────────────────
 
-CREATE TOOL_API fetch_ohlcv(ticker TEXT, days TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API fetch_ohlcv(ticker TEXT, days TEXT)
+RETURNS TEXT AS PYTHON $$
 import urllib.request, json, datetime
 
 def fetch_ohlcv(ticker: str, days: str) -> str:
@@ -41,7 +42,8 @@ def fetch_ohlcv(ticker: str, days: str) -> str:
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API compute_metrics(csv_data TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API compute_metrics(csv_data TEXT)
+RETURNS TEXT AS PYTHON $$
 def compute_metrics(csv_data: str) -> str:
     """Compute simple price metrics from date,close CSV."""
     try:
@@ -72,18 +74,10 @@ def compute_metrics(csv_data: str) -> str:
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API get_item(items TEXT, idx TEXT) RETURNS TEXT AS PYTHON $$
-def get_item(items: str, idx: str) -> str:
-    """Extract the idx-th item (0-based) from a comma-separated list."""
-    try:
-        return [x.strip() for x in items.split(",")][int(idx)]
-    except Exception as e:
-        return f"error: {e}"
-$$;
-
 -- ── Probabilistic regime: LLM prompt templates ───────────────
 
-CREATE FUNCTION interpret_metrics(ticker TEXT, metrics TEXT) RETURNS TEXT AS $$
+CREATE FUNCTION interpret_metrics(ticker TEXT, metrics TEXT)
+RETURNS TEXT AS $$
 You are a financial analyst. Given the following price metrics for {ticker},
 write a concise two-sentence summary covering:
   1. Overall trend direction (bullish / bearish / sideways).
@@ -92,9 +86,11 @@ write a concise two-sentence summary covering:
 Metrics: {metrics}
 $$;
 
-CREATE FUNCTION synthesize_report(tickers TEXT, summaries TEXT) RETURNS TEXT AS $$
+CREATE FUNCTION synthesize_report(tickers TEXT, summaries TEXT, days INT)
+RETURNS TEXT AS $$
 You are a portfolio manager. Given the following per-stock summaries for {tickers},
 produce a brief (3–5 sentence) consolidated portfolio outlook that:
+  - opens with the tickers and time frame,
   - Highlights the best and worst performers.
   - Notes any correlated risk across the portfolio.
   - Ends with a single actionable recommendation.
@@ -106,34 +102,22 @@ $$;
 -- ── WORKFLOW ─────────────────────────────────────────────────
 
 WORKFLOW stock_analysis
-  INPUT @tickers TEXT := 'AAPL,MSFT,GOOGL'
-  INPUT @days TEXT := '30'
-  INPUT @max_tickers INTEGER := 3
+  INPUT @tickers TEXT := 'AAPL,META,GOOG, CRM'
+  INPUT @days INT := 30
   OUTPUT @report TEXT
 DO
-  @i := 0;
   @report := '';
 
-  -- Classic loop: deterministic data + LLM insight per ticker
-  WHILE @i < @max_tickers DO
-    -- Deterministic: extract ticker from list
-    CALL get_item(@tickers, @i) INTO @ticker;
-
-    -- Deterministic: fetch OHLCV data via HTTP (Python TOOL_API)
+  -- Native LIST iteration: splits @tickers by comma automatically
+  WHILE @ticker IN @tickers DO
     CALL fetch_ohlcv(@ticker, @days) INTO @raw_data;
-
-    -- Deterministic: compute numeric metrics in Python
     CALL compute_metrics(@raw_data) INTO @metrics;
-
-    -- Probabilistic: LLM interprets the metrics
     GENERATE interpret_metrics(@ticker, @metrics) INTO @insight;
-
     @report := @report + @ticker + ': ' + @insight + '\n\n';
-    @i := @i + 1;
   END;
 
   -- Final LLM synthesis across all tickers
-  GENERATE synthesize_report(@tickers, @report) INTO @synthesis;
+  GENERATE synthesize_report(@tickers, @report, @days) INTO @synthesis;
   @report := @synthesis;
 
   RETURN @report WITH status = 'complete';
