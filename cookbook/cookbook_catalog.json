@@ -1242,6 +1242,24 @@
       "requires": [
         "ollama:gemma4"
       ]
+    },
+    {
+      "id": "65",
+      "name": "Mixed-Regime Stock Analysis",
+      "description": "Demonstrates CREATE TOOL_API: deterministic Python tools (fetch_ohlcv, compute_metrics) + LLM analysis (interpret_metrics, synthesize_report) in one self-contained .spl file",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/65_stock_analysis/stock_analysis.spl"
+      ],
+      "dir": "65_stock_analysis",
+      "log": "stock_analysis",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [],
+      "excluded_adapters": []
     }
   ]
 }

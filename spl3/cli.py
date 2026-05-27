@@ -2320,7 +2320,23 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 
         llm = get_adapter(adapter, timeout=timeout, **({"model": model} if model else {}))
         prompt_text = _MMD2SPL_PROMPT.format(mermaid=mermaid_content)
-        
+
+        # Inject available tools catalog (stdlib + registry) so the LLM knows
+        # what already exists and reuses CALL instead of re-generating TOOL_API.
+        try:
+            from spl3.tool_api_registry import available_tools_prompt_block
+            _tools_block = available_tools_prompt_block()
+            if _tools_block:
+                _TOOLS_ANCHOR = "== MANDATORY SPL 3.0 CONVENTIONS"
+                if _TOOLS_ANCHOR in prompt_text:
+                    prompt_text = prompt_text.replace(
+                        _TOOLS_ANCHOR,
+                        _tools_block + "\n" + _TOOLS_ANCHOR,
+                        1,
+                    )
+        except Exception:
+            pass   # non-fatal: generation proceeds without the catalog
+
         if prompt_debug:
             click.echo("=" * 70)
             click.echo("LLM PROMPT:")
@@ -2924,67 +2940,147 @@ Mermaid Diagram:
 {mermaid}
 ```
 
-MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY):
-1. WORKFLOW declaration syntax — INPUT/OUTPUT come BEFORE DO, no semicolons, one END;:
+== REGIME CLASSIFICATION — DO THIS FIRST ==
+
+Before writing any construct, classify each operation in the diagram:
+
+  DETERMINISTIC (single correct answer expressible as code)?
+    → CREATE TOOL_API ... AS PYTHON $$ ... $$  +  CALL
+  PROBABILISTIC (requires reasoning, judgment, or generation)?
+    → CREATE FUNCTION ... AS $$ <prompt> $$    +  GENERATE
+
+Classical / deterministic indicators — ALWAYS use TOOL_API:
+  external API call, HTTP request, data fetch, math/statistics, string split/join/index,
+  data transformation, file I/O, sorting/filtering, format conversion, chart/plot rendering,
+  any operation a developer could unit-test with an exact expected value.
+
+Probabilistic indicators — use CREATE FUNCTION:
+  summarization, interpretation, nuanced classification, text generation, quality judgment,
+  any operation where "correct" depends on context requiring reasoning.
+
+Using GENERATE for a deterministic operation is a category error — like solving
+Schrödinger''s equation to predict a missile trajectory. Use the right regime.
+
+== MANDATORY SPL 3.0 CONVENTIONS (FOLLOW EXACTLY) ==
+
+1. WORKFLOW declaration — INPUT/OUTPUT before DO, no semicolons on those lines:
    WORKFLOW <name>
      INPUT @param1 TYPE, @param2 TYPE := default
      OUTPUT @result TYPE
    DO
      ... statements ...
    END;
-   IMPORTANT: Do NOT put semicolons after INPUT or OUTPUT lines.
-   IMPORTANT: Do NOT wrap the body in a nested DO...END; block — DO opens the body and END; closes the whole WORKFLOW.
-2. Variable sigils: Use @ for workflow variables (e.g., @input, @result, @temp).
-3. Variable assignment: Use := (e.g., @var := "value";).
-4. LLM calls: Use GENERATE <fn>(<args>) INTO @<var>;
-5. Tool calls: Use CALL <tool>(<args>) INTO @<var>;
-6. Branching: Use EVALUATE @<var> WHEN contains("string") THEN ... ELSE ... END;
-   IMPORTANT: EVALUATE must target a variable with @ prefix.
-   IMPORTANT: WHEN clauses must use the contains("...") function for string matching.
-7. Parallel execution: Use CALL PARALLEL ... END; for concurrent branches.
-   Branches are comma-separated with NO CALL/GENERATE prefix and NO semicolons on each line:
+   Do NOT put semicolons after INPUT or OUTPUT lines.
+   Do NOT wrap the body in a nested DO...END; block.
+
+2. Variable sigils: Use @ for workflow variables (@input, @result, @i).
+
+3. Variable assignment: @var := "value";
+
+4. Deterministic tool definition and call (classical regime):
+   -- Define at the top of the file, before CREATE FUNCTION and WORKFLOW:
+   CREATE TOOL_API <name>(<param> TEXT, ...) RETURNS TEXT AS PYTHON $$
+   import needed_library   -- imports go inside the body
+   def <name>(<param>: str, ...) -> str:
+       try:
+           # real implementation — not a stub
+           return result_as_string
+       except Exception as e:
+           return f"error: {{e}}"
+   $$;
+   -- Call inside WORKFLOW:
+   CALL <name>(@arg1, @arg2) INTO @var;
+   RULES:
+   - Every parameter and return value is str (SPL passes everything as strings).
+   - The function name inside $$ MUST match the TOOL_API name exactly.
+   - Return "error: <msg>" on failure — never raise unhandled exceptions.
+   - Include all imports inside the $$ body.
+   - Use '' (two single quotes) for apostrophes inside $$ string literals.
+
+5. LLM function definition and call (probabilistic regime):
+   CREATE FUNCTION <name>(<param> TYPE, ...) RETURNS TYPE AS $$
+     <natural language prompt using {{param}} template slots>
+   $$;
+   GENERATE <name>(@arg) INTO @var;
+   RULES:
+   - Function parameters do NOT use @ prefix.
+   - Use {{param}} (curly braces) inside $$ bodies for template slots.
+   - Use '' (two single quotes) for apostrophes inside $$ bodies.
+
+6. Branching: EVALUATE @<var> WHEN contains("token") THEN ... ELSE ... END;
+   WHEN clauses use contains("...") for string matching — never comparison operators.
+
+7. Parallel execution:
    CALL PARALLEL
      branch_one(@arg) INTO @var1,
-     branch_two(@arg) INTO @var2,
-     branch_three(@arg) INTO @var3
+     branch_two(@arg) INTO @var2
    END;
-   IMPORTANT: Do NOT write CALL or GENERATE before branch names inside CALL PARALLEL.
-   IMPORTANT: Separate branches with commas, not semicolons. No semicolon on the last branch.
-8. Looping: Use WHILE <condition> DO ... END;
-   IMPORTANT: Never hardcode an iteration limit as a literal number (e.g. NEVER write "@iteration < 3").
-   Always declare @max_iterations as a WORKFLOW INPUT with a sensible default, then reference it:
-     INPUT @max_iterations INTEGER := 3
-     ...
-     WHILE @iteration < @max_iterations DO ... END;
-   This keeps the limit configurable without editing the workflow.
-   IMPORTANT: Use = (single equals) for comparisons, NOT == (double equals). SPL has no == operator.
-9. Helper functions: Define CREATE FUNCTION <name>(<params>) RETURNS <type> AS $$ <prompt> $$; at the top of the file.
-   Note: Function parameters in CREATE FUNCTION do NOT use @ prefix.
-   IMPORTANT: Inside $$ prompt bodies, use '' (two single quotes) instead of ' (apostrophe/single quote)
-   to avoid string literal parsing errors. E.g. write "don''t" not "don't", "it''s" not "it's".
-10. Return: Use RETURN @<var> WITH status = "complete";
-    IMPORTANT: RETURN must only appear at the TOP LEVEL of the WORKFLOW body — NEVER inside a WHILE loop
-    or EVALUATE block. To exit early based on a quality score or condition, use a binary gate function
-    that returns "done" or "continue", check it with EVALUATE AFTER the loop ends, then RETURN there.
-    Correct pattern for quality-gated loops:
-      WHILE @iteration < @max_iterations DO
-        GENERATE score_fn(@draft) INTO @score
-        GENERATE gate_fn(@score) INTO @gate       -- returns "done" if score >= threshold
-        EVALUATE @gate
-          WHEN contains("done") THEN
-            @iteration := @max_iterations         -- force loop exit next condition check
-          ELSE
-            GENERATE refine_fn(@draft) INTO @draft
-        END
-        @iteration := @iteration + 1
-      END
-      RETURN @draft WITH status = "complete";
-11. Score comparisons: Never use EVALUATE to compare numeric scores directly with contains("0.8") etc.
-    LLM score outputs vary in format ("0.80", "0.8", "Score: 0.8"). Always extract the score with a
-    dedicated CREATE FUNCTION that returns a categorical token like "high", "low", or "done"/"continue",
-    then use EVALUATE ... WHEN contains("done") ... to branch on that token.
+   No CALL/GENERATE prefix on branch lines. Comma-separated, no semicolon on last branch.
 
-The generated SPL must be complete, executable, and follow the logic of the diagram exactly.
+8. Looping:
+   WHILE @i < @max_iterations DO ... END;
+   Never hardcode iteration limits — declare INPUT @max_iterations INTEGER := N.
+   Use = (single equals) for comparisons. SPL has no == operator.
+
+9. Return (top-level only — never inside WHILE or EVALUATE):
+   RETURN @var WITH status = "complete";
+   For quality-gated loops, force-exit by setting @i := @max_iterations inside EVALUATE,
+   then RETURN after the loop closes.
+
+10. Score/numeric comparisons: extract a categorical token first.
+    WRONG: EVALUATE @score WHEN contains("0.8") THEN ...
+    RIGHT: GENERATE gate_fn(@score) INTO @gate  -- returns "done" or "continue"
+           EVALUATE @gate WHEN contains("done") THEN ...
+
+== FILE STRUCTURE ORDER ==
+
+1. CREATE TOOL_API blocks   (deterministic Python tools — classical regime)
+2. CREATE FUNCTION blocks   (LLM prompt templates — probabilistic regime)
+3. WORKFLOW block
+
+== EXAMPLE — mixed regime (stock data pipeline) ==
+
+CREATE TOOL_API get_ticker(ticker_list TEXT, idx TEXT) RETURNS TEXT AS PYTHON $$
+def get_ticker(ticker_list: str, idx: str) -> str:
+    return [t.strip() for t in ticker_list.split(",")][int(idx)]
+$$;
+
+CREATE TOOL_API fetch_ohlcv(ticker TEXT, years TEXT) RETURNS TEXT AS PYTHON $$
+import yfinance as yf, pandas as pd
+def fetch_ohlcv(ticker: str, years: str) -> str:
+    try:
+        end = pd.Timestamp.today()
+        start = end - pd.DateOffset(years=float(years))
+        df = yf.download(ticker, start=start, end=end, auto_adjust=True)
+        return "error: no data" if df.empty else df.to_csv()
+    except Exception as e:
+        return f"error: {{e}}"
+$$;
+
+CREATE FUNCTION interpret_metrics(ticker TEXT, csv_data TEXT) RETURNS TEXT AS $$
+  Analyze the OHLCV data for {{ticker}} and write a 2-sentence investment summary
+  covering trend direction, volatility, and key risk. Data: {{csv_data}}
+$$;
+
+WORKFLOW stock_report
+  INPUT @tickers TEXT := "GOOG,META,MSFT"
+  INPUT @years TEXT := "2"
+  INPUT @max_tickers INTEGER := 3
+  OUTPUT @report TEXT
+DO
+  @i := 0;
+  @report := "";
+  WHILE @i < @max_tickers DO
+    CALL get_ticker(@tickers, @i) INTO @ticker;
+    CALL fetch_ohlcv(@ticker, @years) INTO @data;
+    GENERATE interpret_metrics(@ticker, @data) INTO @summary;
+    @report := @report + @ticker + ": " + @summary + "\n";
+    @i := @i + 1;
+  END;
+  RETURN @report WITH status = "complete";
+END;
+
+The generated SPL must be complete, executable, and follow the diagram logic exactly.
 
 OUTPUT FORMAT — REQUIRED:
 Wrap the SPL code between these exact markers (nothing outside them):
@@ -4141,6 +4237,144 @@ def cmd_migrate(source, target, adapter, model, judge_adapter, judge_model,
         score_path = work / f"{stem}-migration-score.md"
         if score_path.exists():
             click.echo(f"\n  Fidelity report → {score_path}")
+
+
+# ── spl3 tool-api ────────────────────────────────────────────────────────────
+
+@main.group("tool-api", short_help="Manage the CREATE TOOL_API library registry.")
+def cmd_tool_api():
+    """List, promote, and remove deterministic TOOL_API libraries.
+
+    TOOL_API libraries are .spl files stored in ~/.spl/tool_apis/.
+    They are loaded automatically before each workflow execution so any
+    CALL statement can dispatch to their deterministic Python functions.
+
+    \b
+    Workflow:
+        spl3 tool-api promote my_recipe.spl --name finance_tools   # register
+        spl3 tool-api list                                          # inspect
+        spl3 tool-api remove finance_tools                          # remove
+    """
+
+
+@cmd_tool_api.command("list", short_help="List registered TOOL_API libraries.")
+@click.option("--tools", "show_tools", is_flag=True,
+              help="Show individual function signatures inside each library.")
+@click.option("--stdlib", is_flag=True,
+              help="Also list built-in stdlib tools (web_search, http_get, ...).")
+def cmd_tool_api_list(show_tools, stdlib):
+    """Show all .spl files registered in the TOOL_API library (~/.spl/tool_apis/).
+
+    \b
+    Examples:
+        spl3 tool-api list                  # file-level summary
+        spl3 tool-api list --tools          # show function signatures
+        spl3 tool-api list --tools --stdlib # include stdlib tools too
+    """
+    from spl3.tool_api_registry import list_libraries, list_tools, registry_dir
+
+    if show_tools:
+        # Function-level view
+        tools = list_tools(include_stdlib=stdlib)
+        if not tools:
+            msg = "No TOOL_API tools found"
+            if not stdlib:
+                msg += " in registry (use --stdlib to include built-in tools)"
+            click.echo(msg)
+            return
+
+        # Group by source
+        by_source: dict[str, list] = {}
+        for t in tools:
+            by_source.setdefault(t.source, []).append(t)
+
+        if stdlib and "stdlib" in by_source:
+            click.echo("Stdlib tools (built-in, always available):")
+            for t in by_source.pop("stdlib"):
+                click.echo(f"  CALL {t.spl_signature()}")
+            click.echo()
+
+        if by_source:
+            click.echo(f"User library tools in {registry_dir()}:")
+            for lib_name, sigs in sorted(by_source.items()):
+                click.echo(f"\n  [{lib_name}.spl]")
+                for t in sigs:
+                    click.echo(f"    CALL {t.spl_signature()}")
+        elif not stdlib:
+            click.echo(f"No library tools in {registry_dir()}")
+            click.echo("Use `spl3 tool-api promote <file.spl>` to add one.")
+    else:
+        # File-level view (original behaviour)
+        libs = list_libraries()
+        if not libs:
+            click.echo(f"No TOOL_API libraries registered in {registry_dir()}")
+            click.echo("Use `spl3 tool-api promote <file.spl>` to add one.")
+            return
+        click.echo(f"TOOL_API libraries in {registry_dir()}:\n")
+        for lib in libs:
+            click.echo(
+                f"  {lib['name']:<30}  {lib['tool_count']} tool(s)  "
+                f"({lib['size']:,} bytes)  {lib['path']}"
+            )
+
+
+@cmd_tool_api.command("promote", short_help="Add a .spl file to the TOOL_API library.")
+@click.argument("spl_file", metavar="FILE")
+@click.option("--name", "-n", default=None,
+              help="Registry name (default: stem of FILE).")
+@click.option("--force", is_flag=True,
+              help="Overwrite existing library entry with the same name.")
+def cmd_tool_api_promote(spl_file, name, force):
+    """Promote a .spl file containing CREATE TOOL_API blocks to the shared library.
+
+    The file is copied to ~/.spl/tool_apis/<name>.spl.
+    All future `spl3 run` invocations will load these tools automatically.
+
+    \b
+    Example:
+        spl3 tool-api promote cookbook/65_stock_analysis/stock_analysis.spl --name finance
+        spl3 tool-api list
+    """
+    from pathlib import Path as _Path
+    from spl3.tool_api_registry import promote, registry_dir
+
+    src = _Path(spl_file)
+    if not src.exists():
+        click.echo(f"Error: file not found: {spl_file}", err=True)
+        raise SystemExit(1)
+
+    dest_name = name or src.stem
+    dest = registry_dir() / f"{dest_name}.spl"
+    if dest.exists() and not force:
+        click.echo(
+            f"Error: library '{dest_name}' already exists. "
+            f"Use --force to overwrite.", err=True
+        )
+        raise SystemExit(1)
+
+    try:
+        dest_path = promote(src, name=dest_name)
+        click.echo(f"✓  Promoted → {dest_path}")
+    except ValueError as exc:
+        click.echo(f"Error: {exc}", err=True)
+        raise SystemExit(1)
+
+
+@cmd_tool_api.command("remove", short_help="Remove a library from the registry.")
+@click.argument("name", metavar="NAME")
+def cmd_tool_api_remove(name):
+    """Remove a registered TOOL_API library by its registry name (no .spl suffix).
+
+    \b
+    Example:
+        spl3 tool-api remove finance
+    """
+    from spl3.tool_api_registry import remove
+    if remove(name):
+        click.echo(f"✓  Removed TOOL_API library: {name}")
+    else:
+        click.echo(f"Not found: no library named '{name}' in the registry.")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

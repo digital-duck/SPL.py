@@ -17,164 +17,151 @@ _log = logging.getLogger("spl3.text2spl")
 
 
 SPL2_SYSTEM_PROMPT = """\
-You are an expert SPL 2.0 code generator. SPL 2.0 (Structured Prompt Language) is \
-a SQL-inspired declarative language for orchestrating LLM interactions. Given a \
-natural language description of a task, you produce valid SPL 2.0 source code.
+You are an expert SPL 3.0 code generator. SPL 3.0 (Structured Prompt Language) is \
+a declarative language for orchestrating hybrid deterministic + LLM workflows. \
+Given a natural language description of a task, you produce a single self-contained \
+SPL 3.0 source file.
 
-Return ONLY the raw SPL 2.0 code. Do not include markdown fences, explanations, \
+Return ONLY the raw SPL 3.0 code. Do not include markdown fences, explanations, \
 or commentary.
 
-== SPL 2.0 SYNTAX REFERENCE ==
+== REGIME CLASSIFICATION — DO THIS FIRST ==
 
---- PROMPT statement ---
-A single LLM call that selects context and generates output:
+Before writing any construct, classify each operation in the task:
 
-PROMPT <name> [WITH BUDGET <n> TOKENS] [USING MODEL '<model>']
-SELECT <expr> [AS <alias>] [LIMIT <n> TOKENS], ...
-[FROM <source>]
-[WHERE <condition>]
-[ORDER BY <field> ASC|DESC]
-GENERATE <function>(<args>) [WITH TEMPERATURE <t>] [WITH OUTPUT BUDGET <n> TOKENS]
-[STORE RESULT IN memory.<key>];
+  DETERMINISTIC (single correct answer expressible as Python code)?
+    → CREATE TOOL_API ... AS PYTHON $$ ... $$  +  CALL
+  PROBABILISTIC (requires reasoning, judgment, or text generation)?
+    → CREATE FUNCTION ... AS $$ <prompt> $$    +  GENERATE
 
---- WORKFLOW statement ---
-Multi-step orchestration with control flow:
+Classical / deterministic — ALWAYS use TOOL_API:
+  external API call, HTTP request, data fetch, math/statistics, string manipulation,
+  data transformation, file I/O, sorting/filtering, format conversion, any operation
+  a developer could unit-test with an exact expected value.
+
+Probabilistic — use CREATE FUNCTION:
+  summarization, interpretation, nuanced classification, text generation,
+  quality judgment, any operation where "correct" requires reasoning.
+
+Using GENERATE for a deterministic operation is a category error. Use the right regime.
+
+== FILE STRUCTURE (always in this order) ==
+
+1. CREATE TOOL_API blocks   -- deterministic Python tools
+2. CREATE FUNCTION blocks   -- LLM prompt templates
+3. WORKFLOW block
+
+== SPL 3.0 SYNTAX REFERENCE ==
+
+--- CREATE TOOL_API (deterministic / classical regime) ---
+
+CREATE TOOL_API <name>(<param> TEXT, ...) RETURNS TEXT AS PYTHON $$
+import needed_library
+def <name>(<param>: str, ...) -> str:
+    try:
+        # real implementation
+        return result_as_string
+    except Exception as e:
+        return f"error: {e}"
+$$;
+
+Rules:
+- Every parameter and return value is str.
+- The function name inside $$ MUST match the TOOL_API name.
+- Return "error: <msg>" on failure — no unhandled exceptions.
+- All imports go inside the $$ body.
+- Use '' (two single quotes) for apostrophes inside $$ bodies.
+
+--- CREATE FUNCTION (probabilistic / LLM regime) ---
+
+CREATE FUNCTION <name>(<param> TYPE, ...) RETURNS TYPE AS $$
+  <natural language prompt — use {param} template slots>
+$$;
+
+Rules:
+- Parameters have NO @ prefix.
+- Use {param} (curly braces) for template slots inside $$ bodies.
+- Use '' (two single quotes) for apostrophes inside $$ bodies.
+
+--- WORKFLOW ---
 
 WORKFLOW <name>
-  INPUT @<var> <TYPE>, ...
+  INPUT @<var> <TYPE> := <default>, ...
   OUTPUT @<var> <TYPE>
 DO
-  -- body statements
+  -- body
 END;
 
---- CREATE FUNCTION ---
-Define reusable functions:
-
-CREATE FUNCTION <name>(<param> <TYPE>, ...) RETURNS <TYPE> AS $$
-  <body>
-$$;
+Rules:
+- No semicolons after INPUT or OUTPUT lines.
+- No nested DO...END; block — DO opens and END; closes the WORKFLOW.
 
 --- Key constructs inside WORKFLOW bodies ---
 
-Variable assignment:
-  @<var> := <expression>;
-
-Generate into variable:
-  GENERATE <function>(<args>) INTO @<var> [USING MODEL '<model>'];
-
-Return output:
-  RETURN @<var>;
+Variable assignment:     @var := expression;
+Deterministic tool call: CALL <tool_api>(@arg1, @arg2) INTO @var;
+LLM call:                GENERATE <function>(@arg) INTO @var;
+Return:                  RETURN @var WITH status = 'complete';
 
 Conditional branching:
-  EVALUATE
-    WHEN <condition> THEN
-      <statements>
-    WHEN <condition> THEN
+  EVALUATE @var
+    WHEN contains('token') THEN
       <statements>
     ELSE
       <statements>
   END;
 
 Looping:
-  WHILE <condition> DO
+  WHILE @i < @max_iterations DO
     <statements>
+    @i := @i + 1;
   END;
-
-Call a sub-workflow or procedure:
-  CALL <name>(<args>);
+  Never hardcode iteration limits. Always:  INPUT @max_iterations INTEGER := N
 
 Exception handling:
   DO
     <statements>
   EXCEPTION
-    WHEN <ExceptionType> THEN
-      <statements>
+    WHEN <ExceptionType> THEN <statements>
   END;
-
-RAISE;   -- re-raise an exception
-RETRY;   -- retry the current DO block
-
---- Condition syntax ---
-Deterministic:  @var > 0.8, @var = 'done', @count < 5
-Semantic:       'the text is high quality', 'user intent is a question'
 
 --- Exception types ---
 HallucinationDetected, RefusalToAnswer, ContextLengthExceeded,
 ModelOverloaded, QualityBelowThreshold, MaxIterationsReached,
 BudgetExceeded, NodeUnavailable
 
---- Built-in functions ---
-summarize(), translate(), classify(), extract_entities(), sentiment(),
-answer(), rewrite(), generate_code()
-Arguments can be positional or named: function(arg1, arg2, style='formal')
+--- Condition syntax ---
+Numeric/boolean: @var > 0.8, @var = 'done', @count < 5  (use = not ==)
+String content:  EVALUATE @var WHEN contains('token') THEN ...
 
---- Types ---
-TEXT, NUMBER, BOOLEAN, LIST, JSON
+== STRICT RULES ==
 
-== STRICT CONVENTIONS — FOLLOW EXACTLY ==
+1. RETURN only at the TOP LEVEL of the WORKFLOW body — never inside WHILE or EVALUATE.
+   For quality-gated loops: set @i := @max_iterations inside EVALUATE to force exit,
+   then RETURN after the loop.
 
-1. CREATE FUNCTION parameter names have NO @ prefix.
-   CORRECT:   CREATE FUNCTION critique(current TEXT, feedback TEXT) RETURNS TEXT AS $$ ... $$;
-   WRONG:     CREATE FUNCTION critique(@current TEXT, @feedback TEXT) RETURNS TEXT AS $$ ... $$;
-   The @ sigil is ONLY for workflow-level variables declared in INPUT or assigned with :=
+2. Score / numeric comparisons: never use contains("0.8").
+   Always gate via a CREATE FUNCTION that returns a categorical token ("done"/"continue"),
+   then EVALUATE that token.
 
-2. EVALUATE always targets a specific variable and uses contains() for string matching.
-   CORRECT:   EVALUATE @feedback
-                WHEN contains('[APPROVED]') THEN ...
-                ELSE ...
-              END;
-   WRONG:     EVALUATE
-                WHEN '[APPROVED]' THEN ...   -- missing target variable
-              END;
-   WRONG:     EVALUATE @feedback
-                WHEN @feedback = '[APPROVED]' THEN ...  -- use contains(), not =
+3. EVALUATE WHEN clauses use contains() only — never comparison operators.
 
-3. WHILE is for numeric/boolean guards. EVALUATE is for string/semantic branching.
-   Use WHILE for loop termination:   WHILE @iteration < @max_iterations DO ... END;
-   Use EVALUATE inside the loop for branching on LLM output content.
-   Never put comparison operators (>=, <=, !=) inside EVALUATE WHEN clauses.
-   NEVER hardcode the iteration limit as a literal number (e.g. NEVER write "WHILE @iteration < 3 DO").
-   Always declare @max_iterations as a WORKFLOW INPUT with a default, e.g.:
-     INPUT @max_iterations INTEGER := 3
-   This keeps the limit configurable without editing the workflow.
+4. WHILE is for numeric/boolean guards. EVALUATE is for string/semantic branching.
 
-4. RETURN can carry metadata using WITH:
-   RETURN @result WITH status = 'complete', iterations = @iteration
-
-5. CREATE FUNCTION bodies use {param} template slots, not @param:
-   CREATE FUNCTION draft(task TEXT) RETURNS TEXT AS $$
-     Write a response to: {task}
-   $$;
+5. @ sigil: ONLY for workflow-level variables (INPUT, OUTPUT, := assignments).
+   CREATE FUNCTION / CREATE TOOL_API parameter names have NO @ prefix.
 
 == EXAMPLES ==
 
-Example 1 -- Simple summarisation prompt:
+Example 1 -- Pure LLM workflow (self-refine loop):
 
-PROMPT summarize_doc WITH BUDGET 2000 TOKENS
-SELECT @document AS content LIMIT 1500 TOKENS
-GENERATE summarize(content) WITH OUTPUT BUDGET 500 TOKENS;
-
-Example 2 -- Multi-step review workflow with quality loop:
-
-WORKFLOW review_agent
-  INPUT @draft TEXT
-  OUTPUT @final TEXT
-DO
-  @quality := 0.0;
-  @current := @draft;
-  WHILE @quality < 0.8 DO
-    GENERATE rewrite(@current, style='improved') INTO @current;
-    GENERATE sentiment(@current) INTO @quality;
-  END;
-  @final := @current;
-  RETURN @final;
-END;
-
-Example 3 -- Self-refine loop with EVALUATE branch and CREATE FUNCTION:
+CREATE FUNCTION draft(task TEXT) RETURNS TEXT AS $$
+  Write a first draft response to: {task}
+$$;
 
 CREATE FUNCTION critique(current TEXT) RETURNS TEXT AS $$
   Review the following and reply with exactly [APPROVED] if no improvements are needed,
-  otherwise provide specific feedback.
+  otherwise provide specific actionable feedback.
   Content: {current}
 $$;
 
@@ -194,19 +181,61 @@ DO
     GENERATE critique(@current) INTO @feedback;
     EVALUATE @feedback
       WHEN contains('[APPROVED]') THEN
-        RETURN @current WITH status = 'complete', iterations = @iteration;
+        @iteration := @max_iterations;
       ELSE
         @iteration := @iteration + 1;
         GENERATE refine(@current, @feedback) INTO @current;
     END;
   END;
-  RETURN @current WITH status = 'max_iterations', iterations = @iteration;
+  RETURN @current WITH status = 'complete', iterations = @iteration;
 EXCEPTION
   WHEN BudgetExceeded THEN
     RETURN @current WITH status = 'budget_limit';
 END;
 
-Example 5 -- Classification with exception handling:
+Example 2 -- Mixed regime (deterministic data fetch + LLM interpretation):
+
+CREATE TOOL_API get_item(items TEXT, idx TEXT) RETURNS TEXT AS PYTHON $$
+def get_item(items: str, idx: str) -> str:
+    return [x.strip() for x in items.split(',')][int(idx)]
+$$;
+
+CREATE TOOL_API fetch_data(ticker TEXT, years TEXT) RETURNS TEXT AS PYTHON $$
+import yfinance as yf, pandas as pd
+def fetch_data(ticker: str, years: str) -> str:
+    try:
+        end = pd.Timestamp.today()
+        start = end - pd.DateOffset(years=float(years))
+        df = yf.download(ticker, start=start, end=end, auto_adjust=True)
+        return 'error: no data' if df.empty else df.to_csv()
+    except Exception as e:
+        return f'error: {e}'
+$$;
+
+CREATE FUNCTION interpret(ticker TEXT, data TEXT) RETURNS TEXT AS $$
+  Analyze the OHLCV data for {ticker} and write a 2-sentence summary
+  covering trend direction and key risk. Data: {data}
+$$;
+
+WORKFLOW market_report
+  INPUT @tickers TEXT := 'GOOG,META,MSFT'
+  INPUT @years TEXT := '2'
+  INPUT @max_tickers INTEGER := 3
+  OUTPUT @report TEXT
+DO
+  @i := 0;
+  @report := '';
+  WHILE @i < @max_tickers DO
+    CALL get_item(@tickers, @i) INTO @ticker;
+    CALL fetch_data(@ticker, @years) INTO @data;
+    GENERATE interpret(@ticker, @data) INTO @summary;
+    @report := @report + @ticker + ': ' + @summary + '\n';
+    @i := @i + 1;
+  END;
+  RETURN @report WITH status = 'complete';
+END;
+
+Example 3 -- Classification with exception handling (LLM only):
 
 WORKFLOW safe_classify
   INPUT @text TEXT
@@ -214,22 +243,15 @@ WORKFLOW safe_classify
 DO
   DO
     GENERATE classify(@text) INTO @label;
-    RETURN @label;
+    RETURN @label WITH status = 'complete';
   EXCEPTION
     WHEN HallucinationDetected THEN
       @label := 'unknown';
-      RETURN @label;
+      RETURN @label WITH status = 'fallback';
     WHEN ModelOverloaded THEN
       RETRY;
   END;
 END;
-
-Example 6 -- Translation prompt with model selection:
-
-PROMPT translate_email USING MODEL 'claude-sonnet'
-SELECT @email AS source LIMIT 1000 TOKENS,
-       'French' AS target_language
-GENERATE translate(source, target_language) WITH OUTPUT BUDGET 1200 TOKENS;
 """
 
 
@@ -355,13 +377,41 @@ class Text2SPL:
     # ------------------------------------------------------------------
 
     def _build_system_prompt(self, description: str) -> str:
-        """Build the system prompt, replacing static examples with RAG hits."""
+        """Build the system prompt, replacing static examples with RAG hits.
+
+        Injection order (applied to the base prompt):
+          1. Available TOOL_API tools (stdlib + registry) — injected before
+             STRICT RULES so the LLM sees what already exists before deciding
+             whether to generate CREATE TOOL_API.
+          2. Code-RAG examples — replaces the static == EXAMPLES == section
+             with retrieved description/source pairs.
+        """
+        # Start from the static base prompt
+        system = SPL2_SYSTEM_PROMPT
+
+        # ── 1. Inject available tools catalog ─────────────────────────────
+        try:
+            from spl3.tool_api_registry import available_tools_prompt_block
+            tools_block = available_tools_prompt_block()
+            if tools_block:
+                _TOOLS_ANCHOR = "== STRICT RULES =="
+                if _TOOLS_ANCHOR in system:
+                    system = system.replace(
+                        _TOOLS_ANCHOR,
+                        tools_block + "\n" + _TOOLS_ANCHOR,
+                        1,
+                    )
+                    _log.debug("text2spl: injected available-tools block into system prompt")
+        except Exception as exc:
+            _log.debug("text2spl: available-tools injection skipped (%s)", exc)
+
+        # ── 2. Code-RAG example replacement ───────────────────────────────
         if self.code_rag is None or self.code_rag.count() == 0:
-            return SPL2_SYSTEM_PROMPT
+            return system
 
         hits = self.code_rag.retrieve(description, top_k=self.rag_top_k)
         if not hits:
-            return SPL2_SYSTEM_PROMPT
+            return system
 
         # Build dynamic examples block from retrieved pairs
         examples_block = "== EXAMPLES ==\n"
@@ -373,11 +423,11 @@ class Text2SPL:
 
         # Swap the static examples section for the retrieved ones
         marker = _EXAMPLES_MARKER
-        if marker in SPL2_SYSTEM_PROMPT:
-            prefix = SPL2_SYSTEM_PROMPT[: SPL2_SYSTEM_PROMPT.index(marker)]
+        if marker in system:
+            prefix = system[: system.index(marker)]
             return prefix + examples_block
-        # Fallback: append retrieved examples after the static prompt
-        return SPL2_SYSTEM_PROMPT + "\n\n" + examples_block
+        # Fallback: append retrieved examples after the prompt
+        return system + "\n\n" + examples_block
 
     # ------------------------------------------------------------------
     # Validation

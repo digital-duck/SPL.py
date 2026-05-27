@@ -13,6 +13,9 @@ New capabilities over SPL 2.0:
                                   adapter.generate().  Workflow INPUT params of
                                   these types are still passed through as-is.
   - CallParallelStatement      →  dispatches branches via WorkflowComposer
+  - ToolAPINode                →  CREATE TOOL_API ... AS PYTHON $$ ... $$
+                                  exec()d at load time, registered in _GLOBAL_TOOLS
+                                  so CALL dispatch finds them transparently
 
 SPL 2.0 backward compatibility is fully preserved.
 """
@@ -28,7 +31,7 @@ _log = logging.getLogger("spl.executor")
 from spl.executor import Executor as SPL2Executor
 
 from spl.ast_nodes import Condition
-from spl3.ast_nodes import NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition
+from spl3.ast_nodes import NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition, ToolAPINode
 from spl3.types import coerce_to_int, coerce_to_float
 
 
@@ -304,6 +307,86 @@ class SPL3Executor(SPL2Executor):
                              stmt.target_variable)
         else:
             _log.info("GENERATE chain done -> [DISCARDED] (%d chars)", len(last_content))
+
+    # ------------------------------------------------------------------ #
+    # CREATE TOOL_API — load and register before execution                 #
+    # ------------------------------------------------------------------ #
+
+    def _load_tool_apis(self, program) -> None:
+        """exec() each CREATE TOOL_API body and register in the executor's tool table.
+
+        Called once at the start of execute_program(), before any WORKFLOW or
+        PROMPT statement is executed.  This ensures CALL dispatch can resolve
+        tool names defined inline in the .spl file.
+
+        The executor snapshots _GLOBAL_TOOLS at __init__ time into
+        self.functions; new tools must be registered via self.register_tool()
+        so CALL dispatch finds them in self.functions.get_tool().
+
+        The function named *node.name* must be defined at the top level of the
+        Python body.  If it is missing, or if exec() raises, a RuntimeError is
+        raised with a clear message pointing to the offending TOOL_API name.
+
+        Security: exec() runs in an unrestricted namespace — same trust level
+        as --tools modules loaded from disk.  Both require the user to supply
+        the code; no sandbox is applied for the local-execution use case.
+        """
+        for stmt in program.statements:
+            if not isinstance(stmt, ToolAPINode):
+                continue
+
+            if stmt.runtime != "PYTHON":
+                _log.warning(
+                    "CREATE TOOL_API '%s': runtime '%s' is not supported yet — skipped",
+                    stmt.name, stmt.runtime,
+                )
+                continue
+
+            namespace: dict = {}
+            try:
+                exec(compile(stmt.python_body, f"<tool_api:{stmt.name}>", "exec"), namespace)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"CREATE TOOL_API '{stmt.name}': failed to compile/exec body — {exc}"
+                ) from exc
+
+            fn = namespace.get(stmt.name)
+            if fn is None:
+                raise RuntimeError(
+                    f"CREATE TOOL_API '{stmt.name}': body must define a Python function "
+                    f"named '{stmt.name}' at the top level."
+                )
+            if not callable(fn):
+                raise RuntimeError(
+                    f"CREATE TOOL_API '{stmt.name}': '{stmt.name}' in the body is not "
+                    f"callable (got {type(fn).__name__})."
+                )
+
+            # Register directly into this executor's FunctionRegistry so CALL
+            # dispatch finds it via self.functions.get_tool() — the global
+            # _GLOBAL_TOOLS dict is snapshotted at __init__ time and is too late.
+            self.register_tool(stmt.name, fn)
+            _log.debug("Registered TOOL_API '%s' -> %r", stmt.name, fn)
+
+    async def execute_program(self, analysis, params=None):
+        """Execute program, loading TOOL_API definitions before any workflow runs.
+
+        Load order (later entries win on name collision):
+          1. Library tools from ~/.spl/tool_apis/ (promoted shared libraries)
+          2. Inline TOOL_API blocks from the current .spl file
+        """
+        # 1. Load promoted TOOL_API libraries from registry (~/.spl/tool_apis/)
+        try:
+            from spl3.tool_api_registry import load_all_into_executor
+            n = load_all_into_executor(self)
+            if n:
+                _log.debug("Loaded %d TOOL_API library file(s) from registry", n)
+        except Exception as exc:
+            _log.warning("TOOL_API registry load failed (non-fatal): %s", exc)
+
+        # 2. Inline TOOL_API blocks in the current program (override library tools)
+        self._load_tool_apis(analysis.ast)
+        return await super().execute_program(analysis, params=params)
 
     # ------------------------------------------------------------------ #
     # Workflow execution — typed INPUT param coercion                     #

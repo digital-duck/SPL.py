@@ -4,7 +4,7 @@ Checks beyond parse-level correctness:
   1. Undefined variable reference  — @x used before any assignment/input
   2. Unreachable code after RETURN  — statements following CommitStatement
   3. Potential infinite WHILE loop  — no exit-capable statement inside body
-  4. Undefined CALL target         — procedure not in declared CREATE FUNCTIONs
+  4. Undefined CALL target         — procedure not in CREATE FUNCTION / TOOL_API / workflows / stdlib
 
 Usage::
 
@@ -37,6 +37,7 @@ from spl.ast_nodes import (
 from spl3.ast_nodes import (
     ImportStatement,
     CallParallelStatement,
+    ToolAPINode,
 )
 
 # stdlib tools that are always valid CALL targets
@@ -236,14 +237,28 @@ def lint_program(program: Any) -> list[LintIssue]:
         if isinstance(stmt, CreateFunctionStatement):
             known_fns.add(stmt.name)
 
+    # Collect all CREATE TOOL_API names — deterministic Python tools,
+    # valid CALL targets registered at executor load time
+    known_tool_apis: set[str] = set()
+    for stmt in statements:
+        if isinstance(stmt, ToolAPINode):
+            known_tool_apis.add(stmt.name)
+
     # Collect all declared workflow names (for CALL workflow cross-refs)
     known_workflows: set[str] = set()
     for stmt in statements:
         if isinstance(stmt, WorkflowStatement):
             known_workflows.add(stmt.name)
 
-    # CALL targets can also be other workflows
-    all_known = known_fns | known_workflows | _STDLIB_TOOLS
+    # Also load stdlib tool names at lint time so we don't hard-code a partial list
+    try:
+        from spl.tools import get_global_tools
+        runtime_stdlib: set[str] = set(get_global_tools().keys())
+    except Exception:
+        runtime_stdlib = set()
+
+    # CALL targets can be: TOOL_API, CREATE FUNCTION, other workflows, or stdlib
+    all_known = known_fns | known_tool_apis | known_workflows | _STDLIB_TOOLS | runtime_stdlib
 
     # Per-workflow passes
     for stmt in statements:

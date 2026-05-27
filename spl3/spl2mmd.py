@@ -7,8 +7,9 @@ branches, exception handlers, and RETURN/RAISE terminals.
 
 Node shapes by type:
   rectangle    — assignment, SELECT, generic
-  parallelogram — GENERATE (LLM call)
-  subroutine   — CALL (procedure)
+  parallelogram — GENERATE (LLM call)          [blue]
+  subroutine   — CALL (sub-workflow)           [amber]
+  subroutine   — TOOL_API (deterministic Python) [green — distinct from sub-wf CALL]
   diamond      — WHILE / EVALUATE / exception
   cylinder     — STORE / storage assign
   stadium      — Start / End / RETURN / RAISE
@@ -31,6 +32,7 @@ from spl.ast_nodes import (
     FStringLiteral, NamedArg, StorageSubscript, ListLiteral, MapLiteral,
     Condition, SemanticCondition, ComparisonCondition, CompoundCondition,
 )
+from spl3.ast_nodes import ToolAPINode
 
 
 # ---------------------------------------------------------------------------
@@ -126,14 +128,15 @@ def _last_is_terminal(stmts: list) -> bool:
 # ---------------------------------------------------------------------------
 
 _STYLE_DEFS = {
-    "llm":    "fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f",
-    "proc":   "fill:#fef3c7,stroke:#f59e0b,color:#78350f",
-    "ctrl":   "fill:#ede9fe,stroke:#8b5cf6,color:#3b0764",
-    "store":  "fill:#dcfce7,stroke:#22c55e,color:#14532d",
-    "term":   "fill:#fce7f3,stroke:#ec4899,color:#831843",
-    "log":    "fill:#f8fafc,stroke:#94a3b8,color:#64748b",
-    "fn":     "fill:#f0fdf4,stroke:#86efac,color:#166534",
-    "assign": "fill:#f8fafc,stroke:#64748b,color:#1e293b",
+    "llm":     "fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f",   # blue  — LLM / GENERATE
+    "proc":    "fill:#fef3c7,stroke:#f59e0b,color:#78350f",   # amber — sub-workflow CALL
+    "toolapi": "fill:#d1fae5,stroke:#10b981,color:#064e3b",   # green — TOOL_API CALL (deterministic)
+    "ctrl":    "fill:#ede9fe,stroke:#8b5cf6,color:#3b0764",   # purple — WHILE/EVALUATE/EXCEPTION
+    "store":   "fill:#dcfce7,stroke:#22c55e,color:#14532d",
+    "term":    "fill:#fce7f3,stroke:#ec4899,color:#831843",
+    "log":     "fill:#f8fafc,stroke:#94a3b8,color:#64748b",
+    "fn":      "fill:#f0fdf4,stroke:#86efac,color:#166534",
+    "assign":  "fill:#f8fafc,stroke:#64748b,color:#1e293b",
 }
 
 _IND = "    "
@@ -147,6 +150,7 @@ class ASTToMermaid:
         self._lines: list[str] = []
         self._class_assigns: list[str] = []  # deferred, emitted outside subgraphs
         self._used_classes: set[str] = set()
+        self._tool_api_names: set[str] = set()  # CALL targets backed by CREATE TOOL_API
 
     # ── ID / node / edge helpers ────────────────────────────────────────────
 
@@ -192,6 +196,10 @@ class ASTToMermaid:
         self._lines = ["flowchart TD"]
         self._class_assigns = []
         self._used_classes = set()
+        # Pre-pass: collect TOOL_API names so CALL nodes can be styled distinctly
+        self._tool_api_names = {
+            stmt.name for stmt in program.statements if isinstance(stmt, ToolAPINode)
+        }
 
         fn_stmts = [s for s in program.statements if isinstance(s, CreateFunctionStatement)]
         for stmt in program.statements:
@@ -335,6 +343,13 @@ class ASTToMermaid:
             sfx = ", ..." if len(stmt.arguments) > 2 else ""
             target = f" -> @{stmt.target_variable}" if stmt.target_variable and stmt.target_variable != "NONE" else ""
             nid = self._id("SUB")
+            if stmt.procedure_name in self._tool_api_names:
+                # Deterministic Python tool — green subroutine box, distinct from LLM and sub-wf
+                return self._node(
+                    nid, "subroutine",
+                    f"TOOL_API {stmt.procedure_name}({args}{sfx}){target}",
+                    "toolapi",
+                )
             return self._node(nid, "subroutine", f"CALL {stmt.procedure_name}({args}{sfx}){target}", "proc")
 
         if isinstance(stmt, WhileStatement):

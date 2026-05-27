@@ -45,6 +45,7 @@ from spl3.ast_nodes import (
     CallParallelStatement,
     CompoundCondition,
     NoneLiteral,
+    ToolAPINode,
     UnaryOp,
 )
 
@@ -69,6 +70,7 @@ class LangGraphTranspiler:
         self.spl_dir = spl_dir            # source directory for resolving IMPORT paths
         self.prompts: dict[str, str] = {}          # fn_name → prompt body
         self.fn_params: dict[str, list] = {}        # fn_name → [Parameter]
+        self.tool_apis: dict[str, str] = {}         # tool_name → python_body
         self.sub_workflows: dict[str, WorkflowStatement] = {}
 
     # ── Public entry point ────────────────────────────────────────────────────
@@ -78,11 +80,13 @@ class LangGraphTranspiler:
         # Pre-pass: resolve IMPORT statements by inlining sub-workflow files
         self._resolve_imports(program)
 
-        # Pass 1: collect CREATE FUNCTION definitions
+        # Pass 1: collect CREATE FUNCTION and CREATE TOOL_API definitions
         for stmt in program.statements:
             if isinstance(stmt, CreateFunctionStatement):
                 self.prompts[stmt.name] = stmt.body
                 self.fn_params[stmt.name] = stmt.parameters
+            elif isinstance(stmt, ToolAPINode):
+                self.tool_apis[stmt.name] = stmt.python_body
 
         # Pass 2: collect workflow definitions
         workflows = [s for s in program.statements if isinstance(s, WorkflowStatement)]
@@ -97,6 +101,7 @@ class LangGraphTranspiler:
             parts = [
                 self._gen_header_fanout(main_wf),
                 self._gen_prompts(),
+                self._gen_tool_apis(),
                 self._gen_state_class(main_wf, state_name),
                 self._gen_helpers_fanout(),
                 self._gen_nodes_fanout(main_wf, state_name),
@@ -107,6 +112,7 @@ class LangGraphTranspiler:
             parts = [
                 self._gen_header(main_wf),
                 self._gen_prompts(),
+                self._gen_tool_apis(),
                 self._gen_state_class(main_wf, state_name),
                 self._gen_helpers(),
                 self._gen_nodes(main_wf, state_name),
@@ -182,6 +188,79 @@ from langgraph.graph import END, StateGraph'''
             body_clean = body.strip("\n")
             lines.append(f'\n{const} = """\\\n{body_clean}"""')
         return "\n".join(lines)
+
+    def _gen_tool_apis(self) -> str:
+        """Emit CREATE TOOL_API bodies verbatim as Python helper functions.
+
+        The Python body is already valid Python — it just needs to be placed
+        in the generated module scope so that CALL statements can invoke it.
+        For LangGraph (Python output) no translation is needed; the body is
+        emitted as-is, dedented to module level.
+        """
+        if not self.tool_apis:
+            return ""
+        lines = [
+            "\n# ── Tool APIs (mirrors CREATE TOOL_API blocks in .spl) "
+            "──────────────────"
+        ]
+        for name, body in self.tool_apis.items():
+            lines.append(f"\n# SPL: CREATE TOOL_API {name}")
+            lines.append(body.strip("\n"))
+        return "\n".join(lines)
+
+    def _emit_call_stmt(self, stmt: CallStatement, subs: dict | None = None, indent: str = "    ") -> str:
+        """Emit a Python line for a CALL statement, routing to the right target.
+
+        Priority:
+          1. write_file stdlib tool → _write(...)
+          2. CREATE TOOL_API function → direct Python call (uses _expr_py for args)
+          3. sub-workflow CALL → delegated via _invoke (existing pattern)
+          4. unknown → commented-out placeholder
+        """
+        subs = subs or {}
+        # SPL-style args for traceability comments (@var syntax)
+        args_spl = [self._spl_arg(a) for a in stmt.arguments]
+        # Python-style args for actual function calls (state["var"] syntax)
+        args_py = [self._expr_py(a) for a in stmt.arguments]
+        target = self._key(stmt.target_variable) if stmt.target_variable else "_"
+
+        if stmt.procedure_name == "write_file":
+            args = self._write_args(stmt.arguments, subs)
+            return f"{indent}_write({', '.join(args)})"
+
+        if stmt.procedure_name in self.tool_apis:
+            # Deterministic TOOL_API call — direct Python function call, no LLM
+            # Apply subs (local-var substitutions) to the Python args
+            call_args = []
+            for a in args_py:
+                s = a
+                if subs:
+                    for k, v in subs.items():
+                        s = s.replace(f'state["{k}"]', v).replace(f"state['{k}']", v)
+                call_args.append(s)
+            return (
+                f"{indent}# SPL: CALL {stmt.procedure_name}({', '.join(args_spl)}) INTO @{target}\n"
+                f"{indent}{target} = {stmt.procedure_name}({', '.join(call_args)})"
+            )
+
+        if stmt.procedure_name in self.sub_workflows:
+            # Sub-workflow call — inline GENERATE from that workflow
+            sub_wf = self.sub_workflows[stmt.procedure_name]
+            gen = next((s for s in sub_wf.body if isinstance(s, GenerateIntoStatement)), None)
+            if gen:
+                gc = gen.generate_clause
+                prompt_call = self._prompt_fmt(gc.function_name, stmt.arguments)
+                model_expr = self._model_expr(gc.model)
+                return (
+                    f"{indent}# SPL: CALL {stmt.procedure_name}({', '.join(args_spl)}) INTO @{target}\n"
+                    f"{indent}{target} = _invoke({model_expr}, {prompt_call})"
+                )
+
+        # Unknown CALL target — emit a comment placeholder
+        return (
+            f"{indent}# TODO: implement CALL {stmt.procedure_name}({', '.join(args_spl)}) INTO @{target}\n"
+            f"{indent}{target} = ''  # CALL {stmt.procedure_name} not resolved"
+        )
 
     def _gen_state_class(self, wf: WorkflowStatement, state_name: str) -> str:
         lines = [
@@ -466,9 +545,8 @@ def build_graph():
         # After generating, local var 'current' holds the new value
         subs = {self._key(gen.target_variable): self._key(gen.target_variable)} if gen else {}
         for s in init_stmts:
-            if isinstance(s, CallStatement) and s.procedure_name == "write_file":
-                args = self._write_args(s.arguments, subs)
-                lines.append(f"    _write({', '.join(args)})")
+            if isinstance(s, CallStatement):
+                lines.append(self._emit_call_stmt(s, subs))
 
         # logging after the generate
         if gen:
@@ -543,12 +621,12 @@ def build_graph():
                         )
                         break
 
-        # write_file: use local var for newly computed feedback + i for iteration
+        # write_file / TOOL_API: use local var for newly computed feedback + i for iteration
         fb_subs = {target: target, "iteration": "i"}
         for s in pre_eval_stmts:
-            if isinstance(s, CallStatement) and s.procedure_name == "write_file":
-                args = self._write_args(s.arguments, fb_subs)
-                lines.append(f"    _write({', '.join(args)})")
+            # Skip the sub-workflow CALL that was already inlined as GENERATE above
+            if isinstance(s, CallStatement) and s is not call:
+                lines.append(self._emit_call_stmt(s, fb_subs))
 
         lines.append(f'    return {{"{target}": {target}}}')
 
@@ -596,11 +674,10 @@ def build_graph():
             "iteration": "i",
         }
 
-        # write_file calls
+        # CALL dispatch (write_file, TOOL_API, sub-workflow, ...)
         for s in else_stmts:
-            if isinstance(s, CallStatement) and s.procedure_name == "write_file":
-                args = self._write_args(s.arguments, refine_subs)
-                lines.append(f"    _write({', '.join(args)})")
+            if isinstance(s, CallStatement):
+                lines.append(self._emit_call_stmt(s, refine_subs))
 
         # logging
         for s in else_stmts:
@@ -619,13 +696,12 @@ def build_graph():
         lines = [f"def node_commit(state: {state_name}) -> dict:"]
         lines.append("    # RETURN @current (write final.md and log status)")
 
-        # Write final.md (deduplicate: same file written by both paths)
+        # Emit first CALL in commit path (deduplicate: same write_file in both branches)
         all_stmts = list(when_stmts) + list(post_stmts)
         for s in all_stmts:
-            if isinstance(s, CallStatement) and s.procedure_name == "write_file":
-                args = self._write_args(s.arguments)
-                lines.append(f"    _write({', '.join(args)})")
-                break  # only emit once
+            if isinstance(s, CallStatement):
+                lines.append(self._emit_call_stmt(s))
+                break  # only emit once (commit node typically writes one file)
 
         lines.append('    approved = "[APPROVED]" in state["feedback"]')
         lines.append('    status = "complete" if approved else "max_iterations"')
