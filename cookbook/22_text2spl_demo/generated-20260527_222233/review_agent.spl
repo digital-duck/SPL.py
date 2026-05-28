@@ -1,0 +1,63 @@
+ISNI
+CREATE TOOL_API get_item(items TEXT, idx TEXT) RETURNS TEXT AS PYTHON $$
+import json
+def get_item(items: str, idx: str) -> str:
+    try:
+        items_list = items.split('','')
+        return items_list[int(idx)]
+    except (IndexError, ValueError) as e:
+        return f"error: {e}"
+$$;
+
+CREATE FUNCTION draft(task TEXT)
+RETURNS TEXT AS $$
+  Write a first draft response to: {task}
+$$;
+
+CREATE FUNCTION critique(current TEXT)
+RETURNS TEXT AS $$
+  Review the following and reply with exactly [APPROVED] if no improvements are needed,
+  otherwise provide specific actionable feedback.
+  Content: {current}
+$$;
+
+CREATE FUNCTION refine(current TEXT, feedback TEXT)
+RETURNS TEXT AS $$
+  Improve the following based on the feedback provided.
+  Draft: {current}
+  Feedback: {feedback}
+$$;
+
+CREATE FUNCTION classify(text TEXT)
+RETURNS FLOAT AS $$
+  Assess the quality of the text based on grammar, clarity, and relevance.
+  Return a score between 0.0 and 1.0.
+  {text}
+$$;
+
+WORKFLOW self_refine
+  INPUT @task TEXT, @max_iterations INTEGER := 3, @quality_threshold FLOAT := 0.8
+  OUTPUT @result TEXT
+DO
+  @iteration := 0;
+  @current_draft := draft(@task);
+  @current_quality := classify(@current_draft);
+
+  WHILE @current_quality <= @quality_threshold AND @iteration < @max_iterations DO
+    @feedback := generate_critique(@current_draft);
+    @refined_draft := refine(@current_draft, @feedback);
+    @current_quality := classify(@refined_draft);
+    @iteration := @iteration + 1;
+  END;
+
+  IF @current_quality > @quality_threshold THEN
+    @result := @refined_draft;
+  ELSE
+    @result := @current_draft;
+  END;
+
+  RETURN @result WITH status = 'complete', iterations = @iteration, quality = @current_quality;
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    RETURN @current_draft WITH status = 'budget_limit', quality = @current_quality;
+END;

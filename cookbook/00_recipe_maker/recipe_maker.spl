@@ -57,10 +57,8 @@ DO
     GENERATE step_name(arg1, arg2, context_function()) INTO @variable
 
     -- Reusable system context (injected as LLM system prompt):
-    CREATE FUNCTION context_name() RETURN TEXT 
-    AS $$ 
-        ... 
-    $$;
+    CREATE FUNCTION context_name() RETURN TEXT
+    AS [body];
 
     -- Conditional branching:
     EVALUATE @variable
@@ -141,6 +139,8 @@ A well-formed SPL recipe has ALL of the following:
 $$;
 
 -- ── Main workflow ─────────────────────────────────────────────────────────────
+
+IMPORT 'tools'
 
 WORKFLOW recipe_maker
     INPUT:  @concept     TEXT DEFAULT '',

@@ -2,11 +2,11 @@
 {
   "risk_level": "medium",
   "flags": [
-    "Sanctions (Potential for unwitting facilitation of sanctions evasion if dealing with sanctioned entities in affected agricultural areas)",
-    "AML (Increased risk of money laundering if the drought-affected agricultural sector is being used to move illicit funds, particularly if linked to sanctioned countries or high-risk individuals)",
-    "Market Manipulation (Low - potential for manipulated reporting of NPLs if the network is attempting to conceal financial distress)",
-    "AI Ethics (Low - Lack of AI oversight in risk assessment of agricultural lending increases vulnerability to biased decision-making if AI is used to assess borrower creditworthiness)"
+    "Sanctions - Potential for inadvertently facilitating transactions with sanctioned entities if the microfinance network operates internationally and hasn't robust screening.",
+    "AML - Increased NPLs due to drought could indicate increased money laundering activity (e.g., fraudulent claims, misuse of aid funds).",
+    "Market Manipulation - While less likely given the context, a sudden, large increase in NPLs could be linked to market manipulation if the network has significant power within the agricultural sector.",
+    "AI Ethics -  If the microfinance network utilizes AI for credit scoring or risk assessment, the drought creates a significant bias in the data, potentially leading to unfairly negative outcomes and ethical concerns regarding algorithmic fairness."
   ],
-  "summary": "The spike in non-performing loans linked to agricultural drought introduces heightened AML scrutiny due to potential illicit activity and warrants monitoring for sanctions compliance risks."
+  "summary": "The reported rise in NPLs presents a moderate risk, requiring scrutiny for potential sanctions violations, AML vulnerabilities, and ethical concerns related to AI-driven credit decisions exacerbated by a significant economic event."
 }
 ```

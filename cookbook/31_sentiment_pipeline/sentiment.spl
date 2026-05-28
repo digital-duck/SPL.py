@@ -25,6 +25,8 @@
 
 -- ── Schema (zero LLM cost — injected as grounding context) ─────────────────
 
+IMPORT 'tools'
+
 CREATE FUNCTION sentiment_schema()
 RETURN JSON
 AS $$

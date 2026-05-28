@@ -1,0 +1,38 @@
+-- ============================================================
+-- stdlib_finance — Financial / compliance TOOL_API library
+-- Promote:  spl3 tool-api promote cookbook/tools/stdlib_finance.spl
+-- ============================================================
+
+CREATE TOOL_API extract_risk_rating(report_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def extract_risk_rating(report_text: str) -> str:
+    """Parse an LLM risk assessment and return 'high', 'medium', or 'low'."""
+    t = report_text.lower()
+    if "high risk" in t or "critical" in t or "red flag" in t:
+        return "high"
+    if "medium risk" in t or "moderate" in t or "review needed" in t:
+        return "medium"
+    return "low"
+$$;
+
+CREATE TOOL_API extract_json_field(json_str TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+import json
+
+def extract_json_field(json_str: str, field: str) -> str:
+    """Safely extract a field from LLM JSON output (strips markdown code fences)."""
+    try:
+        clean = json_str.replace("```json", "").replace("```", "").strip()
+        data = json.loads(clean)
+        return str(data.get(field, "unknown"))
+    except json.JSONDecodeError:
+        return "parse_error"
+$$;
+
+CREATE TOOL_API send_alert(alert_payload TEXT)
+RETURNS TEXT AS PYTHON $$
+def send_alert(alert_payload: str) -> str:
+    """Mock alert dispatcher — replace body with real Slack/email webhook in prod."""
+    print(f"COMPLIANCE ALERT:\n{alert_payload[:200]}")
+    return "alert_sent"
+$$;

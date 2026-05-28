@@ -1,6 +1,5 @@
-This step focuses on implementing the core CRUD operations for todo items, translating the API design into functional code. We’ll create individual functions or routes to handle creating, reading, updating, and deleting todo items, ensuring a robust and well-defined API.  This builds upon the previous design steps and lays the groundwork for the application's functionality.
+This step implements basic authentication/authorization by introducing API key support. We're defining a mechanism for securing our API endpoints, allowing clients to identify themselves and access resources appropriately.  This design decision results in a configuration file outlining the API key structure and usage.
 
 **Filenames Created:**
 
-*   `api_endpoints.md`
-*   `todo_data_model.json`
+*   `api_key_config.json`

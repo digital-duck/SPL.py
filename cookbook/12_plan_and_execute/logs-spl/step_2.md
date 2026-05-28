@@ -1,6 +1,5 @@
-This step solidifies the API's foundation by formally documenting the available endpoints and the standardized JSON schema for representing todo items. This ensures a consistent and predictable interaction between clients and the backend system.
+This step focuses on formally defining the structure of task data using JSON schemas. These schemas dictate the precise format for task objects, including all required fields and their corresponding data types, ensuring consistent data exchange between the backend and frontend.  The resulting schemas guarantee data integrity and facilitate seamless API integration.
 
 **Filenames Created:**
 
-*   `api_endpoints.md`
-*   `todo_data_model.json`
+*   `task_schema.json`

@@ -1,6 +1,6 @@
-1.  Define API Endpoints & Data Model: Specify core endpoints (e.g., `/todos`, `/todos/{id}`) and corresponding JSON data structure for todo items (id, title, description, completed).
-2.  Choose Technology Stack: Select backend language/framework (e.g., Python/Flask, Node.js/Express) and database (e.g., PostgreSQL, MongoDB).
-3.  Implement CRUD Operations: Develop individual functions/routes for Create, Read, Update, and Delete operations for todo items.
-4.  Implement API Documentation: Generate API documentation (e.g., using Swagger/OpenAPI) to facilitate client integration.
-5.  Implement Basic Testing: Write unit tests for key API endpoints and data validation.
-6.  Deploy API to a Basic Server: Containerize the application (e.g., Docker) and deploy to a simple server (e.g., Heroku, AWS).
+1.  Define API Endpoints & Data Models (JSON schemas for tasks – ID, title, description, due date, completed status).
+2.  Implement Core CRUD Operations (Create, Read, Update, Delete) using a suitable framework (e.g., Flask, Django REST Framework, Node.js/Express).
+3.  Implement Basic Authentication/Authorization (e.g., API key, JWT).
+4.  Implement Unit Tests for Individual API Endpoints.
+5.  Deploy API to a suitable environment (e.g., Heroku, AWS, Docker).
+6.  Implement Basic Logging & Monitoring.

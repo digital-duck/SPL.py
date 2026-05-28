@@ -2,6 +2,6 @@
 {
   "risk_level": "high",
   "flags": ["sanctions", "AML", "market manipulation"],
-  "summary": "The bank's settlement for sanctions violations involving cross-border payments represents a significant regulatory risk due to potential systemic implications and heightened scrutiny."
+  "summary": "The bank's settlement for sanctions violations indicates a significant risk of ongoing non-compliance with international regulations regarding cross-border payments and potential facilitation of illicit activities."
 }
 ```

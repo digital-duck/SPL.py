@@ -1,6 +1,5 @@
-This step establishes the foundation for our API by detailing the specific endpoints and the structure of the data we’ll be exchanging. It defines how clients will interact with the todo management system, ensuring consistency and clarity in the API design.  This design document will drive subsequent development and integration efforts.
+This step defines the structure of data exchanged between the backend and frontend through our API. It results in JSON schemas outlining the expected format for task objects, including fields like ID, title, description, due date, and completion status.  This ensures consistent data representation and facilitates seamless integration.
 
 **Filenames Created:**
 
-*   `api_endpoints.md` (describes the endpoints and their HTTP methods)
-*   `todo_data_model.json` (defines the JSON structure for todo items)
+*   `task_schema.json`

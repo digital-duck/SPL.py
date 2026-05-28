@@ -2,11 +2,10 @@
 {
   "risk_level": "low",
   "flags": [
-    "Sanctions (potential indirect risk - changes in lending could impact sanctioned entities)",
-    "AML (increased lending activity could present higher transaction monitoring needs)",
-    "Market Manipulation (unlikely, but rate changes can be leveraged)",
-    "AI Ethics (no direct ethical concern)"
+    "Sanctions",
+    "AML",
+    "Market Manipulation"
   ],
-  "summary": "While the news itself doesn't directly pose regulatory risks, the rate increase could indirectly impact compliance requirements related to sanctions and AML monitoring of increased lending activity."
+  "summary": "This news item presents a low risk due to the central bank action of raising interest rates, which doesn't directly involve regulatory breaches or activities susceptible to sanctions, AML violations, or market manipulation."
 }
 ```

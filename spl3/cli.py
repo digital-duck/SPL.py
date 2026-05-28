@@ -575,16 +575,31 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
         registry = FederatedRegistry(local, hub_reg)
         click.echo(f"Hub registry: {hub_url}")
 
-    # Propagate --model into workflow @model param so USING MODEL @model picks it up.
-    # Only set if the user hasn't already passed --param model=... explicitly.
-    if model and "model" not in params:
-        params["model"] = model
-
     # Build executor and attach composer for CALL workflow_name() dispatch
+    from spl3.adapters import _model_compatible
     adapter_kwargs = {"model": model} if model else {}
     if allowed_tools:
         adapter_kwargs["allowed_tools"] = [t.strip() for t in allowed_tools.split(",")]
     _inner_adapter = get_adapter(adapter_name, **adapter_kwargs)
+
+    # Resolve the effective model: if the requested model was incompatible,
+    # the adapter dropped it and uses its default — reflect that here so
+    # @model in the workflow gets the adapter's actual default, not an invalid name.
+    effective_model = model if (model and _model_compatible(adapter_name, model)) else (
+        getattr(_inner_adapter, "default_model", None)
+        or getattr(_inner_adapter, "_default_model", None)
+        or model or ""
+    )
+    if model and effective_model != model:
+        click.echo(
+            f"Note: model '{model}' is not compatible with adapter '{adapter_name}' "
+            f"— using '{effective_model}' instead."
+        )
+
+    # Propagate effective model into workflow @model param so USING MODEL @model picks it up.
+    # Only set if the user hasn't already passed --param model=... explicitly.
+    if effective_model and "model" not in params:
+        params["model"] = effective_model
     capturing = _CapturingAdapter(_inner_adapter)
     executor = Executor(adapter=capturing)
     executor.composer = WorkflowComposer(registry, executor)

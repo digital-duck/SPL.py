@@ -4,8 +4,9 @@
   "flags": [
     "sanctions",
     "aml",
-    "ai_ethics"
+    "ai_ethics",
+    "market_manipulation"
   ],
-  "summary": "The draft guidelines on AI credit scoring transparency introduce potential AML risks related to biased data and model validation, alongside broader AI ethics concerns regarding fairness and explainability, requiring banks to ensure compliance within a tight timeframe."
+  "summary": "The draft guidelines on AI credit scoring transparency introduce potential AML risks related to biased algorithms and require banks to demonstrate compliance, raising concerns about fairness and potential manipulation."
 }
 ```

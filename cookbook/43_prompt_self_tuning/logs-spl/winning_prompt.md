@@ -1,1 +1,1 @@
-Summarize this technical document, focusing on the core algorithm, its key components, and its intended purpose, assuming the reader has a foundational understanding of quantum computing principles.
+Summarize this technical document, focusing on the core algorithm's functionality, key steps, and any significant mathematical concepts, assuming the reader has a foundational understanding of quantum mechanics but may not be an expert in this specific algorithm.

@@ -1,1 +1,1 @@
-Output: "0"
+**Combined Summary:** This document tests a map-reduce summarization process using the sentence "The quick brown fox jumps over the lazy dog." The input "0" is likely a placeholder or a result of this process.

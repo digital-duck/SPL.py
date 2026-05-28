@@ -1,4 +1,4 @@
-```sql
+```spl
 CREATE FUNCTION detect_lang(code TEXT)
 RETURN TEXT
 AS $$

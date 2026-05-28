@@ -9,21 +9,50 @@
 -- Usage:
 --   spl3 run cookbook/65_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --tools cookbook/65_llm_splc/tools.py \
 --       --param spl_file="cookbook/05_self_refine/self_refine.spl" \
 --       --param target="langgraph"
 --
 --   spl3 run cookbook/65_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --tools cookbook/65_llm_splc/tools.py \
 --       --param spl_file="cookbook/11_debate_arena/debate_arena.spl" \
 --       --param target="crewai"
 --
 --   spl3 run cookbook/65_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --tools cookbook/65_llm_splc/tools.py \
 --       --param spl_file="cookbook/63_parallel_code_review/parallel_code_review.spl" \
 --       --param target="autogen"
+
+-- load_file: reads a file from disk (stdlib passthrough)
+CREATE TOOL_API load_file(path TEXT)
+RETURNS TEXT AS PYTHON $$
+import os
+
+def load_file(path: str) -> str:
+    """Load a file and return its contents."""
+    path = path.strip()
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+$$;
+
+-- write_file: strips markdown code fences before writing code files (*.py, *.go, *.ts, *.js)
+CREATE TOOL_API write_file(path TEXT, content TEXT)
+RETURNS TEXT AS PYTHON $$
+import os
+import re
+
+def write_file(path: str, content: str) -> str:
+    """Write content to a file, stripping markdown code fences for code files."""
+    code_exts = {".py", ".go", ".ts", ".js"}
+    if os.path.splitext(path)[1] in code_exts:
+        content = re.sub(r"^```[a-zA-Z0-9_]*\n?", "", content.strip())
+        content = re.sub(r"\n?```$", "", content).strip()
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(content + "\n")
+    return f"written: {path}"
+$$;
 
 CREATE FUNCTION framework_guide(target TEXT)
 RETURN TEXT

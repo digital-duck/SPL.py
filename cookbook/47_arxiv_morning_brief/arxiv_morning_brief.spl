@@ -23,6 +23,8 @@
 --       urls='["https://arxiv.org/pdf/2501.12948","https://arxiv.org/pdf/2501.09732"]' \
 --       date="2026-04-02"
 
+IMPORT 'tools'
+
 -- ── LLM function definitions ──────────────────────────────────────────────────
 -- (inlined from functions.spl; identical to the SPL 3.0 version)
 

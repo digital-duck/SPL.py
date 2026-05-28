@@ -7,6 +7,8 @@
 --       --tools cookbook/49_regulatory_news_audit/tools.py \
 --       news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt
 
+IMPORT 'tools'
+
 -- Compliance persona + audit instruction combined in one function.
 -- (regulatory_auditor() persona is inlined here so GENERATE receives it
 --  as a rendered template argument — avoids non-builtin function call in expressions.)

@@ -4,21 +4,39 @@
 --
 -- @spec accepts either:
 --   • an inline text description, or
---   • a file path — the file contents are loaded automatically via load_spec()
+--   • a filename under cookbook/30_code_gen/specs/ — loaded automatically via load_spec()
 --
 -- Usage:
 --   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama --model gemma3 \
---       --tools cookbook/30_code_gen/tools.py \
 --       spec="A function that validates an email address" language="Python"
 --
 --   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama \
---       --tools cookbook/30_code_gen/tools.py \
 --       spec="Binary search over a sorted list, return index or -1" language="Go" \
 --       test_framework="testing"
 --
 --   spl3 run cookbook/30_code_gen/code_gen.spl --adapter ollama --model gemma3 \
---       --tools cookbook/30_code_gen/tools.py \
---       spec="specs/email_validator.txt" language="Python"
+--       spec="email_validator.txt" language="Python"
+
+CREATE TOOL_API load_spec(spec TEXT)
+RETURNS TEXT AS PYTHON $$
+import os
+
+def load_spec(spec: str) -> str:
+    """Load a spec from a filename under cookbook/30_code_gen/specs/ or return text as-is.
+
+    If *spec* looks like a bare filename (no spaces, no newlines), the corresponding
+    file under cookbook/30_code_gen/specs/ is loaded and its contents returned.
+    Otherwise the string is returned unchanged so callers can pass an inline spec.
+    """
+    candidate = spec.strip()
+    if candidate and '\n' not in candidate and ' ' not in candidate:
+        path = os.path.join('cookbook/30_code_gen/specs', candidate)
+        if os.path.isfile(path):
+            with open(path, encoding='utf-8') as fh:
+                contents = fh.read().strip()
+            return f'[loaded from {path}]\n\n{contents}'
+    return candidate
+$$;
 
 CREATE FUNCTION language_conventions(language TEXT)
 RETURN TEXT

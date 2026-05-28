@@ -5,10 +5,44 @@
 --
 -- Usage:
 --   spl3 run cookbook/43_prompt_self_tuning/prompt_self_tuning.spl \
---       --tools cookbook/43_prompt_self_tuning/tools.py \
 --       --adapter ollama \
 --       baseline_prompt="Summarize this technical document." \
 --       failed_case="The document describes a complex quantum algorithm."
+
+CREATE TOOL_API check_quality(text TEXT)
+RETURNS TEXT AS PYTHON $$
+def check_quality(text: str) -> str:
+    """
+    Heuristic quality gate for generated text.
+
+    Checks:
+      - Minimum word count (>= 30 words)
+      - Not a refusal / error message
+      - Not mostly whitespace
+
+    Returns 'pass' if all checks pass, or 'fail:<reason>' otherwise.
+    This is a deterministic check — zero LLM tokens consumed.
+    """
+    _MIN_WORDS = 30
+    if not text or not text.strip():
+        return "fail:empty_response"
+
+    words = text.split()
+    if len(words) < _MIN_WORDS:
+        return f"fail:too_short({len(words)}_words)"
+
+    lower = text.lower()
+    refusal_markers = [
+        "i cannot", "i can't", "i'm unable", "i am unable",
+        "as an ai", "i don't have", "i do not have",
+        "error:", "exception:", "traceback",
+    ]
+    for marker in refusal_markers:
+        if marker in lower:
+            return "fail:refusal_detected"
+
+    return "pass"
+$$;
 
 CREATE FUNCTION variation_prompt(baseline TEXT, failed_case TEXT, variant_num TEXT)
 RETURN TEXT

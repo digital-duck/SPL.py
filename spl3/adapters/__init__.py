@@ -55,11 +55,60 @@ def register_adapter(name: str, adapter_cls) -> None:
     _ADAPTER_REGISTRY[name] = adapter_cls
 
 
+def _model_compatible(adapter_name: str, model: str) -> bool:
+    """Return False when model is clearly wrong for the given adapter.
+
+    Each entry is a set of lowercase prefixes that are *valid* for that adapter.
+    A model that matches none of the valid prefixes for a *known* adapter is
+    rejected so the caller can fall back to the adapter's default instead of
+    making a doomed API call.
+    """
+    if not model:
+        return True  # no model specified — adapter uses its own default
+    m = model.lower()
+    rules: dict[str, tuple[str, ...]] = {
+        # Claude CLI and Anthropic API only speak Claude models
+        "claude_cli":  ("claude-",),
+        "anthropic":   ("claude-",),
+        # Gemini CLI only speaks Gemini models
+        "gemini_cli":  ("gemini-", "gemini"),
+        # OpenAI only speaks gpt / o1 / o3 / text- models
+        "openai":      ("gpt-", "o1", "o3", "text-", "davinci", "curie", "babbage", "ada"),
+        # OpenRouter models always contain a slash (provider/model)
+        "openrouter":  ("/",),
+    }
+    valid_prefixes = rules.get(adapter_name)
+    if valid_prefixes is None:
+        return True  # unknown adapter — don't second-guess it
+    return any(m.startswith(p) or (p == "/" and "/" in m) for p in valid_prefixes)
+
+
 def get_adapter(name: str, **kwargs) -> LLMAdapter:
-    """Get an LLM adapter instance by name."""
+    """Get an LLM adapter instance by name.
+
+    If the requested model is incompatible with the adapter (e.g. an ollama
+    model name passed to claude_cli), a warning is logged and the model kwarg
+    is dropped so the adapter uses its own default.
+    """
     if name not in _ADAPTER_REGISTRY:
         available = ", ".join(sorted(_ADAPTER_REGISTRY.keys())) or "(none)"
         raise ValueError(f"Unknown adapter '{name}'. Available: {available}")
+
+    model = kwargs.get("model") or ""
+    if model and not _model_compatible(name, model):
+        try:
+            entry_cls = _ADAPTER_REGISTRY[name]
+            default = getattr(entry_cls, "DEFAULT_MODEL", None) or "(adapter default)"
+        except Exception:
+            default = "(adapter default)"
+
+        _log.warning(
+            "Model '%s' is not compatible with adapter '%s' — "
+            "falling back to %s",
+            model, name, default,
+        )
+        kwargs = {k: v for k, v in kwargs.items() if k != "model"}
+
     entry = _ADAPTER_REGISTRY[name]
     if _inspect.isclass(entry):
         sig = _inspect.signature(entry.__init__)

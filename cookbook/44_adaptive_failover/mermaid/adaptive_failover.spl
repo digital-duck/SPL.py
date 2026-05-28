@@ -23,7 +23,7 @@ $$;
 WORKFLOW adaptive_failover
     INPUT:
         @query          TEXT DEFAULT 'Write a detailed technical summary of quantum entanglement.',
-        @primary_model  TEXT DEFAULT 'phi4-mini',
+        @primary_model  TEXT DEFAULT 'phi4',
         @fallback_model TEXT DEFAULT 'gemma3',
         @log_dir TEXT DEFAULT 'cookbook/44_adaptive_failover/logs-spl'
     OUTPUT: @final_response TEXT

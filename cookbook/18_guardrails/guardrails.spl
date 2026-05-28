@@ -24,6 +24,8 @@
 -- Discover available test inputs:
 --   spl3 run ... input_id=list
 
+IMPORT 'tools'
+
 WORKFLOW guardrails_pipeline
     INPUT:  @input_id   TEXT DEFAULT '',
             @user_input TEXT DEFAULT ''
