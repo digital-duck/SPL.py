@@ -14,8 +14,8 @@ New capabilities over SPL 2.0:
                                   these types are still passed through as-is.
   - CallParallelStatement      →  dispatches branches via WorkflowComposer
   - ToolAPINode                →  CREATE TOOL_API ... AS PYTHON $$ ... $$
-                                  exec()d at load time, registered in _GLOBAL_TOOLS
-                                  so CALL dispatch finds them transparently
+                                  exec()d into KernelSession (or fallback dict) at
+                                  load time, registered in executor's tool table
 
 SPL 2.0 backward compatibility is fully preserved.
 """
@@ -65,10 +65,32 @@ def _builtin_clean_code(text: str) -> str:
 
 class SPL3Executor(SPL2Executor):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        *args,
+        kernel_enabled: bool = False,
+        self_healing: bool = False,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        # Register SPL 3.0 built-ins
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
+
+        # Kernel session — persistent Python execution substrate (opt-in)
+        self._kernel: "KernelSession | None" = None
+        if kernel_enabled:
+            from spl3.kernel import KernelSession
+            self._kernel = KernelSession(mode="dev", self_healing=self_healing)
+            # Override stdlib run_python with a kernel-routing version so
+            # CALL run_python(...) uses the persistent kernel namespace instead
+            # of spawning a fresh subprocess.
+            _k = self._kernel
+            def _kernel_run_python(code: str, timeout: str = "30") -> str:  # noqa: ARG001
+                try:
+                    return _k.exec_code(str(code))
+                except Exception as exc:
+                    return f"run_python error: {exc}"
+            self.register_tool("run_python", _kernel_run_python)
+            _log.debug("SPL3Executor: kernel session active (self_healing=%s)", self_healing)
     """SPL 3.0 executor, extending SPL 2.0 with the extended type system."""
 
     # ------------------------------------------------------------------ #
@@ -313,24 +335,20 @@ class SPL3Executor(SPL2Executor):
     # ------------------------------------------------------------------ #
 
     def _load_tool_apis(self, program) -> None:
-        """exec() each CREATE TOOL_API body and register in the executor's tool table.
+        """Exec each CREATE TOOL_API body and register in the executor's tool table.
 
-        Called once at the start of execute_program(), before any WORKFLOW or
-        PROMPT statement is executed.  This ensures CALL dispatch can resolve
-        tool names defined inline in the .spl file.
+        When a KernelSession is active, bodies are exec()d into the kernel's
+        shared namespace so tool definitions can import packages at definition
+        time and reuse them across calls within the same run.
 
-        The executor snapshots _GLOBAL_TOOLS at __init__ time into
-        self.functions; new tools must be registered via self.register_tool()
-        so CALL dispatch finds them in self.functions.get_tool().
+        When no kernel is active, bodies exec into an isolated dict (original
+        behaviour) — the resulting callable is still registered correctly.
 
-        The function named *node.name* must be defined at the top level of the
-        Python body.  If it is missing, or if exec() raises, a RuntimeError is
-        raised with a clear message pointing to the offending TOOL_API name.
-
-        Security: exec() runs in an unrestricted namespace — same trust level
-        as --tools modules loaded from disk.  Both require the user to supply
-        the code; no sandbox is applied for the local-execution use case.
+        Called once at the start of execute_program() before any WORKFLOW or
+        PROMPT statement executes, so CALL dispatch can resolve tool names
+        defined inline in the .spl file.
         """
+        kernel = self._kernel
         for stmt in program.statements:
             if not isinstance(stmt, ToolAPINode):
                 continue
@@ -342,31 +360,34 @@ class SPL3Executor(SPL2Executor):
                 )
                 continue
 
-            namespace: dict = {}
-            try:
-                exec(compile(stmt.python_body, f"<tool_api:{stmt.name}>", "exec"), namespace)
-            except Exception as exc:
-                raise RuntimeError(
-                    f"CREATE TOOL_API '{stmt.name}': failed to compile/exec body — {exc}"
-                ) from exc
+            if kernel is not None:
+                fn = kernel.define_tool(stmt.name, stmt.python_body)
+            else:
+                namespace: dict = {}
+                try:
+                    exec(compile(stmt.python_body, f"<tool_api:{stmt.name}>", "exec"), namespace)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': failed to compile/exec body — {exc}"
+                    ) from exc
 
-            fn = namespace.get(stmt.name)
-            if fn is None:
-                raise RuntimeError(
-                    f"CREATE TOOL_API '{stmt.name}': body must define a Python function "
-                    f"named '{stmt.name}' at the top level."
-                )
-            if not callable(fn):
-                raise RuntimeError(
-                    f"CREATE TOOL_API '{stmt.name}': '{stmt.name}' in the body is not "
-                    f"callable (got {type(fn).__name__})."
-                )
+                fn = namespace.get(stmt.name)
+                if fn is None:
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': body must define a Python function "
+                        f"named '{stmt.name}' at the top level."
+                    )
+                if not callable(fn):
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': '{stmt.name}' in the body is not "
+                        f"callable (got {type(fn).__name__})."
+                    )
 
-            # Register directly into this executor's FunctionRegistry so CALL
-            # dispatch finds it via self.functions.get_tool() — the global
-            # _GLOBAL_TOOLS dict is snapshotted at __init__ time and is too late.
             self.register_tool(stmt.name, fn)
-            _log.debug("Registered TOOL_API '%s' -> %r", stmt.name, fn)
+            _log.debug(
+                "Registered TOOL_API '%s' -> %r (via %s)",
+                stmt.name, fn, "kernel" if kernel else "exec",
+            )
 
     async def execute_program(self, analysis, params=None):
         """Execute program, loading TOOL_API definitions before any workflow runs.
@@ -478,16 +499,40 @@ class SPL3Executor(SPL2Executor):
             state.total_latency_ms += sub_result.latency_ms
 
     # ------------------------------------------------------------------ #
-    # CALL statement — registry-aware override                             #
+    # CALL statement — registry-aware override with self-healing           #
     # ------------------------------------------------------------------ #
 
     async def _exec_call(self, stmt, state) -> None:
-        """Execute CALL procedure(args) INTO @var.
+        """Execute CALL, with optional self-healing on ModuleNotFoundError.
 
-        Extends SPL 2.0 _exec_call with workflow registry lookup:
+        When self_healing is active, catches ToolFailed whose __cause__ is a
+        ModuleNotFoundError, pip-installs the missing package, and retries
+        once.  If the direct install fails (module name ≠ package name), a
+        single LLM call resolves the correct package name before the retry.
+        Capped at 2 attempts total; raises on second failure.
+        """
+        kernel = self._kernel
+        if not (kernel and kernel.self_healing):
+            await self._exec_call_inner(stmt, state)
+            return
 
-        1. If a WorkflowComposer is attached and the procedure name is found
-           in the registry, delegate to the composer (sub-workflow CALL).
+        from spl.executor import ToolFailed
+        for attempt in range(2):
+            try:
+                await self._exec_call_inner(stmt, state)
+                return
+            except ToolFailed as exc:
+                cause = exc.__cause__
+                if attempt == 0 and isinstance(cause, ModuleNotFoundError):
+                    await self._self_heal_module(cause)
+                else:
+                    raise
+
+    async def _exec_call_inner(self, stmt, state) -> None:
+        """Registry-aware CALL dispatch (extracted for self-healing retry support).
+
+        1. If a WorkflowComposer is attached and the name is found in the
+           registry, delegate to the composer (sub-workflow CALL).
         2. Otherwise fall through to SPL 2.0 tool / builtin / LLM handling.
         """
         composer = getattr(self, "composer", None)
@@ -499,7 +544,6 @@ class SPL3Executor(SPL2Executor):
                 defn = None
 
             if defn is not None:
-                # Resolve positional arguments by matching INPUT param names
                 try:
                     param_names = [inp.name for inp in defn.ast_node.inputs]
                 except (AttributeError, TypeError):
@@ -519,7 +563,44 @@ class SPL3Executor(SPL2Executor):
                 state.total_latency_ms += sub_result.latency_ms
                 return
 
-        # Fall through to SPL 2.0 tool / builtin / procedure / LLM handling
         await super()._exec_call(stmt, state)
+
+    async def _self_heal_module(self, exc: ModuleNotFoundError) -> None:
+        """pip-install the missing module; escalate to LLM if direct install fails."""
+        module = getattr(exc, "name", None) or (
+            str(exc).split("'")[1] if "'" in str(exc) else str(exc)
+        )
+        kernel = self._kernel
+        assert kernel is not None  # only called when kernel.self_healing is True
+        _log.info("Self-healing: module '%s' not found, attempting pip install", module)
+        if kernel.pip_install(module):
+            return
+        _log.info(
+            "Self-healing: direct install of '%s' failed, asking LLM for package name",
+            module,
+        )
+        package = await self._resolve_package_via_llm(module)
+        if package and package != module:
+            kernel.pip_install(package)
+
+    async def _resolve_package_via_llm(self, module_name: str) -> str:
+        """Ask the adapter which pip package provides a missing Python module."""
+        prompt = (
+            f"The Python module '{module_name}' is not installed. "
+            f"What is the exact pip package name to install it? "
+            f"Reply with only the package name, nothing else."
+        )
+        try:
+            result = await self.adapter.generate(
+                prompt=prompt,
+                system="You are a Python package resolver. Reply with only the pip package name.",
+                model=self.default_model or "",
+                max_tokens=20,
+            )
+            return (result.content or "").strip().split()[0]
+        except Exception as e:
+            _log.warning("LLM package resolution failed: %s", e)
+            return ""
+
 
 Executor = SPL3Executor  # convenience alias for cli.py imports

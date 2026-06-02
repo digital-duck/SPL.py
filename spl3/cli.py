@@ -523,8 +523,13 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
+@click.option("--kernel/--no-kernel", default=True,
+              help="Persistent Python kernel session for CREATE TOOL_API and run_python (default: on).")
+@click.option("--self-healing", "self_healing", is_flag=True, default=False,
+              help="Auto-install missing pip packages on CALL failures (requires --kernel).")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
+        kernel, self_healing):
     """Execute an .spl file."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -545,11 +550,13 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
     hub_url = ctx.obj.get("hub")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
-                              tools_module, allowed_tools))
+                              tools_module, allowed_tools,
+                              kernel_enabled=kernel, self_healing=self_healing))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None):
+                        tools_module=None, allowed_tools=None,
+                        kernel_enabled=False, self_healing=False):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -601,8 +608,11 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     if effective_model and "model" not in params:
         params["model"] = effective_model
     capturing = _CapturingAdapter(_inner_adapter)
-    executor = Executor(adapter=capturing)
+    executor = Executor(adapter=capturing, kernel_enabled=kernel_enabled,
+                        self_healing=self_healing)
     executor.composer = WorkflowComposer(registry, executor)
+    if kernel_enabled:
+        click.echo(f"Kernel: enabled (self_healing={self_healing})")
     if log_prompts:
         executor.prompt_log_dir = log_prompts
         click.echo(f"Prompt logging → {log_prompts}/")

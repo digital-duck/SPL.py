@@ -53,6 +53,9 @@ ui = [
     "streamlit-ace>=0.1.1",
     "chromadb>=0.5",
 ]
+kernel = [
+    "ipython>=8.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",

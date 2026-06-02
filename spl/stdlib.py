@@ -641,6 +641,9 @@ def http_get(url: str, timeout: str = "10") -> str:
         CALL http_get(@url, '30') INTO @response;
 
     Requires: pip install requests
+
+    Deprecated: use CREATE TOOL_API with `import requests` in the kernel instead.
+    Scheduled for removal in spl-llm v3.2.
     """
     try:
         import requests
@@ -666,6 +669,11 @@ def run_python(code: str, timeout: str = "30") -> str:
         CALL run_python(@code_snippet) INTO @output;
 
     Security note: executes arbitrary code — use only with trusted input.
+
+    Deprecated: with --kernel (now default), deterministic Python belongs in
+    CREATE TOOL_API blocks, which execute in the persistent kernel session and
+    share state across calls. This subprocess fallback remains for --no-kernel
+    mode only. Scheduled for removal in spl-llm v3.2.
     """
     import subprocess
     import sys
