@@ -521,7 +521,7 @@ class SPL3Executor(SPL2Executor):
         Capped at 2 attempts total; raises on second failure.
         """
         kernel = self._kernel
-        if not (kernel and kernel.self_healing):
+        if not (kernel and getattr(kernel, "self_healing", False)):
             await self._exec_call_inner(stmt, state)
             return
 

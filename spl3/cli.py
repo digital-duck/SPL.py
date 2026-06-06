@@ -638,6 +638,13 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                 executor.register_tool(tool_name, tool_fn)
             click.echo(f"Auto-loaded {len(loaded)} tool(s) from {auto_tools}")
 
+    # If kernel is enabled, re-register the kernel's run_python AFTER tool loading.
+    # The stdlib registers a subprocess-based run_python globally; loading any
+    # --tools module returns all global tools including that one, which would
+    # override the kernel version. Re-registering here ensures the kernel wins.
+    if kernel and executor._kernel is not None:
+        executor._register_run_python()
+
     # Parse the file — needed for function registration and PROMPT fallback
     from spl.lexer import Lexer
     from spl.ast_nodes import CreateFunctionStatement, PromptStatement
