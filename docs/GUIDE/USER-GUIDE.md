@@ -19,6 +19,8 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 2. [LLM Adapters](#2-llm-adapters)
 3. [spl3 validate](#3-spl3-validate)
 4. [spl3 run](#4-spl3-run)
+   - [4.1 Basic options](#41-basic-options)
+   - [4.2 IPython kernel (`--kernel`)](#42-ipython-kernel---kernel)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
@@ -123,6 +125,154 @@ Executes a `.spl` workflow against a live LLM adapter.
 ```bash
 spl3 run <file.spl> [OPTIONS]
 ```
+
+### 4.1 Basic options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--adapter NAME` | `ollama` | LLM adapter (`ollama`, `claude_cli`, `openrouter`, …) |
+| `--model MODEL` | adapter default | Model override |
+| `-p / --param key=val` | — | Workflow `INPUT` parameter. Repeatable. |
+| `--tools FILE` | auto-load `tools.py` | Python module providing `@spl_tool` functions for `CALL` |
+| `--log-prompts DIR` | off | Write each assembled prompt to `DIR/<fn>_NNN.md` before sending |
+| `--claude-allowed-tools` | — | Comma-separated tools for the `claude_cli` adapter |
+| `--kernel` | off | Enable persistent IPython kernel (see §4.2) |
+| `--kernel-scope` | `session` | Kernel lifecycle: `session` or `workflow` |
+| `--kernel-timeout` | `60.0` | Per-cell execution timeout in seconds |
+
+```bash
+# Basic run
+spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
+
+# Pass workflow INPUT parameters
+spl3 run workflow.spl --adapter ollama -p topic="linear algebra" -p depth=3
+
+# Load a Python tools module
+spl3 run workflow.spl --adapter ollama --tools mytools.py
+
+# Log all LLM prompts for inspection
+spl3 run workflow.spl --adapter claude_cli --log-prompts ./prompts/
+```
+
+---
+
+### 4.2 IPython Kernel (`--kernel`)
+
+`--kernel` attaches a **persistent IPython kernel** (via `jupyter_client`) to the
+executor session.  Every `CALL run_python(@code) INTO @result` step routes through
+this kernel instead of spawning a new Python subprocess.
+
+**Why it matters:**
+
+| Without `--kernel` | With `--kernel` |
+|--------------------|-----------------|
+| Each `CALL run_python` is a fresh subprocess | One kernel shared across all `CALL run_python` steps |
+| No state between calls — imports, variables lost | State accumulates: `import sympy` in step 1 still live in step 5 |
+| Only stdlib available; extra deps require `@spl_tool` wiring | Every `pip`-installed package is available — just `import` it |
+| Subprocess output only (stdout captured as string) | Full IPython semantics: expression results, repr, stdout |
+
+**Quick example:**
+
+```bash
+# Run recipe 69 — eigenvalue notebook generator
+spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+    --kernel --adapter ollama \
+    --tools cookbook/69_notebook_gen/tools.py
+```
+
+The workflow runs three `CALL run_python` steps that share a single kernel:
+
+```spl
+-- Step 1: import once
+CALL run_python(f'
+import sympy as sp
+A = sp.Matrix({@matrix_a})
+print(f"A = {A}")
+') INTO @matrix_repr
+
+-- Step 2: A and sympy are still live — no re-import
+CALL run_python('
+eigendata = A.eigenvects()
+...
+') INTO @eigen_summary
+
+-- Step 3: eigendata is still live — no re-computation
+CALL run_python('
+checks = [bool(A * v == lam * v) for lam, mult, vecs in eigendata for v in vecs]
+...
+') INTO @verification
+```
+
+**Passing SPL variables into kernel code:**
+
+Use SPL f-strings with `{@variable}` for values that are safe Python literals
+(numbers, lists, simple strings).  For LLM-generated prose, pass via a
+`@spl_tool` function (`tools.py`) to avoid quoting issues.
+
+```spl
+-- Safe: @matrix_a = "[[4, 1], [2, 3]]" becomes a valid Python literal
+CALL run_python(f'A = sp.Matrix({@matrix_a})') INTO @_
+
+-- Safe: @n is a number
+CALL run_python(f'result = factorial({@n})') INTO @result
+
+-- Best practice for prose: use tools.py, not f-string embedding
+CALL assemble_notebook(@intro_text, @explanation_text, @output_path) INTO @path
+```
+
+**Kernel scope options:**
+
+| `--kernel-scope` | Behaviour |
+|------------------|-----------|
+| `session` (default) | One kernel shared across all `CALL run_python` steps in the run — imports, variables, and SymPy symbols persist end-to-end |
+| `workflow` | Caller is responsible for restarting between workflow runs when isolation is needed (e.g. parallel batch runs) |
+
+**Timeout:**
+
+`--kernel-timeout 120` sets the per-cell timeout to 120 seconds.  Useful for
+workflows with long-running computations (large matrix factorisations, numerical
+optimisation).  A `TimeoutError` is mapped to SPL `ToolFailed`.
+
+**Requirements:**
+
+```bash
+pip install jupyter_client ipykernel sympy   # minimum for symbolic math
+```
+
+`jupyter_client` and `ipykernel` must be installed in the same environment as
+`spl-llm`.  Any other package (`numpy`, `z3-solver`, `networkx`, …) is available
+as soon as it is `pip install`-ed — no `@spl_tool` wiring needed.
+
+**How it interacts with `--tools`:**
+
+When `--tools` is used together with `--kernel`, the stdlib's subprocess-based
+`run_python` (registered globally) is automatically overridden by the kernel
+version after tool loading.  Functions from your `tools.py` that need to
+receive LLM-generated text should use `@spl_tool` and accept them as `str`
+arguments — this avoids the quoting complexity of embedding multi-line prose
+inside Python code strings via SPL f-strings.
+
+**Error handling:**
+
+A Python exception inside the kernel raises `KernelExecutionError`, which is
+mapped to SPL `ToolFailed`.  The kernel recovers automatically — the session
+stays alive and subsequent `CALL run_python` steps continue normally.
+
+```
+KernelExecutionError: ZeroDivisionError: division by zero
+→ SPL ToolFailed  →  caught by EXCEPTION handler or logged as workflow error
+→ kernel session remains live for subsequent steps
+```
+
+**Two kernel backends (advanced):**
+
+| Backend | Class | When used |
+|---------|-------|-----------|
+| `IPythonKernel` | out-of-process via `jupyter_client` | `--kernel` flag; full IPython semantics, expression results, real notebook parity |
+| `KernelSession` | in-process `exec()` namespace | `CREATE TOOL_API` bodies; no extra deps, captures stdout only |
+
+`--kernel` always uses `IPythonKernel`.  `KernelSession` is used internally
+for `CREATE TOOL_API` definitions and does not require `jupyter_client`.
 
 ---
 
@@ -1157,6 +1307,10 @@ spl3 validate <file.spl> [file.spl ...]        # syntax check
               [--semantic/--no-semantic]             # semantic lint (default: on)  [To-Test]
               [--strict]                             # warnings → errors            [To-Test]
 spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
+              [--tools FILE]                           # load @spl_tool functions
+              [--kernel]                               # persistent IPython kernel
+              [--kernel-scope session|workflow]        # default: session
+              [--kernel-timeout FLOAT]                 # default: 60.0 s
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
 spl3 text2mmd "<description>|<file.md>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
