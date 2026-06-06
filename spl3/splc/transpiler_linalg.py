@@ -136,6 +136,7 @@ from linalg_graph import (
     concept_names, primitive_names,
     gap, learning_path,
 )
+from style_profiles import style_instruction, get_style_profile, available_styles
 
 # ── LLM helper (configure SPL_MODEL or replace with your adapter) ────────────
 def _llm_call(prompt: str, model: str | None = None) -> str:
@@ -240,7 +241,10 @@ class LinalgTranspiler:
         param_lines: list[str] = []
         for p in wf.inputs:
             typ = (p.param_type or "TEXT").upper()
-            if typ in ("INT", "INTEGER"):
+            # Use the SPL DEFAULT value when present; fall back to sensible type default
+            if p.default_value is not None:
+                default = self._expr_py(p.default_value)
+            elif typ in ("INT", "INTEGER"):
                 default = "1"
             elif typ in ("FLOAT", "NUMBER"):
                 default = "1.0"

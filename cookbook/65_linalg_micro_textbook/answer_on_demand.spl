@@ -9,6 +9,10 @@
 --   3. Compute the learning gap: ancestors(target) minus already-mastered concepts.
 --   4. Generate and verify one section per gap concept in productivity order.
 --   5. Close with the target concept section.
+--
+-- Style: @style selects a profile from style_profiles.py.
+--   resolve_target is style-agnostic (it resolves a concept name, not prose).
+--   All content-generating calls receive @style_guide.
 
 -- ── Prompt templates ────────────────────────────────────────────────────────
 
@@ -27,29 +31,29 @@ student's question. Output only the concept name as a bare identifier (e.g.
 "eigenpair", "spectral_theorem"). No explanation. No punctuation.
 $$;
 
-CREATE FUNCTION write_section(concept TEXT, context TEXT)
+CREATE FUNCTION write_section(concept TEXT, context TEXT, style_guide TEXT)
 RETURN TEXT
 AS $$
 You are an expert linear algebra author writing a personalised micro-lesson.
 
+{style_guide}
+
 Write a self-contained section for the concept: {concept}
 Surrounding context: {context}
 
-Structure:
-1. **Definition** — precise and minimal, built only from prerequisite concepts.
-2. **Worked example** — a concrete 2×2 or 3×3 numerical example.
-3. **Key property** — one theorem or identity with a brief proof sketch.
-4. **Lab cell** — a short SymPy snippet the student can run interactively.
-
-Length: 250–350 words. Use LaTeX for all mathematics.
+Follow the structure and length specified in the STYLE GUIDE above exactly.
+Use LaTeX for all mathematics.
 Output only the section text. No preamble.
 $$;
 
-CREATE FUNCTION refine_section(section TEXT, feedback TEXT)
+CREATE FUNCTION refine_section(section TEXT, feedback TEXT, style_guide TEXT)
 RETURN TEXT
 AS $$
 You are an expert linear algebra author. Revise the section below based on
 the feedback provided. Keep all correct content; fix only what is flagged.
+Maintain the style described below throughout the revision.
+
+{style_guide}
 
 SECTION:
 {section}
@@ -65,29 +69,35 @@ $$;
 WORKFLOW answer_on_demand
     INPUT:
         @question TEXT DEFAULT 'Why does diagonalization work?',
+        @style TEXT DEFAULT 'textbook',
         @learner_state LIST DEFAULT []
     OUTPUT:
         @lesson TEXT
 DO
-    -- 1. Resolve natural-language question to a concept node
+    -- 1. Resolve style profile once (deterministic — no LLM involved)
+    SOLVE @style_guide TEXT := style_instruction(@style)
+
+    LOGGING f"Style: {@style}" LEVEL INFO
+
+    -- 2. Resolve natural-language question to a concept node (style-agnostic)
     SOLVE @concept_list TEXT := str(concept_names())
 
     GENERATE resolve_target(@question, @concept_list) INTO @target
 
-    -- 2. Verify the resolved target exists in the concept graph
+    -- 3. Verify the resolved target exists in the concept graph
     ASSERT in_graph(@graph, @target)
         OTHERWISE GENERATE resolve_target(@question, @concept_list) INTO @target
 
     LOGGING f"Target concept: {@target}" LEVEL INFO
 
-    -- 3. Compute the personalised learning gap (ancestors minus mastered)
+    -- 4. Compute the personalised learning gap (ancestors minus mastered)
     SOLVE @order LIST := learning_path(@graph, @target, @learner_state, weight=1.0)
 
     SOLVE @order_len INT := len(@order)
 
     LOGGING f"Learning path: {@order_len} new concepts" LEVEL INFO
 
-    -- 4. Generate and verify each gap concept in dependency order
+    -- 5. Generate and verify each gap concept in dependency order
     @lesson := ""
     @_i := 0
 
@@ -96,12 +106,12 @@ DO
 
         LOGGING f"Generating: {@concept}" LEVEL INFO
 
-        GENERATE write_section(@concept, @concept) INTO @section
+        GENERATE write_section(@concept, @concept, @style_guide) INTO @section
 
         CALL verify_math(@section) INTO @check
         EVALUATE @check
             WHEN contains("fail") THEN
-                GENERATE refine_section(@section, @check) INTO @section
+                GENERATE refine_section(@section, @check, @style_guide) INTO @section
             ELSE
                 LOGGING f"Section {@concept} verified" LEVEL INFO
         END
@@ -110,12 +120,12 @@ DO
         @_i := @_i + 1
     END
 
-    -- 5. Target concept capstone
-    GENERATE write_section(@target, @target) INTO @capstone
+    -- 6. Target concept capstone (styled)
+    GENERATE write_section(@target, @target, @style_guide) INTO @capstone
 
     @lesson := @lesson + "\n\n---\n\n## " + @target + "\n\n" + @capstone
 
-    LOGGING f"Lesson complete for: {@target}" LEVEL INFO
+    LOGGING f"Lesson complete — style: {@style}, target: {@target}" LEVEL INFO
 
     COMMIT @lesson
 END
