@@ -524,6 +524,28 @@ def primitive_names() -> list[str]:
     return list(_PRIMITIVES.keys())
 
 
+def gap(graph: nx.DiGraph, target: str, learner_state: Iterable[str]) -> set[str]:
+    """Concepts needed to reach target that the learner has not yet mastered.
+
+    Returns ancestors(graph, target) minus learner_state.  The result is the
+    minimal set of new concepts the learner must cover to understand target.
+    """
+    return ancestors(graph, target).difference(set(learner_state))
+
+
+def learning_path(graph: nx.DiGraph, target: str, learner_state: Iterable[str],
+                  weight: float = 1.0) -> list[str]:
+    """Productivity-ordered list of concepts a learner still needs for target.
+
+    Equivalent to productivity_order(restrict(graph, gap(graph, target, learner_state))).
+    Handles the empty-gap case (all prerequisites already mastered) gracefully.
+    """
+    needed = gap(graph, target, learner_state)
+    if not needed:
+        return []
+    return productivity_order(restrict(graph, needed), weight=weight)
+
+
 # ---------------------------------------------------------------------------
 # Quick smoke-test (python linalg_graph.py)
 # ---------------------------------------------------------------------------

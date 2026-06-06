@@ -134,6 +134,7 @@ from linalg_graph import (
     productivity_order, in_graph, applications_of, new_primitives,
     first_radical_primitives, both_radical_primitives,
     concept_names, primitive_names,
+    gap, learning_path,
 )
 
 # ── LLM helper (configure SPL_MODEL or replace with your adapter) ────────────
@@ -352,14 +353,19 @@ class LinalgTranspiler:
 
         prompt_const = fn.upper() + "_PROMPT"
         if fn in self.prompts:
+            fn_params = self.fn_params.get(fn, [])
             parts: list[str] = []
-            for a in gc.arguments:
-                if isinstance(a, ParamRef):
-                    parts.append(f"{self._key(a.name)}={self._expr_py(a)}")
-                elif isinstance(a, NamedArg):
+            for idx, a in enumerate(gc.arguments):
+                if isinstance(a, NamedArg):
                     parts.append(f"{a.name}={self._expr_py(a.value)}")
                 else:
-                    parts.append(self._expr_py(a))
+                    # Use the function's declared parameter name as the keyword (positional-by-position)
+                    param_name = fn_params[idx].name if idx < len(fn_params) else None
+                    val_py = self._expr_py(a)
+                    if param_name:
+                        parts.append(f"{param_name}={val_py}")
+                    else:
+                        parts.append(val_py)
             fmt_args = ", ".join(parts)
             prompt_expr = f"{prompt_const}.format({fmt_args})" if fmt_args else prompt_const
         else:
@@ -536,6 +542,10 @@ class LinalgTranspiler:
             return f"@{self._key(expr.name)}"
         if isinstance(expr, Literal):
             return repr(expr.value)
+        if isinstance(expr, FStringLiteral):
+            return f"f'{expr.template}'"
+        if isinstance(expr, BinaryOp):
+            return f"{self._spl_expr(expr.left)} {expr.op} {self._spl_expr(expr.right)}"
         if isinstance(expr, str):
             return expr
         return self._spl_arg(expr)
@@ -555,25 +565,52 @@ class LinalgTranspiler:
             parts = [self._render_condition(c) for c in cond.conditions]
             op = " and " if cond.conjunctions and cond.conjunctions[0] == "AND" else " or "
             return op.join(parts)
+        if hasattr(cond, "left") and hasattr(cond, "operator") and hasattr(cond, "right"):
+            left = self._expr_py(cond.left)
+            right = self._expr_py(cond.right)
+            op = "==" if cond.operator == "=" else cond.operator
+            return f"{left} {op} {right}"
+        # fallback: single-operand condition (e.g., UnaryOp or bare expression)
         if hasattr(cond, "operator") and hasattr(cond, "right"):
             right = self._expr_py(cond.right)
-            return f"_cond_var {cond.operator} {right}"
+            op = "==" if cond.operator == "=" else cond.operator
+            return f"_cond_var {op} {right}"
         return self._expr_py(cond)
 
     def _spl_condition(self, cond) -> str:
         """Render a condition in SPL syntax for comment."""
         if isinstance(cond, SemanticCondition):
             return cond.semantic_value
+        if isinstance(cond, CompoundCondition):
+            # spl3 CompoundCondition has left/right/operator
+            if hasattr(cond, "left") and hasattr(cond, "right"):
+                return f"{self._spl_condition(cond.left)} {cond.operator} {self._spl_condition(cond.right)}"
+            # spl base CompoundCondition has conditions/conjunctions lists
+            parts = [self._spl_condition(c) for c in cond.conditions]
+            conj = f" {cond.conjunctions[0]} " if cond.conjunctions else " AND "
+            return conj.join(parts)
+        if hasattr(cond, "left") and hasattr(cond, "operator") and hasattr(cond, "right"):
+            return f"{self._spl_expr(cond.left)} {cond.operator} {self._spl_expr(cond.right)}"
         return str(cond)
 
     def _render_when_condition(self, cond, subject_var: str) -> str:
         """Render a WHEN <cond> condition in the context of an EVALUATE subject."""
         if isinstance(cond, SemanticCondition):
+            # semantic_value is encoded as "contains:substring" by the parser
             val = cond.semantic_value.lower()
-            return f'"{val}" in str({subject_var}).lower()'
+            if val.startswith("contains:"):
+                substring = val[len("contains:"):]
+            else:
+                substring = val
+            return f'"{substring}" in str({subject_var}).lower()'
+        if hasattr(cond, "left") and hasattr(cond, "operator") and hasattr(cond, "right"):
+            right = self._expr_py(cond.right)
+            op = "==" if cond.operator == "=" else cond.operator
+            return f"{subject_var} {op} {right}"
         if hasattr(cond, "operator") and hasattr(cond, "right"):
             right = self._expr_py(cond.right)
-            return f"{subject_var} {cond.operator} {right}"
+            op = "==" if cond.operator == "=" else cond.operator
+            return f"{subject_var} {op} {right}"
         return self._render_condition(cond)
 
     @staticmethod

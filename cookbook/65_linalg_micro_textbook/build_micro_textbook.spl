@@ -1,0 +1,133 @@
+-- Layer 4a: build_micro_textbook.spl
+-- End-to-end Linear Algebra micro-textbook generation.
+-- Logical view (DODA): the physical artifact is produced by
+--   splc --lang python/linalg build_micro_textbook.spl
+--
+-- The concept graph (37 nodes, 51 edges) is pre-loaded in the setup cell.
+-- SOLVE / ASSERT statements route to the Python kernel deterministically.
+-- GENERATE statements call the LLM via _llm_call() in the notebook.
+
+-- ── Prompt templates ────────────────────────────────────────────────────────
+
+CREATE FUNCTION write_section(concept TEXT, context TEXT)
+RETURN TEXT
+AS $$
+You are an expert linear algebra author writing a concise micro-textbook.
+
+Write a self-contained section for the concept: {concept}
+Surrounding context: {context}
+
+Structure each section as:
+1. **Definition** — precise and minimal, built only from prerequisite concepts.
+2. **Worked example** — a concrete 2×2 or 3×3 numerical example.
+3. **Key property** — one theorem or identity with a brief proof sketch.
+4. **Lab cell** — a short SymPy snippet the student can run interactively.
+
+Length: 300–400 words. Use LaTeX for all mathematics.
+Output only the section text. No preamble, no metadata.
+$$;
+
+CREATE FUNCTION refine_section(section TEXT, feedback TEXT)
+RETURN TEXT
+AS $$
+You are an expert linear algebra author. Revise the section below based on
+the feedback provided. Keep all correct content; fix only what is flagged.
+
+SECTION:
+{section}
+
+FEEDBACK:
+{feedback}
+
+Output the revised section only. No preamble. No commentary.
+$$;
+
+CREATE FUNCTION write_payoff(target TEXT, applications TEXT)
+RETURN TEXT
+AS $$
+You are an expert author writing the capstone of a linear algebra micro-textbook.
+
+The textbook culminates in the concept: {target}
+Applications this concept unlocks: {applications}
+
+Write a "Payoff" section (200–250 words) that:
+1. Explains what {target} achieves and why it is the natural endpoint.
+2. Shows how it connects to each listed application domain.
+3. Ends with an invitation to explore one application in depth.
+
+Use LaTeX for mathematics. Output only the section. No preamble.
+$$;
+
+-- ── Main workflow ────────────────────────────────────────────────────────────
+
+WORKFLOW build_micro_textbook
+    INPUT:
+        @target TEXT DEFAULT 'spectral_theorem',
+        @primitive_budget INT DEFAULT 2,
+        @payoff_weight FLOAT DEFAULT 1.5
+    OUTPUT:
+        @textbook TEXT
+DO
+    -- 1. Verify the concept graph is well-formed (deterministic checks)
+    ASSERT acyclic(@graph)
+
+    ASSERT reducible(@graph, @primitives)
+
+    -- 2. Scope to target concept and compute teaching order
+    SOLVE @needed SET := ancestors(@graph, @target)
+
+    SOLVE @order LIST := productivity_order(restrict(@graph, @needed), weight=@payoff_weight)
+
+    SOLVE @order_len INT := len(@order)
+
+    LOGGING f"Teaching {@order_len} concepts toward {@target}" LEVEL INFO
+
+    -- 3. Generate and verify one section per concept in dependency order
+    @textbook := ""
+    @_i := 0
+
+    WHILE @_i < @order_len DO
+        SOLVE @concept TEXT := @order[@_i]
+
+        LOGGING f"Section {@_i}: {@concept}" LEVEL INFO
+
+        -- 3a. Generate the section for this concept
+        GENERATE write_section(@concept, @concept) INTO @section
+
+        -- 3b. Primitive budget: no more than primitive_budget new radicals per section
+        ASSERT new_primitives(@section) <= @primitive_budget
+            OTHERWISE GENERATE refine_section(@section, "introduce at most one new primitive per section") INTO @section
+
+        -- 3c. Symbolic math check (SymPy recompute of worked examples)
+        CALL verify_math(@section) INTO @check
+        EVALUATE @check
+            WHEN contains("fail") THEN
+                GENERATE refine_section(@section, @check) INTO @section
+            ELSE
+                LOGGING "Math verified" LEVEL INFO
+        END
+
+        -- 3d. Shape / dimensional-analysis check
+        CALL shape_check(@section) INTO @shapes
+        EVALUATE @shapes
+            WHEN contains("fail") THEN
+                GENERATE refine_section(@section, @shapes) INTO @section
+            ELSE
+                LOGGING "Shapes OK" LEVEL INFO
+        END
+
+        @textbook := @textbook + "\n\n---\n\n" + @section
+        @_i := @_i + 1
+    END
+
+    -- 4. Capstone: tie target to its payoff applications
+    SOLVE @apps LIST := applications_of(@graph, @target)
+
+    GENERATE write_payoff(@target, @apps) INTO @capstone
+
+    @textbook := @textbook + "\n\n---\n\n## Payoff\n\n" + @capstone
+
+    LOGGING "Textbook complete" LEVEL INFO
+
+    COMMIT @textbook
+END
