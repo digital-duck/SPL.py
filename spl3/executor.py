@@ -61,12 +61,51 @@ def _builtin_clean_code(text: str) -> str:
 
 
 class SPL3Executor(SPL2Executor):
+    """SPL 3.0 executor, extending SPL 2.0 with the extended type system."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, kernel: bool = False, kernel_scope: str = "session",
+                 kernel_timeout: float = 60.0, **kwargs):
         super().__init__(*args, **kwargs)
         # Register SPL 3.0 built-ins
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
-    """SPL 3.0 executor, extending SPL 2.0 with the extended type system."""
+
+        # IPython kernel — lazy start on first run_python call
+        self._kernel_enabled = kernel
+        self._kernel: "IPythonKernel | None" = None
+        if kernel:
+            from spl3.kernel import IPythonKernel
+            self._kernel = IPythonKernel(scope=kernel_scope, timeout=kernel_timeout)
+            self._register_run_python()
+
+    def _register_run_python(self) -> None:
+        """Register run_python(@code) as a synchronous @spl_tool.
+
+        Usage in SPL:
+            CALL run_python(@code) INTO @result
+
+        The kernel starts lazily on the first call.  All subsequent calls
+        share the same session — imports and variables persist.
+        """
+        kernel = self._kernel
+
+        def run_python(code: str) -> str:
+            from spl.executor import ToolFailed
+            from spl3.kernel import KernelExecutionError
+            try:
+                return kernel.execute(str(code))
+            except KernelExecutionError as e:
+                raise ToolFailed(f"run_python kernel error: {e}") from e
+            except TimeoutError as e:
+                raise ToolFailed(f"run_python timeout: {e}") from e
+
+        self.functions.register_tool("run_python", run_python)
+        _log.info("IPython kernel registered: CALL run_python(@code) INTO @result")
+
+    def close(self) -> None:
+        """Shut down the IPython kernel (if running) then delegate to SPL 2.0 close."""
+        if self._kernel is not None and self._kernel.is_running:
+            self._kernel.shutdown()
+        super().close()
 
     # ------------------------------------------------------------------ #
     # Expression evaluation                                                #

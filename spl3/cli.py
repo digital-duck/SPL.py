@@ -125,8 +125,16 @@ def main(ctx, hub, verbose):
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
+@click.option("--kernel", is_flag=True, default=False,
+              help="Enable persistent IPython kernel for CALL run_python() steps.")
+@click.option("--kernel-scope", default="session",
+              type=click.Choice(["session", "workflow"]), show_default=True,
+              help="Kernel lifecycle scope: 'session' shares state; 'workflow' re-isolates.")
+@click.option("--kernel-timeout", default=60.0, type=float, show_default=True,
+              help="Per-cell execution timeout in seconds.")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools):
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
+        kernel, kernel_scope, kernel_timeout):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -147,11 +155,14 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
     hub_url = ctx.obj.get("hub")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
-                              tools_module, allowed_tools))
+                              tools_module, allowed_tools,
+                              kernel=kernel, kernel_scope=kernel_scope,
+                              kernel_timeout=kernel_timeout))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None):
+                        tools_module=None, allowed_tools=None,
+                        kernel=False, kernel_scope="session", kernel_timeout=60.0):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -183,8 +194,12 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
         adapter_kwargs["allowed_tools"] = [t.strip() for t in allowed_tools.split(",")]
     _inner_adapter = get_adapter(adapter_name, **adapter_kwargs)
     capturing = _CapturingAdapter(_inner_adapter)
-    executor = Executor(adapter=capturing)
+    executor = Executor(adapter=capturing,
+                        kernel=kernel, kernel_scope=kernel_scope,
+                        kernel_timeout=kernel_timeout)
     executor.composer = WorkflowComposer(registry, executor)
+    if kernel:
+        click.echo(f"IPython kernel: enabled (scope={kernel_scope}, timeout={kernel_timeout}s)")
     if log_prompts:
         executor.prompt_log_dir = log_prompts
         click.echo(f"Prompt logging → {log_prompts}/")
