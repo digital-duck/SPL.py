@@ -29,6 +29,7 @@ from spl3.ast_nodes import (
     NoneLiteral, SetLiteral, ImportStatement,
     CallParallelBranch, CallParallelStatement,
     UnaryOp, CompoundCondition, ToolAPINode,
+    SolveStatement, AssertStatement,
 )
 
 
@@ -61,6 +62,14 @@ class SPL3Parser(SPL2Parser):
                     and next_tok.type == TokenType.IDENTIFIER
                     and next_tok.value.lower() == "tool_api"):
                 return self._parse_tool_api()
+
+        # SOLVE @var [TYPE] := python_expr  — deterministic value query via kernel
+        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "solve":
+            return self._parse_solve_statement()
+
+        # ASSERT python_expr [OTHERWISE ...]  — deterministic branch via kernel
+        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "assert":
+            return self._parse_assert_statement()
 
         return super()._parse_statement()
 
@@ -323,6 +332,235 @@ class SPL3Parser(SPL2Parser):
                 elements.append(self._parse_expression())
             self._expect(TokenType.RBRACE)
             return SetLiteral(elements=elements)
+
+    # ------------------------------------------------------------------ #
+    # Workflow / procedure parameter — handle SET keyword as type          #
+    # ------------------------------------------------------------------ #
+
+    # ------------------------------------------------------------------ #
+    # SOLVE statement                                                      #
+    # ------------------------------------------------------------------ #
+
+    def _parse_solve_statement(self) -> SolveStatement:
+        """Parse SOLVE @var [TYPE] := python_expr
+
+        Syntax:
+            SOLVE @target_var [TYPE_ANNOTATION] := python_expression
+        where python_expression may contain @@varname@@ variable references
+        (produced by _parse_python_call_template() from @var tokens).
+
+        Example:
+            SOLVE @order LIST := productivity_order(@@graph@@, weight=@@payoff_weight@@)
+        """
+        self._advance()  # consume 'solve' identifier
+
+        self._expect(TokenType.AT)
+        target = self._expect_identifier_or_keyword().value
+
+        # Optional type annotation (TEXT, NUMBER, LIST, etc.)
+        target_type = None
+        if self._check(TokenType.IDENTIFIER):
+            target_type = self._advance().value.upper()
+
+        self._expect(TokenType.ASSIGN)  # :=
+        python_template = self._parse_python_call_template()
+        return SolveStatement(
+            target_variable=target,
+            target_type=target_type,
+            python_template=python_template,
+        )
+
+    # ------------------------------------------------------------------ #
+    # ASSERT statement                                                     #
+    # ------------------------------------------------------------------ #
+
+    def _parse_assert_statement(self) -> AssertStatement:
+        """Parse ASSERT python_expr [OTHERWISE statement_or_block]
+
+        Syntax:
+            ASSERT python_expression [OTHERWISE <statement> | DO <stmts> END]
+        where python_expression may contain @@varname@@ variable references.
+
+        OTHERWISE is lexed as TokenType.ELSE (backward-compatibility alias).
+        The OTHERWISE body is parsed as:
+          - A single statement (RETRY, RAISE, GENERATE...INTO, CALL..., etc.)
+          - OR a DO...END block for multiple statements.
+
+        Example:
+            ASSERT reducible(@@graph@@, @@primitives@@)
+                OTHERWISE RETRY
+        """
+        self._advance()  # consume 'assert' identifier
+        python_template = self._parse_python_call_template()
+
+        otherwise_body: list = []
+        if self._check(TokenType.ELSE):  # OTHERWISE is lexed as ELSE
+            self._advance()  # consume OTHERWISE/ELSE
+            if self._check(TokenType.DO):
+                self._advance()  # consume DO
+                while not self._check_any(TokenType.END, TokenType.EOF):
+                    otherwise_body.append(self._parse_statement())
+                self._expect(TokenType.END)
+            else:
+                # Single statement after OTHERWISE
+                otherwise_body.append(self._parse_statement())
+
+        return AssertStatement(
+            python_template=python_template,
+            otherwise_body=otherwise_body,
+        )
+
+    # ------------------------------------------------------------------ #
+    # Python expression template parser (shared by SOLVE and ASSERT)      #
+    # ------------------------------------------------------------------ #
+
+    def _parse_python_call_template(self) -> str:
+        """Collect tokens until a statement boundary and rebuild as a Python
+        expression template string.
+
+        SPL @var references become @@varname@@ markers so the executor can
+        substitute state values at runtime via re.sub().
+
+        Handles token types that commonly appear in Python expressions:
+          identifiers, numeric/string literals, parentheses, brackets,
+          braces, comparison operators, arithmetic operators, boolean
+          keywords (and/or/not), in, True/False/None, and single = for
+          keyword arguments.
+
+        Stops at: EOF, SEMICOLON, END, ELSE (OTHERWISE), or any token
+        type not recognised as valid inside a Python expression.
+        """
+        _STOP = {
+            TokenType.EOF,
+            TokenType.SEMICOLON,
+            TokenType.END,
+            TokenType.ELSE,   # OTHERWISE
+        }
+        # Map token type → literal string for tokens that are both SPL
+        # keywords and valid Python tokens.
+        _KEYWORD_AS_PYTHON: dict[TokenType, str] = {
+            TokenType.AND:         " and ",
+            TokenType.OR:          " or ",
+            TokenType.NOT:         "not ",
+            TokenType.IN:          " in ",
+            TokenType.TRUE:        "True",
+            TokenType.FALSE:       "False",
+            TokenType.NONE:        "None",
+            # SPL keywords that appear as Python identifier tokens in expressions:
+            TokenType.DEFAULT:     "default",
+            TokenType.MODEL:       "model",
+            TokenType.FORMAT:      "format",
+            TokenType.LIMIT:       "limit",
+            TokenType.FROM:        "from",
+            TokenType.FOR:         "for",
+            TokenType.AS:          "as",
+            TokenType.RETURN:      "return",
+            TokenType.WITH:        "with",
+            TokenType.INPUT:       "input",
+            TokenType.OUTPUT:      "output",
+            TokenType.SELECT:      "select",
+            TokenType.ORDER:       "order",
+            TokenType.WHERE:       "where",
+            TokenType.RESULT:      "result",
+            TokenType.STORE:       "store",
+            TokenType.CACHE:       "cache",
+            TokenType.RETRY:       "retry",
+            TokenType.RAISE:       "raise",
+            TokenType.CALL:        "call",
+            TokenType.INTO:        "into",
+            TokenType.SET:         "set",
+            TokenType.LOGGING:     "logging",
+            TokenType.TO:          "to",
+            TokenType.LEVEL:       "level",
+            TokenType.GENERATE:    "generate",
+            TokenType.EVALUATE:    "evaluate",
+            TokenType.WORKFLOW:    "workflow",
+            TokenType.ERROR:       "error",
+            TokenType.VERSION:     "version",
+            TokenType.SCHEMA:      "schema",
+            TokenType.COMMIT:      "commit",
+        }
+        _OP_MAP: dict[TokenType, str] = {
+            TokenType.EQ:       "=",
+            TokenType.NEQ:      "!=",
+            TokenType.GT:       ">",
+            TokenType.LT:       "<",
+            TokenType.GTE:      ">=",
+            TokenType.LTE:      "<=",
+            TokenType.PLUS:     "+",
+            TokenType.MINUS:    "-",
+            TokenType.STAR:     "*",
+            TokenType.PERCENT:  "%",
+            TokenType.LPAREN:   "(",
+            TokenType.RPAREN:   ")",
+            TokenType.LBRACKET: "[",
+            TokenType.RBRACKET: "]",
+            TokenType.LBRACE:   "{",
+            TokenType.RBRACE:   "}",
+            TokenType.COLON:    ":",
+            TokenType.COMMA:    ", ",
+            TokenType.DOT:      ".",
+        }
+
+        parts: list[str] = []
+        paren_depth = 0  # track open parens so we stop after the outermost close
+        while True:
+            tok = self._current()
+            if tok.type in _STOP:
+                break
+            # After the top-level expression is complete (paren_depth == 0 and we
+            # already emitted some content), an IDENTIFIER that is not immediately
+            # after a dot/open-paren signals the start of a new SPL statement.
+            if paren_depth == 0 and parts and tok.type == TokenType.IDENTIFIER:
+                # Allow continuation for binary operators (and/or/in are in
+                # _KEYWORD_AS_PYTHON and will be handled below); plain identifiers
+                # after a closed expression mark a new statement → stop.
+                next_tok = self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
+                if (tok.value.upper() not in {kw.upper() for kw in ["and", "or", "not", "in"]}
+                        and next_tok is not None
+                        and next_tok.type not in (TokenType.EQ, TokenType.DOT)):
+                    # Plain identifier at depth-0 that is not a binary operator and not
+                    # followed by = or . — treat as start of next SPL statement.
+                    break
+            if tok.type == TokenType.AT:
+                # Lookahead: @var := is an SPL assignment — stop the template.
+                # @var followed by anything else is a variable reference → @@var@@.
+                ahead1 = self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
+                ahead2 = self.tokens[self.pos + 2] if self.pos + 2 < len(self.tokens) else None
+                if (ahead1 is not None
+                        and ahead1.type in (TokenType.IDENTIFIER,)
+                        and ahead2 is not None
+                        and ahead2.type == TokenType.ASSIGN):
+                    break  # @var := pattern → new SPL statement, stop template
+                self._advance()  # consume @
+                try:
+                    name_tok = self._expect_identifier_or_keyword()
+                    parts.append(f"@@{name_tok.value}@@")
+                except Exception:
+                    parts.append("@")
+            elif tok.type in _KEYWORD_AS_PYTHON:
+                self._advance()
+                parts.append(_KEYWORD_AS_PYTHON[tok.type])
+            elif tok.type in _OP_MAP:
+                self._advance()
+                s = _OP_MAP[tok.type]
+                if tok.type == TokenType.LPAREN:
+                    paren_depth += 1
+                elif tok.type == TokenType.RPAREN:
+                    paren_depth -= 1
+                parts.append(s)
+            elif tok.type == TokenType.IDENTIFIER:
+                parts.append(self._advance().value)
+            elif tok.type == TokenType.INTEGER:
+                parts.append(str(self._advance().value))
+            elif tok.type == TokenType.FLOAT:
+                parts.append(str(self._advance().value))
+            elif tok.type == TokenType.STRING:
+                parts.append(repr(self._advance().value))
+            else:
+                break  # unrecognised token → end of expression
+
+        return "".join(parts)
 
     # ------------------------------------------------------------------ #
     # Workflow / procedure parameter — handle SET keyword as type          #

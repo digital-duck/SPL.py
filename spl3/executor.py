@@ -16,6 +16,12 @@ New capabilities over SPL 2.0:
   - ToolAPINode                →  CREATE TOOL_API ... AS PYTHON $$ ... $$
                                   exec()d into KernelSession (or fallback dict) at
                                   load time, registered in executor's tool table
+  - SolveStatement             →  SOLVE @var [TYPE] := python_expr
+                                  sends expression to IPython kernel, assigns str
+                                  representation of result to @var
+  - AssertStatement            →  ASSERT python_expr [OTHERWISE <body>]
+                                  sends bool(expr) to kernel; executes otherwise_body
+                                  (or raises ToolFailed) when result is falsy
 
 SPL 2.0 backward compatibility is fully preserved.
 """
@@ -31,7 +37,10 @@ _log = logging.getLogger("spl.executor")
 from spl.executor import Executor as SPL2Executor
 
 from spl.ast_nodes import Condition
-from spl3.ast_nodes import NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition, ToolAPINode
+from spl3.ast_nodes import (
+    NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition,
+    ToolAPINode, SolveStatement, AssertStatement,
+)
 from spl3.types import coerce_to_int, coerce_to_float
 
 
@@ -101,6 +110,108 @@ class SPL3Executor(SPL2Executor):
         if self._kernel is not None and self._kernel.is_running:
             self._kernel.shutdown()
         super().close()
+
+    # ------------------------------------------------------------------ #
+    # Statement dispatch — routes SPL 3.0 statement types to handlers     #
+    # ------------------------------------------------------------------ #
+
+    async def _execute_statement(self, stmt, state) -> None:
+        """Override base dispatch to handle SPL 3.0 statement types.
+
+        Handles:
+          SolveStatement        → _exec_solve
+          AssertStatement       → _exec_assert
+          CallParallelStatement → _execute_call_parallel
+          Everything else       → SPL 2.0 base dispatch
+        """
+        if isinstance(stmt, SolveStatement):
+            await self._exec_solve(stmt, state)
+        elif isinstance(stmt, AssertStatement):
+            await self._exec_assert(stmt, state)
+        elif isinstance(stmt, CallParallelStatement):
+            await self._execute_call_parallel(stmt, state)
+        else:
+            await super()._execute_statement(stmt, state)
+
+    # ------------------------------------------------------------------ #
+    # SOLVE / ASSERT — kernel-routed deterministic constructs             #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _resolve_python_template(template: str, state) -> str:
+        """Substitute @@varname@@ markers with values from workflow state.
+
+        Parser writes @var as @@varname@@ in the template; this method
+        replaces each marker with state.get_var(varname).
+        """
+        import re
+        return re.sub(r'@@(\w+)@@', lambda m: state.get_var(m.group(1)), template)
+
+    async def _exec_solve(self, stmt: SolveStatement, state) -> None:
+        """Execute SOLVE @var [TYPE] := python_template via the IPython kernel.
+
+        Substitutes @@varname@@ markers, wraps the expression in a
+        _spl_solve_result = ...; print(str(_spl_solve_result)) pattern,
+        sends to the kernel, and assigns the printed output to @var.
+        """
+        if self._kernel is None:
+            from spl.executor import ToolFailed
+            raise ToolFailed(
+                "SOLVE requires --kernel flag; run with 'spl3 run --kernel ...'"
+            )
+        code = self._resolve_python_template(stmt.python_template, state)
+        kernel_code = (
+            f"_spl_solve_result = {code}\n"
+            f"print(str(_spl_solve_result))"
+        )
+        from spl.executor import ToolFailed
+        from spl3.kernel import KernelExecutionError
+        try:
+            result = self._kernel.execute(kernel_code)
+        except KernelExecutionError as e:
+            raise ToolFailed(f"SOLVE kernel error: {e}") from e
+        except TimeoutError as e:
+            raise ToolFailed(f"SOLVE timeout: {e}") from e
+
+        state.set_var(stmt.target_variable, result.strip())
+        _log.info("SOLVE @%s := %s -> %r", stmt.target_variable, code, result.strip())
+
+    async def _exec_assert(self, stmt: AssertStatement, state) -> None:
+        """Execute ASSERT python_template [OTHERWISE ...] via the IPython kernel.
+
+        Substitutes @@varname@@ markers, wraps in bool(...) and sends to
+        the kernel.  If the result is falsy, executes otherwise_body; if
+        otherwise_body is empty, raises a ToolFailed (assertion failure).
+        """
+        if self._kernel is None:
+            from spl.executor import ToolFailed
+            raise ToolFailed(
+                "ASSERT requires --kernel flag; run with 'spl3 run --kernel ...'"
+            )
+        code = self._resolve_python_template(stmt.python_template, state)
+        kernel_code = (
+            f"_spl_assert_result = bool({code})\n"
+            f"print(_spl_assert_result)"
+        )
+        from spl.executor import ToolFailed
+        from spl3.kernel import KernelExecutionError
+        try:
+            result = self._kernel.execute(kernel_code)
+        except KernelExecutionError as e:
+            raise ToolFailed(f"ASSERT kernel error: {e}") from e
+        except TimeoutError as e:
+            raise ToolFailed(f"ASSERT timeout: {e}") from e
+
+        passed = result.strip() == "True"
+        _log.info("ASSERT %s -> %s", code, passed)
+
+        if not passed:
+            if stmt.otherwise_body:
+                await self._execute_body(stmt.otherwise_body, state)
+            else:
+                raise ToolFailed(
+                    f"ASSERT failed: {code!r} returned {result.strip()!r}"
+                )
 
     # ------------------------------------------------------------------ #
     # Expression evaluation                                                #

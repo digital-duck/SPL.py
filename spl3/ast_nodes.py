@@ -7,6 +7,8 @@ New nodes:
   UnaryOp               — NOT <expr>  boolean negation
   CompoundCondition     — <cond> AND/OR <cond>  compound boolean condition
   ToolAPINode           — CREATE TOOL_API ... AS PYTHON $$ ... $$  deterministic tool
+  SolveStatement        — SOLVE @var [TYPE] := python_expr  deterministic value query via kernel
+  AssertStatement       — ASSERT python_expr OTHERWISE <body>  deterministic branch via kernel
 """
 
 from __future__ import annotations
@@ -170,3 +172,47 @@ class ToolAPINode:
     return_type: str = "TEXT"
     runtime: str = "PYTHON"
     python_body: str = ""
+
+
+@dataclass
+class SolveStatement:
+    """SOLVE @var [TYPE] := python_template
+
+    Routes to the IPython kernel; the result is assigned to @var.
+
+    python_template is a Python expression with @@varname@@ markers that
+    are substituted with SPL variable values at runtime before sending to
+    the kernel.  The kernel evaluates the expression and the string
+    representation of the result is stored in @var.
+
+    TYPE annotation (optional) is recorded for documentation and future
+    type-coercion — currently the result is always stored as a string.
+
+    Example:
+        SOLVE @order LIST := productivity_order(@@graph@@, weight=@@payoff_weight@@)
+    """
+    target_variable: str           # variable name (without @)
+    target_type: str | None        # e.g. "LIST", "NUMBER", "TEXT", or None
+    python_template: str           # Python expression; @@var@@ → state.get_var(var)
+
+
+@dataclass
+class AssertStatement:
+    """ASSERT python_template [OTHERWISE statement_or_block]
+
+    Routes to the IPython kernel; if the result is falsy, executes
+    otherwise_body.  If no otherwise_body is provided, raises an
+    AssertionError-equivalent SPL EXCEPTION.
+
+    python_template is a Python expression with @@varname@@ markers (same
+    substitution as SolveStatement).
+
+    otherwise_body is a list of SPL statements.  Typically contains RETRY,
+    RAISE, GENERATE ... INTO, or a DO ... END block.
+
+    Example:
+        ASSERT reducible(@@graph@@, @@primitives@@)
+            OTHERWISE RETRY
+    """
+    python_template: str           # Python bool expression; @@var@@ markers
+    otherwise_body: list = field(default_factory=list)  # statements if falsy
