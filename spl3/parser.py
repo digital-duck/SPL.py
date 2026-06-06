@@ -357,9 +357,10 @@ class SPL3Parser(SPL2Parser):
         self._expect(TokenType.AT)
         target = self._expect_identifier_or_keyword().value
 
-        # Optional type annotation (TEXT, NUMBER, LIST, etc.)
+        # Optional type annotation (TEXT, NUMBER, LIST, SET, etc.)
+        # SET is a reserved keyword (TokenType.SET); others lex as IDENTIFIER
         target_type = None
-        if self._check(TokenType.IDENTIFIER):
+        if self._check(TokenType.IDENTIFIER) or self._check(TokenType.SET):
             target_type = self._advance().value.upper()
 
         self._expect(TokenType.ASSIGN)  # :=
@@ -435,6 +436,23 @@ class SPL3Parser(SPL2Parser):
             TokenType.SEMICOLON,
             TokenType.END,
             TokenType.ELSE,   # OTHERWISE
+            # SPL statement-starting keywords that cannot appear in a Python
+            # expression at paren depth 0.  Keeping them out of _STOP would
+            # allow them to leak into the template as Python identifiers.
+            TokenType.COMMIT,
+            TokenType.LOGGING,
+            TokenType.WHILE,
+            TokenType.EVALUATE,
+            TokenType.WORKFLOW,
+            TokenType.RETRY,
+            TokenType.RAISE,
+        }
+        # Additional statement-starters: stop only when paren_depth == 0 and
+        # the token is immediately followed by something that starts a new
+        # statement (AT or IDENTIFIER that is not an operator continuation).
+        _DEPTH0_STOP = {
+            TokenType.CALL,
+            TokenType.GENERATE,
         }
         # Map token type → literal string for tokens that are both SPL
         # keywords and valid Python tokens.
@@ -464,21 +482,13 @@ class SPL3Parser(SPL2Parser):
             TokenType.RESULT:      "result",
             TokenType.STORE:       "store",
             TokenType.CACHE:       "cache",
-            TokenType.RETRY:       "retry",
-            TokenType.RAISE:       "raise",
-            TokenType.CALL:        "call",
             TokenType.INTO:        "into",
             TokenType.SET:         "set",
-            TokenType.LOGGING:     "logging",
             TokenType.TO:          "to",
             TokenType.LEVEL:       "level",
-            TokenType.GENERATE:    "generate",
-            TokenType.EVALUATE:    "evaluate",
-            TokenType.WORKFLOW:    "workflow",
             TokenType.ERROR:       "error",
             TokenType.VERSION:     "version",
             TokenType.SCHEMA:      "schema",
-            TokenType.COMMIT:      "commit",
         }
         _OP_MAP: dict[TokenType, str] = {
             TokenType.EQ:       "=",
@@ -511,17 +521,21 @@ class SPL3Parser(SPL2Parser):
             # After the top-level expression is complete (paren_depth == 0 and we
             # already emitted some content), an IDENTIFIER that is not immediately
             # after a dot/open-paren signals the start of a new SPL statement.
-            if paren_depth == 0 and parts and tok.type == TokenType.IDENTIFIER:
-                # Allow continuation for binary operators (and/or/in are in
-                # _KEYWORD_AS_PYTHON and will be handled below); plain identifiers
-                # after a closed expression mark a new statement → stop.
-                next_tok = self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
-                if (tok.value.upper() not in {kw.upper() for kw in ["and", "or", "not", "in"]}
-                        and next_tok is not None
-                        and next_tok.type not in (TokenType.EQ, TokenType.DOT)):
-                    # Plain identifier at depth-0 that is not a binary operator and not
-                    # followed by = or . — treat as start of next SPL statement.
+            if paren_depth == 0 and parts:
+                # CALL / GENERATE at depth 0 always start a new SPL statement.
+                if tok.type in _DEPTH0_STOP:
                     break
+                if tok.type == TokenType.IDENTIFIER:
+                    # Allow continuation for binary operators (and/or/in are in
+                    # _KEYWORD_AS_PYTHON and will be handled below); plain identifiers
+                    # after a closed expression mark a new statement → stop.
+                    next_tok = self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
+                    if (tok.value.upper() not in {kw.upper() for kw in ["and", "or", "not", "in"]}
+                            and next_tok is not None
+                            and next_tok.type not in (TokenType.EQ, TokenType.DOT)):
+                        # Plain identifier at depth-0 that is not a binary operator and not
+                        # followed by = or . — treat as start of next SPL statement.
+                        break
             if tok.type == TokenType.AT:
                 # Lookahead: @var := is an SPL assignment — stop the template.
                 # @var followed by anything else is a variable reference → @@var@@.
