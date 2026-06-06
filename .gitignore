@@ -1,3 +1,21 @@
+.claude/
+.spl/
+.igrid/
+GEMINI.md
+CLAUDE.md
+# **/logs/
+**/out/
+go_git.log
+graphify-out/
+
+graphify-out/
+
+README.html
+
+neurips-experiments/
+backup/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

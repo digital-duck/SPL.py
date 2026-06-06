@@ -1,0 +1,12 @@
+    flowchart TD
+    A([Start]) --> B["Initialize Context<br/>@topic, @loop_count=0"]
+    B --> C["GENERATE plan_queries<br/>Output: @current_queries"]
+    C --> D["CALL search_web<br/>For each query"]
+    D --> E["GENERATE extract_facts<br/>Distill snippets"]
+    E --> F["Aggregate Results<br/>to @notes"]
+    F --> G{"EVALUATE<br/>@synthesis_action?"}
+    G -->|"research & count < 2"| H["Increment @loop_count<br/>Store @feedback"]
+    H --> C
+    G -->|finalize| I["CREATE FUNCTION assess_and_report<br/>Generate @report"]
+    I --> J["WRITE @report to File<br/>Console Log"]
+    J --> K([End])

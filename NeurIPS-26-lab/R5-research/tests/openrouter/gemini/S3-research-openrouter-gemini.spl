@@ -1,0 +1,116 @@
+CREATE FUNCTION Planner(topic TEXT, feedback TEXT)
+RETURNS TEXT AS $$
+You are a research planner. Given the research topic: {topic}
+Previous feedback (if any): {feedback}
+
+Generate exactly 3 specific, diverse search queries to gather comprehensive information.
+Format your response as:
+QUERY_1: <first search query>
+QUERY_2: <second search query>
+QUERY_3: <third search query>
+$$;
+
+CREATE FUNCTION ExtractQuery(queries TEXT, position INT)
+RETURNS TEXT AS $$
+From this list of search queries:
+{queries}
+
+Extract and return only the search query at position {position}.
+For example, if position is 1, return the text after "QUERY_1: ".
+Return only the query text with no prefix or extra formatting.
+$$;
+
+CREATE FUNCTION Researcher(query TEXT)
+RETURNS TEXT AS $$
+Convert the following query into an optimized search engine string: {query}
+$$;
+
+CREATE FUNCTION Extractor(raw_results TEXT)
+RETURNS TEXT AS $$
+Extract key facts and notes from the following search results.
+Focus on accuracy and relevance. Don''t include fluff.
+Raw results: {raw_results}
+$$;
+
+CREATE FUNCTION AccumulateNotes(existing TEXT, note1 TEXT, note2 TEXT, note3 TEXT)
+RETURNS TEXT AS $$
+Merge the following research notes into one coherent, organized collection.
+Remove duplicates and group related facts together.
+
+Existing notes:
+{existing}
+
+New notes from this research iteration:
+Batch 1: {note1}
+Batch 2: {note2}
+Batch 3: {note3}
+
+Return the complete merged notes collection.
+$$;
+
+CREATE FUNCTION Synthesizer(topic TEXT, notes TEXT)
+RETURNS TEXT AS $$
+Evaluate if the following research notes are sufficient to write a comprehensive report on "{topic}".
+If more info is needed, respond with "Need More Info".
+If the information is sufficient, respond with "Sufficient Info".
+Notes: {notes}
+$$;
+
+CREATE FUNCTION FeedbackGenerator(topic TEXT, notes TEXT)
+RETURNS TEXT AS $$
+Based on the current notes, what specific information is missing regarding "{topic}"?
+Provide instructions for the planner to refine the next set of queries.
+Notes: {notes}
+$$;
+
+CREATE FUNCTION Finalizer(topic TEXT, notes TEXT)
+RETURNS TEXT AS $$
+Create a final, polished Markdown report about {topic} using the provided research notes: {notes}.
+$$;
+
+WORKFLOW Research_Agent
+  INPUT @topic TEXT, @out TEXT := "report.txt"
+  OUTPUT @report TEXT
+DO
+  @loop_count := 0;
+  @all_notes := "";
+  @status := "Need More Info";
+  @feedback := "Initial planning";
+
+  WHILE @loop_count < 2 DO
+    GENERATE Planner(@topic, @feedback) INTO @queries;
+
+    GENERATE ExtractQuery(@queries, 1) INTO @query1;
+    GENERATE ExtractQuery(@queries, 2) INTO @query2;
+    GENERATE ExtractQuery(@queries, 3) INTO @query3;
+
+    GENERATE Researcher(@query1) INTO @search1;
+    GENERATE Researcher(@query2) INTO @search2;
+    GENERATE Researcher(@query3) INTO @search3;
+
+    CALL search_web(@search1) INTO @raw1;
+    CALL search_web(@search2) INTO @raw2;
+    CALL search_web(@search3) INTO @raw3;
+
+    GENERATE Extractor(@raw1) INTO @note1;
+    GENERATE Extractor(@raw2) INTO @note2;
+    GENERATE Extractor(@raw3) INTO @note3;
+
+    GENERATE AccumulateNotes(@all_notes, @note1, @note2, @note3) INTO @all_notes;
+
+    GENERATE Synthesizer(@topic, @all_notes) INTO @status;
+
+    EVALUATE @status
+      WHEN contains("Need More Info") THEN
+        GENERATE FeedbackGenerator(@topic, @all_notes) INTO @feedback;
+      ELSE
+        @feedback := "";
+    END;
+
+    @loop_count := @loop_count + 1;
+  END;
+
+  GENERATE Finalizer(@topic, @all_notes) INTO @report;
+  CALL write_file(@out, @report) INTO @write_result;
+  RETURN @report WITH status = "complete";
+END;

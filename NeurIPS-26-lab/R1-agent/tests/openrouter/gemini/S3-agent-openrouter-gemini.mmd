@@ -1,0 +1,10 @@
+    flowchart TD
+    Start([Start]) --> InitVars[Initialize Question and Context]
+    InitVars --> DecideAction[DecideAction Logical Function]
+    DecideAction --> EvaluateAction{Evaluate Action}
+    EvaluateAction -->|search| WebSearch[CALL Web Search Tool]
+    WebSearch --> UpdateContext[Update Research Context]
+    UpdateContext --> DecideAction
+    EvaluateAction -->|answer| AnswerQuestion[AnswerQuestion Logical Function]
+    AnswerQuestion --> OutputResult[Synthesize Final Response]
+    OutputResult --> End([Return status=done])

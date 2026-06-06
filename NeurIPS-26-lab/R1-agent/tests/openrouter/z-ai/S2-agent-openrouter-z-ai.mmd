@@ -1,0 +1,16 @@
+flowchart TD
+    A[Start: Read @question & Init @context] --> B[Generate DecideAction]
+    B --> X{{YAML Parsed OK?}}
+    X -->|Yes| C{{Action contains search?}}
+    X -->|No: YAMLParseError| Y[Retry: Fix block-scalar formatting]
+    Y --> Z{{Retry Parsed OK?}}
+    Z -->|Yes| C
+    Z -->|No| W[Raise ValueError]
+    W --> END1[End: Error]
+    C -->|search| D[Call search_web_duckduckgo]
+    D --> E[Append results to @context]
+    E --> B
+    C -->|answer| F[Save @decision.answer to @context]
+    F --> G[Generate AnswerQuestion]
+    G --> H[Return @answer & Write File]
+    H --> END2[End: Complete]

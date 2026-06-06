@@ -13,6 +13,9 @@ New capabilities over SPL 2.0:
                                   adapter.generate().  Workflow INPUT params of
                                   these types are still passed through as-is.
   - CallParallelStatement      →  dispatches branches via WorkflowComposer
+  - ToolAPINode                →  CREATE TOOL_API ... AS PYTHON $$ ... $$
+                                  exec()d into KernelSession (or fallback dict) at
+                                  load time, registered in executor's tool table
 
 SPL 2.0 backward compatibility is fully preserved.
 """
@@ -28,7 +31,7 @@ _log = logging.getLogger("spl.executor")
 from spl.executor import Executor as SPL2Executor
 
 from spl.ast_nodes import Condition
-from spl3.ast_nodes import NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition
+from spl3.ast_nodes import NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition, ToolAPINode
 from spl3.types import coerce_to_int, coerce_to_float
 
 
@@ -66,7 +69,6 @@ class SPL3Executor(SPL2Executor):
     def __init__(self, *args, kernel: bool = False, kernel_scope: str = "session",
                  kernel_timeout: float = 60.0, **kwargs):
         super().__init__(*args, **kwargs)
-        # Register SPL 3.0 built-ins
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
 
         # IPython kernel — lazy start on first run_python call
@@ -78,14 +80,7 @@ class SPL3Executor(SPL2Executor):
             self._register_run_python()
 
     def _register_run_python(self) -> None:
-        """Register run_python(@code) as a synchronous @spl_tool.
-
-        Usage in SPL:
-            CALL run_python(@code) INTO @result
-
-        The kernel starts lazily on the first call.  All subsequent calls
-        share the same session — imports and variables persist.
-        """
+        """Register run_python(@code) as a synchronous @spl_tool."""
         kernel = self._kernel
 
         def run_python(code: str) -> str:
@@ -162,11 +157,15 @@ class SPL3Executor(SPL2Executor):
             return not self._eval_while_cond(cond.operand, state)
 
         if isinstance(cond, Condition):
+            ls = self._eval_expression(cond.left,  state)
+            rs = self._eval_expression(cond.right, state)
             try:
-                left_val  = float(self._eval_expression(cond.left,  state))
-                right_val = float(self._eval_expression(cond.right, state))
-                return self._compare(left_val, cond.operator, right_val)
+                return self._compare(float(ls), cond.operator, float(rs))
             except (ValueError, TypeError):
+                if cond.operator == "=":
+                    return ls == rs
+                if cond.operator in ("!=", "<>"):
+                    return ls != rs
                 return False
 
         # Plain expression — truthy string check
@@ -330,11 +329,94 @@ class SPL3Executor(SPL2Executor):
             current_gen = current_gen.next_segment
 
         if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
-            state.set_var(stmt.target_variable, last_content)
-            _log.info("GENERATE chain done -> @%s (%d chars total)",
-                      stmt.target_variable, len(last_content))
+            if last_content:
+                state.set_var(stmt.target_variable, last_content)
+                _log.info("GENERATE chain done -> @%s (%d chars total)",
+                          stmt.target_variable, len(last_content))
+            else:
+                _log.warning("GENERATE chain returned empty content for @%s — variable unchanged",
+                             stmt.target_variable)
         else:
             _log.info("GENERATE chain done -> [DISCARDED] (%d chars)", len(last_content))
+
+    # ------------------------------------------------------------------ #
+    # CREATE TOOL_API — load and register before execution                 #
+    # ------------------------------------------------------------------ #
+
+    def _load_tool_apis(self, program) -> None:
+        """Exec each CREATE TOOL_API body and register in the executor's tool table.
+
+        When a KernelSession is active, bodies are exec()d into the kernel's
+        shared namespace so tool definitions can import packages at definition
+        time and reuse them across calls within the same run.
+
+        When no kernel is active, bodies exec into an isolated dict (original
+        behaviour) — the resulting callable is still registered correctly.
+
+        Called once at the start of execute_program() before any WORKFLOW or
+        PROMPT statement executes, so CALL dispatch can resolve tool names
+        defined inline in the .spl file.
+        """
+        kernel = self._kernel
+        for stmt in program.statements:
+            if not isinstance(stmt, ToolAPINode):
+                continue
+
+            if stmt.runtime != "PYTHON":
+                _log.warning(
+                    "CREATE TOOL_API '%s': runtime '%s' is not supported yet — skipped",
+                    stmt.name, stmt.runtime,
+                )
+                continue
+
+            if kernel is not None:
+                fn = kernel.define_tool(stmt.name, stmt.python_body)
+            else:
+                namespace: dict = {}
+                try:
+                    exec(compile(stmt.python_body, f"<tool_api:{stmt.name}>", "exec"), namespace)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': failed to compile/exec body — {exc}"
+                    ) from exc
+
+                fn = namespace.get(stmt.name)
+                if fn is None:
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': body must define a Python function "
+                        f"named '{stmt.name}' at the top level."
+                    )
+                if not callable(fn):
+                    raise RuntimeError(
+                        f"CREATE TOOL_API '{stmt.name}': '{stmt.name}' in the body is not "
+                        f"callable (got {type(fn).__name__})."
+                    )
+
+            self.register_tool(stmt.name, fn)
+            _log.debug(
+                "Registered TOOL_API '%s' -> %r (via %s)",
+                stmt.name, fn, "kernel" if kernel else "exec",
+            )
+
+    async def execute_program(self, analysis, params=None):
+        """Execute program, loading TOOL_API definitions before any workflow runs.
+
+        Load order (later entries win on name collision):
+          1. Library tools from ~/.spl/tool_apis/ (promoted shared libraries)
+          2. Inline TOOL_API blocks from the current .spl file
+        """
+        # 1. Load promoted TOOL_API libraries from registry (~/.spl/tool_apis/)
+        try:
+            from spl3.tool_api_registry import load_all_into_executor
+            n = load_all_into_executor(self)
+            if n:
+                _log.debug("Loaded %d TOOL_API library file(s) from registry", n)
+        except Exception as exc:
+            _log.warning("TOOL_API registry load failed (non-fatal): %s", exc)
+
+        # 2. Inline TOOL_API blocks in the current program (override library tools)
+        self._load_tool_apis(analysis.ast)
+        return await super().execute_program(analysis, params=params)
 
     # ------------------------------------------------------------------ #
     # Workflow execution — typed INPUT param coercion                     #
@@ -426,16 +508,40 @@ class SPL3Executor(SPL2Executor):
             state.total_latency_ms += sub_result.latency_ms
 
     # ------------------------------------------------------------------ #
-    # CALL statement — registry-aware override                             #
+    # CALL statement — registry-aware override with self-healing           #
     # ------------------------------------------------------------------ #
 
     async def _exec_call(self, stmt, state) -> None:
-        """Execute CALL procedure(args) INTO @var.
+        """Execute CALL, with optional self-healing on ModuleNotFoundError.
 
-        Extends SPL 2.0 _exec_call with workflow registry lookup:
+        When self_healing is active, catches ToolFailed whose __cause__ is a
+        ModuleNotFoundError, pip-installs the missing package, and retries
+        once.  If the direct install fails (module name ≠ package name), a
+        single LLM call resolves the correct package name before the retry.
+        Capped at 2 attempts total; raises on second failure.
+        """
+        kernel = self._kernel
+        if not (kernel and kernel.self_healing):
+            await self._exec_call_inner(stmt, state)
+            return
 
-        1. If a WorkflowComposer is attached and the procedure name is found
-           in the registry, delegate to the composer (sub-workflow CALL).
+        from spl.executor import ToolFailed
+        for attempt in range(2):
+            try:
+                await self._exec_call_inner(stmt, state)
+                return
+            except ToolFailed as exc:
+                cause = exc.__cause__
+                if attempt == 0 and isinstance(cause, ModuleNotFoundError):
+                    await self._self_heal_module(cause)
+                else:
+                    raise
+
+    async def _exec_call_inner(self, stmt, state) -> None:
+        """Registry-aware CALL dispatch (extracted for self-healing retry support).
+
+        1. If a WorkflowComposer is attached and the name is found in the
+           registry, delegate to the composer (sub-workflow CALL).
         2. Otherwise fall through to SPL 2.0 tool / builtin / LLM handling.
         """
         composer = getattr(self, "composer", None)
@@ -447,7 +553,6 @@ class SPL3Executor(SPL2Executor):
                 defn = None
 
             if defn is not None:
-                # Resolve positional arguments by matching INPUT param names
                 try:
                     param_names = [inp.name for inp in defn.ast_node.inputs]
                 except (AttributeError, TypeError):
@@ -467,7 +572,44 @@ class SPL3Executor(SPL2Executor):
                 state.total_latency_ms += sub_result.latency_ms
                 return
 
-        # Fall through to SPL 2.0 tool / builtin / procedure / LLM handling
         await super()._exec_call(stmt, state)
+
+    async def _self_heal_module(self, exc: ModuleNotFoundError) -> None:
+        """pip-install the missing module; escalate to LLM if direct install fails."""
+        module = getattr(exc, "name", None) or (
+            str(exc).split("'")[1] if "'" in str(exc) else str(exc)
+        )
+        kernel = self._kernel
+        assert kernel is not None  # only called when kernel.self_healing is True
+        _log.info("Self-healing: module '%s' not found, attempting pip install", module)
+        if kernel.pip_install(module):
+            return
+        _log.info(
+            "Self-healing: direct install of '%s' failed, asking LLM for package name",
+            module,
+        )
+        package = await self._resolve_package_via_llm(module)
+        if package and package != module:
+            kernel.pip_install(package)
+
+    async def _resolve_package_via_llm(self, module_name: str) -> str:
+        """Ask the adapter which pip package provides a missing Python module."""
+        prompt = (
+            f"The Python module '{module_name}' is not installed. "
+            f"What is the exact pip package name to install it? "
+            f"Reply with only the package name, nothing else."
+        )
+        try:
+            result = await self.adapter.generate(
+                prompt=prompt,
+                system="You are a Python package resolver. Reply with only the pip package name.",
+                model=self.default_model or "",
+                max_tokens=20,
+            )
+            return (result.content or "").strip().split()[0]
+        except Exception as e:
+            _log.warning("LLM package resolution failed: %s", e)
+            return ""
+
 
 Executor = SPL3Executor  # convenience alias for cli.py imports

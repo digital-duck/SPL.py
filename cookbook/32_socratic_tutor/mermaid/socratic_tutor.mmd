@@ -1,0 +1,71 @@
+flowchart TD
+    subgraph SG_socratic_tutor["WORKFLOW: socratic_tutor"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Socratic tutor | l...'"]
+    SUB3[["CALL load_topic(@topic_id, @subject) -> @topic_context"]]
+    LOG2 --> SUB3
+    SUB4[["CALL get_level_guidance(@student_...) -> @level_guide"]]
+    SUB3 --> SUB4
+    LOG5>"LOG(DEBUG) 'Topic and level guid...'"]
+    SUB4 --> LOG5
+    GEN6[/"GENERATE opening_question(@topic, @topic_co..., ...) -> @question_1"/]
+    LOG5 --> GEN6
+    GEN7[/"GENERATE simulate_student_response(@question_1, @topic, ...) -> @student_1"/]
+    GEN6 --> GEN7
+    GEN8[/"GENERATE followup_question(@question_1, @student_1, ...) -> @question_2"/]
+    GEN7 --> GEN8
+    GEN9[/"GENERATE simulate_student_response(@question_2, @topic, ...) -> @student_2"/]
+    GEN8 --> GEN9
+    GEN10[/"GENERATE assess_understanding(@student_1, @student_2, ...) -> @understanding_score"/]
+    GEN9 --> GEN10
+    LOG11>"LOG(INFO) f'Understanding scor...'"]
+    GEN10 --> LOG11
+    EVAL12{"EVALUATE: @understanding_score"}
+    GEN14[/"GENERATE consolidation_question(@topic, @topic_co..., ...) -> @question_3"/]
+    EVAL12 -->|"WHEN > 7"| GEN14
+    GEN14 --> MERGE13
+    GEN15[/"GENERATE hint_question(@question_2, @topic, ...) -> @question_3"/]
+    EVAL12 -->|"ELSE"| GEN15
+    GEN15 --> MERGE13
+    MERGE13[" "]
+    LOG11 --> EVAL12
+    GEN16[/"GENERATE simulate_student_response(@question_3, @topic, ...) -> @student_3"/]
+    MERGE13 --> GEN16
+    SUB17[["CALL compile_dialogue(@question_1, @student_1, ...) -> @dialogue"]]
+    GEN16 --> SUB17
+    LOG18>"LOG(INFO) f'Dialogue compiled ...'"]
+    SUB17 --> LOG18
+    RET19(["RETURN @dialogue (status='comp..., understanding_score=@unde...)"])
+    LOG18 --> RET19
+    START1 --> LOG2
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN20["FUNCTION: socratic_persona()"]
+    end
+    class START1 term
+    class LOG2 log
+    class SUB3 proc
+    class SUB4 proc
+    class LOG5 log
+    class GEN6 llm
+    class GEN7 llm
+    class GEN8 llm
+    class GEN9 llm
+    class GEN10 llm
+    class LOG11 log
+    class EVAL12 ctrl
+    class GEN14 llm
+    class GEN15 llm
+    class GEN16 llm
+    class SUB17 proc
+    class LOG18 log
+    class RET19 term
+    class FN20 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534

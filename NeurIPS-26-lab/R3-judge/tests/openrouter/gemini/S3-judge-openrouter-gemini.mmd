@@ -1,0 +1,8 @@
+    flowchart TD
+    Start([Start]) --> Generator[Generator: Draft Content]
+    Generator --> Judge[Judge: Evaluate Content]
+    Judge --> Evaluation{Verdict?}
+    Evaluation -->|FAIL and Attempts < 3| LoopBack["Capture Feedback<br/>Increment Attempts"]
+    LoopBack --> Generator
+    Evaluation -->|PASS or Attempts reached| FinalOutput[Finalize Results]
+    FinalOutput --> End([RETURN WITH Final Content and Score])

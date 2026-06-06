@@ -1,0 +1,79 @@
+# Hypothesis Workflow
+
+Generated from `hypothesis.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_hypothesis_tester["WORKFLOW: hypothesis_tester"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Hypothesis tester ...'"]
+    GEN3[/"GENERATE formulate_hypotheses(@observation, @domain, ...) -> @hypotheses"/]
+    LOG2 --> GEN3
+    LOG4>"LOG(DEBUG) 'Hypotheses formulate...'"]
+    GEN3 --> LOG4
+    GEN5[/"GENERATE design_test(@hypotheses, @domain) -> @test_plan"/]
+    LOG4 --> GEN5
+    LOG6>"LOG(DEBUG) 'Test plan designed'"]
+    GEN5 --> LOG6
+    GEN7[/"GENERATE evaluate_evidence(@observation, @hypotheses, ...) -> @evidence_json"/]
+    LOG6 --> GEN7
+    LOG8>"LOG(DEBUG) 'Evidence evaluated'"]
+    GEN7 --> LOG8
+    GEN9[/"GENERATE extract_confidence(@evidence...) -> @confidence"/]
+    LOG8 --> GEN9
+    LOG10>"LOG(INFO) f'Confidence score: ...'"]
+    GEN9 --> LOG10
+    EVAL11{"EVALUATE: @confidence"}
+    GEN13[/"GENERATE write_conclusion(@hypotheses, @evidence..., ...) -> @conclusion"/]
+    RET14(["RETURN @conclusion (status='conc..., verdict='h1_s...)"])
+    GEN13 --> RET14
+    EVAL11 -->|"WHEN >= @confidence_thres..."| GEN13
+    GEN15[/"GENERATE write_conclusion(@hypotheses, @evidence..., ...) -> @conclusion"/]
+    RET16(["RETURN @conclusion (status='inco..., verdict='need...)"])
+    GEN15 --> RET16
+    EVAL11 -->|"WHEN >= 0.4"| GEN15
+    GEN17[/"GENERATE write_conclusion(@hypotheses, @evidence..., ...) -> @conclusion"/]
+    RET18(["RETURN @conclusion (status='conc..., verdict='h0_n...)"])
+    GEN17 --> RET18
+    EVAL11 -->|"ELSE"| GEN17
+    LOG10 --> EVAL11
+    START1 --> LOG2
+    EXC19{"EXCEPTION GenerationError"}
+    RET20(["RETURN @hypotheses (status='hypo..., reason='evid...)"])
+    EXC19 --> RET20
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN21["FUNCTION: hypothesis_framework()"]
+    FN22["FUNCTION: evidence_schema()"]
+    end
+    class START1 term
+    class LOG2 log
+    class GEN3 llm
+    class LOG4 log
+    class GEN5 llm
+    class LOG6 log
+    class GEN7 llm
+    class LOG8 log
+    class GEN9 llm
+    class LOG10 log
+    class EVAL11 ctrl
+    class GEN13 llm
+    class RET14 term
+    class GEN15 llm
+    class RET16 term
+    class GEN17 llm
+    class RET18 term
+    class EXC19 ctrl
+    class RET20 term
+    class FN21 fn
+    class FN22 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+```

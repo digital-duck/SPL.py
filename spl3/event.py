@@ -236,13 +236,15 @@ class EventCallTree:
     @classmethod
     def build(cls, events: list[WorkflowInvocationEvent]) -> "EventCallTree":
         """Build a call tree from a flat list of events."""
+        if not events:
+            raise ValueError("No root event found (event list is empty)")
         by_id = {e.event_id: cls(root=e) for e in events}
         root_node = None
         for node in by_id.values():
             pid = node.root.parent_event_id
             if pid and pid in by_id:
                 by_id[pid].children.append(node)
-            else:
+            elif not pid:
                 root_node = node
         if root_node is None:
             raise ValueError("No root event found (event with no parent_event_id)")

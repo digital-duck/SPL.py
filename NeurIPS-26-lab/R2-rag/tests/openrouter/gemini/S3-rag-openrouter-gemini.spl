@@ -1,0 +1,23 @@
+CREATE FUNCTION GenerateAnswer(context TEXT, user_query TEXT)
+RETURNS TEXT AS $$
+You are a helpful assistant. Based on the provided context:
+{context}
+
+Please answer the following question:
+{user_query}
+
+If the answer isn''t in the context, say you don''t know.
+$$;
+
+WORKFLOW RagIndexingAndQuery
+  INPUT @raw_input TEXT, @user_query TEXT
+  OUTPUT @final_response TEXT
+DO
+  CALL ChunkRawTexts(@raw_input) INTO @chunked_docs;
+  CALL GenerateVectorEmbeddings(@chunked_docs) INTO @doc_embeddings;
+  CALL ConstructFAISSIndex(@doc_embeddings) INTO @vector_index;
+  CALL EmbedQuery(@user_query) INTO @query_embedding;
+  CALL NearestNeighborSearch(@vector_index, @query_embedding) INTO @retrieved_context;
+  GENERATE GenerateAnswer(@retrieved_context, @user_query) INTO @final_response;
+  RETURN @final_response WITH status = "complete";
+END;

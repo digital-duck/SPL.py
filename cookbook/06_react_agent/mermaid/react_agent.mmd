@@ -1,0 +1,66 @@
+flowchart TD
+    subgraph SG_search_population["PROCEDURE: search_population"]
+    direction TB
+    START1(["Start"])
+    GEN2[/"GENERATE search_population(country, year) -> @result"/]
+    RET3(["RETURN @result"])
+    GEN2 --> RET3
+    START1 --> GEN2
+    end
+    subgraph SG_population_growth["WORKFLOW: population_growth"]
+    direction TB
+    START4(["Start"])
+    A5["@year_prev := @year_curr - 1"]
+    LOG6>"LOG(INFO) f'Population growth ...'"]
+    A5 --> LOG6
+    SUB7[["CALL search_population(@country, @year_prev) -> @pop_prev"]]
+    LOG6 --> SUB7
+    SUB8[["CALL search_population(@country, @year_curr) -> @pop_curr"]]
+    SUB7 --> SUB8
+    LOG9>"LOG(DEBUG) f'Population fetched...'"]
+    SUB8 --> LOG9
+    SUB10[["CALL calc_growth_rate(@pop_prev, @pop_curr) -> @growth_rate"]]
+    LOG9 --> SUB10
+    LOG11>"LOG(INFO) f'Growth rate comput...'"]
+    SUB10 --> LOG11
+    GEN12[/"GENERATE growth_report(@country, @year_prev, ...) -> @report"/]
+    LOG11 --> GEN12
+    RET13(["RETURN @report (status='comp...)"])
+    GEN12 --> RET13
+    START4 --> A5
+    EXC14{"EXCEPTION SearchFailed"}
+    GEN15[/"GENERATE search_error_report(@country) -> @report"/]
+    RET16(["RETURN @report (status='error')"])
+    GEN15 --> RET16
+    EXC14 --> GEN15
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN17["FUNCTION: search_population()"]
+    FN18["FUNCTION: growth_report()"]
+    end
+    class START1 term
+    class GEN2 llm
+    class RET3 term
+    class START4 term
+    class A5 assign
+    class LOG6 log
+    class SUB7 proc
+    class SUB8 proc
+    class LOG9 log
+    class SUB10 proc
+    class LOG11 log
+    class GEN12 llm
+    class RET13 term
+    class EXC14 ctrl
+    class GEN15 llm
+    class RET16 term
+    class FN17 fn
+    class FN18 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b

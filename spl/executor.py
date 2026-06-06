@@ -27,7 +27,7 @@ from spl.ast_nodes import (
     EvaluateStatement, WhileStatement, DoBlock,
     LoggingStatement, AssignmentStatement, StoreStatement, GenerateIntoStatement,
     CommitStatement, RetryStatement, RaiseStatement, CallStatement, SelectIntoStatement,
-    SemanticCondition, ComparisonCondition, Condition, ExceptionHandler,
+    SemanticCondition, ComparisonCondition, Condition, CompoundCondition, ExceptionHandler,
     FStringLiteral, ListLiteral, MapLiteral,
     StorageSpec, StorageSubscript, StorageAssignStatement,
 )
@@ -586,6 +586,23 @@ class Executor:
             _log.exception("RAG query failed")
             return "[RAG not initialized]"
 
+    def _eval_arg_in_context(self, arg, context: dict) -> str:
+        """Evaluate a generate-clause argument against a plain dict context."""
+        import re
+        if isinstance(arg, Literal):
+            if getattr(arg, 'literal_type', None) == 'bool':
+                return 'true' if arg.value else 'false'
+            return str(arg.value)
+        elif isinstance(arg, (Identifier, ParamRef)):
+            return context.get(arg.name, '')
+        elif isinstance(arg, DottedName):
+            return context.get(arg.full_name, context.get(arg.parts[0], ''))
+        elif isinstance(arg, FStringLiteral):
+            def _sub(m: re.Match) -> str:
+                return context.get(m.group(1), '')
+            return re.sub(r'\{@(\w+)\}', _sub, arg.template)
+        return str(arg)
+
     def _assemble_prompt(self, context: dict, plan: ExecutionPlan,
                          stmt: PromptStatement | None) -> str:
         parts = []
@@ -599,19 +616,25 @@ class Executor:
             if func_def:
                 arg_values: dict[str, str] = {}
                 for param, arg in zip(func_def.parameters, gen.arguments):
-                    if isinstance(arg, Identifier):
-                        arg_values[param.name] = context.get(arg.name, "")
-                    elif isinstance(arg, Literal):
-                        arg_values[param.name] = str(arg.value)
-                    else:
-                        arg_values[param.name] = str(arg)
+                    val = self._eval_arg_in_context(arg, context)
+                    # Treat "[...]" sentinel placeholders as missing (same convention as prompt assembly)
+                    if val.startswith("["):
+                        val = ""
+                    # Fall back to parameter default when resolved value is empty
+                    if not val and param.default_value is not None and isinstance(param.default_value, Literal):
+                        val = str(param.default_value.value)
+                    arg_values[param.name] = val
+                # Handle positionally-omitted trailing parameters
+                for param in func_def.parameters[len(gen.arguments):]:
+                    if param.default_value is not None and isinstance(param.default_value, Literal):
+                        arg_values[param.name] = str(param.default_value.value)
                 task_text = func_def.body
                 for key, val in arg_values.items():
                     task_text = task_text.replace("{" + key + "}", val)
                 parts.append(f"\n## Task\n{task_text}")
             else:
                 args_str = ", ".join(
-                    a.name if isinstance(a, Identifier) else str(a)
+                    self._eval_arg_in_context(a, context)
                     for a in gen.arguments
                 )
                 parts.append(
@@ -821,9 +844,17 @@ class Executor:
         args_text = [self._eval_expression(a, state) for a in gen.arguments]
         func_def = self.functions.get(gen.function_name)
         if func_def:
-            prompt_text = func_def.body
+            param_vals: dict[str, str] = {}
             for param, arg_val in zip(func_def.parameters, args_text):
-                prompt_text = prompt_text.replace("{" + param.name + "}", arg_val)
+                if not arg_val and param.default_value is not None:
+                    arg_val = self._eval_expression(param.default_value, state)
+                param_vals[param.name] = arg_val
+            for param in func_def.parameters[len(args_text):]:
+                if param.default_value is not None:
+                    param_vals[param.name] = self._eval_expression(param.default_value, state)
+            prompt_text = func_def.body
+            for key, val in param_vals.items():
+                prompt_text = prompt_text.replace("{" + key + "}", val)
         else:
             prompt_text = f"Task: {gen.function_name}\n\n"
             for i, arg_text in enumerate(args_text):
@@ -882,9 +913,17 @@ class Executor:
             # Check for user-defined function template
             func_def = self.functions.get(current_gen.function_name)
             if func_def:
-                prompt = func_def.body
+                func_param_vals: dict[str, str] = {}
                 for param, arg_val in zip(func_def.parameters, args_text):
-                    prompt = prompt.replace("{" + param.name + "}", arg_val)
+                    if not arg_val and param.default_value is not None:
+                        arg_val = self._eval_expression(param.default_value, state)
+                    func_param_vals[param.name] = arg_val
+                for param in func_def.parameters[len(args_text):]:
+                    if param.default_value is not None:
+                        func_param_vals[param.name] = self._eval_expression(param.default_value, state)
+                prompt = func_def.body
+                for key, val in func_param_vals.items():
+                    prompt = prompt.replace("{" + key + "}", val)
 
             if self.default_model:
                 model = self.default_model  # --model CLI flag overrides everything
@@ -928,9 +967,13 @@ class Executor:
 
         # Final result of the chain is stored in the target variable
         if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
-            state.set_var(stmt.target_variable, last_content)
-            _log.info("GENERATE chain done -> @%s (%d chars total)",
-                      stmt.target_variable, len(last_content))
+            if last_content:
+                state.set_var(stmt.target_variable, last_content)
+                _log.info("GENERATE chain done -> @%s (%d chars total)",
+                          stmt.target_variable, len(last_content))
+            else:
+                _log.warning("GENERATE chain returned empty content for @%s — variable unchanged",
+                             stmt.target_variable)
         else:
             _log.info("GENERATE chain done -> [DISCARDED] (%d chars)", len(last_content))
 
@@ -1037,13 +1080,40 @@ class Executor:
             # Evaluate condition
             should_continue = False
 
-            if isinstance(cond, Condition):
+            if isinstance(cond, CompoundCondition):
+                def _eval_single(c):
+                    ls = self._eval_expression(c.left, state)
+                    rs = self._eval_expression(c.right, state)
+                    try:
+                        return self._compare(float(ls), c.operator, float(rs))
+                    except (ValueError, TypeError):
+                        if c.operator == "=":
+                            return ls == rs
+                        if c.operator in ("!=", "<>"):
+                            return ls != rs
+                        return False
+                result = _eval_single(cond.conditions[0])
+                for conj, sub in zip(cond.conjunctions, cond.conditions[1:]):
+                    if conj == "AND":
+                        result = result and _eval_single(sub)
+                    else:
+                        result = result or _eval_single(sub)
+                should_continue = result
+            elif isinstance(cond, Condition):
+                left_str = self._eval_expression(cond.left, state)
+                right_str = self._eval_expression(cond.right, state)
                 try:
-                    left_val = float(self._eval_expression(cond.left, state))
-                    right_val = float(self._eval_expression(cond.right, state))
+                    left_val = float(left_str)
+                    right_val = float(right_str)
                     should_continue = self._compare(left_val, cond.operator, right_val)
                 except (ValueError, TypeError):
-                    should_continue = False
+                    # Fall back to string comparison for non-numeric operands
+                    if cond.operator == "=":
+                        should_continue = left_str == right_str
+                    elif cond.operator in ("!=", "<>"):
+                        should_continue = left_str != right_str
+                    else:
+                        should_continue = False
             elif isinstance(cond, SemanticCondition):
                 # Semantic while condition — provide variable context for informed judgment
                 context_lines = []
@@ -1199,7 +1269,8 @@ class Executor:
             args_text = [self._eval_expression(a, state) for a in stmt.arguments]
             prompt = f"Execute procedure: {stmt.procedure_name}({', '.join(args_text)})"
             self._check_budget(state)
-            result = await self.adapter.generate(prompt=prompt, max_tokens=1000)
+            result = await self.adapter.generate(prompt=prompt, max_tokens=1000,
+                                                 model=self.default_model)
             state.record_llm_call(result)
             if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
                 state.set_var(stmt.target_variable, result.content)
@@ -1340,7 +1411,7 @@ class Executor:
             conn = state.get_storage(expr.storage_var) if state else None
             if conn is not None:
                 key = self._eval_expression(expr.key, state)
-                return conn.get(str(key))
+                return conn.get(str(key)) or ""
             var_val = state.get_var(expr.storage_var) if state else ""
             key_str = self._eval_expression(expr.key, state)
             # Try MAP (JSON dict) first

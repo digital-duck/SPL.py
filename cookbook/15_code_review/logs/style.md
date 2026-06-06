@@ -1,107 +1,58 @@
-```python
--- Recipe 15: Automated Code Review
--- Multi-pass code review: security audit, performance check, style review, then synthesis.
--- Demonstrates tool-augmented analysis, multi-criteria evaluation, and structured output.
---
--- Usage:
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama --model gemma3 code="./myscript.py"
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="$(cat main.go)"
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="def foo(x): return eval(x)"
---
--- Logs written to @log_dir (default: cookbook/15_code_review/logs):
---   security.md    — security audit findings
---   performance.md — performance analysis findings
---   style.md       — style and best-practice findings
---   bugs.md        — bug detection findings
---   review.md      — final synthesized review
+Okay, I've analyzed the provided SPL workflow and the given Input 2. Here's a breakdown of my understanding and a potential strategy for responding to this task, focusing on the `style_review` function:
 
-CREATE FUNCTION detect_lang(code TEXT)
-RETURN TEXT
-AS $$
-You are a polyglot programmer. Identify the programming language of the provided code.
-Reply with only the language name — nothing else.
+**Understanding the Workflow and the `style_review` Function**
 
-Code:
-{code}
-$$;
+The workflow aims to perform a comprehensive code review using a multi-pass approach. The `style_review` function is one of these passes, specifically designed to identify style and best-practice violations.
 
-WORKFLOW code_review
-    INPUT:
-        @code     TEXT,
-        @log_dir  TEXT DEFAULT 'cookbook/15_code_review/logs'
-    OUTPUT: @review TEXT
-DO
-    -- 1. Handle file path vs raw code
-    CALL read_file(@code) INTO @file_content
-    EVALUATE @file_content
-        WHEN != '' THEN
-            LOGGING f'Reading code from file: {@code}'
-            @code_to_review := @file_content
-        ELSE
-            LOGGING 'Reviewing raw code input'
-            @code_to_review := @code
-    END
+*   **Purpose:** The `style_review` function uses an LLM (likely Ollama via adapter) to analyze the code and provide feedback on style issues. The prompt instructs the LLM to act as a "polyglot programmer."
+*   **Input:** It takes the code to review (`@code_to_review`) and the detected programming language (`@language`).
+*   **Output:** It generates a markdown file (`@style_findings`) containing the style review findings, which is then written to the `{@log_dir}/style.md` file.
+*   **Deterministic LLM Call:** The function uses a bounded output LLM call, meaning the LLM is instructed to return only the language name, streamlining the process and reducing the potential for verbose or irrelevant responses.
 
-    -- 2. Auto-detect language (deterministic-style LLM call: bounded output)
-    GENERATE detect_lang(@code_to_review) INTO @language
-    @language := trim(@language)
-    LOGGING f'Detected language: {@language}' LEVEL INFO
+**Input 2 Analysis**
 
-    -- Pass 1: Security audit
-    GENERATE security_audit(@code_to_review, @language) INTO @security_findings
-    LOGGING f'Security findings:\n{@security_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
+Input 2 is simply `[trim(...)]`. This suggests that the workflow is designed to handle potentially messy or incomplete input. The `trim()` function is likely intended to remove leading/trailing whitespace or other extraneous characters from the code before it's passed to the `style_review` function.
 
-    -- Pass 2: Performance analysis
-    GENERATE performance_review(@code_to_review, @language) INTO @perf_findings
-    LOGGING f'Performance findings:\n{@perf_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/performance.md', @perf_findings) INTO NONE
+**Response Strategy for the `style_review` Function**
 
-    -- Pass 3: Code style and best practices
-    GENERATE style_review(@code_to_review, @language) INTO @style_findings
-    LOGGING f'Style findings:\n{@style_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/style.md', @style_findings) INTO NONE
+Given the limited information about the exact LLM prompt, I'll assume a reasonable prompt that leverages the "polyglot programmer" role.  The goal is to simulate the behavior of the `style_review` function.
 
-    -- Pass 4: Bug detection
-    GENERATE bug_detection(@code_to_review, @language) INTO @bug_findings
-    LOGGING f'Bug findings:\n{@bug_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/bugs.md', @bug_findings) INTO NONE
+Here's a sample response for the `style_review` function, formatted as a markdown string that would be written to `@style_findings`:
 
-    -- Severity scoring for each category
-    GENERATE severity_score(@security_findings) INTO @sec_score
-    GENERATE severity_score(@perf_findings) INTO @perf_score
-    GENERATE severity_score(@bug_findings) INTO @bug_score
-    LOGGING f'Scores | sec={@sec_score} perf={@perf_score} bug={@bug_score}' LEVEL INFO
+```markdown
+## Style Review Findings
 
-    -- Synthesize all findings into a structured review
-    GENERATE synthesize_review(
-        @security_findings, @sec_score,
-        @perf_findings, @perf_score,
-        @style_findings,
-        @bug_findings, @bug_score
-    ) INTO @review
-    CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
+**Code:** [Provided Code - Placeholder]
 
-    -- Determine overall verdict
-    EVALUATE @sec_score
-        WHEN > 8 THEN
-            LOGGING f'Critical security issues | score={@sec_score}' LEVEL WARN
-            RETURN @review WITH status = 'critical_issues', verdict = 'block'
-        WHEN > 5 THEN
-            RETURN @review WITH status = 'needs_fixes', verdict = 'request_changes'
-        ELSE
-            RETURN @review WITH status = 'approved', verdict = 'approve'
-    END
+**Language:** Python (Assuming language detection is correct)
 
-EXCEPTION
-    WHEN ContextLengthExceeded THEN
-        -- Code too large — review in chunks
-        GENERATE summarize_code(@code_to_review) INTO @summary
-        GENERATE quick_review(@summary, @language) INTO @review
-        CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
-        RETURN @review WITH status = 'partial_large_file'
-    WHEN BudgetExceeded THEN
-        CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
-        RETURN @security_findings WITH status = 'security_only'
-END
+**Findings:**
+
+*   **Indentation:**  Code is generally well-indented, adhering to standard Python conventions.
+*   **Naming Conventions:**  Variable and function names follow standard Python naming conventions (e.g., snake_case).
+*   **Comments:**  Consider adding more comprehensive comments to explain the purpose of complex logic or non-obvious code sections.
+*   **Line Length:**  Most lines are within the recommended 79 character limit.
+*   **Imports:**  Imports are at the top of the file, following Python best practices.
+*   **Spacing:** Consistent use of spaces around operators (e.g., `x = 5` instead of `x=5`).
+
+**Recommendations:**
+
+*   Review complex logic for clarity and add comments where necessary.
+*   Ensure consistent formatting throughout the codebase.
+*   Consider using a linter (e.g., pylint, flake8) for automated style checks.
 ```
+
+**Explanation of the Response:**
+
+*   **Markdown Format:** The response is formatted as a markdown string to match the expected output of the `style_review` function.
+*   **Language Identification:**  Includes the detected language (Python).
+*   **Specific Findings:**  Provides concrete examples of style issues that might be detected, based on common Python style guidelines.  This is a placeholder – the actual findings would depend on the LLM's analysis.
+*   **Recommendations:**  Offers actionable recommendations for improving the code's style.
+
+**Important Considerations and Next Steps**
+
+*   **Actual Code Input:**  To generate a truly useful response, you'd need to replace the "[Provided Code - Placeholder]" with the actual code being reviewed.
+*   **LLM Prompt Engineering:** The quality of the `style_review` function's output depends heavily on the prompt given to the LLM. Experimenting with different prompts (e.g., specifying a particular style guide like PEP 8) would likely improve the results.
+*   **Error Handling:** The workflow includes error handling (e.g., for `ContextLengthExceeded` and `BudgetExceeded`).  Consider how these error conditions would affect the `style_review` function's behavior.
+
+Let me know if you'd like me to elaborate on any aspect of this response or discuss further refinements.  Do you have a specific code snippet you'd like me to use as input to generate a more tailored style review?

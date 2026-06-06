@@ -2,6 +2,7 @@
 -- Sub-workflow: download one arXiv PDF, chunk it, summarize, reduce to abstract.
 
 IMPORT 'functions.spl'
+IMPORT 'tools'
 
 WORKFLOW summarize_paper
     INPUT:  @pdf_url    TEXT,
@@ -22,5 +23,5 @@ DO
     END
 
     GENERATE paper_reducer(@summaries) WITH OUTPUT BUDGET 200 TOKENS INTO @paper_summary
-    COMMIT @paper_summary
+    RETURN @paper_summary
 END

@@ -1,0 +1,6 @@
+PROMPT summarize_document WITH BUDGET 2000 TOKENS
+SELECT
+  system_role('You are a concise summarizer.'),
+  context.document_text AS document
+GENERATE summarize(document, 'in 3 bullet points')
+WITH OUTPUT BUDGET 1500 TOKENS

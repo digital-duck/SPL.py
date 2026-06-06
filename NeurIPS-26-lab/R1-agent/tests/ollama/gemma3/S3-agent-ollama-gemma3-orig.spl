@@ -1,0 +1,46 @@
+WORKFLOW question_answering WITH
+  INPUT @question TEXT;
+  OUTPUT @answer TEXT;
+
+  CREATE FUNCTION generate_decision AS $$
+    prompt = """
+    You are a question answering bot. Based on the question, decide whether to search the web or generate an answer directly.
+    If the question asks for a search, call the search_web tool. Otherwise, generate an answer.
+    Return 'search' or 'answer'.
+    Question: {question}
+    """
+    response = LLM.run(prompt)
+    return response
+  $$;
+
+  CREATE FUNCTION search_web AS $$
+    prompt = """
+    You are a web search tool.  Search the web for the following query: {question}
+    Return the search results as a JSON object.
+    """
+    response = LLM.run(prompt)
+    return response
+  $$;
+
+  CREATE FUNCTION generate_answer AS $$
+    prompt = """
+    You are a question answering bot. Generate an answer to the following question: {question}
+    Return the answer.
+    """
+    response = LLM.run(prompt)
+    return response
+  $$;
+
+  @action := generate_decision;
+  @decision := @action;
+
+  EVALUATE @decision WHEN contains(@decision, 'search') THEN
+    @result := CALL search_web(@question) INTO @search_results;
+    @action := generate_answer(@question);
+  ELSE
+    @action := generate_answer(@question);
+  END;
+
+  @answer := @action;
+
+  RETURN @answer WITH status = 'complete';

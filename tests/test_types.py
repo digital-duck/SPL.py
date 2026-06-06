@@ -455,6 +455,9 @@ class TestImportStatement:
     def test_import_circular_detected(self, tmp_path, caplog):
         """Circular IMPORT is detected and skipped with a warning."""
         import logging
+        logging.getLogger("spl").propagate = True
+        logger = logging.getLogger("spl.loader")
+        logger.propagate = True
         from spl3._loader import load_workflows_from_file
 
         a = tmp_path / "a.spl"
@@ -462,7 +465,7 @@ class TestImportStatement:
         a.write_text("IMPORT 'b.spl'\nWORKFLOW wf_a INPUT: @x TEXT OUTPUT: @y TEXT DO COMMIT 'a' END")
         b.write_text("IMPORT 'a.spl'\nWORKFLOW wf_b INPUT: @x TEXT OUTPUT: @y TEXT DO COMMIT 'b' END")
 
-        with caplog.at_level(logging.WARNING, logger="spl.loader"):
+        with caplog.at_level(logging.WARNING):
             defns = load_workflows_from_file(a)
 
         assert "Circular" in caplog.text

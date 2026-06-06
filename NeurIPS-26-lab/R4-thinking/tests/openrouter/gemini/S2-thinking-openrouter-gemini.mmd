@@ -1,0 +1,9 @@
+flowchart TD
+    Start([Start]) --> Init[Initialize Shared State]
+    Init --> CoTStep["ChainOfThoughtStep<br/>(LLM Generation)"]
+    CoTStep --> Parse["Parse YAML Output:<br/>Thinking, Plan, Flag"]
+    Parse --> Eval{next_thought_needed?}
+    Eval -->|True| Update["Update History & Plan<br/>(Self-Assessment)"]
+    Update --> CoTStep
+    Eval -->|False| Finalize["Extract Final Reasoning<br/>Trace"]
+    Finalize --> End(["End Status: Done"])

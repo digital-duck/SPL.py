@@ -34,5 +34,5 @@ DO
         WITH OUTPUT BUDGET 400 TOKENS
         USING MODEL @review_model
         INTO @feedback
-    COMMIT @feedback
+    RETURN @feedback
 END

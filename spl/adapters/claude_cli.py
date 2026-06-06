@@ -1,7 +1,7 @@
 """Claude Code CLI adapter: wraps the `claude` CLI for development use.
 
 Leverages Claude Code subscription billing for zero marginal cost during development.
-Invokes `claude -p "<prompt>"` via subprocess.
+Invokes `claude --print` via subprocess, feeding the prompt through stdin.
 """
 
 from __future__ import annotations
@@ -55,7 +55,9 @@ class ClaudeCLIAdapter(LLMAdapter):
 
         # Build CLI command
         effective_model = model or self.default_model
-        cmd = [self.cli_path, "-p", full_prompt, "--no-session-persistence",
+        # Pass prompt via stdin (not -p arg) to avoid OS arg-length limits
+        # with large prompts (e.g. review/fix steps that embed generated code).
+        cmd = [self.cli_path, "--print", "--no-session-persistence",
                "--model", effective_model]
         if self.allowed_tools:
             cmd += ["--allowedTools", ",".join(self.allowed_tools)]
@@ -77,17 +79,19 @@ class ClaudeCLIAdapter(LLMAdapter):
         }
         env = {k: v for k, v in os.environ.items() if k not in _STRIP_VARS}
 
-        # Run subprocess asynchronously
+        # Feed prompt via stdin using communicate(input=...) — avoids OS arg-length
+        # limits and eliminates the file-handle race in the temp-file approach.
         try:
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
-                stdin=subprocess.DEVNULL,
+                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 env=env,
             )
             stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=self.timeout
+                proc.communicate(input=full_prompt.encode("utf-8")),
+                timeout=self.timeout,
             )
         except FileNotFoundError:
             raise RuntimeError(
@@ -98,11 +102,22 @@ class ClaudeCLIAdapter(LLMAdapter):
             raise RuntimeError(f"Claude CLI timed out after {self.timeout}s")
 
         stderr_text = stderr.decode('utf-8', errors='replace').strip()
+        stdout_text = stdout.decode('utf-8', errors='replace').strip()
 
         if proc.returncode != 0:
-            raise RuntimeError(f"Claude CLI error (exit {proc.returncode}): {stderr_text}")
+            # The claude CLI often writes errors to stdout rather than stderr.
+            error_detail = stderr_text or stdout_text or "(no output)"
+            low_detail = error_detail.lower()
+            # Detect session limit, rate limit, or quota issues
+            if any(m in low_detail for m in ["session limit", "rate limit", "quota"]):
+                # Use local import to avoid circular dependency at module load time.
+                # The executor will catch this and handle it via EXCEPTION WHEN ModelOverloaded.
+                from spl.executor import ModelOverloaded
+                raise ModelOverloaded(f"Claude CLI limit reached: {error_detail}")
 
-        content = stdout.decode('utf-8', errors='replace').strip()
+            raise RuntimeError(f"Claude CLI error (exit {proc.returncode}): {error_detail}")
+
+        content = stdout_text
         latency = self._elapsed_ms(start)
 
         if not content:
@@ -125,6 +140,87 @@ class ClaudeCLIAdapter(LLMAdapter):
             cost_usd=0.0,  # Subscription billing
         )
 
+    async def generate_multimodal(
+        self,
+        content: list[dict],
+        model: str = "",
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+        system: str | None = None,
+    ) -> GenerationResult:
+        """Generate from content including images using the Anthropic SDK directly.
+
+        The `claude` CLI accepts only text via stdin and has no flag for binary
+        image data.  For vision calls this method bypasses the CLI and calls the
+        Anthropic Messages API via the Python SDK, which requires ANTHROPIC_API_KEY.
+        """
+        try:
+            import anthropic as _anthropic
+        except ImportError:
+            raise ImportError(
+                "pip install anthropic  — required for multimodal calls via claude_cli adapter"
+            )
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            raise RuntimeError(
+                "ANTHROPIC_API_KEY is required for multimodal (vision) calls.\n"
+                "ClaudeCLIAdapter uses the Anthropic SDK for image input because the\n"
+                "claude CLI has no binary image flag.  Set ANTHROPIC_API_KEY, or use\n"
+                "--adapter anthropic / --adapter google instead."
+            )
+
+        effective_model = model or self.default_model
+
+        api_content: list[dict] = []
+        for part in content:
+            ptype = part.get("type")
+            if ptype == "text":
+                api_content.append({"type": "text", "text": part.get("text", "")})
+            elif ptype == "image":
+                if part.get("source") == "base64":
+                    api_content.append({
+                        "type": "image",
+                        "source": {
+                            "type":       "base64",
+                            "media_type": part.get("media_type", "image/png"),
+                            "data":       part.get("data", ""),
+                        },
+                    })
+                elif part.get("source") == "url":
+                    api_content.append({
+                        "type": "image",
+                        "source": {"type": "url", "url": part.get("url", "")},
+                    })
+
+        kwargs: dict = {
+            "model":      effective_model,
+            "max_tokens": max_tokens,
+            "messages":   [{"role": "user", "content": api_content}],
+        }
+        if system:
+            kwargs["system"] = system
+
+        start  = self._measure_time()
+        client = _anthropic.AsyncAnthropic(api_key=api_key)
+        try:
+            response = await client.messages.create(**kwargs)
+        finally:
+            await client.close()
+
+        latency = self._elapsed_ms(start)
+        text    = "".join(b.text for b in response.content if b.type == "text")
+
+        return GenerationResult(
+            content=text,
+            model=effective_model,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            total_tokens=response.usage.input_tokens + response.usage.output_tokens,
+            latency_ms=latency,
+            cost_usd=0.0,
+        )
+
     def count_tokens(self, text: str, model: str = "") -> int:
         """Estimate tokens using character-based heuristic (~3.5 chars/token for Claude)."""
         if not text:
@@ -132,5 +228,9 @@ class ClaudeCLIAdapter(LLMAdapter):
         return max(1, len(text) // 4)
 
     def list_models(self) -> list[str]:
-        """Return the default model; any Claude model ID can be passed to generate()."""
-        return [self.default_model]
+        """Return available Claude models supported by the CLI."""
+        return [
+            "claude-haiku-4-5-20251001",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6",
+        ]

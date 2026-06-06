@@ -304,6 +304,13 @@ class Parser:
             self._expect(TokenType.RPAREN)
             return CTEClause(name=name, nested_prompt=nested_prompt)
 
+        # Shorthand: GENERATE directly without a PROMPT header (documentation style)
+        if self._check(TokenType.GENERATE):
+            generate_clause = self._parse_generate_clause()
+            nested_prompt = PromptStatement(name=name, generate_clause=generate_clause)
+            self._expect(TokenType.RPAREN)
+            return CTEClause(name=name, nested_prompt=nested_prompt)
+
         select_items = self._parse_select_clause()
 
         from_clause = None
@@ -367,7 +374,10 @@ class Parser:
             else:
                 min_vram_gb = float(self._expect(TokenType.INTEGER).value)
 
-        select_items = self._parse_select_clause()
+        if self._check(TokenType.SELECT):
+            select_items = self._parse_select_clause()
+        else:
+            select_items = []
 
         generate_clause = None
         if self._check(TokenType.GENERATE):
@@ -746,9 +756,9 @@ class Parser:
         name = self._expect_identifier_or_keyword().value
         param_type = None
         default_value = None
-        if self._check(TokenType.IDENTIFIER) and not self._check_any(TokenType.COMMA, TokenType.RPAREN, TokenType.DEFAULT):
+        if self._check(TokenType.IDENTIFIER) and not self._check_any(TokenType.COMMA, TokenType.RPAREN, TokenType.DEFAULT, TokenType.ASSIGN):
             param_type = self._advance().value
-        if self._check(TokenType.DEFAULT):
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
         return Parameter(name=name, param_type=param_type, default_value=default_value)
@@ -801,21 +811,22 @@ class Parser:
         self._expect(TokenType.WORKFLOW)
         name = self._expect(TokenType.IDENTIFIER).value
 
-        # INPUT: @param type, ...
+        # INPUT: supports both compact  "INPUT @p1 type, @p2 type"
+        # and per-line  "INPUT @p1 type := val\nINPUT @p2 type := val"
         inputs = []
-        if self._check(TokenType.INPUT):
+        while self._check(TokenType.INPUT):
             self._advance()
             if self._check(TokenType.COLON):
                 self._advance()
-            inputs = self._parse_workflow_param_list()
+            inputs.extend(self._parse_workflow_param_list())
 
-        # OUTPUT: @param type, ...
+        # OUTPUT: same dual-syntax support as INPUT
         outputs = []
-        if self._check(TokenType.OUTPUT):
+        while self._check(TokenType.OUTPUT):
             self._advance()
             if self._check(TokenType.COLON):
                 self._advance()
-            outputs = self._parse_workflow_param_list()
+            outputs.extend(self._parse_workflow_param_list())
 
         # Optional metadata blocks
         security = None
@@ -881,8 +892,8 @@ class Parser:
             else:
                 param_type = self._advance().value
 
-        # Optional DEFAULT
-        if self._check(TokenType.DEFAULT):
+        # Optional DEFAULT or := (both introduce a default value expression)
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
 
@@ -1145,7 +1156,10 @@ class Parser:
             condition = Condition(left=left, operator=op, right=right)
 
             # Check for AND/OR compound conditions
+            conditions = [condition]
+            conjunctions = []
             while self._check_any(TokenType.AND, TokenType.OR):
+                conj = "AND" if self._check(TokenType.AND) else "OR"
                 self._advance()  # AND/OR
                 if self._check(TokenType.NOT):
                     self._advance()
@@ -1159,14 +1173,20 @@ class Parser:
                             # Skip the FROM args until DO
                             while not self._check(TokenType.DO):
                                 self._advance()
-                        return condition
-                # Simple compound: AND expr op expr
-                self._parse_expression()
+                        break
+                # Simple compound: AND/OR expr op expr
+                next_left = self._parse_expression()
                 if self._current().type in op_map:
+                    next_op = op_map[self._current().type]
                     self._advance()
-                    self._parse_expression()
+                    next_right = self._parse_expression()
+                    conditions.append(Condition(left=next_left, operator=next_op, right=next_right))
+                    conjunctions.append(conj)
 
-            return condition
+            if len(conditions) == 1:
+                return conditions[0]
+            from spl.ast_nodes import CompoundCondition
+            return CompoundCondition(conditions=conditions, conjunctions=conjunctions)
 
         # If no operator, it could be a semantic condition in string form
         return left
@@ -1178,6 +1198,12 @@ class Parser:
     def _parse_commit_statement(self) -> CommitStatement:
         """Parse RETURN expr [WITH key=value, ...]  (COMMIT accepted as deprecated alias)"""
         if self._check(TokenType.COMMIT):
+            import warnings
+            warnings.warn(
+                "COMMIT is deprecated and will be removed in a future version; use RETURN instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
             self._advance()
         else:
             self._expect(TokenType.RETURN)
@@ -1297,7 +1323,7 @@ class Parser:
         return StoreStatement(variable=var_name, key=key)
 
     def _parse_assignment_statement(self):
-        """Parse @var := expr  OR  @var['key'] := expr (storage write)."""
+        """Parse @var := expr  OR  @var TYPE := expr  OR  @var['key'] := expr (storage write)."""
         self._expect(TokenType.AT)
         var_name = self._expect_identifier_or_keyword().value
 
@@ -1312,6 +1338,13 @@ class Parser:
                 storage_var=var_name, key=key_expr, value=value_expr
             )
 
+        # Optional inline type annotation: @var TYPE := expr
+        # LLMs frequently generate this form; consume the type token and ignore it.
+        if (self._check(TokenType.IDENTIFIER)
+                and self.pos + 1 < len(self.tokens)
+                and self.tokens[self.pos + 1].type == TokenType.ASSIGN):
+            self._advance()  # consume type annotation (e.g. TEXT, INTEGER)
+
         self._expect(TokenType.ASSIGN)
         expression = self._parse_expression()
         return AssignmentStatement(variable=var_name, expression=expression)
@@ -1321,7 +1354,10 @@ class Parser:
     # ================================================================
 
     def _parse_generate_into_statement(self) -> GenerateIntoStatement:
-        """Parse GENERATE func(args) [WITH options] INTO @var|NONE"""
+        """Parse GENERATE func(args) [WITH options] [USING MODEL x] INTO @var|NONE [USING MODEL x]
+
+        USING MODEL is accepted both before and after INTO for LLM-generated SPL compatibility.
+        """
         gen_clause = self._parse_generate_clause()
 
         target = None
@@ -1333,6 +1369,18 @@ class Parser:
             else:
                 self._expect(TokenType.AT)
                 target = self._expect_identifier_or_keyword().value
+
+        # Allow USING MODEL after INTO @var (LLMs often place it here)
+        if self._check(TokenType.USING) and gen_clause.model is None:
+            self._advance()
+            self._expect(TokenType.MODEL)
+            if self._check(TokenType.STRING):
+                gen_clause.model = self._advance().value
+            elif self._check(TokenType.AT):
+                self._advance()
+                gen_clause.model = '@' + self._expect_identifier_or_keyword().value
+            else:
+                gen_clause.model = self._expect(TokenType.IDENTIFIER).value
 
         return GenerateIntoStatement(
             generate_clause=gen_clause,
@@ -1584,6 +1632,12 @@ class Parser:
         if tok.type in keyword_as_expr:
             self._advance()
             return Identifier(name=tok.value)
+
+        # Unary minus: -expr  (e.g. -1.5, -@var)
+        if tok.type == TokenType.MINUS:
+            self._advance()
+            operand = self._parse_primary()
+            return BinaryOp(left=Literal(value=0, literal_type="int"), op="-", right=operand)
 
         # Parenthesized expression
         if tok.type == TokenType.LPAREN:

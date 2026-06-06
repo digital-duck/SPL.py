@@ -1,0 +1,121 @@
+# Map Reduce Workflow
+
+Generated from `map_reduce.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_map_reduce_summarizer["WORKFLOW: map_reduce_summarizer"]
+    direction TB
+    START1(["Start"])
+    A2["@chunk_index := 0"]
+    A3["@summaries := (0 items)"]
+    A2 --> A3
+    LOG4>"LOG(INFO) 'Starting... + @document"]
+    A3 --> LOG4
+    SUB5[["CALL chunk_plan(@document) -> @chunk_count"]]
+    LOG4 --> SUB5
+    LOG6>"LOG(INFO) 'Document... + ' chunks'"]
+    SUB5 --> LOG6
+    WHILE7{"WHILE: @chunk_index < @chunk_count"}
+    SUB8[["CALL extract_chunk(@document, @chunk_index, ...) -> @chunk"]]
+    SUB9[["CALL write_file(f'(@log_d..., @chunk)"]]
+    SUB8 --> SUB9
+    GEN10[/"GENERATE summarize_chunk(@chunk, @chunk_index) -> @chunk_summary"/]
+    SUB9 --> GEN10
+    SUB11[["CALL write_file(f'(@log_d..., @chunk_su...)"]]
+    GEN10 --> SUB11
+    LOG12>"LOG(INFO) f'(Chunk (@chunk_ind...'"]
+    SUB11 --> LOG12
+    A13["@summaries := list_append(@summaries, @chunk_s..."]
+    LOG12 --> A13
+    A14["@chunk_index := @chunk_index + 1"]
+    A13 --> A14
+    WHILE7 -->|"True"| SUB8
+    A14 -.-> WHILE7
+    LOG6 --> WHILE7
+    A15["@summaries_text := list_concat(@summaries, '\n')"]
+    WHILE7 --> A15
+    GEN16[/"GENERATE reduce_summaries(@summarie..., @style) -> @final_summary"/]
+    A15 --> GEN16
+    GEN17[/"GENERATE quality_score(@final_su..., @document) -> @score"/]
+    GEN16 --> GEN17
+    EVAL18{"EVALUATE: @score"}
+    SUB20[["CALL write_file(f'(@log_d..., @final_su...)"]]
+    LOG21>"LOG(INFO) f'Final summary save...'"]
+    SUB20 --> LOG21
+    RET22(["RETURN @final_summary (status='comp..., chunks=@chun...)"])
+    LOG21 --> RET22
+    EVAL18 -->|"WHEN > 0.7"| SUB20
+    GEN23[/"GENERATE improve_summary(@final_su..., @summarie...) -> @final_summary"/]
+    SUB24[["CALL write_file(f'(@log_d..., @final_su...)"]]
+    GEN23 --> SUB24
+    LOG25>"LOG(INFO) f'Improved summary s...'"]
+    SUB24 --> LOG25
+    RET26(["RETURN @final_summary (status='refi..., chunks=@chun...)"])
+    LOG25 --> RET26
+    EVAL18 -->|"ELSE"| GEN23
+    GEN17 --> EVAL18
+    START1 --> A2
+    EXC27{"EXCEPTION ContextLengthExceeded"}
+    A28["@summaries_text := list_concat(@summaries, '\n')"]
+    GEN29[/"GENERATE reduce_summaries(@summarie..., @style) -> @final_summary"/]
+    A28 --> GEN29
+    SUB30[["CALL write_file(f'(@log_d..., @final_su...)"]]
+    GEN29 --> SUB30
+    RET31(["RETURN @final_summary (status='part...)"])
+    SUB30 --> RET31
+    EXC27 --> A28
+    EXC32{"EXCEPTION BudgetExceeded"}
+    A33["@summaries_text := list_concat(@summaries, '\n')"]
+    GEN34[/"GENERATE reduce_summaries(@summarie..., @style) -> @final_summary"/]
+    A33 --> GEN34
+    SUB35[["CALL write_file(f'(@log_d..., @final_su...)"]]
+    GEN34 --> SUB35
+    RET36(["RETURN @final_summary (status='budg...)"])
+    SUB35 --> RET36
+    EXC32 --> A33
+    end
+    class START1 term
+    class A2 assign
+    class A3 assign
+    class LOG4 log
+    class SUB5 proc
+    class LOG6 log
+    class WHILE7 ctrl
+    class SUB8 proc
+    class SUB9 proc
+    class GEN10 llm
+    class SUB11 proc
+    class LOG12 log
+    class A13 assign
+    class A14 assign
+    class A15 assign
+    class GEN16 llm
+    class GEN17 llm
+    class EVAL18 ctrl
+    class SUB20 proc
+    class LOG21 log
+    class RET22 term
+    class GEN23 llm
+    class SUB24 proc
+    class LOG25 log
+    class RET26 term
+    class EXC27 ctrl
+    class A28 assign
+    class GEN29 llm
+    class SUB30 proc
+    class RET31 term
+    class EXC32 ctrl
+    class A33 assign
+    class GEN34 llm
+    class SUB35 proc
+    class RET36 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

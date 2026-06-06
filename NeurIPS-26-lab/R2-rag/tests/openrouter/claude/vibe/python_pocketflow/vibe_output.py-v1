@@ -1,0 +1,434 @@
+I'll read the specification and implement the RAG system using PocketFlow.
+
+```python
+#!/usr/bin/env python3
+"""
+RAG (Retrieval-Augmented Generation) System using PocketFlow
+Implements a complete ETL-style LLM orchestration pipeline for document Q&A
+"""
+
+import os
+import re
+import json
+import math
+import hashlib
+import logging
+from typing import Any, Optional
+from collections import defaultdict
+
+# ─────────────────────────────────────────────
+# PocketFlow minimalist framework (inline)
+# ─────────────────────────────────────────────
+
+class Node:
+    def __init__(self):
+        self.successors = {}
+
+    def next(self, node, action="default"):
+        self.successors[action] = node
+        return node
+
+    def prep(self, shared: dict) -> Any:
+        return None
+
+    def exec(self, prep_res: Any) -> Any:
+        return prep_res
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        return "default"
+
+    def run(self, shared: dict) -> str:
+        prep_res = self.prep(shared)
+        exec_res = self.exec(prep_res)
+        return self.post(shared, prep_res, exec_res)
+
+
+class Flow:
+    def __init__(self, start: Node):
+        self.start = start
+
+    def run(self, shared: dict) -> None:
+        current = self.start
+        while current:
+            action = current.run(shared)
+            current = current.successors.get(action) or current.successors.get("default")
+
+
+class BatchNode(Node):
+    def exec(self, prep_res: Any) -> Any:
+        if not isinstance(prep_res, list):
+            return super().exec(prep_res)
+        return [self.exec_item(item) for item in prep_res]
+
+    def exec_item(self, item: Any) -> Any:
+        return item
+
+
+# ─────────────────────────────────────────────
+# Logging setup
+# ─────────────────────────────────────────────
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("rag_pipeline")
+
+
+# ─────────────────────────────────────────────
+# LLM helper
+# ─────────────────────────────────────────────
+
+def call_llm(prompt: str, model: str = None) -> str:
+    """Call LLM via OpenRouter API."""
+    import urllib.request
+
+    api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise EnvironmentError(
+            "Set OPENROUTER_API_KEY (or OPENAI_API_KEY) environment variable."
+        )
+
+    model = model or os.environ.get(
+        "LLM_MODEL", "anthropic/claude-3-5-haiku"
+    )
+
+    base_url = os.environ.get("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    url = f"{base_url}/chat/completions"
+
+    payload = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2,
+        "max_tokens": 1024,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://github.com/rag-pocketflow",
+            "X-Title": "RAG PocketFlow",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(req, timeout=60) as resp:
+        body = json.loads(resp.read().decode("utf-8"))
+
+    return body["choices"][0]["message"]["content"].strip()
+
+
+# ─────────────────────────────────────────────
+# Embedding helper (TF-IDF based, no external deps)
+# ─────────────────────────────────────────────
+
+def tokenize(text: str) -> list:
+    """Simple whitespace + punctuation tokenizer."""
+    return re.findall(r"\b[a-zA-Z0-9]+\b", text.lower())
+
+
+def compute_tfidf_vector(tokens: list, idf: dict) -> dict:
+    """Compute TF-IDF vector as a sparse dict."""
+    tf = defaultdict(float)
+    for t in tokens:
+        tf[t] += 1.0
+    n = len(tokens) or 1
+    vec = {}
+    for t, count in tf.items():
+        if t in idf:
+            vec[t] = (count / n) * idf[t]
+    return vec
+
+
+def cosine_similarity(vec_a: dict, vec_b: dict) -> float:
+    """Cosine similarity between two sparse TF-IDF vectors."""
+    dot = sum(vec_a.get(t, 0.0) * vec_b.get(t, 0.0) for t in vec_b)
+    norm_a = math.sqrt(sum(v * v for v in vec_a.values())) or 1e-10
+    norm_b = math.sqrt(sum(v * v for v in vec_b.values())) or 1e-10
+    return dot / (norm_a * norm_b)
+
+
+def build_idf(corpus_tokens: list) -> dict:
+    """Build IDF table from a list of token lists."""
+    N = len(corpus_tokens)
+    df = defaultdict(int)
+    for tokens in corpus_tokens:
+        for t in set(tokens):
+            df[t] += 1
+    return {t: math.log((N + 1) / (count + 1)) + 1 for t, count in df.items()}
+
+
+# ─────────────────────────────────────────────
+# Document store (in-memory)
+# ─────────────────────────────────────────────
+
+class DocumentStore:
+    """Simple in-memory document store with TF-IDF retrieval."""
+
+    def __init__(self):
+        self.chunks: list[dict] = []   # {id, text, source, tokens}
+        self.idf: dict = {}
+
+    def add_chunks(self, chunks: list[dict]) -> None:
+        self.chunks.extend(chunks)
+        self._rebuild_idf()
+
+    def _rebuild_idf(self):
+        corpus = [c["tokens"] for c in self.chunks]
+        self.idf = build_idf(corpus)
+
+    def search(self, query: str, top_k: int = 5) -> list[dict]:
+        if not self.chunks:
+            return []
+        q_tokens = tokenize(query)
+        q_vec = compute_tfidf_vector(q_tokens, self.idf)
+        scored = []
+        for chunk in self.chunks:
+            c_vec = compute_tfidf_vector(chunk["tokens"], self.idf)
+            score = cosine_similarity(q_vec, c_vec)
+            scored.append((score, chunk))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [chunk for _, chunk in scored[:top_k]]
+
+    def clear(self):
+        self.chunks.clear()
+        self.idf.clear()
+
+    def __len__(self):
+        return len(self.chunks)
+
+
+# Global document store shared across pipeline runs
+DOC_STORE = DocumentStore()
+
+
+# ─────────────────────────────────────────────
+# PocketFlow Nodes
+# ─────────────────────────────────────────────
+
+class IngestDocumentsNode(Node):
+    """
+    Ingests raw documents from shared['documents'].
+    Splits them into chunks and stores in shared['chunks'].
+    """
+
+    def __init__(self, chunk_size: int = 300, chunk_overlap: int = 50):
+        super().__init__()
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+
+    def prep(self, shared: dict) -> list[dict]:
+        documents = shared.get("documents", [])
+        logger.info(f"IngestDocumentsNode: received {len(documents)} document(s).")
+        return documents
+
+    def exec(self, prep_res: list[dict]) -> list[dict]:
+        all_chunks = []
+        for doc in prep_res:
+            source = doc.get("source", "unknown")
+            text = doc.get("text", "")
+            chunks = self._split(text, source)
+            all_chunks.extend(chunks)
+            logger.info(f"  → '{source}': {len(chunks)} chunk(s)")
+        return all_chunks
+
+    def _split(self, text: str, source: str) -> list[dict]:
+        words = text.split()
+        chunks = []
+        start = 0
+        while start < len(words):
+            end = min(start + self.chunk_size, len(words))
+            chunk_text = " ".join(words[start:end])
+            chunk_id = hashlib.md5(f"{source}:{start}".encode()).hexdigest()[:8]
+            chunks.append({
+                "id": chunk_id,
+                "text": chunk_text,
+                "source": source,
+                "tokens": tokenize(chunk_text),
+            })
+            if end == len(words):
+                break
+            start += self.chunk_size - self.chunk_overlap
+        return chunks
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["chunks"] = exec_res
+        logger.info(f"IngestDocumentsNode: total {len(exec_res)} chunk(s) produced.")
+        if exec_res:
+            return "index"
+        logger.warning("No chunks produced — skipping indexing.")
+        return "empty"
+
+
+class IndexChunksNode(Node):
+    """
+    Indexes chunks into the DocumentStore.
+    """
+
+    def prep(self, shared: dict) -> list[dict]:
+        return shared.get("chunks", [])
+
+    def exec(self, prep_res: list[dict]) -> int:
+        DOC_STORE.clear()
+        DOC_STORE.add_chunks(prep_res)
+        logger.info(f"IndexChunksNode: indexed {len(DOC_STORE)} chunk(s).")
+        return len(DOC_STORE)
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["index_size"] = exec_res
+        return "default"
+
+
+class QueryInputNode(Node):
+    """
+    Reads the user query from shared['query'].
+    Validates and normalises it.
+    """
+
+    def prep(self, shared: dict) -> str:
+        return shared.get("query", "").strip()
+
+    def exec(self, prep_res: str) -> str:
+        if not prep_res:
+            raise ValueError("Query is empty. Please provide a non-empty question.")
+        logger.info(f"QueryInputNode: query = '{prep_res}'")
+        return prep_res
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["validated_query"] = exec_res
+        return "default"
+
+
+class RetrieveChunksNode(Node):
+    """
+    Retrieves top-k relevant chunks for the validated query.
+    """
+
+    def __init__(self, top_k: int = 5):
+        super().__init__()
+        self.top_k = top_k
+
+    def prep(self, shared: dict) -> str:
+        return shared.get("validated_query", "")
+
+    def exec(self, prep_res: str) -> list[dict]:
+        results = DOC_STORE.search(prep_res, top_k=self.top_k)
+        logger.info(f"RetrieveChunksNode: retrieved {len(results)} chunk(s).")
+        for i, r in enumerate(results):
+            logger.debug(f"  [{i+1}] source={r['source']} id={r['id']}")
+        return results
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["retrieved_chunks"] = exec_res
+        if not exec_res:
+            logger.warning("No chunks retrieved — routing to no_context.")
+            return "no_context"
+        return "default"
+
+
+class BuildContextNode(Node):
+    """
+    Assembles the retrieved chunks into a formatted context string.
+    """
+
+    def prep(self, shared: dict) -> list[dict]:
+        return shared.get("retrieved_chunks", [])
+
+    def exec(self, prep_res: list[dict]) -> str:
+        parts = []
+        for i, chunk in enumerate(prep_res, 1):
+            parts.append(
+                f"[Excerpt {i} — source: {chunk['source']}]\n{chunk['text']}"
+            )
+        context = "\n\n".join(parts)
+        logger.info(f"BuildContextNode: context length = {len(context)} chars.")
+        return context
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["context"] = exec_res
+        return "default"
+
+
+class GenerateAnswerNode(Node):
+    """
+    Sends query + context to the LLM and stores the answer.
+    """
+
+    PROMPT_TEMPLATE = """\
+You are a helpful assistant that answers questions based ONLY on the provided context.
+If the context does not contain enough information to answer the question, say so clearly.
+
+CONTEXT:
+{context}
+
+QUESTION:
+{question}
+
+ANSWER (be concise and accurate, cite the source excerpts where relevant):"""
+
+    def prep(self, shared: dict) -> dict:
+        return {
+            "query": shared.get("validated_query", ""),
+            "context": shared.get("context", ""),
+        }
+
+    def exec(self, prep_res: dict) -> str:
+        prompt = self.PROMPT_TEMPLATE.format(
+            context=prep_res["context"],
+            question=prep_res["query"],
+        )
+        logger.info("GenerateAnswerNode: calling LLM …")
+        answer = call_llm(prompt)
+        logger.info(f"GenerateAnswerNode: answer length = {len(answer)} chars.")
+        return answer
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["answer"] = exec_res
+        shared["status"] = "success"
+        return "default"
+
+
+class NoContextAnswerNode(Node):
+    """
+    Fallback node when no relevant chunks are found.
+    """
+
+    def prep(self, shared: dict) -> str:
+        return shared.get("validated_query", "")
+
+    def exec(self, prep_res: str) -> str:
+        prompt = (
+            f"The user asked: '{prep_res}'\n\n"
+            "No relevant documents were found in the knowledge base. "
+            "Politely inform the user and suggest they rephrase or add documents."
+        )
+        logger.info("NoContextAnswerNode: no context found, calling LLM for fallback …")
+        return call_llm(prompt)
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:
+        shared["answer"] = exec_res
+        shared["status"] = "no_context"
+        return "default"
+
+
+class OutputNode(Node):
+    """
+    Formats and prints the final answer.
+    """
+
+    def prep(self, shared: dict) -> dict:
+        return {
+            "query": shared.get("validated_query", shared.get("query", "")),
+            "answer": shared.get("answer", ""),
+            "status": shared.get("status", "unknown"),
+            "chunks_retrieved": len(shared.get("retrieved_chunks", [])),
+        }
+
+    def exec(self, prep_res: dict) -> dict:
+        return prep_res
+
+    def post(self, shared: dict, prep_res: Any, exec_res: Any) -> str:

@@ -1,0 +1,40 @@
+CREATE FUNCTION generate_decision(question TEXT, context TEXT) 
+RETURNS TEXT AS $$
+You are a question answering bot. Based on the question and current context, decide whether to search the web or generate an answer directly.
+If the question asks for a search, respond with 'search'. Otherwise, respond with 'answer'.
+Question: {question}
+Context: {context}
+$$;
+
+CREATE FUNCTION generate_answer(question TEXT, context TEXT) 
+RETURNS TEXT AS $$
+You are a question answering bot. Generate a comprehensive answer to the following question based on the provided context.
+Question: {question}
+Context: {context}
+$$;
+
+WORKFLOW question_answering
+  INPUT @question TEXT
+  OUTPUT @answer TEXT
+DO
+  @context := @question;
+  @iteration := 0;
+  @max_iterations := 3;
+
+  WHILE @iteration < @max_iterations DO
+    GENERATE generate_decision(@question, @context) INTO @decision;
+
+    EVALUATE @decision
+      WHEN contains('search') THEN
+        CALL search_web(@question) INTO @search_results;
+        @context := @context + "\n\nSearch Results: " + @search_results;
+        @iteration := @iteration + 1;
+      ELSE
+        GENERATE generate_answer(@question, @context) INTO @answer;
+        RETURN @answer WITH status = 'complete', iterations = @iteration;
+    END;
+  END;
+
+  GENERATE generate_answer(@question, @context) INTO @answer;
+  RETURN @answer WITH status = 'max_iterations';
+END;

@@ -23,6 +23,8 @@
 -- Discover available experiments:
 --   spl3 run ... experiment_id=list
 
+IMPORT 'tools'
+
 -- Scoring rubric as a reusable function
 CREATE FUNCTION scoring_rubric()
 RETURN TEXT

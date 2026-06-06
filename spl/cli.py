@@ -315,7 +315,7 @@ def cmd_init() -> None:
     click.echo(f"  Config: {CONFIG_PATH}")
 
 
-# ── spl validate / syntax ───────────────────────────────────────────────────
+# ── spl validate / syntax / parse ───────────────────────────────────────────
 
 @cli.command("validate")
 @click.argument("file", type=click.Path(dir_okay=False))
@@ -347,6 +347,21 @@ def cmd_validate(file: str, as_json: bool) -> None:
         raise click.ClickException(str(exc)) from exc
 
 
+@cli.command("syntax", hidden=True)
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.pass_context
+def cmd_syntax(ctx: click.Context, file: str) -> None:
+    """Alias for 'validate'."""
+    ctx.invoke(cmd_validate, file=file, as_json=False)
+
+
+@cli.command("parse", hidden=True)
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.option("--json", "as_json", is_flag=True, default=False)
+@click.pass_context
+def cmd_parse(ctx: click.Context, file: str, as_json: bool) -> None:
+    """Alias for 'validate'."""
+    ctx.invoke(cmd_validate, file=file, as_json=as_json)
 
 
 # ── spl explain ──────────────────────────────────────────────────────────────
@@ -367,6 +382,18 @@ def cmd_explain(file: str) -> None:
         raise
     except Exception as exc:
         raise click.ClickException(str(exc)) from exc
+
+
+@cli.command("execute", hidden=True, context_settings={"ignore_unknown_options": True})
+@click.argument("file", type=click.Path(dir_okay=False))
+@click.option("--adapter", default=None, metavar="NAME")
+@click.option("--model", "-m", default=None, metavar="MODEL")
+@click.option("--param", "-p", multiple=True, metavar="KEY=VALUE")
+@click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
+@click.pass_context
+def cmd_execute_alias(ctx: click.Context, **kwargs) -> None:
+    """Alias for 'run'."""
+    ctx.invoke(cmd_execute, **kwargs)
 
 
 # ── spl run ──────────────────────────────────────────────────────────────────
@@ -900,8 +927,6 @@ def memory_delete(key: str, storage_dir: str | None, db: str | None) -> None:
         raise click.ClickException(f"Key not found: {key}")
 
 
-# ── spl doc-rag ───────────────────────────────────────────────────────────────
-
 @cli.group("doc-rag")
 def cmd_rag() -> None:
     """Manage the document RAG vector store (.spl/vectors)."""
@@ -976,6 +1001,17 @@ def rag_count(storage_dir: str) -> None:
     click.echo(f"Documents indexed: {n}")
 
 
+@cli.group("rag", hidden=True)
+def cmd_rag_alias() -> None:
+    """Alias for 'doc-rag'."""
+    pass
+
+
+cmd_rag_alias.add_command(rag_add, "add")
+cmd_rag_alias.add_command(rag_query, "query")
+cmd_rag_alias.add_command(rag_count, "count")
+
+
 # ── spl code-rag ────────────────────────────────────────────────────────────
 
 @cli.group("code-rag")
@@ -1034,7 +1070,7 @@ def code_rag_import(cookbook_dir: str, catalog: str | None, from_file: str | Non
 
     if from_file:
         # ── JSONL import ──────────────────────────────────────────────────
-        from spl.text2spl import Text2SPL
+        from spl3.text2spl import Text2SPL
         path = Path(from_file)
         if not path.exists():
             raise click.ClickException(f"File not found: {from_file}")
@@ -1297,7 +1333,7 @@ def code_rag_parse_log(
       spl code-rag parse-log cookbook/out/run_all_20260320.md
       spl code-rag parse-log cookbook/out/run_all_20260320.md --dry-run
     """
-    from spl.text2spl import Text2SPL
+    from spl3.text2spl import Text2SPL
 
     catalog_map = _load_catalog_map(cookbook_dir)
     store = None if dry_run else _get_code_rag_store(storage_dir)
@@ -1409,7 +1445,7 @@ def cmd_text2spl(description: str, adapter: str | None, model: str | None,
     log = get_logger("cli.text2spl", "spl")
     log.info("spl text2spl %r --adapter %s --mode %s", description, adapter, mode)
 
-    from spl.text2spl import Text2SPL
+    from spl3.text2spl import Text2SPL
     from spl.adapters import get_adapter as _get_adapter
 
     try:

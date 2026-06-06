@@ -1,0 +1,35 @@
+CREATE FUNCTION generate_description(state, feedback)
+RETURNS TEXT AS $$ Generate a high-quality description based on the current state: {state}.
+If feedback is provided, use it to improve the result: {feedback}
+Be concise, clear, and do not repeat yourself. $$;
+
+CREATE FUNCTION evaluate_description(description)
+RETURNS TEXT AS $$ Evaluate the following description for quality: {description}
+If quality is acceptable (score >= 7), respond with: VERDICT: pass, Score: [score]
+If quality needs improvement, respond with: VERDICT: fail, Score: [score], Feedback: [specific suggestions] $$;
+
+WORKFLOW description_evaluation_loop
+  INPUT @initial_state STRING := "default"
+  OUTPUT @final_result STRING
+DO
+  @shared_state := @initial_state;
+  @attempts := 0;
+  @verdict := "";
+  @feedback := "";
+  @status := "retry";
+
+  WHILE @attempts <= 2 AND @status = "retry" DO
+    GENERATE generate_description(@shared_state, @feedback) INTO @description;
+    GENERATE evaluate_description(@description) INTO @verdict;
+
+    EVALUATE @verdict WHEN contains("pass") THEN
+      @status := "pass";
+    ELSE
+      @attempts := @attempts + 1;
+      @feedback := @verdict;
+    END;
+  END;
+
+  @final_result := @description;
+  RETURN @final_result WITH status = @status;
+END;

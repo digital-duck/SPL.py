@@ -1,0 +1,72 @@
+# Ab Test Workflow
+
+Generated from `ab_test.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_ab_test["WORKFLOW: ab_test"]
+    direction TB
+    START1(["Start"])
+    SUB2[["CALL load_experiment(@experime...) -> @experiment_context"]]
+    GEN3[/"GENERATE run_variant_a(@task, @prompt_a, ...) -> @response_a"/]
+    SUB2 --> GEN3
+    GEN4[/"GENERATE run_variant_b(@task, @prompt_b, ...) -> @response_b"/]
+    GEN3 --> GEN4
+    GEN5[/"GENERATE evaluate_response(@response_a, @task, ...) -> @score_a_json"/]
+    GEN4 --> GEN5
+    GEN6[/"GENERATE evaluate_response(@response_b, @task, ...) -> @score_b_json"/]
+    GEN5 --> GEN6
+    SUB7[["CALL extract_score_total(@score_a_...) -> @score_a"]]
+    GEN6 --> SUB7
+    SUB8[["CALL extract_score_total(@score_b_...) -> @score_b"]]
+    SUB7 --> SUB8
+    EVAL9{"EVALUATE: @score_a - @score_b"}
+    A11["@winner_output := @response_a"]
+    RET12(["RETURN @winner_output (winner='A', score_a=@score_a)"])
+    A11 --> RET12
+    EVAL9 -->|"WHEN > @winner_threshold"| A11
+    A13["@winner_output := @response_b"]
+    RET14(["RETURN @winner_output (winner='B', score_a=@score_a)"])
+    A13 --> RET14
+    EVAL9 -->|"WHEN < 0 - @winner_t..."| A13
+    SUB15[["CALL format_tie_result(@response_a, @response_b, ...) -> @winner_output"]]
+    RET16(["RETURN @winner_output (winner='tie', score_a=@score_a)"])
+    SUB15 --> RET16
+    EVAL9 -->|"ELSE"| SUB15
+    SUB8 --> EVAL9
+    START1 --> SUB2
+    EXC17{"EXCEPTION GenerationError"}
+    RET18(["RETURN 'A/B test failed duri...' (status='error')"])
+    EXC17 --> RET18
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN19["FUNCTION: scoring_rubric()"]
+    end
+    class START1 term
+    class SUB2 proc
+    class GEN3 llm
+    class GEN4 llm
+    class GEN5 llm
+    class GEN6 llm
+    class SUB7 proc
+    class SUB8 proc
+    class EVAL9 ctrl
+    class A11 assign
+    class RET12 term
+    class A13 assign
+    class RET14 term
+    class SUB15 proc
+    class RET16 term
+    class EXC17 ctrl
+    class RET18 term
+    class FN19 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b
+```

@@ -5,9 +5,44 @@
 --
 -- Usage:
 --   spl3 run cookbook/41_human_steering/human_steering.spl \
---       --tools cookbook/41_human_steering/tools.py \
 --       --adapter ollama \
 --       topic="The future of agentic AI"
+
+CREATE TOOL_API wait_for_human_feedback(prompt_msg TEXT)
+RETURNS TEXT AS PYTHON $$
+def wait_for_human_feedback(prompt_msg: str) -> str:
+    """
+    Pause the workflow and prompt the human for feedback via stdin.
+
+    Displays the prompt message, then reads a multi-line response until the user
+    enters a blank line or presses Ctrl-D.  Returns the trimmed response text,
+    or '' if no feedback is given (workflow continues with the original draft).
+    """
+    print("\n" + "=" * 60)
+    print("HUMAN FEEDBACK REQUIRED")
+    print("=" * 60)
+    print(prompt_msg)
+    print("-" * 60)
+    print("Enter feedback (blank line or Ctrl-D to skip):")
+
+    lines = []
+    try:
+        while True:
+            line = input()
+            if line == "":
+                break
+            lines.append(line)
+    except EOFError:
+        pass
+
+    feedback = "\n".join(lines).strip()
+    if feedback:
+        print(f"[Feedback recorded: {len(feedback)} chars]")
+    else:
+        print("[No feedback — using draft as-is]")
+    print("=" * 60 + "\n")
+    return feedback
+$$;
 
 CREATE FUNCTION draft(topic TEXT)
 RETURN TEXT

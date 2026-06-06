@@ -1,58 +1,91 @@
-Okay, this is a solid and well-structured SPL code review workflow! Here's a breakdown of the design and some potential areas for consideration or refinement, along with explanations of why each part is useful:
+```sql
+CREATE FUNCTION detect_lang(code TEXT)
+RETURN TEXT
+AS $$
+You are a polyglot programmer. Identify the programming language of the provided code.
+Reply with only the language name — nothing else.
 
-**Strengths of the Design**
+Code:
+{code}
+$$;
 
-* **Multi-Pass Approach:** The workflow's core strength is its multi-pass structure. This is crucial for a comprehensive code review.  The separate passes for security, performance, style, and bugs allows for targeted analysis and prioritization.
-* **Tool-Augmented Analysis:** It correctly uses an LLM (Ollama/Gemma3) to perform the core analysis tasks, leveraging its language understanding capabilities.
-* **Multi-Criteria Evaluation:**  The workflow considers multiple aspects of code quality – which is essential in real-world scenarios.
-* **Structured Output:** The use of separate markdown files for each category (security, performance, style, bugs, review) and a final consolidated `review.md` provides a clear and organized output that can be easily consumed by human reviewers.
-* **Deterministic-Style LLM Call:** The `detect_lang` function enforces a bounded output, making the LLM responses predictable and easier to parse.
-* **Severity Scoring:**  The `severity_score` function provides a quantitative way to prioritize findings, which is important for triage.
-* **Handling Large Files:** The `ContextLengthExceeded` exception handling is clever and addresses a practical limitation of LLMs.
-* **Clear Logging:**  The `LOGGING` statements provide valuable debugging information and insight into the workflow's execution.
+WORKFLOW code_review
+    INPUT:
+        @code     TEXT,
+        @log_dir  TEXT DEFAULT 'cookbook/15_code_review/logs'
+    OUTPUT: @review TEXT
+DO
+    -- 1. Handle file path vs raw code
+    CALL read_file(@code) INTO @file_content
+    EVALUATE @file_content
+        WHEN != '' THEN
+            LOGGING f'Reading code from file: {@code}'
+            @code_to_review := @file_content
+        ELSE
+            LOGGING 'Reviewing raw code input'
+            @code_to_review := @code
+    END
 
-**Detailed Explanation and Comments**
+    -- 2. Auto-detect language (deterministic-style LLM call: bounded output)
+    GENERATE detect_lang(@code_to_review) INTO @language
+    @language := trim(@language)
+    LOGGING f'Detected language: {@language}' LEVEL INFO
 
-1. **`detect_lang` Function:**  This is a good initial step to identify the programming language, which helps tailor subsequent analysis. The function is well-defined and concise.
+    -- Pass 1: Security audit
+    GENERATE security_audit(@code_to_review, @language) INTO @security_findings
+    LOGGING f'Security findings:\n{@security_findings}' LEVEL DEBUG
+    CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
 
-2. **`code_review` Workflow:**
-   * **File Handling:** The `read_file` and `EVALUATE` block handles both file input and raw code input gracefully.  It is important to allow different types of input.
-   * **Language Detection:** Uses `detect_lang` to determine the language.  The `trim()` function is a good safeguard.
-   * **Pass 1-4 (Analysis Passes):** The use of `GENERATE` to call the analysis functions is clean and efficient.  The output from each pass is logged for debugging. `write_file` writes the result to a file.
-   * **Severity Scoring:** Calculates scores, important for prioritization.
-   * **Synthesis:** The `synthesize_review` function is the key to combining the findings.
-   * **Verdict:** The `EVALUATE` block uses severity scores to determine a final verdict, providing a clear indication of the code's quality.
+    -- Pass 2: Performance analysis
+    GENERATE performance_review(@code_to_review, @language) INTO @perf_findings
+    LOGGING f'Performance findings:\n{@perf_findings}' LEVEL DEBUG
+    CALL write_file(f'{@log_dir}/performance.md', @perf_findings) INTO NONE
 
-3. **Helper Functions (Assumed):**
-   * `security_audit`:  Likely analyzes the code for vulnerabilities, insecure coding practices, etc.
-   * `performance_review`:  Identifies potential performance bottlenecks.
-   * `style_review`:  Checks for adherence to coding style guidelines (e.g., PEP 8 for Python).
-   * `bug_detection`:  Detects potential bugs, logic errors, or runtime issues.
-   * `synthesize_review`: Combines the findings from the different analysis passes into a coherent review.  This function needs to be well-designed to produce a useful summary.
-   * `summarize_code`:  Used when the code is too large for a single LLM invocation.
-   * `quick_review`: Performs a high-level review of the summarized code.
-   * `severity_score`: Calculates a score based on the severity of the findings.
+    -- Pass 3: Code style and best practices
+    GENERATE style_review(@code_to_review, @language) INTO @style_findings
+    LOGGING f'Style findings:\n{@style_findings}' LEVEL DEBUG
+    CALL write_file(f'{@log_dir}/style.md', @style_findings) INTO NONE
 
-**Potential Improvements & Considerations**
+    -- Pass 4: Bug detection
+    GENERATE bug_detection(@code_to_review, @language) INTO @bug_findings
+    LOGGING f'Bug findings:\n{@bug_findings}' LEVEL DEBUG
+    CALL write_file(f'{@log_dir}/bugs.md', @bug_findings) INTO NONE
 
-* **`synthesize_review` Complexity:** The `synthesize_review` function is critical.  It needs to be designed to effectively combine the findings from the various analysis passes in a way that produces a human-readable and actionable review.  Consider how to avoid redundancy.
+    -- Severity scoring for each category
+    GENERATE severity_score(@security_findings) INTO @sec_score
+    GENERATE severity_score(@perf_findings) INTO @perf_score
+    GENERATE severity_score(@bug_findings) INTO @bug_score
+    LOGGING f'Scores | sec={@sec_score} perf={@perf_score} bug={@bug_score}' LEVEL INFO
 
-* **LLM Prompt Engineering:** The quality of the results depends heavily on the prompts used within the analysis functions.  Experiment with different prompt formulations to optimize the LLM's performance.
+    -- Synthesize all findings into a structured review
+    GENERATE synthesize_review(
+        @security_findings, @sec_score,
+        @perf_findings, @perf_score,
+        @style_findings,
+        @bug_findings, @bug_score
+    ) INTO @review
+    CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
 
-* **Error Handling:** The `ContextLengthExceeded` and `BudgetExceeded` exceptions are good, but consider adding more robust error handling for other potential issues (e.g., network errors, LLM API errors).
+    -- Determine overall verdict
+    EVALUATE @sec_score
+        WHEN > 8 THEN
+            LOGGING f'Critical security issues | score={@sec_score}' LEVEL WARN
+            RETURN @review WITH status = 'critical_issues', verdict = 'block'
+        WHEN > 5 THEN
+            RETURN @review WITH status = 'needs_fixes', verdict = 'request_changes'
+        ELSE
+            RETURN @review WITH status = 'approved', verdict = 'approve'
+    END
 
-* **Configuration:** The workflow could be made more flexible by introducing configurable parameters (e.g., the LLM model to use, the log directory, the severity thresholds for the verdict).
-
-* **Feedback Loop:** Consider adding a feedback loop to allow human reviewers to update the findings and provide additional context.
-
-* **Testing:** Thoroughly test the workflow with a variety of code samples to ensure that it produces accurate and reliable results.
-
-**Example Usage Scenarios**
-
-* **`spl3 run cookbook/15_code_review/code_review.spl --adapter ollama --model gemma3 code="./myscript.py"`:**  This runs the workflow on a Python script named `myscript.py`.
-* **`spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="$(cat main.go)"`:** This runs the workflow on a Go program, using the content of `main.go` as input.
-* **`spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="def foo(x): return eval(x)"`:** This uses a Python example with a potentially unsafe `eval` function.
-
-**Overall:**
-
-This is a well-designed and practical workflow for automated code review. The multi-pass approach, tool-augmented analysis, and structured output make it a valuable tool for improving code quality.  By addressing the potential improvements and considerations mentioned above, you can further enhance its effectiveness.  The use of multiple LLM calls, combined with structured output, demonstrates a solid understanding of how to leverage AI for software development tasks.
+EXCEPTION
+    WHEN ContextLengthExceeded THEN
+        -- Code too large — review in chunks
+        GENERATE summarize_code(@code_to_review) INTO @summary
+        GENERATE quick_review(@summary, @language) INTO @review
+        CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
+        RETURN @review WITH status = 'partial_large_file'
+    WHEN BudgetExceeded THEN
+        CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
+        RETURN @security_findings WITH status = 'security_only'
+END
+```

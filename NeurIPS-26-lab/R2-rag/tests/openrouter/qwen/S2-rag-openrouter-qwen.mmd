@@ -1,0 +1,43 @@
+    flowchart TD
+    START([Start]) --> B
+    subgraph OFFLINE["Offline Indexing Workflow"]
+    B["Chunk Raw<br/>Texts"]
+    C["Generate Vector<br/>Embeddings"]
+    D["Construct FAISS<br/>Index"]
+    E["Log & Persist<br/>Index"]
+    B --> C
+    C --> D
+    D --> E
+    end
+    subgraph SHARED["@shared Variable Store"]
+    S1["@texts"]
+    S2["@embeddings"]
+    S3["@index"]
+    S4["@query"]
+    S5["@query_embedding"]
+    S6["@retrieved_doc"]
+    S7["@answer"]
+    end
+    subgraph ONLINE["Online Query Workflow"]
+    F["Accept User<br/>Query"]
+    G["Embed<br/>Query"]
+    H["Nearest-Neighbor<br/>Search"]
+    I["Retrieve Top<br/>Document"]
+    J["Format Prompt<br/>(GenerateAnswer)"]
+    K["Execute GENERATE<br/>LLM Call"]
+    L["Write Markdown<br/>File"]
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J --> K
+    K --> L
+    end
+    E -->|"@index stored"| S3
+    E --> F
+    F --- S4
+    G --- S5
+    H --- S3
+    I --- S6
+    K --- S7
+    L --> END([End])

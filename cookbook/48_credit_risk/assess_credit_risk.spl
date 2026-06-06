@@ -4,7 +4,6 @@
 -- Usage:
 --   spl3 run cookbook/48_credit_risk/assess_credit_risk.spl \
 --       --adapter ollama \
---       --tools cookbook/48_credit_risk/tools.py \
 --       applicant_data="$(cat cookbook/48_credit_risk/data/applicant_680.json)" \
 --       credit_score=680
 

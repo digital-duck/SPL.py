@@ -4,13 +4,59 @@
 --
 -- Usage:
 --   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
---       --tools cookbook/12_plan_and_execute/tools.py \
 --       task="Build a REST API for a todo app" \
 --       output_dir="cookbook/12_plan_and_execute/output"
 --
 --   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
 --       task="Set up a CI/CD pipeline for a Python project"
 
+CREATE TOOL_API write_code_files(content TEXT, output_dir TEXT)
+RETURNS TEXT AS PYTHON $$
+import os
+import re
+
+def write_code_files(content: str, output_dir: str) -> str:
+    """Parse fenced code blocks with '# filename:' comments and write each to output_dir.
+
+    Expects blocks in this format anywhere in the content:
+
+        ```python
+        # filename: app/main.py
+        ...code...
+        ```
+
+    Returns a summary of files written.
+    """
+    if not output_dir.strip():
+        return "No output_dir specified — files not written"
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    pattern = re.compile(
+        r"```(?:\w+)?\n#\s*filename:\s*(\S+)\n(.*?)```",
+        re.DOTALL,
+    )
+
+    files_written = []
+    for match in pattern.finditer(content):
+        rel_path = match.group(1).strip()
+        code = match.group(2)
+        filepath = os.path.join(output_dir, rel_path)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(code)
+        files_written.append(rel_path)
+
+    if not files_written:
+        return (
+            "No code files found — ensure code blocks have a '# filename: path' "
+            "comment as the first line inside the fence."
+        )
+
+    lines = [f"Written {len(files_written)} file(s) to {output_dir}:"]
+    lines += [f"  {f}" for f in files_written]
+    return "\n".join(lines)
+$$;
 
 -- Phase 1: Decompose task into a numbered implementation plan
 CREATE FUNCTION plan(task TEXT) 

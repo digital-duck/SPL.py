@@ -1,6 +1,6 @@
-1.  Define API Endpoints & Data Models: Specify core endpoints (e.g., `/todos`, `/todos/{id}`) and corresponding JSON data models for todos (id, title, description, completed).
-2.  Choose Technology Stack: Select a framework (e.g., Flask, Django REST Framework, Node.js with Express) and database (e.g., PostgreSQL, MongoDB).
-3.  Implement CRUD Operations: Develop handlers for Create (POST /todos), Read (GET /todos, GET /todos/{id}), Update (PUT /todos/{id}), and Delete (DELETE /todos/{id}) operations.
-4.  Implement Basic Authentication/Authorization: Implement a simple authentication mechanism (e.g., API keys, basic HTTP authentication) for user identification.
-5.  Create Unit Tests: Write unit tests for each API handler to ensure functionality and data integrity.
-6.  Deploy to a Basic Environment: Deploy the API to a simple environment (e.g., Heroku, PythonAnywhere) for testing and demonstration.
+1.  Define API Endpoints & Data Models (JSON schemas for tasks – ID, title, description, due date, completed status).
+2.  Implement Core CRUD Operations (Create, Read, Update, Delete) using a suitable framework (e.g., Flask, Django REST Framework, Node.js/Express).
+3.  Implement Basic Authentication/Authorization (e.g., API key, JWT).
+4.  Implement Unit Tests for Individual API Endpoints.
+5.  Deploy API to a suitable environment (e.g., Heroku, AWS, Docker).
+6.  Implement Basic Logging & Monitoring.

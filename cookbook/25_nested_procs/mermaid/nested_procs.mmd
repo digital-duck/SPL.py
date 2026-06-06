@@ -1,0 +1,70 @@
+flowchart TD
+    subgraph SG_explain_layer["PROCEDURE: explain_layer"]
+    direction TB
+    START1(["Start"])
+    GEN2[/"GENERATE explain(content, audience, ...) -> @explanation"/]
+    RET3(["RETURN @explanation"])
+    GEN2 --> RET3
+    START1 --> GEN2
+    end
+    subgraph SG_make_example["PROCEDURE: make_example"]
+    direction TB
+    START4(["Start"])
+    GEN5[/"GENERATE concrete_example(concept, context, ...) -> @example"/]
+    RET6(["RETURN @example"])
+    GEN5 --> RET6
+    START4 --> GEN5
+    end
+    subgraph SG_calibrate_complexity["PROCEDURE: calibrate_complexity"]
+    direction TB
+    START7(["Start"])
+    GEN8[/"GENERATE assess_reading_level(text) -> @reading_level"/]
+    EVAL9{"EVALUATE: @reading_level"}
+    GEN11[/"GENERATE simplify(text, audience) -> @calibrated"/]
+    RET12(["RETURN @calibrated"])
+    GEN11 --> RET12
+    EVAL9 -->|"WHEN > target_grade"| GEN11
+    RET13(["RETURN text"])
+    EVAL9 -->|"ELSE"| RET13
+    GEN8 --> EVAL9
+    START7 --> GEN8
+    end
+    subgraph SG_layered_explainer["WORKFLOW: layered_explainer"]
+    direction TB
+    START14(["Start"])
+    GEN15[/"GENERATE research_overview(@topic) -> @overview"/]
+    SUB16[["CALL explain_layer(content=@..., audience=..., ...) -> @base_explanation"]]
+    GEN15 --> SUB16
+    SUB17[["CALL make_example(concept=@..., context=@..., ...) -> @example"]]
+    SUB16 --> SUB17
+    SUB18[["CALL calibrate_complexity(text=@bas..., audience=..., ...) -> @calibrated_explanation"]]
+    SUB17 --> SUB18
+    GEN19[/"GENERATE assemble_article(@topic, @calibrat..., ...) -> @article"/]
+    SUB18 --> GEN19
+    RET20(["RETURN @article (status='comp..., audience=@audi...)"])
+    GEN19 --> RET20
+    START14 --> GEN15
+    end
+    class START1 term
+    class GEN2 llm
+    class RET3 term
+    class START4 term
+    class GEN5 llm
+    class RET6 term
+    class START7 term
+    class GEN8 llm
+    class EVAL9 ctrl
+    class GEN11 llm
+    class RET12 term
+    class RET13 term
+    class START14 term
+    class GEN15 llm
+    class SUB16 proc
+    class SUB17 proc
+    class SUB18 proc
+    class GEN19 llm
+    class RET20 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843

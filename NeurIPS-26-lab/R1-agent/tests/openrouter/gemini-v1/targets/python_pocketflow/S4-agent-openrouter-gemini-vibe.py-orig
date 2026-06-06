@@ -1,0 +1,124 @@
+import os
+import yaml
+import json
+from typing import Dict, Any
+from duckduckgo_search import DDGS
+from openai import OpenAI
+
+# Configuration
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+class Node:
+    def prep(self, shared: Dict[str, Any]) -> None:
+        pass
+
+    def exec(self, shared: Dict[str, Any]) -> None:
+        pass
+
+    def post(self, shared: Dict[str, Any]) -> None:
+        pass
+
+class DecideAction(Node):
+    def exec(self, shared: Dict[str, Any]) -> None:
+        prompt = f"""
+        You are a Research Controller. Decide if you need to search the web or if you have enough info to answer.
+        
+        USER QUESTION: {shared['question']}
+        CURRENT CONTEXT: {shared['context']}
+        
+        Respond ONLY with a YAML block:
+        ```yaml
+        thinking: "your reasoning"
+        action: "search" or "answer"
+        reason: "why"
+        search_query: "query if searching"
+        ```
+        """
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": "You are a helpful research assistant."},
+                      {"role": "user", "content": prompt}]
+        )
+        content = response.choices[0].message.content
+        # Extract YAML from markdown block
+        yaml_str = content.split("```yaml")[1].split("```")[0].strip()
+        shared['decision'] = yaml.safe_load(yaml_str)
+        print(f"[DecideAction] Action: {shared['decision']['action']}")
+
+class SearchWeb(Node):
+    def exec(self, shared: Dict[str, Any]) -> None:
+        query = shared['decision'].get('search_query', shared['question'])
+        print(f"[SearchWeb] Querying: {query}")
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(query, max_results=3):
+                results.append(f"Title: {r['title']}\nSnippet: {r['body']}\nSource: {r['href']}")
+        
+        new_context = "\n\n".join(results)
+        shared['context'] += f"\n--- Search Results for '{query}' ---\n{new_context}"
+
+class AnswerQuestion(Node):
+    def exec(self, shared: Dict[str, Any]) -> None:
+        print("[AnswerQuestion] Synthesizing final answer...")
+        prompt = f"""
+        Synthesize a final response for the user based on the gathered research.
+        
+        QUESTION: {shared['question']}
+        RESEARCH CONTEXT: {shared['context']}
+        
+        Provide a comprehensive markdown-style answer.
+        """
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": "You are an expert researcher."},
+                      {"role": "user", "content": prompt}]
+        )
+        shared['answer'] = response.choices[0].message.content
+
+class ResearchFlow:
+    def __init__(self):
+        self.decide_node = DecideAction()
+        self.search_node = SearchWeb()
+        self.answer_node = AnswerQuestion()
+
+    def run(self, question: str) -> Dict[str, Any]:
+        shared = {
+            "question": question,
+            "context": "No previous search results.",
+            "answer": None,
+            "decision": {},
+            "max_iterations": 5,
+            "iterations": 0
+        }
+
+        while shared['iterations'] < shared['max_iterations']:
+            shared['iterations'] += 1
+            
+            # Decide
+            self.decide_node.exec(shared)
+            
+            if shared['decision']['action'] == "search":
+                # Call Tool
+                self.search_node.exec(shared)
+                # Loop continues
+            else:
+                # Generate Answer
+                self.answer_node.exec(shared)
+                break
+        
+        return {
+            "answer": shared['answer'],
+            "research_history": shared['context']
+        }
+
+if __name__ == "__main__":
+    # Example usage
+    flow = ResearchFlow()
+    user_query = "What are the latest breakthroughs in room-temperature superconductivity as of late 2024?"
+    result = flow.run(user_query)
+    
+    print("\n" + "="*50)
+    print("FINAL ANSWER:")
+    print(result['answer'])
+    print("="*50)
+    # print("\nRESEARCH HISTORY:\n", result['research_history'])

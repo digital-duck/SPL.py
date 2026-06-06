@@ -1,4 +1,4 @@
-```spl3
+```spl
 CREATE FUNCTION detect_lang(code TEXT)
 RETURN TEXT
 AS $$
@@ -88,4 +88,4 @@ EXCEPTION
         CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
         RETURN @security_findings WITH status = 'security_only'
 END
- ```
+```

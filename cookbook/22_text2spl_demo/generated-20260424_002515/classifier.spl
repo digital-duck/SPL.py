@@ -1,0 +1,7 @@
+WORKFLOW classify_and_route
+  INPUT @user_input TEXT
+  OUTPUT @intent TEXT
+DO
+  GENERATE classify_intent(@user_input) INTO @intent;
+  COMMIT @intent;
+END;

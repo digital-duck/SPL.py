@@ -2,10 +2,10 @@
 {
   "risk_level": "low",
   "flags": [
-    "sanctions",
-    "aml",
-    "ai_ethics"
+    "Sanctions",
+    "AML",
+    "Market Manipulation"
   ],
-  "summary": "While the news doesn’t directly present regulatory risk, the rate hike could trigger scrutiny regarding potential conflicts of interest if the institution's lending activities are not carefully monitored, and AI model performance in lending decisions should be continuously evaluated."
+  "summary": "This news item presents a low risk due to the central bank action of raising interest rates, which doesn't directly involve regulatory breaches or activities susceptible to sanctions, AML violations, or market manipulation."
 }
 ```

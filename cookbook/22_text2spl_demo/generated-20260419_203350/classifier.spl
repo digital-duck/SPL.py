@@ -1,0 +1,20 @@
+WORKFLOW classify_intent
+INPUT (@input TEXT, @model_name TEXT DEFAULT 'intent_classifier')
+OUTPUT (@route TEXT)
+SECURITY (owner='admin', classification='sensitive')
+DO
+  GENERATE classify_intent(@input) WITH OUTPUT BUDGET 100 TOKENS MODEL '<@model_name>' INTO @classification
+  WHEN @classification == 'greeting' THEN
+    COMMIT @input WITH route='/greet'
+  WHEN @classification == 'query' THEN
+    COMMIT @input WITH route='/query'
+  WHEN @classification == 'complaint' THEN
+    COMMIT @input WITH route='/complaint'
+  ELSE
+    RAISE UnknownIntent '<@classification>'
+  END
+EXCEPTION
+  WHEN UnknownIntent THEN
+    @route := '/unknown'
+    COMMIT @route WITH status='unknown'
+END

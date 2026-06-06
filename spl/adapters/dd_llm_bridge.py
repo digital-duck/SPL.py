@@ -34,8 +34,22 @@ class DDLLMBridge(LLMAdapter):
     """
 
     def __init__(self, provider: str, **kwargs) -> None:
-        import dd_llm
+        import dd_llm, inspect
         self._provider_name = provider
+        # `model` is a call-time argument, not a constructor param for dd-llm
+        # adapters. Pull it out and use it as the default model for generate().
+        self._default_model = kwargs.pop("model", "")
+        # Filter remaining kwargs to only those the underlying adapter accepts
+        # so unknown kwargs don't cause TypeError on strict adapters.
+        try:
+            from dd_llm.registry import _ADAPTER_REGISTRY
+            adapter_cls = _ADAPTER_REGISTRY.get(provider)
+            if adapter_cls is not None:
+                sig = inspect.signature(adapter_cls.__init__)
+                if "kwargs" not in sig.parameters:  # strict signature
+                    kwargs = {k: v for k, v in kwargs.items() if k in sig.parameters}
+        except ImportError:
+            pass
         self._impl = dd_llm.get_adapter(provider, **kwargs)
         _log.debug("DDLLMBridge: loaded provider=%r via dd-llm", provider)
 
@@ -51,7 +65,7 @@ class DDLLMBridge(LLMAdapter):
         result = await asyncio.to_thread(
             self._impl.call,
             prompt,
-            model=model,
+            model=model or self._default_model,
             max_tokens=max_tokens,
             temperature=temperature,
             system=system,

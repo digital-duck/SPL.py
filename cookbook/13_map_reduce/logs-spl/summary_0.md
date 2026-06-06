@@ -1,3 +1,1 @@
-Okay! That's the classic pangram – a sentence that uses every letter of the alphabet. 😊 
-
-Is there anything you'd like to do with this sentence, or were you just confirming that I recognized it?
+This document is a test for map-reduce summarization, specifically using the sentence: "The quick brown fox jumps over the lazy dog." The second input, "0," appears to be a placeholder or a result related to the summarization process.

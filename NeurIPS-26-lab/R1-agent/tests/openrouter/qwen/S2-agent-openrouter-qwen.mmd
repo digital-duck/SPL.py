@@ -1,0 +1,12 @@
+    flowchart TD
+    A([Start]) --> B[Init Shared State]
+    B --> C[Invoke Decide Prompt]
+    C --> D[Parse YAML Output]
+    D -->|Malformed| E[Repair & Retry]
+    E --> D
+    D -->|Valid| F{Action Token?}
+    F -->|search| G[Call Web Search]
+    G --> H[Append Results]
+    H --> C
+    F -->|answer| I[Generate Final Answer]
+    I --> J([Return Done])

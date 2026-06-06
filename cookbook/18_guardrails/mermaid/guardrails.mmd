@@ -1,0 +1,104 @@
+flowchart TD
+    subgraph SG_guardrails_pipeline["WORKFLOW: guardrails_pipeline"]
+    direction TB
+    START1(["Start"])
+    SUB2[["CALL load_test_input(@input_id) -> @test_context"]]
+    SUB3[["CALL classify_input_keywords(@user_input) -> @keyword_class"]]
+    SUB2 --> SUB3
+    EVAL4{"EVALUATE: @keyword_class"}
+    RET6(["RETURN 'I cannot help with t...' (status='bloc..., gate='keyw...)"])
+    EVAL4 -->|"WHEN startswith:harmful"| RET6
+    RET7(["RETURN 'That question is out...' (status='bloc..., gate='keyw...)"])
+    EVAL4 -->|"WHEN startswith:off_topic"| RET7
+    EVAL4 -->|"ELSE"| MERGE5
+    MERGE5[" "]
+    SUB3 --> EVAL4
+    GEN8[/"GENERATE classify_input(@user_input, @test_con...) -> @input_class"/]
+    MERGE5 --> GEN8
+    EVAL9{"EVALUATE: @input_class"}
+    RET11(["RETURN 'I cannot help with t...' (status='bloc..., gate='llm_...)"])
+    EVAL9 -->|"WHEN harmful"| RET11
+    RET12(["RETURN 'That question is out...' (status='bloc..., gate='llm_...)"])
+    EVAL9 -->|"WHEN off_topic"| RET12
+    EVAL9 -->|"ELSE"| MERGE10
+    MERGE10[" "]
+    GEN8 --> EVAL9
+    SUB13[["CALL detect_pii(@user_input) -> @pii_report"]]
+    MERGE10 --> SUB13
+    EVAL14{"EVALUATE: @pii_report"}
+    SUB16[["CALL redact_pii(@user_input) -> @clean_input"]]
+    EVAL14 -->|"WHEN startswith:pii_found"| SUB16
+    SUB16 --> MERGE15
+    A17["@clean_input := @user_input"]
+    EVAL14 -->|"ELSE"| A17
+    A17 --> MERGE15
+    MERGE15[" "]
+    SUB13 --> EVAL14
+    GEN18[/"GENERATE safe_response(@clean_input) -> @raw_response"/]
+    MERGE15 --> GEN18
+    GEN19[/"GENERATE validate_output(@raw_resp..., @clean_input) -> @output_check"/]
+    GEN18 --> GEN19
+    EVAL20{"EVALUATE: @output_check"}
+    A22["@safe_response := @raw_response"]
+    EVAL20 -->|"WHEN safe"| A22
+    A22 --> MERGE21
+    SUB23[["CALL redact_pii(@raw_resp...) -> @safe_response"]]
+    EVAL20 -->|"WHEN contains_pii"| SUB23
+    SUB23 --> MERGE21
+    GEN24[/"GENERATE safe_response(@clean_input) -> @safe_response"/]
+    S25["RetryStatement"]
+    GEN24 --> S25
+    EVAL20 -->|"WHEN hallucination"| GEN24
+    S25 --> MERGE21
+    A26["@safe_response := 'I was unable to gene...'"]
+    EVAL20 -->|"ELSE"| A26
+    A26 --> MERGE21
+    MERGE21[" "]
+    GEN19 --> EVAL20
+    RET27(["RETURN @safe_response (status='comp..., input_class=@inpu...)"])
+    MERGE21 --> RET27
+    START1 --> SUB2
+    EXC28{"EXCEPTION RefusalToAnswer"}
+    RET29(["RETURN 'This request cannot ...' (status='refu...)"])
+    EXC28 --> RET29
+    EXC30{"EXCEPTION HallucinationDetected"}
+    RET31(["RETURN 'Unable to provide a ...' (status='hall...)"])
+    EXC30 --> RET31
+    EXC32{"EXCEPTION BudgetExceeded"}
+    RET33(["RETURN @safe_response (status='budg...)"])
+    EXC32 --> RET33
+    end
+    class START1 term
+    class SUB2 proc
+    class SUB3 proc
+    class EVAL4 ctrl
+    class RET6 term
+    class RET7 term
+    class GEN8 llm
+    class EVAL9 ctrl
+    class RET11 term
+    class RET12 term
+    class SUB13 proc
+    class EVAL14 ctrl
+    class SUB16 proc
+    class A17 assign
+    class GEN18 llm
+    class GEN19 llm
+    class EVAL20 ctrl
+    class A22 assign
+    class SUB23 proc
+    class GEN24 llm
+    class S25 assign
+    class A26 assign
+    class RET27 term
+    class EXC28 ctrl
+    class RET29 term
+    class EXC30 ctrl
+    class RET31 term
+    class EXC32 ctrl
+    class RET33 term
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b

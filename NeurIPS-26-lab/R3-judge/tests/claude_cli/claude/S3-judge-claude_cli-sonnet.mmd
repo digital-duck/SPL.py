@@ -1,0 +1,12 @@
+    flowchart TD
+    A([Start]) --> B["Generator<br/>task, feedback=''"]
+    B --> C["Judge<br/>Evaluate draft"]
+    C --> D{Verdict PASS<br/>or score >= 7?}
+    D -->|Yes| E["Set final_description<br/>Set final_score"]
+    E --> F(["RETURN<br/>status=pass"])
+    D -->|No| G["attempts += 1<br/>Store feedback"]
+    G --> H{attempts >= 3?}
+    H -->|Yes| I["Set final_description<br/>Set final_score"]
+    I --> J(["RETURN<br/>status=max_attempts"])
+    H -->|No| K["Generator<br/>task + feedback"]
+    K --> C

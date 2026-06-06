@@ -1,0 +1,64 @@
+-- ============================================================
+-- stdlib_list — List / collection TOOL_API library
+-- Handles both comma-separated TEXT lists and JSON arrays.
+-- Promote:  spl3 tool-api promote cookbook/tools/stdlib_list.spl
+-- ============================================================
+
+CREATE TOOL_API get_item(items TEXT, idx TEXT)
+RETURNS TEXT AS PYTHON $$
+import json
+
+def get_item(items: str, idx: str) -> str:
+    """Return the idx-th item (0-based) from a comma-separated or JSON list."""
+    items = items.strip()
+    try:
+        lst = json.loads(items)
+        if isinstance(lst, list):
+            return str(lst[int(idx)])
+    except (json.JSONDecodeError, TypeError, ValueError):
+        pass
+    return [x.strip() for x in items.split(",")][int(idx)]
+$$;
+
+CREATE TOOL_API get_list_length(items TEXT)
+RETURNS TEXT AS PYTHON $$
+import json, ast
+
+def get_list_length(items: str) -> str:
+    """Return the number of items in a comma-separated or JSON list."""
+    if not items or not items.strip():
+        return "0"
+    s = items.strip()
+    try:
+        lst = json.loads(s)
+        if isinstance(lst, list):
+            return str(len(lst))
+    except (json.JSONDecodeError, TypeError):
+        pass
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            lst = ast.literal_eval(s)
+            if isinstance(lst, list):
+                return str(len(lst))
+        except Exception:
+            pass
+    return str(len([x.strip() for x in s.split(",") if x.strip()]))
+$$;
+
+CREATE TOOL_API list_append(items TEXT, item TEXT)
+RETURNS TEXT AS PYTHON $$
+def list_append(items: str, item: str) -> str:
+    """Append item to a comma-separated list; returns new list string."""
+    items = items.strip()
+    if not items:
+        return item.strip()
+    return items + "," + item.strip()
+$$;
+
+CREATE TOOL_API list_count(items TEXT, value TEXT)
+RETURNS TEXT AS PYTHON $$
+def list_count(items: str, value: str) -> str:
+    """Count occurrences of value in a comma-separated list."""
+    parts = [x.strip() for x in items.split(",") if x.strip()]
+    return str(parts.count(value.strip()))
+$$;

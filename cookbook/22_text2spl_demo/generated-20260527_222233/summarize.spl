@@ -1,0 +1,4 @@
+CREATE FUNCTION summarize_document(document TEXT)
+RETURNS TEXT AS $$
+  Summarize the following document into a concise and informative summary, aiming for approximately 2000 tokens. Focus on the key arguments, findings, and conclusions.  Maintain a neutral and objective tone.
+$$;

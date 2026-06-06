@@ -1,0 +1,110 @@
+# Code Gen Workflow
+
+Generated from `code_gen.spl` via `spl3 spl2mmd` (AST-direct, no LLM).
+
+## Mermaid Diagram
+
+```mermaid
+flowchart TD
+    subgraph SG_code_gen_with_tests["WORKFLOW: code_gen_with_tests"]
+    direction TB
+    START1(["Start"])
+    LOG2>"LOG(INFO) f'Code gen start | l...'"]
+    SUB3[["CALL load_spec(@spec) -> @spec"]]
+    LOG2 --> SUB3
+    LOG4>"LOG(DEBUG) f'Spec resolved ((@s...'"]
+    SUB3 --> LOG4
+    LOG5>"LOG(DEBUG) 'Generating implement...'"]
+    LOG4 --> LOG5
+    GEN6[/"GENERATE implement_function(@spec, @language, ...) -> @implementation"/]
+    LOG5 --> GEN6
+    LOG7>"LOG(DEBUG) f'Implementation gen...'"]
+    GEN6 --> LOG7
+    LOG8>"LOG(DEBUG) 'Reviewing implementa...'"]
+    LOG7 --> LOG8
+    GEN9[/"GENERATE review_implementation(@implemen..., @spec, ...) -> @review_notes"/]
+    LOG8 --> GEN9
+    LOG10>"LOG(DEBUG) f'Review notes: (@re...'"]
+    GEN9 --> LOG10
+    EVAL11{"EVALUATE: @review_notes"}
+    LOG13>"LOG(WARN) 'Issues found — fixin...'"]
+    GEN14[/"GENERATE fix_implementation(@implemen..., @review_n..., ...) -> @implementation"/]
+    LOG13 --> GEN14
+    LOG15>"LOG(DEBUG) 'Fixed implementation...'"]
+    GEN14 --> LOG15
+    EVAL11 -->|"WHEN contains:issue|error|problem"| LOG13
+    LOG15 --> MERGE12
+    LOG16>"LOG(DEBUG) 'Implementation looks...'"]
+    EVAL11 -->|"ELSE"| LOG16
+    LOG16 --> MERGE12
+    MERGE12[" "]
+    LOG10 --> EVAL11
+    LOG17>"LOG(DEBUG) 'Generating unit test...'"]
+    MERGE12 --> LOG17
+    GEN18[/"GENERATE generate_tests(@implemen..., @spec, ...) -> @tests"/]
+    LOG17 --> GEN18
+    LOG19>"LOG(DEBUG) 'Unit tests generated'"]
+    GEN18 --> LOG19
+    LOG20>"LOG(DEBUG) 'Verifying test synta...'"]
+    LOG19 --> LOG20
+    GEN21[/"GENERATE verify_test_syntax(@tests, @language) -> @syntax_ok"/]
+    LOG20 --> GEN21
+    LOG22>"LOG(DEBUG) f'Syntax check resul...'"]
+    GEN21 --> LOG22
+    LOG23>"LOG(DEBUG) 'Assembling final out...'"]
+    LOG22 --> LOG23
+    GEN24[/"GENERATE assemble_output(@implemen..., @tests, ...) -> @final_output"/]
+    LOG23 --> GEN24
+    LOG25>"LOG(INFO) f'Code gen complete ...'"]
+    GEN24 --> LOG25
+    RET26(["RETURN @final_output (status='comp..., language=@lang...)"])
+    LOG25 --> RET26
+    START1 --> LOG2
+    EXC27{"EXCEPTION GenerationError"}
+    LOG28>"LOG(WARN) f'GenerationError ca...'"]
+    RET29(["RETURN @implementation (status='impl..., reason='test...)"])
+    LOG28 --> RET29
+    EXC27 --> LOG28
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN30["FUNCTION: language_conventions()"]
+    FN31["FUNCTION: test_framework_guide()"]
+    end
+    class START1 term
+    class LOG2 log
+    class SUB3 proc
+    class LOG4 log
+    class LOG5 log
+    class GEN6 llm
+    class LOG7 log
+    class LOG8 log
+    class GEN9 llm
+    class LOG10 log
+    class EVAL11 ctrl
+    class LOG13 log
+    class GEN14 llm
+    class LOG15 log
+    class LOG16 log
+    class LOG17 log
+    class GEN18 llm
+    class LOG19 log
+    class LOG20 log
+    class GEN21 llm
+    class LOG22 log
+    class LOG23 log
+    class GEN24 llm
+    class LOG25 log
+    class RET26 term
+    class EXC27 ctrl
+    class LOG28 log
+    class RET29 term
+    class FN30 fn
+    class FN31 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef proc fill:#fef3c7,stroke:#f59e0b,color:#78350f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef log fill:#f8fafc,stroke:#94a3b8,color:#64748b
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+```

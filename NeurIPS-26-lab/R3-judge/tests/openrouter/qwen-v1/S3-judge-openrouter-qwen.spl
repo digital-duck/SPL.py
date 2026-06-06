@@ -1,0 +1,60 @@
+CREATE FUNCTION generator_fn(task TEXT, feedback TEXT) 
+RETURNS TEXT AS $$ 
+Generate a draft based on the task. Incorporate provided feedback if available. 
+$$;
+
+CREATE FUNCTION judge_fn(draft TEXT) 
+RETURNS TEXT AS $$ 
+Evaluate the draft quality. Output must contain a verdict (PASS or FAIL) and a numeric score. 
+$$;
+
+WORKFLOW iterative_refinement
+INPUT @question TEXT
+OUTPUT @answer TEXT
+
+DO
+    @task := @question;
+    @attempts := 0;
+    @score := 0;
+    @verdict := 'FAIL';
+    @final_description := '';
+    @feedback := '';
+    @draft := '';
+    @judgment := '';
+
+    WHILE @attempts < 3 AND @score < 7 DO
+        DO
+            GENERATE generator_fn(@task, @feedback) INTO @draft;
+            GENERATE judge_fn(@draft) INTO @judgment;
+            @verdict := @judgment;
+            @score := 0;
+        EXCEPTION
+            WHEN ParseError THEN
+                @final_description := @draft;
+                @answer := @final_description;
+                RETURN @answer WITH status = 'degraded';
+            WHEN Timeout THEN
+                @final_description := @draft;
+                @answer := @final_description;
+                RETURN @answer WITH status = 'degraded';
+        END;
+
+        EVALUATE @verdict WHEN contains('PASS') THEN
+            @final_description := @draft;
+            @score := 7;
+        ELSE
+            @attempts := @attempts + 1;
+            @feedback := @judgment;
+        END;
+    END;
+
+    EVALUATE @final_description WHEN = '' THEN
+        @final_description := @draft;
+    END;
+
+    @metadata := 'attempts:' || @attempts || '|score:' || @score;
+    CALL write_file('output.md', @final_description) INTO @file_out;
+
+    @answer := @final_description;
+    RETURN @answer WITH status = 'complete', score = @score, iterations = @attempts;
+END;

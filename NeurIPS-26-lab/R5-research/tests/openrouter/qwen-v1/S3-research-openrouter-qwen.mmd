@@ -1,0 +1,16 @@
+flowchart TD
+    A[Start: Initialize Shared State] --> B[plan_queries: GENERATE Search Directives]
+    B --> C[Parallel CALL Web Search for @queries]
+    C --> D[extract_facts: GENERATE & Aggregate Factual Notes]
+    D --> E{{WHILE @loop_count < 2}}
+    E -->|Yes| F[assess_and_synthesize: GENERATE YAML Decision]
+    F -->|Success| G{{EVALUATE Action Field}}
+    G -->|research| H[Update @feedback & Increment @loop_count]
+    H --> B
+    G -->|finalize| I[write_report: GENERATE Final Markdown]
+    E -->|No| I
+    I --> J[CALL Write File to Disk]
+    J --> K[RETURN Report & Metadata]
+    K --> L[End]
+    F -->|API/Parsing Error| M[EXCEPTION WHEN Handler]
+    M --> L

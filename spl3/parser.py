@@ -7,6 +7,7 @@ New capabilities over SPL 2.0:
   - INT, FLOAT, IMAGE, AUDIO, VIDEO type annotations  (IDENTIFIER tokens)
   - IMPORT 'file.spl'    →  ImportStatement
   - CALL PARALLEL ... END  →  CallParallelStatement
+  - CREATE TOOL_API ... AS PYTHON $$ ... $$  →  ToolAPINode
 
 SPL 2.0 backward compatibility is fully preserved:
   - All existing MAP literals { 'k': v } continue to work.
@@ -27,7 +28,7 @@ from spl.ast_nodes import (
 from spl3.ast_nodes import (
     NoneLiteral, SetLiteral, ImportStatement,
     CallParallelBranch, CallParallelStatement,
-    UnaryOp, CompoundCondition,
+    UnaryOp, CompoundCondition, ToolAPINode,
 )
 
 
@@ -43,6 +44,7 @@ class SPL3Parser(SPL2Parser):
 
         Handles SPL 3.0 additions:
           IMPORT 'file.spl'
+          CREATE TOOL_API ... AS PYTHON $$ ... $$
         before falling through to SPL 2.0 dispatch.
         """
         tok = self._current()
@@ -50,6 +52,15 @@ class SPL3Parser(SPL2Parser):
         # IMPORT 'file.spl'
         if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "import":
             return self._parse_import_statement()
+
+        # CREATE TOOL_API ... AS PYTHON $$ ... $$
+        # Peek ahead: CREATE followed by an identifier whose value is 'tool_api'
+        if tok.type == TokenType.CREATE:
+            next_tok = self.tokens[self.pos + 1] if self.pos + 1 < len(self.tokens) else None
+            if (next_tok is not None
+                    and next_tok.type == TokenType.IDENTIFIER
+                    and next_tok.value.lower() == "tool_api"):
+                return self._parse_tool_api()
 
         return super()._parse_statement()
 
@@ -62,6 +73,61 @@ class SPL3Parser(SPL2Parser):
         self._advance()  # consume 'import' identifier
         path = self._expect(TokenType.STRING).value
         return ImportStatement(path=path)
+
+    # ------------------------------------------------------------------ #
+    # CREATE TOOL_API statement                                            #
+    # ------------------------------------------------------------------ #
+
+    def _parse_tool_api(self) -> ToolAPINode:
+        """Parse CREATE TOOL_API <name>(<params>) RETURNS <type> AS PYTHON $$ <body> $$
+
+        Uses existing token types — no lexer changes required:
+          CREATE       TokenType.CREATE
+          TOOL_API     two consecutive IDENTIFIER tokens ('tool_api' treated as one name)
+          AS           TokenType.AS
+          PYTHON       IDENTIFIER token (value 'python') — not a reserved keyword
+          $$           TokenType.DOLLAR_DOLLAR
+          <body>       TokenType.STRING  (lexer captures everything between $$ ... $$)
+        """
+        self._expect(TokenType.CREATE)
+        # consume 'tool_api' identifier (already peeked in _parse_statement)
+        self._advance()
+
+        name = self._expect(TokenType.IDENTIFIER).value
+
+        # parameter list
+        self._expect(TokenType.LPAREN)
+        parameters = []
+        if not self._check(TokenType.RPAREN):
+            parameters.append(self._parse_parameter())
+            while self._check(TokenType.COMMA):
+                self._advance()
+                parameters.append(self._parse_parameter())
+        self._expect(TokenType.RPAREN)
+
+        # RETURNS <type>
+        if self._check(TokenType.RETURN):
+            self._advance()
+        else:
+            self._expect(TokenType.RETURNS)
+        return_type = self._expect(TokenType.IDENTIFIER).value
+
+        # AS PYTHON
+        self._expect(TokenType.AS)
+        runtime_tok = self._expect(TokenType.IDENTIFIER)
+        runtime = runtime_tok.value.upper()  # 'PYTHON', future: 'GO', 'TS'
+
+        # $$ <body> $$
+        self._expect(TokenType.DOLLAR_DOLLAR)
+        body = self._expect(TokenType.STRING).value
+
+        return ToolAPINode(
+            name=name,
+            parameters=parameters,
+            return_type=return_type,
+            runtime=runtime,
+            python_body=body,
+        )
 
     # ------------------------------------------------------------------ #
     # CALL PARALLEL override                                               #
@@ -199,7 +265,10 @@ class SPL3Parser(SPL2Parser):
             return UnaryOp(operator='NOT', operand=operand)
 
         # NONE / NULL literal
-        if tok.type == TokenType.IDENTIFIER and tok.value.upper() in ("NONE", "NULL"):
+        if tok.type == TokenType.NONE:
+            self._advance()
+            return NoneLiteral()
+        if tok.type == TokenType.IDENTIFIER and tok.value.upper() == "NULL":
             self._advance()
             return NoneLiteral()
 
@@ -293,7 +362,7 @@ class SPL3Parser(SPL2Parser):
             # SET is a keyword token, not IDENTIFIER — accept as type annotation
             param_type = self._advance().value  # "set"
 
-        if self._check(TokenType.DEFAULT):
+        if self._check(TokenType.DEFAULT) or self._check(TokenType.ASSIGN):
             self._advance()
             default_value = self._parse_expression()
 

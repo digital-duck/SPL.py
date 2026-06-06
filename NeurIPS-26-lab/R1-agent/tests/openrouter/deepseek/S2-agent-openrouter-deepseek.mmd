@@ -1,0 +1,7 @@
+flowchart TD
+    A[Start] --> B[DecideAction]
+    B --> C{{Action?}}
+    C -->|search| D[SearchWeb]
+    C -->|answer| E[AnswerQuestion]
+    D --> B
+    E --> F[End]

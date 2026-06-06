@@ -1,6 +1,5 @@
-This step establishes the blueprint for our API, defining the URLs and the structure of the data we'll be exchanging. It results in a documented API specification (`api_spec.md`) detailing all endpoints and their expected JSON formats, alongside a finalized JSON data model (`todo_model.json`) representing a single todo item.
+This step defines the structure of data exchanged between the backend and frontend through our API. It results in JSON schemas outlining the expected format for task objects, including fields like ID, title, description, due date, and completion status.  This ensures consistent data representation and facilitates seamless integration.
 
-**Filenames:**
+**Filenames Created:**
 
-*   `api_spec.md`
-*   `todo_model.json`
+*   `task_schema.json`

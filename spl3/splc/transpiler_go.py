@@ -8,6 +8,7 @@ from spl.ast_nodes import (
 from spl3.ast_nodes import (
     NoneLiteral, UnaryOp, CompoundCondition,
     CallParallelStatement, CallParallelBranch,
+    ToolAPINode,
 )
 
 
@@ -15,10 +16,11 @@ class GoTranspiler:
     def __init__(self, recipe_name: str):
         self.recipe_name = recipe_name
         self.prompts = {}
+        self.tool_apis: dict[str, ToolAPINode] = {}   # name → ToolAPINode (for stub generation)
         self.workflow_inputs = {}   # workflow_name → [param_name, ...]  (Issue 4)
         self.indent_level = 0
         self.current_wf_vars = {}
-        self._in_exception_handler = False   # Issue 3: COMMIT → named-return assignment inside defer
+        self._in_exception_handler = False   # Issue 3: RETURN → named-return assignment inside defer
 
     def indent(self):
         return "  " * self.indent_level
@@ -26,10 +28,12 @@ class GoTranspiler:
     # ── Public entry point ────────────────────────────────────────────────────
 
     def transpile(self, program) -> str:
-        # ── Pass 1: collect prompts + workflow signatures ─────────────────────
+        # ── Pass 1: collect prompts, TOOL_API definitions, + workflow signatures ─
         for stmt in program.statements:
             if isinstance(stmt, CreateFunctionStatement):
                 self.prompts[stmt.name] = stmt.body
+            if isinstance(stmt, ToolAPINode):
+                self.tool_apis[stmt.name] = stmt
             if isinstance(stmt, WorkflowStatement):
                 self.workflow_inputs[stmt.name] = [p.name.lstrip('@') for p in stmt.inputs]
 
@@ -120,6 +124,12 @@ class GoTranspiler:
             "}",
             "",
         ])
+
+        # TOOL_API stubs — Go has no Python runtime; emit stub functions with
+        # the Python reference implementation as a comment block.
+        for node in self.tool_apis.values():
+            lines.append(self._gen_tool_api_stub(node))
+            lines.append("")
 
         # Workflows
         for stmt in program.statements:
@@ -274,6 +284,19 @@ class GoTranspiler:
                 args = [self.transpile_expression(a) for a in stmt.arguments]
                 return f"{ind}{self._spl_comment(stmt)}\n{ind}writeFile({', '.join(args)})"
 
+            if stmt.procedure_name in self.tool_apis:
+                # CREATE TOOL_API → call the generated Go stub function
+                proc = self.to_camel_case(stmt.procedure_name)
+                target = stmt.target_variable.lstrip('@') if stmt.target_variable else "_"
+                node = self.tool_apis[stmt.procedure_name]
+                callee_params = [p.name for p in node.parameters]
+                resolved = self._resolve_call_args(stmt.arguments, callee_params)
+                return (
+                    f"{ind}{self._spl_comment(stmt)}\n"
+                    f"{ind}{target}, err = {proc}({', '.join(resolved)})\n"
+                    f"{ind}if err != nil {{ return \"\", \"error\", 0, err }}"
+                )
+
             proc = self.to_camel_case(stmt.procedure_name)
             target = stmt.target_variable.lstrip('@') if stmt.target_variable else "_"
             # Issue 4: resolve named args by callee parameter list
@@ -369,6 +392,35 @@ class GoTranspiler:
 
         return f"{ind}// TODO: {type(stmt).__name__}"
 
+    def _gen_tool_api_stub(self, node: ToolAPINode) -> str:
+        """Emit a Go stub function for a CREATE TOOL_API block.
+
+        Go cannot execute Python; emit the Python body as a comment block and
+        generate a placeholder that callers can compile.  The stub returns an
+        error so the build succeeds and the implementor gets a clear TODO.
+        """
+        fn_go = self.to_camel_case(node.name)
+        # Parameters: all TEXT → string in Go
+        params_go = ", ".join(
+            f"{p.name} string" for p in node.parameters
+        ) if node.parameters else ""
+
+        # Format Python body as // comment lines
+        py_lines = node.python_body.strip().splitlines()
+        comment_block = "\n".join(f"//   {line}" for line in py_lines)
+
+        return (
+            f"// SPL: CREATE TOOL_API {node.name} — Python reference implementation.\n"
+            f"// Port the logic below to Go for production use.\n"
+            f"//\n"
+            f"// Python reference:\n"
+            f"{comment_block}\n"
+            f"func {fn_go}({params_go}) (string, error) {{\n"
+            f"  // TODO: implement in Go (see Python reference above)\n"
+            f'  return "", fmt.Errorf("TOOL_API {node.name}: not yet ported to Go")\n'
+            f"}}"
+        )
+
     def _transpile_call_parallel(self, stmt: CallParallelStatement) -> str:
         """Issue 2: Emit goroutines + sync.WaitGroup for CALL PARALLEL."""
         ind = self.indent()
@@ -448,7 +500,7 @@ class GoTranspiler:
             into = f" INTO {stmt.target_variable}" if stmt.target_variable else ""
             return f"// SPL: CALL {stmt.procedure_name}({args}){into}"
         if isinstance(stmt, CommitStatement):
-            return f"// SPL: COMMIT {self._spl_expr(stmt.expression)}"
+            return f"// SPL: RETURN {self._spl_expr(stmt.expression)}"
         if isinstance(stmt, EvaluateStatement):
             return f"// SPL: EVALUATE {self._spl_expr(stmt.expression)} ..."
         if isinstance(stmt, WhileStatement):

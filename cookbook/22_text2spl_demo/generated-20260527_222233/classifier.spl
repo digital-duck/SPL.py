@@ -1,0 +1,14 @@
+CREATE FUNCTION classify_intent(query TEXT)
+RETURNS TEXT AS $$
+  Determine the user''s intent based on the query.
+  Possible intents: booking_flight, setting_reminder, getting_weather, playing_music.
+  Return the intent as a string.
+$$;
+
+WORKFLOW route_request
+  INPUT @query TEXT
+  OUTPUT @intent TEXT
+DO
+  GENERATE classify_intent(@query) INTO @intent;
+  RETURN @intent WITH status = 'complete';
+END;

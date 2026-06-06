@@ -107,27 +107,27 @@ class VectorStore:
     def add(self, text: str, metadata: dict | None = None) -> int:
         """Embed *text*, store in the FAISS index, and return the document count."""
         from dd_vectordb.models import Document
-        import hashlib
         vec = self._embed(text)
-        doc_id = hashlib.sha1(text.encode()).hexdigest()[:16]
+        doc_count = self._db.count() + 1
+        doc_id = str(doc_count)
         self._db.add_documents([
             Document(id=doc_id, text=text, embedding=vec.tolist(), metadata=metadata or {})
         ])
         self._db.save(self._index_path)
-        return self._db.count()
+        return doc_count
 
     def add_batch(self, texts: list[str], metadatas: list[dict] | None = None) -> list[int]:
         """Bulk-add multiple documents. Returns list of sequential position numbers."""
         from dd_vectordb.models import Document
-        import hashlib
         if metadatas is None:
             metadatas = [{}] * len(texts)
         if len(metadatas) != len(texts):
             raise ValueError("texts and metadatas must have the same length")
         vecs = self._embed_batch(texts)
+        start_count = self._db.count()
         docs = [
             Document(
-                id=hashlib.sha1(t.encode()).hexdigest()[:16],
+                id=str(start_count + i + 1),
                 text=t,
                 embedding=vecs[i].tolist(),
                 metadata=metadatas[i],
@@ -137,7 +137,7 @@ class VectorStore:
         self._db.add_documents(docs)
         self._db.save(self._index_path)
         total = self._db.count()
-        return list(range(total - len(texts) + 1, total + 1))
+        return list(range(start_count + 1, total + 1))
 
     def query(self, text: str, top_k: int = 5) -> list[dict]:
         """Search for the *top_k* most similar documents.

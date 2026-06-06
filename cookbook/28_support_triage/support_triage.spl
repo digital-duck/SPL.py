@@ -23,6 +23,8 @@
 
 -- ── Helper functions (evaluated locally, zero LLM cost) ────────────────────
 
+IMPORT 'tools'
+
 CREATE FUNCTION support_categories()
 RETURN TEXT
 AS $$

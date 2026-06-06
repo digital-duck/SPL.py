@@ -1,0 +1,18 @@
+PROMPT classify_intent_with_handler
+WITH BUDGET 500 TOKENS
+SELECT
+  system_role('You are a conversational AI.'),
+  context.user_input AS input_text,
+  rag.query('intent_classification', top_k=5) AS intents
+GENERATE classify_intent(input_text) WITH OUTPUT BUDGET 300 TOKENS INTO @intent
+WITH OUTPUT BUDGET 200 TOKENS
+SELECT
+  case
+    WHEN @intent = 'greeting' THEN
+      CALL greet_handler()
+    WHEN @intent = 'question' THEN
+      CALL answer_question_handler()
+    ELSE
+      RAISE UnknownIntent 'Unknown intent'
+  END INTO @result
+WITH OUTPUT BUDGET 100 TOKENS

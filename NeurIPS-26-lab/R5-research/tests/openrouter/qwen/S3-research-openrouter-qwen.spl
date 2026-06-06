@@ -1,0 +1,37 @@
+CREATE FUNCTION plan_queries(topic)
+RETURNS TEXT AS $$ You are a research planner. Generate 3 focused search queries to gather information on the topic: {topic}.
+List each query on a new line prefixed with QUERY: $$;
+
+CREATE FUNCTION extract_facts(web_results)
+RETURNS TEXT AS $$ Extract and summarize the key facts from the following web search results: {web_results}.
+Return a concise bullet-point list of the most important findings. $$;
+
+CREATE FUNCTION assess_and_report(notes_data)
+RETURNS TEXT AS $$ Synthesize the following aggregated notes into a comprehensive final report: {notes_data}.
+Ensure all key findings are clearly structured and actionable. $$;
+
+WORKFLOW research_workflow
+  INPUT @topic STRING := "default_topic"
+  OUTPUT @report STRING
+DO
+  @loop_count := 0;
+  @iteration := 0;
+  @notes := "";
+  @current_queries := "";
+  @web_results := "";
+  @extracted_facts := "";
+  @report := "";
+
+  WHILE @loop_count < 2 AND @iteration < 3 DO
+    @iteration := @iteration + 1;
+    GENERATE plan_queries(@topic) INTO @current_queries;
+    CALL search_web(@current_queries) INTO @web_results;
+    GENERATE extract_facts(@web_results) INTO @extracted_facts;
+    @notes := @notes + @extracted_facts;
+    @loop_count := @loop_count + 1;
+  END;
+
+  GENERATE assess_and_report(@notes) INTO @report;
+  CALL write_file("report.txt", @report);
+  RETURN @report WITH status = "complete";
+END;

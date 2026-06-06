@@ -30,6 +30,8 @@
 
 -- ── Socratic persona (zero LLM cost — injected as system context) ───────────
 
+IMPORT 'tools'
+
 CREATE FUNCTION socratic_persona(student_level TEXT DEFAULT 'high school')
 RETURN TEXT
 AS $$

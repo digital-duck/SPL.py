@@ -1,0 +1,67 @@
+flowchart TD
+    subgraph SG_safe_generation["WORKFLOW: safe_generation"]
+    direction TB
+    START1(["Start"])
+    GEN2[/"GENERATE response(@prompt) -> @result"/]
+    GEN3[/"GENERATE quality_assess(@result) -> @quality"/]
+    GEN2 --> GEN3
+    EVAL4{"EVALUATE: @quality"}
+    RET6(["RETURN @result (status='high...)"])
+    EVAL4 -->|"WHEN high_quality"| RET6
+    GEN7[/"GENERATE improved(@result, @prompt) -> @result"/]
+    RET8(["RETURN @result (status='refi...)"])
+    GEN7 --> RET8
+    EVAL4 -->|"WHEN acceptable"| GEN7
+    RET9(["RETURN @result (status='best...)"])
+    EVAL4 -->|"ELSE"| RET9
+    GEN3 --> EVAL4
+    START1 --> GEN2
+    END10(["End"])
+    EXC11{"EXCEPTION HallucinationDetected"}
+    GEN12[/"GENERATE response(@prompt) -> @result"/]
+    RET13(["RETURN @result (status='cons...)"])
+    GEN12 --> RET13
+    EXC11 --> GEN12
+    EXC14{"EXCEPTION ContextLengthExceeded"}
+    S15["RetryStatement"]
+    EXC14 --> S15
+    S15 --> END10
+    EXC16{"EXCEPTION RefusalToAnswer"}
+    RET17(["RETURN @prompt (status='refu...)"])
+    EXC16 --> RET17
+    EXC18{"EXCEPTION BudgetExceeded"}
+    RET19(["RETURN @result (status='trun...)"])
+    EXC18 --> RET19
+    end
+    subgraph FUNCTIONS["Function Definitions"]
+    direction TB
+    FN20["FUNCTION: response()"]
+    FN21["FUNCTION: quality_assess()"]
+    FN22["FUNCTION: improved()"]
+    end
+    class START1 term
+    class GEN2 llm
+    class GEN3 llm
+    class EVAL4 ctrl
+    class RET6 term
+    class GEN7 llm
+    class RET8 term
+    class RET9 term
+    class END10 term
+    class EXC11 ctrl
+    class GEN12 llm
+    class RET13 term
+    class EXC14 ctrl
+    class S15 assign
+    class EXC16 ctrl
+    class RET17 term
+    class EXC18 ctrl
+    class RET19 term
+    class FN20 fn
+    class FN21 fn
+    class FN22 fn
+    classDef llm fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+    classDef ctrl fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+    classDef term fill:#fce7f3,stroke:#ec4899,color:#831843
+    classDef fn fill:#f0fdf4,stroke:#86efac,color:#166534
+    classDef assign fill:#f8fafc,stroke:#64748b,color:#1e293b

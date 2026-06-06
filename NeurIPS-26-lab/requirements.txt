@@ -1,0 +1,18 @@
+# NeurIPS-26-lab experiment dependencies
+# Install into the spl123 conda environment:
+#   conda activate spl123
+#   pip install -r requirements.txt
+
+# R2-rag / R5-research tools.py — embedding + retrieval
+faiss-cpu
+ollama
+numpy
+
+# R4-thinking tools.py — YAML field extraction
+pyyaml
+
+# S4 compiled targets (python/pocketflow)
+pocketflow
+
+# R1-agent / R5-research S4 targets — web search
+ddgs
