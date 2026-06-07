@@ -164,6 +164,52 @@ Set `LINALG_GRAPH_DIR=cookbook/71_linalg_micro_textbook` if the notebook can't
 locate `linalg_graph.py` / `style_profiles.py` automatically, and `SPL_MODEL`
 to choose the Ollama model used by the generated `_llm_call` helper.
 
+## Sub-graph-scoped validation runs
+
+`@target` naturally scopes the curriculum — `ancestors(@graph, @target)` pulls
+in only the concepts `@target` transitively needs, so a target close to the
+primitives produces a small curriculum that's cheap to run end-to-end. This is
+the fastest way to validate a change (transpiler fix, prompt edit, cache
+behavior, kernel config) *before* committing to the full ~13-section
+`spectral_theorem` run (~10–25 min depending on cache state and model).
+
+The compiled notebook reads every workflow `INPUT` scalar through
+`_spl_config(KEY, default)` — env var → `~/.spl/config` → the `.spl`
+`DEFAULT` — so `@target` (and `@style` / `@primitive_budget` /
+`@payoff_weight`) can be overridden **without recompiling**:
+
+```bash
+cd cookbook/71_linalg_micro_textbook/targets/python_linalg
+
+TARGET=linear_independence SPL_MODEL=gemma4:12b \
+LINALG_GRAPH_DIR=/path/to/cookbook/71_linalg_micro_textbook \
+jupyter nbconvert --to notebook --execute \
+    --ExecutePreprocessor.kernel_name=spl123 \
+    --ExecutePreprocessor.timeout=1800 \
+    --output executed_smoke.ipynb \
+    build_micro_textbook_python_linalg.ipynb
+```
+
+| `TARGET` | Ancestor concepts taught (sections) | Payoff capstone | Total LLM-authored blocks |
+|---|---|---|---|
+| `linear_independence` | 3 — `scalar_multiplication`, `vector_addition`, `linear_combination` | `linear_independence` | 4 |
+| `diagonalization` | 8 — adds `linear_map`, `span`, `basis`, `eigenpair`, `linear_independence` | `diagonalization` | 9 |
+| `spectral_theorem` (default) | 13 — full curriculum (both radicals, `⊕`/`⊙` and `⟨·,·⟩`, meet here) | `spectral_theorem` | 14 |
+
+Other env vars useful for staged validation:
+
+- `SPL_OLLAMA_URL` — point at a different Ollama daemon (default `http://localhost:11434`)
+- `SPL_LLM_TIMEOUT` — per-`GENERATE` HTTP timeout in seconds (default `600`)
+- `SPL_WHILE_MAX_ITER` — guard against runaway `WHILE` loops during development
+
+**Recommended staging order**: smoke (`linear_independence`, 3 concepts) →
+mid-size (`diagonalization`, 8 concepts, exercises a wider concept mix
+including eigen-theory) → full (`spectral_theorem`, unset `TARGET` or set it
+explicitly). At each stage, confirm: zero errors, correct cache HIT/MISS
+counts (write-once — a HIT costs 0 LLM calls and is logged at `0.0s`), and a
+well-formed `build_micro_textbook_output.md` (raw markdown/LaTeX — *not*
+JSON-string-escaped; `COMMIT` routes `TEXT`-typed outputs straight to `.md`).
+
 ## Timing instrumentation
 
 Both workflows log wall-clock elapsed time per section, per capstone, and for

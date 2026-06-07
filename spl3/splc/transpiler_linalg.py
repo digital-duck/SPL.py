@@ -138,19 +138,80 @@ from linalg_graph import (
 )
 from style_profiles import style_instruction, get_style_profile, available_styles
 
-# ── LLM helper (configure SPL_MODEL / SPL_LLM_TIMEOUT or replace with your adapter) ──
+# ── SPL runtime config lookup — env var, then ~/.spl/config, then default
+# (same precedence `spl3 configure` documents for "SPL runtime defaults";
+# the notebook is a standalone artifact so it re-reads the dotenv-format
+# file directly rather than importing the spl3 CLI) ──────────────────────────
+def _spl_config(key: str, default: str) -> str:
+    if key in os.environ:
+        return os.environ[key]
+    _cfg = Path.home() / ".spl" / "config"
+    if _cfg.exists():
+        for _line in _cfg.read_text(encoding="utf-8").splitlines():
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _, _v = _line.partition("=")
+                if _k.strip() == key:
+                    return _v.strip().strip('"').strip("'")
+    return default
+
+# ── LLM helper (configure SPL_MODEL / SPL_LLM_TIMEOUT / SPL_OLLAMA_URL, or
+# replace with your adapter) — calls Ollama's OpenAI-compatible HTTP endpoint
+# directly (stream=False), the same way spl/adapters/ollama.py's OllamaAdapter
+# does. Earlier this shelled out to the interactive `ollama run <model>` CLI —
+# but that CLI streams a live "Thinking..." status line to stdout using raw
+# ANSI cursor-control escapes (`\\x1b[9D\\x1b[K`, ...) to overwrite it in place,
+# and `subprocess.run(capture_output=True)` captures those escapes verbatim
+# into the "response", contaminating every GENERATE result, the cache, and the
+# committed textbook with ~2000 stray control-character sequences. The HTTP
+# API talks to the same Ollama daemon but returns clean structured JSON. ──────
 def _llm_call(prompt: str, model: str | None = None) -> str:
-    import subprocess
+    import urllib.request
     _m = model or os.environ.get("SPL_MODEL", "llama3.2")
     # Local models (esp. 8B+ on consumer GPUs) can take well over a minute per
     # call, and refine-loop prompts re-send the full prior section as context —
     # default generously and let SPL_LLM_TIMEOUT override per deployment.
     _timeout = int(os.environ.get("SPL_LLM_TIMEOUT", "600"))
-    r = subprocess.run(["ollama", "run", _m], input=prompt,
-                       capture_output=True, text=True, timeout=_timeout)
-    if r.returncode != 0:
-        raise RuntimeError(f"LLM call failed: {r.stderr}")
-    return r.stdout.strip()
+    _url = os.environ.get("SPL_OLLAMA_URL", "http://localhost:11434") + "/v1/chat/completions"
+    _payload = json.dumps({
+        "model": _m,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+    }).encode("utf-8")
+    _req = urllib.request.Request(
+        _url, data=_payload, method="POST",
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(_req, timeout=_timeout) as _resp:
+        _data = json.loads(_resp.read().decode("utf-8"))
+    return _data["choices"][0]["message"]["content"].strip()
+
+# ── Layer 2 content cache (write-once, content-addressed — same backend and
+# semantics as spl/stdlib.py's cache_get/cache_put @spl_tools; reimplemented
+# here directly against spl3.cache because this notebook is a standalone
+# artifact that calls the cache without going through the SPL executor) ──────
+def cache_get(concept: str, rubric_version: str = "v1") -> str:
+    \"\"\"Returns cached content on a hit, or the sentinel string "miss".\"\"\"
+    try:
+        from spl3.cache import get_content_cache
+        entry = get_content_cache().get(
+            concept=concept, params={}, rubric_version=rubric_version, dep_hashes={},
+        )
+        return entry.content if entry is not None else "miss"
+    except Exception:
+        return "miss"
+
+def cache_put(concept: str, content: str, rubric_version: str = "v1") -> str:
+    \"\"\"Stores generated+verified content (write-once, immutable); returns the cache key.\"\"\"
+    try:
+        from spl3.cache import get_content_cache
+        entry = get_content_cache().put(
+            concept=concept, content=content, provenance="machine_generated",
+            params={}, rubric_version=rubric_version, dep_hashes={},
+        )
+        return entry.key
+    except Exception as exc:
+        return f"cache_put error: {exc}"
 
 # ── Math verifier helpers ─────────────────────────────────────────────────────
 def _verify_math(section: str) -> str:
@@ -215,6 +276,10 @@ class LinalgTranspiler:
         self.spl_dir = spl_dir
         self.prompts: dict[str, str] = {}
         self.fn_params: dict[str, list] = {}
+        # var name -> declared OUTPUT type (e.g. "textbook" -> "TEXT"); lets
+        # _commit_cell pick a format that matches the content rather than
+        # always wrapping the value in JSON — see _commit_cell.
+        self.output_types: dict[str, str] = {}
 
     # ── Public entry point ────────────────────────────────────────────────────
 
@@ -231,6 +296,7 @@ class LinalgTranspiler:
         if not workflows:
             raise ValueError("No WORKFLOW statement found in SPL source")
         main_wf = workflows[-1]
+        self.output_types = {p.name: (p.param_type or "TEXT").upper() for p in main_wf.outputs}
 
         cells: list[dict] = []
         cells.append(self._header_cell(main_wf))
@@ -268,7 +334,22 @@ class LinalgTranspiler:
                 default = "[]"
             else:
                 default = f'"{p.name.lower()}"'
-            param_lines.append(f"{p.name} = {default}  # {typ}")
+            # Scalar params are overridable via env var / ~/.spl/config (same
+            # _spl_config precedence as SPL_WHILE_MAX_ITER) — e.g. set TARGET
+            # to a concept near the primitives (`linear_independence`, `basis`)
+            # to run a small sub-graph smoke test before committing to the full
+            # curriculum (`spectral_theorem`, 13 sections, ~25 min). nbconvert
+            # has no papermill-style parameter injection, so this is the
+            # lightest way to stage validation without editing the notebook.
+            env_key = p.name.upper()
+            if typ in ("INT", "INTEGER"):
+                param_lines.append(f"{p.name} = int(_spl_config('{env_key}', str({default})))  # {typ}")
+            elif typ in ("FLOAT", "NUMBER"):
+                param_lines.append(f"{p.name} = float(_spl_config('{env_key}', str({default})))  # {typ}")
+            elif typ in ("SET", "LIST"):
+                param_lines.append(f"{p.name} = {default}  # {typ}")
+            else:
+                param_lines.append(f"{p.name} = _spl_config('{env_key}', {default})  # {typ}")
         # Initialise OUTPUT variables
         for p in wf.outputs:
             typ = (p.param_type or "TEXT").upper()
@@ -458,9 +539,44 @@ class LinalgTranspiler:
             lines.extend(inner if inner else ["    pass"])
         return _code_cell("\n".join(lines), metadata={"tags": ["evaluate"]})
 
+    def _loop_bound_expr(self, cond) -> str | None:
+        """Detect `@i < @bound` / `@i <= @bound` where @bound is a plain
+        variable reference (e.g. `@_i < @order_len`) and return the Python
+        expression for @bound.
+
+        This lets the generated safety cap track the loop's actual,
+        runtime-computed length instead of guessing a constant — the bug
+        this guards against: `_while_iter < 10` silently truncated a
+        13-section curriculum to 10 sections with no error, because the
+        old fallback never looked at what the loop was actually counting
+        toward. Literal bounds (`@i < 5`) are deliberate and left alone;
+        compound/semantic conditions (quality-gate loops) return None and
+        fall back to the configurable `SPL_WHILE_MAX_ITER` safety net.
+        """
+        if isinstance(cond, (CompoundCondition, SemanticCondition)):
+            return None
+        if hasattr(cond, "left") and hasattr(cond, "operator") and hasattr(cond, "right"):
+            if cond.operator in ("<", "<="):
+                right = cond.right
+                if isinstance(right, ParamRef):
+                    return self._key(right.name)
+        return None
+
     def _while_cell(self, stmt: WhileStatement) -> dict:
         cond = self._render_condition(stmt.condition)
-        max_iter = stmt.max_iterations or 10
+        bound = self._loop_bound_expr(stmt.condition)
+        if stmt.max_iterations:
+            max_iter = str(stmt.max_iterations)
+        elif bound:
+            # Naturally-bounded loop — cap = the real bound (+1 margin for
+            # loop-counter mechanics), not an arbitrary guess.
+            max_iter = f"({bound} + 1)"
+        else:
+            # No statically-derivable bound (e.g. quality-gate loops) —
+            # configurable safety net against runaway/non-converging loops.
+            # Override via env var SPL_WHILE_MAX_ITER or
+            # `spl3 configure set spl SPL_WHILE_MAX_ITER=<n>`.
+            max_iter = f"int(_spl_config('SPL_WHILE_MAX_ITER', '{self._DEFAULT_WHILE_MAX_ITER}'))"
         lines = [
             f"# SPL: WHILE {self._spl_condition(stmt.condition)} DO",
             f"_while_iter = 0",
@@ -480,14 +596,32 @@ class LinalgTranspiler:
         spl_src = f"COMMIT {self._spl_expr(stmt.expression)}"
         if status_parts:
             spl_src += f" WITH {status_parts}"
-        lines = [
-            f"# SPL: {spl_src}",
-            f"import json",
-            f"_output = {var}",
-            f'_result_path = Path("{self.recipe_name}_output.json")',
-            f"_result_path.write_text(json.dumps(_output, indent=2, default=str))",
-            f'print(f"Committed to {{_result_path}}")',
-        ]
+
+        # TEXT outputs (e.g. @textbook) hold markdown/prose, not structured
+        # data. json.dumps()-ing a multi-thousand-word string produces a file
+        # that is *syntactically* valid JSON — a single quoted, escaped
+        # string — but is not actually JSON data; it's a markdown document
+        # wearing a JSON costume (literal \n, \", \\mathbb{...} escapes throughout,
+        # unreadable as either format). Write TEXT straight to .md instead;
+        # reserve .json + json.dumps for genuinely structured (dict/list) outputs.
+        out_type = self.output_types.get(var, "TEXT")
+        if out_type == "TEXT":
+            lines = [
+                f"# SPL: {spl_src}",
+                f"_output = {var}",
+                f'_result_path = Path("{self.recipe_name}_output.md")',
+                f"_result_path.write_text(_output, encoding='utf-8')",
+                f'print(f"Committed to {{_result_path}}")',
+            ]
+        else:
+            lines = [
+                f"# SPL: {spl_src}",
+                f"import json",
+                f"_output = {var}",
+                f'_result_path = Path("{self.recipe_name}_output.json")',
+                f"_result_path.write_text(json.dumps(_output, indent=2, default=str))",
+                f'print(f"Committed to {{_result_path}}")',
+            ]
         if status_parts:
             lines.append(f"# status: {status_parts}")
         return _code_cell("\n".join(lines), metadata={"tags": ["commit"]})
@@ -650,6 +784,12 @@ class LinalgTranspiler:
         "_i", "_ii", "_iii", "_ih", "_oh", "_dh", "_sh",
         "_", "__", "___", "In", "Out", "get_ipython", "exit", "quit",
     })
+
+    # Fallback safety cap for WHILE loops whose bound can't be statically
+    # derived (e.g. quality-gate loops like `WHILE @check != "approved" DO`).
+    # Naturally-bounded loops (`@_i < @order_len`) derive their cap from the
+    # bound variable itself instead — see `_loop_bound_expr`/`_while_cell`.
+    _DEFAULT_WHILE_MAX_ITER = 10
 
     @classmethod
     def _key(cls, var_name: str) -> str:

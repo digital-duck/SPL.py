@@ -914,11 +914,96 @@ spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m q
 |----------|-----------|-------|
 | `python/pocketflow` | Deterministic | Default for NDD experiments |
 | `python/langgraph` | Deterministic | |
+| `python/linalg` | Deterministic | Domain target — compiles `SOLVE`/`ASSERT` graph + verification workflows to a runnable Jupyter notebook (DODA: no LLM call needed to compile). See [recipe 71](../../cookbook/71_linalg_micro_textbook/readme.md) and **Style profiles** below |
 | `go` | Deterministic | |
 | `ts` | Deterministic | |
 | `python/crewai` | LLM only | Requires `--llm` |
 | `python/autogen` | LLM only | Requires `--llm` |
 | `python` | LLM only | Plain Python, requires `--llm` |
+
+### Style profiles (`python/linalg` and other domain targets)
+
+Domain targets such as `python/linalg` compile workflows that take a `@style`
+runtime `INPUT` and resolve it to a **prose** profile — tone, depth, audience,
+length, structure — *without changing what is taught or whether it's correct*.
+`SOLVE @style_guide TEXT := style_instruction(@style)` resolves the chosen
+profile to an instruction block once, and that block is threaded into every
+`GENERATE` prompt as `{style_guide}`. The symbolic checks (`verify_math`,
+`shape_check`, `reducible`, …) never see `@style` and never change their
+verdict because of it — **style is orthogonal to truth**: one verified body of
+mathematics, five very different reading experiences.
+
+`cookbook/71_linalg_micro_textbook/style_profiles.py` ships five profiles:
+
+| Style | Audience | Tone | Structure |
+|---|---|---|---|
+| `textbook` | first-year university student (calculus background) | precise and formal | Definition → Worked example → Key theorem → Lab cell (SymPy) |
+| `feynman` | curious person comfortable with high-school algebra; no university math | intuitive, story-driven — build intuition, then let the algebra follow inevitably | Motivating story → Intuition → Minimal formalisation → "Now you try" |
+| `flashcard` | student reviewing the night before an exam | terse, precise, exam-ready — one fact per card, no proofs | Q: [precise question] → A: [minimal complete answer] → Example: [one line] |
+| `instructor` | instructor preparing a lecture or recitation | pedagogical — explicitly names common misconceptions and how to counter them | Concept summary → Common mistakes → Teaching tip → Suggested exercise |
+| `research` | grad student / researcher who needs a precise, citable statement | dense and formal, theorem-proof style, citation-ready | Definition → Theorem → Proof → Remark (connections / generalisations) |
+
+Each profile also fixes a target length per section (e.g. `textbook`:
+300–400 words, `flashcard`: 50–100 words / one Q&A pair, `instructor`:
+400–500 words) — part of the same instruction block, so the LLM is told not
+just *how* to write but *how much*.
+
+`@style` is a **runtime** workflow input, not a compile-time constant — the
+compiled notebook's structure (cell count, cell order, verification cells) is
+identical regardless of which style is selected; only the generated prose
+differs:
+
+```bash
+spl3 run cookbook/71_linalg_micro_textbook/build_micro_textbook.spl \
+    --kernel --adapter ollama --model gemma3 \
+    -p style=feynman -p target=spectral_theorem
+```
+
+See [cookbook recipe 71](../../cookbook/71_linalg_micro_textbook/readme.md)
+for the full pipeline: concept graph → productivity-ordered curriculum →
+style-guided generation → symbolic verification (SymPy) → notebook
+compilation.
+
+### Inspecting, sharing, and composing concept graphs (`scripts/concept_graph.py`)
+
+Every micro-textbook domain (e.g. `linalg_graph.py` for recipe 71,
+`geometry_graph.py` for recipe 73) is a self-contained Python module that
+exposes `build() -> networkx.DiGraph` — the same graph the `productivity_order`
+/ `reducible` / `learning_path` checks above operate on. `scripts/concept_graph.py`
+is a generic CLI that works against *any* such module purely through that
+`build()` contract — no domain module imports it or knows it exists, so two
+domains' notions of e.g. "ancestors" can never silently diverge (each domain
+keeps its own copy of the graph algorithms; see
+[cookbook/70's readme](../../cookbook/70_linalg_core_concepts/readme.md) for
+why that duplication is intentional). It is the one *reporting and sharing*
+layer every domain gets "mixed in" for free:
+
+```bash
+# Inspect — stats, list, show, ancestors, productivity order, learning paths
+python scripts/concept_graph.py --domain linalg_graph stats
+python scripts/concept_graph.py --domain linalg_graph show spectral_theorem
+python scripts/concept_graph.py --domain linalg_graph path spectral_theorem -k norm
+
+# Visualize — mermaid / graphviz-dot / ascii outline (no plotting libs needed)
+python scripts/concept_graph.py --domain linalg_graph visualize --format mermaid -o graph.mmd
+
+# Share a domain (or just a target's ancestor closure) as portable JSON
+python scripts/concept_graph.py --domain linalg_graph export shared.json -t pca
+python scripts/concept_graph.py import shared.json
+
+# Compose a hybrid, multi-domain concept graph
+python scripts/concept_graph.py compose -d linalg_graph -d geometry_graph hybrid.json
+python scripts/concept_graph.py --domain hybrid.json stats
+```
+
+`--domain` accepts an importable module name, a path to a `.py` domain
+module, or a path to a `.json` graph written by `export`/`compose` — so
+exported and composed graphs flow straight back through the same CLI.
+`compose` is the framework's first mechanical step toward authoring concept
+graphs that span multiple fields — exactly the kind of "too daunting to
+publish by hand" task the micro-textbook framework exists to make tractable.
+See [`scripts/README-concept_graph.md`](../../scripts/README-concept_graph.md)
+for the full command reference.
 
 ---
 
