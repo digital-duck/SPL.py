@@ -1,10 +1,15 @@
 -- ============================================================
 -- Recipe 72: Verify arXiv References
 --
--- Citation-integrity check, automated. Given a "## References"
--- block (as found at the end of a paper draft), this recipe:
+-- Citation-integrity check, automated. Given raw text — a "##
+-- References" block, a full paper draft, or any other text that
+-- cites arXiv work — this recipe:
 --
---   1. Parses each reference entry out of the block,
+--   1. Scans the text for arXiv citations (arXiv:XXXX.XXXXX or an
+--      arxiv.org/abs|pdf URL) wherever they appear, deduplicating
+--      repeat citations of the same id down to one entry — no
+--      "## References" heading or blank-line-separated bibliography
+--      format is required,
 --   2. Extracts an arXiv id where one is cited (arXiv:XXXX.XXXXX
 --      or an arxiv.org/abs|pdf URL) — entries with no arXiv id
 --      (books, journals, ...) are logged and skipped,
@@ -47,15 +52,37 @@
 CREATE TOOL_API parse_references(raw TEXT)
 RETURNS TEXT AS PYTHON $$
 def parse_references(raw: str) -> str:
-    """Split a '## References' block into a JSON list of entry strings.
-    Entries are blank-line separated and may be hard-wrapped across lines."""
+    """Scan raw text for arXiv citations and return a deduped JSON list of
+    entry strings, one per distinct arXiv id found.
+
+    No '## References' heading or blank-line-separated bibliography format
+    is required — this looks for the citation patterns themselves
+    ('arXiv:XXXX.XXXXX' or an arxiv.org/abs|pdf/XXXX.XXXXX URL) wherever
+    they occur in the text, line by line. Each entry is normalised to start
+    with 'arXiv:<id>' so extract_arxiv_id always resolves it unambiguously
+    — including when a single line cites more than one id — followed by
+    the source line for context. Repeat citations of the same id collapse
+    to their first occurrence."""
     import json
     import re
 
-    text = raw.strip()
-    text = re.sub(r'^#+\s*References\s*\n+', '', text, flags=re.IGNORECASE)
-    entries = [e.strip() for e in re.split(r'\n\s*\n', text) if e.strip()]
-    entries = [re.sub(r'\s*\n\s*', ' ', e) for e in entries]
+    pattern = re.compile(
+        r'arxiv\s*:\s*(\d{4}\.\d{4,5})'
+        r'|arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})',
+        re.IGNORECASE,
+    )
+
+    seen: set[str] = set()
+    entries: list[str] = []
+    for line in raw.splitlines():
+        for m in pattern.finditer(line):
+            arxiv_id = m.group(1) or m.group(2)
+            if arxiv_id in seen:
+                continue
+            seen.add(arxiv_id)
+            context = re.sub(r'\s+', ' ', line).strip()
+            entries.append(f'arXiv:{arxiv_id} — {context}')
+
     return json.dumps(entries)
 $$;
 

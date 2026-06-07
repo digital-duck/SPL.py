@@ -1326,6 +1326,124 @@
         "sympy"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "69",
+      "name": "Jupyter Notebook Generator",
+      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps \u2014 the kernel does exact eigendecomposition and symbolic A\u00b7v=\u03bb\u00b7v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/69_notebook_gen/notebook_gen.spl",
+        "--kernel",
+        "--adapter",
+        "ollama"
+      ],
+      "dir": "69_notebook_gen",
+      "log": "notebook_gen",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "70",
+      "name": "Linear Algebra Core Concepts (Content-Cache Experiment)",
+      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) \u2014 verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
+        "--adapter",
+        "ollama",
+        "--model",
+        "gemma3"
+      ],
+      "dir": "70_linalg_core_concepts",
+      "log": "linalg_core_concepts",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "71",
+      "name": "Linear Algebra Micro-Textbook Generator",
+      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified micro-textbook pipeline \u2014 compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view \u2192 physical notebook artifact)",
+      "args": [
+        "spl3",
+        "splc",
+        "compile",
+        "cookbook/71_linalg_micro_textbook/build_micro_textbook.spl",
+        "--lang",
+        "python/linalg"
+      ],
+      "dir": "71_linalg_micro_textbook",
+      "log": "linalg_micro_textbook",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "72",
+      "name": "Verify arXiv References",
+      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV \u2014 automates the spot-check a careful reviewer does by hand",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/72_verify_arxiv_references/verify_arxiv_references.spl",
+        "--adapter",
+        "ollama",
+        "--model",
+        "phi3",
+        "in_refs=Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948.",
+        "out_dir=cookbook/72_verify_arxiv_references/output"
+      ],
+      "dir": "72_verify_arxiv_references",
+      "log": "verify_arxiv_references",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "retrieval",
+      "tier": 2,
+      "requires": [
+        "httpx"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "73",
+      "name": "Intro Geometry Micro-Textbook Generator",
+      "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Authored spec-first, DODA-style \u2014 .spl workflows validate cleanly but the python/intro_geometry splc target doesn't exist yet (tracked in README-todo.md)",
+      "args": [
+        "spl3",
+        "validate",
+        "cookbook/73_intro_geometry/build_micro_textbook.spl"
+      ],
+      "dir": "73_intro_geometry",
+      "log": "intro_geometry",
+      "is_active": false,
+      "approval_status": "wip",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": []
     }
   ]
 }
