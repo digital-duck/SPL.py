@@ -174,7 +174,7 @@ async def run(
 @click.option("--mode",       default="caption", show_default=True,
               type=click.Choice(["caption", "detailed", "ocr"]),
               help="caption (Q&A) | detailed (full description) | ocr (text extraction)")
-@click.option("--model",      default="gemma4", show_default=True, help="Model name")
+@click.option("--model",      default="gemma4:12b", show_default=True, help="Model name")
 @click.option("--backend",    default="ollama", show_default=True,
               type=click.Choice(["ollama", "openrouter"]))
 @click.option("--max-dim",    default=1024, show_default=True, type=int,

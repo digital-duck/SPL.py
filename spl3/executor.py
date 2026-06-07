@@ -36,7 +36,7 @@ _log = logging.getLogger("spl.executor")
 
 from spl.executor import Executor as SPL2Executor
 
-from spl.ast_nodes import Condition
+from spl.ast_nodes import Condition, NamedArg
 from spl3.ast_nodes import (
     NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition,
     ToolAPINode, SolveStatement, AssertStatement,
@@ -568,6 +568,40 @@ class SPL3Executor(SPL2Executor):
         return await super().execute_workflow(stmt, params=params)
 
     # ------------------------------------------------------------------ #
+    # Sub-workflow CALL argument resolution                                 #
+    # ------------------------------------------------------------------ #
+
+    def _resolve_sub_workflow_args(self, arguments, param_names, state) -> dict[str, str]:
+        """Bind CALL arguments to a sub-workflow's INPUT parameter names.
+
+        Named args (key=value) bind directly by name; positional args fill
+        the remaining parameter slots in declaration order. Mirrors the
+        SPL 2.0 procedure-binding rule in spl.executor (named_args /
+        positional_args) — without this, `f(a, k1=v1, k2=v2)` would bind
+        v1/v2 to whatever parameters happen to sit at indices 1/2,
+        regardless of the keyword names actually used.
+        """
+        named_args = {a.name: a.value for a in arguments if isinstance(a, NamedArg)}
+        positional_args = [a for a in arguments if not isinstance(a, NamedArg)]
+
+        args: dict[str, str] = {}
+        pos_idx = 0
+        for param_name in param_names:
+            if param_name in named_args:
+                args[param_name] = self._eval_expression(named_args[param_name], state)
+            elif pos_idx < len(positional_args):
+                args[param_name] = self._eval_expression(positional_args[pos_idx], state)
+                pos_idx += 1
+
+        # Fall back to arg0, arg1, ... for any leftover positional args beyond
+        # the known parameter list (keeps prior behaviour for unregistered targets).
+        extra_start = len(param_names)
+        for j in range(pos_idx, len(positional_args)):
+            args[f"arg{extra_start + (j - pos_idx)}"] = self._eval_expression(positional_args[j], state)
+
+        return args
+
+    # ------------------------------------------------------------------ #
     # CALL PARALLEL execution                                              #
     # ------------------------------------------------------------------ #
 
@@ -604,10 +638,7 @@ class SPL3Executor(SPL2Executor):
             except Exception:
                 param_names = []
 
-            args: dict[str, str] = {}
-            for i, arg_expr in enumerate(branch.arguments):
-                key = param_names[i] if i < len(param_names) else f"arg{i}"
-                args[key] = self._eval_expression(arg_expr, state)
+            args = self._resolve_sub_workflow_args(branch.arguments, param_names, state)
 
             calls.append((branch.workflow_name, args, branch.target_var))
 
@@ -669,10 +700,7 @@ class SPL3Executor(SPL2Executor):
                 except (AttributeError, TypeError):
                     param_names = []
 
-                args: dict[str, str] = {}
-                for i, arg_expr in enumerate(stmt.arguments):
-                    key = param_names[i] if i < len(param_names) else f"arg{i}"
-                    args[key] = self._eval_expression(arg_expr, state)
+                args = self._resolve_sub_workflow_args(stmt.arguments, param_names, state)
 
                 into_var = stmt.target_variable or ""
                 sub_result = await composer.call(stmt.procedure_name, args, into_var)

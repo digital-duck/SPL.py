@@ -17,27 +17,56 @@ def wait_for_human_feedback(prompt_msg: str) -> str:
     Displays the prompt message, then reads a multi-line response until the user
     enters a blank line or presses Ctrl-D.  Returns the trimmed response text,
     or '' if no feedback is given (workflow continues with the original draft).
+
+    Bounded by an overall wall-clock timeout — default 15 minutes (900s),
+    override via the HUMAN_FEEDBACK_TIMEOUT_SEC env var. Without this, an
+    unattended run (e.g. cookbook/run_all.py batch jobs, where no human is at
+    the keyboard) would block on input() forever. A timeout is treated exactly
+    like "no feedback": the workflow continues with the draft as-is.
     """
+    import os
+    import select
+    import sys
+    import time
+
+    timeout_sec = float(os.environ.get("HUMAN_FEEDBACK_TIMEOUT_SEC", "900"))
+    deadline = time.monotonic() + timeout_sec
+
     print("\n" + "=" * 60)
     print("HUMAN FEEDBACK REQUIRED")
     print("=" * 60)
     print(prompt_msg)
     print("-" * 60)
-    print("Enter feedback (blank line or Ctrl-D to skip):")
+    print(f"Enter feedback (blank line or Ctrl-D to skip; "
+          f"times out after {timeout_sec:.0f}s with no input):")
 
     lines = []
+    timed_out = False
     try:
         while True:
-            line = input()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                timed_out = True
+                break
+            ready, _, _ = select.select([sys.stdin], [], [], remaining)
+            if not ready:
+                timed_out = True
+                break
+            line = sys.stdin.readline()
+            if line == "":            # EOF — Ctrl-D, or stdin closed/redirected (batch run)
+                break
+            line = line.rstrip("\n")
             if line == "":
                 break
             lines.append(line)
-    except EOFError:
+    except Exception:
         pass
 
     feedback = "\n".join(lines).strip()
     if feedback:
         print(f"[Feedback recorded: {len(feedback)} chars]")
+    elif timed_out:
+        print(f"[No input within {timeout_sec:.0f}s — continuing unattended with draft as-is]")
     else:
         print("[No feedback — using draft as-is]")
     print("=" * 60 + "\n")

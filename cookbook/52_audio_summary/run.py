@@ -53,8 +53,8 @@ import click
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT))
 
-from spl.codecs import encode_audio                     # noqa: E402
-from spl.adapters.liquid import LiquidAdapter           # noqa: E402
+from spl3.codecs import encode_audio                    # noqa: E402
+from spl3.adapters.liquid import LiquidAdapter          # noqa: E402
 
 # ── Prompt templates (mirror audio_summary.spl CREATE FUNCTIONs) ─────────────
 
@@ -85,9 +85,12 @@ _PROMPTS = {
 
 _SYSTEM = "You are a helpful audio analysis assistant. Base your answer only on the provided audio."
 
-# Default model: OpenRouter LFM-2.5 (confirmed audio support)
+# Default model: OpenRouter LFM-2.5 — NOTE: as of 2026-06-07 OpenRouter rejects
+# `input_audio` content for this model ("No endpoints found that support input
+# audio", HTTP 404), and Ollama's LFM build doesn't accept it either (HTTP 400).
+# This recipe is blocked on upstream audio-input support landing for LFM-2.5.
 _DEFAULT_MODEL_OPENROUTER = "liquid/lfm-2.5-1.2b-instruct:free"
-_DEFAULT_MODEL_OLLAMA      = "lfm-2.5"
+_DEFAULT_MODEL_OLLAMA      = "lfm2.5"
 
 
 async def run(

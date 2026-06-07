@@ -5,32 +5,29 @@ run.py — physical runner for Recipe 52: Text to Image.
 Pipeline
 --------
   1. (optional) Enhance prompt via Gemma4 / Ollama  ← LiquidAdapter.generate()
-  2. Generate image via DALL-E 3 (openai)
+  2. Generate image via gpt-image-1 (openai)
   3. Save PNG to outputs/
 
 Backends
 --------
-  dall-e-3   OpenAI DALL-E 3 (default, requires OPENAI_API_KEY)
-  dall-e-2   OpenAI DALL-E 2 (cheaper, lower quality)
+  gpt-image-1   OpenAI's current Images API model (requires OPENAI_API_KEY).
+                DALL-E 2/3 have been retired from the Images API — gpt-image-1
+                replaces both, always returns b64_json, and doesn't accept the
+                old response_format / style parameters.
 
 Usage
 -----
-  # Minimal — DALL-E 3 with default prompt
+  # Minimal — gpt-image-1 with default prompt
   python cookbook/54_text_to_image/run.py --prompt "A fox in a moonlit forest"
 
   # With prompt enhancement via Gemma4
   python cookbook/54_text_to_image/run.py \\
       --prompt "A fox in a forest" --enhance --style "oil painting"
 
-  # Landscape aspect, HD quality
+  # Landscape aspect, high quality
   python cookbook/54_text_to_image/run.py \\
       --prompt "Tokyo skyline at night" \\
-      --aspect landscape --quality hd
-
-  # Vivid style (DALL-E 3 only)
-  python cookbook/54_text_to_image/run.py \\
-      --prompt "Dragon over a medieval castle" \\
-      --dalle-style vivid
+      --aspect landscape --quality high
 """
 
 from __future__ import annotations
@@ -55,16 +52,13 @@ try:
 except ImportError:
     _OPENAI_OK = False
 
-# ── Size map for DALL-E aspect ratios ─────────────────────────────────────────
-_DALL_E_3_SIZES = {
+# ── Size map for gpt-image-1 aspect ratios ────────────────────────────────────
+# DALL-E 3 / DALL-E 2 were retired from the Images API; gpt-image-1 is the
+# current model and only accepts these three sizes (plus "auto").
+_GPT_IMAGE_SIZES = {
     "square":    "1024x1024",
-    "landscape": "1792x1024",
-    "portrait":  "1024x1792",
-}
-_DALL_E_2_SIZES = {
-    "square":    "1024x1024",
-    "landscape": "1024x1024",   # DALL-E 2 only supports square
-    "portrait":  "1024x1024",
+    "landscape": "1536x1024",
+    "portrait":  "1024x1536",
 }
 
 _ENHANCE_SYSTEM = "You are a professional prompt engineer. Output only the enhanced prompt."
@@ -85,7 +79,7 @@ async def enhance_prompt(prompt: str, style: str, aspect: str, llm_model: str) -
         result = await adapter.generate(
             _ENHANCE_PROMPT.format(prompt=prompt, style=style, aspect=aspect),
             system=_ENHANCE_SYSTEM,
-            max_tokens=256,
+            max_tokens=768,    # gemma4 needs headroom for chain-of-thought; 256 truncates to empty
         )
         enhanced = result.content.strip()
         print(f"[text_to_image] enhanced prompt ({len(enhanced)} chars)")
@@ -101,7 +95,6 @@ async def generate_image_dalle(
     model: str,
     aspect: str,
     quality: str,
-    dalle_style: str,
     output_dir: Path,
 ) -> Path:
     if not _OPENAI_OK:
@@ -111,21 +104,19 @@ async def generate_image_dalle(
         raise ValueError("OPENAI_API_KEY environment variable is not set.")
 
     client = AsyncOpenAI(api_key=api_key)
-    sizes = _DALL_E_3_SIZES if model == "dall-e-3" else _DALL_E_2_SIZES
-    size = sizes.get(aspect, "1024x1024")
+    size = _GPT_IMAGE_SIZES.get(aspect, "1024x1024")
 
+    # gpt-image-1 (current Images API model — DALL-E 2/3 were retired) always
+    # returns b64_json and doesn't accept response_format / style parameters.
     kwargs: dict = dict(
         model=model,
         prompt=prompt,
         n=1,
         size=size,
-        response_format="b64_json",
+        quality=quality,                     # "low" | "medium" | "high" | "auto"
     )
-    if model == "dall-e-3":
-        kwargs["quality"] = quality          # "standard" | "hd"
-        kwargs["style"]   = dalle_style      # "natural" | "vivid"
 
-    print(f"[text_to_image] → DALL-E {model} ({size}, quality={quality}) ...")
+    print(f"[text_to_image] → {model} ({size}, quality={quality}) ...")
     t0 = time.perf_counter()
     response = await client.images.generate(**kwargs)
     latency_ms = (time.perf_counter() - t0) * 1000
@@ -133,7 +124,7 @@ async def generate_image_dalle(
     b64 = response.data[0].b64_json
     revised = getattr(response.data[0], "revised_prompt", None)
     if revised:
-        print(f"[text_to_image] DALL-E revised prompt: {revised[:80]}...")
+        print(f"[text_to_image] revised prompt: {revised[:80]}...")
 
     img_bytes = base64.b64decode(b64)
     ts = int(time.time())
@@ -152,7 +143,6 @@ async def run(
     style: str,
     aspect: str,
     quality: str,
-    dalle_style: str,
     enhance: bool,
     model: str,
     llm_model: str,
@@ -168,7 +158,6 @@ async def run(
         model=model,
         aspect=aspect,
         quality=quality,
-        dalle_style=dalle_style,
         output_dir=output_dir,
     )
 
@@ -179,19 +168,16 @@ async def run(
               help="Visual style hint for prompt enhancer")
 @click.option("--aspect",      default="square", show_default=True,
               type=click.Choice(["square", "landscape", "portrait"]))
-@click.option("--quality",     default="standard", show_default=True,
-              type=click.Choice(["standard", "hd"]),
-              help="DALL-E 3 quality (hd costs more)")
-@click.option("--dalle-style", default="natural", show_default=True,
-              type=click.Choice(["natural", "vivid"]),
-              help="natural (realistic) | vivid (dramatic)")
+@click.option("--quality",     default="auto", show_default=True,
+              type=click.Choice(["low", "medium", "high", "auto"]),
+              help="gpt-image-1 quality (high costs more)")
 @click.option("--enhance",     is_flag=True, help="Enhance prompt via Gemma4/Ollama first")
-@click.option("--model",       default="dall-e-3", show_default=True,
-              type=click.Choice(["dall-e-3", "dall-e-2"]))
-@click.option("--llm-model",   default="gemma4:e4b", show_default=True,
+@click.option("--model",       default="gpt-image-1", show_default=True,
+              type=click.Choice(["gpt-image-1"]))
+@click.option("--llm-model",   default="gemma4:12b", show_default=True,
               help="Ollama model for prompt enhancement")
 @click.option("--output-dir",  default="cookbook/54_text_to_image/outputs", show_default=True)
-def main(prompt, style, aspect, quality, dalle_style, enhance, model, llm_model, output_dir) -> None:
+def main(prompt, style, aspect, quality, enhance, model, llm_model, output_dir) -> None:
     """Recipe 52 — Text to Image (SPL 3.0 multimodal output)."""
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -201,7 +187,6 @@ def main(prompt, style, aspect, quality, dalle_style, enhance, model, llm_model,
         style=style,
         aspect=aspect,
         quality=quality,
-        dalle_style=dalle_style,
         enhance=enhance,
         model=model,
         llm_model=llm_model,

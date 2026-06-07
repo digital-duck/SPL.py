@@ -46,7 +46,7 @@ WORKFLOW voice_dialogue
         @audio_in     AUDIO  DEFAULT 'cookbook/60_voice_dialogue/sample/question.wav',
         @context      TEXT   DEFAULT '',
         @persona      TEXT   DEFAULT 'a helpful assistant',
-        @llm_model    TEXT   DEFAULT 'gemma4:e4b',
+        @llm_model    TEXT   DEFAULT 'lfm2.5',
         @tts_voice    TEXT   DEFAULT 'alloy',
         @tts_model    TEXT   DEFAULT 'tts-1',
         @output_dir   TEXT   DEFAULT 'cookbook/60_voice_dialogue/outputs',

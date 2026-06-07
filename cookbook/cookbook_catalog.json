@@ -956,7 +956,7 @@
         "--image",
         "cookbook/51_image_caption/sample/photo.jpg",
         "--model",
-        "gemma4:e2b"
+        "gemma4:12b"
       ],
       "dir": "51_image_caption",
       "log": "image_caption",
@@ -965,7 +965,7 @@
       "category": "multimodal",
       "tier": 1,
       "requires": [
-        "ollama:gemma4:e4b"
+        "ollama:gemma4:12b"
       ]
     },
     {
@@ -976,12 +976,13 @@
         "python",
         "cookbook/52_audio_summary/run.py",
         "--audio",
-        "cookbook/52_audio_summary/sample/clip.mp3"
+        "cookbook/52_audio_summary/sample/short-conversation.mp3"
       ],
       "dir": "52_audio_summary",
       "log": "audio_summary",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "disabled",
+      "disabled_reason": "Upstream limitation: LFM-2.5 rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request). Blocked until LFM-2.5 audio-input support lands upstream.",
       "category": "multimodal",
       "tier": 3,
       "requires": [
@@ -1012,7 +1013,7 @@
     {
       "id": "54",
       "name": "Text to Image",
-      "description": "Generate an image from a text prompt using DALL-E 3 (TEXT \u2192 IMAGE)",
+      "description": "Generate an image from a text prompt using gpt-image-1 (TEXT \u2192 IMAGE)",
       "args": [
         "python",
         "cookbook/54_text_to_image/run.py",
@@ -1111,7 +1112,7 @@
       "category": "multimodal",
       "tier": 4,
       "requires": [
-        "ollama:gemma4:e4b",
+        "ollama:gemma4:12b",
         "env:OPENAI_API_KEY"
       ]
     },
@@ -1146,18 +1147,19 @@
         "python",
         "cookbook/60_voice_dialogue/run.py",
         "--audio",
-        "cookbook/60_voice_dialogue/sample/question.mp3"
+        "cookbook/52_audio_summary/sample/short-conversation.mp3"
       ],
       "dir": "60_voice_dialogue",
       "log": "voice_dialogue",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "disabled",
+      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) — same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ — args point at recipe 52's sample as a stand-in.)",
       "category": "multimodal",
       "tier": 4,
       "requires": [
         "env:OPENROUTER_API_KEY",
         "env:OPENAI_API_KEY",
-        "ollama:gemma4:e4b"
+        "ollama:lfm2.5"
       ]
     },
     {
@@ -1240,7 +1242,7 @@
       "category": "agentic",
       "tier": 1,
       "requires": [
-        "ollama:gemma4"
+        "ollama:gemma3"
       ]
     },
     {

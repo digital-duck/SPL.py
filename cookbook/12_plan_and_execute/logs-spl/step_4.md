@@ -1,5 +1,3 @@
-This step introduces a `schemas.py` file with two Pydantic request-body models — `TodoCreate` (requiring `title`, optional `completed`) and `TodoUpdate` (all fields optional for partial updates) — keeping input shapes separate from the `Todo` domain model. FastAPI's built-in Pydantic integration automatically returns 422 Unprocessable Entity when validation fails, while `routes.py` is updated to declare these schemas as handler parameter types and standardize the existing `HTTPException(404)` raises.
+This step focuses on building a robust error handling system for our API, ensuring consistent responses with standardized HTTP status codes and detailed JSON error messages. We’ll implement comprehensive error handling to gracefully manage various scenarios like invalid requests or resource not found conditions.
 
-**Files created/modified:**
-- `schemas.py` — `TodoCreate` and `TodoUpdate` Pydantic models
-- `routes.py` — handlers updated to accept schema types and raise typed 404s
+**Filenames Created:** `api_design.md`, `todo_data_model.json`

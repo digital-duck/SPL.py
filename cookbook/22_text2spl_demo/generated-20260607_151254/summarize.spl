@@ -1,0 +1,4 @@
+CREATE FUNCTION summarize(document TEXT)
+RETURNS TEXT AS $$
+  Provide a concise summary of the following document, aiming for approximately 2000 tokens in length. Focus on capturing the key arguments and conclusions.
+$$;

@@ -46,7 +46,7 @@ WORKFLOW image_caption
         @photo    IMAGE  DEFAULT 'cookbook/51_image_caption/sample/photo.jpg',
         @question TEXT   DEFAULT 'What is in this image? Describe it in detail.',
         @mode     TEXT   DEFAULT 'caption',
-        @model    TEXT   DEFAULT 'gemma4:e4b',
+        @model    TEXT   DEFAULT 'gemma4:12b',
         @output_budget INT DEFAULT 1024,
         @log_dir TEXT DEFAULT 'cookbook/51_image_caption/logs-spl'
     OUTPUT: @result TEXT

@@ -52,7 +52,7 @@ WORKFLOW image_restyle
         @preserve     TEXT   DEFAULT 'composition, main subject, mood',
         @quality      TEXT   DEFAULT 'hd',
         @dalle_style  TEXT   DEFAULT 'natural',
-        @vision_model TEXT   DEFAULT 'gemma4:e4b',
+        @vision_model TEXT   DEFAULT 'gemma4:12b',
         @output_dir   TEXT   DEFAULT 'cookbook/58_image_restyle/outputs',
         @log_dir      TEXT   DEFAULT 'cookbook/58_image_restyle/logs-spl'
     OUTPUT: @result TEXT

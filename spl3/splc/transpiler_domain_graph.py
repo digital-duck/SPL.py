@@ -104,6 +104,17 @@ class DomainConfig:
     framework: str               # short label used in notebook metadata, e.g. "linalg"
     primitives_fn: str = "both_radical_primitives"
     verifiers: tuple[VerifierSpec, ...] = field(default_factory=tuple)
+    # Extension points for targets whose setup cell can't be expressed by the
+    # default "import {graph_module}, build the graph at compile time" shape —
+    # e.g. `python/domain_textbook`, which resolves its domain data from a
+    # `@domain_yaml` workflow INPUT at *notebook runtime* rather than baking
+    # in one fixed graph module. `extra_imports` is appended verbatim to the
+    # `from {graph_module} import (...)` block; `graph_bootstrap`, when set,
+    # REPLACES the default `graph = dg.build()` / `primitives = dg.{fn}()`
+    # lines wholesale. Both default to "do what linalg/intro_geometry already
+    # do" so existing presets are untouched.
+    extra_imports: tuple[str, ...] = field(default_factory=tuple)
+    graph_bootstrap: tuple[str, ...] | None = None
 
     @property
     def graph_file(self) -> str:
@@ -196,7 +207,7 @@ from {{GRAPH_MODULE}} import (
     productivity_order, in_graph, applications_of, new_primitives,
     first_radical_primitives, both_radical_primitives,
     concept_names, primitive_names,
-    gap, learning_path,
+    gap, learning_path,{{EXTRA_IMPORTS}}
 )
 from style_profiles import style_instruction, get_style_profile, available_styles
 
@@ -439,22 +450,29 @@ class DomainGraphTranspiler:
             else:
                 param_lines.append(f'{p.name} = ""')
 
-        # Build the concept graph once in setup
+        # Build the concept graph once in setup — or, for targets that resolve
+        # their domain data at notebook runtime (see DomainConfig.graph_bootstrap),
+        # emit that target's own bootstrap lines instead.
         param_lines.append("")
-        param_lines.append(f"# Pre-build the {self.config.graph_module} concept graph (reused by all SOLVE/ASSERT cells)")
-        param_lines.append("graph = dg.build()")
-        param_lines.append(f"primitives = dg.{self.config.primitives_fn}()")
-        param_lines.append(
-            f'print(f"{self.config.graph_module} loaded: {{graph.number_of_nodes()}} nodes, '
-            '{graph.number_of_edges()} edges")'
-        )
+        if self.config.graph_bootstrap is not None:
+            param_lines.extend(self.config.graph_bootstrap)
+        else:
+            param_lines.append(f"# Pre-build the {self.config.graph_module} concept graph (reused by all SOLVE/ASSERT cells)")
+            param_lines.append("graph = dg.build()")
+            param_lines.append(f"primitives = dg.{self.config.primitives_fn}()")
+            param_lines.append(
+                f'print(f"{self.config.graph_module} loaded: {{graph.number_of_nodes()}} nodes, '
+                '{graph.number_of_edges()} edges")'
+            )
 
+        extra_imports = "".join(f"\n    {name}," for name in self.config.extra_imports)
         src = (
             _SETUP_TEMPLATE
             .replace("{{TARGET}}", self.config.target)
             .replace("{{GRAPH_FILE}}", self.config.graph_file)
             .replace("{{GRAPH_MODULE}}", self.config.graph_module)
             .replace("{{GRAPH_DIR_ENV}}", self.config.graph_dir_env)
+            .replace("{{EXTRA_IMPORTS}}", extra_imports)
             .replace("{verifier_defs}", self._verifier_defs_source())
             .replace("{param_defaults}", "\n".join(param_lines))
         )

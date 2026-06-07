@@ -6,10 +6,10 @@ IMAGE + TEXT  →  TEXT + IMAGE
 
 Pipeline
 --------
-  1. Encode source image via spl.codecs.encode_image
+  1. Encode source image via spl3.codecs.encode_image
   2. Call Gemma4 (Ollama) via generate_multimodal():
        image + style instruction → JSON {description, dalle_prompt}
-  3. Call DALL-E 3 with the generated prompt → new image file
+  3. Call gpt-image-1 with the generated prompt → new image file
   4. Output: description text  +  restyled image file
 
 Both the original analysis (TEXT) and the new image (IMAGE) are produced.
@@ -30,10 +30,10 @@ Usage
       --style "oil painting, impressionist, thick brushstrokes" \\
       --preserve "composition, lighting, main subject"
 
-  # Landscape HD
+  # Landscape, high quality
   python cookbook/58_image_restyle/run.py \\
       --image photo.jpg --style "cyberpunk neon" \\
-      --aspect landscape --quality hd
+      --aspect landscape --quality high
 """
 
 from __future__ import annotations
@@ -61,10 +61,12 @@ except ImportError:
     _AsyncOpenAI = None  # type: ignore[assignment,misc]
     _OPENAI_OK = False
 
-_DALL_E_3_SIZES = {
+# gpt-image-1 is the current Images API model (DALL-E 2/3 were retired);
+# it only accepts these three sizes (plus "auto").
+_GPT_IMAGE_SIZES = {
     "square":    "1024x1024",
-    "landscape": "1792x1024",
-    "portrait":  "1024x1792",
+    "landscape": "1536x1024",
+    "portrait":  "1024x1536",
 }
 
 _ANALYSE_SYSTEM = (
@@ -113,7 +115,7 @@ async def analyse_image(
         result = await adapter.generate_multimodal(
             content,
             system=_ANALYSE_SYSTEM,
-            max_tokens=512,
+            max_tokens=1200,   # gemma4 needs headroom for JSON + chain-of-thought; 512 truncates to empty
         )
         latency_ms = (time.perf_counter() - t1) * 1000
         print(f"[image_restyle] vision ✓ ({latency_ms:.0f} ms)")
@@ -142,7 +144,6 @@ async def generate_image(
     prompt: str,
     aspect: str,
     quality: str,
-    dalle_style: str,
     output_dir: Path,
 ) -> Path:
     if not _OPENAI_OK or _AsyncOpenAI is None:
@@ -152,26 +153,26 @@ async def generate_image(
         raise ValueError("OPENAI_API_KEY environment variable is not set.")
 
     client = _AsyncOpenAI(api_key=api_key)
-    size = _DALL_E_3_SIZES.get(aspect, "1024x1024")
+    size = _GPT_IMAGE_SIZES.get(aspect, "1024x1024")
     ts   = int(time.time())
     out  = output_dir / f"restyled_{ts}.png"
 
-    print(f"[image_restyle] → DALL-E 3 ({size}, quality={quality}, style={dalle_style}) ...")
+    # gpt-image-1 (current Images API model — DALL-E 2/3 were retired) always
+    # returns b64_json and doesn't accept response_format / style parameters.
+    print(f"[image_restyle] → gpt-image-1 ({size}, quality={quality}) ...")
     t0 = time.perf_counter()
     response = await client.images.generate(
-        model="dall-e-3",
+        model="gpt-image-1",
         prompt=prompt,
         n=1,
         size=size,
         quality=quality,
-        style=dalle_style,
-        response_format="b64_json",
     )
     latency_ms = (time.perf_counter() - t0) * 1000
 
     revised = getattr(response.data[0], "revised_prompt", None)
     if revised:
-        print(f"[image_restyle] DALL-E revised: {revised[:80]}...")
+        print(f"[image_restyle] revised prompt: {revised[:80]}...")
 
     img_bytes = base64.b64decode(response.data[0].b64_json)
     out.write_bytes(img_bytes)
@@ -188,7 +189,6 @@ async def run(
     preserve: str,
     aspect: str,
     quality: str,
-    dalle_style: str,
     vision_model: str,
     max_dim: int,
     output_dir: Path,
@@ -204,7 +204,6 @@ async def run(
         prompt=dalle_prompt,
         aspect=aspect,
         quality=quality,
-        dalle_style=dalle_style,
         output_dir=output_dir,
     )
     return description, dalle_prompt, out_path
@@ -218,15 +217,14 @@ async def run(
               show_default=True, help="Elements to preserve from the original")
 @click.option("--aspect",       default="square", show_default=True,
               type=click.Choice(["square", "landscape", "portrait"]))
-@click.option("--quality",      default="standard", show_default=True,
-              type=click.Choice(["standard", "hd"]))
-@click.option("--dalle-style",  default="natural", show_default=True,
-              type=click.Choice(["natural", "vivid"]))
-@click.option("--vision-model", default="gemma4:e4b", show_default=True,
+@click.option("--quality",      default="auto", show_default=True,
+              type=click.Choice(["low", "medium", "high", "auto"]),
+              help="gpt-image-1 quality (high costs more)")
+@click.option("--vision-model", default="gemma4:12b", show_default=True,
               help="Ollama vision model for image analysis")
 @click.option("--max-dim",      default=1024, show_default=True, type=int)
 @click.option("--output-dir",   default="cookbook/58_image_restyle/outputs", show_default=True)
-def main(image, style, preserve, aspect, quality, dalle_style, vision_model, max_dim, output_dir) -> None:
+def main(image, style, preserve, aspect, quality, vision_model, max_dim, output_dir) -> None:
     """Recipe 54 — Image Restyle (IMAGE+TEXT → TEXT+IMAGE)."""
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -237,7 +235,6 @@ def main(image, style, preserve, aspect, quality, dalle_style, vision_model, max
         preserve=preserve,
         aspect=aspect,
         quality=quality,
-        dalle_style=dalle_style,
         vision_model=vision_model,
         max_dim=max_dim,
         output_dir=out_dir,

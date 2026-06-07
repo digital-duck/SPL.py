@@ -1,0 +1,71 @@
+CREATE TOOL_API draft(task TEXT) RETURNS TEXT AS PYTHON $$
+import openai
+def draft(task: str) -> str:
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=f"Write a detailed response to the following task: {task}",
+        max_tokens=256,
+        n=1,
+        stop=None,
+        temperature=0.7,
+    )
+    return response[''choices''][0][''text''].strip()
+$$;
+
+CREATE TOOL_API critique(current TEXT) RETURNS TEXT AS PYTHON $$
+import openai
+def critique(current: str) -> str:
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=f"Review the following text and provide specific, actionable feedback for improvement:\n{current}\nPlease focus on clarity, conciseness, and impact.",
+        max_tokens=256,
+        n=1,
+        stop=None,
+        temperature=0.3,
+    )
+    return response[''choices''][0][''text''].strip()
+$$;
+
+CREATE TOOL_API refine(current TEXT, feedback TEXT) RETURNS TEXT AS PYTHON $$
+import openai
+def refine(current: str, feedback: str) -> str:
+    response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=f"Improve the following text based on the provided feedback:\nOriginal Text: {current}\nFeedback: {feedback}",
+        max_tokens=256,
+        n=1,
+        stop=None,
+        temperature=0.7,
+    )
+    return response[''choices''][0][''text''].strip()
+$$;
+
+CREATE FUNCTION classify(text TEXT)
+RETURNS FLOAT AS $$
+  # This function is a placeholder for a more sophisticated quality assessment.
+  # In a real implementation, this would use an LLM to evaluate the text''s quality.
+  # For now, we simulate a quality score based on the length of the text.
+  return len(text) * 0.1
+$$;
+
+WORKFLOW self_refine
+  INPUT @task TEXT, @max_iterations INTEGER := 3
+  OUTPUT @result TEXT
+DO
+  @iteration := 0;
+  GENERATE draft(@task) INTO @current;
+  WHILE @iteration < @max_iterations AND classify(@current) <= 0.8 DO
+    GENERATE critique(@current) INTO @feedback;
+    GENERATE refine(@current, @feedback) INTO @current;
+    @iteration := @iteration + 1;
+  END;
+  EVALUATE classify(@current)
+    WHEN > 0.8 THEN
+      RETURN @current WITH status = 'complete', iterations = @iteration, quality = classify(@current);
+    ELSE
+      RETURN @current WITH status = 'failed_to_reach_quality', iterations = @iteration, quality = classify(@current);
+  END;
+EXCEPTION
+  WHEN BudgetExceeded THEN
+    RETURN @current WITH status = 'budget_limit';
+END;

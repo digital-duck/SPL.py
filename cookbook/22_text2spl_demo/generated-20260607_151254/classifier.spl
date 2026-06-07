@@ -1,0 +1,21 @@
+CREATE TOOL_API detect_intent(text TEXT) RETURNS TEXT AS PYTHON $$
+import re
+def detect_intent(text: str) -> str:
+    text = text.lower()
+    if "weather" in text:
+        return "weather_query"
+    elif "book flight" in text or "flight booking" in text:
+        return "flight_booking"
+    elif "order pizza" in text:
+        return "pizza_order"
+    else:
+        return "unknown"
+$$;
+
+WORKFLOW classify_and_route
+  INPUT @user_query TEXT
+  OUTPUT @intent TEXT
+DO
+  GENERATE detect_intent(@user_query) INTO @intent;
+  RETURN @intent WITH status = 'complete';
+END;

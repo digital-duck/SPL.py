@@ -88,4 +88,7 @@ EXCEPTION
         CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
         RETURN @security_findings WITH status = 'security_only'
 END
+
+Input 2:
+[trim(...)]
 ```

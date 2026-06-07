@@ -58,8 +58,8 @@ import click
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT))
 
-from spl.codecs import encode_audio              # noqa: E402
-from spl.adapters.liquid import LiquidAdapter   # noqa: E402
+from spl3.codecs import encode_audio             # noqa: E402
+from spl3.adapters.liquid import LiquidAdapter  # noqa: E402
 
 try:
     from openai import AsyncOpenAI as _AsyncOpenAI
@@ -237,8 +237,8 @@ async def run(
               help="Transcription model")
 @click.option("--asr-backend", default="openrouter", show_default=True,
               type=click.Choice(["openrouter", "ollama"]))
-@click.option("--llm-model",   default="gemma4:e4b", show_default=True,
-              help="Response LLM via Ollama")
+@click.option("--llm-model",   default="lfm2.5", show_default=True,
+              help="Response LLM via Ollama (Liquid model — matches LiquidAdapter)")
 @click.option("--tts-voice",   default="alloy", show_default=True, help="TTS voice")
 @click.option("--tts-model",   default="tts-1", show_default=True,
               type=click.Choice(["tts-1", "tts-1-hd", "gpt-4o-mini-tts"]))
@@ -253,7 +253,7 @@ def main(audio, context, persona, asr_model, asr_backend, llm_model,
         raise click.UsageError(
             "OPENROUTER_API_KEY not set.\n"
             "  export OPENROUTER_API_KEY=sk-or-...\n"
-            "  Or use --asr-backend ollama --asr-model lfm-2.5"
+            "  Or use --asr-backend ollama --asr-model lfm2.5"
         )
 
     out_dir = Path(output_dir)

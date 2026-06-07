@@ -34,6 +34,10 @@ mkdir -p cookbook/logs
 python cookbook/run_all.py --adapter ollama --model gemma3 \
   2>&1 | tee cookbook/logs/exp1_spl3_single_ollama_$(date +%Y%m%d_%H%M%S).md
 
+python cookbook/run_all.py --adapter ollama --model gemma3 \
+  --ids "01-66" \
+  2>&1 | tee cookbook/logs/exp1_spl3_single_ollama_gemma3_$(date +%Y%m%d_%H%M%S).md
+
 
 python cookbook/run_all.py --adapter claude_cli \
   2>&1 | tee cookbook/logs/exp1_spl3_single_claude_cli_$(date +%Y%m%d_%H%M%S).md
