@@ -74,6 +74,13 @@ WORKFLOW answer_on_demand
     OUTPUT:
         @lesson TEXT
 DO
+    -- 0. Timing instrumentation — wall-clock elapsed time per section and
+    --    total, logged so runs can be profiled and compared (e.g. across
+    --    distributed workers on Momagrid). See build_micro_textbook.spl for
+    --    why _now()/_elapsed() (not time.time() directly) — both are defined
+    --    in the python/linalg setup cell as bare-name wrappers.
+    SOLVE @t_workflow_start FLOAT := _now()
+
     -- 1. Resolve style profile once (deterministic — no LLM involved)
     SOLVE @style_guide TEXT := style_instruction(@style)
 
@@ -103,6 +110,7 @@ DO
 
     WHILE @_i < @order_len DO
         SOLVE @concept TEXT := @order[@_i]
+        SOLVE @t_section_start FLOAT := _now()
 
         LOGGING f"Generating: {@concept}" LEVEL INFO
 
@@ -116,14 +124,25 @@ DO
                 LOGGING f"Section {@concept} verified" LEVEL INFO
         END
 
+        SOLVE @section_elapsed FLOAT := _elapsed(@t_section_start)
+        LOGGING f"[timing] {@concept}: {@section_elapsed:.1f}s" LEVEL INFO
+
         @lesson := @lesson + "\n\n---\n\n" + @section
         @_i := @_i + 1
     END
 
     -- 6. Target concept capstone (styled)
+    SOLVE @t_capstone_start FLOAT := _now()
+
     GENERATE write_section(@target, @target, @style_guide) INTO @capstone
 
+    SOLVE @capstone_elapsed FLOAT := _elapsed(@t_capstone_start)
+    LOGGING f"[timing] capstone ({@target}): {@capstone_elapsed:.1f}s" LEVEL INFO
+
     @lesson := @lesson + "\n\n---\n\n## " + @target + "\n\n" + @capstone
+
+    SOLVE @total_elapsed FLOAT := _elapsed(@t_workflow_start)
+    LOGGING f"[timing] workflow total: {@total_elapsed:.1f}s for {@order_len} concepts + capstone" LEVEL INFO
 
     LOGGING f"Lesson complete — style: {@style}, target: {@target}" LEVEL INFO
 

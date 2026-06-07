@@ -18,7 +18,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..",
-                                "cookbook", "65_linalg_micro_textbook"))
+                                "cookbook", "71_linalg_micro_textbook"))
 
 import linalg_graph as lg
 from spl.lexer import Lexer
@@ -30,7 +30,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
-_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "65_linalg_micro_textbook"
+_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_micro_textbook"
 
 
 def _compile(recipe: str) -> dict:

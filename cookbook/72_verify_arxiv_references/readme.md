@@ -50,7 +50,7 @@ rather than aborting the whole run.
 ## File structure
 
 ```
-cookbook/70_verify_arxiv_references/
+cookbook/72_verify_arxiv_references/
 ├── readme.md                      ← this file
 ├── verify_arxiv_references.spl    ← workflow + inline TOOL_API + LLM function
 ├── neurosymbolic-spl-refs.txt     ← real reference list (our own paper) for testing
@@ -89,12 +89,12 @@ beyond arXiv. Only step 5, the digest, calls the model.)
 ### Smoke test — single reference
 
 ```bash
-spl3 run cookbook/70_verify_arxiv_references/verify_arxiv_references.spl \
+spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
     --adapter ollama --model phi3 \
     in_refs="## References
 
 Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948." \
-    out_dir="cookbook/70_verify_arxiv_references/output"
+    out_dir="cookbook/72_verify_arxiv_references/output"
 ```
 
 Expected: 1 verified, `output/2501.12948.pdf` downloaded, and `summary.csv`
@@ -106,10 +106,10 @@ recipe is built to surface.
 ### Full run — verify our paper's reference list
 
 ```bash
-spl3 run cookbook/70_verify_arxiv_references/verify_arxiv_references.spl \
+spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
     --adapter ollama --model phi3 \
-    in_refs="$(cat cookbook/70_verify_arxiv_references/neurosymbolic-spl-refs.txt)" \
-    out_dir="cookbook/70_verify_arxiv_references/output"
+    in_refs="$(cat cookbook/72_verify_arxiv_references/neurosymbolic-spl-refs.txt)" \
+    out_dir="cookbook/72_verify_arxiv_references/output"
 ```
 
 `neurosymbolic-spl-refs.txt` holds the real `## References` block from our

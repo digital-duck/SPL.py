@@ -21,7 +21,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..",
-                                "cookbook", "65_linalg_micro_textbook"))
+                                "cookbook", "71_linalg_micro_textbook"))
 
 from style_profiles import (
     STYLE_PROFILES,
@@ -34,7 +34,7 @@ from spl3.parser import SPL3Parser
 from spl3.splc.transpiler_linalg import LinalgTranspiler
 from pathlib import Path
 
-_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "65_linalg_micro_textbook"
+_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_micro_textbook"
 _STYLES = ["textbook", "feynman", "flashcard", "instructor", "research"]
 
 
@@ -213,8 +213,9 @@ class TestBuildMicroTextbookStyleProfiles:
         """Compilation output has same cell count regardless of style input.
         Style is a runtime parameter — the structure is fixed at compile time."""
         nb = _compile("build_micro_textbook")
-        # Cell count is deterministic
-        assert len(nb["cells"]) == 19
+        # Cell count is deterministic (25 since the timing instrumentation —
+        # SOLVE @t_*_start / @*_elapsed + LOGGING [timing] — was added)
+        assert len(nb["cells"]) == 25
 
     def test_default_style_is_textbook(self):
         src = (_COOKBOOK / "build_micro_textbook.spl").read_text()

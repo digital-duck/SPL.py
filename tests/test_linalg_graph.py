@@ -18,7 +18,7 @@ import os
 
 # Allow importing linalg_graph directly (it lives in the cookbook, not in spl/)
 sys.path.insert(0, os.path.join(os.path.dirname(__file__),
-                                "..", "cookbook", "65_linalg_micro_textbook"))
+                                "..", "cookbook", "71_linalg_micro_textbook"))
 
 import networkx as nx
 import pytest

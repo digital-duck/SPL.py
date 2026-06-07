@@ -3,7 +3,7 @@
 Part of the ``python/linalg`` splc target (Layer 2 of the neurosymbolic SPL
 roadmap).  Loaded into the IPython kernel at workflow start:
 
-    CALL run_python('import sys; sys.path.insert(0, "/path/to/cookbook/65_linalg_micro_textbook")') INTO @_
+    CALL run_python('import sys; sys.path.insert(0, "/path/to/cookbook/71_linalg_micro_textbook")') INTO @_
     CALL run_python('import linalg_graph; graph = linalg_graph.build()') INTO @_
 
 Public API

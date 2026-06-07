@@ -77,6 +77,15 @@ WORKFLOW build_micro_textbook
     OUTPUT:
         @textbook TEXT
 DO
+    -- 0. Timing instrumentation — wall-clock elapsed time per section and
+    --    total, logged so runs can be profiled and compared (e.g. across
+    --    distributed workers on Momagrid). _now()/_elapsed() are bare-name
+    --    wrappers around time.time() defined in the python/linalg setup
+    --    cell — the SOLVE-template parser doesn't yet support dotted
+    --    continuations like `time.time()`, so we route through these
+    --    instead, the same way verify_math/shape_check route to _verify_math/_shape_check.
+    SOLVE @t_workflow_start FLOAT := _now()
+
     -- 1. Resolve style profile once (deterministic — no LLM involved)
     SOLVE @style_guide TEXT := style_instruction(@style)
 
@@ -102,6 +111,7 @@ DO
 
     WHILE @_i < @order_len DO
         SOLVE @concept TEXT := @order[@_i]
+        SOLVE @t_section_start FLOAT := _now()
 
         LOGGING f"Section {@_i}: {@concept}" LEVEL INFO
 
@@ -130,6 +140,9 @@ DO
                 LOGGING "Shapes OK" LEVEL INFO
         END
 
+        SOLVE @section_elapsed FLOAT := _elapsed(@t_section_start)
+        LOGGING f"[timing] {@concept}: {@section_elapsed:.1f}s" LEVEL INFO
+
         @textbook := @textbook + "\n\n---\n\n" + @section
         @_i := @_i + 1
     END
@@ -137,9 +150,17 @@ DO
     -- 5. Capstone: tie target to its payoff applications
     SOLVE @apps LIST := applications_of(@graph, @target)
 
+    SOLVE @t_payoff_start FLOAT := _now()
+
     GENERATE write_payoff(@target, @apps, @style_guide) INTO @capstone
 
+    SOLVE @payoff_elapsed FLOAT := _elapsed(@t_payoff_start)
+    LOGGING f"[timing] payoff: {@payoff_elapsed:.1f}s" LEVEL INFO
+
     @textbook := @textbook + "\n\n---\n\n## Payoff\n\n" + @capstone
+
+    SOLVE @total_elapsed FLOAT := _elapsed(@t_workflow_start)
+    LOGGING f"[timing] workflow total: {@total_elapsed:.1f}s for {@order_len} sections + payoff" LEVEL INFO
 
     LOGGING f"Textbook complete — style: {@style}" LEVEL INFO
 

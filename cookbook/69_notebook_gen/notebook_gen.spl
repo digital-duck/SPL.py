@@ -16,20 +16,20 @@
 --   run_python (kernel)  — deterministic: eigendecomposition,
 --                          verification A*v = lambda*v
 --   GENERATE   (LLM)     — probabilistic: intro prose, explanation
---   assemble_notebook    — tools.py: builds the .ipynb safely
+--   assemble_notebook    — tools.spl (CREATE TOOL_API): builds the .ipynb safely
 --
 -- Run:
 --   spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
---       --kernel --adapter ollama \
---       --tools cookbook/69_notebook_gen/tools.py
+--       --kernel --adapter ollama
 --
 -- With custom topic:
 --   spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
 --       --kernel --adapter ollama \
---       --tools cookbook/69_notebook_gen/tools.py \
 --       -p topic="dot products and orthogonality" \
 --       -p matrix_a="[[1, 0], [0, -1]]"
 -- ============================================================
+
+IMPORT 'tools'
 
 -- ── Prompt templates ─────────────────────────────────────────
 
@@ -113,7 +113,7 @@ print(", ".join(checks))
     GENERATE explain_eigenvalues(@matrix_a, @eigen_summary) INTO @explanation_text
 
     -- ── Step 6: assemble and write the .ipynb ─────────────────
-    -- tools.py handles text assembly safely — no string escaping
+    -- tools.spl (CREATE TOOL_API) handles text assembly safely — no string escaping
     -- of LLM output needed inside SPL f-strings.
     CALL assemble_notebook(
         @topic, @matrix_a, @intro_text, @explanation_text,

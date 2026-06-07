@@ -1,5 +1,5 @@
 -- ============================================================
--- Recipe 70: Verify arXiv References
+-- Recipe 72: Verify arXiv References
 --
 -- Citation-integrity check, automated. Given a "## References"
 -- block (as found at the end of a paper draft), this recipe:
@@ -36,10 +36,10 @@
 -- arXiv-sourced metadata) for each entry it could resolve.
 --
 -- Run:
---   spl3 run cookbook/70_verify_arxiv_references/verify_arxiv_references.spl \
+--   spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
 --       --adapter ollama --model gemma3 \
 --       in_refs="$(cat references.md)" \
---       out_dir="cookbook/70_verify_arxiv_references/output"
+--       out_dir="cookbook/72_verify_arxiv_references/output"
 -- ============================================================
 
 -- ── TOOL_API: deterministic helpers ───────────────────────────
@@ -255,7 +255,7 @@ $$;
 WORKFLOW verify_arxiv_references
     INPUT:
         @in_refs TEXT,
-        @out_dir TEXT DEFAULT 'cookbook/70_verify_arxiv_references/output'
+        @out_dir TEXT DEFAULT 'cookbook/72_verify_arxiv_references/output'
     OUTPUT: @summary_csv TEXT
 DO
     LOGGING 'Verify arXiv References — starting' LEVEL INFO
