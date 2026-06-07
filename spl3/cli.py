@@ -649,19 +649,26 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     from spl.lexer import Lexer
     from spl.ast_nodes import CreateFunctionStatement, PromptStatement
     from spl3.parser import SPL3Parser
-    from spl3._loader import load_workflows_from_file
+    from spl3._loader import load_definitions_from_file, load_workflows_from_file
 
     source = path.read_text(encoding="utf-8")
     _tokens = Lexer(source).tokenize()
     _program = SPL3Parser(_tokens).parse()
 
-    # Register CREATE FUNCTION definitions so prompt templates are expanded
-    for _stmt in _program.statements:
-        if isinstance(_stmt, CreateFunctionStatement):
-            executor.functions.register(_stmt)
+    # Register CREATE TOOL_API / CREATE FUNCTION definitions — both from this
+    # file AND recursively through its IMPORTs (a shared 'tools.spl' imported
+    # via IMPORT 'tools' previously registered nothing, since IMPORT only
+    # loaded WORKFLOW definitions; CALLs to those tools silently fell back to
+    # the LLM). load_definitions_from_file walks IMPORTs the same way
+    # load_workflows_from_file does, with the importing file's own
+    # declarations registered last so they win on name collisions.
+    _imported_tool_apis, _imported_functions = load_definitions_from_file(path)
 
-    # Register CREATE TOOL_API definitions (exec + register as tools)
-    executor._load_tool_apis(_program)
+    for _stmt in _imported_functions:
+        executor.functions.register(_stmt)
+
+    from types import SimpleNamespace
+    executor._load_tool_apis(SimpleNamespace(statements=_imported_tool_apis))
 
     stem = path.stem.replace("-", "_")
     defns = load_workflows_from_file(path)

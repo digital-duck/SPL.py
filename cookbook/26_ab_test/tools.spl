@@ -3,6 +3,7 @@
 
 CREATE TOOL_API load_experiment(experiment_id TEXT)
 RETURNS TEXT AS PYTHON $$
+def load_experiment(experiment_id: str) -> str:
     import json
     import os
     import textwrap
@@ -58,6 +59,7 @@ $$;
 
 CREATE TOOL_API list_experiments()
 RETURNS TEXT AS PYTHON $$
+def list_experiments() -> str:
     import json
     import os
 
@@ -77,6 +79,7 @@ $$;
 
 CREATE TOOL_API extract_score_total(score_json TEXT)
 RETURNS TEXT AS PYTHON $$
+def extract_score_total(score_json: str) -> str:
     import json
 
     score_json = score_json.strip()
@@ -95,6 +98,7 @@ $$;
 
 CREATE TOOL_API format_tie_result(response_a TEXT, response_b TEXT, score_a_json TEXT, score_b_json TEXT)
 RETURNS TEXT AS PYTHON $$
+def format_tie_result(response_a: str, response_b: str, score_a_json: str, score_b_json: str) -> str:
     import json
     import textwrap
 

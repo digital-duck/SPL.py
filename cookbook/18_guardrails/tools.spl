@@ -3,6 +3,7 @@
 
 CREATE TOOL_API load_test_input(input_id TEXT)
 RETURNS TEXT AS PYTHON $$
+def load_test_input(input_id: str) -> str:
     import json
     import os
 
@@ -44,6 +45,7 @@ $$;
 
 CREATE TOOL_API list_test_inputs()
 RETURNS TEXT AS PYTHON $$
+def list_test_inputs() -> str:
     import json
     import os
 
@@ -64,6 +66,7 @@ $$;
 
 CREATE TOOL_API detect_pii(text TEXT)
 RETURNS TEXT AS PYTHON $$
+def detect_pii(text: str) -> str:
     import json
     import re
 
@@ -107,6 +110,7 @@ $$;
 
 CREATE TOOL_API redact_pii(text TEXT)
 RETURNS TEXT AS PYTHON $$
+def redact_pii(text: str) -> str:
     import re
 
     SSN_RE = re.compile(r"\b\d{3}[-\s]\d{2}[-\s]\d{4}\b")
@@ -133,6 +137,7 @@ $$;
 
 CREATE TOOL_API classify_input_keywords(text TEXT)
 RETURNS TEXT AS PYTHON $$
+def classify_input_keywords(text: str) -> str:
     HARMFUL_KEYWORDS = [
         "keylogger", "malware", "ransomware", "phishing", "pipe bomb", "bomb",
         "explosive", "poison", "synthesize drugs", "hack into", "steal credentials",

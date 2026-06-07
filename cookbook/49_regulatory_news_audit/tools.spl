@@ -8,6 +8,7 @@
 
 CREATE TOOL_API read_news_feed(path TEXT)
 RETURNS TEXT AS PYTHON $$
+def read_news_feed(path: str) -> str:
     import json
     import os
     import re

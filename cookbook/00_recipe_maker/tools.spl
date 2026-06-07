@@ -3,6 +3,7 @@
 
 CREATE TOOL_API load_patterns(pattern_id TEXT)
 RETURNS TEXT AS PYTHON $$
+def load_patterns(pattern_id: str) -> str:
     import json
     import os
     import textwrap
@@ -64,6 +65,7 @@ $$;
 
 CREATE TOOL_API load_dataset(path TEXT)
 RETURNS TEXT AS PYTHON $$
+def load_dataset(path: str) -> str:
     import csv
     import json
     import os
@@ -112,6 +114,7 @@ $$;
 
 CREATE TOOL_API load_resources(path TEXT)
 RETURNS TEXT AS PYTHON $$
+def load_resources(path: str) -> str:
     import os
 
     path = path.strip()
@@ -133,6 +136,7 @@ $$;
 
 CREATE TOOL_API write_artifact(output_dir TEXT, filename TEXT, content TEXT)
 RETURNS TEXT AS PYTHON $$
+def write_artifact(output_dir: str, filename: str, content: str) -> str:
     import os
     from datetime import datetime
 
@@ -167,6 +171,7 @@ $$;
 
 CREATE TOOL_API list_artifacts(output_dir TEXT)
 RETURNS TEXT AS PYTHON $$
+def list_artifacts(output_dir: str) -> str:
     import os
     from datetime import datetime
 
@@ -212,6 +217,7 @@ $$;
 
 CREATE TOOL_API notify_review(output_dir TEXT, artifact_list TEXT, feedback_mode TEXT)
 RETURNS TEXT AS PYTHON $$
+def notify_review(output_dir: str, artifact_list: str, feedback_mode: str) -> str:
     import os
     from datetime import datetime
 

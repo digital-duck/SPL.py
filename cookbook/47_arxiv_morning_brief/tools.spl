@@ -8,6 +8,7 @@
 
 CREATE TOOL_API download_arxiv_pdf(url TEXT)
 RETURNS TEXT AS PYTHON $$
+def download_arxiv_pdf(url: str) -> str:
     import json
     import logging
     import time
@@ -96,6 +97,7 @@ $$;
 
 CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT)
 RETURNS TEXT AS PYTHON $$
+def semantic_chunk_plan(pdf_path: str) -> str:
     import json
     import re
     from pathlib import Path
@@ -151,6 +153,7 @@ $$;
 
 CREATE TOOL_API list_count(json_list TEXT)
 RETURNS TEXT AS PYTHON $$
+def list_count(json_list: str) -> str:
     import json
 
     try:
@@ -161,6 +164,7 @@ $$;
 
 CREATE TOOL_API parse_urls(raw TEXT)
 RETURNS TEXT AS PYTHON $$
+def parse_urls(raw: str) -> str:
     import json
     import re
     from pathlib import Path
@@ -194,6 +198,7 @@ $$;
 
 CREATE TOOL_API build_brief_date_header(date TEXT)
 RETURNS TEXT AS PYTHON $$
+def build_brief_date_header(date: str) -> str:
     import datetime
 
     if not date or not date.strip():
