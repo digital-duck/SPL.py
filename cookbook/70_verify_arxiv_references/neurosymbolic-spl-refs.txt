@@ -1,0 +1,111 @@
+
+## References
+
+Agrawal, A., Venkatraman, J., Leonard, S., & Paepcke, A. (2016). YouEDU:
+Addressing confusion in MOOC discussion forums by recommending instructional
+video clips. *Proceedings of EDM 2016*.
+
+Axler, S. (2024). *Linear Algebra Done Right* (4th ed.). Springer.
+Available open-access (CC BY-NC): https://linear.axler.net/
+
+Beezer, R. A. (2015). *A First Course in Linear Algebra* (3rd ed.).
+Congruent Press. Available open-access (GNU FDL): http://linear.pugetsound.edu/
+
+Daunis, I. (2025). A declarative language for building and orchestrating
+LLM-powered agent workflows. arXiv:2512.19769.
+
+Su, Y., Xu, K., Gao, Y., Yang, F., Li, C., Yang, M., & Xu, T. (2026).
+Neuro-symbolic verification on instruction following of LLMs. arXiv:2601.17789.
+
+Shen, C., Sun, Z., Shi, T., Zhang, X., & Xu, J. (2025). Balancing stylization
+and truth via disentangled representation steering. arXiv:2508.04530.
+
+Xu, L., Beckmann, P., Valentino, M., & Freitas, A. (2025). Adaptive LLM-symbolic
+reasoning via dynamic logical solver composition. arXiv:2510.06774. EACL 2026.
+
+Zhou, K., & Zhang, L. (2025). Step-wise formal verification for LLM-based
+mathematical problem solving. arXiv:2505.20869.
+
+Aytekin, Ç., & Saygın, Y. (2024). ACE: AI-assisted construction of educational
+knowledge graphs with prerequisite relations. *Journal of Educational Data Mining*,
+16(2).
+
+Cheng, X., Zhang, Z., Wang, J., Fang, L., He, C., Guan, Q., Pan, S., & Luo, W.
+(2025). GraphRAG-induced dual knowledge structure graphs for personalized learning
+path recommendation. arXiv:2506.22303.
+
+Bouneffouf, D., et al. (2025). Neuro-symbolic AI in 2024: A systematic review.
+arXiv:2501.05435.
+
+Doignon, J.-P., & Falmagne, J.-C. (1985). Spaces for the assessment of knowledge.
+*International Journal of Man-Machine Studies*, 23(2), 175–196.
+
+Doignon, J.-P., & Falmagne, J.-C. (1999). *Knowledge Spaces*. Springer.
+
+Garcez, A. d'Avila, Gori, M., Lamb, L. C., Serafini, L., Spranger, M., &
+Tran, S. N. (2022). Neural-symbolic computing: An effective methodology for
+principled integration of machine learning and reasoning.
+*Journal of Applied Logics*, 9(6).
+
+Gong, W. G. (2026). Structured Prompt Language: Declarative context management
+for LLMs. arXiv:2602.21257.
+
+Kahn, A. B. (1962). Topological sorting of large networks. *Communications of the
+ACM*, 5(11), 558–562.
+
+Karpas, E., Abend, O., Belinkov, Y., Lenz, B., Lieber, O., Moskovitch, R., ... &
+Shalev-Shwartz, S. (2022). MRKL systems: A modular, neuro-symbolic architecture
+that combines large language models, external knowledge sources and discrete
+reasoning. arXiv:2205.00445.
+
+Khan Academy. (2023). *Khanmigo: AI-powered educational assistant*. Technical
+report, Khan Academy.
+
+Khattab, O., Singhvi, A., Maheshwari, P., Zhang, Z., Shrivastava, A., Sharma, S.,
+... & Potts, C. (2023). DSPy: Compiling declarative language model calls into
+self-improving pipelines. arXiv:2310.03714.
+
+Li, X., et al. (2025). Advancing symbolic integration in large language models:
+Beyond conventional neurosymbolic AI. arXiv:2510.21425.
+
+Liang, C., Wu, Z., Huang, W., & Giles, C. L. (2017). Recovering concept
+prerequisite relations from university course dependencies. *Proceedings of
+AAAI 2017*, 31(1).
+
+Marra, G., Duman, E., & De Raedt, L. (2024). From statistical relational to
+neurosymbolic artificial intelligence: A survey.
+*Artificial Intelligence*, 328, 104062.
+
+Mukherjee, S., et al. (2025). SymCode: A neurosymbolic approach to mathematical
+reasoning via verifiable code generation.
+arXiv:2510.25975. EACL 2026 Findings.
+
+Olausson, T. X., Gu, A., Lipkin, B., Zhang, C. E., Solar-Lezama, A., Tenenbaum,
+J. B., & Levy, R. (2023). LINC: A neurosymbolic approach for logical reasoning
+by combining language models with first-order logic provers.
+arXiv:2310.15164.
+
+Pan, L., Albalak, A., Wang, X., & Wang, W. Y. (2023). Logic-LM: Empowering large
+language models with symbolic solvers for faithful logical reasoning.
+arXiv:2305.12295.
+
+Schick, T., Dwivedi-Yu, J., Dessì, R., Raileanu, R., Lomeli, M., Zettlemoyer, L.,
+... & Scialom, T. (2023). Toolformer: Language models can teach themselves to use
+tools. arXiv:2302.04761.
+
+Sheth, A., Roy, K., & Gaur, M. (2024). Neurosymbolic AI — why, what, and how.
+*IEEE Intelligent Systems*, 38(3), 56–62.
+
+Sheth, A., et al. (2024). Education in the era of neurosymbolic AI.
+*Journal of Web Semantics*, 80, 100822. arXiv:2411.12763.
+
+Sonkar, S., et al. (2026). PATS: Personality-aware teaching strategies with
+large language model tutors. arXiv:2601.08402. EACL 2026 Findings.
+
+VanLehn, K. (2011). The relative effectiveness of human tutoring, intelligent
+tutoring systems, and other tutoring systems. *Educational Psychologist*, 46(4),
+197–221.
+
+Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., & Cao, Y. (2022).
+ReAct: Synergizing reasoning and acting in language models.
+arXiv:2210.03629.
