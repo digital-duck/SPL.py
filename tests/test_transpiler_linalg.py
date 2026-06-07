@@ -240,12 +240,15 @@ class TestSetupCell:
     def test_graph_build_in_setup(self):
         nb = _transpile(_MINIMAL_SPL)
         setup = _cell_src(nb["cells"][1])
-        assert "graph = lg.build()" in setup
+        # alias is `dg` (domain graph) post-generalization — see
+        # transpiler_domain_graph.py's _SETUP_TEMPLATE; behavior is identical,
+        # only the import alias changed from the linalg-only `lg`.
+        assert "graph = dg.build()" in setup
 
     def test_primitives_in_setup(self):
         nb = _transpile(_MINIMAL_SPL)
         setup = _cell_src(nb["cells"][1])
-        assert "primitives = lg.both_radical_primitives()" in setup
+        assert "primitives = dg.both_radical_primitives()" in setup
 
 
 # ---------------------------------------------------------------------------
