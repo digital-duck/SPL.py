@@ -1,0 +1,13 @@
+name: correctness
+criteria:
+  - factual_accuracy
+  - mathematical_correctness
+  - logical_consistency
+  - no_contradictions
+pass_threshold: 7.0
+prompt_template: |
+  Evaluate factual and mathematical correctness. Focus on:
+  - factual_accuracy: Are all stated facts verifiable and accurate?
+  - mathematical_correctness: Are all equations, derivations, and numerical claims correct?
+  - logical_consistency: Does the argument follow logically from premises to conclusions?
+  - no_contradictions: Are there any internal contradictions or inconsistent claims?

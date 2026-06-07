@@ -1,0 +1,13 @@
+name: clarity
+criteria:
+  - prose_clarity
+  - completeness
+  - appropriate_detail
+  - no_ambiguity
+pass_threshold: 7.0
+prompt_template: |
+  Evaluate prose clarity and communication quality. Focus on:
+  - prose_clarity: Is the writing clear, concise, and easy to follow?
+  - completeness: Does the content cover the topic fully without leaving gaps?
+  - appropriate_detail: Is the level of detail right for the intended audience?
+  - no_ambiguity: Are there vague or ambiguous statements that could be misread?

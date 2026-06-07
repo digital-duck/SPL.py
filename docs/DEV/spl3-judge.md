@@ -1,6 +1,6 @@
 # Design: `spl3 judge`
 
-> **Status**: Planning — do not code until this document is approved.
+> **Status**: Approved — complete. Phase 1 and Phase 2 done; judge→cache `--cache-key` integration done. 69/69 tests pass (conda env `spl123`, Python 3.11.15).
 
 ---
 
@@ -187,33 +187,43 @@ human review — exactly the right behavior.
 
 ```
 spl3 judge <file>
-    [--criteria BUILTIN|FILE]   rubric name or path to .yaml rubric
-    [--panel ADAPTER/MODEL,...] comma-separated panel members
-    [--adapter NAME]            single judge adapter (ignored if --panel)
-    [--model MODEL]             single judge model
-    [--aggregation STRATEGY]    majority | confidence_weighted | unanimous
-    [--swap-check]              run swap consistency check
+    [--criteria BUILTIN|FILE]        rubric name or path to .yaml rubric
+    [--llm ADAPTER:MODEL]            judge spec; repeat for panel mode (wins over --adapter/--model)
+    [--adapter NAME]                 legacy: single judge adapter (used only if --llm not given)
+    [--model MODEL]                  legacy: single judge model   (used only if --llm not given)
+    [--aggregation STRATEGY]         majority | confidence_weighted | unanimous
+    [--swap-check]                   run swap consistency check
     [--format markdown|json|text]
     [-o OUTPUT_FILE]
 ```
 
+**`--llm` flag convention:**
+- Format: `<adapter>:<model-id>` — e.g. `claude_cli:claude-opus-4-6`, `openrouter:google/gemini-2.5-pro`
+- Repeatable (`multiple=True`): one `--llm` → single judge; two or more → panel mode (concurrent)
+- **Precedence**: if `--llm` is given, `--adapter`/`--model` are ignored even if also provided
+- `--adapter`/`--model` remain supported as the legacy fallback for existing scripts
+
 **Examples:**
 
 ```bash
-# Single judge, built-in rubric
+# Single judge, built-in rubric (new style)
+spl3 judge output.md --criteria clarity --llm claude_cli:claude-opus-4-6
+
+# Single judge, custom rubric (new style)
+spl3 judge my_section.md --criteria ./rubrics/math-check.yaml --llm claude_cli:claude-opus-4-6
+
+# Single judge (legacy style — still works)
 spl3 judge output.md --criteria clarity --adapter claude_cli --model claude-opus-4-6
 
-# Single judge, custom rubric
-spl3 judge my_section.md --criteria ./rubrics/math-check.yaml --adapter claude_cli
-
-# Panel of three — runs concurrently
+# Panel of three — repeat --llm, runs concurrently
 spl3 judge output.md --criteria spl-compliance \
-    --panel "claude_cli/claude-opus-4-6,openrouter/google/gemini-2.5-pro,openrouter/qwen/qwen-max" \
+    --llm claude_cli:claude-opus-4-6 \
+    --llm openrouter:google/gemini-2.5-pro \
+    --llm openrouter:qwen/qwen-max \
     --aggregation majority --swap-check
 
 # NDD pipeline inline — replacing compare LLM tier
-spl3 judge S5-spec.md --criteria spl-compliance --adapter claude_cli --model claude-opus-4-6 \
-    -o S6-judge.md
+spl3 judge S5-spec.md --criteria spl-compliance --llm claude_cli:claude-opus-4-6 -o S6-judge.md
 ```
 
 **Output (JSON excerpt):**
@@ -245,7 +255,7 @@ JUDGE @section
 # Panel judge — consensus required
 JUDGE @section
     AGAINST "correctness"
-    PANEL ["claude_cli/claude-opus-4-6", "openrouter/gemini-2.5-pro"]
+    PANEL ["claude_cli:claude-opus-4-6", "openrouter:google/gemini-2.5-pro"]
     AGGREGATION majority
     INTO @verdict
     WHEN @verdict.verdict == "ESCALATE":
@@ -287,7 +297,7 @@ Current: `spl3 compare S1-spec.md S5-spec.md --adapter claude_cli --model claude
 
 After: optionally replace or augment with:
 ```bash
-spl3 judge S5-spec.md --criteria spl-compliance --adapter claude_cli --model claude-opus-4-6
+spl3 judge S5-spec.md --criteria spl-compliance --llm claude_cli:claude-opus-4-6
 ```
 
 `compare` measures fidelity to original spec (two-input diff).
@@ -342,22 +352,22 @@ and `prompt_template` fields — loadable via `--criteria path/to/rubric.yaml`.
 
 ## 9. Implementation Plan
 
-### Phase 1 — Single judge, CLI, built-in rubrics (implement first)
-- [ ] `spl3/judge/types.py` — `JudgeResult`, `Rubric`
-- [ ] `spl3/judge/prompt.py` — `build_judge_prompt()` with CoT structure
-- [ ] `spl3/judge/engine.py` — `run_judge()` with structured JSON parsing
-- [ ] `spl3/judge/rubrics/` — `spl_compliance.yaml`, `correctness.yaml`, `clarity.yaml`
-- [ ] `spl3/judge/report.py` — markdown/json/text render (reuse compare report pattern)
-- [ ] `spl3 judge` CLI command in `spl3/cli.py`
-- [ ] Unit tests: single judge, each built-in rubric, parse error handling
+### Phase 1 — Single judge, CLI, built-in rubrics ✅ Done
+- [x] `spl3/judge/types.py` — `JudgeResult`, `Rubric`
+- [x] `spl3/judge/prompt.py` — `build_judge_prompt()` with CoT structure
+- [x] `spl3/judge/engine.py` — `run_judge()` with structured JSON parsing
+- [x] `spl3/judge/rubrics/` — `spl_compliance.yaml`, `correctness.yaml`, `clarity.yaml`, `ai_review.yaml`
+- [x] `spl3/judge/report.py` — markdown/json/text render (mirrors compare report pattern)
+- [x] `spl3 judge` CLI command in `spl3/cli.py` — with `--llm ADAPTER:MODEL` convention
+- [x] Unit tests: single judge, each built-in rubric, parse error handling (39 tests)
 
-### Phase 2 — Panel mode and aggregation
-- [ ] `spl3/judge/aggregators.py` — `majority_vote`, `confidence_weighted`, `unanimous`
-- [ ] `PanelResult` type
-- [ ] `run_panel()` with `asyncio.gather` (CALL PARALLEL)
-- [ ] `--panel` CLI flag
-- [ ] `--swap-check` flag and swap consistency logic
-- [ ] Tests: panel with mock adapters, aggregation edge cases (split, unanimous)
+### Phase 2 — Panel mode and aggregation ✅ Done
+- [x] `spl3/judge/aggregators.py` — `majority_vote`, `confidence_weighted`, `unanimous`
+- [x] `PanelResult` type
+- [x] `run_panel()` with `asyncio.gather` (CALL PARALLEL)
+- [x] `--llm` repeated flag activates panel mode (replaced `--panel`); `--aggregation` flag
+- [x] `--swap-check` flag and swap consistency logic (single + panel)
+- [x] Tests: panel with echo adapter, all three aggregation strategies, split/unanimous edge cases (28 tests)
 
 ### Phase 3 — SPL language integration
 - [ ] `JUDGE` verb in lexer/parser/AST

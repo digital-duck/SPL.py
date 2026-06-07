@@ -1,0 +1,26 @@
+name: spl-compliance
+criteria:
+  - workflow_identity
+  - generate_signatures
+  - call_dependencies
+  - evaluate_conditions
+  - exception_handlers
+  - variable_data_flow
+pass_threshold: 7.0
+weight:
+  workflow_identity: 0.15
+  generate_signatures: 0.30
+  call_dependencies: 0.20
+  evaluate_conditions: 0.15
+  exception_handlers: 0.10
+  variable_data_flow: 0.10
+prompt_template: |
+  Evaluate SPL (Structured Prompt Language) compliance. Focus on:
+  - workflow_identity: Are WORKFLOW/PROCEDURE names present and consistent?
+  - generate_signatures: Are GENERATE function signatures complete and semantically correct?
+    (These are the semantic heart — what the LLM is asked to do.)
+  - call_dependencies: Are CALL sub-workflow invocations correct and consistent?
+  - evaluate_conditions: Are WHILE/EVALUATE control-flow conditions logically sound?
+  - exception_handlers: Are EXCEPTION handlers present where safety contracts require them?
+  - variable_data_flow: Are @variable names consistent and data flow coherent?
+  Treat operation signatures as primary evidence; syntax details as secondary.

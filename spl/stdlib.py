@@ -692,3 +692,70 @@ def run_python(code: str, timeout: str = "30") -> str:
         return f"run_python timed out after {timeout}s"
     except Exception as e:
         return f"run_python error: {e}"
+
+
+# ------------------------------------------------------------------ #
+# Layer 2 content cache tools                                          #
+# ------------------------------------------------------------------ #
+
+@spl_tool
+def cache_get(concept: str, rubric_version: str = "v1", params_json: str = "{}") -> str:
+    """Retrieve a verified section from the Layer 2 content cache.
+
+    Returns the cached content string on a hit, or the sentinel string
+    "miss" when the concept is not in the cache.
+
+    Usage in SPL:
+        CALL cache_get(@concept) INTO @section
+        EVALUATE @section:
+            WHEN miss:
+                CALL build_micro_textbook(@concept) INTO @section
+                CALL cache_put(@concept, @section)
+    """
+    try:
+        from spl3.cache import get_content_cache
+        params = json.loads(params_json) if params_json else {}
+        cache = get_content_cache()
+        entry = cache.get(
+            concept=concept,
+            params=params,
+            rubric_version=rubric_version,
+            dep_hashes={},
+        )
+        return entry.content if entry is not None else "miss"
+    except Exception:
+        return "miss"
+
+
+@spl_tool
+def cache_put(
+    concept: str,
+    content: str,
+    provenance: str = "machine_generated",
+    rubric_version: str = "v1",
+    params_json: str = "{}",
+    token_cost: str = "0",
+) -> str:
+    """Store a generated section in the Layer 2 content cache.
+
+    Returns the cache key on success, or an error string on failure.
+
+    Usage in SPL:
+        CALL cache_put(@concept, @section) INTO @cache_key
+    """
+    try:
+        from spl3.cache import get_content_cache
+        params = json.loads(params_json) if params_json else {}
+        cache = get_content_cache()
+        entry = cache.put(
+            concept=concept,
+            content=content,
+            provenance=provenance,
+            params=params,
+            rubric_version=rubric_version,
+            dep_hashes={},
+            token_cost=int(token_cost) if token_cost.isdigit() else 0,
+        )
+        return entry.key
+    except Exception as e:
+        return f"cache_put error: {e}"

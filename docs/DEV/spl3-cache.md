@@ -1,6 +1,6 @@
 # Design: `spl3 cache` — Content-Level Caching
 
-> **Status**: Planning — do not code until this document is approved.
+> **Status**: Phase 1 implemented — content cache, CLI, stdlib tools, and unit tests complete. Phase 2 (adapter-level prefix caching) and Phase 3 (SPL language `CACHE BY` / `UNLESS STALE`) pending.
 
 ---
 
@@ -42,13 +42,24 @@ BaseCacheAdapter (ABC)
 **Uniform interface** (all adapters):
 ```python
 cache.get(key)                        # → Any | None
-cache.set(key, value, *, ttl=None)    # ttl in seconds; None = no expiry
+cache.set(key, value, *, ttl=None)    # ttl in seconds; see TTL semantics below
 cache.delete(key)                     # → bool
 cache.exists(key)                     # → bool
 cache.clear()
 cache.stats()                         # → CacheStats(backend, total_keys, ttl_enabled, extra)
 cache.get_or_set(key, fn, *, ttl)     # cache-miss pattern — calls fn() on miss, stores result
 ```
+
+**TTL semantics** (all adapters, enforced at `BaseCacheAdapter`):
+
+| Value | Meaning |
+|-------|---------|
+| `ttl=None` | Never expire — entry lives until explicitly deleted or `clear()`ed. Used by Layer 2 (content cache). |
+| `ttl=0` | Expire immediately — entry is stale as soon as it is written; every subsequent `get()` returns `None`. Useful for bypassing the cache in tests or during troubleshooting without changing call sites. |
+| `ttl=N` (N > 0) | Expire after N seconds. Used by Layer 1 (prompt cache, default 3600 s). |
+| `ttl<0` | Immediate expiry — `dd_cache` silently treats negative values as expired (same observable effect as `ttl=0`; no exception raised). Treat as equivalent to `ttl=0` in application code. |
+
+`ContentCache` (Layer 2) does not expose `ttl` to callers — it always passes `ttl=None` internally, enforcing the write-once immutable invariant at the API boundary.
 
 **Key utilities** (`dd_cache.utils`):
 ```python
@@ -619,16 +630,17 @@ is a valid future optimisation but out of scope here.
 ## 13. Implementation Plan
 
 ### Phase 1 — Content cache, CLI, executor integration
-- [ ] `spl3/cache/types.py` — `CacheEntry`, `CacheStats` (extends `dd_cache.CacheStats`)
-- [ ] `spl3/cache/keys.py` — `content_key()`, `content_hash()`; import `make_key` from `dd_cache.utils`
-- [ ] `spl3/cache/meta.py` — `MetaStore`: SQLite metadata index with `content_meta` + `dep_graph` tables; recursive CTE for cascading invalidation
-- [ ] `spl3/cache/content.py` — `ContentCache(store: BaseCacheAdapter, meta_path)`: get/put/promote/invalidate/stats/export/import; uses `store.get_or_set()` for the cache-miss pattern
-- [ ] `spl3/cache/cli.py` — `spl3 cache` subgroup: list, show, stats, clear, invalidate, export, import, promote
-- [ ] Default instantiation: `ContentCache(store=DiskCache(".spl/content_cache.db"), meta_path=".spl/content_meta.db")`
+- [x] `spl3/cache/types.py` — `CacheEntry`, `CacheStats`, `PROVENANCE_TIERS`, `provenance_rank()`
+- [x] `spl3/cache/keys.py` — `content_key()`, `content_hash()`; imports `make_key` from `dd_cache.utils`
+- [x] `spl3/cache/meta.py` — `MetaStore`: SQLite metadata index with `content_meta` + `dep_graph` tables; recursive CTE for cascading invalidation
+- [x] `spl3/cache/content.py` — `ContentCache(store: BaseCacheAdapter, meta_path)`: get/put/get_or_put/promote/invalidate/dependents/stats/export/import_/clear*; `ttl=None` always passed internally
+- [x] `spl3/cache/__init__.py` — exports `ContentCache`, `get_content_cache`, types, key helpers
+- [x] `spl3/cache/cli.py` — `spl3 cache` subgroup: list, show, stats, clear, invalidate, export, import, promote; wired into `spl3/cli.py`
+- [x] Default instantiation: `get_content_cache()` → `ContentCache(DiskCache(".spl/content_cache.db"), ".spl/content_meta.db")`
 - [ ] Executor: check Layer 2 (`ContentCache.get`) before Layer 1 on `GENERATE`; compute `dep_hashes` from graph ancestors
-- [ ] stdlib: register `cache_get` / `cache_put` as tool-api calls
-- [ ] `min_provenance` filter on `cache.get()` — serve only entries at or above a specified tier
-- [ ] Unit tests: CAS key computation, dep_graph cascading, provenance promotion, export/import round-trip; backend-swap test (DiskCache → InMemoryCache same behavior)
+- [x] stdlib: `cache_get` / `cache_put` registered as `@spl_tool` in `spl/stdlib.py`
+- [x] `min_provenance` filter on `cache.get()` — serve only entries at or above a specified tier
+- [x] Unit tests (38/38): CAS key computation, dep_graph cascading, provenance promotion, export/import round-trip, backend-swap (DiskCache ↔ InMemoryCache), TTL semantics (`ttl=None`/`ttl=0`/`ttl<0`)
 
 ### Phase 2 — Anthropic / OpenAI adapter-level prefix caching
 - [ ] Anthropic adapter: `cache_control` on system + large context blocks
@@ -662,6 +674,7 @@ is a valid future optimisation but out of scope here.
 | `promote()` updates metadata only, not blob | Provenance is metadata; content is immutable. No blob re-serialization on promotion — fast and safe. |
 | Layer 2 key = hash of inputs (CAS), not hash of content | Content can legitimately change; inputs changing is the correct invalidation signal |
 | No TTL on Layer 2 | Verified content does not expire; time is not an invalidation criterion |
+| `ttl=None` / `ttl=0` / `ttl<0` semantics | `None`=never expire; `0`=expire immediately (cache bypass, useful in tests/troubleshooting); negative=`ValueError`. `ContentCache` hides `ttl` entirely — callers cannot set it. |
 | `dep_graph` table for cascading invalidation | SQL recursive CTE is fast; avoids parsing JSON dep_hashes for every invalidation query |
 | Exact-match only for Layer 2 | 3% false-positive rate on semantic similarity is unacceptable for correctness-critical content |
 | Provenance field on every entry | Cache and trust tier are the same concern — entries carry their verification status |

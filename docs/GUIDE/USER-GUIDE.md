@@ -29,14 +29,18 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 10. [spl3 spl2mmd](#10-spl3-spl2mmd)
 11. [spl3 mmd2spl](#11-spl3-mmd2spl)
 12. [spl3 compare](#12-spl3-compare)
-13. [spl3 splc compile](#13-spl3-splc-compile)
-14. [spl3 splc describe](#14-spl3-splc-describe)
-15. [spl3 vibe](#15-spl3-vibe)
-16. [spl3 code-rag](#16-spl3-code-rag)
-17. [Full Pipeline S1–S10: IR + Ablation](#17-full-pipeline-s1s10-ir--ablation)
-18. [Debugging LLM Prompts](#18-debugging-llm-prompts)
-19. [Claude Code `/spl3` Skill](#19-claude-code-spl3-skill)
-20. [Command reference](#20-command-reference)
+13. [spl3 judge](#13-spl3-judge)
+14. [spl3 splc compile](#14-spl3-splc-compile)
+15. [spl3 splc describe](#15-spl3-splc-describe)
+16. [spl3 vibe](#16-spl3-vibe)
+17. [spl3 code-rag](#17-spl3-code-rag)
+18. [spl3 cache — Layer 2 Content Cache](#18-spl3-cache--layer-2-content-cache)
+19. [spl3 experiment — Batch Runner](#19-spl3-experiment--batch-experiment-runner)
+20. [spl3 migrate — DODA Pipeline](#20-spl3-migrate--doda-migration-pipeline)
+21. [Full Pipeline S1–S10: IR + Ablation](#21-full-pipeline-s1s10-ir--ablation)
+22. [Debugging LLM Prompts](#22-debugging-llm-prompts)
+23. [Claude Code `/spl3` Skill](#23-claude-code-spl3-skill)
+24. [Command reference](#24-command-reference)
 
 ---
 
@@ -744,7 +748,154 @@ direct visual comparison.
 
 ---
 
-## 13. spl3 splc compile
+## 13. spl3 judge
+
+Evaluates a file against a named rubric using an LLM judge. Returns a structured
+verdict — **PASS / FAIL / ESCALATE** — with per-criterion scores, chain-of-thought
+reasoning, and actionable feedback.
+
+`spl3 judge` answers *"how good is this?"* against explicit criteria.
+`spl3 compare` answers *"how different are these two?"*. The two commands are
+orthogonal and complementary.
+
+```bash
+spl3 judge <file> [OPTIONS]
+```
+
+### `--llm` convention
+
+Judge specs use the format `ADAPTER:MODEL-ID`. The model-id may contain `/`
+(as OpenRouter models do) — the colon is always the adapter/model delimiter:
+
+```
+claude_cli:claude-opus-4-6
+openrouter:google/gemini-2.5-pro
+openrouter:qwen/qwen-max
+ollama:gemma3
+```
+
+`--llm` wins over the legacy `--adapter` / `--model` flags if both are given.
+
+### Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--criteria BUILTIN\|FILE` | `clarity` | Built-in rubric name or path to a `.yaml` rubric |
+| `--llm ADAPTER:MODEL` | — | Judge spec. **Repeat for panel mode** (judges run concurrently). Wins over `--adapter`/`--model`. |
+| `--adapter NAME` | `ollama` | Legacy: judge adapter (ignored when `--llm` is given) |
+| `--model MODEL` | adapter default | Legacy: judge model (ignored when `--llm` is given) |
+| `--aggregation` | `majority` | Panel aggregation: `majority` · `confidence_weighted` · `unanimous` |
+| `--swap-check` | off | Re-run with reversed criterion order; flag if verdict disagrees |
+| `--format` | `markdown` | Output format: `markdown` · `json` · `text` |
+| `-o / --output FILE` | stdout | Write report to file |
+| `--prompt` | off | Print the judge prompt and exit (no LLM call) |
+
+### Built-in rubrics
+
+| Name | Criteria | Use case |
+|------|----------|----------|
+| `clarity` | prose_clarity, completeness, appropriate_detail, no_ambiguity | Prose quality |
+| `correctness` | factual_accuracy, mathematical_correctness, logical_consistency, no_contradictions | Math / factual content |
+| `spl-compliance` | workflow_identity, generate_signatures, call_dependencies, evaluate_conditions, exception_handlers, variable_data_flow | SPL source review |
+| `ai-review` | helpfulness, harmlessness, honesty, task_completion | General AI output quality |
+
+### Single judge
+
+```bash
+# Evaluate prose clarity
+spl3 judge output.md --criteria clarity --llm claude_cli:claude-opus-4-6
+
+# Evaluate mathematical correctness, save report
+spl3 judge my_section.md --criteria correctness \
+    --llm openrouter:google/gemini-2.5-pro -o judge-report.md
+
+# Evaluate SPL compliance (NDD pipeline S6 replacement/augmentation)
+spl3 judge S5-spec.md --criteria spl-compliance \
+    --llm claude_cli:claude-opus-4-6 -o S6-judge.md
+
+# Legacy adapter/model style (still works)
+spl3 judge output.md --criteria clarity --adapter ollama --model llama3
+
+# Preview the judge prompt without calling the LLM
+spl3 judge output.md --criteria clarity --llm claude_cli:claude-opus-4-6 --prompt
+```
+
+### Panel mode
+
+Repeat `--llm` to run multiple judges concurrently. Results are aggregated via
+`--aggregation`.
+
+```bash
+# Majority vote — 3 judges, concurrent
+spl3 judge output.md --criteria spl-compliance \
+    --llm claude_cli:claude-opus-4-6 \
+    --llm openrouter:google/gemini-2.5-pro \
+    --llm openrouter:qwen/qwen-max \
+    --aggregation majority --swap-check
+
+# Unanimous — PASS only if all agree (conservative quality gate)
+spl3 judge output.md --criteria correctness \
+    --llm claude_cli:claude-opus-4-6 \
+    --llm openrouter:google/gemini-2.5-pro \
+    --aggregation unanimous -o panel-report.md
+```
+
+**Aggregation strategies:**
+
+| Strategy | Verdict rule | Score | When to use |
+|----------|-------------|-------|-------------|
+| `majority` | PASS if > 50% PASS; tied → ESCALATE | Mean | Default; balanced |
+| `confidence_weighted` | Weighted by each judge's self-reported confidence | Weighted mean | When judge quality varies |
+| `unanimous` | PASS only if all PASS; else ESCALATE | Min (conservative) | High-stakes quality gates |
+
+A **SPLIT** (evenly divided panel) always yields **ESCALATE** rather than a coin flip —
+surfacing the disagreement for human review.
+
+### Custom rubric
+
+```bash
+# YAML file: name, criteria, pass_threshold, weight (optional), prompt_template (optional)
+spl3 judge output.md --criteria ./rubrics/my-domain.yaml --llm claude_cli:claude-opus-4-6
+```
+
+Rubric YAML format:
+
+```yaml
+name: my-domain
+criteria:
+  - accuracy
+  - conciseness
+  - domain_coverage
+pass_threshold: 7.0
+weight:
+  accuracy: 0.5
+  conciseness: 0.2
+  domain_coverage: 0.3
+prompt_template: |
+  Focus on domain-specific terminology and technical accuracy.
+```
+
+### Output formats
+
+**`--format markdown`** (default) — verdict banner, criteria scores table, reasoning, and
+feedback. Suitable for pipeline artifacts (`S6-judge.md`).
+
+**`--format json`** — machine-readable; includes all fields. For single judge: `verdict`,
+`score`, `confidence`, `criteria_scores`, `reasoning`, `feedback`, `swap_consistent`.
+For panel: adds `consensus`, `aggregation`, `individual[]`, `dissent`.
+
+**`--format text`** — compact terminal output.
+
+### Swap-consistency check (`--swap-check`)
+
+Runs the judge a second time with criterion order reversed. If the verdict differs,
+`swap_consistent: false` is flagged in the report — indicating the result may be
+sensitive to position bias. For panels, `swap_consistent` is `true` only if every
+individual judge passed the check.
+
+---
+
+## 14. spl3 splc compile
 
 Deterministic or LLM-assisted compilation of a `.spl` logical view to a physical target.
 
@@ -771,7 +922,7 @@ spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m q
 
 ---
 
-## 14. spl3 splc describe
+## 15. spl3 splc describe
 
 Reverse-engineers a specification from a **compiled target implementation**. Used in step S5 of the NDD round-trip pipeline.
 
@@ -787,7 +938,7 @@ splc describe → spec.md → text2spl → .spl → splc compile → new target
 
 ---
 
-## 15. spl3 vibe
+## 16. spl3 vibe
 
 One-shot prototype generator: **NL description → working code + README + test data**,
 in a single LLM call. No `.mmd` or `.spl` IR steps required.
@@ -889,7 +1040,7 @@ spl3 vibe --spec S1-agent-spec.md --adapter claude_cli --prompt
 
 ---
 
-## 16. spl3 code-rag
+## 17. spl3 code-rag
 
 Manages the Code-RAG vector store that powers `text2spl` and `vibe` few-shot retrieval.
 
@@ -900,7 +1051,167 @@ spl3 code-rag stats
 
 ---
 
-## 17. spl3 experiment — Batch Experiment Runner
+## 18. spl3 cache — Layer 2 Content Cache
+
+The content cache is a **write-once, input-keyed store** for verified generated
+sections. Unlike the Layer 1 prompt cache (which is TTL-based and scoped to a single
+session), the Layer 2 content cache persists across sessions and is invalidated only
+when its inputs change — not when time passes.
+
+### Two cache layers
+
+```
+Layer 2 — Content Cache  (spl3/cache)
+  Key:  sha256(concept + params + rubric_version + dep_hashes)
+  TTL:  none — write-once immutable
+  Invalidation: input-driven (CAS), explicit, cascading via dep_graph
+  Scope: cross-session, portable / shareable
+
+      ↓ miss → generate + verify → store
+
+Layer 1 — Prompt Cache  (spl/storage/memory.py)
+  Key:  sha256(model + assembled_prompt)
+  TTL:  1–24 h (configurable via cache_ttl)
+  Scope: per-session / per-workspace
+
+      ↓ miss → LLM call → store
+```
+
+A Layer 2 hit skips both the LLM call and the verification loop — the entry is
+already known-good. On a cold run every concept is generated and stored; on a warm run
+every concept is a Layer 2 hit and the cost is near zero.
+
+### Provenance tiers
+
+Every cached entry carries a provenance tier that records how it was verified:
+
+| Tier | Meaning |
+|------|---------|
+| `machine_generated` | Produced by the LLM; not yet verified |
+| `machine_verified` | Passed automated checks (e.g. `verify_math`, `shape_check`) |
+| `ai_reviewed` | Passed an `spl3 judge` review; `JudgeResult` stored alongside entry |
+| `human_verified` | Accepted by a human editor |
+
+Tiers are **monotonically increasing** — entries can only be promoted upward.
+The delivery layer filters by tier:
+`cache.get(concept, …, min_provenance="machine_verified")` returns `None` for
+unverified entries, ensuring learners never receive unverified content.
+
+### TTL semantics
+
+The content cache never sets a TTL on stored entries — `ttl=None` is always passed
+internally and callers cannot override it. For the underlying `dd_cache` adapters:
+
+| Value | Meaning |
+|-------|---------|
+| `ttl=None` | Never expire (used by Layer 2) |
+| `ttl=0` | Expire immediately — cache bypass, useful in tests |
+| `ttl=N > 0` | Expire after N seconds (used by Layer 1) |
+| `ttl<0` | Treated as immediate expiry by `dd_cache` (no exception raised) |
+
+### CLI commands
+
+```bash
+# Inspect
+spl3 cache list                              # all entries
+spl3 cache list --concept eigenpair          # filter by concept
+spl3 cache list --provenance machine_verified
+spl3 cache list --format json
+spl3 cache show <key>                        # full entry + content preview
+spl3 cache stats                             # hit rate, tokens saved, tier breakdown
+
+# Invalidation
+spl3 cache invalidate --concept span         # mark stale; output: list of affected keys
+spl3 cache invalidate --concept span --cascade   # propagate to all dependents
+spl3 cache clear --stale                     # remove all stale-flagged entries
+spl3 cache clear --all                       # full wipe (Layer 1 prompt cache unaffected)
+spl3 cache clear --provenance machine_generated  # remove unverified entries only
+
+# Portability — team sharing without a live remote store
+spl3 cache export -o cache.tar.gz
+spl3 cache import cache.tar.gz               # --merge (default): skip conflicts
+spl3 cache import cache.tar.gz --no-merge    # error on key conflict
+
+# Manual promotion
+spl3 cache promote <key> --to human_verified
+```
+
+### SPL workflow integration
+
+`cache_get` and `cache_put` are registered as stdlib tools — use them in any
+SPL workflow via `CALL` without any `CREATE TOOL_API` block:
+
+```spl
+-- On-demand textbook: return cached section or generate on miss
+WORKFLOW answer_on_demand
+    INPUT @concept TEXT
+
+    CALL cache_get(@concept) INTO @section
+    EVALUATE @section:
+        WHEN miss:
+            CALL build_micro_textbook(@concept) INTO @section
+            CALL cache_put(@concept, @section) INTO @cache_key
+    APPEND @section TO @lesson
+    COMMIT @lesson
+END
+```
+
+`cache_get` returns the cached content string on a hit, or the sentinel `"miss"` on a
+cache miss.  `cache_put` stores the content and returns the cache key.
+
+Both tools accept optional parameters for rubric version and params:
+
+```spl
+-- With explicit rubric version and domain params
+CALL cache_get(@concept, "v2", '{"domain":"linalg"}') INTO @section
+CALL cache_put(@concept, @section, "machine_verified", "v2", '{"domain":"linalg"}') INTO @key
+```
+
+### Cascading invalidation
+
+The cache tracks which concepts depend on which upstream concepts via a `dep_graph`
+table. Invalidating an upstream concept automatically marks all downstream concepts
+stale in a single SQL recursive query:
+
+```bash
+# Invalidate "vector" and everything that depends on it
+spl3 cache invalidate --concept vector --cascade
+
+# Output:
+# Invalidated 3 concept(s): vector, span, eigenpair
+```
+
+Stale entries are served with a warning by default. Use `UNLESS STALE` in a `GENERATE`
+statement (Phase 3) to treat stale entries as misses and force re-generation.
+
+### Export / import for team sharing
+
+A pre-warmed cache can be shipped with a textbook deliverable so every reader gets
+instant responses without re-generating content:
+
+```bash
+# Author: export after full build + verification
+spl3 cache export -o linalg-cache-v2.tar.gz
+
+# Reader: import before first use
+spl3 cache import linalg-cache-v2.tar.gz
+```
+
+The archive contains both the content blobs and the metadata index (provenance, hit
+counts, dep_graph). Importing is idempotent — `--merge` (default) skips any key
+that already exists locally.
+
+### Default storage paths
+
+| File | Contents |
+|------|----------|
+| `.spl/content_cache.db` | Blob store (dd-cache DiskCache, SQLite) |
+| `.spl/content_meta.db` | Metadata index (provenance, dep_graph, hit counts) |
+| `.spl/prompt_cache.db` | Layer 1 prompt cache (unchanged, TTL-based) |
+
+---
+
+## 19. spl3 experiment — Batch Experiment Runner
 
 > **[To-Test]** New in this release (1.1, 1.2).
 
@@ -979,7 +1290,7 @@ spl3 experiment report --steps S6
 
 ---
 
-## 18. spl3 migrate — DODA Migration Pipeline `[To-Test]`
+## 20. spl3 migrate — DODA Migration Pipeline `[To-Test]`
 
 `spl3 migrate` automates the full pipeline for porting an existing codebase into SPL
 and re-compiling to a new target runtime. It wraps four steps into a single command
@@ -1048,7 +1359,7 @@ Output shows all 4 steps + fidelity compare commands with artifact paths, so you
 
 ---
 
-## 19. Full Pipeline S1–S10: IR + Ablation
+## 21. Full Pipeline S1–S10: IR + Ablation
 
 The ten-step pipeline combines the full IR path (S1–S6) with an ablation baseline
 (S7–S10) to measure whether the Mermaid + SPL intermediate representations add
@@ -1201,7 +1512,7 @@ spl3 compare $OUT/S6-$RECIPE-$ADAPTER-$MODEL-spec-diff.md \
 
 ---
 
-## 19. Debugging LLM Prompts
+## 22. Debugging LLM Prompts
 
 All LLM-powered commands support the `--prompt` flag. It prints the full assembled
 prompt — including RAG hits and reference context — then exits without calling the API.
@@ -1224,7 +1535,7 @@ The output includes prompt length in characters and approximate token count.
 
 ---
 
-## 19. Claude Code `/spl3` Skill
+## 23. Claude Code `/spl3` Skill
 
 The `/spl3` skill lets you invoke any `spl3` command directly from the Claude
 Code chat prompt — no terminal switching required.
@@ -1300,7 +1611,7 @@ install, and how to extend the skill with new commands.
 
 ---
 
-## 20. Command reference
+## 24. Command reference
 
 ```
 spl3 validate <file.spl> [file.spl ...]        # syntax check
@@ -1335,6 +1646,14 @@ spl3 compare <f1> <f2>
               [--diff-style unified|context|side-by-side]
               [--synthesize/--no-synthesize]
               [--prompt]
+spl3 judge <file>
+              [--criteria spl-compliance|correctness|clarity|ai-review|FILE.yaml]
+              [--llm ADAPTER:MODEL]           # repeat for panel mode; wins over --adapter/--model
+              [--adapter NAME] [--model MODEL]  # legacy; used only when --llm not given
+              [--aggregation majority|confidence_weighted|unanimous]  # panel only
+              [--swap-check]                  # re-run with reversed criteria; flags inconsistency
+              [--format markdown|json|text] [-o FILE]
+              [--prompt]
 spl3 vibe "<description>" [--target LANG] [--adapter] [--model]
           [--out-dir DIR] [-o FILE]
           [--rag/--no-rag] [--rag-k N] [--references URL] [--verbose] [--prompt]
@@ -1350,6 +1669,18 @@ spl3 splc describe <impl.py | folder/> [--lang LABEL] [--adapter] [--spec-dir DI
 
 spl3 code-rag seed [cookbook/] [--from-specs]
 spl3 code-rag stats
+
+# Layer 2 content cache
+spl3 cache list [--concept NAME] [--provenance TIER] [--format table|json]
+spl3 cache show <key>
+spl3 cache stats
+spl3 cache invalidate --concept NAME [--cascade/--no-cascade]
+spl3 cache clear --stale                              # remove stale-flagged entries
+spl3 cache clear --all                                # full wipe
+spl3 cache clear --provenance TIER --tier TIER        # remove by provenance
+spl3 cache export -o FILE.tar.gz
+spl3 cache import FILE.tar.gz [--merge/--no-merge]    # default: merge (skip conflicts)
+spl3 cache promote <key> --to TIER                    # tiers: machine_generated→machine_verified→ai_reviewed→human_verified
 
 # Batch experiment runner  [To-Test]
 spl3 experiment run

@@ -3500,6 +3500,155 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
         click.echo(output_content)
 
 # ------------------------------------------------------------------ #
+# spl3 judge                                                          #
+# ------------------------------------------------------------------ #
+
+def _resolve_llm(llm_specs: tuple[str, ...], adapter: str, model: str | None):
+    """Resolve (adapter_name, model) pairs from --llm or --adapter/--model fallback.
+
+    --llm takes precedence; --adapter/--model are the legacy fallback.
+    Each --llm value is ADAPTER:MODEL-ID where MODEL-ID may contain '/'.
+    """
+    if llm_specs:
+        pairs = []
+        for spec in llm_specs:
+            a, sep, m = spec.partition(":")
+            pairs.append((a.strip(), m.strip() if sep else None))
+        return pairs
+    return [(adapter, model or None)]
+
+
+@main.command("judge", short_help="Evaluate content against a rubric using an LLM judge.")
+@click.argument("file")
+@click.option("--criteria", default="clarity", show_default=True, metavar="BUILTIN|FILE",
+              help="Built-in rubric name or path to a .yaml rubric file. "
+                   "Built-ins: spl-compliance, correctness, clarity, ai-review.")
+@click.option("--llm", "llm_specs", multiple=True, metavar="ADAPTER:MODEL",
+              help="Judge spec as ADAPTER:MODEL (e.g. claude_cli:claude-opus-4-6). "
+                   "Repeat to form a panel — judges run concurrently. "
+                   "Wins over --adapter/--model.")
+@click.option("--adapter", default="ollama", show_default=True, metavar="NAME",
+              help="Legacy: judge adapter (used only when --llm is not given).")
+@click.option("--model", default=None, metavar="MODEL",
+              help="Legacy: judge model (used only when --llm is not given).")
+@click.option("--aggregation", default="majority", show_default=True,
+              type=click.Choice(["majority", "confidence_weighted", "unanimous"]),
+              help="Panel aggregation strategy (ignored for single judge).")
+@click.option("--swap-check", is_flag=True, default=False,
+              help="Re-run each judge with reversed criterion order; flag if verdict disagrees.")
+@click.option("--format", "output_format", default="markdown", show_default=True,
+              type=click.Choice(["markdown", "json", "text"]),
+              help="Output format.")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write judge report to FILE.")
+@click.option("--prompt", "prompt_debug", is_flag=True, default=False,
+              help="Display the judge prompt and exit.")
+@click.option("--cache-key", default=None, metavar="KEY",
+              help="On PASS verdict, promote this content-cache entry to 'ai_reviewed'. "
+                   "Key is the hex digest returned by 'spl3 cache list'.")
+def cmd_judge(file, criteria, llm_specs, adapter, model, aggregation,
+              swap_check, output_format, output, prompt_debug, cache_key):
+    """Evaluate FILE against a rubric using an LLM judge.
+
+    Returns a structured verdict (PASS / FAIL / ESCALATE), per-criterion scores,
+    chain-of-thought reasoning, and actionable feedback.
+
+    Repeat --llm to run a panel of judges concurrently; results are aggregated
+    via --aggregation (majority / confidence_weighted / unanimous).
+
+    \b
+    Examples:
+      spl3 judge output.md --criteria clarity --llm claude_cli:claude-opus-4-6
+      spl3 judge my_section.md --criteria correctness --llm openrouter:google/gemini-2.5-pro
+      spl3 judge S5-spec.md --criteria spl-compliance --llm claude_cli:claude-opus-4-6 -o S6-judge.md
+      spl3 judge output.md --criteria spl-compliance \\
+          --llm claude_cli:claude-opus-4-6 \\
+          --llm openrouter:google/gemini-2.5-pro \\
+          --llm openrouter:qwen/qwen-max \\
+          --aggregation majority --swap-check
+      spl3 judge section.md --criteria correctness --llm ollama:llama3.2 --cache-key <hex>
+    """
+    from spl3.judge.rubrics import load_rubric
+    from spl3.judge.engine import run_judge, run_panel
+    from spl3.judge.prompt import build_judge_prompt
+    from spl3.judge.report import render_judge_report
+
+    path = Path(file)
+    if not path.exists():
+        raise click.ClickException(f"File not found: {path}")
+
+    content = path.read_text(encoding="utf-8")
+
+    try:
+        rubric = load_rubric(criteria)
+    except (ValueError, FileNotFoundError) as exc:
+        raise click.ClickException(str(exc))
+
+    if prompt_debug:
+        prompt = build_judge_prompt(content, rubric)
+        click.echo("=" * 70)
+        click.echo("JUDGE PROMPT:")
+        click.echo("=" * 70)
+        click.echo(prompt)
+        return
+
+    pairs = _resolve_llm(llm_specs, adapter, model)
+
+    if len(pairs) == 1:
+        judge_adapter, judge_model = pairs[0]
+        result = asyncio.run(run_judge(
+            content=content,
+            rubric=rubric,
+            adapter_name=judge_adapter,
+            model=judge_model,
+            swap_check=swap_check,
+        ))
+    else:
+        click.echo(
+            f"Panel mode: {len(pairs)} judges, aggregation={aggregation}", err=True
+        )
+        result = asyncio.run(run_panel(
+            content=content,
+            rubric=rubric,
+            members=pairs,
+            aggregation=aggregation,
+            swap_check=swap_check,
+        ))
+
+    report = render_judge_report(result, output_format=output_format)
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(report, encoding="utf-8")
+        click.echo(f"Judge report written to: {out_path}")
+        click.echo(f"Verdict: {result.verdict}  Score: {result.score:.1f}/10  "
+                   f"Confidence: {result.confidence}")
+    else:
+        click.echo(report)
+
+    # ---- judge → cache promotion integration ----
+    if cache_key:
+        if result.verdict == "PASS":
+            import dataclasses, json as _json
+            from spl3.cache import get_content_cache
+            verdict_dict = dataclasses.asdict(result)
+            try:
+                cache = get_content_cache()
+                cache.promote(cache_key, "ai_reviewed", verdict=verdict_dict)
+                click.echo(
+                    f"Cache entry {cache_key[:16]}... promoted to ai_reviewed.", err=True
+                )
+            except Exception as exc:
+                click.echo(f"Warning: cache promotion failed: {exc}", err=True)
+        else:
+            click.echo(
+                f"Verdict {result.verdict} — cache entry not promoted "
+                f"(promotion requires PASS).", err=True
+            )
+
+
+# ------------------------------------------------------------------ #
 # spl3 show                                                           #
 # ------------------------------------------------------------------ #
 
@@ -3656,6 +3805,14 @@ def cmd_show(adapter, model, tool):
 
 from spl3.splc.cli import splc as _splc_command
 main.add_command(_splc_command, name="splc")
+
+
+# ------------------------------------------------------------------ #
+# spl3 cache                                                           #
+# ------------------------------------------------------------------ #
+
+from spl3.cache.cli import cmd_cache as _cache_command
+main.add_command(_cache_command, name="cache")
 
 
 # ------------------------------------------------------------------ #
