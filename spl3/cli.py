@@ -509,6 +509,9 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.argument("spl_file")
 @click.option("--adapter", default="ollama", show_default=True)
 @click.option("--model", default=None, show_default=True)
+@click.option("--llm", "llm_spec", default=None, metavar="ADAPTER:MODEL",
+              help="LLM spec as ADAPTER:MODEL (e.g. ollama:gemma3, claude_cli:claude-opus-4-6). "
+                   "Wins over --adapter/--model.")
 @click.option("--param", "-p", multiple=True, help="key=value workflow INPUT params")
 @click.option(
     "--log-prompts", default=None, metavar="DIR",
@@ -531,12 +534,15 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--kernel-timeout", default=60.0, type=float, show_default=True,
               help="Per-cell execution timeout in seconds.")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
+def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_module, allowed_tools,
         kernel, kernel_scope, kernel_timeout):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
     from spl3._loader import load_workflows_from_file
+
+    if llm_spec:
+        adapter, model = _resolve_llm((llm_spec,), adapter, model)[0]
 
     # Parse params: key=value pairs
     params = {}

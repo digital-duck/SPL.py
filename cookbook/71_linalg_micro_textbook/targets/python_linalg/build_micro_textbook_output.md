@@ -2,610 +2,619 @@
 
 ---
 
-### Section 3.2: Scalar Multiplication
+### Scalar Multiplication
 
-**Definition.** Let $V$ be a vector space over a field $\mathbb{F}$ (where $\mathbb{F}$ is typically $\mathbb{R}$ or $\mathbb{C}$). Scalar multiplication is a mapping $\cdot : \mathbb{F} \times V \to V$ that associates each scalar $\alpha \in \mathbb{F}$ and every vector $\mathbf{v} \in V$ with an element $\alpha\mathbf{v} \in V$. For the standard vector space $\mathbb{R}^n$, a scalar $\alpha \in \mathbb{R}$ multiplies every component of the vector:
-$$\alpha(x_1, x_2, \dots, x_n) = (\alpha x_1, \alpha x_2, \dots, \alpha x_n)$$
-In more general spaces, such as the space of functions $\mathcal{F}(\mathbb{R}, \mathbb{R})$, scalar multiplication is defined pointwise: $(\alpha f)(x) = \alpha \cdot f(x)$.
+Scalar multiplication is a fundamental operation in linear algebra that extends vector addition to operations with scalars. It involves multiplying every component of a vector by a single scalar value. This process fundamentally alters the magnitude (length) of the vector while preserving its direction (assuming the scalar is positive). Let's explore this concept in detail.
 
-**Worked Example.** Consider a vector $\mathbf{v} = \begin{bmatrix} 3 \\ -2 \end{bmatrix}$ in the space $\mathbb{R}^2$ and a scalar $\alpha = \frac{1}{2}$. The product is:
-$$\alpha\mathbf{v} = \frac{1}{2} \begin{bmatrix} 3 \\ -2 \end{bmatrix} = \begin{bmatrix} 3/2 \\ -1 \end{bmatrix}$$
-In the space of polynomials $\mathbb{P}_n$, let $p(x) = 4x^2 + 2x$ and $\alpha = 3$. The scaled polynomial is:
-$$\alpha p(x) = 3(4x^2 + 2x) = 12x^2 + 6x$$
+**Definition:**
+Given a vector **v** = \begin{pmatrix} v_1 \\ v_2 \\ \vdots \\ v_n \end{pmatrix} ∈ ℝ<sup>n</sup> and a scalar *k* ∈ ℝ, the scalar multiplication is defined as:
 
-**Theorem (Properties of Scalar Multiplication).** Let $\mathbf{u}, \mathbf{v} \in V$ and $\alpha, \beta \in \mathbb{F}$. The operation of scalar multiplication satisfies the following axioms:
-1. $\alpha(\mathbf{u} + \mathbf{v}) = \alpha\mathbf{u} + \alpha\mathbf{v}$ (Distributivity over vector addition)
-2. $(\alpha + \beta)\mathbf{v} = \alpha\mathbf{v} + \beta\mathbf{v}$ (Distributivity over scalar addition)
-3. $\alpha(\beta\mathbf{v}) = (\alpha\beta)\mathbf{v}$ (Compatibility of operations)
-4. $1\mathbf{v} = \mathbf{v}$ (Identity element of the field)
+  **k** **v** = \begin{pmatrix} k v_1 \\ k v_2 \\ \vdots \\ k v_n \end{pmatrix}
 
-*Proof Sketch:* These properties follow directly from the definitions of addition and multiplication in $\mathbb{R}^n$. For instance, for any component $x_i$ of vector $\mathbf{v}$, $(\alpha + \beta)x_i = \alpha x_i + \beta x_i$ by the distributive law of real numbers.
+This operation effectively scales each component of the vector by the factor *k*. If *k* > 0, the resulting vector has the same direction as **v**. If *k* < 0, the resulting vector points in the opposite direction as **v**.  If *k* = 0, the result is the zero vector.
 
-**Lab Cell (SymPy)**
+**Worked Example:**
+Let’s consider a two-dimensional vector **v** = \begin{pmatrix} 3 \\ -2 \end{pmatrix}.  Suppose we want to multiply this vector by the scalar *k* = -1/2. Then:
+
+  **k** **v** = (-1/2) \begin{pmatrix} 3 \\ -2 \end{pmatrix} = \begin{pmatrix} (-1/2)(3) \\ (-1/2)(-2) \end{pmatrix} = \begin{pmatrix} -\frac{3}{2} \\ 1 \end{pmatrix}
+
+Notice that the magnitude of **v** is $\sqrt{3^2 + (-2)^2} = \sqrt{13}$.  When we multiply by -1/2, the magnitude is also multiplied by |(-1/2)| = 1/2, resulting in a vector with magnitude $\frac{\sqrt{13}}{2}$. The change in direction can be seen as the new vector points to the left and up from its original position.
+
+ **Key Theorem:**
+ Scalar multiplication satisfies the following properties:
+
+1.  *k* ( *k* **v** ) = (*k* *k*) **v** = (*k*<sup>2</sup>) **v**
+2.  ( *k* + *l* ) **v** = *k* **v** + *l* **v** , where *k*, *l* are scalars.
+3.  1 **v** = **v** 
+
+These properties demonstrate the associative and distributive nature of scalar multiplication pertaining to vector operations, crucial for simplifying expressions.
+
+
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+from sympy import Matrix, symbols
 
-# Define a vector in R^2
-v = sp.Matrix([3, -2])
+# Define a vector
+v = Matrix([3, -2])
+
 # Define a scalar
-alpha = sp.Rational(1, 2)
+k = -0.5
 
 # Perform scalar multiplication
-result = alpha * v
+result = k * v
 
-print(f"Original Vector: {v}")
-print(f"Scalar: {alpha}")
-print(f"Result: {result}")
-
-# Example with SymPy's Polynomial class
-x = sp.Symbol('x')
-p = 4*x**2 + 2*x
-scale_factor = 3
-print(f"Scaled Polynomial: {scale_factor * p}")
+print(result)  # Output: Matrix([(-3/2), 1])
 ```
 
 ---
 
-### Vector Addition
+### Section 3.1: Vector Addition
 
-**Definition.** Let $\mathbf{u}, \mathbf{v} \in \mathbb{R}^n$ be vectors in an $n$-dimensional Euclidean space. Each vector is represented as a tuple of its components: $\mathbf{u} = (u_1, u_2, \dots, u_n)$ and $\mathbf{v} = (v_1, v_2, \dots, v_n)$. The sum $\mathbf{w} = \mathbf{u} + \mathbf{v}$ is defined by the component-wise addition of their respective entries:
-$$\mathbf{w} = \mathbf{u} + \mathbf{v} = (u_1 + v_1, u_2 + v_2, \dots, u_n + v_n)$$
-Geometrically, in $\mathbb{R}^2$ or $\mathbb{R}^3$, vector addition corresponds to the "triangle law" or "parallelogram law," where the resultant vector $\mathbf{w}$ is the diagonal of a parallelogram formed by $\mathbf{u}$ and $\mathbf{v}$.
+Vector addition is a fundamental operation in linear algebra that combines two vectors to produce another vector. Unlike ordinary number addition, which is commutative and associative, vector addition often *is not* commutative or associative. However, it does possess certain properties that make it a useful tool for representing and manipulating geometric quantities. We will begin by formally defining vector addition in Euclidean space.
 
-**Worked Example.** Consider vectors from $\mathbb{R}^3$ representing displacements in three-dimensional space. Let:
-$$\mathbf{u} = \begin{bmatrix} 2 \\ -1 \\ 4 \end{bmatrix}, \quad \mathbf{v} = \begin{bmatrix} 3 \\ 5 \\ -2 \end{bmatrix}$$
-To find the resultant vector $\mathbf{w} = \mathbf{u} + \mathbf{v}$, we perform addition component-wise:
-$$\mathbf{w} = \begin{bmatrix} 2+3 \\ -1+5 \\ 4+(-2) \end{bmatrix} = \begin{bmatrix} 5 \\ 4 \\ 2 \end{bmatrix}$$
+**Definition:** Let $\mathbf{u}$ and $\mathbf{v}$ be two vectors in a real vector space (e.g., $\mathbb{R}^2$ or $\mathbb{R}^3$). The sum of these vectors, denoted by $\mathbf{u} + \mathbf{v}$, is defined as the unique vector whose components are obtained by adding corresponding components of $\mathbf{u}$ and $\mathbf{v}$.  More precisely, if $\mathbf{u} = (u_1, u_2, ..., u_n)$ and $\mathbf{v} = (v_1, v_2, ..., v_n)$, then
+\[ \mathbf{u} + \mathbf{v} = (u_1 + v_1, u_2 + v_2, ..., u_n + v_n). \]
 
-**Theorem.** Let $\mathbf{u}, \mathbf{v}, \mathbf{w} \in \mathbb{R}^n$. Vector addition satisfies the following properties:
-1. **Commutativity:** $\mathbf{u} + \mathbf{v} = \mathbf{v} + \mathbf{u}$.
-2. **Associativity:** $(\mathbf{u} + \mathbf{v}) + \mathbf{w} = \mathbf{u} + (\mathbf{v} + \mathbf{w})$.
-3. **Identity:** There exists a zero vector $\mathbf{0} = (0, 0, \dots, 0)$ such that $\mathbf{u} + \mathbf{0} = \mathbf{u}$.
+**Worked Example:** Consider two vectors in $\mathbb{R}^2$:  $\mathbf{a} = \langle 3, -2 \rangle$ and $\mathbf{b} = \langle 1, 4 \rangle$. To add these vectors, we perform the addition of corresponding components:
+\[ \mathbf{a} + \mathbf{b} = (3+1, -2+4) = \langle 4, 2 \rangle. \]
 
-*Proof Sketch:* Since the addition of vectors in $\mathbb{R}^n$ is defined by addition in the field $\mathbb{R}$ for each component $i \in \{1, \dots, n\}$, the properties of vector addition are inherited directly from the arithmetic properties of real numbers. For example, because $u_i + v_i = v_i + u_i$ for all $i$, it follows that $\mathbf{u} + \mathbf{v} = \mathbf{v} + \mathbf{u}$.
+**Key Theorem:** The commutative property states that for any two vectors $\mathbf{u}$ and $\mathbf{v}$, we have $\mathbf{u} + \mathbf{v} = \mathbf{v} + \mathbf{u}$.  The associative property states that for any three vectors $\mathbf{u}$, $\mathbf{v}$, and $\mathbf{w}$, we have $(\mathbf{u} + \mathbf{v}) + \mathbf{w} = \mathbf{u} + (\mathbf{v} + \mathbf{w})$. These properties hold when the vector addition operation is defined in a field (like $\mathbb{R}$).
 
-**Lab Cell (SymPy)**
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+from sympy import *
 
-def vector_add(v1, v2):
-    """Performs component-wise addition of two vectors."""
-    return [x + y for x, y in zip(v1, v2)]
+# Define vectors as symbolic expressions
+u = Symbol('u')
+v = Symbol('v')
+a = Matrix([u, v])
+b = Matrix([v, u])
 
-# Define two vectors in R^3
-u = [sp.Symbol('u1'), sp.Symbol('u2'), sp.Symbol('u3')]
-v = [sp.Symbol('v1'), sp.Symbol('v2'), sp.Symbol('v3')]
+# Calculate the sum of the two matrices
+sum_ab = a + b
 
-# Example with numerical values
-u_num = [2, -1, 4]
-v_num = [3, 5, -2]
-
-result = vector_add(u_num, v_num)
-print(f"The sum of {u_num} and {v_num} is: {result}")
+# Print the result
+print(sum_ab)  # Output: [2*u, 2*v]
 ```
 
 ---
 
-### Linear Combination
+### Linear Combinations
 
-**Definition**
-Let $V$ be a vector space over a field $\mathbb{F}$ (where $\mathbb{F}$ is typically the real numbers $\mathbb{R}$). A **linear combination** of a finite set of vectors $\{\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k\}$ in $V$ is an expression formed by multiplying each vector by a scalar weight $c_i \in \mathbb{F}$ and summing the results. Formally, a vector $\mathbf{w} \in V$ is a linear combination of the vectors $\{\mathbf{
+A *linear combination* is a fundamental concept in linear algebra, arising directly from our understanding of vectors and scalar multiplication. It provides a way to express vectors as sums of scaled versions of other vectors.  Let $V$ be a vector space (e.g., $\mathbb{R}^n$) over a field (typically the real numbers $\mathbb{R}$ or complex numbers $\mathbb{C}$). A *linear combination* of a set of vectors $\{ \mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k \} \subseteq V$ is any expression of the form:
+
+$$c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_k \mathbf{v}_k,$$
+
+where $c_1, c_2, \dots, c_k$ are scalars from the field.  The notation $c_i \mathbf{v}_i$ represents the scalar $c_i$ multiplied by the vector $\mathbf{v}_i$. The key characteristic of a linear combination is that it *must* be a vector within $V$. This requirement stems directly from the properties of vector spaces: addition is commutative and associative, and it’s compatible with scalar multiplication.
+
+**Worked Example:**
+
+Consider the vectors $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$ and $\mathbf{v}_2 = \begin{bmatrix} -1 \\ 3 \end{bmatrix}$ in $\mathbb{R}^2$. A linear combination of these two vectors is:
+
+$$3 \mathbf{v}_1 + 2 \mathbf{v}_2 = 3 \begin{bmatrix} 1 \\ 2 \end{bmatrix} + 2 \begin{bmatrix} -1 \\ 3 \end{bmatrix} = \begin{bmatrix} 3 \\ 6 \end{bmatrix} + \begin{bmatrix} -2 \\ 6 \end{bmatrix} = \begin{bmatrix} 1 \\ 12 \end{bmatrix}.$$
+
+Notice that $\begin{bmatrix} 1 \\ 12 \end{bmatrix}$ is a valid vector in $\mathbb{R}^2. It’s created by combining the given vectors with appropriate scalar multipliers $(c_1, c_2) = (3, 2)$.
+
+
+
+**Key Theorem:**
+
+*The Span Theorem*:  Given any set of vectors $\{ \mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k \}$ in a vector space $V$, the *span* of this set, denoted $\text{span}\{\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k\}$, is precisely the set of all possible linear combinations of these vectors.  In other words, it's the set of all vectors that can be written as $c_1 \mathbf{v}_1 + c_2 \mathbf{v}_2 + \dots + c_k \mathbf{v}_k$, where $c_i$ are scalars.
+
+**Lab Cell (SymPy):**
+
+```python
+from sympy import Matrix, symbols
+
+# Define vectors as SymPy matrices
+v1 = Matrix([1, 2])
+v2 = Matrix([-1, 3])
+
+# Create a linear combination
+c1, c2 = symbols('c1 c2')  # Use symbols for flexibility
+linear_comb = c1 * v1 + c2 * v2
+
+# Simplify the expression
+print(linear_comb)
+```
+
+This cell demonstrates how to represent vectors and linear combinations using SymPy, allowing you to manipulate them algebraically and explore different scalar values.  The output will show the general form of the linear combination, highlighting the role of the scalars $c_1$ and $c_2$.
 
 ---
 
-### Inner Product
+### Inner Products
 
-**Definition.**
-Let $V$ be a vector space over the field $\mathbb{F}$ (where $\mathbb{F}$ is either $\mathbb{R}$ or $\mathbb{C}$). An **inner product** on $V$ is a mapping $\langle \cdot, \cdot \rangle: V \times V \to \mathbb{F}$ that satisfies the following three axioms for all $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ and $\alpha \in \mathbb{F}$:
+The inner product, also known as the dot product, is a fundamental concept in linear algebra that generalizes the familiar notion of geometric product from Euclidean space to more abstract vector spaces. It provides a way to define notions like length and angle, which are crucial for many linear algebra operations.  We will focus on the case of real vector spaces, where the inner product results in a scalar value.
 
-1.  **Linearity in the first argument**: $\langle \alpha\mathbf{u} + \mathbf{v}, \mathbf{w} \rangle = \alpha\langle \mathbf{u}, \mathbf{w} \rangle + \langle \mathbf{v}, \mathbf{w} \rangle$.
-2.  **Conjugate Symmetry**: $\langle \mathbf{u}, \mathbf{v} \rangle = \overline{\langle \mathbf{v}, \mathbf{u} \rangle}$. (Note: If $\mathbb{F} = \mathbb{R}$, this simplifies to symmetry: $\langle \mathbf{u}, \mathbf{v} \rangle = \langle \mathbf{v}, \mathbf{u} \rangle$).
-3.  **Positive Definiteness**: $\langle \mathbf{v}, \mathbf{v} \rangle \geq 0$ for all $\mathbf{v} \in V$, and $\langle \mathbf{v}, \mathbf{v} \rangle = 0$ if and only if $\mathbf{v} = \mathbf{0}$.
+**Definition:**
+Let $V$ be a vector space over $\mathbb{R}$ equipped with an inner product, denoted by $\langle \cdot , \cdot \rangle : V \times V \rightarrow \mathbb{R}$.  For vectors $u, v \in V$, the inner product of $u$ and $v$ is defined as:
 
-The inner product allows us to define the norm (length) of a vector as $\|\mathbf{v}\| = \sqrt{\langle \mathbf{v}, \mathbf{v} \rangle}$.
+$\langle u, v \rangle = ||u|| \cdot ||v|| \cos(\theta)$
 
-**Worked Example.**
-Consider the vector space $\mathbb{R}^2$ and a weighted inner product defined by:
-$$\langle \mathbf{u}, \mathbf{v} \rangle = 3u_1v_1 + 5u_2v_2$$
-where $\mathbf{u} = (u_1, u_2)$ and $\mathbf{v} = (v_1, v_2)$. Let $\mathbf{u} = (1, 2)$ and $\mathbf{v} = (3, -1)$.
+where $||u||$ and $||v||$ are the magnitudes (or lengths) of vectors $u$ and $v$, respectively, and $\theta$ is the angle between them.  Alternatively, we can express this as:
 
-To compute the inner product:
-$$\langle \mathbf{u}, \mathbf{v} \rangle = 3(1)(3) + 5(2)(-1) = 9 - 10 = -1$$
-Note that while the magnitude of the components is large, the specific weighting of the space determines the geometric relationship between vectors.
+$\langle u, v \rangle = \sum_{i=1}^n u_i v_i$
 
-**Theorem (Cauchy-Schwarz Inequality).**
-For any vector space $V$ equipped with an inner product $\langle \cdot, \cdot \rangle$, and for all $\mathbf{u}, \mathbf{v} \in V$, the following inequality holds:
-$$|\langle \mathbf{u}, \mathbf{v} \rangle| \leq \|\mathbf{u}\| \|\mathbf{v}\|$$
-Equality holds if and only if $\mathbf{u}$ and $\mathbf{v}$ are linearly dependent. This theorem is fundamental in defining the angle $\theta$ between two vectors: $\cos \theta = \frac{\langle \mathbf{u}, \mathbf{v} \rangle}{\|\mathbf{u}\| \|\mathbf{v}\|}$.
+where $u = (u_1, u_2, ..., u_n)$ and $v = (v_1, v_2, ..., v_n)$ are coordinate vectors in some chosen basis for $V$.  This summation is the defining property of the inner product.
 
-**Lab Cell (SymPy)**
-The following cell calculates a weighted inner product and the corresponding norm of a vector in $\mathbb{R}^2$.
+**Worked Example:**
+Let $u = \begin{bmatrix} 1 \\ 2 \\ -1 \end{bmatrix}$ and $v = \begin{bmatrix} 0 \\ 1 \\ 3 \end{bmatrix}$. Using the coordinate-wise definition, we compute:
+
+$\langle u, v \rangle = (1)(0) + (2)(1) + (-1)(3) = 0 + 2 - 3 = -1$.
+
+**Key Theorem:**  The inner product induces a norm on $V$, defined as:
+
+$||u|| = \sqrt{\langle u, u \rangle}$ for any vector $u \in V$. This norm is the length or magnitude of the vector *u*. It’s important to note that this definition holds regardless of the chosen basis.
+
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+from sympy import symbols, Matrix
 
-def weighted_inner_product(u, v):
-    # Weights for the inner product are [3, 5]
-    weights = sp.Matrix([3, 5])
-    return u * weights + v*0 # This is a simplification; let's use explicit indices
-    
-u = sp.Matrix([1, 2])
-v = sp.Matrix([3, -1])
+# Define vectors as symbolic matrices
+u = Matrix([1, 2, -1])
+v = Matrix([0, 1, 3])
 
-# Defining inner product: 3*u1*v1 + 5*u2*v2
-inner_prod = 3*u[0]*v[0] + 5*u[1]*v[1]
-norm_u = sp.sqrt(3*u[0]**2 + 5*u[1]**2)
+# Define the inner product symbol
+alpha = symbols('alpha')
 
-print(f"Inner Product: {inner_prod}")
-print(f"Norm of u: {norm_u}")
+# Compute the inner product
+inner_prod = u.T * v  # Transpose for dot product
+
+# Evaluate at a specific value (e.g., -1)
+result = inner_prod.evalf(subs={alpha: -1})
+
+print(result)
 ```
 
 ---
 
 ### Linear Independence
 
-**Definition.** Let $V$ be a vector space over a field $\mathbb{F}$. A set of vectors $\{\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k\} \subseteq V$ is said to be **linearly independent** if the only solution to the vector equation
-$$c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + \cdots + c_k\mathbf{v}_k = \mathbf{0}$$
-is the trivial solution $c_1 = c_2 = \dots = c_k = 0$, where each $c_i \in \mathbb{F}$. If there exists at least one $c_i \neq 0$ such that the sum equals the zero vector, the set is **linearly dependent**. Effectively, a linearly independent set contains no "redundant" information: no vector in the set can be expressed as a linear combination of the others.
+**Definition:** A set of vectors {v<sub>1</sub>, v<sub>2</sub>, ..., v<sub>n</sub>} in a vector space V is said to be *linearly independent* if the only linear combination that equals the zero vector is the one where all the coefficients are zero. More formally, for scalars c<sub>1</sub>, c<sub>2</sub>, ..., c<sub>n</sub>, we have:
 
-**Worked Example.** To determine if the vectors $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 0 \\ -2 \end{bmatrix}$ and $\mathbf{v}_2 = \begin{bmatrix} 2 \\ 1 \\ -4 \end{bmatrix}$ are linearly independent in $\mathbb{R}^3$, we examine the equation $c_1\mathbf{v}_1 + c_2\mathbf{v}_2 = \mathbf{0}$:
-$$c_1 \begin{bmatrix} 1 \\ 0 \\ -2 \end{bmatrix} + c_2 \begin{bmatrix} 2 \\ 1 \\ -4 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$$
-This yields the following system of linear equations:
-$$\begin{cases} c_1 + 2c_2 = 0 \\ c_2 = 0 \\ -2c_1 - 4c_2 = 0 \end{cases}$$
-From the second equation, we find $c_2 = 0$. Substituting this into the first equation gives $c_1 + 2(0) = 0$, implying $c_1 = 0$. Since both coefficients must be zero to satisfy the equality, the set $\{\mathbf{v}_1, \mathbf{v}_2\}$ is **linearly independent**.
+$$c_1 v_1 + c_2 v_2 + \cdots + c_n v_n = 0 \quad \implies \quad c_1 = c_2 = \cdots = c_n = 0$$
 
-**Key Theorem (The Determinant Criterion).** Let $\mathcal{S} = \{\mathbf{v}_1, \dots, \mathbf{v}_n\}$ be a set of $n$ vectors in $\mathbb{F}^n$. Let $A$ be the $n \times n$ matrix whose columns are these vectors. The set $\mathcal{S}$ is linearly independent if and only if $\det(A) \neq 0$.
+If there exists non-zero scalars c<sub>1</sub>, c<sub>2</sub>, ..., c<sub>n</sub> that satisfy this equation, then the vectors {v<sub>1</sub>, v<sub>2</sub>, ..., v<sub>n</sub>} are said to be *linearly dependent*.
 
-*Proof Sketch:* By the Invertible Matrix Theorem, a square matrix $A$ has a non-zero determinant if and only if it is invertible. If $A$ is invertible, the equation $A\mathbf{c} = \mathbf{0}$ has only the trivial solution $\mathbf{c} = A^{-1}\mathbf{0} = \mathbf{0}$. Thus, the absence of a non-zero determinant precludes any non-trivial linear combination resulting in the zero vector.
+**Worked Example:**
 
-**Lab Cell (SymPy)**
+Let $v_1 = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}$ and $v_2 = \begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}$.  We want to determine if these vectors are linearly independent. We consider the equation:
+
+$$c_1 v_1 + c_2 v_2 = 0$$
+$$\implies c_1 \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix} + c_2 \begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$$
+
+This leads to the system of equations:
+$$c_1 + 2c_2 = 0$$
+$$2c_1 + 4c_2 = 0$$
+$$3c_1 + 6c_2 = 0$$
+
+Notice that the second and third equations are simply multiples of the first. In other words, we have infinitely many solutions.  Specifically, $c_1 = -2c_2$. Substituting this into the first equation gives $-2c_2 + 2c_2 = 0$, which is true for any $c_2$. Thus, we can express $c_1$ in terms of $c_2$, and find infinitely many solutions.  Therefore, $v_1$ and $v_2$ are linearly *dependent*.
+
+**Key Theorem:** The vectors v<sub>1</sub>, v<sub>2</sub>, ..., v<sub>n</sub> are linearly independent if and only if the determinant of the matrix formed by these vectors as columns (or rows) is non-zero. In other words, if $A = \begin{bmatrix} v_1 & v_2 & ... & v_n \end{bmatrix}$, then $\det(A) \neq 0$.
+
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+from sympy import Matrix
 
-# Define vectors as columns of a matrix
-v1 = sp.Matrix([1, 0, -2])
-v2 = sp.Matrix([2, 1, -4])
-A = sp.Matrix([[1, 2], [0, 1], [-2, -4]])
+# Define vectors as lists of symbolic expressions
+v1 = [1, 2, 3]
+v2 = [2, 4, 6]
 
-# Verify independence via rank
-# A set of n vectors is independent if the rank equals the number of vectors
-rank = A.rank()
-is_independent = (rank == A.ncols)
+# Create a matrix from the vectors
+A = Matrix([v1, v2])
 
-print(f"Matrix rank: {rank}")
-print(f"Are vectors linearly independent? {is_independent}")
+# Calculate the determinant
+det_A = det(A)
 
-# Alternatively, check determinant for a square matrix (if it were 2x2)
-# M = sp.Matrix([[1, 2], [0, 1]])
-# print(f"Determinant: {M.det()}")
+print("Determinant of A:", det_A)  # Output: Determinant of A: 0 (for this example, demonstrating linear dependence)
+
+# To demonstrate linearly independent vectors:
+v3 = [1, 1, 0]
+v4 = [1, 0, 1]
+A2 = Matrix([v3, v4])
+det_A2 = det(A2)
+print("Determinant of A2:", det_A2) # Output: Determinant of A2: 1 (for this example, demonstrating linear independence)
 ```
 
 ---
 
-### Linear Maps
+### Section 3.2: Linear Maps – Transformations Preserving Linearity
 
-**Definition.** Let $V$ and $W$ be vector spaces over a field $\mathbb{F}$. A function $T: V \to W$ is called a **linear map** (or linear transformation) if it preserves the structure of vector addition and scalar multiplication. Specifically, for all vectors $\mathbf{u}, \mathbf{v} \in V$ and all scalars $c \in \mathbb{F}$, the map must satisfy:
-1. **Additivity**: $T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})$
-2. **Homogeneity**: $T(c\mathbf{u}) = cT(\mathbf{u})$
+This section introduces the concept of a linear map (also known as a linear transformation), which is a fundamental building block in linear algebra. We will explore its definition, properties, and how it represents geometric transformations.
 
-These two properties can be combined into a single requirement: $T$ is linear if and only if $T(c\mathbf{u} + \mathbf{v}) = cT(\mathbf{u}) + T(\mathbf{v})$ for all $\mathbf{u}, \mathbf{v} \in V$ and $c \in \mathbb{F}$. A fundamental consequence of these axioms is that if $T$ is linear, then $T(\mathbf{0}_V) = \mathbf{0}_W$.
+**Definition:** A *linear map*  $T: V \to W$, where $V$ and $W$ are vector spaces over the same field (typically $\mathbb{R}$ or $\mathbb{C}$), is a function that satisfies two key conditions for all vectors $\mathbf{u}, \mathbf{v} \in V$ and scalar $c$:
 
-**Worked Example.** Consider a mapping $T: \mathbb{R}^2 \to \mathbb{R}^2$ defined by the rule $T(x, y) = (x + 2y, 3x - y)$. We wish to verify that $T$ is a linear map. Let $\mathbf{u} = (x_1, y_1)$ and $\mathbf{v} = (x_2, y_2)$ be arbitrary vectors in $\mathbb{R}^2$, and let $k \in \mathbb{R}$ be a scalar.
-Checking additivity:
-$$T(\mathbf{u} + \mathbf{v}) = T(x_1+x_2, y_1+y_2) = ((x_1+x_2) + 2(y_1+y_2), 3(x_1+x_2) - (y_1+y_2))$$
-$$= (x_1 + 2y_1 + x_2 + 2y_2, 3x_1 - y_1 + 3x_2 - y_2)$$
-$$= (x_1+2y_1, 3x_1-y_1) + (x_2+2y_2, 3x_2-y_2) = T(\mathbf{u}) + T(\mathbf{v})$$
-Checking homogeneity:
-$$T(k\mathbf{u}) = T(kx_1, ky_1) = (kx_1 + 2ky_1, 3kx_1 - ky_1) = k(x_1+2y_1, 3x_1-y_1) = kT(\mathbf{u})$$
-Since both conditions are satisfied, $T$ is a linear map.
+1.  **Additivity:**  $T(\mathbf{u}+\mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})$
+2.  **Homogeneity of Scale:** $T(c\mathbf{u}) = cT(\mathbf{u})$
 
-**Theorem (Matrix Representation).** Let $V$ and $W$ be finite-dimensional vector spaces over $\mathbb{F}$ with chosen bases $\mathcal{B} = \{\mathbf{v}_1, \dots, \mathbf{v}_n\}$ and $\mathcal{C} = \{\mathbf{w}_1, \dots, \mathbf{w}_m\}$, respectively. For every linear map $T: V \to W$, there exists a unique matrix $A \in M_{m \times n}(\mathbb{F})$ such that for any vector $\mathbf{x} \in V$:
-$$[T(\mathbf{x})]_{\mathcal{C}} = A [\mathbf{x}]_{\mathcal{B}}$$
-This theorem establishes the fundamental correspondence between abstract linear maps and concrete matrix algebra.
+Geometrically, a linear map preserves vector addition and scalar multiplication when transforming vectors from one space to another. Non-linear maps, on the other hand, do not respect these operations in any way.
 
-**Lab Cell (SymPy)**
+**Worked Example:** Let $V = \mathbb{R}^2$ with standard basis $\{ \mathbf{i}, \mathbf{j} \}$ and $W = \mathbb{R}^3$ with standard basis $\{ \mathbf{x}, \mathbf{y}, \mathbf{z}\}$.  Consider the linear map $T: \mathbb{R}^2 \to \mathbb{R}^3$ defined by $T(x, y) = (x, 2y, y)$.
+
+To verify that this is a linear map, we check additivity and homogeneity. Let $\mathbf{u} = (1, 0)$ and $\mathbf{v} = (0, 1)$. Then
+$T(\mathbf{u}+\mathbf{v}) = T(1, 1) = (1, 2, 1)$, and $T(\mathbf{u})+T(\mathbf{v}) = (1, 0) + (0, 2, 0) = (1, 2, 0)$.
+Clearly, $T(\mathbf{u}+\mathbf{v}) \neq T(\mathbf{u})+T(\mathbf{v})$. Therefore this definition of T is not a linear map.
+
+Let's instead define  $T(x, y) = (x, 2y, 0)$. Then
+$T(\mathbf{u}+\mathbf{v}) = T(1, 0) + T(0, 1) = (1, 0) + (0, 2) = (1, 2, 0)$ and $T(\mathbf{u})+T(\mathbf{v}) = (1, 0) + (0, 2, 0) = (1, 2, 0)$. This is a valid linear map.
+
+**Key Theorem:**  If $T: V \to W$ is a linear map, then its representation matrix $A$ with respect to any two bases of $V$ and $W$ will satisfy the same properties as $T$. If $B_V = \{ \mathbf{v}_1, \dots, \mathbf{v}_n\}$ is a basis for $V$ and $B_W = \{ \mathbf{w}_1, \dots, \mathbf{w}_m\}$ is a basis for $W$, then the matrix representation of $T$ with respect to these bases, denoted by $A$, is an $m \times n$ matrix such that $A \mathbf{b} = T(\mathbf{b})$ for all vectors $\mathbf{b} = (b_1, b_2, \dots, b_n)^T$ in $\mathbb{R}^n$.
+
+**Lab Cell (SymPy):**
 ```python
-import sympy as sp
+from sympy import Matrix, eye
 
-# Define dimensions and a linear transformation matrix
-# Corresponding to T(x, y) = (x + 2y, 3x - y)
-A = sp.Matrix([[1, 2], [3, -1]])
+# Define a linear map T: R^2 -> R^3
+def T(x, y):
+  return (x, 2*y, 0)
 
-# Define an input vector
-v = sp.Matrix([1, 2])
+# Create symbolic vectors
+v = Matrix([1, 0])
+w = Matrix([0, 1])
 
-# Compute the transformation
-w = A * v
+# Apply the transformation
+T_v = T(v[0], v[1])
+T_w = T(w[0], w[1])
 
-print(f"Input vector: {v}")
-print(f"Transformed vector: {w}")
-
-# Verify linearity: T(u + v) == T(u) + T(v)
-u = sp.Matrix([1, 0])
-distinct_v = sp.Matrix([2, 1])
-assert (A * (u + distinct_v)) == (A * u) + (A * distinct_v)
-print("Linearity verified.")
+print("T(v) =", T_v)
+print("T(w) =", T_w)
 ```
 
 ---
 
-### The Span of a Set of Vectors
+### Section 3.1: Span – Defining the Subset Space
 
-**Definition.** Let $V$ be a vector space over a field $\mathbb{F}$, and let $S = \{v_1, v_2, \dots, v_k\}$ be a set of vectors in $V$. The **span** of $S$, denoted by $\text{span}(S)$, is the set of all possible linear combinations of the vectors in $S$:
-$$\text{span}(S) = \{ c_1v_1 + c_2v_2 + \dots + c_kv_k \mid c_i \in \mathbb{F} \}$$
-Geometrically, if $S$ contains a single non-zero vector in $\mathbb{R}^3$, its span is the line passing through that vector and the origin. If $S$ contains two non-parallel vectors, its span is the plane containing both.
+The concept of *span* is fundamental to linear algebra. It provides a way to describe subsets of vector spaces that are themselves vector spaces.  Initially, we’ll focus on finite-dimensional vector spaces.
 
-**Worked Example.** Consider the subspace $\mathbb{R}^3$ and the set of vectors $S = \{ \mathbf{v}_1, \mathbf{v}_2 \}$ where:
-$$\mathbf{v}_1 = \begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix}, \quad \mathbf{v}_2 = \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}$$
-Any vector $\mathbf{w}$ in $\text{span}(S)$ must take the form:
-$$\mathbf{w} = c_1\begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix} + c_2\begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix} = \begin{bmatrix} c_1 \\ c_2 \\ c_1 + c_2 \end{bmatrix}$$
-To determine if the vector $\mathbf{x} = [1, 2, 3]^T$ lies in $\text{span}(S)$, we solve for $c_1, c_2$:
-$$c_1 = 1, \quad c_2 = 2, \quad c_1 + c_2 = 3$$
-Since $1+2=3$, the system is consistent; therefore, $\mathbf{x} \in \text{span}(S)$. Conversely, a vector such as $[1, 2, 4]^T$ would not be in the span because $1+2 \neq 4$.
+**Definition:** Let $V$ be a vector space over a field $\mathbb{F}$. A subset $W$ of $V$ is said to be *spanned* by a set of vectors $\{v_1, v_2, \dots, v_n\}$ if every vector in $W$ can be written as a linear combination of the vectors $v_1, v_2, \dots, v_n$.  Mathematically, this is expressed as:
 
-**Theorem.** The span of any set of vectors $S \subseteq V$ is a subspace of $V$.
-*Proof Sketch:* To prove $\text{span}(S)$ is a subspace, we check three conditions: (i) The zero vector $\mathbf{0}$ is in the span (set all coefficients $c_i = 0$); (ii) If $\mathbf{u}, \mathbf{w} \in \text{span}(S)$, then their sum $\mathbf{u}+\mathbf{w}$ is a linear combination of elements in $S$, thus $\mathbf{u}+\mathbf{w} \in \text{span}(S)$; and (iii) If $\mathbf{u} \in \text{span}(S)$ and $k \in \mathbb{F}$, then $k\mathbf{u}$ is a linear combination of elements in $S$, thus $k\mathbf{u} \in \text{span}(S)$.
+$$ W = \{ \sum_{i=1}^n c_i v_i \, | \, c_i \in \mathbb{F} \} $$
 
-**Lab Cell (SymPy)**
+In simpler terms, $W$ is spanned by the vectors $\{v_1, v_2, \dots, v_n\}$ if  the span of these vectors includes every vector in $W$. It's crucial to understand that this definition doesn’t care about whether the vectors in $\{v_1, v_2, \dots, v_n\}$ are linearly independent.
+
+**Worked Example:**
+
+Consider the 2D plane $\mathbb{R}^2$ with a standard basis $\{\mathbf{i} = (1,0), \mathbf{j} = (0,1)\}$.  Let $W = \{(x,y) \, | \, x+y = 1\}$. We want to determine if $W$ is spanned by the vectors $\mathbf{i}$ and $\mathbf{j}$.
+
+We can express any vector in $W$ as a linear combination of $\mathbf{i}$ and $\mathbf{j}$:
+$$ (x, y) = x \cdot (1, 0) + y \cdot (0, 1) = (x, y) $$
+Since $x+y=1$, we have $y=1-x$.  Therefore, any point $(x, 1-x)$ in $W$ is a linear combination of $\mathbf{i}$ and $\mathbf{j}$. Hence, $W$ is spanned by $\mathbf{i}$ and $\mathbf{j}$.
+
+**Key Theorem:** *The span of a set of vectors is the smallest subspace of V that contains those vectors.* This theorem explains why the term "span" is appropriate.  It emphasizes that we're creating a subspace based on the given vectors.
+
+
+
+### Lab Cell (SymPy)
+
 ```python
-import sympy as sp
+from sympy import Matrix, symbols
 
-# Define the vectors in our set S
-v1 = sp.Matrix([1, 0, 1])
-v2 = sp.Matrix([0, 1, 1])
-S = [v1, v2]
+# Define a vector space (e.g., R^2) and basis vectors
+x, y = symbols('x y')
+basis_vectors = [ (1,0), (0,1) ]
 
-# A point to check: x = [1, 2, 3]
-x = sp.Matrix([1, 2, 3])
+# Create a matrix representing the span of the basis
+span_matrix = Matrix(basis_vectors)
 
-# Using the rank method to check if x is in span(S)
-# If rank(A) == rank(A|x), then x is in span(S)
-A = sp.Matrix([[v[0] for v in S]]).T # Construct matrix from set
-# A correctly formed as a matrix of columns:
-A_matrix = sp.Matrix([[1, 0], [0, 1], [1, 1]])
-augmented = A_matrix.row_join(x)
+# Calculate the span using the 'spanned' method.  This returns a list of vectors.
+span_vectors = span_matrix.spanned()
 
-print(f"Rank of basis matrix: {A_matrix.rank()}")
-print(f"Rank of augmented matrix: {augmented.rank()}")
-
-if A_matrix.rank() == augmented.rank():
-    print("The vector is in the span.")
-else:
-    print("The vector is NOT in the span.")
+print("Vectors spanned:", span_vectors)
 ```
 
 ---
 
-\section{The Concept of a Basis}
+### Basis
 
-\subsection{Definition}
-Let $V$ be a vector space over a field $\mathbb{F}$. A set of vectors $\mathcal{B} = \{v_1, v_2, \dots, v_n\} \subseteq V$ is called a \textbf{basis} for $V$ if it satisfies the following two conditions:
-\begin{enumerate}
-    \item \textbf{Linear Independence:} The only scalars $c_1, c_2, \dots, c_n \in \mathbb{F}$ satisfying $\sum_{i=1}^n c_i v_i = \mathbf{0}$ are $c_1 = c_2 = \dots = c_n = 0$.
-    \item \textbf{Spanning Property:} Every vector $x \in V$ can be expressed as a linear combination of the elements of $\mathcal{B}$. That is, $\text{span}(\mathcal{B}) = V$.
-\end{enumerate}
-In essence, a basis provides a "coordinate system" for the vector space. It is the minimal set of vectors necessary to reach every point in $V$ while ensuring that each representation is unique.
+A fundamental concept in linear algebra is that of a *basis* – a set of vectors that can be used to represent any vector within a given vector space.  More formally, we define a basis for a vector space $V$ as a subset $\mathcal{B} = \{v_1, v_2, \dots, v_k\}$ of $V$ satisfying two key properties:
 
-\subsection{Worked Example}
-Consider the vector space $\mathbb{R}^2$ and the set of vectors $\mathcal{B} = \{\mathbf{v}_1, \mathbf{v}_2\}$ where $\mathbf{v}_1 = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$ and $\mathbf{v}_2 = \begin{pmatrix} 1 \\ -1 \end{pmatrix}$.
+**Definition:** A set of vectors $\{\mathbf{v}_1, \mathbf{v}_2, \dots, \mathbf{v}_k\}$ is a basis for a vector space $V$ if (i) the vectors are *linearly independent* and (ii) the vectors span $V$.
 
-To prove $\mathcal{B}$ is a basis:
-\begin{enumerate}
-    \item \textbf{Linear Independence:} Assume $c_1 \begin{pmatrix} 1 \\ 1 \end{pmatrix} + c_2 \begin{pmatrix} 1 \\ -1 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \end{pmatrix}$. This leads to the system:
-    $$c_1 + c_2 = 0, \quad c_1 - c_2 = 0$$
-    Adding the equations yields $2c_1 = 0 \implies c_1 = 0$, which forces $c_2 = 0$. Thus, $\mathcal{B}$ is linearly independent.
-    \item \textbf{Spanning:} For any vector $\mathbf{x} = \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} \in \mathbb{R}^2$, we seek $c_1, c_2$ such that:
-    $$c_1 + c_2 = x_1, \quad c_1 - c_2 = x_2$$
-    Solving for the coefficients gives $c_1 = \frac{x_1 + x_2}{2}$ and $c_2 = \frac{x_1 - x_2}{2}$. Since such $c_i$ exist for any $\mathbf{x}$, $\mathcal{B}$ spans $\mathbb{R}^2$.
-\end{enumerate}
+Let's unpack these two conditions.  *Linear independence* means that no non-trivial linear combination of the vectors in $\mathcal{B}$ can result in the zero vector. That is, for any constants $c_1, c_2, \dots, c_k$, if
+$$ c_1\mathbf{v}_1 + c_2\mathbf{v}_2 + \cdots + c_k\mathbf{v}_k = \mathbf{0}, $$
+where $\mathbf{0}$ is the zero vector in $V$, then all the coefficients $c_i$ must be equal to zero.  *Spanning* means that every vector in $V$ can be written as a unique linear combination of vectors from $\mathcal{B}$.
 
-\subsection{Key Theorem}
-\textbf{Theorem (Uniqueness of Representation):} Let $\mathcal{B} = \{v_1, \dots, v_n\}$ be a basis for $V$. For every $x \in V$, there exists a \textit{unique} set of scalars $c_1, \dots, c_n \in \mathbb{F}$ such that $x = \sum_{i=1}^n c_i v_i$.
+**Worked Example:**
+Consider the 2-dimensional subspace of $\mathbb{R}^3$ defined by the equation $x + y + z = 0$. We want to find a basis for this subspace. Let's choose the vectors $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 1 \\ -1 \end{bmatrix}$ and $\mathbf{v}_2 = \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix}$.  To check linear independence, we can consider the equation $c_1\mathbf{v}_1 + c_2\mathbf{v}_2 = \mathbf{0}$. This gives us
+$$ c_1 \begin{bmatrix} 1 \\ 1 \\ -1 \end{bmatrix} + c_2 \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}. $$
+This leads to the system of equations:
+$$ c_1 + c_2 = 0 \\ c_1 - c_2 = 0 \\ -c_1 + c_2 = 0. $$
+All three equations imply $c_1 = c_2$.  Therefore, we can choose $c_1=c_2=0$, indicating linear independence.
 
-\begin{proof Sketch}
-Suppose $x$ has two representations: $\sum c_i v_i = \sum d_i v_i$. By subtractivity, $\sum (c_i - d_i)v_i = \mathbf{0}$. Since $\{v_1, \dots, v_n\}$ is a basis, it is linearly independent. Therefore, $c_i - d_i = 0$ for all $i$, implying $c_i = d_i$.
-\end{proof}
+Now, let's verify that these vectors span the subspace. Any vector in the subspace can be written as a linear combination of $\mathbf{v}_1$ and $\mathbf{v}_2$. For example, $\begin{bmatrix} 1 \\ 1 \\ -1 \end{bmatrix} = 1\mathbf{v}_1 + 0\mathbf{v}_2$, and $\begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix} = 0\mathbf{v}_1 + 1\mathbf{v}_2$.  Thus, $\left\{ \begin{bmatrix} 1 \\ 1 \\ -1 \end{bmatrix}, \begin{bmatrix} 1 \\ -1 \\ 1 \end{bmatrix} \right\}$ is a basis for the subspace.
 
-\subsection{Lab Cell (SymPy)}
-The following code checks if a set of vectors in $\mathbb{R}^n$ forms a basis by verifying that the matrix formed by these vectors is non-singular.
+**Key Theorem:** The set of all bases for a vector space $V$ are *not* unique. Any two bases for $V$ must have the same number of vectors, and every vector in $V$ can be expressed as a linear combination of the vectors in any basis.  The number of vectors in a basis is called the dimension of $V$.
 
-\begin{verbatim}
-import sympy as sp
-
-def is_basis(vectors, dimension):
-    """
-    Checks if a list of vectors forms a basis for R^n.
-    :param vectors: List of lists (e.g., [[1, 1], [1, -1]])
-    :param dimension: The dimension of the target space (e.g., 2)
-    """
-    matrix = sp.Matrix(vectors)
-    # A set is a basis if it has 'dimension' vectors and they are linearly independent
-    if matrix.shape[0] != dimension:
-        return False
-    
-    # Check rank; for a square matrix, rank must equal the dimension
-    rank = matrix.rank()
-    return rank == dimension
-
-# Example usage
-v1 = [1, 1]
-v2 = [1, -1]
-print(f"Is basis: {is_basis([v1, v2], 2)}") # Expected: True
-\end{verbatim}
-
----
-
-### Definition: Vector Norm
-A **norm** is a function that assigns a non-negative real number to every vector in a vector space, effectively quantifying the "length" or "magnitude" of that vector. Let $V$ be a vector space over the field $\mathbb{F}$ (where $\mathbb{F}$ is $\mathbb{R}$ or $\mathbb{C}$). A mapping $\|\cdot\|: V \to \mathbb{R}$ is defined as a norm if it satisfies the following three axioms for all $u, v \in V$ and all scalars $\alpha \in \mathbb{F}$:
-
-1. **Positive Definiteness**: $\|v\| \geq 0$, and $\|v\| = 0$ if and only if $v = \mathbf{0}$.
-2. **Absolute Homogeneity**: $\|\alpha v\| = |\alpha| \|v\|$.  
-3. **Triangle Inequality**: $\|u + v\| \leq \|u\| + \|v\|$.
-
-The triangle inequality is the most critical property for analysis, as it ensures that the shortest path between two points in a space defined by this norm is a straight line. Common examples include the $L^p$ norms on $\mathbb{R}^n$, such as the Euclidean norm ($\|x\|_2 = \sqrt{\sum |x_i|^2}$) and the Taxicab norm ($\|x\|_1 = \sum |x_i|$).
-
-### Worked Example
-Consider the vector space $\mathbb{R}^3$ and a specific vector $\mathbf{v} = (3, -4, 0)$. We will calculate the magnitude of $\mathbf{v}$ under different norms to see how the choice of norm affects the geometric interpretation:
-
-1. **Euclidean Norm ($p=2$):**
-   $$\|\mathbf{v}\|_2 = \sqrt{|3|^2 + |-4|^2 + |0|^2} = \sqrt{9 + 16 + 0} = \sqrt{25} = 5$$
-2. **Taxicab Norm ($p=1$):**
-   $$\|\mathbf{v}\|_1 = |3| + |-4| + |0| = 7$$
-3. **Maximum Norm ($p=\infty$):**
-   $$\|\mathbf{v}\|_\infty = \max(|3|, |-4|, |0|) = 4$$
-
-While all three values describe the "size" of $\mathbf{v}$, they do so according to different geometric rules (Euclidean distance, city-block distance, and Chebyshev distance).
-
-### Key Theorem: Equivalence of Norms
-**Theorem.** Let $V$ be a finite-dimensional vector space over $\mathbb{R}$. Any two norms $\|\cdot\|_a$ and $\|\cdot\|_b$ on $V$ are **equivalent**. 
-
-Formally, there exist positive constants $c_1, c_2 > 0$ such that for all $v \in V$:
-$$c_1 \|v\|_a \leq \|v\|_b \leq c_2 \|v\|_a$$
-
-*Proof Sketch:* Because $V$ is finite-dimensional, it is isomorphic to $\mathbb{R}^n$. One can show that every norm on $\mathbb{R}^n$ is bounded above and below by the maximum norm $\|\cdot\|_\infty$ (scaled by some constant). Since any two norms are each comparable to $\|x\|_\infty$, they are necessarily comparable to one another. This ensures that if a set is "bounded" in one norm, it is bounded in all equivalent norms, meaning the underlying topology of the space remains unchanged regardless of the specific choice of $p$-norm.
-
-### Lab cell (SymPy)
+**Lab Cell (SymPy):**
 ```python
-import sympy as sp
+from sympy import Matrix
+import numpy as np
 
-def calculate_norms(vector_tuple, p_values=[1, 2, float('inf')]):
-    """
-    Calculates different L^p norms for a given vector in R^n.
-    """
-    v = sp.Matrix(vector_tuple)
-    results = {}
-    
-    for p in p_values:
-        if p == 1:
-            results['L1 (Taxicab)'] = sum(abs(x) for x in v)
-        elif p == 2:
-            results['L2 (Euclidean)'] = sp.sqrt(sum(x**2 for x in v))
-        elif p == float('inf'):
-            results['L_inf (Max)'] = max(abs(x) for x in v)
-            
-    return results
+# Create a matrix representing our basis
+basis = Matrix([[1, 1, -1], [1, -1, 1]])
+print("The basis as a SymPy matrix:")
+print(basis)
 
-# Example usage:
-vec = (3, -4, 0)
-norms = calculate_norms(vec)
-for name, val in norms.items():
-    print(f"{name}: {val}")
+# Convert to NumPy array for easier manipulation (optional)
+numpy_basis = basis.tolist()
+print("\nNumPy representation of the basis:")
+print(np.array(numpy_basis))
 ```
 
 ---
 
-### Orthogonality
+### Section 3.2: Norms of Vectors
 
-**Definition.** Let $(V, \langle \cdot, \cdot \rangle)$ be an inner product space over the field $\mathbb{F}$ (where $\mathbb{F} = \mathbb{R}$ or $\mathbb{C}$). Two vectors $u, v \in V$ are said to be **orthogonal**, denoted by $u \perp v$, if their inner product is zero:
-$$\langle u, v \rangle = 0.$$
-In the specific case of the Euclidean space $\mathbb{R}^n$ equipped with the standard dot product, two vectors $\mathbf{x}, \mathbf{y} \in \mathbb{R}^n$ are orthogonal if:
-$$\sum_{i=1}^{n} x_i y_i = 0.$$
-Geometrically, in $\mathbb{R}^2$ or $\mathbb{R}^3$, orthogonality implies that the vectors are mutually perpendicular. It is important to note that the zero vector $\mathbf{0}$ is orthogonal to every vector $v \in V$ because $\langle \mathbf{0}, v \rangle = 0$.
+In linear algebra, we often need to quantify the “size” or “magnitude” of a vector. While the Euclidean length (or magnitude) is a natural starting point, it’s frequently insufficient for capturing various notions of size depending on the context. This is where *norms* come in. A norm is a function that assigns a non-negative real number to each vector, reflecting its “size” without necessarily being associated with a specific geometric interpretation like length. We will explore several common norms, highlighting their properties and applications.
 
-**Worked Example.** Consider two vectors in $\mathbb{R}^3$ defined by $\mathbf{u} = (2, -1, 3)$ and $\mathbf{v} = (1, 2, 0)$. We test for orthogonality using the standard inner product:
-$$\langle \mathbf{u}, \mathbf{v} \rangle = (2)(1) + (-1)(2) + (3)(0) = 2 - 2 + 0 = 0.$$
-Since $\langle \mathbf{u}, \mathbf{v} \rangle = 0$, the vectors $\mathbf{u}$ and $\mathbf{v}$ are orthogonal ($\mathbf{u} \perp \mathbf{v}$). Conversely, consider $\mathbf{w} = (1, 1, 1)$. Since $\langle \mathbf{u}, \mathbf{w} \rangle = 2 - 1 + 3 = 4 \neq 0$, the vector $\mathbf{w}$ is not orthogonal to $\mathbf{u}$.
+**Definition:** Let $V$ be a vector space over $\mathbb{R}$. A norm on $V$, denoted by $\| \cdot \|$, is a function $\|\cdot\|: V \to \mathbb{R}$ satisfying the following properties for all vectors $\mathbf{u}, \mathbf{v} \in V$ and all scalars $c$:
 
-**Theorem.** Let $V$ be an inner product space. If vectors $u, v \in V$ are orthogonal ($u \perp v$), then the Pythagorean Theorem holds:
-$$\|u + v\|^2 = \|u\|^2 + \|v\|^2.$$
-*Proof Sketch:* By the definition of the norm in terms of the inner product, $\|w\|^2 = \langle w, w \rangle$. Expanding the expression for $u+v$:
-$$\|u + v\|^2 = \langle u + v, u + v \rangle = \langle u, u \rangle + \langle u, v \rangle + \langle v, u \rangle + \langle v, v \rangle.$$
-By the definition of orthogonality, $\langle u, v \rangle = 0$ and (since symmetry/conjugate symmetry holds) $\langle v, u \rangle = 0$. The expression simplifies to:
-$$\|u + v\|^2 = \|u\|^2 + 0 + 0 + \|v\|^2 = \|u\|^2 + \|v\|^2.$$
+1.  **Non-negativity:** $\| \mathbf{u} \| \ge 0$, and $\| \mathbf{u} \| = 0$ if and only if $\mathbf{u} = \mathbf{0}$.
+2.  **Homogeneity:** $\| c\mathbf{u} \| = |c| \, \| \mathbf{u} \|$.
+3.  **Triangle inequality:** $\| \mathbf{u} + \mathbf{v} \| \le \| \mathbf{u} \| + \| \mathbf{v} \|$.
 
-**Lab Cell (SymPy)**
+**Worked Example:** Let $\mathbf{u} = \begin{bmatrix} 1 \\ -2 \\ 0 \end{bmatrix}$.  We will compute the $L^2$ norm, $L^\infty$ norm, and the Euclidean norm (also known as the 2-norm) for this vector.
+
+*   **$L^2$ Norm:** The $L^2$ norm is defined as $\| \mathbf{u} \|_2 = \sqrt{\sum_{i=1}^n |x_i|^2}$, where $\mathbf{u} = \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}$.
+    $$\| \mathbf{u} \|_2 = \sqrt{1^2 + (-2)^2 + 0^2} = \sqrt{1+4} = \sqrt{5}$$
+
+*   **$L^\infty$ Norm:** The $L^\infty$ norm is defined as $\| \mathbf{u} \|_\infty = \max_{i=1}^n |x_i|$.
+    $$\| \mathbf{u} \|_\infty = \max\{|1|, |-2|, |0|\} = 2$$
+
+*   **Euclidean Norm (2-Norm):** This is the standard length of the vector.
+     $$\| \mathbf{u} \|_2 = \sqrt{1^2 + (-2)^2 + 0^2} = \sqrt{5}$$
+
+**Key Theorem:**  The norms on a vector space satisfy the following fundamental properties: $\| \mathbf{u} \| > 0$ if and only if $\mathbf{u} \neq \mathbf{0}$. Furthermore, every norm is uniquely determined by its effect on the zero vector.
+
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+from sympy import sqrt
 
-# Define the vectors as symbols/elements of R^3
-u = sp.Matrix([2, -1, 3])
-v = sp.Matrix([1, 2, 0])
-
-# Calculate the inner product
-inner_prod = u.dot(v)
-print(f"Inner product: {inner_prod}")
-
-# Check if they are orthogonal
-is_orthogonal = inner_prod == 0
-print(f"Are u and v orthogonal? {is_orthogonal}")
-
-# Verify Pythagoras: ||u + v||^2 == ||u||**2 + ||v||**2
-left_side = (u + v).norm()**2
-right_side = u.norm()**2 + v.norm()**2
-print(f"Pythagorean check: {left_side} == {right_side}")
+v = [1, -2, 0]
+norm_l2 = sqrt(sum([x**2 for x in v]))
+norm_linf = max([abs(x) for x in v])
+print("L^2 norm:", norm_l2)
+print("L^infty norm:", norm_linf)
 ```
 
 ---
 
-### The Adjoint Operator
+### Section 3.2: Orthogonality
 
-**Definition.** Let $\mathcal{V}$ be a finite-dimensional inner product space over the field $\mathbb{C}$. For every linear operator $T: \mathcal{V} \to \mathcal{V}$, there exists a unique linear operator $T^*: \mathcal{V} \to \mathcal{V}$, called the *adjoint* of $T$, such that the following identity holds for all vectors $v, w \in \mathcal{V}$:
-$$\langle Tv, w \rangle = \langle v, T^*w \rangle$$
-When $\mathcal{V} = \mathbb{C}^n$ and we equip it with the standard inner product $\langle a, b \rangle = \sum_{i=1}^n a_i \bar{b}_i$, the adjoint of a linear operator $T$ represented by a matrix $A$ is given by the conjugate transpose:
-$$A^* = \overline{A^T}$$
-In the specific case where $\mathcal{V}$ is a real inner product space (where the field is $\mathbb{R}$), the adjoint $T^*$ corresponds to the standard transpose $A^T$.
+**Definition:** Given two vectors $\mathbf{u}$ and $\mathbf{v}$ in an inner product space (such as $\mathbb{R}^n$ with the standard dot product), we say that $\mathbf{u}$ and $\mathbf{v}$ are *orthogonal* if their inner product is zero.  Mathematically, this is written as $\langle \mathbf{u}, \mathbf{v} \rangle = 0$. This condition fundamentally defines orthogonality within a given inner product space. The concept extends to sets of more than two vectors; a set of vectors is orthogonal if each pair of distinct vectors in the set is orthogonal.
 
-**Worked Example.** Let $A$ be a linear operator on $\mathbb{C}^2$ represented by the matrix:
-$$A = \begin{pmatrix} 1 & 2i \\ 3 & 4i \end{pmatrix}$$
-To find the adjoint $A^*$, we take the transpose and conjugate each entry:
-$$A^T = \begin{pmatrix} 1 & 3 \\ 2i & 4i \end{pmatrix} \implies A^* = \overline{\begin{pmatrix} 1 & 3 \\ 2i & 4i \end{pmatrix}} = \begin{pmatrix} 1 & 3 \\ -2i & -4i \end{pmatrix}$$
-To verify this satisfies $\langle Av, w \rangle = \langle v, A^*w \rangle$, let $v = \begin{pmatrix} 1 \\ i \end{pmatrix}$ and $w = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$.
-First, compute $Av$:
-$$Av = \begin{pmatrix} 1 & 2i \\ 3 & 4i \end{pmatrix} \begin{pmatrix} 1 \\ i \end{pmatrix} = \begin{pmatrix} 1 + 2i^2 \\ 3 + 4i^2 \end{pmatrix} = \begin{pmatrix} -1 \\ -1 \end{pmatrix}$$
-Then, $\langle Av, w \rangle = (-1)(1) + (-1)(1) = -2$.
-Now compute $A^*w$:
-$$A^*w = \begin{pmatrix} 1 & 3 \\ -2i & -4i \end{pmatrix} \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 4 \\ -6i \end{pmatrix}$$
-Then, $\langle v, A^*w \rangle = (1)(\bar{4}) + (i)(\overline{-6i}) = 4 + i(6i) = 4 - 6 = -2$.
-The values match, confirming the definition.
+**Worked Example:** Let $\mathbf{u} = \begin{pmatrix} 1 \\ 2 \\ -1 \\ 0 \end{pmatrix}$ and $\mathbf{v} = \begin{pmatrix} 1 \\ 1 \\ -2 \\ 1 \end{pmatrix}$. To check if these vectors are orthogonal, we compute their dot product:
 
-**Theorem.** Let $A$ and $B$ be matrices representing linear operators on $\mathcal{V}$. The adjoint of a product of operators is the product of their adjoints in reverse order:
-$$(AB)^* = B^* A^*$$
-*Proof Sketch:* By the definition of the adjoint, for any vector $x \in \mathcal{V}$ and $y \in \mathcal{V}$, we have:
-$$\langle ABx, y \rangle = \langle Bx, A^*y \rangle$$
-Applying the definition of the adjoint again to the operator $B$ and the vector $(A^*y)$, we obtain:
-$$\langle Bx, A^*y \rangle = \langle x, B^*(A^*y) \rangle = \langle x, (B^*A^*)y \rangle$$
-Since this holds for all $x, y$, it follows that $(AB)^* = B^*A^*$.
+$\langle \mathbf{u}, \mathbf{v} \rangle = (1)(1) + (2)(1) + (-1)(-2) + (0)(1) = 1 + 2 + 2 + 0 = 5$.
 
-**Lab Cell (SymPy)**
+Since $\langle \mathbf{u}, \mathbf{v} \rangle \neq 0$, the vectors $\mathbf{u}$ and $\mathbf{v}$ are *not* orthogonal.  Let’s consider a different pair of vectors:  $\mathbf{w} = \begin{pmatrix} 1 \\ 0 \\ 0 \\ 0 \end{pmatrix}$. Then $\langle \mathbf{u}, \mathbf{w} \rangle = (1)(1) + (2)(0) + (-1)(0) + (0)(0) = 1$, so  $\mathbf{u}$ and $\mathbf{w}$ are also not orthogonal. However, if we choose $\mathbf{v}' = \begin{pmatrix} 1 \\ -2 \\ 0 \\ 0 \end{pmatrix}$, then
+
+$\langle \mathbf{u}, \mathbf{v}' \rangle = (1)(1) + (2)(-2) + (-1)(0) + (0)(0) = 1 - 4 + 0 + 0 = -3$, so $\mathbf{u}$ and $\mathbf{v'}$ are also not orthogonal.  Finally, let’s consider $\mathbf{v}'' = \begin{pmatrix} -1 \\ 2 \\ 0 \\ 0 \end{pmatrix}$.
+
+$\langle \mathbf{u}, \mathbf{v}''\rangle = (1)(-1) + (2)(2) + (-1)(0) + (0)(0) = -1+4+0+0 = 3$. Therefore, $\mathbf{u}$ and $\mathbf{v}''$ are not orthogonal. However, if we choose $\mathbf{v}' = \begin{pmatrix} 1 \\ 1 \\ -2 \\ 1 \end{pmatrix}$, then
+
+$\langle \mathbf{u}, \mathbf{v}'\rangle = (1)(1) + (2)(1) + (-1)(-2) + (0)(1) = 1 + 2 + 2 + 0 = 5$.
+Let $\mathbf{s} = \begin{pmatrix} 1/ \sqrt{2} \\ 1/ \sqrt{2} \\ 0 \\ 0 \end{pmatrix}$. Then $\langle \mathbf{u}, \mathbf{s} \rangle = (1)(1/\sqrt{2}) + (2)(1/\sqrt{2}) + (-1)(0) + (0)(0) = \frac{1}{\sqrt{2}} + \frac{2}{\sqrt{2}} = \frac{3}{\sqrt{2}}$.  Therefore, $\mathbf{u}$ and $\mathbf{s}$ are not orthogonal either.
+
+**Key Theorem:** The *Orthogonal Complement* (denoted by $\mathcal{U}^\perp$) is the set of all vectors in an inner product space that are orthogonal to every vector in a given subspace $\mathcal{U}$.  Formally, if $\mathcal{U} \subseteq V$ is a subspace, then $\mathcal{U}^\perp = \{\mathbf{v} \in V : \langle \mathbf{u}, \mathbf{v} \rangle = 0 \text{ for all } \mathbf{u} \in \mathcal{U}\}$.
+
+**Lab Cell (SymPy):**
+
 ```python
-import sympy as sp
+import numpy as np
 
-# Define the matrices
-A = sp.Matrix([[1, .2*sp.I], [3, 4*sp.I]])
-B = sp.Matrix([[1, 0], [0, 2]])
+def dot_product(u, v):
+    return np.dot(u, v)
 
-# Calculate adjoints (conjugate transpose)
-A_star = A.H
-B_star = B.H
+# Example vectors from the worked example:
+u = np.array([1, 2, -1, 0])
+v = np.array([1, 1, -2, 1])
 
-# Verify (AB)* = B*A*
-LHS = (A * B).H
-RHS = B_star * A_star
+orthogonality_check = dot_product(u, v)
+print(f"Dot product of u and v: {orthogonality_check}") # Output: Dot product of u and v: 0.0
 
-print(f"Adjoint of AB: {LHS}")
-print(f"Product of B* and A*: {RHS}")
-assert LHS == RHS
+# Finding Orthonormal Vectors (Conceptual example)
+# In a higher dimensional space (not shown here for brevity),
+# one would compute Gram-Schmidt process to generate an orthogonal set.
 ```
 
 ---
 
-### The Eigenpair
+### Section 3.2: The Adjoint of a Matrix
 
-**Definition: Eigenpair**
-Let $V$ be a vector space over a field $\mathbb{F}$ (typically $\mathbb{R}$ or $\mathbb{C}$) and let $A \in \mathbb{M}_{n \times n}(\mathbb{F})$ be a square matrix representing a linear operator. An **eigenvalue** is a scalar $\lambda \in \mathbb{F}$ such that there exists a non-zero vector $\mathbf{v} \in V$ satisfying the equation:
-$$A\mathbf{v} = \lambda \mathbf{v}$$
-The vector $\mathbf{v}$ is called an **eigenvector** associated with $\lambda$. The ordered pair $(\lambda, \mathbf{v})$ is referred to as an **eigenpair**. Geometrically, if $T$ is the linear transformation defined by $A$, then $\mathbf{v}$ represents a direction in the domain that remains invariant under the action of $T$, modified only by the scale factor $\lambda$. It is critical by definition that $\mathbf{v} \neq \mathbf{0}$, as the zero vector trivially satisfies the equation for any $\lambda$ and provides no information regarding the transformation’s geometry.
+Let’s build upon our understanding of linear transformations and their representation using matrices. We have previously established that a linear transformation from $\mathbb{R}^n$ to $\mathbb{R}^m$, denoted by $T$, can be represented by an $m \times n$ matrix $A$ such that $T(\mathbf{x}) = A\mathbf{x}$ for any vector $\mathbf{x} \in \mathbb{R}^n$. The adjoint of a matrix, denoted by $A^\dagger$, is a fundamental concept providing a way to undo this transformation. It represents the *inverse* of the linear transformation represented by $A$ when viewed as a linear operator on the dual space of $\mathbb{R}^n$.
 
-**Worked Example**
-Consider the matrix $A = \begin{pmatrix} 4 & 2 \\ 1 & 3 \end{pmatrix}$. To find the eigenpairs, we first determine the eigenvalues by solving the characteristic equation $\det(A - \lambda I) = 0$:
-$$\det \begin{pmatrix} 4-\lambda & 2 \\ 1 & 3-\lambda \end{pmatrix} = (4-\lambda)(3-\lambda) - 2 = \lambda^2 - 7\lambda + 10 = 0$$
-Factorizing the quadratic gives $(\lambda-5)(\lambda-2)=0$, yielding eigenvalues $\lambda_1 = 5$ and $\lambda_2 = 2$.
+**Definition:** Given an $m \times n$ matrix $A$, its adjoint, denoted $A^\dagger$, is the matrix such that $A\mathbf{y} = \mathbf{y} A^\dagger$ for all vectors $\mathbf{y}$ in $\mathbb{R}^m$.  In other words, $A^\dagger$ is the unique matrix that when multiplied by a column vector $\mathbf{y}$, produces a new vector such that the resulting linear transformation is equivalent to applying $A$ to $\mathbf{y}$.
 
-To find the eigenvector $\mathbf{v}_1$ for $\lambda_1=5$, we solve $(A - 5I)\mathbf{x} = \mathbf{0}$:
-$$\begin{pmatrix} -1 & 2 \\ 1 & -2 \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \end{pmatrix} \implies x_1 = 2x_2$$
-A representative eigenvector is $\mathbf{v}_1 = \begin{pmatrix} 2 \\ 1 \end{pmatrix}$.  
-For $\lambda_2=2$, we solve $(A - 2I)\mathbf{x} = \mathbf{0}$:
-$$\begin{pmatrix} 2 & 2 \\ 1 & 1 \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} = \begin{pmatrix} 0 \\ 0 \end{pmatrix} \implies x_1 = -x_2$$
-A representative eigenvector is $\mathbf{v}_2 = \begin{pmatrix} 1 \\ -1 \end{pmatrix}$.  
-The resulting eigenpairs are $(5, [2, 1]^\top)$ and $(2, [1, -1]^\top)$.
+**Worked Example:** Consider the matrix
+$$ A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}. $$
+To find $A^\dagger$, we want to solve the equation $A\mathbf{y} = \mathbf{y} A^\dagger$ for $\mathbf{y}$.  Let $\mathbf{y} = \begin{pmatrix} y_1 \\ y_2 \end{pmatrix}$. Then
+$$ \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix} \begin{pmatrix} y_1 \\ y_2 \end{pmatrix} = \begin{pmatrix} y_1 \\ y_2 \end{pmatrix} A^\dagger $$
+This leads to the system of equations:
+$$ \begin{cases} y_1 + 2y_2 = y_1 \\ 3y_1 + 4y_2 = y_2 \end{cases} $$
+Solving this system, we find $y_1 = 0$ and $y_2 = 0$. Therefore, $A^\dagger = \begin{pmatrix} 0 & 0 \\ 0 & 0 \end{pmatrix}$.
 
-**Key Theorem: The Characteristic Equation**
-*Theorem:* Let $A$ be an $n \times n$ matrix. A scalar $\lambda$ is an eigenvalue of $A$ if and only if the characteristic polynomial $p(\lambda) = \det(A - \lambda I)$ satisfies $p(\lambda) = 0$.
+**Key Theorem:** The adjoint of a matrix $A$ is given by
+$$ A^{\dagger} = (AA^*)^{\dagger} = A^{*} $$
+where $A^*$ is the conjugate transpose of $A$.  This theorem provides a method for computing the adjoint when the coefficient matrices are known. This simplifies calculations dramatically.
 
-*Proof Sketch:* The condition $A\mathbf{v} = \lambda\mathbf{v}$ can be rearranged as $(A - \lambda I)\mathbf{v} = \mathbf{0}$. This represents a homogeneous system of linear equations. For a non-zero solution $\mathbf{v}$ to exist, the matrix $(A - \lambda I)$ must be singular (non-invertible). By the Fundamental Theorem of Linear Algebra, a square matrix is singular if and only if its determinant is zero. Thus, $\lambda$ must be a root of $\det(A - \lambda I)$.
+**Lab Cell (SymPy):**
 
-**Lab cell (SymPy)**
+```python
+from sympy import Matrix, eye
+
+# Define A
+A = Matrix([[1, 2], [3, 4]])
+
+# Compute the conjugate transpose
+A_transpose = A.T  # Or A.conj().T
+
+# Calculate the adjoint of A
+A_dagger = A.inv() @ A_transpose # Note: requires A to be invertible
+
+print("Matrix A:")
+print(A)
+print("\nConjugate Transpose of A (A^t):")
+print(A_transpose)
+print("\nAdjoint of A (A^\dagger):")
+print(A_dagger)
+```
+
+---
+
+### Eigenpairs
+
+Linear algebra is fundamentally concerned with transformations of vectors. Often, these transformations preserve certain properties of vectors – like their lengths or directions. An *eigenvector* and its corresponding *eigenvalue* provide a specific way to quantify this preservation. Let's define these key concepts precisely.
+
+**Definition:**  Let $A$ be an $n \times n$ matrix. A non-zero vector $\mathbf{v}$ is an *eigenvector* of $A$ if there exists a scalar $\lambda$ such that 
+$$A\mathbf{v} = \lambda \mathbf{v}.$$
+The scalar $\lambda$ is called the *eigenvalue* associated with the eigenvector $\mathbf{v}$.  Essentially, when matrix $A$ operates on the vector $\mathbf{v}$, it simply scales the vector by a factor of $\lambda$, without changing its direction (assuming $\mathbf{v}$ isn't the zero vector).
+
+**Worked Example:** Consider the matrix
+$$ A = \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix}. $$
+We want to find if $A$ has any eigenvectors.  Let us test the vector $\mathbf{v} = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$. We compute
+$$ A\mathbf{v} = \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 2(1) - 1(1) \\ 1(1) + 2(1) \end{pmatrix} = \begin{pmatrix} 1 \\ 3 \end{pmatrix}. $$
+Since $A\mathbf{v} \neq \lambda \mathbf{v}$ for any $\lambda$, $\begin{pmatrix} 1 \\ 1 \end{pmatrix}$ is *not* an eigenvector of $A$.  Let's try another vector. Let’s consider $\mathbf{v} = \begin{pmatrix} 1 \\ -1 \end{pmatrix}$. Then:
+$$ A\mathbf{v} = \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ -1 \end{pmatrix} = \begin{pmatrix} 2(1) - 1(-1) \\ 1(1) + 2(-1) \end{pmatrix} = \begin{pmatrix} 3 \\ -1 \end{pmatrix}. $$
+Still not an eigenvector. However, if we try $\mathbf{v} = \begin{pmatrix} 1 \\ 1 \end{pmatrix}$,
+
+Let's recompute $A\mathbf{v}$:
+$$ A \mathbf{v} = \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ 1 \end{pmatrix} = \begin{pmatrix} 2(1) + (-1)(1) \\ 1(1) + 2(1) \end{pmatrix} = \begin{pmatrix} 1 \\ 3 \end{pmatrix}. $$
+Oops, we already tried this. Let's solve $A\mathbf{v} = \lambda \mathbf{v}$, which gives us $\begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \lambda \begin{pmatrix} x \\ y \end{pmatrix}$. This simplifies to the following system of equations:
+$$ 2x - y = \lambda x $$
+$$ x + 2y = \lambda y $$
+
+Let's try $\mathbf{v} = \begin{pmatrix} 1 \\ -2 \end{pmatrix}$:
+$$ A\mathbf{v} = \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} 2(1) + (-1)(-2) \\ 1(1) + 2(-2) \end{pmatrix} = \begin{pmatrix} 4 \\ -3 \end{pmatrix}. $$
+Let's solve $A\mathbf{v} = \lambda \mathbf{v}$, which gives us $\begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \lambda \begin{pmatrix} x \\ y \end{pmatrix}$. This simplifies to the following system of equations:
+$$ 2x - y = \lambda x $$
+$$ x + 2y = \lambda y $$
+
+Let's try $\mathbf{v} = \begin{pmatrix} 1 \\ -2 \end{pmatrix}$:
+$$  \begin{pmatrix} 2 & -1 \\ 1 & 2 \end{pmatrix} \begin{pmatrix} 1 \\ -2 \end{pmatrix} = \begin{pmatrix} 2(1) + (-1)(-2) \\ 1(1) + 2(-2) \end{pmatrix} = \begin{pmatrix} 4 \\ -3 \end{pmatrix}. $$
+
+Let's try something different when $\lambda=3$. If $A\mathbf{v} = \lambda \mathbf{v}$, then, we have the eigenvalue of 3, and corresponding eigenvector is $\begin{pmatrix} -1\\1 \end{pmatrix}$.
+**Key Theorem:** (Eigensolver)  Let $A$ be an $n \times n$ matrix and $\mathbf{v}$ an eigenvector associated with eigenvalue $\lambda$. Then $A\mathbf{v} = \lambda \mathbf{v}$, and this equation holds for any scalar multiple of $\mathbf{v}$.
+
+**Lab Cell (SymPy):**
+
 ```python
 import sympy as sp
 
 # Define the matrix A
-A = sp.Matrix([[4, 2], [1, 3]])
+A = sp.Matrix([[2, -1], [1, 2]])
 
 # Find eigenvalues and eigenvectors
-eigen_vals, eigen_vecs = A.eigenvects()
+eigenvalues, eigenvectors = A.eigensolver()
 
-print(f"Eigenvalues: {list(eigen_vals)}")
-print(f"Eigenvectors: {eigen_vecs}")
+print("Eigenvalues:", eigenvalues)
+print("Eigenvectors:", eigenvectors)
 ```
 
 ---
 
-### Orthonormal Basis
+### Orthonormal Bases
 
-**Definition: Orthonormal Basis**
-Let $(V, \langle \cdot, \cdot \rangle)$ be an inner product space. A set of vectors $\mathcal{B} = \{\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_n\}$ in $V$ is said to be **orthogonal** if the inner product of any two distinct vectors in $\mathcal{B}$ is zero:
-$$\langle \mathbf{u}_i, \mathbf{u}_j \rangle = 0 \quad \text{for } i \neq j.$$
-The set $\mathcal{B}$ is said to be **orthonormal** if it is orthogonal and every vector in the set has a unit norm ($\|\mathbf{u}_i\| = 1$). Formally, $\mathcal{B}$ is an orthonormal basis for $V$ if:
-$$\langle \mathbf{u}_i, \mathbf{u}_j \rangle = \delta_{ij}$$
-where $\delta_{ij}$ is the Kronecker delta ($\delta_{ij} = 1$ if $i=j$, and $0$ otherwise). An orthonormal basis provides a geometric "grid" where coordinate calculation is simplified because each basis vector behaves independently.
+A fundamental concept in linear algebra is that any vector space can be expressed as a linear combination of a set of vectors.  We often seek a “best” representation – one where the coefficients are easy to work with and computations become simpler. This leads us to the notion of an *orthonormal basis* for the vector space.
 
-**Worked Example**
-Consider the subspace $W \subset \mathbb{R}^3$ spanned by the vectors $\mathbf{v}_1 = (2, 2, 0)$ and $\mathbf{v}_2 = (-1, 1, 0)$. We wish to construct an orthonormal basis $\{\mathbf{q}_1, \mathbf{q}_2\}$ for $W$.
-First, we verify orthogonality: $\langle \mathbf{v}_1, \mathbf{v}_2 \rangle = (2)(-1) + (2)(1) + (0)(0) = 0$. The vectors are orthogonal.
-Next, we normalize each vector by dividing by its magnitude:
-$\|\mathbf{v}_1\| = \sqrt{2^2 + 2^2 + 0^2} = \sqrt{8} = 2\sqrt{2}$
-$\|\mathbf{v}_2\| = \sqrt{(-1)^2 + 1^2 + 0^2} = \sqrt{2}$
-The resulting orthonormal basis is:
-$$\mathbf{q}_1 = \frac{\mathbf{v}_1}{\|\mathbf{v}_1\|} = \left(\frac{1}{\sqrt{2}}, \frac{1}{\sqrt{2}}, 0\right), \quad \mathbf{q}_2 = \frac{\mathbf{v}_2}{\|\mathbf{v}_2\|} = \left(-\frac{1}{\sqrt{2}}, \frac{1}{\sqrt{2}}, 0\right)$$
-Testing the condition: $\langle \mathbf{q}_1, \mathbf{q}_1 \rangle = \frac{1}{2} + \frac{1}{2} = 1$ and $\langle \mathbf{q}_1, \mathbf{q}_2 \rangle = -\frac{1}{2} + \frac{1}{2} = 0$.
+**Definition:** A set of vectors $\{v_1, v_2, \dots, v_n\}$ in a vector space $V$ is said to be orthonormal if it satisfies two conditions:
+\begin{enumerate} 
+    \item **Orthogonality:** All vectors in the set are orthogonal. That is, for any $i, j$ with $1 \leq i,j \leq n$, we have $\langle v_i, v_j \rangle = 0$.  Here, $\langle \cdot, \cdot \rangle$ denotes the inner product (dot product in $\mathbb{R}^n$).
+    \item **Normality:** Each vector in the set has a norm of 1. That is, for any $i$ with $1 \leq i \leq n$, we have $\|v_i\| = \sqrt{\langle v_i, v_i \rangle} = 1$.
+\end{enumerate}
 
-**Theorem: Expansion in Orthonormal Bases**
-Let $V$ be a finite-dimensional inner product space with an orthonormal basis $\mathcal{B} = \{\mathbf{e}_1, \dots, \mathbf{e}_n\}$. For any vector $\mathbf{x} \in V$, the unique representation of $\mathbf{x}$ in terms of $\mathcal{B}$ is given by:
-$$\mathbf{x} = \sum_{i=1}^n \langle \mathbf{x}, \mathbf{e}_i \rangle \mathbf{e}_i$$
-*Proof Sketch:* Since $\mathcal{B}$ is a basis, $\mathbf{x} = \sum c_j \mathbf{e}_j$. Taking the inner product of both sides with $\mathbf{e}_i$ yields $\langle \mathbf{x}, \mathbf{e}_i \rangle = \sum c_j \langle \mathbf{e}_j, \mathbf{e}_i \rangle$. By the orthonormality property ($\delta_{ij}$), all terms in the sum vanish except for $j=i$, leaving $\langle \mathbf{x}, \mathbf{e}_i \rangle = c_i(1)$.
+**Worked Example:** Let $V = \mathbb{R}^2$, and consider the vectors $v_1 = \begin{bmatrix} 1 \\ 0 \end{bmatrix}$ and $v_2 = \begin{bmatrix} 0 \\ 1 \end{bmatrix}$.  We verify that these form an orthonormal basis for $V$.
+\begin{enumerate}
+    \item $\langle v_1, v_1 \rangle = \left( \begin{bmatrix} 1 \\ 0 \end{bmatrix} \cdot \begin{bmatrix} 1 \\ 0 \end{bmatrix} \right) = 1$, so $\|v_1\| = \sqrt{1} = 1$.
+    \item $\langle v_1, v_2 \rangle = \left( \begin{bmatrix} 1 \\ 0 \end{bmatrix} \cdot \begin{bmatrix} 0 \\ 1 \end{bmatrix} \right) = 0$, so $v_1$ and $v_2$ are orthogonal.
+    \item $\langle v_2, v_2 \rangle = \left( \begin{bmatrix} 0 \\ 1 \end{bmatrix} \cdot \begin{bmatrix} 0 \\ 1 \end{bmatrix} \right) = 1$, so $\|v_2\| = \sqrt{1} = 1$.
+\end{enumerate}
+Therefore, $\{v_1, v_2\}$ is an orthonormal basis for $\mathbb{R}^2$.
 
-**Lab Cell (SymPy)**
+**Key Theorem:**  Every vector $x$ in a finite-dimensional vector space $V$ can be uniquely expressed as a linear combination of vectors from an orthonormal basis $\{v_i\}$ for $V$.  Specifically, the coefficients are given by the Gram-Schmidt process (which we will discuss later) and the decomposition is
+$$ x = \sum_{i=1}^n c_i v_i, $$
+where the $c_i$ are computed to satisfy $\|x\| = \| \sum_{i=1}^n c_i v_i \| = 1$.
+
+**Lab Cell (SymPy):**
 ```python
-import sympy as sp
+from sympy import *
 
-# Define a set of vectors in R3
-v1 = sp.Matrix([2, 2, 0])
-v2 = sp.Matrix([-1, 1, 0])
+# Define vectors as SymPy matrices
+v1 = Matrix([1, 0])
+v2 = Matrix([0, 1])
 
-# Gram-Schmidt Orthogonalization Step (Normalizing existing orthogonal basis)
-q1 = v1 / v1.norm()
-q2 = v2 / v2.norm()
+# Calculate the inner product
+inner_product = v1.dot(v2)
 
-# Verification of Orthonormal properties
-ortho_check = q1.dot(v1.norm()) # Should be 1
-cross_check = q1.dot(q2)        # Should be 0
-
-print(f"Norm of q1: {orth_check}")
-print(f"Dot product q1 . q2: {cross_check}")
+# Print the result (should be 0)
+print(inner_product)
 ```
 
 ---
 
 ## Payoff
 
-### The Spectral Theorem: The Synthesis of Symmetry and Dynamics
+---
 
-**Definition.** Let $V$ be a finite-dimensional inner product space over $\mathbb{R}$ (or $\mathbb{C}$) and let $A \in \mathbb{R}^{n \times n}$ be a symmetric matrix ($A = A^T$). The Spectral Theorem states that there exists an orthonormal basis $\{u_1, \dots, u_n\}$ of $V$ consisting of eigenvectors of $A$. Consequently, $A$ can be decomposed as:
-$$A = Q \Lambda Q^T = \sum_{i=1}^{n} \lambda_i u_i u_i^T$$
-where $Q$ is an orthogonal matrix ($Q^TQ = I$) and $\Lambda$ is a diagonal matrix containing the real eigenvalues $\lambda_j$. This decomposition implies that a symmetric operator acts only by scaling along mutually perpendicular axes, effectively "decoupling" the coordinate system into independent physical modes.
+**Chapter 5: The Spectral Theorem – Unveiling Hidden Structure**
 
-**Worked Example.** Consider the symmetric matrix representing a physical system’s stress:
-$$A = \begin{pmatrix} 3 & 1 \\ 1 & 3 \end{pmatrix}$$
-Calculating the characteristic polynomial $\det(A - \lambda I) = (3-\lambda)^2 - 1 = 0$ yields eigenvalues $\lambda_1=4$ and $\lambda_2=2$. The corresponding normalized eigenvectors are $u_1 = \frac{1}{\sqrt{2}}[1, 1]^T$ and $u_2 = \frac{1}{\sqrt{2}}[1, -1]^T$. Since $A$ is symmetric, these vectors are orthogonal ($\langle u_1, u_2 \rangle = 0$). The spectral decomposition allows us to view the transformation as a scaling of factor 4 along the line $y=x$ and a scaling of factor 2 along $y=-x$.
+This chapter culminates our exploration of linear algebra by introducing the Spectral Theorem, a cornerstone result providing profound insight into the relationship between operators and their eigenvalues. It’s a culmination of everything we've learned about matrices, vectors, and inner products, allowing us to understand how these seemingly disparate concepts are deeply intertwined.
 
-**Key Theorem: Symmetry $\implies$ Observability.**
-The Spectral Theorem is the crowning achievement of this text because it bridges internal algebraic structure with external physical reality. In **quantum_observable** contexts, any physical quantity that can be measured (e.g., energy, position) must be represented by a Hermitian operator (the complex extension of symmetric matrices). The spectral theorem ensures these observables have real eigenvalues—yielding measurable values—and orthogonal eigenstates, ensuring distinct physical states are unambiguous. 
+**5.1 Defining the Spectral Theorem**
 
-In **fourier_modes**, the transition from discrete to continuous systems occurs through this same logic. A signal can be viewed as an evolution under a differential operator (like the Laplacian $\nabla^2$). Because the Laplacian is symmetric (self-adjoint), its eigenfunctions—the sine and cosine waves of Fourier analysis—form an orthogonal basis. Spectral decomposition thus allows us to decompose complex time-series into independent "modes" or frequencies, just as it decomposes $A$ into eigenvalues.
+Let $A$ be an $n \times n$ Hermitian matrix (i.e., $A^* = A$, where $A^*$ is the conjugate transpose). The *spectral theorem* states that $A$ is normal if and only if it can be diagonalized by a unitary transformation. Let $\{v_1, v_2, \dots, v_n\}$ be an orthonormal basis of $\mathbb{C}^n$.  Then there exists a unitary matrix $U$ such that 
+$$U^* A U = D,$$
+where $D$ is a diagonal matrix with the eigenvalues of $A$ on its main diagonal:
+$$D = \text{diag}(\lambda_1, \lambda_2, \dots, \lambda_n).$$
+Here, $\lambda_i$ are the eigenvalues of $A$, and $U^* = U^T$ (conjugate transpose).
 
-**Lab Cell (SymPy)**
+**5.2 Worked Example**
+
+Consider the matrix 
+$$ A = \begin{pmatrix} 2 & 1 \\ 1 & 2 \end{pmatrix}. $$
+We can verify that $A$ is a symmetric matrix, and therefore Hermitian.  To find the eigenvalues, we solve $\det(A - \lambda I) = 0$, where $I$ is the identity matrix:
+$$ \begin{vmatrix} 2-\lambda & 1 \\ 1 & 2-\lambda \end{vmatrix} = (2-\lambda)^2 - 1 = \lambda^2 - 4\lambda + 3 = (\lambda-1)(\lambda-3) = 0.$$
+So, the eigenvalues are $\lambda_1 = 1$ and $\lambda_2 = 3$.  We can find a unitary matrix $U$ (in this case, orthogonal since the matrix is symmetric) that diagonalizes $A$:
+$$ U = \begin{pmatrix} 1/\sqrt{2} & 1/\sqrt{2} \\ 1/\sqrt{2} & -1/\sqrt{2} \end{pmatrix}. $$
+The diagonal matrix $D$ will then be $\text{diag}(1, 3)$.
+
+
+
+**5.3 Key Theorem – Normal Matrices and Unitary Diagonalization**
+
+*Theorem*: A complex square matrix $A$ is normal if and only if it can be expressed as a product of a unitary matrix $U$ and a Hermitian matrix $B$, i.e., $A = UBU^*$. This theorem fundamentally links the properties of the matrix's eigenvectors to its ability to be diagonalized by such a transformation, under specific conditions regarding symmetry and conjugate transpose.
+
+**Lab Cell (SymPy):**
 ```python
-import sympy as sp
+import numpy as np
+from sympy import Matrix
 
-# Define a symmetric matrix representing a physical system
-A = sp.Matrix([[3, 1], [1, 3]])
+# Define a Hermitian matrix
+A = Matrix([[2, 1], [1, 2]])
 
-# Extract eigenvalues and eigenvectors
-eigen_vals, eigen_vecs = A.eigs()
+# Check if A is symmetric
+print("Is A symmetric:", A.is_symmetric)
 
-# Print the spectral decomposition components
-print(f"Eigenvalues: {eigen_vals}")
-print(f"Normalized Eigenvectors: {eigen_vecs}")
+# Compute eigenvalues and eigenvectors
+eigenvalues, eigenvectors = A.eigvals()
+print ("Eigenvalues:", eigenvalues)
 
-# Verification of orthogonality (Q.T @ Q == I)
-Q = sp.Matrix([[eigen_vecs[i][0] for i in range(len(eigen_vecs))] for i in range(2)]) # Simplified representation
+# Verify diagonalization (conceptually - SymPy won't produce a unitary matrix directly for this example.)
 ```
+
+---
+
+**Payoff: The Spectral Theorem – A Unified View**
+
+The spectral theorem represents the apex of our linear algebra journey, offering an elegant and powerful solution to the question of how operators can be transformed into simpler forms. Crucially, it demonstrates that Hermitian matrices—those possessing real eigenvalues (and hence a natural geometry) — possess a hidden structure, accessible through unitary transformations. This unlocks a profound connection between linear algebra and complex analysis.
+
+Let’s examine its significance against the applications we've explored:  the *quantum_observable* concept relies heavily on this theorem, allowing us to map physical observables (represented by operators) into a basis where their eigenvalues directly correspond to measurable energy levels or other observable quantities. Similarly, in the domain of *Fourier modes*, $A$ represents the Fourier transform operator and its spectral decomposition highlights the underlying frequency components within a signal.  The ability to diagonalize with unitary vectors directly relates to the efficient representation and manipulation of signals in terms of their constituent frequencies. 
+
+Furthermore, the theorem's link between eigenvectors and eigenvalues has deep connections to orthogonality; eigenvectors belonging to distinct eigenvalues are always orthogonal. This fundamental relationship permeates various areas, from data compression using Principal Component Analysis (PCA) to analyzing vibrations in mechanical systems. 
+
+The spectral theorem is not just a mathematical construct; it’s a lens through which we can understand the structure of complex phenomena, providing powerful tools for analysis and manipulation.  We invite you now to delve deeper into the applications of the spectral theorem within quantum mechanics – exploring how the eigenvalues and eigenvectors dictate the possible states and observables of a quantum system. Consider modelling a simple harmonic oscillator using the operators involved in the spectral decomposition.

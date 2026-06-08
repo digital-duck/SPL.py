@@ -72,8 +72,8 @@ Rules:
 - For "solve", write f(x) with everything moved to the left side (= 0 form)
 
 Examples:
-  "find the roots of x squared minus 5x plus 6"   →  x**2 - 5*x + 6|solve
-  "differentiate 3x cubed plus 2x"                →  3*x**3 + 2*x|diff
+  "find the roots of x squared minus 5x plus 6"    →  x**2 - 5*x + 6|solve
+  "differentiate 3x cubed plus 2x"                 →  3*x**3 + 2*x|diff
   "integrate sine of x"                            →  sin(x)|integrate
   "factor x squared minus 9"                       →  x**2 - 9|factor
   "simplify (x^2-1)/(x-1)"                         →  (x**2 - 1)/(x - 1)|simplify
@@ -87,7 +87,7 @@ A student asked: "{problem}"
 
 The symbolic math engine computed: {sympy_result}
 
-Write a clear, friendly explanation (3–5 sentences) that:
+Write a clear, friendly explanation in less than 5 sentences that:
 1. Restates what the problem is asking in plain English
 2. States the exact answer from the computation above
 3. Briefly explains the key concept or method used
@@ -98,11 +98,14 @@ $$;
 
 WORKFLOW math_solver
   INPUT @problem TEXT := 'find the roots of x squared minus 5x plus 6'
+  INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
   OUTPUT @explanation TEXT
 DO
   -- Step 1 (probabilistic): LLM parses NL problem → SymPy expression|operation
   GENERATE parse_math_problem(@problem) INTO @parsed;
   CALL trim(@parsed) INTO @parsed;
+
+  LOGGING f"Problem '@{@problem}' is translated into SymPy:\n '{@parsed}'" LEVEL INFO
 
   -- Extract expression and operation by splitting on '|'
   CALL split_part(@parsed, '|', '1') INTO @expression;
