@@ -32,8 +32,8 @@ that's what `sonnet-4-6` refers to here and throughout; the raw transcripts log 
 By design, we should receive the same math answer every time, shown below.
 
 ```
-d/dx(3x³ − x)        = 9x² − 1
-factor(9x² − 1)      = (3x − 1)(3x + 1)
+d/dx(3x³ − x)         = 9x² − 1
+factor(9x² − 1)       = (3x − 1)(3x + 1)
 solve((3x−1)(3x+1)=0) = x = −1/3, 1/3
 ```
 
@@ -139,5 +139,7 @@ answer to every capability gap in your world too, I'd love to hear whether
 this resonates — or where you think it breaks.
 
 ---
-*The full transcripts behind this post — every prompt, every token count, every
-log line — are public: [`case-2.md`](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/case-2.md), part of [recipe 67](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math) in the SPL cookbook.*
+The full transcripts behind this post — every prompt, every token count, every
+log line — are public: 
+- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl) 
+- [case-2-log.md](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/case-2-log.md)
