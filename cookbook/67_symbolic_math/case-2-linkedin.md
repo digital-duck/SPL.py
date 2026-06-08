@@ -1,6 +1,6 @@
 # Same Problem, Same Pipeline, Nine Models — and Only the Math Agreed
 
-I gave nine different LLMs the exact same math problem, wired into the exact
+I asked nine different LLMs to solve the exact same math problem, wired into the exact
 same pipeline, and watched what came back. The result changed how I think
 about the "just use a bigger model" instinct that's become the default answer
 to almost everything in AI right now.
@@ -22,12 +22,10 @@ Take a workflow that:
 ### The models
 
 We selected the following 9 models: `sonnet-4-6`, `gemma3`, `gemma4:12b`,
-`qwen2.5`, `qwen3`, `phi3`, `phi4`, `deepseek-r1`, `lfm2.5`.
+`qwen2.5`, `qwen3`, `phi3`, `phi4`, `deepseek-r1`, `lfm2.5`. 
 
-*`claude_cli` is an SPL adapter which uses Claude Sonnet 4.6 under the hood —
-that's what `sonnet-4-6` refers to here and throughout; the raw transcripts in
-`case-2.md` log it under its adapter name, `claude_cli`.*
-
+(Note: `claude_cli` is an SPL adapter which uses Claude Sonnet 4.6 under the hood —
+that's what `sonnet-4-6` refers to here and throughout; the raw transcripts log it under its adapter name, `claude_cli`.)
 
 ### The answer should never change
 
