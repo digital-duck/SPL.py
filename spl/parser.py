@@ -1079,6 +1079,24 @@ class Parser:
             self._advance()
             return ComparisonCondition(operator="=", right=Literal(value=val, literal_type="bool"))
 
+        # IS 'value' / IS NOT 'value' — natural-language sugar for = / !=
+        # Reads more naturally for boolean-flavored comparisons, e.g.
+        #   WHEN @enable_solver IS 'true' THEN ...
+        #   WHEN @status IS NOT 'ok' THEN ...
+        # Desugars to the same deterministic ComparisonCondition as
+        # `=` / `!=` — including the boolean-shorthand case-insensitive
+        # 'true'/'false' comparison in the executor — so it carries none
+        # of the LLM-judged SemanticCondition cost that a bare string
+        # literal (`WHEN 'true' THEN`) would.
+        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == 'is':
+            self._advance()  # IS
+            op = "="
+            if self._check(TokenType.NOT):
+                self._advance()  # NOT
+                op = "!="
+            right = self._parse_expression()
+            return ComparisonCondition(operator=op, right=right)
+
         # contains('value') [OR contains('value')]* — semantic substring condition
         if tok.type == TokenType.IDENTIFIER and tok.value.lower() == 'contains':
             values: list[str] = []

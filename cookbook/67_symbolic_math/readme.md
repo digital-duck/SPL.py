@@ -193,8 +193,8 @@ chain — `decompose_problem` (planning) and `explain_chain` (narration):
 | `gemma4:12b` (ollama) | 389 tokens, 19.3s → `3*x**3-x\|diff` / `PREV\|factor` (eventually correct, ~20-65x the cost) | same | **1000 tokens, 39.7s → empty.** `WARNING: GENERATE chain returned empty content for @explanation` — `Output: (no COMMIT)` | ❌ fails |
 
 ```
-$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
-      --param problem="differentiate 3*x**3-x, then factor if needed"
+spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ...
 Output:  We're asked to find the derivative of 3x³ - x and then factor the result if
 possible. First, taking the derivative term by term gives us 9x² - 1. This
