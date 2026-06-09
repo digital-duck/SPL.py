@@ -1,4 +1,4 @@
-# The experimental logs for Recipe #67
+# Recipe #67 experimental logs
 
 ## sonnet-4-6 (claude_cli)
 

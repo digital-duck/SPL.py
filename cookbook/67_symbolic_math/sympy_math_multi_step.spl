@@ -187,7 +187,7 @@ DO
   GENERATE decompose_problem(@problem) INTO @steps_text;
   CALL trim(@steps_text) INTO @steps_text;
 
-  LOGGING f"Problem '@{@problem}' decomposed into:\n{@steps_text}" LEVEL INFO
+  LOGGING f"Problem '@{@problem}' decomposed into:\n\n\n{@steps_text}\n\n" LEVEL INFO
 
   CALL step_count(@steps_text) INTO @n_steps;
 

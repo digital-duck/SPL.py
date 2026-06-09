@@ -1,4 +1,4 @@
-# Designing a Real Benchmark Out of a Lucky Accident
+# How to Inject Determinism into LLM Workflows
 
 *Companion to [`case-2.md`](case-2.md) / [`case-2-linkedin.md`](case-2-linkedin.md)
 — this document is the experimental design for the follow-up study, written

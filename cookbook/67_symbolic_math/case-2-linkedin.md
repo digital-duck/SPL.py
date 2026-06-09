@@ -21,8 +21,16 @@ Take a workflow that:
 
 ### The models
 
-We selected the following 9 models: `sonnet-4-6`, `gemma3`, `gemma4:12b`,
-`qwen2.5`, `qwen3`, `phi3`, `phi4`, `deepseek-r1`, `lfm2.5`. 
+Nine models, spanning frontier APIs to free local weights:
+
+| Model | Owner |
+|---|---|
+| `sonnet-4-6` | [Anthropic](https://www.anthropic.com) |
+| `gemma3`, `gemma4:12b` | [Google](https://ai.google.dev/gemma) |
+| `qwen2.5`, `qwen3` | [Alibaba](https://qwenlm.github.io) |
+| `phi3`, `phi4` | [Microsoft](https://azure.microsoft.com/en-us/products/phi) |
+| `deepseek-r1` | [DeepSeek](https://www.deepseek.com) |
+| `lfm2.5` | [Liquid AI](https://www.liquid.ai) |
 
 (Note: `claude_cli` is an SPL adapter which uses Claude Sonnet 4.6 under the hood —
 that's what `sonnet-4-6` refers to here and throughout; the raw transcripts log it under its adapter name, `claude_cli`.)
@@ -43,44 +51,59 @@ If the answer never moved, what was the experiment even measuring? Whether
 each model could follow a narrow, plain-spoken instruction — *twice*, at
 opposite ends of the same pipeline. And on that axis, the spread was enormous:
 
-- **Four models** (`sonnet-4-6`, `gemma3`, `qwen3`, `qwen2.5`) did exactly
-  what was asked, cleanly, and `qwen2.5` did it in **8.8 seconds** — as fast
-  as the frontier model in the lineup, and nearly **3x faster** than its own
-  newer-numbered sibling `qwen3` on the identical task.
-- **Two models** (`phi3`, `phi4`) wandered off-script mid-pipeline — one
-  hallucinated an unrelated integration step complete with `√` and `∫`
-  symbols; the other wrapped its output in a markdown code fence that got fed
-  to the math engine as if it were an equation. In both cases the engine
-  rejected the garbage cleanly, and — this is the part I didn't expect — **the
-  final explanation still recovered and landed on the right answer anyway.**
-  The architecture absorbed the damage.
-- **Two models** (`gemma4:12b`, `deepseek-r1`) simply ran out of road —
-  burned their entire response budget at *both* ends of the pipeline and came
-  back with nothing. Total time: nearly **a minute and a half**, for zero
-  usable output. At least that failure was loud and honest: `(no COMMIT)`,
-  nothing to mistake for an answer.
+- **Four models** (`sonnet-4-6` by Anthropic, `gemma3` and `qwen3` and
+  `qwen2.5` by Google/Alibaba) did exactly what was asked, cleanly. Two stood
+  out: Google's `gemma3` at **6.1 seconds** and Alibaba's `qwen2.5` at
+  **7.2 seconds** — both faster than the frontier model, both producing clean,
+  well-structured explanations, and both running **free, locally, on consumer
+  hardware** via Ollama. No API key. No bill. `qwen2.5` was nearly **3× faster**
+  than its own newer sibling `qwen3` on the identical task.
+- **One model** (Microsoft's `phi4`) produced garbage wrapper steps — markdown
+  code fences that SymPy rejected cleanly — but the three substantive steps
+  (diff → factor → solve) ran correctly and the final explanation was fully
+  right. The architecture absorbed the noise without any assistance.
+- **One model** (Microsoft's `phi3`) hallucinated off-script in a different way
+  every run — once generating Python code about boiling water at altitude, once
+  treating the polynomial as `exp(x)`. The pipeline ran its steps faithfully on
+  whatever `phi3` handed it, but the input was garbage so the output was too.
+  Unlike `phi4`, the architecture did *not* recover — `phi3` missed x = ±1/3
+  every time.
+- **One model** (Google's `gemma4:12b`) burned its entire response budget at
+  *both* ends of the pipeline and came back with nothing — `(no COMMIT)`, every
+  single run, ~80 seconds wasted for zero usable output. At least that failure
+  is loud and honest: nothing to mistake for an answer.
+- **Two models** (DeepSeek's `deepseek-r1` and Liquid AI's `lfm2.5`) bypassed
+  the pipeline entirely: both burned their full 1,000-token budget on the
+  decomposition step without producing a single `expr|op` line — spending every
+  token on internal chain-of-thought reasoning instead. SymPy never ran. More
+  on this below.
 
-## The one that made me stop and think
+## The ones that made me stop and think
 
-One model — `lfm2.5`, an architecture that isn't a transformer at all —
-produced *empty* output from the planning step (the same dead end as
-`gemma4:12b`), which means the symbolic engine never ran, no chain was ever
-verified... and yet the final explanation came back **completely correct**,
-fluently narrated, reporting `Status: complete`.
+`deepseek-r1` and `lfm2.5` — one a reasoning-fine-tuned transformer, the
+other an architecture that isn't a transformer at all — showed the same
+failure mode across every run: the decomposition step hit the token ceiling
+and returned empty, so the symbolic engine never ran and no chain was ever
+verified. And yet both came back with fluent, confident explanations reporting
+`Status: complete`.
 
-From the outside, that response is *indistinguishable* from one that came out
-of the verified pipeline. It's worth being fair here: small math-tuned models
-of this kind are sometimes specifically trained on exactly this class of
-problem, so this may simply be a model that's *good at this particular
-arithmetic* doing it natively — not a lucky guess. I don't know which, and one
-data point on a textbook cubic isn't enough to say.
+Here is where it gets interesting. `deepseek-r1` produced the correct answer
+every time — its internal reasoning is simply strong enough to solve the
+problem without SymPy. `lfm2.5` was less consistent: in one run it correctly
+decomposed the problem and ran the full verified pipeline; in another it
+bypassed the pipeline and still got the right answer; in a third run it
+bypassed the pipeline and gave **the wrong answer** — `x = 0, x = √(1/3),
+x = −√(1/3)`, solving the original polynomial `3x³ − x = 0` rather than its
+derivative. Fluent, confident, wrong — and `Status: complete`.
 
-But that's exactly the point worth sitting with: **the system's outward
-signals — "complete," a confident paragraph, a plausible number — looked
-identical whether the verified engine ran three times over, or never ran at
-all.** If you're building anything that reports "done" to a human, that gap is
-the thing to design against — not the wrong answers (those are easy to spot),
-but the *right-looking* answers that arrived by an unverified path.
+That is the failure mode worth designing against. The verified engine would
+have caught it immediately. Without it, the wrong answer is
+*indistinguishable* from the right one — same format, same confidence, same
+status signal. **The system's outward signals looked identical whether SymPy
+ran three times over, or never ran at all.** If you're building anything that
+reports "done" to a human, that gap is the thing to close — not the wrong
+answers that look wrong (those are easy to spot), but the wrong answers that
+look exactly right.
 
 ## Why I think this matters more broadly
 
@@ -112,6 +135,15 @@ worth pulling isn't always "more parameters, more training, more compute" —
 sometimes it's "stop asking the pattern-matcher to do the part of the job
 that was never pattern-matching in the first place."
 
+It is also worth noting who built the free, open-weight models that made this
+accessible. Google invented the Transformer architecture in 2017 ("Attention Is All You
+Need", Vaswani et al.) — the foundation eight of the nine models in this
+experiment are built on. The ninth, Liquid AI's `lfm2.5`, is a deliberate
+departure: a continuous-time neural network rooted in differential equations,
+not attention at all. Alibaba's `qwen2.5` was released quietly in September 2024 and has stood
+the test of time: still competitive, still fast, still free. That is quality
+that does not need marketing to prove itself.
+
 That reframing — *let the LLM plan and explain; let the domain expert
 compute* — generalizes far past algebra. Physics, chemistry, structural
 engineering, formal logic, financial modeling: anywhere "hard science" has a
@@ -119,27 +151,68 @@ deterministic substrate (a simulator, a solver, a verified database, a proof
 checker), the same shape applies. The LLM's job shrinks to what it's
 *actually* good at, and the part that has to be exact — stays exact.
 
-## Where this goes next
+There is also an equity dimension I care about deeply — and honestly, it is
+a large part of why I built SPL in the first place. A student in an
+underdeveloped country, or simply a curious kid without institutional
+resources, has no realistic path to a frontier model API subscription. That
+is a luxury, full stop. But `gemma3` and `qwen2.5` run on a modest laptop,
+cost nothing, and on this problem produced explanations indistinguishable in
+quality from Claude Sonnet 4.6. The SPL neurosymbolic architecture is what
+made that possible: by routing computation through SymPy, it shrinks the
+LLM's role to parsing intent and explaining clearly — exactly what small
+models already do well. The hard math stays exact by construction, regardless
+of which model sits at the top of the pipeline. Correct, verified, step-by-step
+STEM education, on hardware a student already owns, at zero marginal cost.
+That is not a minor efficiency gain. That is the goal.
+
+## How to reproduce
+
+The full transcripts — every prompt, every token count, every log line — are
+public. Clone the repo and run it yourself:
+
+- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl)
+- [case-2-log-rerun-20260609-011821.md](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-20260609-011821.md)
+
+To run the local models (`gemma3`, `qwen2.5`, `phi3`, `phi4`, etc.), install
+[Ollama](https://ollama.ai) — a one-command local model server that runs on
+Mac, Linux, and Windows. Once installed, pull the models you want:
+
+```bash
+ollama pull gemma3
+ollama pull qwen2.5
+ollama pull phi4
+ollama pull deepseek-r1
+# add any others from the model list
+```
+
+Then clone the repo and run the experiment:
+
+```bash
+git clone https://github.com/digital-duck/SPL.py.git
+cd SPL.py
+conda create -n spl123 python=3.11 -y && conda activate spl123
+pip install -e .
+python cookbook/67_symbolic_math/run_experiment.py -p p003 && python cookbook/67_symbolic_math/run_analysis.py
+```
+
+## Our next expedition
 
 This recipe lives in an open-source project called [SPL](https://github.com/digital-duck/SPL.py) — a declarative
 language for building exactly this kind of "probabilistic ↔ deterministic"
-pipeline. Because the workflow is just a
-script, running it across a *battery* of STEM problems and a wider model
-roster is now a parameter sweep, not an engineering project — and every run
-produces a machine-checkable trace, so grading correctness doesn't need a
-human in the loop.
+pipeline. Because the workflow is just a script, running it across a *battery*
+of STEM problems and a wider model roster is now a parameter sweep, not an
+engineering project — and every run produces a machine-checkable trace, so
+grading correctness doesn't need a human in the loop.
 
 I'm building out exactly that battery now — together with a mathematician
 collaborator who can help curate problems that actually probe the edges of
-what symbolic engines and LLMs each do well — and there's a real case that
-this shape of system is *underrated* for STEM education and even early-stage
-math research: always-correct, always-explained, at small-model cost. I'll be
-sharing more data as it comes in. If "bigger model" has become the default
-answer to every capability gap in your world too, I'd love to hear whether
-this resonates — or where you think it breaks.
+what symbolic engines and LLMs each do well. The vision is a system that is
+always-correct, always-explained, and within reach of any student with a
+laptop — not just those with institutional budgets. I'll be sharing more data
+as it comes in.
 
----
-The full transcripts behind this post — every prompt, every token count, every
-log line — are public: 
-- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl) 
-- [case-2-log.md](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/case-2-log.md)
+If you work in STEM education, edtech, or open-source AI — or if "bigger
+model" has simply become the default answer to every capability gap in your
+world — I'd love to hear whether this resonates, or where you think it
+breaks. Quality STEM education should not be a luxury. SPL is the
+infrastructure I'm building to make that real, one recipe at a time.

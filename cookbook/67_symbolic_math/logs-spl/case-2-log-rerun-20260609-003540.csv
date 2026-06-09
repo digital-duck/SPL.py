@@ -1,0 +1,10 @@
+mid,label,pid,tier,problem,solver,run,pass,status,output_preview,llm_calls,latency_ms,steps,spl_log
+m001,sonnet-4-6,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,8734,3,/home/gongai/.spl/logs/sympy_math_multi_step-claude_cli-claude-sonnet-4-6-20260609-003540.md
+m002,gemma3,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,6133,3,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-gemma3-20260609-003549.md
+m003,gemma4:12b,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,False,unverified_success,?,2,79566,0,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-gemma4-12b-20260609-003556.md
+m004,qwen2.5,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,7167,3,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-qwen2.5-20260609-003716.md
+m005,qwen3,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,22239,3,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-qwen3-20260609-003723.md
+m006,phi3,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,12874,16,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-phi3-20260609-003746.md
+m007,phi4,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,True,complete,?,2,20582,5,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-phi4-20260609-003759.md
+m008,deepseek-r1,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,False,unverified_success,?,2,49870,0,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-deepseek-r1-20260609-003820.md
+m009,lfm2.5,p003,T1,"differentiate 3*x**3-x, then factor if needed, finally solve for x",true,1,False,unverified_success,?,2,14089,0,/home/gongai/.spl/logs/sympy_math_multi_step-ollama-lfm2.5-20260609-003910.md

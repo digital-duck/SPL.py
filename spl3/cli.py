@@ -61,7 +61,9 @@ def _write_run_log(
     ts_file  = started_at.strftime("%Y%m%d-%H%M%S")
     ts_human = started_at.strftime("%Y-%m-%d %H:%M:%S")
 
-    filename = f"{stem}-{adapter_name}-{ts_file}.md"
+    model_slug = model_name.replace(":", "-").replace(" ", "_") if model_name else ""
+    filename = (f"{stem}-{adapter_name}-{model_slug}-{ts_file}.md" if model_slug
+                else f"{stem}-{adapter_name}-{ts_file}.md")
     log_path = _SPL_LOG_DIR / filename
 
     # Support both WorkflowResult (spl3) and SPLResult / GenerationResult (spl2)
