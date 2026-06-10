@@ -47,8 +47,12 @@ RESULT_RE = re.compile(
     r"\s+-->"
 )
 
-# Statuses that count as a pass
-PASS_STATUSES = {"complete"}
+# Statuses that count as a pass, per solver arm:
+#   solver=true  → "complete" only (kernel ran and verified)
+#   solver=false → "complete" OR "unverified_success" (LLM-only arm has no
+#                  kernel by design, so steps=0 / unverified is expected)
+PASS_STATUSES_SOLVER   = {"complete"}
+PASS_STATUSES_LLM_ONLY = {"complete", "unverified_success"}
 
 
 def find_latest_log(log_dir: str) -> Path:
@@ -65,11 +69,22 @@ def parse_log(log_path: Path) -> list:
         r = m.groupdict()
         # output_preview absent in logs generated before it was added to the tag
         r["output_preview"] = (r["output_preview"] or "?").replace("_", " ")
+        # Reclassify from output_preview sentinel prefixes — the SPL framework
+        # sometimes emits Status: complete even when RETURN WITH carries a
+        # different status; the Output line content is authoritative for these.
+        preview = r["output_preview"]
+        if preview.startswith("[SOLVER FAILURE]"):
+            r["status"] = "solver_error"
+        elif preview.startswith("[PLAN FAILURE]"):
+            r["status"] = "plan_error"
+        elif preview.startswith("[NARRATION FAILURE]"):
+            r["status"] = "narration_error"
         # Reclassify: steps=0 + complete means pipeline was bypassed entirely —
         # the LLM free-formed an answer without SymPy verification.
-        if r["status"] == "complete" and r["steps"] == "0":
+        elif r["status"] == "complete" and r["steps"] == "0":
             r["status"] = "unverified_success"
-        r["pass"]           = r["status"] in PASS_STATUSES
+        pass_set = PASS_STATUSES_LLM_ONLY if r.get("solver") == "false" else PASS_STATUSES_SOLVER
+        r["pass"] = r["status"] in pass_set
         r["run"]         = int(r["run"])
         r["llm_calls"]   = int(r["llm_calls"])  if r["llm_calls"]  != "?" else None
         r["latency_ms"]  = int(r["latency_ms"]) if r["latency_ms"] != "?" else None

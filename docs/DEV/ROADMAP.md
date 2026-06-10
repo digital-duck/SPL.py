@@ -1,5 +1,13 @@
 # SPL 3.0 — Feature Roadmap
 
+> Last reviewed against the codebase: **2026-06-10**.
+>
+> **Current focus (2026-06):** the micro-textbook / neurosymbolic track (§4.5–§4.8).
+> Next up: SageMath + Lean verifier backends — see
+> [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md). Long-term aim:
+> SPL as a seamless deterministic + probabilistic agentic orchestration language
+> for mathematicians' and physicists' daily research workflows.
+
 Suggested features based on a full review of the codebase, the NeurIPS-26 experiment
 protocol, and gaps observed during the `spl3 compare` / `spl3 vibe` implementation.
 These are not committed — they are candidates for future discussion.
@@ -135,6 +143,17 @@ and vibing to a new target.
 
 ---
 
+### ✅ `spl3 cache` — Layer 2 content cache
+
+Persistent content cache for expensive LLM generations (micro-textbook sections,
+notebook cells). Provenance tiers, TTL semantics, cascading invalidation along the
+concept graph (`invalidate vector` → invalidates `span`, `eigenpair`, …), and
+export/import for team sharing without a live remote store. CLI: `spl3 cache
+stats|list|show|invalidate|promote|export|import`. See USER-GUIDE §18 and
+`docs/DEV/spl3-cache.md`.
+
+---
+
 ### 2.1 `spl3 pipeline` — run a named multi-step pipeline in one command
 
 ** [Put-Off] **
@@ -228,7 +247,11 @@ just *how much*.
 
 ** [Put-Off] **
 
-Currently these targets require `--llm`. A deterministic transpiler would:
+Deterministic transpilers now cover `go`, `ts`, `python/langgraph`, `python/pocketflow`,
+and the three domain micro-textbook targets (`python/linalg`, `python/intro_geometry`,
+`python/domain_textbook`). Still LLM-only: `python` (plain), `python/crewai`,
+`python/autogen`, `python/liquid`. A deterministic transpiler for the remaining
+targets would:
 - lower LLM cost (no API call for compilation)
 - produce consistent, auditable output
 - be unit-testable
@@ -276,6 +299,74 @@ Implemented in `spl3/linter.py`. `validate` now runs both parse-level and semant
 
 New options: `--semantic/--no-semantic` (default on), `--strict` (WARNs become fatal).
 All checks are static AST passes — no LLM involved.
+
+---
+
+### ✅ 4.5 `SOLVE` / `ASSERT` — neurosymbolic constructs + IPython kernel
+
+New SPL statements for deterministic computation inside an LLM workflow:
+
+```spl
+SOLVE @order LIST := productivity_order(@@graph@@, weight=@@payoff_weight@@)
+ASSERT reducible(@@graph@@, @@primitives@@) OTHERWISE RETURN @error
+```
+
+Backed by a persistent IPython kernel (`spl3 run --kernel`, with `--kernel-scope
+session|workflow` and `--kernel-timeout`). Every `CALL run_python(@code)` routes
+through the kernel; state (imports, variables, SymPy symbols) persists across steps.
+Implemented in `parser.py`, `kernel.py` (out-of-process `jupyter_client` backend +
+in-process `KernelSession` fallback); see `docs/DEV/SPL-kernel-execution-design.md`
+and `tests/test_solve_assert.py` / `test_kernel.py`. Powers the symbolic-math and
+micro-textbook recipes (67–74).
+
+---
+
+### ✅ 4.6 `CREATE TOOL_API` — deterministic tool definitions + library registry
+
+Closes the language duality: `GENERATE fn()` ↔ `CREATE FUNCTION` (LLM) is now matched
+by `CALL tool()` ↔ `CREATE TOOL_API ... AS PYTHON $$...$$` (deterministic Python).
+Fully implemented across language, generation (`mmd2spl`/`text2spl` emit TOOL_API for
+deterministic ops), and tooling: `spl3 tool-api list|promote|remove` manages a stdlib
+tool registry, and validated workflow tools can be promoted into it. See
+`docs/DEV/spl3-tool-api.md`.
+
+---
+
+### ✅ 4.7 Domain micro-textbook targets — parameterized `python/<domain>` engine
+
+Three deterministic `.ipynb` compile targets: `python/linalg`, `python/intro_geometry`,
+and the generic `python/domain_textbook` (domain supplied as a YAML concept graph,
+resolved at runtime via `graph_lib`). Includes style profiles, concept-graph tooling
+(`scripts/concept_graph.py` — inspect, visualize, share, compose hybrid multi-domain
+graphs), and cookbook recipes 69–74 (notebook gen, linalg core concepts, micro-textbook,
+intro geometry, domain textbook). The `transpiler_linalg.py` → `transpiler_domain_*.py`
+generalization landed 2026-06-07.
+
+---
+
+### 4.8 Verifier ladder — SageMath + Lean 4 backends for `SOLVE`/`ASSERT`
+
+**Priority: current focus.** Full design in
+[`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md). Zero parser/AST
+changes — both are pure backend work behind the existing constructs:
+
+- **SageMath (Part A):** make the kernel spec configurable
+  (`kernel.py` hardcodes `kernel_name="python3"` today; Sage ships a `sagemath`
+  Jupyter kernel spec). Add `verifier: "sage"` to the domain-graph vocabulary,
+  `DomainConfig.kernel_name`, and `.ipynb` kernelspec emission. Unlocks
+  `python/classical_mechanics` (SageManifolds), richer geometry verifiers, and
+  future GAP/PARI/Singular domains. Small lift.
+- **Lean 4 + mathlib (Part B):** kernel-resident `lean_bridge` client talking to a
+  persistent `leanprover-community/repl` process. Statement checking → proof
+  checking → `OTHERWISE RETRY` repair loop with Lean errors fed back. Introduces a
+  new trust tier `machine_proved` above `machine_verified` — CAS checks *instances*,
+  Lean checks *statements*. Larger lift; strictly optional dependency.
+
+**Why this matters beyond the micro-textbook:** the verifier ladder
+(NumPy → SymPy/Sage → Lean) behind the same two constructs is the concrete form of
+SPL's ambition — seamless deterministic + probabilistic orchestration that no
+agent framework offers at the language level, aimed at researchers' daily
+draft → falsify → formalize → cite loops.
 
 ---
 
@@ -327,18 +418,29 @@ comparable to `splc compile` outputs on equal footing.
 
 ## 6. Quality & Testing
 
-### 6.1 `spl3 test` — golden-file regression tests for transpilers
+### ✅ 6.0 `spl3 test` — pipeline-level workflow tests
 
-The deterministic transpilers (`go`, `ts`, `pocketflow`, `langgraph`) produce
-structured code from a fixed `.spl` input. Add a golden-file test harness:
+Implemented, but as YAML-fixture pipeline tests rather than golden files: each
+`workflow.spl` can have a `workflow.test.yaml` declaring test cases (input `params` +
+`assert: contains / status`), run via `spl3 test <file-or-dir>`. Executes the real
+workflow against a chosen adapter/model.
+
+---
+
+### 6.1 Golden-file regression tests for transpilers
+
+The deterministic transpilers (`go`, `ts`, `pocketflow`, `langgraph`, domain targets)
+produce structured code from a fixed `.spl` input. Add a golden-file test harness:
 
 ```bash
-spl3 test cookbook/05_self_refine/self_refine.spl --lang python/pocketflow
+spl3 test cookbook/05_self_refine/self_refine.spl --lang python/pocketflow --golden
 ```
 
 Compares transpiler output against a committed `.golden.py` file, fails on diff.
 Catches transpiler regressions without running an LLM. Critical as the transpilers
-grow more complex.
+grow more complex. (Partially mitigated today by unit tests such as
+`tests/test_transpiler_linalg.py`, but `go`/`ts`/`pocketflow`/`langgraph` have no
+output-snapshot coverage.)
 
 ---
 
@@ -374,12 +476,19 @@ Includes an automatic `spl3 compare` at the end to score migration fidelity.
 
 ---
 
-### 7.3 Multi-judge evaluation
+### ✅ 7.3 Multi-judge evaluation
 
-Use multiple independent judges or a non-Claude judge when testing Claude models
-to address the intra-provider self-preference risk identified in the NeurIPS paper.
-Cross-judge consistency would also validate that Intent Drift ΔS is a stable metric
-rather than a judge-specific artefact.
+Implemented as `spl3 judge` (package `spl3/judge/`): rubric-based evaluation with
+structured verdicts (PASS / FAIL / ESCALATE), per-criterion scores, and reasoning.
+Panel mode runs multiple independent judges concurrently — repeat `--llm
+ADAPTER:MODEL` and aggregate via `--aggregation majority|confidence_weighted|unanimous`;
+`--swap-check` tests order-bias consistency. Cross-provider panels (Claude + Gemini +
+Qwen) directly address the intra-provider self-preference risk identified in the
+NeurIPS paper. See USER-GUIDE §13.
+
+**Remaining:** systematically run cross-judge consistency analysis on the NeurIPS
+S6/S9 results to validate that Intent Drift ΔS is judge-stable (analysis task, not
+tooling).
 
 ---
 
@@ -391,6 +500,27 @@ SPL workflows today are single-process, ephemeral — a node crash mid-run loses
 DBOS (Durable Execution on PostgreSQL) makes every step crash-survivable by checkpointing
 each `@DBOS.step()` call to Postgres before execution. This is the reliability layer that
 makes Momagrid production-worthy.
+
+> **Status 2026-06-10:** No DBOS code in the repo yet (8.1–8.3 all open). Momagrid
+> *distribution* has shipped (see ✅ 8.0 below); Momagrid *durability* has not.
+
+### ✅ 8.0 Momagrid Hub workflow registry + Hub-to-Hub peering
+
+The Hub is now the "OS kernel" of the compute grid (`spl3/hub_registry.py`,
+`spl3/peer.py`): it maintains a workflow registry (name → definition) shared across
+all connected nodes, and `CALL workflow_name()` in a client workflow routes to the
+Hub via the existing `POST /tasks` protocol (one schema field extension, no new
+endpoints). If a workflow isn't registered locally, the Hub forwards to a peer Hub
+via its peer table — Hub-to-Hub WAN routing. CLI: `spl3 register <path>`,
+`spl3 registry list`, `spl3 peers list`. The companion `mg` CLI (Go, separate
+`digital-duck/momagrid` repo) plus the School Momagrid cheatsheet
+(`docs/GUIDE/Momagrid-Cheatsheet.md`) make a classroom grid a two-command setup.
+
+A model-affinity parallelization design for batch experiments (one worker per Ollama
+model, file-locked shared log) is drafted in
+`cookbook/67_symbolic_math/readme-momagrid.md`.
+
+---
 
 ### 8.1 DBOS execution backend for `spl3 run`
 
@@ -507,6 +637,10 @@ Import via `IMPORT "stdlib/patterns/self_refine.spl"`. Parameterize via workflow
 This is the SPL equivalent of the SQL `GROUP BY` / `JOIN` — common operations, standard
 spelling, any runtime.
 
+**Partially shipped:** the *deterministic-tool* half exists — the `CREATE TOOL_API`
+stdlib registry (`spl3 tool-api list --stdlib`, see ✅ 4.6). The *workflow-pattern*
+half (curated `.spl` templates) is still open.
+
 **Concrete task:** Curate LangGraph, AutoGen, and CrewAI recipe repos; translate each
 to `.spl`; add to stdlib and seed Code-RAG vector store.
 
@@ -523,6 +657,11 @@ spl3 registry pull rag-pipeline --version latest
 
 Analogous to Docker Hub for containers or PyPI for packages, but for *agentic workflows*.
 The registry stores the `.spl` only — the runtime is resolved locally at compile time.
+
+**Partially shipped:** the Momagrid Hub workflow registry with Hub-to-Hub peering
+(✅ 8.0) already provides intra-grid publish/discover (`spl3 register`, `spl3 registry
+list`). What remains is the *public* hosted registry with versioning, tags, and
+licensing.
 
 ---
 
@@ -637,19 +776,27 @@ DIVERGED). A dedicated `spl3 diff` command would add no distinct value.
 | 4.2 | swift/snap/edge targets | Compiler | High | Low | Planned |
 | 4.3 | SPL `IMPORT` statement | Language | — | — | ✅ Done |
 | 4.4 | Semantic linting in `validate` | Quality | — | — | ✅ Done |
+| 4.5 | `SOLVE`/`ASSERT` + IPython kernel | Language | — | — | ✅ Done |
+| 4.6 | `CREATE TOOL_API` + tool registry | Language | — | — | ✅ Done |
+| 4.7 | Domain micro-textbook targets (`python/<domain>`) | Compiler | — | — | ✅ Done |
+| 4.8a | SageMath kernel backend (verifier coverage) | Language | Low | High | **Current focus** |
+| 4.8b | Lean 4 + mathlib proof backend (`machine_proved` tier) | Language | High | Very High | **Current focus** |
 | 5.1 | VS Code extension | DX | — | — | ✅ Done |
 | ~~5.2~~ | ~~`spl3 serve`~~ | DX | — | — | **Descoped** (VibeSCOPE FastAPI covers this) |
 | 5.3 | `vibe` provenance manifest | Quality | Low | Medium | Planned |
+| — | `spl3 cache` Layer 2 content cache | Pipeline | — | — | ✅ Done |
+| 6.0 | `spl3 test` pipeline-level workflow tests | Testing | — | — | ✅ Done |
 | 6.1 | Golden-file regression tests | Testing | Medium | Medium | Planned |
 | 7.1 | Cross-runtime round-trip tests | DODA | Low | High | Planned |
 | 7.2 | `spl3 migrate` pipeline command | DODA | Medium | High | ✅ Done |
-| 7.3 | Multi-judge evaluation | Research | Medium | Medium | Planned |
+| 7.3 | Multi-judge evaluation (`spl3 judge` panel) | Research | — | — | ✅ Done |
+| 8.0 | Momagrid Hub registry + Hub-to-Hub peering | Reliability | — | — | ✅ Done |
 | 8.1 | DBOS execution backend (`--target python/dbos`) | Reliability | High | Very High | **Priority 1** |
 | 8.2 | Time-travel debugging via DBOS | Reliability | Medium | High | Planned |
 | 8.3 | Momagrid persistent task queues | Reliability | Medium | Very High | **Priority 1** |
 | 9 | `spl3 migrate` verified migration service | DODA | Medium | Very High | **Priority 2** |
-| 10.1 | SPL Standard Library | Standardization | Medium | Very High | **Priority 3** |
-| 10.2 | SPL Registry | Standardization | High | High | Planned |
+| 10.1 | SPL Standard Library | Standardization | Medium | Very High | **Priority 3** — tool half done (✅ 4.6); pattern half open |
+| 10.2 | SPL Registry | Standardization | High | High | Partial — Hub registry done (✅ 8.0); public registry open |
 | 11.1 | Policy-gated CI/CD deployment | Governance | Medium | High | Planned |
 | 11.2 | Audit trail / lineage manifest | Governance | Low | High | Planned |
 | 12.1 | Federated experiment sharing | Research | High | Medium | Planned |
