@@ -1,4 +1,4 @@
-# Neurosymbolic Math in Structured Prompt Language
+# Neurosymbolic Math in a Structured Prompt Language
 
 *What 400 cells of symbolic math say about open-source models, verified
 reasoning, and who gets access to quality STEM education.*
@@ -26,7 +26,7 @@ So we scaled up — **10 models, 20 problems spanning five difficulty tiers,
 with an A/B control arm built in** — and ran every combination. This is what
 400 data cells look like.
 
-## The architecture: neurosymbolic by construction
+## The architecture: neurosymbolic by design
 
 The pipeline is written in [SPL](https://github.com/digital-duck/SPL.py)
 (Structured Prompt Language), an open-source declarative language for building
@@ -35,7 +35,7 @@ exactly this kind of "probabilistic ↔ deterministic" workflow:
 1. An LLM decomposes the math problem into an ordered list of symbolic
    operations.
 2. **SymPy** — a deterministic symbolic-math engine, not a language model —
-   executes and verifies each step. Exact by construction.
+   executes and verifies each step. Exact by design.
 3. The LLM explains the verified result in plain English.
 
 The LLM plans and explains; the domain expert computes. The hard math never
@@ -86,10 +86,13 @@ no API key, no bill, on hardware a student already owns.
 chain); solver=false counts `complete` or `unverified_success` (no kernel by
 design).*
 
-A note on the frontier benchmark: `sonnet-4-6`'s single solver-arm failure
-(p017, an ODE initial-value problem) was a SymPy library bug, not a model
-error — its decomposition was textbook-correct. We hold the solver arm to
-strict verified correctness, and that strictness cuts both ways.
+A note on `sonnet-4-6`: we included one frontier model deliberately, as a
+quality reference point — and Claude earned it, with the best verified score
+in the test. Its single
+solver-arm failure (p017, an ODE initial-value problem) was a SymPy library
+bug, not a model error — its decomposition was correct. But a reference point
+is exactly that: a reference, not a requirement. Every other model in the
+table runs free and local, and the architecture works the same either way.
 
 ## The standout: rnj-1, a model named after Ramanujan
 
@@ -113,24 +116,24 @@ Ramanujan and [publish it on Ollama](https://ollama.com/library/rnj-1) for
 anyone to pull and run locally, free.
 
 The model lives up to the name. `rnj-1` scores **15/20** on the verified
-solver arm at **4.6 seconds average** — the fastest latency of any model that
-cleared double-digit verified passes — and a perfect 20/20 on the direct-answer
-arm. That combination matters: it can reason through all 20 problems in free
-form, *and* it can decompose them into precise, structured symbolic steps that
-SymPy can execute without repair. Those are two different skills, and the
-second is rarer.
+solver arm — the best result of any open model in the test — at **4.6 seconds
+average**, nearly three times faster than the frontier model. It also scores a
+perfect 20/20 on the direct-answer arm. That combination matters: it can
+reason through all 20 problems in free form, *and* it can break them into
+precise, structured steps that SymPy can run without repair. Those are two
+different skills, and the second is rarer.
 
 A specialized open-weight model, running locally, free, in under 5 seconds,
 within four problems of a frontier API on verified correctness — that is the
-strongest evidence yet that "better at the specific task your pipeline
-actually needs" beats "bigger in general."
+strongest evidence yet that "better at the exact task you need" can be a
+smarter bet than "bigger in general."
 
 ## The A/B gap is the real finding
 
 The most useful number in this dataset is not any model's total score — it is
 the gap between its two arms.
 
-Eight of ten models score 20/20 on `solver=false`. That sounds impressive
+Six of the ten models score a perfect 20/20 on `solver=false`. That sounds impressive
 until you read what it means: the model answered directly, without any
 verification, and the answer *looked* correct. We have no proof it was. On the
 hardest tiers, several models generate fluent, confident explanations for
@@ -141,9 +144,11 @@ The intelligence is there — its free-form reasoning gets the right answer most
 of the time — but it cannot follow the narrow, structured decomposition
 instruction the solver arm requires. Markdown fences, extra prose, wrong field
 names: the format slips, SymPy rejects the plan, and 17 correct answers become
-2 verified ones. `deepseek-r1`, a reasoning-fine-tuned model, shows the same
-pattern. Strong internal reasoning is not the same skill as reducing a problem
-to steps a deterministic engine can verify.
+2 verified ones. `deepseek-r1`, a model trained
+specially for step-by-step reasoning, fails in a related way: it spends its
+whole token budget thinking instead of producing the structured plan.
+Reasoning well in free form is not the same skill as reducing a problem to
+steps an exact engine can verify.
 
 And that is the failure mode worth designing against — not the wrong answers
 that look wrong (those are easy to spot), but the wrong answers that look
@@ -183,13 +188,15 @@ and powerful are not automatically the gifted, and the gifted are very often
 neither rich nor powerful. The next Ramanujan is out there right now, and the
 only question is whether the tools reach her.
 
-But `rnj-1`, `qwen2.5`, and `gemma3` run on a modest laptop, cost nothing, and
-on this 20-problem battery produce explanations that are correct and **verified
-by SymPy — the same verification that runs behind Claude's 19/20.** The
+But `rnj-1`, `qwen2.5`, and `gemma3` run on a modest laptop and cost nothing.
+Every answer they deliver through this pipeline is **verified by SymPy — the
+same verification that runs behind Claude's 19/20.** And when a model fails,
+it fails loudly and visibly — a student never receives a wrong answer dressed
+up as a right one. The
 neurosymbolic architecture is what makes that possible: by routing computation
 through SymPy, it shrinks the LLM's role to parsing intent and explaining
 clearly — exactly what small open models already do well. The hard math stays
-exact by construction, regardless of which model sits at the top of the
+exact by design, regardless of which model sits at the top of the
 pipeline.
 
 Correct, verified, step-by-step STEM education, on hardware a student already
@@ -198,7 +205,7 @@ goal.
 
 It is also worth honoring who built the open models that make this possible.
 Google invented the Transformer architecture in 2017 ("Attention Is All You
-Need," Vaswani et al.) — the foundation eight of these ten models stand on.
+Need," Vaswani et al.) — the foundation nearly every model here stands on.
 Alibaba's `qwen2.5`, released quietly in September 2024, is still the
 efficiency champion eighteen months later: 12/20 verified at 2.8 seconds,
 free. Liquid AI's `lfm2.5` is a deliberate architectural departure — a
@@ -223,8 +230,8 @@ cd SPL.py
 conda create -n spl123 python=3.11 -y && conda activate spl123
 pip install -e .
 
-# run a single model on all 20 problems (both arms):
-python cookbook/67_symbolic_math/run_experiment.py -m m001
+# run a single model on all 20 problems (both arms) — m010 is rnj-1:
+python cookbook/67_symbolic_math/run_experiment.py -m m010
 
 # run all 10 models (400 cells):
 python cookbook/67_symbolic_math/run_experiment.py

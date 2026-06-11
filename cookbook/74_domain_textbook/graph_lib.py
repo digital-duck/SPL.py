@@ -36,6 +36,9 @@ verify_content(section, domain_data, verifier="")  → str   (single generic sym
 verify_right_triangle(a, b, c)                     → str   (exact a²+b²=c² over ℚ; sage|sympy)
 verify_distance_squared(x1, y1, x2, y2, d2)        → str   (exact distance formula over ℚ; sage|sympy)
 verify_polygon_area(vertices, claimed)             → str   (exact shoelace over ℚ; sage|sympy)
+verify_momentum_conservation(m1,u1,m2,u2,v1,v2)    → str   (exact two-body p check over ℚ; sage|sympy)
+verify_energy_conservation(m,g,v0,h0,v1,h1)        → str   (exact T+V ledger over ℚ; sage|sympy)
+verify_sho_solution(solution)                      → str   (symbolic x''+ω²x ≡ 0 check; sage|sympy)
 
 Graph conventions — IDENTICAL to linalg_graph.py / geometry_graph.py
 --------------------------------------------------------------------
@@ -434,6 +437,93 @@ def verify_polygon_area(vertices, claimed_area, verifier: str = "sage|sympy") ->
             if area == num(claimed_area):
                 return f"pass ({engine})"
             return f"fail: shoelace area = {area} != {claimed_area} (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
+
+
+# ---------------------------------------------------------------------------
+# Exact mechanics verifiers — same shape as the geometry ones above
+# (engine absence falls through sage→sympy; a computed verdict is final).
+# ---------------------------------------------------------------------------
+
+def verify_momentum_conservation(m1, u1, m2, u2, v1, v2,
+                                 verifier: str = "sage|sympy") -> str:
+    """Exact two-body momentum check: m₁u₁ + m₂u₂ == m₁v₁ + m₂v₂ over ℚ.
+
+    Verifies the worked example for the `momentum` concept node
+    (u = velocities before the collision, v = after).
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import QQ as num
+            else:
+                from sympy import Rational as num
+            before = num(m1) * num(u1) + num(m2) * num(u2)
+            after = num(m1) * num(v1) + num(m2) * num(v2)
+            if before == after:
+                return f"pass ({engine})"
+            return f"fail: p_before = {before} != p_after = {after} (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
+
+
+def verify_energy_conservation(m, g, v0, h0, v1, h1,
+                               verifier: str = "sage|sympy") -> str:
+    """Exact mechanical-energy check: ½mv₀² + mgh₀ == ½mv₁² + mgh₁ over ℚ.
+
+    Verifies the worked example for the `energy_conservation` concept node
+    (state 0 → state 1 under gravity alone).
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import QQ as num
+            else:
+                from sympy import Rational as num
+            e0 = num(m) * num(v0) ** 2 / 2 + num(m) * num(g) * num(h0)
+            e1 = num(m) * num(v1) ** 2 / 2 + num(m) * num(g) * num(h1)
+            if e0 == e1:
+                return f"pass ({engine})"
+            return f"fail: E_0 = {e0} != E_1 = {e1} (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
+
+
+def verify_sho_solution(solution: str = "A*cos(w*t) + B*sin(w*t)",
+                        verifier: str = "sage|sympy") -> str:
+    """Symbolic check that x(t) solves the simple harmonic oscillator.
+
+    Substitutes the candidate into x'' + ω²·x and verifies it vanishes
+    *identically* (symbolic differentiation + simplification — a genuinely
+    CAS-strength check, not numeric sampling). Free symbols: t, w, A, B.
+    Verifies the worked example for the `harmonic_oscillator` concept node.
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import SR, var, diff
+                t, w, A, B = var("t w A B")
+                x = SR(solution)
+                # NB: `expr == 0` builds a symbolic *equation* in Sage —
+                # is_zero() is the boolean identity test.
+                residual = (diff(x, t, 2) + w**2 * x).simplify_full()
+                ok = residual.is_zero()
+            else:
+                import sympy
+                t, w, A, B = sympy.symbols("t w A B")
+                x = sympy.sympify(solution, locals={"t": t, "w": w, "A": A, "B": B})
+                residual = sympy.simplify(sympy.diff(x, t, 2) + w**2 * x)
+                ok = residual == 0
+            if ok:
+                return f"pass ({engine})"
+            return f"fail: x'' + w^2 x = {residual} != 0 for x = {solution} ({engine})"
         except ImportError as exc:
             last_exc = exc
     return f"fail: no verifier engine available ({last_exc})"

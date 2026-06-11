@@ -347,7 +347,7 @@ not "the textbook claim is proved." Mitigations, all in scope:
 |---|---|---|---|
 | B-1 | `lean_bridge` prototype: REPL session mgmt (incl. `env`-id hygiene, §B.2), `lean_check`, timeout/restart, tests | M | planned |
 | B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M | planned |
-| B-3 | Proof checking + `OTHERWISE RETRY` repair-loop recipe (`cookbook/7x_lean_verify/`) | M | planned |
+| B-3 | Proof checking + repair-loop recipe (`cookbook/76_lean_proof/`) | M | **recipe prepared** 2026-06-10 — `lean_proof.spl` (validated; capped repair loops with Lean errors fed back; faithfulness-gap report) + `readme.md` documenting the bare-name kernel contract B-1 must satisfy (`start`, `lean_statement_ok`, `lean_proof_ok`, `lean_find` → `"ok"`/`"fail: ..."`). Untested until B-1 lands |
 | B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M | planned |
 | B-5 | *(stretch)* mathlib-citation mode — `exact?` with suggestion parsing, or Loogle/LeanSearch (§B.1 caveat); claims link to mathlib lemma names | M/R | stretch |
 

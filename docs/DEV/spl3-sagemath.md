@@ -195,11 +195,31 @@ The seed is the proof that the differential-geometry machinery the future
 
 ## 9. Next
 
-Part A is done. The remaining Sage-track work is *domain authoring*, not
-integration: write `mechanics_graph.yaml` (a new domain YAML, zero engine
-changes) when the classical-mechanics micro-textbook becomes the focus. Part B
-(Lean 4 + mathlib, milestones B-1…B-5) is the next integration phase — see
-[`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md) §3.
+Part A is done. The first post-ladder domain is also authored:
+
+**`mechanics_graph.yaml`** (2026-06-10, `cookbook/74_domain_textbook/`) — the
+classical-mechanics concept graph, 28 nodes / 49 edges: two radicals
+(*kinematics*: position, time; *dynamics*: mass, force) → velocity …
+Lagrangian → Euler–Lagrange → **normal_modes** (the README's stated payoff;
+its `lab` notes the frequencies are eigenvalues of the dynamical matrix — the
+bridge back to the linalg domain). Zero engine changes — pure YAML + three new
+`graph_lib` verifiers:
+
+- `verify_momentum_conservation` / `verify_energy_conservation` — exact ℚ
+  recompute (`sage|sympy`)
+- `verify_sho_solution` — *symbolic differentiation* check that x(t) satisfies
+  x″ + ω²x ≡ 0 identically (a genuinely CAS-strength verification; note Sage's
+  `expr == 0` builds an equation object — `is_zero()` is the boolean test)
+- `configuration_space` is the first **`verifier: "sage"` fail-fast node**,
+  with `lab` pointing at `classical_mechanics_seed.sphere_scalar_curvature`
+
+Graph invariants verified: acyclic; reducible from both radicals; **not**
+reducible from kinematics alone (the physics fact that dynamics is independent,
+encoded and machine-checked). Tests: `tests/test_mechanics_domain.py`.
+
+Part B (Lean 4 + mathlib, milestones B-1…B-5) is the parallel integration
+phase — see [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md)
+§3 and `cookbook/76_lean_proof/readme.md` (the B-1 kernel contract).
 
 See the full milestone tables and granularity policy (run-level kernel vs
 node-level verifier) in

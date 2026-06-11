@@ -120,24 +120,27 @@ class TestTimeoutAndRestart:
     def test_timeout_restarts_and_raises(self):
         repl = LeanREPL(timeout=60).start()
         try:
-            slow = "theorem t : 9999 ^ 9999 = 9999 ^ 9999 := by native_decide"
+            # #eval of a non-terminating partial def hangs the repl for real
+            hang = "partial def splSpin (n : Nat) : Nat := splSpin (n + 1)\n#eval splSpin 0"
             with pytest.raises((TimeoutError, LeanError)):
-                repl.check(slow, timeout=0.05)
-            # self-healed: usable again after the restart
+                repl.check(hang, timeout=2.0)
+            # self-healed: usable again after the restart (warm-up re-paid)
             r = repl.check("theorem t : 1 + 1 = 2 := rfl")
             assert r["ok"] is True
         finally:
             repl.close()
 
-    def test_crash_recovery(self):
+    def test_crash_recovery_is_transparent(self):
         repl = LeanREPL(timeout=60).start()
         try:
             repl._proc.kill()
             repl._proc.wait()
-            with pytest.raises((LeanError, TimeoutError, BrokenPipeError)):
-                repl.check("theorem t : 1 + 1 = 2 := rfl")
+            assert repl.is_running is False
+            # _send respawns a dead process before writing — the check
+            # simply succeeds on the fresh session
             r = repl.check("theorem t : 1 + 1 = 2 := rfl")
             assert r["ok"] is True
+            assert repl.is_running is True
         finally:
             repl.close()
 

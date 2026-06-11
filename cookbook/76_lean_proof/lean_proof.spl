@@ -1,0 +1,201 @@
+-- Recipe 76: lean_proof.spl — proof-grade generate-then-verify (milestone B-3)
+--
+-- The verifier-ladder top rung: an LLM formalizes a prose claim as a Lean 4
+-- statement, Lean checks it; the LLM writes a proof, Lean's kernel checks it.
+-- Every ASSERT/SOLVE routes to the persistent IPython kernel, where
+-- lean_bridge (milestone B-1, spl3/lean_bridge.py) talks to a persistent
+-- `leanprover-community/repl` process with mathlib loaded once.
+--
+--   draft (LLM) → formalize (LLM) → typecheck (Lean) → prove (LLM)
+--        → kernel-check (Lean) → cite (mathlib) — generate-then-verify
+--        at proof grade, with capped repair loops fed by Lean's errors.
+--
+-- Run (after Part B lands):
+--   spl3 run cookbook/76_lean_proof/lean_proof.spl \
+--       --kernel --adapter claude_cli \
+--       -p claim="The sum of two even integers is even." \
+--       -p lean_project="$HOME/lean/spl-mathlib"
+--
+-- STATUS: untested — awaiting lean_bridge (B-1, in progress in a parallel
+-- session). The kernel-side contract this recipe assumes is documented in
+-- readme.md §3; adjust bare-name helpers there if B-1's API differs.
+
+-- ── Prompt templates ────────────────────────────────────────────────────────
+
+CREATE FUNCTION formalize_claim(claim TEXT)
+RETURN TEXT
+AS $$
+You are an expert in Lean 4 and mathlib.
+
+Formalize the following mathematical claim as a single Lean 4 theorem
+statement with a `sorry` proof body:
+
+CLAIM: {claim}
+
+Rules:
+- Output ONLY Lean 4 code — no markdown fences, no commentary.
+- Exactly one declaration, of the form:
+    theorem claim_auto : <proposition> := by sorry
+- Use mathlib vocabulary and conventions (e.g. Even, Nat, Int, ∀, ∃).
+- Prefer the weakest hypotheses that make the claim true.
+$$;
+
+CREATE FUNCTION fix_formalization(claim TEXT, lean_stmt TEXT, errors TEXT)
+RETURN TEXT
+AS $$
+You are an expert in Lean 4 and mathlib. The formalization below does not
+elaborate. Fix it so it typechecks, staying faithful to the original claim.
+
+CLAIM: {claim}
+
+CURRENT FORMALIZATION:
+{lean_stmt}
+
+LEAN ERRORS:
+{errors}
+
+Rules:
+- Output ONLY the corrected Lean 4 code — no markdown fences, no commentary.
+- Keep the form: theorem claim_auto : <proposition> := by sorry
+- Fix names, namespaces, implicit arguments, and types per the errors.
+$$;
+
+CREATE FUNCTION write_proof(lean_stmt TEXT)
+RETURN TEXT
+AS $$
+You are an expert Lean 4 / mathlib proof engineer.
+
+Replace the `sorry` in the theorem below with a complete tactic proof.
+
+THEOREM:
+{lean_stmt}
+
+Rules:
+- Output ONLY the full Lean 4 declaration with the proof — no markdown
+  fences, no commentary.
+- Prefer short, robust tactic combinations: exact?, simp, omega, ring,
+  positivity, aesop, or a direct term-mode proof via a mathlib lemma.
+- Do not change the statement itself.
+$$;
+
+CREATE FUNCTION repair_proof(lean_proof TEXT, errors TEXT)
+RETURN TEXT
+AS $$
+You are an expert Lean 4 / mathlib proof engineer. The proof below fails
+kernel checking. Repair it.
+
+CURRENT ATTEMPT:
+{lean_proof}
+
+LEAN ERRORS:
+{errors}
+
+Rules:
+- Output ONLY the full corrected Lean 4 declaration — no markdown fences.
+- Do not change the theorem statement; repair only the proof after `:=`.
+- If a lemma name is wrong, find the correct mathlib name; if a tactic
+  fails, try an alternative (simp lemmas, omega for arithmetic, ring for
+  algebraic identities).
+$$;
+
+-- ── Main workflow ────────────────────────────────────────────────────────────
+
+WORKFLOW lean_proof
+    INPUT:
+        @claim TEXT DEFAULT 'The sum of two even integers is even.',
+        @lean_project TEXT DEFAULT '.',
+        @max_attempts INT DEFAULT 3
+    OUTPUT:
+        @report TEXT
+DO
+    -- 0. Kernel setup: import lean_bridge helpers as BARE NAMES (the SOLVE
+    --    template parser does not support dotted continuations like
+    --    lean_bridge.check(...)), define timing helpers, and start the
+    --    persistent Lean REPL (mathlib loaded once; ~10-40s cold, amortized
+    --    across every check that follows).
+    CALL run_python(f'
+import time
+def _now(): return time.time()
+def _elapsed(start): return time.time() - start
+
+from lean_bridge import start, lean_statement_ok, lean_proof_ok, lean_find
+start("{@lean_project}")
+print("Lean REPL ready (mathlib loaded)")
+') INTO @_
+
+    SOLVE @t_start FLOAT := _now()
+
+    LOGGING f"Claim: {@claim}" LEVEL INFO
+
+    -- 1. Formalize: prose claim → Lean statement (LLM, probabilistic)
+    GENERATE formalize_claim(@claim) INTO @lean_stmt
+
+    -- 2. Statement repair loop: Lean elaboration is the gate (deterministic).
+    --    'ok' = typechecks with only the sorry warning; 'fail: ...' carries
+    --    Lean's errors back into the next GENERATE — the generate-then-verify
+    --    spine at proof grade.
+    SOLVE @stmt_check TEXT := lean_statement_ok(@lean_stmt)
+    @attempt := 0
+    WHILE @attempt < @max_attempts DO
+        EVALUATE @stmt_check
+            WHEN contains("fail") THEN
+                LOGGING f"formalization attempt {@attempt} failed — repairing" LEVEL INFO
+                GENERATE fix_formalization(@claim, @lean_stmt, @stmt_check) INTO @lean_stmt
+                SOLVE @stmt_check TEXT := lean_statement_ok(@lean_stmt)
+            ELSE
+                LOGGING "statement typechecks" LEVEL INFO
+        END
+        @attempt := @attempt + 1
+    END
+
+    -- Hard gate: no point attempting a proof of a malformed statement.
+    ASSERT "fail" not in @stmt_check
+
+    -- 3. Faithfulness note (B-2 mitigation): the informal↔formal link is the
+    --    one thing Lean cannot check. Render both side by side in the report
+    --    (below); optionally judge it: spl3 judge on {claim, lean_stmt}.
+
+    -- 4. Prove: LLM writes the proof, Lean's kernel checks it (deterministic).
+    GENERATE write_proof(@lean_stmt) INTO @lean_proof
+    SOLVE @proof_check TEXT := lean_proof_ok(@lean_proof)
+    @attempt := 0
+    WHILE @attempt < @max_attempts DO
+        EVALUATE @proof_check
+            WHEN contains("fail") THEN
+                LOGGING f"proof attempt {@attempt} failed — repairing" LEVEL INFO
+                GENERATE repair_proof(@lean_proof, @proof_check) INTO @lean_proof
+                SOLVE @proof_check TEXT := lean_proof_ok(@lean_proof)
+            ELSE
+                LOGGING "proof kernel-checked" LEVEL INFO
+        END
+        @attempt := @attempt + 1
+    END
+
+    -- 5. Outcome: machine_proved on success; on exhaustion the claim keeps
+    --    whatever CAS-level verification it has — Lean failure never blocks
+    --    delivery, it only withholds the higher badge (plan §B.2).
+    EVALUATE @proof_check
+        WHEN contains("fail") THEN
+            @verdict := "unproved — " + @proof_check
+        ELSE
+            @verdict := "machine_proved (lean)"
+    END
+
+    -- 6. (stretch, B-5) mathlib citation: a named lemma matching the
+    --    statement is stronger correspondence evidence than a bespoke proof.
+    SOLVE @citation TEXT := lean_find(@lean_stmt)
+
+    SOLVE @elapsed FLOAT := _elapsed(@t_start)
+    LOGGING f"[timing] lean_proof: {@elapsed:.1f}s" LEVEL INFO
+
+    -- 7. Report: prose claim and Lean statement side by side — the human
+    --    audits the one link nothing machine-checks (faithfulness).
+    @report := "# Lean Proof Report\n\n"
+    @report := @report + "## Claim (prose)\n\n" + @claim + "\n\n"
+    @report := @report + "## Formalization (Lean 4)\n\n```lean\n" + @lean_stmt + "\n```\n\n"
+    @report := @report + "## Proof\n\n```lean\n" + @lean_proof + "\n```\n\n"
+    @report := @report + "## Verdict\n\n" + @verdict + "\n\n"
+    @report := @report + "## mathlib citation\n\n" + @citation + "\n"
+
+    COMMIT @report
+END

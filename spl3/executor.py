@@ -481,7 +481,10 @@ class SPL3Executor(SPL2Executor):
                 )
                 continue
 
-            if kernel is not None:
+            # Only KernelSession (in-process) exposes define_tool; the
+            # out-of-process IPythonKernel does not — TOOL_API bodies are
+            # host-side callables, so they exec in-process either way.
+            if kernel is not None and hasattr(kernel, "define_tool"):
                 fn = kernel.define_tool(stmt.name, stmt.python_body)
             else:
                 namespace: dict = {}

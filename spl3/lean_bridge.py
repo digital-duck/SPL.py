@@ -48,6 +48,7 @@ import json
 import logging
 import os
 import queue
+import re
 import subprocess
 import threading
 from pathlib import Path
@@ -373,6 +374,17 @@ class LeanREPL:
         _log.info("LeanREPL.statement_ok: %s", ok)
         return ok
 
+    @property
+    def feedback(self) -> str:
+        """Repair-loop feedback for the most recent check: error diagnostics,
+        or a note about remaining ``sorry`` placeholders, or ``""`` if clean.
+        Designed to be fed straight back into a repair ``GENERATE`` prompt."""
+        if self.last_errors:
+            return self.last_errors
+        if self.last.get("sorries"):
+            return "the proof still contains sorry placeholder(s)"
+        return ""
+
     def find(self, stmt: str, timeout: Optional[float] = None) -> Optional[str]:
         """Use case 3 (§B.1, stretch): probe mathlib for an existing proof.
 
@@ -391,6 +403,8 @@ class LeanREPL:
             data = msg.get("data", "")
             if "Try this:" in data:
                 suggestion = data.split("Try this:", 1)[1].strip()
+                # drop a leading editor-action tag like "[apply] "
+                suggestion = re.sub(r"^\[\w+\]\s*", "", suggestion)
                 _log.info("LeanREPL.find: %s", suggestion)
                 return suggestion
         self.last_errors = "\n".join(_messages(reply, "error"))
