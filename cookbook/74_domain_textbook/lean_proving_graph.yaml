@@ -1,4 +1,6 @@
-# Proving Math with Lean — micro-textbook concept graph
+# "Proving Math the Lean Way" — micro-textbook concept graph
+# (companion volume to "Doing Math in SageMath Lab" — Book I finds it, Book II proves it)
+# Publisher: Digital Duck (github.com/digital-duck)
 #
 # E-book mission: a free, verified introduction to Lean 4 + mathlib — the
 # proof assistant Terence Tao champions for doing mathematics with AI.

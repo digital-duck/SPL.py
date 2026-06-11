@@ -1,8 +1,8 @@
 """Tests for the tool-advocacy micro-textbook domains.
 
-Two e-book concept graphs authored 2026-06-10:
-  - sage_learning_graph.yaml — "Learning Math with Sage"
-  - lean_proving_graph.yaml  — "Proving Math with Lean"
+Two e-book concept graphs authored 2026-06-10 (publisher: Digital Duck):
+  - sage_learning_graph.yaml — "Doing Math in SageMath Lab"
+  - lean_proving_graph.yaml  — "Proving Math the Lean Way"
 
 Both compile through recipe 74 (build_micro_textbook.spl --lang
 python/domain_textbook) with zero engine changes — the test of the
