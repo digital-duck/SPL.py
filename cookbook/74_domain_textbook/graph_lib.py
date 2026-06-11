@@ -336,6 +336,11 @@ def verify_content(section: str, domain_data: dict[str, Any],
         try:
             if engine == "sage":
                 import sage.all  # noqa: F401 — presence check
+            elif engine == "lean":
+                # Part B's bridge (parallel session). Until it lands, "lean|sympy"
+                # nodes fall through to sympy; afterwards lean becomes the
+                # engine-of-record automatically — no YAML edits needed.
+                import spl3.lean_bridge  # noqa: F401 — presence check
             elif engine == "_domain_default":
                 if domain_data.get("domain", "") == "intro_geometry":
                     import sympy.geometry  # noqa: F401 — presence check

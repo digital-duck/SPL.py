@@ -175,7 +175,9 @@ class LeanREPL:
         self._proc: Optional[subprocess.Popen] = None
         self._lines: "queue.Queue[Optional[str]]" = queue.Queue()
         self._reader: Optional[threading.Thread] = None
-        self._lock = threading.Lock()
+        # RLock, not Lock: a timeout inside _send (which holds the lock)
+        # triggers restart() → _warmup() → _send() on the same thread.
+        self._lock = threading.RLock()
         self._warm_env: Optional[int] = None
 
         #: Human-readable errors from the most recent check — fed back into

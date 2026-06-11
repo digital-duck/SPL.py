@@ -1,6 +1,6 @@
 # Neurosymbolic Math in a Structured Prompt Language
 
-*What 400 cells of symbolic math say about open-source models, verified
+*What 400 runs of symbolic math say about open-source models, verified
 reasoning, and who gets access to quality STEM education.*
 
 ## How this started
@@ -24,16 +24,16 @@ indistinguishable in format and tone from the right ones.
 The natural objection was: *"sure, but one problem isn't a benchmark."* Fair.
 So we scaled up — **10 models, 20 problems spanning five difficulty tiers,
 with an A/B control arm built in** — and ran every combination. This is what
-400 data cells look like.
+400 runs look like.
 
 ## The architecture: neurosymbolic by design
 
 The pipeline is written in [SPL](https://github.com/digital-duck/SPL.py)
-(Structured Prompt Language), an open-source declarative language for building
-exactly this kind of "probabilistic ↔ deterministic" workflow:
+(Structured Prompt Language), an open-source language for building pipelines
+where a language model and an exact math engine each do the part they are
+best at:
 
-1. An LLM decomposes the math problem into an ordered list of symbolic
-   operations.
+1. An LLM breaks the math problem into an ordered list of steps.
 2. **SymPy** — a deterministic symbolic-math engine, not a language model —
    executes and verifies each step. Exact by design.
 3. The LLM explains the verified result in plain English.
@@ -44,13 +44,13 @@ passes through a pattern-matcher at all.
 Each of the 20 problems ran through two arms:
 
 - **solver=true** (neurosymbolic): decompose → SymPy verifies → explain.
-- **solver=false** (LLM-only): the model answers directly. No kernel, no
+- **solver=false** (LLM-only): the model answers directly. No math engine, no
   verification. A clean control.
 
-The problem battery covers five tiers of undergraduate mathematics — from
+The 20 problems cover five tiers of undergraduate mathematics — from
 single-step differentiation, through limits and transcendental functions,
-integration and eigenvalues, ODEs and infinite series, up to Laplace
-transforms with round-trip verification.
+integration and eigenvalues, differential equations and infinite series, up
+to Laplace transforms with round-trip verification.
 
 ## The ten models
 
@@ -69,7 +69,7 @@ no API key, no bill, on hardware a student already owns.
 
 ## The results
 
-| Model | solver=true (20 problems) | solver=false (20 problems) | avg latency (solver) |
+| Model | solver=true (20 problems) | solver=false (20 problems) | avg time (solver arm) |
 |-------|--------------------------|---------------------------|----------------------|
 | `sonnet-4-6` | **19/20** | 20/20 | 13.5s |
 | `rnj-1` | **15/20** | 20/20 | 4.6s |
@@ -83,7 +83,7 @@ no API key, no bill, on hardware a student already owns.
 | `gemma4:12b` | 2/20 | 0/20 | 46.0s |
 
 *Pass criteria: solver=true counts `complete` only (SymPy verified the full
-chain); solver=false counts `complete` or `unverified_success` (no kernel by
+chain); solver=false counts `complete` or `unverified_success` (no engine by
 design).*
 
 A note on `sonnet-4-6`: we included one frontier model deliberately, as a
@@ -233,7 +233,7 @@ pip install -e .
 # run a single model on all 20 problems (both arms) — m010 is rnj-1:
 python cookbook/67_symbolic_math/run_experiment.py -m m010
 
-# run all 10 models (400 cells):
+# run all 10 models (400 runs):
 python cookbook/67_symbolic_math/run_experiment.py
 
 # explore results in the Streamlit UI:
@@ -252,20 +252,20 @@ ollama pull phi4
 
 ## What's next
 
-This 400-cell run answers the "one problem isn't a benchmark" objection. The
-next question is whether the pattern holds on harder, more compositional
-problems — where the decomposition itself requires nested decisions, not just
-a flat list of operations. I'm extending the problem battery now, together
+These 400 runs answer the "one problem isn't a benchmark" objection. The
+next question is whether the pattern holds on harder problems — where breaking
+the problem down takes layered decisions, not a single flat list of steps. I'm
+extending the problem set now, together
 with a mathematician collaborator who is helping curate problems that probe
 the actual edges of where symbolic engines and LLMs each fail.
 
 The reframing — *let the LLM plan and explain; let the domain expert compute* —
 generalizes far past algebra. Physics, chemistry, structural engineering,
-formal logic, financial modeling: anywhere hard science has a deterministic
-substrate (a simulator, a solver, a verified database, a proof checker), the
+formal logic, financial modeling: anywhere hard science has an exact engine
+to lean on (a simulator, a solver, a verified database, a proof checker), the
 same shape applies.
 
-The vision stays the same: a system that is always-correct, always-explained,
+The vision stays the same: a system that is always-verified, always-explained,
 and within reach of any student with a laptop — not just those with
 institutional budgets. Quality STEM education should not be a luxury.
 [SPL](https://github.com/digital-duck/SPL.py) is the infrastructure I'm
