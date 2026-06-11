@@ -213,11 +213,13 @@ class ContentCache:
         key: str,
         badge: str,
         verdict: Optional[dict] = None,
+        statement: str = "",
     ) -> list[str]:
         """Add a trust badge to an entry; returns the new badge set.
 
-        verdict stored for auditability (latest promotion wins)."""
-        return self._meta.promote(key, badge, verdict)
+        verdict stored for auditability (latest promotion wins); a non-empty
+        statement records the formal statement backing the badge."""
+        return self._meta.promote(key, badge, verdict, statement)
 
     # ------------------------------------------------------------------ #
     # Invalidation                                                         #

@@ -74,21 +74,21 @@ jupyter kernelspec list                              # verify: 'sagemath' should
 
 ```bash
 # Default problem: Galois group of x^5 - x - 1
-spl3 run cookbook/75_sage_math/sage_math.spl \
+spl3 run cookbook/75_sage_math/basic_sagemath.spl \
     --adapter ollama --model gemma3 --kernel-name sagemath
 
 # Rational point on a conic (Legendre-style question)
-spl3 run cookbook/75_sage_math/sage_math.spl \
+spl3 run cookbook/75_sage_math/basic_sagemath.spl \
     --adapter ollama --model gemma3 --kernel-name sagemath \
     --param problem="does x^2 + y^2 = 3*z^2 have a rational solution?"
 
 # Elliptic curve rank (curve 11a1)
-spl3 run cookbook/75_sage_math/sage_math.spl \
+spl3 run cookbook/75_sage_math/basic_sagemath.spl \
     --llm claude_cli --kernel-name sagemath \
     --param problem="what is the rank of the elliptic curve y^2 + y = x^3 - x^2 - 10*x - 20"
 
 # Exact factorization over Q
-spl3 run cookbook/75_sage_math/sage_math.spl \
+spl3 run cookbook/75_sage_math/basic_sagemath.spl \
     --adapter ollama --model gemma3 --kernel-name sagemath \
     --param problem="factor x^4 - 1 over the rationals"
 ```

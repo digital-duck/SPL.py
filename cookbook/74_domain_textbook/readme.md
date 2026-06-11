@@ -308,6 +308,32 @@ DOMAIN_YAML=chinese_characters_graph.yaml TARGET=phono_semantic_principle \
 jupyter nbconvert --to webpdf chinese_characters_textbook.ipynb # → chinese_characters_textbook.pdf
 ```
 
+### 8. *Unlocking English Words the LEGO Way* — `english_morphology_graph.yaml`
+
+Sibling pilot to №7 — two writing systems, one schema, **one verifier**:
+`verify_character_lego` machine-checks 汉字 decompositions and Latin word
+sums with zero code changes (Structured Word Inquiry's
+`in + spect + ion → inspection` IS the `pieces` list). Roots are FORM
+(first radical), affixes are the OPERATOR (second radical), and the
+irreducibility theorem is 马's, restated: no pile of roots ever yields
+*inspection*. Multiset parallels carry over one-for-one — `reconstruction`'s
+four bricks are 森's tripling; `import`'s `in-` → `im-` assimilation is the
+水→氵 allomorphy story. 13 / 18 / 5 — 36 nodes, 51 edges. Capstone:
+`morphological_decoding_principle`.
+Tests: `tests/test_english_morphology_domain.py`.
+
+```bash
+DOMAIN_YAML=english_morphology_graph.yaml TARGET=morphological_decoding_principle \
+  jupyter nbconvert --to notebook --execute \
+  build_micro_textbook_python_domain_textbook.ipynb --output english_morphology_textbook.ipynb
+jupyter nbconvert --to webpdf english_morphology_textbook.ipynb # → english_morphology_textbook.pdf
+```
+
+Together, №7 + №8 are a claim bigger than either file: **language learning
+becomes a STEM discipline** — vocabulary as a verifiable decomposition
+system, with reducibility theorems, machine-checked worked examples, and
+computed learning paths, in any writing system.
+
 ## Candidate domains — what the LEGO schema teaches next
 
 The chinese_characters pilot proved the schema works for *structural*
@@ -327,30 +353,12 @@ in parity with the radical-based pilot:
 - **a capstone principle** with the "learn ~N bricks + 1 principle, decode
   thousands" payoff shape.
 
-### Latin & Greek morphology — `english_morphology_graph.yaml`
+### Latin & Greek morphology — `english_morphology_graph.yaml` ✔ DRAFTED
 
-The closest sibling of the Chinese pilot — English academic vocabulary IS a
-phono-semantic-style composition system, it just hides it better.
-
-- **Primitives:** a comprehensive brick inventory in three families —
-  prefixes (`re-`, `pre-`, `sub-`, `trans-`, `ex-`, `in-`, …), roots
-  (`spect`, `port`, `dict`, `struct`, `mit/miss`, `duc/duct`, `graph`,
-  `bio`, …), suffixes (`-ion`, `-or`, `-able`, `-ology`, …). Realistic
-  production scale: ~50 + ~120 + ~50 bricks.
-- **Two-radical split:** roots are FORM (the semantic core — first radical);
-  affixes are the OPERATORS (second radical). The irreducibility theorem:
-  no pile of roots ever yields *inspection* — `in- + spect + -ion` needs
-  the affix system, exactly as 妈 needs 马.
-- **`pieces` multiset:** `reconstruction` = `[re-, con-, struct, -ion]`;
-  double-prefix words play the role 森's tripling plays in the pilot.
-- **Bonus parallel:** allomorphy (`in-` → `im-`/`il-`/`ir-` before labials/
-  liquids) is the 水→氵 variant-form story, one-for-one.
-- **Capstone:** `morphological_decoding_principle` — ~220 bricks + 1
-  principle decode tens of thousands of academic, scientific, legal, and
-  medical words. The equity stake is identical to the Chinese pilot's:
-  morphological awareness is the single best-documented lever on the
-  academic-vocabulary gap, and it is rarely taught explicitly.
-- **Verifier:** `structural` — `verify_character_lego` works unchanged.
+Promoted from candidate to pilot — see **№8 above**. The production version
+scales the brick inventory to ~220 (~50 prefixes / ~120 roots / ~50
+suffixes); the 36-node pilot proves the schema, the irreducibility theorem,
+and the shared verifier.
 
 ### Periodic table — `chemistry_elements_graph.yaml`
 
@@ -399,6 +407,7 @@ on record.
 | `mechanics_graph.yaml` | classical mechanics (exact Sage/SymPy verifiers; Sage-only manifolds node) |
 | `sage_learning_graph.yaml` / `lean_proving_graph.yaml` / `python_science_graph.yaml` | the Digital Duck e-book trilogy (Books I–III) |
 | `chinese_characters_graph.yaml` | ZiNets companion — structural (graph-as-oracle) domain |
+| `english_morphology_graph.yaml` | Latin word-sum sibling of the Chinese pilot — same schema, same verifier |
 | `generate_domain_yaml.py` | one-shot generator: frozen `{domain}_graph.py` → `{domain}_graph.yaml` |
 | `validate_graph_lib.py` | regression oracle: `graph_lib` + YAML ≡ frozen modules (40/40 checks) |
 | `build_micro_textbook.spl` | the one `.spl` source — `@domain_yaml`-parameterized |

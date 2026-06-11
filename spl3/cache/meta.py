@@ -162,15 +162,18 @@ class MetaStore:
         key: str,
         badge: str,
         verdict: Optional[dict] = None,
+        statement: str = "",
     ) -> list[str]:
         """Add a trust badge to an entry's set; returns the new set.
 
         Badges only accumulate — there is no downgrade, and adding a badge
         the entry already holds is an error. A provided verdict replaces the
         stored one (the audit record of the latest promotion); None keeps it.
+        A non-empty *statement* records the formal statement backing the
+        badge (the machine_proved promotion path).
         """
         row = self._conn.execute(
-            "SELECT badges, verdict FROM content_meta WHERE key = ?", (key,)
+            "SELECT badges, verdict, statement FROM content_meta WHERE key = ?", (key,)
         ).fetchone()
         if row is None:
             raise KeyError(f"No cache entry with key: {key}")
@@ -180,8 +183,10 @@ class MetaStore:
         new_badges = normalize_badges(held + [badge])
         verdict_json = json.dumps(verdict) if verdict else row["verdict"]
         self._conn.execute(
-            "UPDATE content_meta SET badges = ?, verdict = ?, updated_at = ? WHERE key = ?",
-            (json.dumps(new_badges), verdict_json, _now(), key),
+            "UPDATE content_meta SET badges = ?, verdict = ?, statement = ?, "
+            "updated_at = ? WHERE key = ?",
+            (json.dumps(new_badges), verdict_json,
+             statement or row["statement"], _now(), key),
         )
         self._conn.commit()
         return new_badges

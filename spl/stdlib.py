@@ -776,3 +776,38 @@ def cache_put(
         return entry.key
     except Exception as e:
         return f"cache_put error: {e}"
+
+
+@spl_tool
+def cache_promote(
+    concept: str,
+    badge: str,
+    statement: str = "",
+    rubric_version: str = "v1",
+    params_json: str = "{}",
+) -> str:
+    """Add a trust badge to an existing Layer 2 cache entry (B-2/B-4).
+
+    Resolves the entry by the same key derivation cache_get/cache_put use
+    (concept + params + rubric version, empty dep hashes) and adds `badge`
+    to its set. A non-empty `statement` records the formal statement
+    backing the badge — pass the kernel-checked Lean proposition when
+    promoting to machine_proved. Returns the new comma-joined badge set on
+    success, or an error string ("cache_promote error: ...") on failure —
+    including when no entry exists, so callers can fall back to cache_put.
+
+    Usage in SPL:
+        CALL cache_promote(@concept, 'machine_proved', statement=@lean_stmt) INTO @badges
+        EVALUATE @badges
+            WHEN contains("error") THEN
+                CALL cache_put(@concept, @report, badges='machine_proved', statement=@lean_stmt)
+        END
+    """
+    try:
+        from spl3.cache import get_content_cache, content_key
+        params = json.loads(params_json) if params_json else {}
+        key = content_key(concept, params, rubric_version, {})
+        new_badges = get_content_cache().promote(key, badge, statement=statement)
+        return ",".join(new_badges)
+    except Exception as e:
+        return f"cache_promote error: {e}"

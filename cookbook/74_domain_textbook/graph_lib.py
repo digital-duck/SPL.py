@@ -40,6 +40,7 @@ verify_momentum_conservation(m1,u1,m2,u2,v1,v2)    → str   (exact two-body p c
 verify_energy_conservation(m,g,v0,h0,v1,h1)        → str   (exact T+V ledger over ℚ; sage|sympy)
 verify_sho_solution(solution)                      → str   (symbolic x''+ω²x ≡ 0 check; sage|sympy)
 verify_character_lego(character, domain_data)      → str   (structural decomposition check; no CAS)
+verify_balanced_equation(reactants, products)      → str   (exact integer atom ledger; no CAS)
 
 Graph conventions — IDENTICAL to linalg_graph.py / geometry_graph.py
 --------------------------------------------------------------------
@@ -595,6 +596,36 @@ def verify_character_lego(character: str, domain_data: dict[str, Any]) -> str:
         return (f"fail: pieces of {character} claim bricks {sorted(set(pieces))} "
                 f"but the graph derives {sorted(derived)}")
     return "pass (structural)"
+
+
+def verify_balanced_equation(reactants, products) -> str:
+    """Exact atom-ledger check: bricks rearrange, never appear or vanish.
+
+    Verifies the worked example for the `conservation_of_atoms` node of
+    `chemistry_elements_graph.yaml`. Each side is a list of
+    ``(coefficient, pieces)`` pairs, where ``pieces`` is a formula node's
+    brick multiset — e.g. 2H₂ + O₂ → 2H₂O is::
+
+        verify_balanced_equation([(2, ["H", "H"]), (1, ["O", "O"])],
+                                 [(2, ["H", "H", "O"])])
+
+    Pure integer arithmetic over Counters — exact by construction, no CAS
+    engine to dispatch (the structural domains' analog of the ℚ verifiers).
+    """
+    from collections import Counter
+
+    def ledger(side) -> Counter:
+        total: Counter = Counter()
+        for coefficient, pieces in side:
+            for brick in pieces:
+                total[brick] += coefficient
+        return total
+
+    lhs, rhs = ledger(reactants), ledger(products)
+    if lhs == rhs:
+        return "pass (exact)"
+    return (f"fail: atom ledger does not balance — "
+            f"reactants {dict(sorted(lhs.items()))} != products {dict(sorted(rhs.items()))}")
 
 
 # ---------------------------------------------------------------------------

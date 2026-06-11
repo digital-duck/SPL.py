@@ -38,8 +38,9 @@ Usage::
     lean = LeanREPL(project_dir="path/to/proj", imports=["Mathlib"]).start()
 
 Strictly optional dependency: nothing here imports at SPL startup, and
-:func:`repl_available` lets tests skip when the toolchain is absent.
-This module must not touch ``spl3/cache/`` (B-4 is deferred until A-3 lands).
+:func:`repl_available` / :func:`mathlib_available` let tests skip tiers the
+toolchain doesn't provide.  This module stays cache-agnostic: badge writes
+(B-4) happen in the recipes via ``cache_put`` / ``cache_promote``.
 """
 
 from __future__ import annotations
@@ -63,6 +64,14 @@ REPL_REVISION = "v4.30.0"
 
 #: Default location of the repl checkout (see setup_lean.sh).
 _DEFAULT_REPL_DIR = Path(__file__).resolve().parent.parent / "cookbook" / "tools" / "lean" / "repl"
+
+#: Default lake project for `lake env repl` (mathlib lives here when
+#: provisioned with `setup_lean.sh --with-mathlib`).
+_DEFAULT_PROJECT_DIR = _DEFAULT_REPL_DIR.parent / "spl_lean"
+
+#: Loogle search endpoint (B-5 fallback; network dependency — an
+#: alternative to local `exact?`, never the default path).
+LOOGLE_URL = "https://loogle.lean-lang.org/json"
 
 
 # ---------------------------------------------------------------------------
@@ -116,6 +125,26 @@ def repl_available(repl_dir: Optional[Path] = None) -> bool:
     """True if the pinned repl binary has been built (tests use this to skip)."""
     try:
         return repl_binary(repl_dir).exists()
+    except Exception:
+        return False
+
+
+def default_project_dir() -> Path:
+    """Resolve the spl_lean lake project directory.
+
+    Order: ``$SPL_LEAN_PROJECT_DIR``, then the in-repo default
+    ``cookbook/tools/lean/spl_lean``.
+    """
+    env_dir = os.environ.get("SPL_LEAN_PROJECT_DIR")
+    return Path(env_dir) if env_dir else _DEFAULT_PROJECT_DIR
+
+
+def mathlib_available(project_dir: Optional[Path] = None) -> bool:
+    """True if the project has mathlib pulled and built (tests use this
+    to skip the mathlib tier; `setup_lean.sh --with-mathlib` provisions it)."""
+    d = Path(project_dir) if project_dir else default_project_dir()
+    try:
+        return (d / ".lake" / "packages" / "mathlib").is_dir()
     except Exception:
         return False
 
@@ -185,6 +214,26 @@ class LeanREPL:
         self.last_errors: str = ""
         #: Full parsed reply of the most recent check.
         self.last: dict[str, Any] = {}
+
+    @classmethod
+    def mathlib(cls, **kwargs) -> "LeanREPL":
+        """A REPL over the spl_lean project with mathlib imported (B-5).
+
+        Requires ``setup_lean.sh --with-mathlib``.  The warm-up pays the
+        mathlib import once (10–40 s); every check then branches off the
+        warm environment as usual.  Raises :class:`LeanNotFound` with the
+        provisioning command when mathlib is absent.
+        """
+        project = kwargs.pop("project_dir", None) or default_project_dir()
+        if not mathlib_available(project):
+            raise LeanNotFound(
+                f"mathlib not provisioned under {project}.\n"
+                f"Run: bash cookbook/tools/lean/setup_lean.sh --with-mathlib\n"
+                f"(~5 GB olean cache; never compiles mathlib from source)"
+            )
+        kwargs.setdefault("imports", ["Mathlib"])
+        kwargs.setdefault("warmup_timeout", 300.0)
+        return cls(project_dir=project, **kwargs)
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -412,6 +461,84 @@ class LeanREPL:
         self.last_errors = "\n".join(_messages(reply, "error"))
         _log.info("LeanREPL.find: no hit")
         return None
+
+    def find_citation(self, stmt: str, *, fallback: bool = True,
+                      max_candidates: int = 8,
+                      timeout: Optional[float] = None) -> Optional[str]:
+        """Citation search with Loogle fallback (B-5).
+
+        Local ``exact?`` first (kernel-grade, no network).  On a miss and
+        with *fallback* enabled, queries Loogle with a pattern derived from
+        the statement and kernel-checks each candidate via ``exact <name>``
+        — the kernel is the filter, so the search can be loose.  Returns a
+        tactic string (``exact <...>``) or ``None``.  Network or search
+        failure degrades to ``None``, never raises.
+        """
+        hit = self.find(stmt, timeout=timeout)
+        if hit is not None:
+            return hit
+        if not fallback:
+            return None
+        try:
+            candidates = loogle(loogle_pattern(stmt), limit=max_candidates)
+        except Exception as exc:
+            _log.info("LeanREPL.find_citation: loogle unavailable (%s)", exc)
+            return None
+        for cand in candidates:
+            name = cand.get("name")
+            if not name:
+                continue
+            try:
+                result = self.check(f"example : {stmt} := by exact {name}",
+                                    timeout=timeout)
+            except (TimeoutError, LeanError):
+                continue
+            if result["ok"]:
+                _log.info("LeanREPL.find_citation: loogle hit %s", name)
+                return f"exact {name}"
+        _log.info("LeanREPL.find_citation: no citation (%d loogle candidates tried)",
+                  len(candidates))
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Loogle — mathlib search over HTTP (B-5 fallback)
+# ---------------------------------------------------------------------------
+
+def loogle_pattern(stmt: str) -> str:
+    """Loogle query for a Lean proposition: the turnstile (conclusion)
+    pattern ``⊢ <stmt>``.
+
+    Measured against the live service: the turnstile form with the
+    statement verbatim is both the most selective (``⊢ ∀ n m : Nat,
+    n + m = m + n`` → exactly ``Nat.add_comm``) and the cheapest — by
+    contrast, all-metavariable term patterns like ``_ + _ = _ + _`` exceed
+    Loogle's server-side heartbeat budget and return an error.
+    """
+    return f"⊢ {stmt.strip()}"
+
+
+def loogle(query: str, limit: int = 8, timeout: float = 10.0) -> list[dict[str, Any]]:
+    """Search mathlib via the Loogle JSON API.
+
+    Returns up to *limit* hits as ``[{"name": ..., "module": ..., "type": ...}]``.
+    A network dependency — callers should treat failure as a soft miss
+    (:meth:`LeanREPL.find_citation` does).  Raises on transport errors so
+    the caller can distinguish "no hits" from "no network".
+    """
+    import urllib.parse
+    import urllib.request
+
+    url = f"{LOOGLE_URL}?q={urllib.parse.quote(query)}"
+    req = urllib.request.Request(url, headers={"User-Agent": "spl3-lean-bridge"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    if data.get("error"):
+        _log.info("loogle: %s", data["error"])
+        return []
+    hits = data.get("hits") or []
+    _log.info("loogle: %d hit(s) for %r", len(hits), query)
+    return hits[:limit]
 
 
 def _messages(reply: dict[str, Any], severity: str) -> list[str]:

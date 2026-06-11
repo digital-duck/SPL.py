@@ -23,6 +23,9 @@ spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --param topic=
 
 ## Quick Start
 
+For a fresh-machine walkthrough covering the full verifier ladder (SymPy →
+SageMath → Lean 4 + mathlib), see [docs/GUIDE/SETUP.md](docs/GUIDE/SETUP.md).
+
 ```bash
 conda create -n spl123 python=3.11
 conda activate spl123        # Python 3.11+

@@ -475,6 +475,20 @@ class TestContentCache:
         meta = disk_content_cache._meta.get_meta(entry.key)
         assert json.loads(meta["badges"]) == ["machine_verified"]
 
+    def test_promote_with_statement(self, disk_content_cache):
+        # the B-2 path: a CAS-verified entry gains the claim-axis top badge
+        # with the kernel-checked statement recorded alongside
+        stmt = "∀ n m : Nat, n + m = m + n"
+        entry = self._put(disk_content_cache, badges=["machine_verified"])
+        disk_content_cache.promote(entry.key, "machine_proved", statement=stmt)
+        hit = disk_content_cache.get("span", {"domain": "linalg"}, "v1", {})
+        assert hit.badges == ["machine_verified", "machine_proved"]
+        assert hit.statement == stmt
+        # a later promotion without a statement must not erase it
+        disk_content_cache.promote(entry.key, "ai_reviewed")
+        meta = disk_content_cache._meta.get_meta(entry.key)
+        assert meta["statement"] == stmt
+
     def test_canonical_property(self, disk_content_cache):
         entry = self._put(disk_content_cache,
                           badges=["machine_proved", "human_verified"])

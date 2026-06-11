@@ -23,7 +23,9 @@ Probabilistic  (LLM)    — write the capstone "Payoff" section tying the target
 
 This is **Layer 4** of the neurosymbolic-SPL roadmap: a domain library
 (`linalg_graph.py`, Layer 2) plus two `WORKFLOW`s (Layer 4a/4b) that consume it,
-compiled to a runnable artifact by the `python/linalg` `splc` transpiler (Layer 3).
+compiled to a runnable artifact by the `python/linalg` `splc` transpiler (Layer 3) —
+plus `lean_payoffs.spl`, a proof-grade Lean post-pass over the build run's
+payoff concepts (verifier ladder B-2, run separately).
 
 ## The concept graph (`linalg_graph.py`)
 
@@ -69,7 +71,7 @@ are completely **style-agnostic** — only the writing adapts.
 | `instructor` | instructor prepping a lecture | Concept summary → Common mistakes → Teaching tip → Exercise |
 | `research` | grad student / researcher | Definition → Theorem → Proof → Remark (citation-ready) |
 
-## Two workflows
+## Three workflows
 
 ### `build_micro_textbook.spl` — full curriculum toward a target
 
@@ -117,6 +119,29 @@ Takes a free-text question (e.g. *"Why does diagonalization work?"*) and an
 optional `@learner_state` (concepts already mastered), resolves it to a concept
 node, computes exactly the gap the learner needs to fill — in teaching order —
 and generates only that slice plus the target concept itself.
+
+### `lean_payoffs.spl` — proof-grade post-pass (verifier ladder B-2)
+
+Run *after* a build run; Lean stays off the default pipeline path. Per payoff
+concept: formalize its canonical claim as a mathlib proposition
+(`statement_ok` typecheck, capped repair loop) → LLM faithfulness judge,
+where **UNFAITHFUL gates the badge** → citation-first proof
+(`find_citation`: local `exact?`, then Loogle fallback, every candidate
+kernel-checked) → on success, `cache_promote` the concept's cached section to
+`machine_proved` with the statement stored for side-by-side audit. The build
+run's CAS checks already earned `machine_verified`, so promoted entries carry
+the first **two-axis badge sets**.
+
+```bash
+bash cookbook/tools/lean/setup_lean.sh --with-mathlib   # one-time, ~5 GB olean cache
+spl3 run cookbook/71_linalg_micro_textbook/lean_payoffs.spl --kernel --llm claude_cli
+spl3 cache list    # rank_nullity, diagonalization → machine_verified,machine_proved
+```
+
+Verified run (2026-06-11): `rank_nullity` and `diagonalization` promoted with
+kernel-checked citations; `spectral_theorem` found no library citation and
+correctly stayed `machine_verified` — failure withholds the badge, never
+blocks delivery. Details: [`docs/DEV/spl3-lean.md`](../../docs/DEV/spl3-lean.md) §6.
 
 ## DODA: logical view → physical artifact
 

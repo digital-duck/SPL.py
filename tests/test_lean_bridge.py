@@ -1,11 +1,16 @@
-"""Tests for spl3.lean_bridge — Lean 4 REPL bridge (B-1).
+"""Tests for spl3.lean_bridge — Lean 4 REPL bridge (B-1, B-5).
 
 The whole live tier is skipped when the pinned repl binary is absent
 (provision with ``cookbook/tools/lean/setup_lean.sh``) — mirroring the
 optional Sage leg in tests/test_kernel.py.  The stdlib-only REPL is used:
 no mathlib required, kernel-checked proofs about ``Nat`` are enough to
 exercise every bridge behaviour, including the §B.2 env-id hygiene.
+A small mathlib tier (B-5) additionally skips unless ``--with-mathlib``
+has been provisioned; Loogle tests never touch the network — the HTTP
+layer is monkeypatched.
 """
+
+import json as _json
 
 import pytest
 
@@ -15,13 +20,21 @@ from spl3.lean_bridge import (
     LeanNotFound,
     LeanREPL,
     ensure_repl,
+    loogle,
+    loogle_pattern,
+    mathlib_available,
     repl_available,
 )
 
 LEAN_MISSING = not repl_available()
+MATHLIB_MISSING = not mathlib_available()
 
 needs_lean = pytest.mark.skipif(
     LEAN_MISSING, reason="Lean repl not provisioned (run cookbook/tools/lean/setup_lean.sh)"
+)
+needs_mathlib = pytest.mark.skipif(
+    LEAN_MISSING or MATHLIB_MISSING,
+    reason="mathlib not provisioned (run cookbook/tools/lean/setup_lean.sh --with-mathlib)",
 )
 
 
@@ -155,3 +168,140 @@ class TestFind:
         # a hit must be a suggestion string
         if hit is not None:
             assert "exact" in hit or hit  # suggestion text, not empty
+
+
+# ---------------------------------------------------------------------------
+# Loogle fallback (B-5) — network layer always mocked
+# ---------------------------------------------------------------------------
+
+class TestLooglePattern:
+    def test_turnstile_form(self):
+        assert loogle_pattern("∀ n m : Nat, n + m = m + n") == \
+            "⊢ ∀ n m : Nat, n + m = m + n"
+
+    def test_strips_whitespace(self):
+        assert loogle_pattern("  1 + 1 = 2  ") == "⊢ 1 + 1 = 2"
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict):
+        self._payload = payload
+
+    def read(self):
+        return _json.dumps(self._payload).encode("utf-8")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return False
+
+
+class TestLoogle:
+    def _patch(self, monkeypatch, payload):
+        import urllib.request
+        monkeypatch.setattr(
+            urllib.request, "urlopen",
+            lambda req, timeout=None: _FakeResponse(payload),
+        )
+
+    def test_hits_parsed_and_limited(self, monkeypatch):
+        hits = [{"name": f"L{i}", "module": "M", "type": "T"} for i in range(10)]
+        self._patch(monkeypatch, {"count": 10, "hits": hits})
+        out = loogle("⊢ whatever", limit=3)
+        assert [h["name"] for h in out] == ["L0", "L1", "L2"]
+
+    def test_server_error_is_soft_miss(self, monkeypatch):
+        # Loogle reports over-broad patterns as an in-band error (observed
+        # live: all-metavariable patterns exceed the heartbeat budget)
+        self._patch(monkeypatch, {"error": "timeout at `whnf`"})
+        assert loogle("_ + _ = _ + _") == []
+
+    def test_transport_error_raises(self, monkeypatch):
+        import urllib.request
+
+        def boom(req, timeout=None):
+            raise TimeoutError("read timed out")
+
+        monkeypatch.setattr(urllib.request, "urlopen", boom)
+        with pytest.raises(TimeoutError):
+            loogle("⊢ anything")
+
+
+@needs_lean
+class TestFindCitation:
+    def test_local_hit_short_circuits(self, lean, monkeypatch):
+        # When exact? hits, Loogle must not be consulted at all
+        def no_network(*a, **k):
+            raise AssertionError("loogle called despite local hit")
+
+        monkeypatch.setattr("spl3.lean_bridge.loogle", no_network)
+        monkeypatch.setattr(lean, "find", lambda s, timeout=None: "exact Nat.add_comm")
+        assert lean.find_citation("∀ n m : Nat, n + m = m + n") == "exact Nat.add_comm"
+
+    def test_loogle_fallback_kernel_checks_candidates(self, lean, monkeypatch):
+        # exact? misses; Loogle offers a dud then the real lemma — only the
+        # kernel-checked one is returned, as a named citation
+        monkeypatch.setattr(lean, "find", lambda s, timeout=None: None)
+        monkeypatch.setattr(
+            "spl3.lean_bridge.loogle",
+            lambda q, limit=8: [{"name": "Nat.le_refl"}, {"name": "Nat.add_comm"}],
+        )
+        cite = lean.find_citation("∀ n m : Nat, n + m = m + n")
+        assert cite == "exact Nat.add_comm"
+
+    def test_no_network_degrades_to_none(self, lean, monkeypatch):
+        monkeypatch.setattr(lean, "find", lambda s, timeout=None: None)
+
+        def boom(q, limit=8):
+            raise TimeoutError("no network")
+
+        monkeypatch.setattr("spl3.lean_bridge.loogle", boom)
+        assert lean.find_citation("∀ n m : Nat, n + m = m + n") is None
+
+    def test_fallback_disabled(self, lean, monkeypatch):
+        monkeypatch.setattr(lean, "find", lambda s, timeout=None: None)
+
+        def no_network(*a, **k):
+            raise AssertionError("loogle called with fallback=False")
+
+        monkeypatch.setattr("spl3.lean_bridge.loogle", no_network)
+        assert lean.find_citation("∀ n m : Nat, n + m = m + n",
+                                  fallback=False) is None
+
+
+# ---------------------------------------------------------------------------
+# Mathlib tier (B-5) — skipped unless --with-mathlib was provisioned
+# ---------------------------------------------------------------------------
+
+class TestMathlibConstructor:
+    def test_mathlib_raises_with_hint_when_absent(self, tmp_path):
+        with pytest.raises(LeanNotFound, match="--with-mathlib"):
+            LeanREPL.mathlib(project_dir=tmp_path)
+
+    def test_mathlib_available_false_for_empty_dir(self, tmp_path):
+        assert mathlib_available(tmp_path) is False
+
+
+@needs_mathlib
+class TestMathlibTier:
+    @pytest.fixture(scope="class")
+    def mlean(self):
+        repl = LeanREPL.mathlib(timeout=90).start()
+        yield repl
+        repl.close()
+
+    def test_mathlib_vocabulary_elaborates(self, mlean):
+        # ℝ and Continuous only exist with mathlib imported
+        assert mlean.statement_ok(
+            "∀ (f : ℝ → ℝ), Continuous f → Continuous (fun x => f x + 1)"
+        ) is True
+
+    def test_statement_check_catches_bad_dot_notation(self, mlean):
+        assert mlean.statement_ok(
+            "∀ (A : Matrix (Fin 2) (Fin 2) ℝ), A.frobnicate = A"
+        ) is False
+
+    def test_find_in_mathlib(self, mlean):
+        hit = mlean.find("∀ n m : Nat, n + m = m + n")
+        assert hit is not None

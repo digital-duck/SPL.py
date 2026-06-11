@@ -208,9 +208,7 @@ Google invented the Transformer architecture in 2017 ("Attention Is All You
 Need," Vaswani et al.) — the foundation nearly every model here stands on.
 Alibaba's `qwen2.5`, released quietly in September 2024, is still the
 efficiency champion eighteen months later: 12/20 verified at 2.8 seconds,
-free. Liquid AI's `lfm2.5` is a deliberate architectural departure — a
-continuous-time neural network rooted in differential equations, not attention
-at all. And Ashish Vaswani — the same Vaswani whose name leads that 2017
+free. Liquid AI's lfm2.5 is based on non-transformer architectures rooted in advanced state-space models (SSMs). Ashish Vaswani — the same Vaswani whose name leads that 2017
 paper — chose to name his company's math model after a genius who proved, a
 hundred years ago, that talent is distributed everywhere even when resources
 are not.

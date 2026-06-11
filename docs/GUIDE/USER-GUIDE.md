@@ -46,6 +46,9 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 
 ## 1. Quick-start
 
+> Provisioning a fresh machine (conda env, SageMath wheels, Lean 4 + mathlib)?
+> Start with **[SETUP.md](SETUP.md)** — this guide assumes that stack is in place.
+
 ```bash
 # Validate a .spl file
 spl3 validate cookbook/05_self_refine/self_refine.spl
@@ -204,6 +207,43 @@ before pure-Python verifier code. See `docs/DEV/sage_lean_integration_plan.md`.
 ```bash
 spl3 run workflow.spl --kernel-name sagemath --adapter ollama
 ```
+
+**Lean 4 bridge (proof-checked verification):** Lean is not a Jupyter kernel — it
+enters through the same door as everything else: a thin client *inside* the Python
+kernel. `spl3.lean_bridge.LeanREPL` manages a persistent
+`leanprover-community/repl` process (mathlib imported once and amortized; every
+check runs in a fresh environment forked from the warm base, with timeout →
+transparent restart). An SPL workflow typechecks and kernel-checks Lean statements
+with ordinary `CALL`/`ASSERT` steps — no new constructs:
+
+```spl
+-- One-time per run: start the bridge inside the kernel
+CALL run_python('from spl3.lean_bridge import LeanREPL; lean = LeanREPL.mathlib().start(); print("ready")') INTO @_
+
+-- Then: statement well-formedness, kernel-checked proofs, mathlib citations
+CALL run_python('ok = lean.statement_ok(stmt)') INTO @stmt_ok
+CALL run_python('result = lean.check(proof_code)') INTO @proof_result
+CALL run_python('cite = lean.find_citation(stmt)') INTO @mathlib_lemma
+```
+
+One-time setup: `cookbook/tools/lean/setup_lean.sh` (elan + pinned REPL build; add
+`--with-mathlib` for the mathlib citation path). Lean is a strictly optional
+dependency — workflows degrade gracefully when it is absent, and a failed proof
+attempt never blocks delivery: the section keeps its CAS-level badge and only the
+higher `machine_proved` badge (§18) is withheld.
+
+Together these form the **verifier ladder** — numeric spot-check (NumPy) → exact
+symbolic instance (SymPy/Sage) → machine-checked proof (Lean 4 + mathlib) — with
+the same two SPL constructs (`SOLVE`/`ASSERT`) at every rung. Worked recipes:
+
+| Recipe | Demonstrates |
+|--------|--------------|
+| `cookbook/75_sage_math` | Sage kernel: Galois groups, conics over ℚ, elliptic-curve rank |
+| `cookbook/76_lean_proof` | Lean proof checking + LLM repair loop + mathlib citation path |
+| `cookbook/71_linalg_micro_textbook/lean_payoffs.spl` | Post-pass promoting real textbook entries to `machine_proved` |
+| `cookbook/77_neurosymbolic` | Capstone: SymPy + SageMath + Lean behind ONE workflow — the backend is a `--param backend=` flip; 29-problem battery + A/B experiment harness |
+
+Design background: `docs/DEV/sage_lean_integration_plan.md` (fully implemented).
 
 The workflow runs three `CALL run_python` steps that share a single kernel:
 
@@ -810,6 +850,7 @@ ollama:gemma3
 | `--format` | `markdown` | Output format: `markdown` · `json` · `text` |
 | `-o / --output FILE` | stdout | Write report to file |
 | `--prompt` | off | Print the judge prompt and exit (no LLM call) |
+| `--cache-key KEY` | — | Layer 2 cache integration: on a **PASS** verdict, add the `ai_reviewed` exposition badge to that content-cache entry (the `JudgeResult` is stored alongside). FAIL/ESCALATE leave the entry untouched. Key is the hex digest from `spl3 cache list`. See §18 |
 
 ### Built-in rubrics
 
@@ -839,6 +880,9 @@ spl3 judge output.md --criteria clarity --adapter ollama --model llama3
 
 # Preview the judge prompt without calling the LLM
 spl3 judge output.md --criteria clarity --llm claude_cli:claude-opus-4-6 --prompt
+
+# Review a cached textbook section; on PASS the entry gains the ai_reviewed badge
+spl3 judge section.md --criteria correctness --llm ollama:llama3.2 --cache-key <hex>
 ```
 
 ### Panel mode
@@ -1191,21 +1235,49 @@ A Layer 2 hit skips both the LLM call and the verification loop — the entry is
 already known-good. On a cold run every concept is generated and stored; on a warm run
 every concept is a Layer 2 hit and the cost is near zero.
 
-### Provenance tiers
+### Trust badges — a badge *set* on two axes
 
-Every cached entry carries a provenance tier that records how it was verified:
+Every cached entry carries a **badge set** recording what has been verified about
+it. Badges live on two orthogonal axes — claim trust attests the mathematical
+content, exposition trust attests the prose and pedagogy:
 
-| Tier | Meaning |
-|------|---------|
-| `machine_generated` | Produced by the LLM; not yet verified |
-| `machine_verified` | Passed automated checks (e.g. `verify_math`, `shape_check`) |
-| `ai_reviewed` | Passed an `spl3 judge` review; `JudgeResult` stored alongside entry |
-| `human_verified` | Accepted by a human editor |
+| Axis | Badge | Attests |
+|------|-------|---------|
+| claim | `machine_verified` | passed a CAS **instance** check (SymPy/Sage — e.g. `verify_math`, `shape_check`): *this worked example is correct* |
+| claim | `machine_proved` | the **statement** itself is Lean kernel-checked: *the theorem, not one example* |
+| exposition | `ai_reviewed` | passed an `spl3 judge` review; `JudgeResult` stored alongside the entry |
+| exposition | `human_verified` | accepted by a human editor |
 
-Tiers are **monotonically increasing** — entries can only be promoted upward.
-The delivery layer filters by tier:
-`cache.get(concept, …, min_provenance="machine_verified")` returns `None` for
-unverified entries, ensuring learners never receive unverified content.
+An entry with no badges is the `machine_generated` baseline — LLM output, nothing
+verified. Within an axis the order is strict (`machine_proved` outranks
+`machine_verified`), but **across axes there is no order**: `ai_reviewed` never
+satisfies a `machine_verified` requirement — prose review says nothing about the
+math, and vice versa. A section can hold any combination; a kernel-checked
+statement with confusing exposition still needs review.
+
+`canonical` is **derived, never stored**: the top badge on *both* axes
+(`machine_proved` + `human_verified`), shown as ★ in the CLI.
+
+Badges only accumulate — promotion adds to the set. The delivery layer filters
+per axis: `cache.get(concept, …, min_badge="machine_verified")` returns `None`
+unless the entry holds a claim-axis badge at that rank or higher
+(`machine_proved` qualifies; `ai_reviewed` does not), ensuring learners never
+receive unverified content.
+
+Two further provenance columns:
+
+- **`verifier`** — the engine-of-record that actually checked the content
+  (`sympy`, `sage`, `lean`, …). With fallback declarations like
+  `verifier: "sage|sympy"` in a domain YAML, this records which engine *ran*,
+  never a silent downgrade.
+- **`statement`** — for `machine_proved` entries, the kernel-checked Lean
+  proposition. `spl3 cache show` renders the prose and the formal statement
+  **side by side**, so the one link nothing machine-checks — informal↔formal
+  correspondence — can be audited at a glance.
+
+> **Migration:** databases and exports from the older single-ordinal provenance
+> model (`machine_generated → … → human_verified`) migrate automatically on first
+> open — each legacy tier becomes the badge set attesting only what it attested.
 
 ### TTL semantics
 
@@ -1223,28 +1295,33 @@ internally and callers cannot override it. For the underlying `dd_cache` adapter
 
 ```bash
 # Inspect
-spl3 cache list                              # all entries
+spl3 cache list                              # all entries (badges, verifier, hits, …)
 spl3 cache list --concept eigenpair          # filter by concept
-spl3 cache list --provenance machine_verified
+spl3 cache list --badge machine_proved       # filter by badge ('unbadged' = baseline)
 spl3 cache list --format json
-spl3 cache show <key>                        # full entry + content preview
-spl3 cache stats                             # hit rate, tokens saved, tier breakdown
+spl3 cache show <key>                        # full entry; machine_proved entries render
+                                             # prose ↔ formal Lean statement side by side
+spl3 cache stats                             # hit rate, tokens saved, badge breakdown, ★ canonical count
 
 # Invalidation
 spl3 cache invalidate --concept span         # mark stale; output: list of affected keys
 spl3 cache invalidate --concept span --cascade   # propagate to all dependents
 spl3 cache clear --stale                     # remove all stale-flagged entries
 spl3 cache clear --all                       # full wipe (Layer 1 prompt cache unaffected)
-spl3 cache clear --provenance machine_generated  # remove unverified entries only
+spl3 cache clear --badge unbadged            # remove unverified entries only
 
 # Portability — team sharing without a live remote store
 spl3 cache export -o cache.tar.gz
 spl3 cache import cache.tar.gz               # --merge (default): skip conflicts
 spl3 cache import cache.tar.gz --no-merge    # error on key conflict
 
-# Manual promotion
+# Manual promotion — adds a badge to the entry's set (★ shown when canonical)
 spl3 cache promote <key> --to human_verified
+spl3 cache promote <key> --to machine_proved
 ```
+
+`spl3 judge <file> --cache-key <key>` is the automated path to the `ai_reviewed`
+badge — a PASS verdict promotes the entry and stores the `JudgeResult` (§13).
 
 ### SPL workflow integration
 
@@ -1269,12 +1346,27 @@ END
 `cache_get` returns the cached content string on a hit, or the sentinel `"miss"` on a
 cache miss.  `cache_put` stores the content and returns the cache key.
 
-Both tools accept optional parameters for rubric version and params:
+`cache_put` accepts the full provenance set — badges (comma-separated),
+engine-of-record, and the Lean statement backing a `machine_proved` badge:
 
 ```spl
 -- With explicit rubric version and domain params
 CALL cache_get(@concept, "v2", '{"domain":"linalg"}') INTO @section
-CALL cache_put(@concept, @section, "machine_verified", "v2", '{"domain":"linalg"}') INTO @key
+CALL cache_put(@concept, @section, badges='machine_verified', rubric_version='v2', params_json='{"domain":"linalg"}') INTO @key
+
+-- Engine-of-record: which CAS actually verified it
+CALL cache_put(@concept, @section, badges='machine_verified', verifier='sage') INTO @key
+
+-- Proof-grade: kernel-checked Lean statement stored alongside the prose
+CALL cache_put(@concept, @report, badges='machine_proved', verifier='lean', statement=@lean_stmt) INTO @key
+```
+
+A third stdlib tool, `cache_promote`, adds a badge to an *existing* entry —
+this is how a Lean post-pass (e.g. recipe 71's `lean_payoffs.spl`) upgrades
+already-cached sections without regenerating them:
+
+```spl
+CALL cache_promote(@concept, 'machine_proved', statement=@lean_stmt) INTO @badges
 ```
 
 ### Cascading invalidation
@@ -1307,16 +1399,18 @@ spl3 cache export -o linalg-cache-v2.tar.gz
 spl3 cache import linalg-cache-v2.tar.gz
 ```
 
-The archive contains both the content blobs and the metadata index (provenance, hit
-counts, dep_graph). Importing is idempotent — `--merge` (default) skips any key
-that already exists locally.
+The archive contains both the content blobs and the metadata index (badge sets,
+verifier, statements, hit counts, dep_graph). Importing is idempotent — `--merge`
+(default) skips any key that already exists locally. Archives exported under the
+old single-ordinal provenance model import cleanly (tiers are migrated to badge
+sets automatically).
 
 ### Default storage paths
 
 | File | Contents |
 |------|----------|
 | `.spl/content_cache.db` | Blob store (dd-cache DiskCache, SQLite) |
-| `.spl/content_meta.db` | Metadata index (provenance, dep_graph, hit counts) |
+| `.spl/content_meta.db` | Metadata index (badge sets, verifier, statements, dep_graph, hit counts) |
 | `.spl/prompt_cache.db` | Layer 1 prompt cache (unchanged, TTL-based) |
 
 ---
@@ -1730,6 +1824,7 @@ spl3 validate <file.spl> [file.spl ...]        # syntax check
 spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
               [--tools FILE]                           # load @spl_tool functions
               [--kernel]                               # persistent IPython kernel
+              [--kernel-name NAME]                     # kernel spec, e.g. sagemath (implies --kernel)
               [--kernel-scope session|workflow]        # default: session
               [--kernel-timeout FLOAT]                 # default: 60.0 s
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
@@ -1764,6 +1859,7 @@ spl3 judge <file>
               [--swap-check]                  # re-run with reversed criteria; flags inconsistency
               [--format markdown|json|text] [-o FILE]
               [--prompt]
+              [--cache-key KEY]               # on PASS: add ai_reviewed badge to cache entry
 spl3 vibe "<description>" [--target LANG] [--adapter] [--model]
           [--out-dir DIR] [-o FILE]
           [--rag/--no-rag] [--rag-k N] [--references URL] [--verbose] [--prompt]
@@ -1774,6 +1870,7 @@ spl3 vibe --spec <SPEC_FILE> [--target LANG] [--adapter] [--model]
 
 spl3 splc compile <file.spl> --lang <target> [--llm] [--adapter] [--rag-k N]
                   [--references URL] [--out-dir DIR] [--overwrite] [--prompt]
+                  [--kernel-name NAME]          # domain targets: emitted .ipynb declares this kernelspec
 spl3 splc describe <impl.py | folder/> [--lang LABEL] [--adapter] [--spec-dir DIR]
                    [-o FILE] [--include-docs] [--prompt]
 
@@ -1781,16 +1878,18 @@ spl3 code-rag seed [cookbook/] [--from-specs]
 spl3 code-rag stats
 
 # Layer 2 content cache
-spl3 cache list [--concept NAME] [--provenance TIER] [--format table|json]
-spl3 cache show <key>
-spl3 cache stats
+spl3 cache list [--concept NAME] [--badge BADGE|unbadged] [--format table|json]
+spl3 cache show <key>                                 # machine_proved: prose ↔ Lean statement side by side
+spl3 cache stats                                      # badge breakdown + ★ canonical count
 spl3 cache invalidate --concept NAME [--cascade/--no-cascade]
 spl3 cache clear --stale                              # remove stale-flagged entries
 spl3 cache clear --all                                # full wipe
-spl3 cache clear --provenance TIER --tier TIER        # remove by provenance
+spl3 cache clear --badge BADGE|unbadged               # remove by badge ('unbadged' = unverified)
 spl3 cache export -o FILE.tar.gz
 spl3 cache import FILE.tar.gz [--merge/--no-merge]    # default: merge (skip conflicts)
-spl3 cache promote <key> --to TIER                    # tiers: machine_generated→machine_verified→ai_reviewed→human_verified
+spl3 cache promote <key> --to BADGE                   # add a badge; claim axis: machine_verified<machine_proved,
+                                                      # exposition axis: ai_reviewed<human_verified; axes independent;
+                                                      # ★ canonical = top badge on both axes (derived, never stored)
 
 # Batch experiment runner  [To-Test]
 spl3 experiment run

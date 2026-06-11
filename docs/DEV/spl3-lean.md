@@ -1,9 +1,9 @@
 # SPL × Lean 4 — Proof-Grade Verification (Verifier Ladder, Part B)
 
-> **Status:** **B-1 shipped, B-3 shipped, B-4 shipped, B-2 core shipped,
-> B-5 seeded** (2026-06-11; 15/15 bridge tests green against the live REPL,
-> recipe 76 verified end-to-end on both proof paths and now lands
-> `machine_proved` in cache provenance). Design:
+> **Status:** **B-1…B-5 all shipped** (2026-06-11; 29/29 bridge tests green
+> including the live-mathlib tier, recipe 76 verified end-to-end on both
+> proof paths, recipe 71's `lean_payoffs.spl` post-pass lands the first
+> two-axis badge sets in cache provenance). Design:
 > [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md) §3.
 > SageMath ([Part A, complete](./spl3-sagemath.md)) widens verification
 > *coverage*; Lean raises the *ceiling*: SymPy/Sage verify **instances**
@@ -29,6 +29,8 @@ SOLVE/ASSERT ──► IPython kernel ──► lean_bridge.LeanREPL ──► r
 | `check(code) -> dict` | Kernel-checks a full declaration; `['ok']` iff no errors **and no sorries**. |
 | `feedback` / `last_errors` | Lean's diagnostics from the most recent call — the raw material for repair-loop prompts. |
 | `find(stmt) -> str \| None` | `exact?` probe with suggestion parsing — the B-5 citation seed. |
+| `LeanREPL.mathlib(**kw)` | Constructor preset for the `spl_lean` mathlib project (`--with-mathlib`): `imports=["Mathlib"]`, warm-up budget sized for the olean import; raises with the setup command when the project is absent (`mathlib_available()` is the test guard). |
+| `find_citation(stmt, fallback=True) -> str \| None` | B-5 citation search: local `exact?` first; on a miss, queries Loogle (`loogle_pattern()` derives the query from the proposition's conclusion) and **kernel-checks every candidate** before returning it — the network is a search hint, never a trust source. Loogle down/unreachable degrades to the local result. |
 | timeout → restart | A timed-out check restarts the repl transparently (re-paying the warm-up) and raises `LeanError`; a crashed repl recovers on the next call. `RLock` because restart→warmup→send re-enters on the same thread. |
 | `repl_available()` / `ensure_repl()` | Toolchain probes; tests skip cleanly when absent, errors carry the setup command instead of a stack trace. |
 
@@ -37,9 +39,12 @@ and built with the toolchain named in its own `lean-toolchain` file — the
 two move together. `setup_lean.sh` keeps its own copy of the pin and the
 comment in both files says to keep them in sync.
 
-Tests: `tests/test_lean_bridge.py` — 15 tests (not-found messaging, check
+Tests: `tests/test_lean_bridge.py` — 29 tests (not-found messaging, check
 semantics incl. sorry-rejection, statement well-formedness, env hygiene,
-timeout/crash recovery, `find`), all green **against the live REPL** in ~3.5 s.
+timeout/crash recovery, `find`, Loogle pattern/parsing/soft-miss semantics,
+`find_citation` fallback paths, plus a **live-mathlib tier** — mathlib
+vocabulary elaboration, dot-notation misuse caught, `find` against the full
+library — guarded by `mathlib_available()`), all green against the live REPL.
 
 ---
 
@@ -138,11 +143,41 @@ advertised `verifier='sage'` since A-3, but nothing had exercised it.
 
 ---
 
-## 6. Next
+## 6. What shipped (B-2/B-5 remainders) — recipe 71 `lean_payoffs`
 
-- **B-2 remainder** — wire `statement_ok` + the faithfulness judge into
-  recipe 71's payoff concepts (rank–nullity, spectral theorem statements);
-  those entries then earn `machine_verified` *and* `machine_proved`
-  together — the first real two-axis badge sets.
-- **B-5 remainder** — run against the mathlib `spl_lean` project
-  (`--with-mathlib`), Loogle/LeanSearch as fallback search.
+`cookbook/71_linalg_micro_textbook/lean_payoffs.spl` — the B-2 post-pass:
+statement-level Lean checking for the micro-textbook's payoff concepts,
+run *after* a `build_micro_textbook` run so Lean stays off the default
+pipeline path (§B.4 scope discipline). Same stage spine as recipe 76, with
+two deliberate differences:
+
+- **UNFAITHFUL gates the badge** (recipe 76 only reports it) — these are
+  real textbook entries being promoted, so a formalization the judge calls
+  unfaithful never earns `machine_proved`.
+- **Promotion, not insertion** — on a kernel-checked citation the concept's
+  *existing* cached section (which already holds `machine_verified` from
+  the build run's CAS checks) gets `cache_promote(..., 'machine_proved',
+  statement=...)` — producing the first real two-axis badge sets.
+
+Verified end-to-end 2026-06-11 against the live mathlib REPL
+(`spl3 run ... --kernel --llm claude_cli`, exit 0; 89/89 bridge+cache
+tests green):
+
+| concept | outcome |
+|---|---|
+| `rank_nullity` | formalized in mathlib vocabulary (`Module.finrank`/`LinearMap.range`/`LinearMap.ker`), FAITHFUL, citation kernel-checked → badges `machine_verified, machine_proved`, statement stored for side-by-side audit |
+| `diagonalization` | `Matrix.det (Matrix.diagonal d) = ∏ i, d i`, FAITHFUL, citation kernel-checked → badges `machine_verified, machine_proved` |
+| `spectral_theorem` | no library citation found → correctly stayed `machine_verified` (statement-checked is recipe-internal; §B.2 — failure withholds the badge, never blocks delivery) |
+
+---
+
+## 7. Next
+
+- **Loogle hardening** — the fallback derives its query from the
+  conclusion only; specializing the pattern (head constant + key
+  arguments) would raise hit rates on harder statements like the spectral
+  theorem.
+- **LeanSearch** (semantic search) as a second fallback tier behind
+  Loogle, same kernel-check discipline.
+- Graduate `lean_bridge` patterns into stdlib `TOOL_API`s once a third
+  recipe needs them (the §B.4 graduation rule).
