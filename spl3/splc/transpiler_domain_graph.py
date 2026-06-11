@@ -295,18 +295,21 @@ def cache_get(concept: str, rubric_version: str = "v1") -> str:
         return "miss"
 
 def cache_put(concept: str, content: str, rubric_version: str = "v1",
-              verifier: str = "") -> str:
+              verifier: str = "", badges: str = "", statement: str = "") -> str:
     \"\"\"Stores generated+verified content (write-once, immutable); returns the cache key.
 
     `verifier` records the engine-of-record that checked the content
     ("sympy", "sage", ...) — pass the engine from the verify step's
-    'pass (<engine>)' result so cache provenance carries it.\"\"\"
+    'pass (<engine>)' result so cache provenance carries it. `badges` is a
+    comma-separated trust badge set (e.g. 'machine_verified'); `statement`
+    carries the formal statement backing a machine_proved badge.\"\"\"
     try:
         from spl3.cache import get_content_cache
         entry = get_content_cache().put(
-            concept=concept, content=content, provenance="machine_generated",
+            concept=concept, content=content,
+            badges=[b.strip() for b in badges.split(",") if b.strip()],
             params={}, rubric_version=rubric_version, dep_hashes={},
-            verifier=verifier,
+            verifier=verifier, statement=statement,
         )
         return entry.key
     except Exception as exc:

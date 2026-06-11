@@ -268,6 +268,18 @@ DO
   LOGGING f"badge: {@badge}" LEVEL INFO
 
   CALL make_report(@claim, @lean_stmt, @faithful, @proof, @badge, @citation) INTO @report;
+
+  -- ── B-4: a kernel-checked outcome enters cache provenance as the
+  -- machine_proved claim badge — verifier='lean' is the engine-of-record,
+  -- and the verified statement is stored alongside the prose so the
+  -- prose↔formal correspondence stays auditable (spl3 cache show <key>).
+  @cache_key := '';
+  EVALUATE @badge
+    WHEN = 'machine_proved' THEN
+      CALL cache_put(@claim, @report, badges='machine_proved', verifier='lean', statement=@lean_stmt) INTO @cache_key;
+      LOGGING f"cache: machine_proved entry {@cache_key}" LEVEL INFO
+  END
+
   RETURN @report WITH status = 'complete', badge = @badge;
 EXCEPTION
   WHEN BudgetExceeded THEN

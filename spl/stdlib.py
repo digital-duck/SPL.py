@@ -731,35 +731,47 @@ def cache_get(concept: str, rubric_version: str = "v1", params_json: str = "{}")
 def cache_put(
     concept: str,
     content: str,
-    provenance: str = "machine_generated",
+    badges: str = "",
     rubric_version: str = "v1",
     params_json: str = "{}",
     token_cost: str = "0",
     verifier: str = "",
+    statement: str = "",
 ) -> str:
     """Store a generated section in the Layer 2 content cache.
 
     Returns the cache key on success, or an error string on failure.
-    `verifier` records the engine-of-record that checked the content
-    ("sympy", "sage", ...) — pass it when the section was symbolically verified.
+    `badges` is a comma-separated trust badge set (claim axis:
+    machine_verified, machine_proved; exposition axis: ai_reviewed,
+    human_verified; empty = machine_generated baseline). `verifier` records
+    the engine-of-record that checked the content ("sympy", "sage",
+    "lean", ...). `statement` carries the kernel-checked Lean proposition
+    backing a machine_proved badge, rendered alongside the prose wherever
+    the badge appears.
 
     Usage in SPL:
         CALL cache_put(@concept, @section) INTO @cache_key
-        CALL cache_put(@concept, @section, verifier='sage') INTO @cache_key
+        CALL cache_put(@concept, @section, badges='machine_verified', verifier='sage') INTO @cache_key
+        CALL cache_put(@concept, @report, badges='machine_proved', verifier='lean', statement=@lean_stmt) INTO @cache_key
     """
     try:
         from spl3.cache import get_content_cache
         params = json.loads(params_json) if params_json else {}
+        badge_set = [b.strip() for b in badges.split(",") if b.strip()]
+        # legacy callers passed the old single-ordinal tier in this slot
+        if badge_set == ["machine_generated"]:
+            badge_set = []
         cache = get_content_cache()
         entry = cache.put(
             concept=concept,
             content=content,
-            provenance=provenance,
+            badges=badge_set,
             params=params,
             rubric_version=rubric_version,
             dep_hashes={},
             token_cost=int(token_cost) if token_cost.isdigit() else 0,
             verifier=verifier,
+            statement=statement,
         )
         return entry.key
     except Exception as e:

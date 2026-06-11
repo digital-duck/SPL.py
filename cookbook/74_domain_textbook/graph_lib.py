@@ -39,6 +39,7 @@ verify_polygon_area(vertices, claimed)             → str   (exact shoelace ove
 verify_momentum_conservation(m1,u1,m2,u2,v1,v2)    → str   (exact two-body p check over ℚ; sage|sympy)
 verify_energy_conservation(m,g,v0,h0,v1,h1)        → str   (exact T+V ledger over ℚ; sage|sympy)
 verify_sho_solution(solution)                      → str   (symbolic x''+ω²x ≡ 0 check; sage|sympy)
+verify_character_lego(character, domain_data)      → str   (structural decomposition check; no CAS)
 
 Graph conventions — IDENTICAL to linalg_graph.py / geometry_graph.py
 --------------------------------------------------------------------
@@ -341,6 +342,10 @@ def verify_content(section: str, domain_data: dict[str, Any],
                 # nodes fall through to sympy; afterwards lean becomes the
                 # engine-of-record automatically — no YAML edits needed.
                 import spl3.lean_bridge  # noqa: F401 — presence check
+            elif engine == "structural":
+                # Graph-structural domains (chinese_characters): the oracle
+                # is graph_lib itself — nothing external to import.
+                pass
             elif engine == "_domain_default":
                 if domain_data.get("domain", "") == "intro_geometry":
                     import sympy.geometry  # noqa: F401 — presence check
@@ -532,6 +537,64 @@ def verify_sho_solution(solution: str = "A*cos(w*t) + B*sin(w*t)",
         except ImportError as exc:
             last_exc = exc
     return f"fail: no verifier engine available ({last_exc})"
+
+
+# ---------------------------------------------------------------------------
+# Structural verifier — chinese_characters (and any future decomposition
+# domain). The oracle here is the graph itself, not a CAS: a character's
+# claimed brick multiset must agree with what the graph derives.
+# ---------------------------------------------------------------------------
+
+def verify_character_lego(character: str, domain_data: dict[str, Any]) -> str:
+    """Structural LEGO check for one node of a decomposition domain.
+
+    Verifies the worked example of every character concept node in
+    `chinese_characters_graph.yaml` (their ``lab`` attribute names this
+    function). Three checks, all against the built graph:
+
+    1. every ``composed_of`` entry is a node in the graph,
+    2. every claimed ``pieces`` brick is a declared primitive,
+    3. set(``pieces``) equals the node's primitive ancestor set — the claimed
+       bricks are exactly the bricks the graph derives.
+
+    ``pieces`` is a *multiset* (林 = two 木) while graph edges cannot repeat,
+    so multiplicity lives only in ``pieces``; the graph cross-check is on the
+    underlying set. Principle nodes (形声 et al.) carry no ``pieces`` — for
+    them the check degrades to per-node reducibility: every in-degree-0
+    ancestor must be a declared primitive. Primitives pass trivially: a brick
+    is its own decomposition.
+    """
+    graph = build(domain_data)
+    if character not in graph:
+        return f"fail: {character!r} is not a node in the {domain_data.get('domain')} graph"
+    node = graph.nodes[character]
+    bricks = set(both_radical_primitives(domain_data))
+
+    if node.get("kind") == "primitive":
+        return "pass (structural)"
+
+    missing = [p for p in node.get("composed_of", []) if p not in graph]
+    if missing:
+        return f"fail: composed_of references unknown node(s) {missing}"
+
+    derived = {a for a in nx.ancestors(graph, character)
+               if graph.nodes[a].get("kind") == "primitive"}
+
+    pieces = node.get("pieces")
+    if pieces is None:
+        leaves = {a for a in nx.ancestors(graph, character)
+                  if graph.in_degree(a) == 0}
+        if leaves.issubset(bricks):
+            return "pass (structural)"
+        return f"fail: {character} has non-primitive leaf ancestor(s) {sorted(leaves - bricks)}"
+
+    undeclared = [p for p in pieces if p not in bricks]
+    if undeclared:
+        return f"fail: pieces of {character} include undeclared brick(s) {undeclared}"
+    if set(pieces) != derived:
+        return (f"fail: pieces of {character} claim bricks {sorted(set(pieces))} "
+                f"but the graph derives {sorted(derived)}")
+    return "pass (structural)"
 
 
 # ---------------------------------------------------------------------------

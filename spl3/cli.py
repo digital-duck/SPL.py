@@ -3574,8 +3574,8 @@ def _resolve_llm(llm_specs: tuple[str, ...], adapter: str, model: str | None):
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
               help="Display the judge prompt and exit.")
 @click.option("--cache-key", default=None, metavar="KEY",
-              help="On PASS verdict, promote this content-cache entry to 'ai_reviewed'. "
-                   "Key is the hex digest returned by 'spl3 cache list'.")
+              help="On PASS verdict, add the 'ai_reviewed' exposition badge to this "
+                   "content-cache entry. Key is the hex digest from 'spl3 cache list'.")
 def cmd_judge(file, criteria, llm_specs, adapter, model, aggregation,
               swap_check, output_format, output, prompt_debug, cache_key):
     """Evaluate FILE against a rubric using an LLM judge.

@@ -6,7 +6,13 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import Optional
 
-from .types import CacheStats, provenance_rank
+from .types import (
+    ALL_BADGES,
+    CacheStats,
+    badges_from_provenance,
+    is_canonical,
+    normalize_badges,
+)
 
 
 _SCHEMA = """
@@ -14,7 +20,7 @@ CREATE TABLE IF NOT EXISTS content_meta (
     key          TEXT PRIMARY KEY,
     concept      TEXT NOT NULL,
     content_hash TEXT NOT NULL,
-    provenance   TEXT NOT NULL DEFAULT 'machine_generated',
+    badges       TEXT NOT NULL DEFAULT '[]',
     rubric_ver   TEXT NOT NULL,
     dep_hashes   TEXT NOT NULL,
     params       TEXT NOT NULL,
@@ -25,13 +31,13 @@ CREATE TABLE IF NOT EXISTS content_meta (
     stale        INTEGER DEFAULT 0,
     verdict      TEXT,
     verifier     TEXT NOT NULL DEFAULT '',
+    statement    TEXT NOT NULL DEFAULT '',
     created_at   TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_concept    ON content_meta(concept);
-CREATE INDEX IF NOT EXISTS idx_provenance ON content_meta(provenance);
-CREATE INDEX IF NOT EXISTS idx_stale      ON content_meta(stale);
+CREATE INDEX IF NOT EXISTS idx_concept ON content_meta(concept);
+CREATE INDEX IF NOT EXISTS idx_stale   ON content_meta(stale);
 
 CREATE TABLE IF NOT EXISTS dep_graph (
     dependent   TEXT NOT NULL,
@@ -48,7 +54,7 @@ def _now() -> str:
 class MetaStore:
     """SQLite metadata index for ContentCache.
 
-    Stores provenance, dependency graph, hit counts, and token costs.
+    Stores trust badges, dependency graph, hit counts, and token costs.
     Blob storage is delegated to dd-cache (BaseCacheAdapter).
     """
 
@@ -57,11 +63,29 @@ class MetaStore:
         self._conn = sqlite3.connect(meta_path)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
-        # Migration: DBs created before the engine-of-record column (A-3)
         cols = {row[1] for row in self._conn.execute("PRAGMA table_info(content_meta)")}
+        # Migration: DBs created before the engine-of-record column (A-3)
         if "verifier" not in cols:
             self._conn.execute(
                 "ALTER TABLE content_meta ADD COLUMN verifier TEXT NOT NULL DEFAULT ''"
+            )
+        # Migration: DBs created before the badge-set model (B-4). The old
+        # single-ordinal `provenance` column is left in place but ignored;
+        # each legacy tier becomes the badge set attesting only what it
+        # attested ('machine_generated' = no badge).
+        if "badges" not in cols:
+            self._conn.execute(
+                "ALTER TABLE content_meta ADD COLUMN badges TEXT NOT NULL DEFAULT '[]'"
+            )
+            if "provenance" in cols:
+                for tier in ALL_BADGES:
+                    self._conn.execute(
+                        "UPDATE content_meta SET badges = ? WHERE provenance = ?",
+                        (json.dumps([tier]), tier),
+                    )
+        if "statement" not in cols:
+            self._conn.execute(
+                "ALTER TABLE content_meta ADD COLUMN statement TEXT NOT NULL DEFAULT ''"
             )
         self._conn.commit()
 
@@ -74,7 +98,7 @@ class MetaStore:
         key: str,
         concept: str,
         content_hash: str,
-        provenance: str,
+        badges: list[str],
         rubric_version: str,
         dep_hashes: dict[str, str],
         params: dict,
@@ -82,17 +106,20 @@ class MetaStore:
         model: str,
         token_cost: int,
         verifier: str = "",
+        statement: str = "",
     ) -> None:
+        badges = normalize_badges(badges)
         now = _now()
         self._conn.execute(
             """INSERT INTO content_meta
-               (key, concept, content_hash, provenance, rubric_ver,
+               (key, concept, content_hash, badges, rubric_ver,
                 dep_hashes, params, adapter, model, token_cost,
-                hit_count, stale, verdict, verifier, created_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,0,0,NULL,?,?,?)
+                hit_count, stale, verdict, verifier, statement,
+                created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,0,0,NULL,?,?,?,?)
                ON CONFLICT(key) DO UPDATE SET
                    content_hash = excluded.content_hash,
-                   provenance   = excluded.provenance,
+                   badges       = excluded.badges,
                    rubric_ver   = excluded.rubric_ver,
                    dep_hashes   = excluded.dep_hashes,
                    params       = excluded.params,
@@ -100,15 +127,16 @@ class MetaStore:
                    model        = excluded.model,
                    token_cost   = excluded.token_cost,
                    verifier     = excluded.verifier,
+                   statement    = excluded.statement,
                    stale        = 0,
                    updated_at   = excluded.updated_at
             """,
             (
-                key, concept, content_hash, provenance, rubric_version,
+                key, concept, content_hash, json.dumps(badges), rubric_version,
                 json.dumps(dep_hashes, sort_keys=True),
                 json.dumps(params, sort_keys=True),
                 adapter, model, token_cost,
-                verifier, now, now,
+                verifier, statement, now, now,
             ),
         )
         # Rebuild dep_graph entries for this concept
@@ -132,27 +160,31 @@ class MetaStore:
     def promote(
         self,
         key: str,
-        new_provenance: str,
+        badge: str,
         verdict: Optional[dict] = None,
-    ) -> None:
-        """Advance entry to a higher provenance tier."""
+    ) -> list[str]:
+        """Add a trust badge to an entry's set; returns the new set.
+
+        Badges only accumulate — there is no downgrade, and adding a badge
+        the entry already holds is an error. A provided verdict replaces the
+        stored one (the audit record of the latest promotion); None keeps it.
+        """
         row = self._conn.execute(
-            "SELECT provenance FROM content_meta WHERE key = ?", (key,)
+            "SELECT badges, verdict FROM content_meta WHERE key = ?", (key,)
         ).fetchone()
         if row is None:
             raise KeyError(f"No cache entry with key: {key}")
-        current_rank = provenance_rank(row["provenance"])
-        new_rank = provenance_rank(new_provenance)
-        if new_rank <= current_rank:
-            raise ValueError(
-                f"Cannot promote from '{row['provenance']}' to '{new_provenance}': "
-                "new tier must be higher."
-            )
+        held = json.loads(row["badges"])
+        if badge in held:
+            raise ValueError(f"Entry already holds badge '{badge}'.")
+        new_badges = normalize_badges(held + [badge])
+        verdict_json = json.dumps(verdict) if verdict else row["verdict"]
         self._conn.execute(
-            "UPDATE content_meta SET provenance = ?, verdict = ?, updated_at = ? WHERE key = ?",
-            (new_provenance, json.dumps(verdict) if verdict else None, _now(), key),
+            "UPDATE content_meta SET badges = ?, verdict = ?, updated_at = ? WHERE key = ?",
+            (json.dumps(new_badges), verdict_json, _now(), key),
         )
         self._conn.commit()
+        return new_badges
 
     def invalidate(self, concept: str, cascade: bool = True) -> list[str]:
         """Mark concept (and optionally all dependents) as stale.
@@ -207,11 +239,20 @@ class MetaStore:
         return dict(row) if row else None
 
     def stats(self) -> CacheStats:
-        rows = self._conn.execute(
-            "SELECT provenance, COUNT(*) as cnt FROM content_meta GROUP BY provenance"
+        badge_rows = self._conn.execute(
+            "SELECT badges FROM content_meta"
         ).fetchall()
-        by_provenance = {r["provenance"]: r["cnt"] for r in rows}
-        total_entries = sum(by_provenance.values())
+        by_badge: dict[str, int] = {}
+        unbadged = 0
+        canonical = 0
+        for r in badge_rows:
+            held = json.loads(r["badges"])
+            if not held:
+                unbadged += 1
+            for b in held:
+                by_badge[b] = by_badge.get(b, 0) + 1
+            if is_canonical(held):
+                canonical += 1
 
         agg = self._conn.execute(
             "SELECT SUM(hit_count) as total_hits, "
@@ -229,8 +270,10 @@ class MetaStore:
         ]
 
         return CacheStats(
-            total_entries=total_entries,
-            by_provenance=by_provenance,
+            total_entries=len(badge_rows),
+            by_badge=by_badge,
+            unbadged=unbadged,
+            canonical=canonical,
             total_hits=agg["total_hits"] or 0,
             total_token_cost=agg["total_token_cost"] or 0,
             estimated_tokens_saved=agg["tokens_saved"] or 0,
@@ -247,7 +290,11 @@ class MetaStore:
         return [dict(r) for r in rows]
 
     def import_rows(self, rows: list[dict], merge: bool = True) -> int:
-        """Import metadata rows. Returns count of rows written."""
+        """Import metadata rows. Returns count of rows written.
+
+        Accepts pre-B-4 exports: a row carrying only the legacy single
+        `provenance` tier is converted to the equivalent badge set.
+        """
         imported = 0
         for row in rows:
             exists = self._conn.execute(
@@ -259,14 +306,23 @@ class MetaStore:
                 raise ValueError(
                     f"Key conflict on import (merge=False): {row['key']}"
                 )
+            row = dict(row)
+            if not row.get("badges"):
+                row["badges"] = json.dumps(
+                    badges_from_provenance(row.get("provenance", ""))
+                )
+            row.setdefault("verifier", "")
+            row.setdefault("statement", "")
             self._conn.execute(
                 """INSERT INTO content_meta
-                   (key, concept, content_hash, provenance, rubric_ver,
+                   (key, concept, content_hash, badges, rubric_ver,
                     dep_hashes, params, adapter, model, token_cost,
-                    hit_count, stale, verdict, created_at, updated_at)
-                   VALUES (:key,:concept,:content_hash,:provenance,:rubric_ver,
+                    hit_count, stale, verdict, verifier, statement,
+                    created_at, updated_at)
+                   VALUES (:key,:concept,:content_hash,:badges,:rubric_ver,
                            :dep_hashes,:params,:adapter,:model,:token_cost,
-                           :hit_count,:stale,:verdict,:created_at,:updated_at)
+                           :hit_count,:stale,:verdict,:verifier,:statement,
+                           :created_at,:updated_at)
                 """,
                 row,
             )
@@ -286,10 +342,18 @@ class MetaStore:
         self._conn.commit()
         return cursor.rowcount
 
-    def delete_by_provenance(self, provenance: str) -> int:
-        cursor = self._conn.execute(
-            "DELETE FROM content_meta WHERE provenance = ?", (provenance,)
-        )
+    def delete_by_badge(self, badge: str) -> int:
+        """Delete entries holding a badge; 'unbadged' deletes the badge-less."""
+        if badge == "unbadged":
+            cursor = self._conn.execute(
+                "DELETE FROM content_meta WHERE badges = '[]'"
+            )
+        else:
+            normalize_badges([badge])
+            cursor = self._conn.execute(
+                "DELETE FROM content_meta WHERE badges LIKE ?",
+                (f'%"{badge}"%',),
+            )
         self._conn.commit()
         return cursor.rowcount
 
