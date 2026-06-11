@@ -81,10 +81,11 @@ def cmd_list(concept, badge, fmt):
     click.echo(f"  {'-'*col_w}  {'─'*badge_w}  ─────  ────  ──────  ────────  ────────────")
     for r in rows:
         stale = "yes" if r["stale"] else "no "
+        key_id = r["key"].rsplit(":", 1)[-1][:12]
         click.echo(
             f"  {r['concept'].ljust(col_w)}  {_fmt_badges(r['badges']).ljust(badge_w)}  "
             f"{stale}    {r['hit_count']:<4}  {r['token_cost']:<6}  "
-            f"{(r.get('verifier') or '—').ljust(8)}  {r['key'][:12]}"
+            f"{(r.get('verifier') or '—').ljust(8)}  {key_id}"
         )
     click.echo(f"\n  {len(rows)} entry/entries")
 
@@ -218,6 +219,7 @@ def cmd_promote(key, badge):
     try:
         badges = cache.promote(key, badge)
         star = " ★ canonical" if is_canonical(badges) else ""
-        click.echo(f"Promoted {key[:12]}… → {{{', '.join(badges)}}}{star}")
+        key_id = key.rsplit(":", 1)[-1][:12]
+        click.echo(f"Promoted {key_id}… → {{{', '.join(badges)}}}{star}")
     except (KeyError, ValueError) as exc:
         raise click.ClickException(str(exc))

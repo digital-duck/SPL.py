@@ -1,9 +1,9 @@
 # SPL × Lean 4 — Proof-Grade Verification (Verifier Ladder, Part B)
 
-> **Status:** **B-1 shipped, B-3 shipped, B-2 core shipped, B-5 seeded**
-> (2026-06-11; 15/15 bridge tests green against the live REPL, recipe 76
-> verified end-to-end on both proof paths). B-4 (`machine_proved` badge in
-> cache provenance) is next. Design:
+> **Status:** **B-1 shipped, B-3 shipped, B-4 shipped, B-2 core shipped,
+> B-5 seeded** (2026-06-11; 15/15 bridge tests green against the live REPL,
+> recipe 76 verified end-to-end on both proof paths and now lands
+> `machine_proved` in cache provenance). Design:
 > [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md) §3.
 > SageMath ([Part A, complete](./spl3-sagemath.md)) widens verification
 > *coverage*; Lean raises the *ceiling*: SymPy/Sage verify **instances**
@@ -86,7 +86,36 @@ Verified end-to-end 2026-06-11 (`spl3 run ... --kernel --llm claude_cli`):
 
 ---
 
-## 4. Findings / decisions settled
+## 4. What shipped (B-4) — `machine_proved` in cache provenance
+
+The pre-B-4 cache assumed one provenance ordinal (`machine_generated →
+machine_verified → ai_reviewed → human_verified`) — which let `ai_reviewed`
+*satisfy* a `machine_verified` threshold despite attesting a different
+thing. B-4 replaces it with the badge-*set* model (plan §B.1, D1):
+
+| Piece | Behavior |
+|---|---|
+| `cache.types` | `CLAIM_BADGES = [machine_verified, machine_proved]`, `EXPOSITION_BADGES = [ai_reviewed, human_verified]`; `satisfies()` is **axis-local** — requiring `machine_verified` is met by `machine_proved`, never by exposition badges; `is_canonical()` derives ★ (top badge on both axes, never stored) |
+| `promote()` | adds a badge to the set (no ladder, no downgrade; duplicate add is an error); `spl3 judge --cache-key` adds `ai_reviewed` |
+| `statement` column | the kernel-checked Lean proposition stored with the entry; `spl3 cache show` renders it under the prose preview — the §B.4 correspondence-audit requirement |
+| `spl3 cache` CLI | `list`/`stats`/`clear --badge` are badge-aware; ★ marks canonical entries |
+| recipe 76 | on a kernel-checked proof: `CALL cache_put(@claim, @report, badges='machine_proved', verifier='lean', statement=@lean_stmt)` — verified end-to-end 2026-06-11 |
+| migration | pre-B-4 DBs and exports convert automatically; each legacy tier becomes the badge set attesting only what it attested (`machine_generated` → empty set) |
+
+Recipe 76's `statement_checked` stays recipe-internal: it attests
+well-formedness, not truth, so it maps to *no* claim badge — the entry
+simply isn't cached above the baseline.
+
+**Found while wiring:** SPL 2.0's tool dispatch flattened `CALL` named
+arguments into the positional list, so `cache_put(..., verifier='lean',
+statement=...)` bound `'lean'` to `rubric_version`. Fixed in
+`spl/executor.py` (`_exec_call` now passes kwargs by name; regression
+tests in `tests/test_executor.py::TestToolCallBinding`) — the stdlib had
+advertised `verifier='sage'` since A-3, but nothing had exercised it.
+
+---
+
+## 5. Findings / decisions settled
 
 - **Stdlib-only default is the right test tier.** Bare-repl warm-up is
   ~instant (15 tests in 3.5 s including process spawns) vs 10–40 s for a
@@ -109,12 +138,11 @@ Verified end-to-end 2026-06-11 (`spl3 run ... --kernel --llm claude_cli`):
 
 ---
 
-## 5. Next
+## 6. Next
 
-- **B-4** — `machine_proved` as a cache-provenance badge: recipe 76's
-  `@badge` string + side-by-side report are the seed; the A-3 `verifier`
-  column machinery (`cache_put(..., verifier='lean')`) is the rail to ride.
 - **B-2 remainder** — wire `statement_ok` + the faithfulness judge into
-  recipe 71's payoff concepts (rank–nullity, spectral theorem statements).
+  recipe 71's payoff concepts (rank–nullity, spectral theorem statements);
+  those entries then earn `machine_verified` *and* `machine_proved`
+  together — the first real two-axis badge sets.
 - **B-5 remainder** — run against the mathlib `spl_lean` project
   (`--with-mathlib`), Loogle/LeanSearch as fallback search.

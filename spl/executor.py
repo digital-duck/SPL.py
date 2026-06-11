@@ -1228,12 +1228,19 @@ class Executor:
         # 1. Python tool takes priority — deterministic, no LLM cost
         tool = self.functions.get_tool(stmt.procedure_name)
         if tool is not None:
-            args_text = [self._eval_expression(a, state) for a in stmt.arguments]
+            # Named args bind by keyword — flattening them into the
+            # positional list would bind values to whatever parameters sit
+            # at those indices (e.g. cache_put's verifier= landing in
+            # rubric_version).
+            args_text = [self._eval_expression(a, state)
+                         for a in stmt.arguments if not isinstance(a, NamedArg)]
+            kwargs_text = {a.name: self._eval_expression(a.value, state)
+                           for a in stmt.arguments if isinstance(a, NamedArg)}
             try:
                 if inspect.iscoroutinefunction(tool):
-                    result_str = await tool(*args_text)
+                    result_str = await tool(*args_text, **kwargs_text)
                 else:
-                    result_str = tool(*args_text)
+                    result_str = tool(*args_text, **kwargs_text)
             except SPLWorkflowError:
                 raise
             except Exception as e:

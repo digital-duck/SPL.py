@@ -282,3 +282,56 @@ class TestWorkflowExceptionHandlers:
         """, params={"x": "test"})
         result = results[0]
         assert result.committed_value == "workflow_caught"
+
+
+# ================================================================
+# CALL tool argument binding
+# ================================================================
+
+class TestToolCallBinding:
+    """Named args in CALL must bind to the tool's keyword parameters —
+    not be flattened into the positional list (which bound values to
+    whatever parameter sat at that index, e.g. cache_put's verifier=
+    landing in rubric_version)."""
+
+    def _run_with_tool(self, source: str, params=None):
+        analysis = _analyze(source)
+        executor = Executor(adapter_name="echo", storage_dir="/tmp/.spl_test")
+        calls = []
+
+        def labeler(text: str, prefix: str = "p", suffix: str = "s") -> str:
+            calls.append((text, prefix, suffix))
+            return f"{prefix}|{text}|{suffix}"
+
+        executor.register_tool("labeler", labeler)
+        try:
+            results = asyncio.run(executor.execute_program(analysis, params=params))
+        finally:
+            executor.close()
+        return results, calls
+
+    def test_named_args_bind_by_keyword(self):
+        results, calls = self._run_with_tool("""
+            WORKFLOW kw_call
+                INPUT @x TEXT
+                OUTPUT @out TEXT
+            DO
+                CALL labeler(@x, suffix='Z') INTO @out
+                COMMIT @out
+            END
+        """, params={"x": "mid"})
+        assert calls == [("mid", "p", "Z")]
+        assert results[0].committed_value == "p|mid|Z"
+
+    def test_positional_only_unchanged(self):
+        results, calls = self._run_with_tool("""
+            WORKFLOW pos_call
+                INPUT @x TEXT
+                OUTPUT @out TEXT
+            DO
+                CALL labeler(@x, 'A', 'B') INTO @out
+                COMMIT @out
+            END
+        """, params={"x": "mid"})
+        assert calls == [("mid", "A", "B")]
+        assert results[0].committed_value == "A|mid|B"

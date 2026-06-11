@@ -137,7 +137,7 @@ class TestEngineOfRecordInCache:
                   provenance="machine_verified", params={}, rubric_version="v1",
                   dep_hashes={}, verifier="sage")
         got = cache.get(concept="eigenpair", params={}, rubric_version="v1",
-                        dep_hashes={}, min_provenance="machine_verified")
+                        dep_hashes={}, min_badge="machine_verified")
         assert got is not None
         assert got.verifier == "sage"
 
@@ -177,7 +177,7 @@ class TestEngineOfRecordInCache:
         assert (row["verifier"] or "") == ""  # old rows default to unverified
         # And new writes can record an engine
         meta.put(key="k2", concept="c2", content_hash="h2",
-                 provenance="machine_verified", rubric_version="v1",
+                 badges=["machine_verified"], rubric_version="v1",
                  dep_hashes={}, params={}, adapter="", model="",
                  token_cost=0, verifier="sympy")
         assert meta.get_meta("k2")["verifier"] == "sympy"

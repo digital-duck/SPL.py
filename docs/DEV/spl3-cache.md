@@ -1,6 +1,7 @@
 # Design: `spl3 cache` — Content-Level Caching
 
 > **Status**: Phase 1 implemented — content cache, CLI, stdlib tools, and unit tests complete. Phase 2 (adapter-level prefix caching) and Phase 3 (SPL language `CACHE BY` / `UNLESS STALE`) pending.
+> **2026-06-11 (B-4):** the single provenance ordinal described below was replaced by a trust-badge *set* on two orthogonal axes (claim: `machine_verified` → `machine_proved`; exposition: `ai_reviewed` → `human_verified`) — see `sage_lean_integration_plan.md` §B.1 and `spl3-lean.md` §4. Sections 6–9 are updated to the badge model; pre-B-4 DBs and exports migrate automatically.
 
 ---
 
@@ -268,13 +269,18 @@ No change to the existing implementation.
 ```python
 # spl3/cache/types.py
 
+# Trust badges (B-4) — a set on two orthogonal axes, not one ladder:
+CLAIM_BADGES      = ["machine_verified", "machine_proved"]   # attest the math
+EXPOSITION_BADGES = ["ai_reviewed", "human_verified"]        # attest the prose
+# [] = machine_generated baseline; 'canonical' is derived (is_canonical():
+# top badge on both axes), shown as ★ in the CLI, never stored.
+
 @dataclass
 class CacheEntry:
     key: str                         # content_key — hash of inputs
     concept: str                     # concept name (e.g. "eigenpair")
     content: str                     # the generated+verified section text
     content_hash: str                # sha256(content) — used as dep_hash by dependents
-    provenance: str                  # "machine_generated" | "machine_verified" | "ai_reviewed" | "human_verified"
     rubric_version: str
     dep_hashes: dict[str, str]       # inputs used to produce this entry
     params: dict
@@ -283,12 +289,18 @@ class CacheEntry:
     token_cost: int                  # tokens spent generating
     created_at: str
     hit_count: int                   # how many times served from cache
+    badges: list[str] = []           # trust badge set (see above)
     stale: bool = False              # explicitly invalidated but not yet purged
+    verdict: dict | None = None      # latest promotion's audit record
+    verifier: str = ""               # engine-of-record: "sympy" | "sage" | "lean" | ""
+    statement: str = ""              # kernel-checked Lean prop backing machine_proved
 
 @dataclass
 class CacheStats:
     total_entries: int
-    by_provenance: dict[str, int]    # {"machine_verified": 12, "machine_generated": 3, …}
+    by_badge: dict[str, int]         # {"machine_verified": 12, "machine_proved": 1, …}
+    unbadged: int                    # machine_generated baseline count
+    canonical: int                   # derived ★ count
     total_hits: int
     total_token_cost: int            # tokens spent generating all entries
     estimated_tokens_saved: int      # sum(hit_count * token_cost) across all entries
@@ -314,17 +326,17 @@ ContentCache
 │       └── MomagridCacheAdapter(…)            distributed node peers (future)
 │
 └── _meta: sqlite3.Connection                  metadata index (always local)
-    ├── content_meta table                     provenance, stale, token_cost, hit_count
+    ├── content_meta table                     badges, stale, token_cost, hit_count
     └── dep_graph table                        cascading invalidation via recursive CTE
 ```
 
 **Why split?**
 
 `dd-cache` excels at `key → blob` with TTL and backend swap. Everything it does
-not model — provenance tiers, stale flags, hit counts, token cost, dependency
+not model — trust badges, stale flags, hit counts, token cost, dependency
 graph — lives in the metadata index. The metadata index is always local SQLite
 because it needs relational queries (recursive CTE for cascading invalidation,
-`GROUP BY provenance` for stats). Blob storage can be remote; metadata cannot.
+badge aggregation for stats). Blob storage can be remote; metadata cannot.
 
 **Key composition** uses `dd_cache.utils.make_key`:
 
@@ -359,7 +371,7 @@ spl3/cache/
 ├── __init__.py      # exports ContentCache, get_content_cache
 ├── types.py         # CacheEntry, CacheStats (extend dd_cache.CacheStats)
 ├── keys.py          # content_key(), content_hash(); imports make_key from dd_cache.utils
-├── meta.py          # MetaStore — SQLite metadata index (provenance, dep_graph, stale)
+├── meta.py          # MetaStore — SQLite metadata index (badges, dep_graph, stale)
 ├── content.py       # ContentCache — wraps BaseCacheAdapter + MetaStore; full API
 └── cli.py           # spl3 cache subcommands
 ```
@@ -379,21 +391,26 @@ class ContentCache:
     def get(
         self, concept: str, params: dict,
         rubric_version: str, dep_hashes: dict,
-        min_provenance: str = "machine_generated",
+        min_badge: Optional[str] = None,
     ) -> Optional[CacheEntry]: ...
-    # Returns None on miss or if entry.provenance < min_provenance
+    # Returns None on miss or if the badge set does not satisfy min_badge.
+    # The filter is axis-local: min_badge="machine_verified" is satisfied
+    # by machine_verified or machine_proved, never by exposition badges.
 
     def put(
-        self, concept: str, content: str, provenance: str,
-        params: dict, rubric_version: str, dep_hashes: dict,
-        adapter: str, model: str, token_cost: int,
+        self, concept: str, content: str, badges: list[str] | str = None,
+        params: dict = None, rubric_version: str = "v1", dep_hashes: dict = None,
+        adapter: str = "", model: str = "", token_cost: int = 0,
+        verifier: str = "", statement: str = "",
+        provenance: str = None,        # legacy single-tier input, converted
     ) -> CacheEntry: ...
 
     def promote(
-        self, key: str, new_provenance: str,
+        self, key: str, badge: str,
         verdict: Optional[dict] = None,
-    ) -> None:
-        """Advance entry through provenance tiers. verdict stored in meta for auditability."""
+    ) -> list[str]:
+        """Add a trust badge to the entry's set (no ladder, no downgrade,
+        duplicate add is an error). verdict stored for auditability."""
 
     def invalidate(self, concept: str, cascade: bool = True) -> list[str]:
         """Mark stale; cascade=True propagates via dep_graph recursive CTE."""
@@ -414,7 +431,7 @@ CREATE TABLE content_meta (
     key          TEXT PRIMARY KEY,     -- same key as in dd-cache store
     concept      TEXT NOT NULL,
     content_hash TEXT NOT NULL,        -- sha256(content)[:16] — dep_hash used by dependents
-    provenance   TEXT NOT NULL DEFAULT 'machine_generated',
+    badges       TEXT NOT NULL DEFAULT '[]',  -- JSON trust-badge set (B-4)
     rubric_ver   TEXT NOT NULL,
     dep_hashes   TEXT NOT NULL,        -- JSON {concept: content_hash}
     params       TEXT NOT NULL,        -- JSON
@@ -423,14 +440,19 @@ CREATE TABLE content_meta (
     token_cost   INTEGER DEFAULT 0,
     hit_count    INTEGER DEFAULT 0,
     stale        INTEGER DEFAULT 0,
-    verdict      TEXT,                 -- JSON JudgeResult if promoted via spl3 judge
+    verdict      TEXT,                 -- JSON JudgeResult from latest promotion
+    verifier     TEXT NOT NULL DEFAULT '',  -- engine-of-record (A-3)
+    statement    TEXT NOT NULL DEFAULT '',  -- Lean prop backing machine_proved (B-4)
     created_at   TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
 
-CREATE INDEX idx_concept    ON content_meta(concept);
-CREATE INDEX idx_provenance ON content_meta(provenance);
-CREATE INDEX idx_stale      ON content_meta(stale);
+CREATE INDEX idx_concept ON content_meta(concept);
+CREATE INDEX idx_stale   ON content_meta(stale);
+
+-- Pre-B-4 DBs carried a single `provenance` ordinal instead of `badges`;
+-- MetaStore migrates them on open (each legacy tier becomes the badge set
+-- attesting only what it attested; 'machine_generated' → '[]').
 
 -- dep_graph: maintained on every put(); drives cascading invalidation
 CREATE TABLE dep_graph (
@@ -444,35 +466,41 @@ The `dep_graph` table is what makes `invalidate(cascade=True)` a single SQL
 recursive CTE query — no in-Python graph traversal over JSON columns needed.
 The blob store (`dd-cache`) never needs to be scanned for invalidation.
 
-**On `promote()`:** updates `provenance` and `verdict` in `content_meta` only;
-the blob in `dd-cache` is unchanged (content is immutable, provenance is metadata).
+**On `promote()`:** updates `badges` and `verdict` in `content_meta` only;
+the blob in `dd-cache` is unchanged (content is immutable, trust is metadata).
 This is efficient — no blob re-serialization on promotion.
 
 ---
 
 ## 8. Provenance Integration
 
-The content cache is the physical implementation of the micro-textbook trust-tier
-promotion pipeline:
+The content cache is the physical implementation of the micro-textbook
+trust-badge pipeline. Badges accumulate on two independent axes:
 
 ```
 GENERATE write_section(@concept, @graph)
-    → cache.put(provenance="machine_generated")
+    → cache.put(badges=[])                                  # baseline
 
-CALL verify_math(@section) + CALL shape_check(@section) → PASS
-    → cache.promote(key, "machine_verified")
+CALL verify_math(@section) → 'pass (sympy)'                 # claim axis
+    → cache.promote(key, "machine_verified")                #   (or put with
+                                                            #    verifier="sympy")
+recipe 76: Lean kernel-checks the formalized claim          # claim axis, top
+    → cache_put(badges='machine_proved', verifier='lean',
+                statement=@lean_stmt)
 
-spl3 judge @section --criteria correctness → PASS
+spl3 judge @section --criteria correctness → PASS           # exposition axis
     → cache.promote(key, "ai_reviewed", verdict=judge_result)
 
-human editor accepts
+human editor accepts                                        # exposition axis, top
     → cache.promote(key, "human_verified")
 ```
 
-Every entry carries its provenance tier. The delivery layer filters by tier:
-`cache.get(concept, …, min_provenance="machine_verified")` — learners never
-receive unverified content. Entries below the threshold are a cache miss, even
-if the key is present.
+An entry holding the top badge on *both* axes is `canonical` (derived, ★ in
+the CLI). The delivery layer filters per axis:
+`cache.get(concept, …, min_badge="machine_verified")` — learners never
+receive mathematically unverified content, and an `ai_reviewed`-only entry
+does not slip through (the pre-B-4 ordinal allowed exactly that). Entries
+below the threshold are a cache miss, even if the key is present.
 
 ---
 
@@ -480,16 +508,16 @@ if the key is present.
 
 ```bash
 # Inspect
-spl3 cache list [--concept NAME] [--provenance TIER] [--format table|json]
-spl3 cache show <key>                            # full entry including dep_hashes
-spl3 cache stats                                 # hit rate, tokens saved, tier breakdown
+spl3 cache list [--concept NAME] [--badge BADGE] [--format table|json]
+spl3 cache show <key>                            # full entry; renders prose + Lean statement together
+spl3 cache stats                                 # hit rate, tokens saved, badge breakdown
 
 # Invalidation
 spl3 cache invalidate --concept NAME             # mark stale, output: list of affected keys
 spl3 cache invalidate --concept NAME --cascade   # propagate to all dependents
 spl3 cache clear --stale                         # remove all stale-flagged entries
 spl3 cache clear --all                           # full wipe (prompt cache unaffected)
-spl3 cache clear --provenance machine_generated  # remove unverified entries only
+spl3 cache clear --badge unbadged                # remove baseline (machine_generated) entries only
 
 # Portability — team sharing without a live remote store
 spl3 cache export -o cache.tar.gz
@@ -514,7 +542,7 @@ The executor computes `dep_hashes` automatically by traversing
 `ancestors(@graph, @concept)` and reading each ancestor's `content_hash` from the
 cache. It checks Layer 2 before calling the LLM. On a hit, `@section` is bound
 immediately with zero LLM cost; on a miss, the LLM is called and the result is
-stored at `machine_generated` provenance.
+stored at the unbadged `machine_generated` baseline.
 
 ### 10.2 `UNLESS STALE` modifier
 
@@ -572,8 +600,8 @@ learner instant responses for all verified concepts.
 
 ### 11.3 `spl3 judge` integration
 
-When `spl3 judge` promotes an entry from `machine_generated` to `ai_reviewed`,
-it calls `cache.promote(key, "ai_reviewed", verdict=judge_result)`. The
+When `spl3 judge` passes an entry, it adds the `ai_reviewed` exposition badge
+via `cache.promote(key, "ai_reviewed", verdict=judge_result)`. The
 `JudgeResult` is stored alongside the entry for auditability. This closes the
 loop between the judge design (spl3-judge.md) and the cache design — the verdict
 that authorised the promotion is permanently recorded.
@@ -671,7 +699,7 @@ is a valid future optimisation but out of scope here.
 | Separate metadata index (SQLite) from blob store | Provenance, dep_graph, stale, hit_count need relational queries; dd-cache is a KV store, not a relational DB. Metadata is always local; blobs can be remote. |
 | `make_key("spl3", "content", …)` for key namespacing | Prevents collision with Layer 1 prompt keys; both layers can safely share one DiskCache file if desired |
 | `get_or_set(key, fn, ttl=None)` for cache-miss pattern | dd-cache provides this helper; maps directly to `CACHE BY` executor behavior without new abstractions |
-| `promote()` updates metadata only, not blob | Provenance is metadata; content is immutable. No blob re-serialization on promotion — fast and safe. |
+| `promote()` updates metadata only, not blob | Trust badges are metadata; content is immutable. No blob re-serialization on promotion — fast and safe. |
 | Layer 2 key = hash of inputs (CAS), not hash of content | Content can legitimately change; inputs changing is the correct invalidation signal |
 | No TTL on Layer 2 | Verified content does not expire; time is not an invalidation criterion |
 | `ttl=None` / `ttl=0` / `ttl<0` semantics | `None`=never expire; `0`=expire immediately (cache bypass, useful in tests/troubleshooting); negative=`ValueError`. `ContentCache` hides `ttl` entirely — callers cannot set it. |

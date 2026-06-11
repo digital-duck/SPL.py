@@ -235,14 +235,17 @@ micro-textbook process is agile, not a waterfall). `canonical` remains the
 composite end state: strongest available badge on *both* axes. Within the claim
 axis the ordering is strict (`machine_proved` outranks `machine_verified`);
 across axes there is no ordering. B-4 implements this as a badge *set* in cache
-provenance and the notebook rendering, not a single ordinal. **Confirmed in
-code:** the cache *does* assume one ordinal today — `PROVENANCE_TIERS =
-[machine_generated, machine_verified, ai_reviewed, human_verified]` in
-`spl3/cache/types.py` with rank-based `promote()` that refuses downgrade
-(`meta.py`), and `spl3 judge --cache-key` promotes along it. That refactor is
-the first thing B-4 changes, and it touches `cache/types|meta|content|cli` plus
-the judge wiring. Note also a naming drift to reconcile there: the code's top
-tier is `human_verified`, while the micro-textbook docs say `canonical`.
+provenance and the notebook rendering, not a single ordinal. **Shipped
+2026-06-11:** `spl3/cache/types.py` now carries `CLAIM_BADGES` /
+`EXPOSITION_BADGES` with axis-local `satisfies()` (requiring
+`machine_verified` is met by `machine_proved`, never by `ai_reviewed` — the
+old ordinal got that wrong), `promote()` accumulates badges instead of
+walking a ladder, and `spl3 judge --cache-key` adds the `ai_reviewed`
+exposition badge. The naming drift is reconciled the same way:
+`human_verified` stays the exposition-axis top badge; `canonical` is
+derived-only (`is_canonical()` — top badge on both axes, shown as ★ in the
+CLI, never stored). Pre-B-4 DBs and exports migrate automatically: each
+legacy tier becomes the badge set attesting only what it attested.
 
 ### B.2 Integration mechanism: kernel-resident client → persistent Lean REPL
 
@@ -348,7 +351,7 @@ not "the textbook claim is proved." Mitigations, all in scope:
 | B-1 | `lean_bridge` prototype: REPL session mgmt (incl. `env`-id hygiene, §B.2), `lean_check`, timeout/restart, tests | M | **shipped** 2026-06-11 — `spl3/lean_bridge.py` (`LeanREPL`: persistent `leanprover-community/repl` pinned `v4.30.0`; every check in a fresh env forked from the warm base — definitions verified not to leak; timeout → transparent restart, crash recovery; `statement_ok` / `check` / `feedback` / `find`; `repl_available()` test guard) + `cookbook/tools/lean/setup_lean.sh` (elan + pinned repl build). 15/15 tests green against the **live** REPL (`tests/test_lean_bridge.py`). See [`spl3-lean.md`](./spl3-lean.md) |
 | B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M | **core shipped** 2026-06-11 — statement check (Stage 1, capped typecheck-repair loop) + LLM faithfulness judge (Stage 2, FAITHFUL/UNFAITHFUL + reason in the report) live in recipe 76. Remaining: wiring into recipe 71's payoff concepts |
 | B-3 | Proof checking + repair-loop recipe (`cookbook/76_lean_proof/`) | M | **shipped** 2026-06-11 — `lean_proof.spl` rewritten against the real B-1 API (the 2026-06-10 prepared draft is in git history) and verified end-to-end: `machine_proved` via both the citation path (`Nat.add_comm`, zero proof tokens) and the LLM-tactic path (`Nat.le_self_pow`); repair-cap exhaustion correctly degrades to `statement_checked` without blocking delivery (§B.2 contract). See recipe readme for verified runs |
-| B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M | planned — recipe 76's `@badge` (`unverified`/`statement_checked`/`machine_proved`) + side-by-side report are the seed |
+| B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M | **shipped** 2026-06-11 — badge set on two axes in `cache.types` (`CLAIM_BADGES`/`EXPOSITION_BADGES`, axis-local `satisfies()`, derived `is_canonical()`); `promote()` adds badges; `min_badge` filter no longer lets `ai_reviewed` satisfy `machine_verified` (the old ordinal did); `statement` column + `spl3 cache show` prose↔formal rendering; recipe 76 writes `machine_proved` + `verifier='lean'` + statement on kernel-checked success (verified end-to-end). Naming reconciled: `human_verified` is the exposition-axis top badge, `canonical` is derived-only (★ in CLI). Legacy DBs/exports migrate automatically |
 | B-5 | *(stretch)* mathlib-citation mode — `exact?` with suggestion parsing, or Loogle/LeanSearch (§B.1 caveat); claims link to mathlib lemma names | M/R | **seeded** 2026-06-11 — `LeanREPL.find()` (`exact?` + suggestion parsing) runs citation-first in recipe 76 Stage 3a; on a hit the suggestion is kernel-checked as the proof. Remaining: mathlib project wiring, Loogle/LeanSearch |
 
 ---

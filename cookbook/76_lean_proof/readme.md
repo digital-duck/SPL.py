@@ -43,6 +43,12 @@ expressed declaratively.
 @badge: machine_proved | statement_checked | unverified
    ▼
 @report — prose claim and Lean statement side by side
+   │ machine_proved only → cache_put(badges='machine_proved',
+   │           verifier='lean', statement=@lean_stmt)   (B-4: the badge
+   │           lands in Layer 2 cache provenance; `spl3 cache show <key>`
+   │           renders prose and statement together for the §B.4 audit)
+   ▼
+@cache_key
 ```
 
 Design points carried over from the plan:
@@ -139,5 +145,5 @@ stdlib-only; point it at a mathlib project for the full library):
 | B-1 (`lean_bridge`) | Consumer — drives the persistent `LeanREPL` from the kernel |
 | B-2 (statement checking) | Stage 1 + the faithfulness judge (Stage 2) |
 | **B-3 (proof + repair loop)** | **This recipe** (Stage 3b) |
-| B-4 (`machine_proved` badge) | The `@badge` string is the badge's seed; cache wiring follows |
+| B-4 (`machine_proved` badge) | Producer — a kernel-checked run writes the `machine_proved` claim badge to the Layer 2 cache with `verifier='lean'` and the statement stored for side-by-side audit (`statement_checked` is recipe-internal: well-formedness isn't a trust badge) |
 | B-5 (mathlib citation) | Stage 3a — the `find`/`exact?` citation path |
