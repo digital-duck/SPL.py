@@ -52,7 +52,7 @@ executable steps. That decomposition skill turns out to be far from uniform.
 | `deepseek-r1` | [DeepSeek](https://www.deepseek.com) | Open-weight, reasoning |
 | `lfm2.5` | [Liquid AI](https://www.liquid.ai) | Non-transformer architecture |
 
-All local models run via [Ollama](https://ollama.ai) — no API key, no bill.
+All local models (except sonnet-4-6) run via [Ollama](https://ollama.ai) — no API key, no bill.
 
 ## The results
 

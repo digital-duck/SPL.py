@@ -927,6 +927,10 @@ spl3 splc compile agent.spl --lang python/pocketflow
 # LLM-assisted — any target
 spl3 splc compile agent.spl --lang go --llm --adapter claude_cli
 spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m qwen/qwen3.6-plus
+
+# Domain notebook under the SageMath kernel — the .ipynb declares kernelspec 'sagemath'
+# (see §4.2 for installing the Sage kernel; docs/DEV/spl3-sagemath.md for details)
+spl3 splc compile build_micro_textbook.spl --lang python/domain_textbook --kernel-name sagemath
 ```
 
 ### Supported targets

@@ -41,7 +41,8 @@ class TestCLIHelp:
 
     def test_no_command_shows_help(self, runner):
         result = runner.invoke(cli, [])
-        assert result.exit_code == 0
+        # click >= 8.2 exits 2 (usage error) for a group with no subcommand
+        assert result.exit_code in (0, 2)
         assert "Usage" in result.output
 
     def test_run_help(self, runner):
@@ -190,7 +191,8 @@ class TestCLIMemory:
 
     def test_memory_no_subcommand(self, runner):
         result = runner.invoke(cli, ["memory"])
-        assert result.exit_code == 0  # click shows help
+        # click >= 8.2 exits 2 (usage error) for a group with no subcommand
+        assert result.exit_code in (0, 2)
         assert "list" in result.output
 
 
@@ -220,7 +222,8 @@ class TestCLIRag:
 
     def test_rag_no_subcommand(self, runner):
         result = runner.invoke(cli, ["rag"])
-        assert result.exit_code == 0
+        # click >= 8.2 exits 2 (usage error) for a group with no subcommand
+        assert result.exit_code in (0, 2)
         assert "add" in result.output
 
 

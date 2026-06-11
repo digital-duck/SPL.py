@@ -261,6 +261,15 @@ def splc():
     default=False,
     help="Display the LLM prompt and exit.",
 )
+@click.option(
+    "--kernel-name", "kernel_name",
+    default=None,
+    metavar="NAME",
+    help=(
+        "Jupyter kernel spec the emitted .ipynb declares (domain notebook "
+        "targets only, e.g. 'sagemath'). Default: python3."
+    ),
+)
 def cmd_compile(
     spl_path:   Path,
     lang:       str,
@@ -276,6 +285,7 @@ def cmd_compile(
     llm:        bool,
     verbose:    bool,
     prompt_debug: bool,
+    kernel_name: str | None,
 ) -> None:
     """splc — SPL Compiler: translate a .spl logical view into a physical implementation."""
 
@@ -390,7 +400,8 @@ def cmd_compile(
                     f"splc: using deterministic linalg transpiler for {spl_path.name}"
                 )
 
-            transpiler = LinalgTranspiler(recipe_name, spl_dir=spl_path.parent)
+            transpiler = LinalgTranspiler(recipe_name, spl_dir=spl_path.parent,
+                                          kernel_name=kernel_name)
             impl_code = transpiler.transpile(program)
             readme_text = (
                 f"# {recipe_name} (Python/linalg notebook)\n\n"
@@ -423,7 +434,8 @@ def cmd_compile(
                     f"splc: using deterministic intro_geometry transpiler for {spl_path.name}"
                 )
 
-            transpiler = IntroGeometryTranspiler(recipe_name, spl_dir=spl_path.parent)
+            transpiler = IntroGeometryTranspiler(recipe_name, spl_dir=spl_path.parent,
+                                                 kernel_name=kernel_name)
             impl_code = transpiler.transpile(program)
             readme_text = (
                 f"# {recipe_name} (Python/intro_geometry notebook)\n\n"
@@ -456,7 +468,8 @@ def cmd_compile(
                     f"splc: using deterministic domain_textbook transpiler for {spl_path.name}"
                 )
 
-            transpiler = DomainTextbookTranspiler(recipe_name, spl_dir=spl_path.parent)
+            transpiler = DomainTextbookTranspiler(recipe_name, spl_dir=spl_path.parent,
+                                                  kernel_name=kernel_name)
             impl_code = transpiler.transpile(program)
             readme_text = (
                 f"# {recipe_name} (Python/domain_textbook notebook)\n\n"

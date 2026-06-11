@@ -224,7 +224,9 @@ class TestBuildMicroTextbookStyleProfiles:
     def test_setup_cell_has_style_param_default(self):
         nb = _compile("build_micro_textbook")
         setup_src = _cell_src(nb["cells"][1])
-        assert 'style = "textbook"' in setup_src or "style = 'textbook'" in setup_src
+        # Params are now config-driven (env → ~/.spl/config → default) rather
+        # than hardcoded literals; 'textbook' remains the default.
+        assert "style = _spl_config('STYLE', 'textbook')" in setup_src
 
 
 # ---------------------------------------------------------------------------

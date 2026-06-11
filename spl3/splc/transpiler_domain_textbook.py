@@ -69,5 +69,6 @@ class DomainTextbookTranspiler(DomainGraphTranspiler):
     — the only difference is which `DomainConfig` it wraps.
     """
 
-    def __init__(self, recipe_name: str, spl_dir=None):
-        super().__init__(recipe_name, DOMAIN_TEXTBOOK_CONFIG, spl_dir=spl_dir)
+    def __init__(self, recipe_name: str, spl_dir=None, kernel_name: str | None = None):
+        super().__init__(recipe_name, DOMAIN_TEXTBOOK_CONFIG, spl_dir=spl_dir,
+                         kernel_name=kernel_name)

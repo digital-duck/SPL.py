@@ -1,8 +1,8 @@
-"""Tests for SPL 2.0 text2spl — natural language to SPL compiler."""
+"""Tests for spl3.text2spl — natural language to SPL compiler."""
 
 import asyncio
 import pytest
-from spl.text2spl import Text2SPL, SPL2_SYSTEM_PROMPT, _MODE_INSTRUCTIONS
+from spl3.text2spl import Text2SPL, SPL2_SYSTEM_PROMPT, _MODE_INSTRUCTIONS
 from spl.adapters.echo import EchoAdapter
 
 
@@ -85,7 +85,8 @@ class TestText2SPLConfig:
     def test_system_prompt_has_examples(self):
         assert "Example 1" in SPL2_SYSTEM_PROMPT
         assert "WORKFLOW" in SPL2_SYSTEM_PROMPT
-        assert "PROMPT" in SPL2_SYSTEM_PROMPT
+        # SPL 3.0 prompt: GENERATE replaced the 2.0-era PROMPT construct
+        assert "GENERATE" in SPL2_SYSTEM_PROMPT
         assert "EVALUATE" in SPL2_SYSTEM_PROMPT
 
     def test_mode_instructions(self):

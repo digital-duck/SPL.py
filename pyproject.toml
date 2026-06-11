@@ -76,6 +76,9 @@ dev = [
     "twine>=5.0",
     "ddgs>=6.0",
     "duckduckgo_search>=6.0",
+    # test_storage / test_code_rag exercise the vector + embedding backends
+    "faiss-cpu>=1.8",
+    "sentence-transformers>=3.0",
 ]
 
 [project.urls]

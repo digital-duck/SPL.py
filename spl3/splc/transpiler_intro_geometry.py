@@ -78,5 +78,5 @@ class IntroGeometryTranspiler(DomainGraphTranspiler):
         Path("out.ipynb").write_text(nb_json)
     """
 
-    def __init__(self, recipe_name: str, spl_dir=None):
-        super().__init__(recipe_name, GEOMETRY_CONFIG, spl_dir=spl_dir)
+    def __init__(self, recipe_name: str, spl_dir=None, kernel_name: str | None = None):
+        super().__init__(recipe_name, GEOMETRY_CONFIG, spl_dir=spl_dir, kernel_name=kernel_name)

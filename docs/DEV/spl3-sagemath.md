@@ -1,6 +1,6 @@
 # SPL × SageMath — Kernel Integration (Verifier Ladder, Part A)
 
-> **Status:** A-1 shipped and spike-verified 2026-06-10. A-2 in progress.
+> **Status:** A-1 and A-2 shipped 2026-06-10 (A-1 spike-verified live). Next: A-3.
 > Design: [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md).
 > SageMath widens `SOLVE`/`ASSERT` verification *coverage* (SageManifolds, GAP,
 > PARI, Singular); Lean (Part B, separate doc to come) raises the *ceiling*.
@@ -125,12 +125,35 @@ END
 
 ---
 
-## 6. Next: A-2 … A-4
+## 6. What shipped (A-2)
+
+The compiled notebook now carries its runtime (DODA), and the generic verifier
+dispatches on an engine:
+
+| Change | Where |
+|---|---|
+| `DomainConfig.kernel_name` (default `"python3"`) — run-level kernel selection, one kernelspec per notebook | `spl3/splc/transpiler_domain_graph.py` |
+| `_notebook()` emits the kernelspec from `kernel_name` (`sagemath` → SageMath/sage) and records `splc.kernel_name` in notebook provenance metadata | `spl3/splc/transpiler_domain_graph.py` |
+| `kernel_name` override parameter on the engine + all three domain transpilers | `transpiler_linalg.py`, `transpiler_intro_geometry.py`, `transpiler_domain_textbook.py` |
+| `splc compile --kernel-name NAME` CLI option (domain notebook targets) | `spl3/splc/cli.py` |
+| `graph_lib.verify_content(section, domain_data, verifier="")` — engine dispatch matching the per-node `verifier:` YAML attribute; `"sage"` branch; `"sage\|sympy"` prefers Sage, falls back to SymPy; engine-of-record in the return (`pass (sage)`) while the no-arg path stays plain `pass` (backward compatible with `EVALUATE ... WHEN contains("fail")`) | `cookbook/74_domain_textbook/graph_lib.py` |
+| 10 tests: kernelspec emission (default / sagemath / unknown-name fallback / cells invariant) + verifier dispatch (default / explicit / unknown / fallback tier / live Sage) | `tests/test_sage_target.py` |
+
+Verified end-to-end:
+
+```
+$ spl3 splc compile build_micro_textbook.spl --lang python/domain_textbook --kernel-name sagemath ...
+kernelspec: {'display_name': 'SageMath', 'language': 'sage', 'name': 'sagemath'}
+splc:       {'target': 'python/domain_textbook', 'domain_library': 'graph_lib.py', 'kernel_name': 'sagemath'}
+```
+
+---
+
+## 7. Next: A-3 … A-4
 
 | ID | Deliverable |
 |---|---|
-| A-2 | `verifier: "sage"` accepted in `graph_lib` domain nodes; `DomainConfig.kernel_name` sourced from the domain YAML; emitted `.ipynb` sets `metadata.kernelspec` (the artifact carries its runtime) |
-| A-3 | Fallback tiering (`"sage\|sympy"`) + engine-of-record in provenance |
+| A-3 | Fallback tiering surfaced in *cache provenance* and cell annotations (the `verify_content` engine-of-record return is the seed); kernelspec downgrade policy when Sage absent at run time |
 | A-4 | Demo: 3–5 geometry-domain nodes upgraded to Sage verifiers; SageManifolds seed cell for `python/classical_mechanics` |
 
 See the full milestone tables and granularity policy (run-level kernel vs

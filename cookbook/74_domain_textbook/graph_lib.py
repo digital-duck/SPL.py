@@ -304,7 +304,8 @@ def primitive_names(domain_data: dict[str, Any]) -> list[str]:
 # Generic verifier — the single symbolic-check shape every domain plugs into
 # ---------------------------------------------------------------------------
 
-def verify_content(section: str, domain_data: dict[str, Any]) -> str:
+def verify_content(section: str, domain_data: dict[str, Any],
+                   verifier: str = "") -> str:
     """Domain-dispatched symbolic check. Returns 'pass' or a failure description.
 
     Recipes 71/73 each declare their own verifier(s) (`verify_math` +
@@ -315,16 +316,32 @@ def verify_content(section: str, domain_data: dict[str, Any]) -> str:
     proving the *shape* generalizes even though the oracle's specifics
     (worked-example recompute, geometry recompute, ...) remain TODO stubs in
     71/73 too. A third domain adds a branch here, not a new `.spl` construct.
+
+    `verifier` (optional) is an explicit engine override, matching the
+    per-node `verifier:` YAML attribute ("sympy" | "z3" | "numpy" | "sage" |
+    "sage|sympy"). "sage" dispatches to SageMath; "sage|sympy" prefers Sage
+    and falls back to SymPy when Sage is absent (the fallback-tiering policy —
+    see SPL.py/docs/DEV/sage_lean_integration_plan.md §A.2). When empty, the
+    domain default applies.
     """
-    domain = domain_data.get("domain", "")
-    try:
-        if domain == "intro_geometry":
-            import sympy.geometry  # noqa: F401 — presence check
-        else:
-            import sympy  # noqa: F401 — presence check
-        return "pass"   # TODO: parse claims from section and recompute per-domain
-    except Exception as exc:
-        return f"fail: {exc}"
+    engines = [e.strip() for e in verifier.split("|") if e.strip()] or ["_domain_default"]
+    last_exc: Exception | None = None
+    for engine in engines:
+        try:
+            if engine == "sage":
+                import sage.all  # noqa: F401 — presence check
+            elif engine == "_domain_default":
+                if domain_data.get("domain", "") == "intro_geometry":
+                    import sympy.geometry  # noqa: F401 — presence check
+                else:
+                    import sympy  # noqa: F401 — presence check
+            else:  # sympy / z3 / numpy
+                __import__("sympy" if engine == "sympy" else engine)
+            # TODO: parse claims from section and recompute per-domain
+            return "pass" if engine == "_domain_default" else f"pass ({engine})"
+        except Exception as exc:
+            last_exc = exc
+    return f"fail: {last_exc}"
 
 
 # ---------------------------------------------------------------------------

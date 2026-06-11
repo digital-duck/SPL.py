@@ -201,8 +201,9 @@ class TestBuildMicroTextbookNotebook:
     def test_setup_cell_imports_linalg_graph(self):
         setup = self.nb["cells"][1]
         src = _cell_src(setup)
-        assert "import linalg_graph as lg" in src
-        assert "graph = lg.build()" in src
+        # Engine generalization (transpiler_domain_graph) renamed the alias lg → dg
+        assert "import linalg_graph as dg" in src
+        assert "graph = dg.build()" in src
         assert "gap" in src
         assert "learning_path" in src
 

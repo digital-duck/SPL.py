@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 import re
 import textwrap
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace as _dc_replace
 from typing import Any
 
 from spl.ast_nodes import (
@@ -115,6 +115,12 @@ class DomainConfig:
     # do" so existing presets are untouched.
     extra_imports: tuple[str, ...] = field(default_factory=tuple)
     graph_bootstrap: tuple[str, ...] | None = None
+    # Jupyter kernel spec the emitted .ipynb declares (the artifact carries its
+    # runtime — DODA). Kernel selection is run-level: one kernelspec per
+    # notebook. "sagemath" runs every cell under SageMath's preparsing kernel;
+    # node-level `verifier:` declarations stay per-cell. Overridable per
+    # compile via `splc compile --kernel-name`.
+    kernel_name: str = "python3"
 
     @property
     def graph_file(self) -> str:
@@ -149,15 +155,28 @@ def _source_lines(text: str) -> list[str]:
     return [ln + "\n" for ln in lines[:-1]] + [lines[-1]]
 
 
+# Known kernel specs → notebook kernelspec metadata. Unknown names fall back
+# to name-as-display-name with python language (any installed Jupyter spec is
+# legal — see spl3/kernel.py ensure_kernelspec()).
+_KERNELSPEC_META: dict[str, dict[str, str]] = {
+    "python3":  {"display_name": "Python 3 (ipykernel)", "language": "python"},
+    "sagemath": {"display_name": "SageMath", "language": "sage"},
+}
+
+
 def _notebook(cells: list[dict], config: DomainConfig) -> dict[str, Any]:
+    spec_meta = _KERNELSPEC_META.get(
+        config.kernel_name,
+        {"display_name": config.kernel_name, "language": "python"},
+    )
     return {
         "nbformat": 4,
         "nbformat_minor": 5,
         "metadata": {
             "kernelspec": {
-                "display_name": "Python 3 (ipykernel)",
-                "language": "python",
-                "name": "python3",
+                "display_name": spec_meta["display_name"],
+                "language": spec_meta["language"],
+                "name": config.kernel_name,
             },
             "language_info": {
                 "name": "python",
@@ -166,6 +185,7 @@ def _notebook(cells: list[dict], config: DomainConfig) -> dict[str, Any]:
             "splc": {
                 "target": config.target,
                 "domain_library": config.graph_file,
+                "kernel_name": config.kernel_name,
             },
         },
         "cells": cells,
@@ -349,8 +369,11 @@ class DomainGraphTranspiler:
         Path("out.ipynb").write_text(nb_json)
     """
 
-    def __init__(self, recipe_name: str, config: DomainConfig, spl_dir=None):
+    def __init__(self, recipe_name: str, config: DomainConfig, spl_dir=None,
+                 kernel_name: str | None = None):
         self.recipe_name = recipe_name
+        if kernel_name and kernel_name != config.kernel_name:
+            config = _dc_replace(config, kernel_name=kernel_name)
         self.config = config
         self.spl_dir = spl_dir
         self.prompts: dict[str, str] = {}
