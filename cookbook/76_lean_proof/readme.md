@@ -103,6 +103,19 @@ spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel \
     --adapter ollama --model gemma3
 ```
 
+## Verified example runs (2026-06-11, `--llm claude_cli`)
+
+| Claim | Formalization | Path | Badge | LLM calls |
+|---|---|---|---|---|
+| addition of natural numbers is commutative *(default)* | `∀ n m : Nat, n + m = m + n` | citation — `exact?` returned `Nat.add_comm`, zero proof tokens | `machine_proved` | 2 |
+| for any natural number n, n² ≥ n | `∀ n : Nat, n ^ 2 ≥ n` | LLM proof — `intro n; exact Nat.le_self_pow (by decide) n`, kernel-checked first try | `machine_proved` | 3 |
+
+Failure mode also exercised: before the prompts warned that mathlib is not
+imported, the model reached for `ring` (unknown tactic in stdlib), burned the
+3-try repair cap — fed Lean's real diagnostics each round — and the run
+completed with `statement_checked`: the badge was withheld, delivery wasn't
+blocked, exactly the §B.2 contract.
+
 ## Good first claims
 
 Stdlib-decidable or simple-tactic territory (the default REPL is

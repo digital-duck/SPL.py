@@ -127,8 +127,10 @@ Write a Lean 4 tactic proof for this proposition:
 Rules:
 - Output ONLY the tactic script — what goes after `:= by`. No fences,
   no commentary, no restatement of the proposition.
-- Prefer simple core tactics: intro, rfl, simp, omega, decide,
-  induction, exact.
+- CORE Lean 4 only — mathlib is NOT imported: ring, linarith, nlinarith,
+  norm_num, positivity, aesop will all fail with "unknown tactic".
+- Stick to: intro, rfl, simp, omega, decide, induction, cases, calc,
+  exact, and core Nat/Int/List lemmas (e.g. Nat.add_comm, Nat.le_self_pow).
 - Example output for `∀ n : Nat, n + 0 = n`:  intro n; rfl
 $$;
 
@@ -141,8 +143,12 @@ Failed tactic script: {tactics}
 Lean's diagnostics:
 {feedback}
 
-Output ONLY a corrected tactic script (what goes after `:= by`).
-Prefer simple core tactics: intro, rfl, simp, omega, decide, induction, exact.
+Output ONLY a corrected tactic script (what goes after `:= by`) — no
+fences, no explanation, nothing after the final tactic.
+CORE Lean 4 only — mathlib is NOT imported: ring, linarith, nlinarith,
+norm_num, positivity, aesop will all fail with "unknown tactic".
+Stick to: intro, rfl, simp, omega, decide, induction, cases, calc,
+exact, and core Nat/Int/List lemmas (e.g. Nat.add_comm, Nat.le_self_pow).
 $$;
 
 -- ── WORKFLOW ─────────────────────────────────────────────────
