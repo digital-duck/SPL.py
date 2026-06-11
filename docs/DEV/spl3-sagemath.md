@@ -1,6 +1,6 @@
 # SPL × SageMath — Kernel Integration (Verifier Ladder, Part A)
 
-> **Status:** A-1 and A-2 shipped 2026-06-10 (A-1 spike-verified live). Next: A-3.
+> **Status:** A-1, A-2, A-3 shipped 2026-06-10 (A-1 spike-verified live). Next: A-4.
 > Design: [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md).
 > SageMath widens `SOLVE`/`ASSERT` verification *coverage* (SageManifolds, GAP,
 > PARI, Singular); Lean (Part B, separate doc to come) raises the *ceiling*.
@@ -149,11 +149,30 @@ splc:       {'target': 'python/domain_textbook', 'domain_library': 'graph_lib.py
 
 ---
 
-## 7. Next: A-3 … A-4
+## 7. What shipped (A-3)
+
+The engine-of-record now persists beyond the cell output, and kernel downgrade
+is loud instead of silent:
+
+| Change | Where |
+|---|---|
+| `CacheEntry.verifier` — which deterministic engine checked the content (`"sympy"`, `"sage"`, `""` = unverified). Orthogonal to `adapter`/`model` (the *generation* engine) | `spl3/cache/types.py` |
+| `verifier TEXT` column + automatic `ALTER TABLE` migration for pre-A-3 cache DBs | `spl3/cache/meta.py` |
+| `ContentCache.put(..., verifier=)` → stored and returned on `get()`; visible in `spl3 cache show` and `list --format json` | `spl3/cache/content.py` |
+| stdlib `cache_put(..., verifier='sage')` `@spl_tool` — recipes pass the engine from the verify step's `pass (<engine>)` result | `spl/stdlib.py` |
+| Notebook-emitted `cache_put` helper gains the same parameter | `spl3/splc/transpiler_domain_graph.py` |
+| **Kernel-check banner** appended to the setup cell of any notebook compiled for a non-`python3` kernel: probes the engine at runtime, prints a WARNING when absent (`sage`-only nodes fail fast; `sage\|sympy` nodes fall back to sympy) — never blocks execution | `spl3/splc/transpiler_domain_graph.py` |
+
+The `"sage|sympy"` fallback dispatch itself landed in A-2
+(`graph_lib.verify_content`); A-3 made its outcome *durable* — engine-of-record
+flows cell output → cache provenance → (future) trust badges in B-4.
+
+---
+
+## 8. Next: A-4
 
 | ID | Deliverable |
 |---|---|
-| A-3 | Fallback tiering surfaced in *cache provenance* and cell annotations (the `verify_content` engine-of-record return is the seed); kernelspec downgrade policy when Sage absent at run time |
 | A-4 | Demo: 3–5 geometry-domain nodes upgraded to Sage verifiers; SageManifolds seed cell for `python/classical_mechanics` |
 
 See the full milestone tables and granularity policy (run-level kernel vs

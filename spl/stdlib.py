@@ -735,13 +735,17 @@ def cache_put(
     rubric_version: str = "v1",
     params_json: str = "{}",
     token_cost: str = "0",
+    verifier: str = "",
 ) -> str:
     """Store a generated section in the Layer 2 content cache.
 
     Returns the cache key on success, or an error string on failure.
+    `verifier` records the engine-of-record that checked the content
+    ("sympy", "sage", ...) — pass it when the section was symbolically verified.
 
     Usage in SPL:
         CALL cache_put(@concept, @section) INTO @cache_key
+        CALL cache_put(@concept, @section, verifier='sage') INTO @cache_key
     """
     try:
         from spl3.cache import get_content_cache
@@ -755,6 +759,7 @@ def cache_put(
             rubric_version=rubric_version,
             dep_hashes={},
             token_cost=int(token_cost) if token_cost.isdigit() else 0,
+            verifier=verifier,
         )
         return entry.key
     except Exception as e:

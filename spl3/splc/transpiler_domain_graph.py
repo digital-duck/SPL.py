@@ -294,13 +294,19 @@ def cache_get(concept: str, rubric_version: str = "v1") -> str:
     except Exception:
         return "miss"
 
-def cache_put(concept: str, content: str, rubric_version: str = "v1") -> str:
-    \"\"\"Stores generated+verified content (write-once, immutable); returns the cache key.\"\"\"
+def cache_put(concept: str, content: str, rubric_version: str = "v1",
+              verifier: str = "") -> str:
+    \"\"\"Stores generated+verified content (write-once, immutable); returns the cache key.
+
+    `verifier` records the engine-of-record that checked the content
+    ("sympy", "sage", ...) — pass the engine from the verify step's
+    'pass (<engine>)' result so cache provenance carries it.\"\"\"
     try:
         from spl3.cache import get_content_cache
         entry = get_content_cache().put(
             concept=concept, content=content, provenance="machine_generated",
             params={}, rubric_version=rubric_version, dep_hashes={},
+            verifier=verifier,
         )
         return entry.key
     except Exception as exc:
@@ -499,7 +505,31 @@ class DomainGraphTranspiler:
             .replace("{verifier_defs}", self._verifier_defs_source())
             .replace("{param_defaults}", "\n".join(param_lines))
         )
+        if self.config.kernel_name != "python3":
+            src += "\n" + self._kernel_check_source()
         return _code_cell(src)
+
+    def _kernel_check_source(self) -> str:
+        """Runtime downgrade notice for notebooks compiled for a non-default kernel.
+
+        The kernelspec metadata declares the intended kernel, but a learner can
+        open the .ipynb under any kernel — this block makes the mismatch loud
+        without blocking execution (fallback-tiering policy: 'sage|sympy' nodes
+        downgrade, 'sage'-only nodes fail fast with a clear cause).
+        """
+        kn = self.config.kernel_name
+        probe = "sage.all" if kn == "sagemath" else kn
+        return (
+            f"\n# ── Kernel check: this notebook was compiled for the '{kn}' kernel ──────────\n"
+            f"try:\n"
+            f"    __import__({probe!r})  # noqa: F401 — engine presence probe\n"
+            f"    print(\"verifier engine-of-record available: {kn}\")\n"
+            f"except Exception:\n"
+            f"    print(\"WARNING: compiled for kernel '{kn}' but its engine is not importable.\")\n"
+            f"    print(\"         'sage'-only verifier nodes will fail fast; 'sage|sympy' nodes\")\n"
+            f"    print(\"         fall back to sympy. Engine-of-record is recorded per cell\")\n"
+            f"    print(\"         output and in cache provenance (verifier column).\")"
+        )
 
     def _verifier_defs_source(self) -> str:
         """Render every domain verifier's helper definition for the setup cell.

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS content_meta (
     hit_count    INTEGER DEFAULT 0,
     stale        INTEGER DEFAULT 0,
     verdict      TEXT,
+    verifier     TEXT NOT NULL DEFAULT '',
     created_at   TEXT NOT NULL,
     updated_at   TEXT NOT NULL
 );
@@ -56,6 +57,12 @@ class MetaStore:
         self._conn = sqlite3.connect(meta_path)
         self._conn.row_factory = sqlite3.Row
         self._conn.executescript(_SCHEMA)
+        # Migration: DBs created before the engine-of-record column (A-3)
+        cols = {row[1] for row in self._conn.execute("PRAGMA table_info(content_meta)")}
+        if "verifier" not in cols:
+            self._conn.execute(
+                "ALTER TABLE content_meta ADD COLUMN verifier TEXT NOT NULL DEFAULT ''"
+            )
         self._conn.commit()
 
     # ------------------------------------------------------------------ #
@@ -74,14 +81,15 @@ class MetaStore:
         adapter: str,
         model: str,
         token_cost: int,
+        verifier: str = "",
     ) -> None:
         now = _now()
         self._conn.execute(
             """INSERT INTO content_meta
                (key, concept, content_hash, provenance, rubric_ver,
                 dep_hashes, params, adapter, model, token_cost,
-                hit_count, stale, verdict, created_at, updated_at)
-               VALUES (?,?,?,?,?,?,?,?,?,?,0,0,NULL,?,?)
+                hit_count, stale, verdict, verifier, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,0,0,NULL,?,?,?)
                ON CONFLICT(key) DO UPDATE SET
                    content_hash = excluded.content_hash,
                    provenance   = excluded.provenance,
@@ -91,6 +99,7 @@ class MetaStore:
                    adapter      = excluded.adapter,
                    model        = excluded.model,
                    token_cost   = excluded.token_cost,
+                   verifier     = excluded.verifier,
                    stale        = 0,
                    updated_at   = excluded.updated_at
             """,
@@ -99,7 +108,7 @@ class MetaStore:
                 json.dumps(dep_hashes, sort_keys=True),
                 json.dumps(params, sort_keys=True),
                 adapter, model, token_cost,
-                now, now,
+                verifier, now, now,
             ),
         )
         # Rebuild dep_graph entries for this concept

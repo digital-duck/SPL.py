@@ -35,6 +35,10 @@ class CacheEntry:
     hit_count: int
     stale: bool = False
     verdict: dict | None = None
+    # Engine-of-record: which deterministic engine verified this content
+    # ("sympy", "sage", ...; "" = unverified / not recorded). Orthogonal to
+    # adapter/model, which record the *generation* engine.
+    verifier: str = ""
 
 
 @dataclass

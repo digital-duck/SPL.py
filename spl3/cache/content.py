@@ -75,6 +75,7 @@ class ContentCache:
             hit_count=meta["hit_count"] + 1,
             stale=bool(meta["stale"]),
             verdict=json.loads(meta["verdict"]) if meta["verdict"] else None,
+            verifier=meta["verifier"] or "",
         )
 
     # ------------------------------------------------------------------ #
@@ -92,8 +93,13 @@ class ContentCache:
         adapter: str = "",
         model: str = "",
         token_cost: int = 0,
+        verifier: str = "",
     ) -> CacheEntry:
-        """Store a generated+verified section. Always ttl=None (write-once immutable)."""
+        """Store a generated+verified section. Always ttl=None (write-once immutable).
+
+        `verifier` records the engine-of-record that checked the content
+        ("sympy", "sage", ...) — see docs/DEV/sage_lean_integration_plan.md §A.2.
+        """
         key = content_key(concept, params, rubric_version, dep_hashes)
         chash = _content_hash(content)
 
@@ -111,6 +117,7 @@ class ContentCache:
             adapter=adapter,
             model=model,
             token_cost=token_cost,
+            verifier=verifier,
         )
 
         from datetime import datetime, timezone
@@ -130,6 +137,7 @@ class ContentCache:
             hit_count=0,
             stale=False,
             verdict=None,
+            verifier=verifier,
         )
 
     def get_or_put(
