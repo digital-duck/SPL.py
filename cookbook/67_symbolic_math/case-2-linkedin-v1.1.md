@@ -93,12 +93,24 @@ strict verified correctness, and that strictness cuts both ways.
 
 ## The standout: rnj-1, a model named after Ramanujan
 
-The most striking open-weight result belongs to a newcomer. Essential AI's
-`rnj-1` is named after **Srinivasa Ramanujan** — the self-taught Indian
-mathematician who, with no formal training and almost no resources, produced
-results that still drive research a century later. It is hard to imagine a
-more fitting namesake for what this experiment is about: serious mathematics
-made accessible without institutional privilege.
+The most striking open-weight result belongs to a newcomer.
+[`rnj-1`](https://www.essential.ai/research/rnj-1) is named after
+[**Srinivasa Ramanujan**](https://www.wikiwand.com/en/Srinivasa_Ramanujan) —
+the self-taught Indian mathematician who, with no formal training and almost
+no resources, produced results that still drive research a century later. A
+clerk with a notebook out-thought the best-resourced institutions of his era —
+proof that intelligence is distributed everywhere, indifferent to wealth and
+power, waiting only for a door to open. It is hard to imagine a more fitting
+namesake for what this experiment is about: serious mathematics made
+accessible without institutional privilege.
+
+The lineage behind the model is just as striking. Essential AI was founded by
+**Ashish Vaswani** — the first author of "Attention Is All You Need" (2017),
+the paper that introduced the Transformer architecture underpinning nearly
+every model in this experiment. The person who started the transformer era
+chose, as his next act, to build an open-weight math model named after
+Ramanujan and [publish it on Ollama](https://ollama.com/library/rnj-1) for
+anyone to pull and run locally, free.
 
 The model lives up to the name. `rnj-1` scores **15/20** on the verified
 solver arm at **4.6 seconds average** — the fastest latency of any model that
@@ -165,7 +177,11 @@ never pattern-matching in the first place."
 
 A student in an underdeveloped country, or simply a curious kid without
 institutional resources, has no realistic path to a frontier model API
-subscription. That is a luxury, full stop.
+subscription. That is a luxury, full stop. And yet genius has never checked
+bank accounts before arriving — Ramanujan is the standing proof that the rich
+and powerful are not automatically the gifted, and the gifted are very often
+neither rich nor powerful. The next Ramanujan is out there right now, and the
+only question is whether the tools reach her.
 
 But `rnj-1`, `qwen2.5`, and `gemma3` run on a modest laptop, cost nothing, and
 on this 20-problem battery produce explanations that are correct and **verified
@@ -187,9 +203,10 @@ Alibaba's `qwen2.5`, released quietly in September 2024, is still the
 efficiency champion eighteen months later: 12/20 verified at 2.8 seconds,
 free. Liquid AI's `lfm2.5` is a deliberate architectural departure — a
 continuous-time neural network rooted in differential equations, not attention
-at all. And Essential AI chose to name its math model after a genius who
-proved, a hundred years ago, that talent is distributed everywhere even when
-resources are not.
+at all. And Ashish Vaswani — the same Vaswani whose name leads that 2017
+paper — chose to name his company's math model after a genius who proved, a
+hundred years ago, that talent is distributed everywhere even when resources
+are not.
 
 ## How to reproduce
 
@@ -198,6 +215,7 @@ Every prompt, every token count, every log line is public. Clone and run:
 - [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl)
 - [run_experiment.py](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/run_experiment.py)
 - [experiment log (rerun 20260610)](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-20260610-062904.md)
+- [rnj-1 announcement (Essential AI)](https://www.essential.ai/research/rnj-1) · [rnj-1 on Ollama](https://ollama.com/library/rnj-1)
 
 ```bash
 git clone https://github.com/digital-duck/SPL.py.git

@@ -1,0 +1,18 @@
+# Minimal lake project for SPL's Lean bridge (`lake env repl` runs here).
+# The toolchain is pinned by ./lean-toolchain and must match the repl
+# checkout's pin (D2 in docs/DEV/sage_lean_integration_plan.md).
+name = "spl_lean"
+version = "0.1.0"
+defaultTargets = ["SplLean"]
+
+[[lean_lib]]
+name = "SplLean"
+
+# Mathlib, pinned to the same release as the toolchain (D2).
+# Enabled by `setup_lean.sh --with-mathlib` (~5 GB olean cache via
+# `lake exe cache get`) — strictly optional, the bridge and all tests
+# work stdlib-only.
+# [[require]]
+# name = "mathlib"
+# scope = "leanprover-community"
+# rev = "v4.30.0"

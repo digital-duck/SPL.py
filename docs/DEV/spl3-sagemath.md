@@ -1,6 +1,7 @@
 # SPL × SageMath — Kernel Integration (Verifier Ladder, Part A)
 
-> **Status:** A-1, A-2, A-3 shipped 2026-06-10 (A-1 spike-verified live). Next: A-4.
+> **Status:** **Part A complete** — A-1…A-4 all shipped 2026-06-10 (spike-verified
+> live, 738-test suite green). Part B (Lean) is next; see the plan §3.
 > Design: [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md).
 > SageMath widens `SOLVE`/`ASSERT` verification *coverage* (SageManifolds, GAP,
 > PARI, Singular); Lean (Part B, separate doc to come) raises the *ceiling*.
@@ -169,11 +170,36 @@ flows cell output → cache provenance → (future) trust badges in B-4.
 
 ---
 
-## 8. Next: A-4
+## 8. What shipped (A-4) — Part A complete
 
-| ID | Deliverable |
+First *real mathematics* in the verifier path — exact recomputation over ℚ, not
+presence checks. (Scope note: the plan said "conics, projective duality", but
+the intro-geometry domain is school geometry — the upgrade targeted its actual
+concepts instead.)
+
+| Change | Where |
 |---|---|
-| A-4 | Demo: 3–5 geometry-domain nodes upgraded to Sage verifiers; SageManifolds seed cell for `python/classical_mechanics` |
+| `verify_right_triangle(a,b,c)` — exact a²+b²=c² over ℚ | `cookbook/74_domain_textbook/graph_lib.py` |
+| `verify_distance_squared(x1,y1,x2,y2,d²)` — distance formula, d² keeps everything rational | `graph_lib.py` |
+| `verify_polygon_area(vertices, claimed)` — exact shoelace; handles `"1/2"`-style rational coords | `graph_lib.py` |
+| All three: sage→sympy **absence** fallback with engine-of-record (`pass (sage)`); a wrong claim fails with the first available engine — fallback never masks a verdict | `graph_lib.py` |
+| `pythagorean_theorem`, `distance_formula`, `area` nodes → `verifier: sage\|sympy`, `lab:` points at the verifier function | `geometry_graph.yaml` |
+| **SageManifolds seed** — `sphere_scalar_curvature(r)`: round S² built with charts + metric, Ricci scalar computed symbolically, equals **2/r² exactly** (`2` at r=1, `1/2` at r=2). Sage-only by nature → the `verifier: "sage"` fail-fast case. Verifier-shaped wrapper included | `cookbook/74_domain_textbook/classical_mechanics_seed.py` |
+| 10 tests (exact pass/fail, rational coords, forced-engine, YAML declarations, live curvature) | `tests/test_sage_target.py` |
+
+The seed is the proof that the differential-geometry machinery the future
+`mechanics_graph.yaml` needs (charts, metrics, curvature — `configuration_space`,
+`lagrangian`, `geodesic`, `normal_modes` nodes) runs in this environment today.
+
+---
+
+## 9. Next
+
+Part A is done. The remaining Sage-track work is *domain authoring*, not
+integration: write `mechanics_graph.yaml` (a new domain YAML, zero engine
+changes) when the classical-mechanics micro-textbook becomes the focus. Part B
+(Lean 4 + mathlib, milestones B-1…B-5) is the next integration phase — see
+[`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md) §3.
 
 See the full milestone tables and granularity policy (run-level kernel vs
 node-level verifier) in

@@ -202,3 +202,62 @@ class TestKernelCheckBanner:
         setup_src = "".join(nb["cells"][1]["source"])
         assert 'verifier: str = ""' in setup_src
         assert "verifier=verifier," in setup_src
+
+
+class TestExactGeometryVerifiers:
+    """A-4: real recomputation verifiers (exact over ℚ) with engine-of-record."""
+
+    ENGINE = "sage" if _sage_available() else "sympy"
+
+    def test_right_triangle_pass(self):
+        assert graph_lib.verify_right_triangle(3, 4, 5) == f"pass ({self.ENGINE})"
+
+    def test_right_triangle_fail_is_final_not_fallback(self):
+        # A wrong claim FAILS with the first available engine — fallback is for
+        # engine absence, never for verdict disagreement.
+        out = graph_lib.verify_right_triangle(3, 4, 6)
+        assert out.startswith("fail:")
+        assert self.ENGINE in out
+
+    def test_distance_squared_pass(self):
+        # (1,2) → (4,6): d² = 3² + 4² = 25
+        assert graph_lib.verify_distance_squared(1, 2, 4, 6, 25) == f"pass ({self.ENGINE})"
+
+    def test_polygon_area_pass_and_fail(self):
+        rect = [(0, 0), (4, 0), (4, 3), (0, 3)]
+        assert graph_lib.verify_polygon_area(rect, 12) == f"pass ({self.ENGINE})"
+        assert graph_lib.verify_polygon_area(rect, 11).startswith("fail:")
+
+    def test_exact_rationals_no_floats(self):
+        # 1/2-unit grid: shoelace stays in ℚ — area of this triangle is 1/8
+        tri = [("0", "0"), ("1/2", "0"), ("0", "1/2")]
+        assert graph_lib.verify_polygon_area(tri, "1/8") == f"pass ({self.ENGINE})"
+
+    def test_forced_sympy_engine(self):
+        assert graph_lib.verify_right_triangle(3, 4, 5, verifier="sympy") == "pass (sympy)"
+
+    def test_geometry_yaml_nodes_declare_fallback_tier(self):
+        data = graph_lib.load_domain(
+            Path(__file__).resolve().parents[1]
+            / "cookbook" / "74_domain_textbook" / "geometry_graph.yaml"
+        )
+        concepts = data["concepts"]
+        for node in ("pythagorean_theorem", "distance_formula", "area"):
+            assert concepts[node]["verifier"] == "sage|sympy", node
+
+
+@pytest.mark.skipif(not _sage_available(), reason="SageMath not installed")
+class TestClassicalMechanicsSeed:
+    """A-4: SageManifolds seed — curvature machinery for python/classical_mechanics."""
+
+    def test_unit_sphere_ricci_scalar_is_2(self):
+        import classical_mechanics_seed as cm
+        assert str(cm.sphere_scalar_curvature(1)) == "2"
+
+    def test_radius_2_sphere_ricci_scalar_is_one_half(self):
+        import classical_mechanics_seed as cm
+        assert str(cm.sphere_scalar_curvature(2)) == "1/2"
+
+    def test_verifier_shape(self):
+        import classical_mechanics_seed as cm
+        assert cm.verify_sphere_curvature(1) == "pass (sage)"

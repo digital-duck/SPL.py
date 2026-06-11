@@ -32,7 +32,10 @@ first_radical_primitives(domain_data) → list[str]
 both_radical_primitives(domain_data)  → list[str]
 concept_names(domain_data)            → list[str]
 primitive_names(domain_data)          → list[str]
-verify_content(section, domain_data)  → str   (single generic symbolic-check stub)
+verify_content(section, domain_data, verifier="")  → str   (single generic symbolic-check stub)
+verify_right_triangle(a, b, c)                     → str   (exact a²+b²=c² over ℚ; sage|sympy)
+verify_distance_squared(x1, y1, x2, y2, d2)        → str   (exact distance formula over ℚ; sage|sympy)
+verify_polygon_area(vertices, claimed)             → str   (exact shoelace over ℚ; sage|sympy)
 
 Graph conventions — IDENTICAL to linalg_graph.py / geometry_graph.py
 --------------------------------------------------------------------
@@ -342,6 +345,98 @@ def verify_content(section: str, domain_data: dict[str, Any],
         except Exception as exc:
             last_exc = exc
     return f"fail: {last_exc}"
+
+
+# ---------------------------------------------------------------------------
+# Exact worked-example verifiers (A-4) — real recomputation, not presence checks
+#
+# Each tries the engines named in `verifier` left to right ("sage|sympy" =
+# prefer Sage, fall back to SymPy when Sage is absent). Fallback applies to
+# ENGINE ABSENCE only — once an engine computes, its verdict is final and the
+# engine-of-record is reported: 'pass (sage)' / 'fail: ... (sympy)'. All
+# arithmetic is exact over the rationals; no floating point anywhere.
+# ---------------------------------------------------------------------------
+
+def _engines(verifier: str) -> list[str]:
+    return [e.strip() for e in verifier.split("|") if e.strip()]
+
+
+def verify_right_triangle(a, b, c, verifier: str = "sage|sympy") -> str:
+    """Exact Pythagorean check: a² + b² == c² over ℚ (legs a, b; hypotenuse c).
+
+    Verifies the worked example for the `pythagorean_theorem` concept node.
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import QQ
+                ok = QQ(a) ** 2 + QQ(b) ** 2 == QQ(c) ** 2
+            else:
+                from sympy import Rational
+                ok = Rational(a) ** 2 + Rational(b) ** 2 == Rational(c) ** 2
+            if ok:
+                return f"pass ({engine})"
+            return f"fail: {a}**2 + {b}**2 != {c}**2 (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
+
+
+def verify_distance_squared(x1, y1, x2, y2, claimed_d_squared,
+                            verifier: str = "sage|sympy") -> str:
+    """Exact distance-formula check: (x₂−x₁)² + (y₂−y₁)² == claimed d² over ℚ.
+
+    Verifies the worked example for the `distance_formula` concept node.
+    Comparing d² keeps everything in ℚ — no square roots, no floats.
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import QQ
+                d2 = (QQ(x2) - QQ(x1)) ** 2 + (QQ(y2) - QQ(y1)) ** 2
+                ok = d2 == QQ(claimed_d_squared)
+            else:
+                from sympy import Rational
+                d2 = (Rational(x2) - Rational(x1)) ** 2 + (Rational(y2) - Rational(y1)) ** 2
+                ok = d2 == Rational(claimed_d_squared)
+            if ok:
+                return f"pass ({engine})"
+            return f"fail: d^2 = {d2} != {claimed_d_squared} (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
+
+
+def verify_polygon_area(vertices, claimed_area, verifier: str = "sage|sympy") -> str:
+    """Exact shoelace-formula check: area of the polygon == claimed value over ℚ.
+
+    Verifies the worked example for the `area` concept node. `vertices` is a
+    sequence of (x, y) pairs in traversal order (either orientation).
+    """
+    last_exc: Exception | None = None
+    for engine in _engines(verifier):
+        try:
+            if engine == "sage":
+                from sage.all import QQ
+                num = QQ
+            else:
+                from sympy import Rational
+                num = Rational
+            pts = [(num(x), num(y)) for x, y in vertices]
+            twice = sum(
+                pts[i][0] * pts[(i + 1) % len(pts)][1]
+                - pts[(i + 1) % len(pts)][0] * pts[i][1]
+                for i in range(len(pts))
+            )
+            area = abs(twice) / 2
+            if area == num(claimed_area):
+                return f"pass ({engine})"
+            return f"fail: shoelace area = {area} != {claimed_area} (exact, {engine})"
+        except ImportError as exc:
+            last_exc = exc
+    return f"fail: no verifier engine available ({last_exc})"
 
 
 # ---------------------------------------------------------------------------

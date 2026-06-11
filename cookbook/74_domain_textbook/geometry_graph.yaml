@@ -153,8 +153,8 @@ concepts:
     - polygon
     - distance
     defines: measure of the two-dimensional region enclosed by a polygon or circle
-    verifier: sympy
-    lab: sympy.geometry
+    verifier: sage|sympy
+    lab: graph_lib.verify_polygon_area (exact QQ shoelace; Sage preferred, SymPy fallback)
     play: decompose an irregular polygon into triangles; sum their areas; compare to the shoelace formula
     tier: 5
   pythagorean_theorem:
@@ -163,8 +163,8 @@ concepts:
     - area
     defines: in a right triangle, a² + b² = c² — the metric radical (side lengths) meets the rotational
       radical (the right angle) for the first time
-    verifier: sympy
-    lab: sympy.geometry
+    verifier: sage|sympy
+    lab: graph_lib.verify_right_triangle (exact QQ recompute; Sage preferred, SymPy fallback)
     play: build right triangles with integer sides; verify a**2 + b**2 == c**2 for Pythagorean triples
     tier: 6
   circle_theorems:
@@ -182,8 +182,8 @@ concepts:
     - coordinate_plane
     - pythagorean_theorem
     defines: d = √((x₂−x₁)² + (y₂−y₁)²) — the Pythagorean theorem restated in coordinates
-    verifier: sympy
-    lab: sympy.geometry
+    verifier: sage|sympy
+    lab: graph_lib.verify_distance_squared (exact QQ recompute; Sage preferred, SymPy fallback)
     play: plot two points; compute the distance both via the formula and via Point.distance(); compare
     tier: 7
   trigonometric_ratios:

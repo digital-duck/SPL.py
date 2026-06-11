@@ -1,0 +1,4 @@
+# Provisioned by setup_lean.sh — never commit toolchain artifacts.
+repl/
+spl_lean/.lake/
+spl_lean/lake-manifest.json
