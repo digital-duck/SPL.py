@@ -1,5 +1,6 @@
 # "Proving Math the Lean Way" — micro-textbook concept graph
-# (companion volume to "Doing Math in SageMath Lab" — Book I finds it, Book II proves it)
+# (Book II of the trilogy with "Doing Math in SageMath Lab" and "Doing Science with Python"
+#  — Book I finds it, Book II proves it, Book III measures it)
 # Publisher: Digital Duck (github.com/digital-duck)
 #
 # E-book mission: a free, verified introduction to Lean 4 + mathlib — the

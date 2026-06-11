@@ -1,121 +1,130 @@
 # Recipe 76 — Lean Proof: generate-then-verify at proof grade
 
-> **Status: prepared, untested.** This recipe is written against the
-> `lean_bridge` API planned in milestone **B-1**
-> ([`docs/DEV/sage_lean_integration_plan.md`](../../docs/DEV/sage_lean_integration_plan.md) §B.2),
-> which is being implemented in a parallel session. It parses clean
-> (`spl3 validate`: OK, with the same linter-heuristic warnings as recipe 71)
-> and will be exercised end-to-end once Part B lands. This is the **B-3**
-> milestone recipe.
+The **B-3** milestone recipe of
+[`docs/DEV/sage_lean_integration_plan.md`](../../docs/DEV/sage_lean_integration_plan.md):
+the top rung of the **verifier ladder**. SymPy/Sage verify *instances*
+(this eigenpair works); Lean verifies *statements* (the theorem itself).
+The workflow is the conjecture-checking loop a mathematician runs by hand,
+expressed declaratively.
+
+> **Status: implemented.** Built on `spl3/lean_bridge.py` (milestone B-1,
+> 15/15 tests green against the live REPL). An earlier prepared-but-untested
+> draft of this recipe — written against a *planned* B-1 API — is preserved
+> in git history (commit `00f1c2b`); this version is rewritten against the
+> API that actually landed.
 
 ## What it demonstrates
 
-The top rung of the **verifier ladder**: SymPy/Sage verify *instances*
-(this eigenpair works); Lean verifies *statements* (the theorem itself).
-The workflow is the conjecture-checking loop a mathematician runs by hand,
-expressed declaratively:
-
 ```
 @claim (prose)
-   │ GENERATE formalize_claim          LLM        (probabilistic)
+   │ GENERATE formalize_claim                LLM   (probabilistic)
    ▼
-@lean_stmt — theorem … := by sorry
-   │ SOLVE lean_statement_ok           Lean       (deterministic gate)
-   │   ↺ fail → GENERATE fix_formalization(claim, stmt, errors)   ≤ max_attempts
+@lean_stmt — a bare Lean 4 proposition
+   │ statement_ok — does `example : <stmt> := by sorry` elaborate?
+   │                                         Lean  (deterministic gate)
+   │   ↺ fail → GENERATE fix_formalization(claim, stmt, lean feedback)  ≤ max_tries
    ▼
-   │ GENERATE write_proof              LLM        (probabilistic)
+   │ GENERATE judge_faithfulness             LLM   (probabilistic — §B.4:
+   │           does the Lean prop say what the prose says? the one link
+   │           nothing machine-checks)
    ▼
-@lean_proof — theorem … := <tactic proof>
-   │ SOLVE lean_proof_ok               Lean kernel (deterministic gate)
-   │   ↺ fail → GENERATE repair_proof(proof, errors)              ≤ max_attempts
+   │ find — exact? probe: is this already a known lemma?
+   │                                         Lean  (deterministic, zero tokens)
+   │   hit → the suggestion IS the proof (citation path, B-5 seed)
+   │   miss ↓
+   │ GENERATE write_tactics                  LLM   (probabilistic — ONLY the
+   │           tactic block; make_theorem splices the verified statement in
+   │           verbatim, so the LLM can never prove a different statement)
    ▼
-@verdict: machine_proved (lean) | unproved (keeps its CAS-level badge)
-   │ SOLVE lean_find — mathlib citation (stretch, B-5)
+@proof — theorem spl_claim : <stmt> := by <tactics>
+   │ check — kernel-check                    Lean  (deterministic gate)
+   │   ↺ fail → GENERATE repair_tactics(stmt, tactics, lean feedback)   ≤ max_tries
+   ▼
+@badge: machine_proved | statement_checked | unverified
    ▼
 @report — prose claim and Lean statement side by side
 ```
 
-Two design points carried over from the plan:
+Design points carried over from the plan:
 
-- **Repair loops are capped** (`@max_attempts`, default 3) and fed Lean's
-  *actual error messages* — the generate-then-verify spine at proof grade.
-  On exhaustion the claim keeps whatever CAS-level verification it has:
-  Lean failure never blocks delivery, it only withholds the higher badge.
-- **The faithfulness gap is surfaced, not hidden** (plan §B.4): the report
-  renders the prose claim and the Lean statement side by side, because the
-  informal↔formal correspondence is the one link nothing machine-checks.
-  A kernel-checked proof means "this *Lean statement* is proved" — a human
-  (or an `spl3 judge` faithfulness check, B-2) must audit that the statement
-  says what the prose says.
+- **Repair loops are capped** (`@max_tries`, default 3) and fed Lean's
+  *actual diagnostics* (`_spl_lean.feedback`) — the generate-then-verify
+  spine at proof grade. On exhaustion the claim keeps its lower badge:
+  **Lean failure never blocks delivery, it only withholds the higher badge**
+  (§B.2).
+- **The faithfulness gap is surfaced, not hidden** (§B.4): a kernel-checked
+  proof means "this *Lean statement* is proved" — the informal↔formal
+  correspondence is judged by a separate LLM call (FAITHFUL/UNFAITHFUL +
+  reason) and rendered in the report next to the prose claim for human audit.
+- **Citation before proving** (§B.4/B-5): `exact?` runs before any
+  proof-writing LLM call. On a hit, the library lemma is the proof — zero
+  tokens, and a citation into a curated library is stronger correspondence
+  evidence than a bespoke proof of a bespoke statement.
+- **The verified statement never round-trips through the LLM** (recipe 67's
+  lesson): `make_theorem` assembles `theorem spl_claim : <stmt> := by <tactics>`
+  deterministically in-process.
 
-## Kernel-side contract (for the B-1 implementation)
+## Kernel-side API (`spl3/lean_bridge.py`, milestone B-1)
 
-The `.spl` imports **bare names** from `lean_bridge` inside the kernel —
-the SOLVE template parser does not support dotted calls (`lean.check(...)`),
-the same constraint that gave recipe 71 its `_now()`/`_verify_math()`
-wrappers. The recipe assumes:
+The recipe drives one persistent `LeanREPL` instance (`_spl_lean`) inside
+the IPython kernel via `CALL run_python(...)`:
 
-| Helper | Contract |
+| Call | Contract |
 |---|---|
-| `start(project_dir: str)` | Spawn (or attach to) the persistent `leanprover-community/repl` with mathlib imported; idempotent per session. |
-| `lean_statement_ok(stmt: str) -> str` | Elaborate the declaration (expecting a `sorry` body). Return `"ok"` iff it typechecks with only the sorry warning, else `"fail: <lean errors>"`. |
-| `lean_proof_ok(code: str) -> str` | Kernel-check the full declaration. Return `"ok"` iff it compiles with **no** sorries and no errors, else `"fail: <lean errors>"`. |
-| `lean_find(stmt: str) -> str` | `exact?`-style mathlib lookup. Return the suggestion / lemma name, or `"none"`. |
+| `LeanREPL().start()` | Spawn the persistent `leanprover-community/repl` (pinned `v4.30.0`), warm up a base environment; stdlib-only by default — pass `project_dir=`/`imports=` for mathlib. |
+| `statement_ok(stmt) -> bool` | Elaborate `example : <stmt> := by sorry` in a fresh env forked from the warm base (env-id hygiene, §B.2). `True` iff it typechecks with only the sorry warning. |
+| `check(code) -> dict` | Kernel-check a full declaration; `['ok']` is `True` iff no errors and no sorries. |
+| `feedback -> str` | Lean's diagnostics from the most recent call — fed back into the repair prompts. |
+| `find(stmt) -> str \| None` | `exact?` probe; returns the suggested term/lemma or `None`. |
+| `repl_available() -> bool` | Toolchain probe; lets tests skip when the REPL is absent. |
 
-The string returns (`"ok"` / `"fail: ..."`) deliberately mirror the
-`graph_lib` verifier shape (`pass (...)` / `fail: ...`) so the same
-`EVALUATE ... WHEN contains("fail")` branching works at every ladder rung —
-and so the engine-of-record can ride into cache provenance later
-(`cache_put(..., verifier='lean')`, A-3 machinery).
+Timeouts restart the REPL transparently; crashes recover on the next call
+(see `tests/test_lean_bridge.py::TestTimeoutAndRestart`).
 
-Each call should run in a **fresh environment forked from the warm-up
-mathlib env** (the REPL `env`-id hygiene requirement, plan §B.2) so checks
-don't pollute each other.
-
-## Run (once Part B lands)
+## Setup (one-time)
 
 ```bash
-# Default claim: "The sum of two even integers is even."
-spl3 run cookbook/76_lean_proof/lean_proof.spl \
-    --kernel --adapter claude_cli \
-    -p lean_project="$HOME/lean/spl-mathlib"
-
-# Your own claim
-spl3 run cookbook/76_lean_proof/lean_proof.spl \
-    --kernel --adapter claude_cli \
-    -p claim="For any natural number n, n^2 >= n." \
-    -p lean_project="$HOME/lean/spl-mathlib" \
-    -p max_attempts=3
+bash cookbook/tools/lean/setup_lean.sh   # elan + pinned repl v4.30.0, built with lake
 ```
 
-Prerequisites (B-1's environment, plan §B.3): `elan`, a `lake` project
-pinned to a mathlib release with `lake exe cache get` run, and the
-`leanprover-community/repl` binary built for that toolchain.
+## Run
+
+```bash
+# Default claim: "addition of natural numbers is commutative"
+spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli
+
+# Your own claim
+spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli \
+    --param claim="for any natural number n, n^2 >= n" \
+    --param max_tries=3
+
+# Local model
+spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel \
+    --adapter ollama --model gemma3
+```
 
 ## Good first claims
 
-Statements that are instances or light specializations of existing mathlib
-lemmas (the in-scope band, plan §B.4):
+Stdlib-decidable or simple-tactic territory (the default REPL is
+stdlib-only; point it at a mathlib project for the full library):
 
-- *The sum of two even integers is even.* (`Even.add`)
-- *For any natural number n, n² ≥ n.* (`Nat.le_self_pow` territory / `omega`-provable)
-- *The product of two odd integers is odd.* (`Odd.mul`)
-- Recipe-71 payoff concepts, once B-2 wires this into the micro-textbook:
-  rank–nullity, spectral theorem statement, diagonalizability criteria.
+- *addition of natural numbers is commutative* (`Nat.add_comm`)
+- *for any natural number n, n² ≥ n* (`omega`/`induction` territory)
+- *n + 0 = n for every natural number* (`rfl`)
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `lean_proof.spl` | The workflow (validated; constructs limited to those proven in recipe 71: `SOLVE`, `ASSERT`, `WHILE`, `EVALUATE`, `GENERATE`, `CALL run_python`, `LOGGING`, `COMMIT`) |
-| `readme.md` | This file — including the kernel-side API contract for B-1 |
+| `lean_proof.spl` | The workflow (validated; warnings are linter heuristics — the WHILE loops are bounded by `@tries < @max_tries`) |
+| `readme.md` | This file |
 
 ## Relation to the milestones
 
 | Milestone | This recipe's role |
 |---|---|
-| B-1 (`lean_bridge`) | Consumer — defines the bare-name contract above |
-| B-2 (statement checking) | Steps 1–2 of the workflow, standalone |
-| **B-3 (proof + repair loop)** | **This recipe** |
-| B-4 (`machine_proved` badge) | The `@verdict` string is the badge's seed; cache wiring follows |
-| B-5 (mathlib citation) | The `lean_find` step (already in the workflow as a stretch) |
+| B-1 (`lean_bridge`) | Consumer — drives the persistent `LeanREPL` from the kernel |
+| B-2 (statement checking) | Stage 1 + the faithfulness judge (Stage 2) |
+| **B-3 (proof + repair loop)** | **This recipe** (Stage 3b) |
+| B-4 (`machine_proved` badge) | The `@badge` string is the badge's seed; cache wiring follows |
+| B-5 (mathlib citation) | Stage 3a — the `find`/`exact?` citation path |

@@ -1,8 +1,10 @@
 """Tests for the tool-advocacy micro-textbook domains.
 
-Two e-book concept graphs authored 2026-06-10 (publisher: Digital Duck):
-  - sage_learning_graph.yaml — "Doing Math in SageMath Lab"
-  - lean_proving_graph.yaml  — "Proving Math the Lean Way"
+E-book concept graphs (publisher: Digital Duck) — the trilogy
+"Book I finds it, Book II proves it, Book III measures it":
+  - sage_learning_graph.yaml  — "Doing Math in SageMath Lab"      (2026-06-10)
+  - lean_proving_graph.yaml   — "Proving Math the Lean Way"       (2026-06-10)
+  - python_science_graph.yaml — "Doing Science with Python"       (2026-06-11)
 
 Both compile through recipe 74 (build_micro_textbook.spl --lang
 python/domain_textbook) with zero engine changes — the test of the
@@ -30,6 +32,12 @@ DOMAINS = {
         "first_radical": ["type", "term"],
         "target": "ai_assisted_proving",
         "target_needs": ["formalization_gap", "automation_tactics", "sorry_first_workflow"],
+    },
+    "python_science_graph.yaml": {
+        "domain": "python_science",
+        "first_radical": ["array", "floating_point"],
+        "target": "reproducible_science",
+        "target_needs": ["model_validation", "numerical_integration_odes", "visualization"],
     },
 }
 
@@ -109,3 +117,15 @@ class TestVerifierDeclarations:
             "section", {"domain": "lean_proving"}, verifier="lean|sympy"
         )
         assert out in ("pass (lean)", "pass (sympy)")
+
+    def test_python_science_each_concept_verified_by_its_own_library(self):
+        # The book's signature: every concept's verifier IS the library it
+        # teaches, and the generic engine dispatch resolves each one.
+        data = graph_lib.load_domain("python_science_graph.yaml")
+        allowed = {"numpy", "sympy", "scipy", "pandas", "sklearn", "matplotlib"}
+        for name, c in data["concepts"].items():
+            assert c["verifier"] in allowed, name
+            out = graph_lib.verify_content(
+                "section", {"domain": "python_science"}, verifier=c["verifier"]
+            )
+            assert out == f"pass ({c['verifier']})", name
