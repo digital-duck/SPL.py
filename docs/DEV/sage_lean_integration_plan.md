@@ -110,6 +110,17 @@ for free.
 > The A-1 spike answers all three at once: run one existing SymPy verifier under
 > the Sage kernel. This can still grow A-1 from S to M — size after the spike,
 > not before.
+>
+> **Spike result (2026-06-10): gap closed by construction.** With the
+> passagemath pip route, the registered `sagemath` kernelspec runs
+> `python3 -m sage.repl.ipython_kernel` — the **same `spl123` interpreter**, same
+> site-packages. All three risks vanish: the domain lib, NetworkX, and SymPy are
+> the env's own. All 12 parity tests + 3 spike tests pass under the Sage kernel
+> (`pytest tests/test_kernel.py`: 32 passed, ~5 s — kernel startup is fast).
+> Notably the SymPy tests pass even *with* the preparser on (Sage `Integer`s
+> sympify cleanly). A-1 stays **S**. Caveat: a conda-forge / distro Sage install
+> *would* reintroduce the separate-interpreter gap — the pip extra is now the
+> primary documented route for SPL use.
 
 Changes, in dependency order:
 
@@ -155,14 +166,22 @@ kernel-spec route is preferred because the `.ipynb` deliverable then declares th
 right kernel for learners, and it keeps the heavy Sage dependency out of the core
 env. Document the conda route as a developer convenience only.
 
+**Install path (shipped 2026-06-10):** `pyproject.toml` gains a `sage` optional
+extra backed by **passagemath** wheels (verified to resolve `--only-binary :all:`
+on Python 3.11 — no source build): `pip install 'spl-llm[sage]'`, then
+`python -m sage.repl.ipython_kernel.install --user` registers the `sagemath`
+kernel spec. The plain `sagemath-standard` PyPI sdist (source build, fragile) is
+deliberately avoided. conda-forge remains the distro-native alternative; both
+routes are named in the `KernelSpecNotFound` error hint.
+
 ### A.3 Milestones
 
-| ID | Deliverable | Size |
-|---|---|---|
-| A-1 | `kernel_name` plumbing + CLI flag + kernelspec probe + environment-gap spike (see §A.2 box) + tests (skipped when Sage absent) | S/M — size after the spike |
-| A-2 | `verifier: "sage"` in `graph_lib` + `DomainConfig.kernel_name` + `.ipynb` kernelspec emission | M |
-| A-3 | Fallback policy (`"sage|sympy"`) + engine-of-record in provenance | S |
-| A-4 | End-to-end demo: upgrade 3–5 geometry-domain nodes (conics, projective duality) to Sage verifiers; one SageManifolds cell as the `classical_mechanics` seed | M |
+| ID | Deliverable | Size | Status |
+|---|---|---|---|
+| A-1 | `kernel_name` plumbing + CLI flag + kernelspec probe + environment-gap spike (see §A.2 box) + tests (skipped when Sage absent) | S | **✅ done** 2026-06-10 — `kernel.py` (`kernel_name` param, `ensure_kernelspec`, `KernelSpecNotFound`), `executor.py` pass-through, `spl3 run --kernel-name` (implies `--kernel`; fails fast with install hint), `pyproject.toml` `sage` extra (passagemath wheels). **Spike executed: 32 passed** under the live Sage kernel — gap closed by construction (same-interpreter kernelspec), D4 resolved |
+| A-2 | `verifier: "sage"` in `graph_lib` + `DomainConfig.kernel_name` + `.ipynb` kernelspec emission | M | planned |
+| A-3 | Fallback policy (`"sage|sympy"`) + engine-of-record in provenance | S | planned |
+| A-4 | End-to-end demo: upgrade 3–5 geometry-domain nodes (conics, projective duality) to Sage verifiers; one SageManifolds cell as the `classical_mechanics` seed | M | planned |
 
 Parity checks for A-1: state persistence across `CALL` steps and exception recovery
 must pass under the Sage kernel exactly as under python3 (reuse `tests/test_kernel.py`
@@ -324,13 +343,13 @@ not "the textbook claim is proved." Mitigations, all in scope:
 
 ### B.5 Milestones
 
-| ID | Deliverable | Size |
-|---|---|---|
-| B-1 | `lean_bridge` prototype: REPL session mgmt (incl. `env`-id hygiene, §B.2), `lean_check`, timeout/restart, tests | M |
-| B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M |
-| B-3 | Proof checking + `OTHERWISE RETRY` repair-loop recipe (`cookbook/7x_lean_verify/`) | M |
-| B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M |
-| B-5 | *(stretch)* mathlib-citation mode — `exact?` with suggestion parsing, or Loogle/LeanSearch (§B.1 caveat); claims link to mathlib lemma names | M/R |
+| ID | Deliverable | Size | Status |
+|---|---|---|---|
+| B-1 | `lean_bridge` prototype: REPL session mgmt (incl. `env`-id hygiene, §B.2), `lean_check`, timeout/restart, tests | M | planned |
+| B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M | planned |
+| B-3 | Proof checking + `OTHERWISE RETRY` repair-loop recipe (`cookbook/7x_lean_verify/`) | M | planned |
+| B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M | planned |
+| B-5 | *(stretch)* mathlib-citation mode — `exact?` with suggestion parsing, or Loogle/LeanSearch (§B.1 caveat); claims link to mathlib lemma names | M/R | stretch |
 
 ---
 
@@ -361,9 +380,11 @@ not "the textbook claim is proved." Mitigations, all in scope:
 - **D3** — whether `lean_bridge` lives in `spl3/` from day one or graduates from
   `cookbook/tools/` after B-2 (recommended: graduate after B-2, the same path
   `linalg_graph` took).
-- **D4** *(new, gates A-1 sizing)* — environment-gap strategy for the Sage kernel:
-  `sys.path` injection vs install-into-Sage-env vs source-over-the-wire (§A.2 box).
-  Settle with a spike at the start of A-1.
+- **D4** — ~~environment-gap strategy for the Sage kernel~~ **Resolved 2026-06-10
+  by the spike:** the passagemath pip route runs the `sagemath` kernel on the
+  same env interpreter, so no injection/install/source-shipping is needed (§A.2
+  box, spike result). Holds as long as the pip extra is the install route;
+  revisit only if conda-forge Sage becomes required.
 
 ---
 

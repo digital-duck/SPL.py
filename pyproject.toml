@@ -55,6 +55,19 @@ ui = [
 ]
 kernel = [
     "ipython>=8.0",
+    "ipykernel>=6.0",
+    "jupyter_client>=8.0",
+]
+sage = [
+    # SageMath as pip wheels (passagemath fork — resolves wheels-only, no source build).
+    # After install, register the 'sagemath' Jupyter kernel spec:
+    #   python -m sage.repl.ipython_kernel.install --user
+    # then run workflows under it:
+    #   spl3 run workflow.spl --kernel-name sagemath
+    # Conda alternative (distro-native Sage): conda install -c conda-forge sage
+    "passagemath-standard>=10.8",
+    "ipykernel>=6.0",
+    "jupyter_client>=8.0",
 ]
 dev = [
     "pytest>=7.0",

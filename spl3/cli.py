@@ -535,9 +535,12 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Kernel lifecycle scope: 'session' shares state; 'workflow' re-isolates.")
 @click.option("--kernel-timeout", default=60.0, type=float, show_default=True,
               help="Per-cell execution timeout in seconds.")
+@click.option("--kernel-name", default="python3", show_default=True, metavar="NAME",
+              help="Jupyter kernel spec to run kernel steps under (e.g. 'sagemath' "
+                   "for SageMath). A non-default value implies --kernel.")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_module, allowed_tools,
-        kernel, kernel_scope, kernel_timeout):
+        kernel, kernel_scope, kernel_timeout, kernel_name):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -560,15 +563,26 @@ def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_modul
 
     hub_url = ctx.obj.get("hub")
 
+    # A non-default kernel spec implies kernel mode; fail fast if it isn't installed.
+    if kernel_name != "python3":
+        kernel = True
+    if kernel:
+        from spl3.kernel import ensure_kernelspec, KernelSpecNotFound
+        try:
+            ensure_kernelspec(kernel_name)
+        except KernelSpecNotFound as exc:
+            raise click.ClickException(str(exc))
+
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
                               tools_module, allowed_tools,
                               kernel=kernel, kernel_scope=kernel_scope,
-                              kernel_timeout=kernel_timeout))
+                              kernel_timeout=kernel_timeout, kernel_name=kernel_name))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
                         tools_module=None, allowed_tools=None,
-                        kernel=False, kernel_scope="session", kernel_timeout=60.0):
+                        kernel=False, kernel_scope="session", kernel_timeout=60.0,
+                        kernel_name="python3"):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -622,10 +636,11 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     capturing = _CapturingAdapter(_inner_adapter)
     executor = Executor(adapter=capturing,
                         kernel=kernel, kernel_scope=kernel_scope,
-                        kernel_timeout=kernel_timeout)
+                        kernel_timeout=kernel_timeout, kernel_name=kernel_name)
     executor.composer = WorkflowComposer(registry, executor)
     if kernel:
-        click.echo(f"IPython kernel: enabled (scope={kernel_scope}, timeout={kernel_timeout}s)")
+        click.echo(f"IPython kernel: enabled (name={kernel_name}, scope={kernel_scope}, "
+                   f"timeout={kernel_timeout}s)")
     if log_prompts:
         executor.prompt_log_dir = log_prompts
         click.echo(f"Prompt logging → {log_prompts}/")

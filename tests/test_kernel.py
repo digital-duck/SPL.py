@@ -1,13 +1,37 @@
-"""Tests for spl3.kernel — IPython kernel integration."""
+"""Tests for spl3.kernel — IPython kernel integration.
+
+The shared ``kernel`` fixture is parameterized over kernel specs: the
+``python3`` leg always runs; the ``sagemath`` leg runs only when SageMath's
+Jupyter kernel is installed (A-1 parity requirement — see
+docs/DEV/sage_lean_integration_plan.md §A.3).
+"""
+
+from pathlib import Path
 
 import pytest
-from spl3.kernel import IPythonKernel, KernelExecutionError
+from spl3.kernel import (
+    IPythonKernel,
+    KernelExecutionError,
+    KernelSpecNotFound,
+    installed_kernelspecs,
+    kernelspec_installed,
+)
+
+SAGE_MISSING = not kernelspec_installed("sagemath")
+
+KERNEL_SPECS = [
+    "python3",
+    pytest.param(
+        "sagemath",
+        marks=pytest.mark.skipif(SAGE_MISSING, reason="SageMath kernel not installed"),
+    ),
+]
 
 
-@pytest.fixture(scope="module")
-def kernel():
-    """Single kernel shared across all tests in this module (session scope)."""
-    k = IPythonKernel(timeout=30)
+@pytest.fixture(scope="module", params=KERNEL_SPECS)
+def kernel(request):
+    """One kernel per spec, shared across all tests in this module."""
+    k = IPythonKernel(timeout=60, kernel_name=request.param)
     k.start()
     yield k
     k.shutdown()
@@ -82,3 +106,71 @@ class TestContextManager:
         with IPythonKernel(timeout=30) as k:
             assert k.execute("2 ** 10") == "1024"
         assert not k.is_running
+
+
+class TestKernelSpec:
+    def test_default_kernel_name(self):
+        assert IPythonKernel().kernel_name == "python3"
+
+    def test_python3_spec_installed(self):
+        assert "python3" in installed_kernelspecs()
+
+    def test_kernelspec_installed_false_for_unknown(self):
+        assert not kernelspec_installed("no_such_kernel_xyz_123")
+
+    def test_missing_kernelspec_raises(self):
+        k = IPythonKernel(kernel_name="no_such_kernel_xyz_123")
+        with pytest.raises(KernelSpecNotFound, match="no_such_kernel_xyz_123"):
+            k.start()
+        assert not k.is_running
+
+    def test_missing_sagemath_message_has_install_hint(self):
+        if not SAGE_MISSING:
+            pytest.skip("SageMath installed — error path not reachable")
+        k = IPythonKernel(kernel_name="sagemath")
+        with pytest.raises(KernelSpecNotFound, match="conda-forge"):
+            k.start()
+
+
+@pytest.mark.skipif(SAGE_MISSING, reason="SageMath kernel not installed")
+class TestSageSpike:
+    """A-1 environment-gap spike (sage_lean_integration_plan.md §A.2).
+
+    Answers the three residual risks in one go: Sage's Python can run the
+    path-located domain library, Sage's bundled SymPy passes an existing
+    verifier check, and the preparser semantics are what we documented.
+    """
+
+    @pytest.fixture(scope="class")
+    def sage(self):
+        k = IPythonKernel(timeout=120, kernel_name="sagemath")
+        k.start()
+        yield k
+        k.shutdown()
+
+    def test_preparser_semantics(self, sage):
+        # The sagemath kernel preparses cell code: ^ is power, not XOR.
+        assert sage.execute("2^3") == "8"
+
+    def test_domain_library_runs_under_sage_python(self, sage):
+        lib = Path(__file__).resolve().parents[1] / "cookbook" / "71_linalg_micro_textbook"
+        sage.execute(f"import sys; sys.path.insert(0, {str(lib)!r})")
+        sage.execute("import linalg_graph; G = linalg_graph.build()")
+        assert sage.execute("linalg_graph.acyclic(G)") == "True"
+        assert sage.execute(
+            "linalg_graph.reducible(G, linalg_graph.primitive_names())"
+        ) == "True"
+
+    def test_sympy_verifier_with_preparser_off(self, sage):
+        # The documented mitigation: preparser(False) before pure-Python verifier code.
+        sage.execute("preparser(False)")
+        try:
+            code = """
+import sympy
+A = sympy.Matrix([[2, 0], [0, 3]])
+lam, v = 3, sympy.Matrix([0, 1])
+(A * v == lam * v)
+"""
+            assert sage.execute(code) == "True"
+        finally:
+            sage.execute("preparser(True)")

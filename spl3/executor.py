@@ -76,7 +76,7 @@ class SPL3Executor(SPL2Executor):
     """SPL 3.0 executor, extending SPL 2.0 with the extended type system."""
 
     def __init__(self, *args, kernel: bool = False, kernel_scope: str = "session",
-                 kernel_timeout: float = 60.0, **kwargs):
+                 kernel_timeout: float = 60.0, kernel_name: str = "python3", **kwargs):
         super().__init__(*args, **kwargs)
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
 
@@ -85,7 +85,8 @@ class SPL3Executor(SPL2Executor):
         self._kernel: "IPythonKernel | None" = None
         if kernel:
             from spl3.kernel import IPythonKernel
-            self._kernel = IPythonKernel(scope=kernel_scope, timeout=kernel_timeout)
+            self._kernel = IPythonKernel(scope=kernel_scope, timeout=kernel_timeout,
+                                         kernel_name=kernel_name)
             self._register_run_python()
 
     def _register_run_python(self) -> None:

@@ -143,6 +143,7 @@ spl3 run <file.spl> [OPTIONS]
 | `--kernel` | off | Enable persistent IPython kernel (see §4.2) |
 | `--kernel-scope` | `session` | Kernel lifecycle: `session` or `workflow` |
 | `--kernel-timeout` | `60.0` | Per-cell execution timeout in seconds |
+| `--kernel-name NAME` | `python3` | Jupyter kernel spec to run kernel steps under (e.g. `sagemath`). A non-default value implies `--kernel`. |
 
 ```bash
 # Basic run
@@ -182,6 +183,26 @@ this kernel instead of spawning a new Python subprocess.
 spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
     --kernel --adapter ollama \
     --tools cookbook/69_notebook_gen/tools.py
+```
+
+**Alternate kernel specs (`--kernel-name`):** any installed Jupyter kernel spec can
+back the session — e.g. `--kernel-name sagemath` runs every `CALL run_python()`,
+`SOLVE`, and `ASSERT` step under SageMath's Python (richer CAS: SageManifolds, GAP,
+PARI). If the spec is not installed, `spl3 run` fails fast with the installed-kernel
+list and install instructions. To install:
+
+```bash
+pip install 'spl-llm[sage]'                          # passagemath wheels — no source build
+python -m sage.repl.ipython_kernel.install --user    # register the 'sagemath' kernel spec
+# or, distro-native: conda install -c conda-forge sage
+```
+
+Note the Sage kernel applies its *preparser* to cell
+code (`^` is power, integer literals are Sage `Integer`s); emit `preparser(False)`
+before pure-Python verifier code. See `docs/DEV/sage_lean_integration_plan.md`.
+
+```bash
+spl3 run workflow.spl --kernel-name sagemath --adapter ollama
 ```
 
 The workflow runs three `CALL run_python` steps that share a single kernel:

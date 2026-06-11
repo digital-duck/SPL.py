@@ -147,6 +147,49 @@ class KernelExecutionError(RuntimeError):
     """Raised when the IPython kernel returns an error reply."""
 
 
+class KernelSpecNotFound(RuntimeError):
+    """Raised when the requested Jupyter kernel spec is not installed."""
+
+
+# ---------------------------------------------------------------------------
+# Kernel spec discovery
+# ---------------------------------------------------------------------------
+
+def installed_kernelspecs() -> list[str]:
+    """Return the names of all installed Jupyter kernel specs."""
+    from jupyter_client.kernelspec import KernelSpecManager
+    return sorted(KernelSpecManager().find_kernel_specs())
+
+
+def kernelspec_installed(name: str) -> bool:
+    """True if the Jupyter kernel spec *name* is installed."""
+    try:
+        return name in installed_kernelspecs()
+    except Exception:
+        return False
+
+
+def ensure_kernelspec(name: str) -> None:
+    """Raise :class:`KernelSpecNotFound` with an actionable message if *name* is missing."""
+    available = installed_kernelspecs()
+    if name in available:
+        return
+    hint = ""
+    if name == "sagemath":
+        hint = (
+            "\nInstall SageMath so its Jupyter kernel is registered — either\n"
+            "  pip install 'spl-llm[sage]'   # passagemath wheels, no source build\n"
+            "  python -m sage.repl.ipython_kernel.install --user\n"
+            "or\n"
+            "  conda install -c conda-forge sage\n"
+            "then verify with: jupyter kernelspec list"
+        )
+    raise KernelSpecNotFound(
+        f"Jupyter kernel spec '{name}' is not installed. "
+        f"Installed kernels: {', '.join(available) or '(none)'}{hint}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # IPythonKernel — full out-of-process IPython kernel (primary backend)
 # ---------------------------------------------------------------------------
@@ -161,15 +204,22 @@ class IPythonKernel:
         by the caller.
     timeout:
         Seconds to wait per cell execution.  Default 60 s.
+    kernel_name:
+        Jupyter kernel spec to launch.  Default ``"python3"`` (ipykernel).
+        Any installed spec works — e.g. ``"sagemath"`` runs every
+        ``CALL run_python()`` / ``SOLVE`` / ``ASSERT`` under SageMath's
+        Python (note: the Sage kernel applies its preparser to cell code).
     """
 
-    def __init__(self, scope: str = "session", timeout: float = 60.0) -> None:
-        self.scope    = scope
-        self.timeout  = timeout
-        self._km      = None
-        self._kc      = None
-        self._lock    = threading.Lock()
-        self._started = False
+    def __init__(self, scope: str = "session", timeout: float = 60.0,
+                 kernel_name: str = "python3") -> None:
+        self.scope       = scope
+        self.timeout     = timeout
+        self.kernel_name = kernel_name
+        self._km         = None
+        self._kc         = None
+        self._lock       = threading.Lock()
+        self._started    = False
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -180,8 +230,10 @@ class IPythonKernel:
         if self._started:
             return
         from jupyter_client import KernelManager
-        _log.info("IPythonKernel: starting (scope=%s, timeout=%.0fs)", self.scope, self.timeout)
-        self._km = KernelManager(kernel_name="python3")
+        ensure_kernelspec(self.kernel_name)
+        _log.info("IPythonKernel: starting (kernel=%s, scope=%s, timeout=%.0fs)",
+                  self.kernel_name, self.scope, self.timeout)
+        self._km = KernelManager(kernel_name=self.kernel_name)
         self._km.start_kernel()
         self._kc = self._km.blocking_client()
         self._kc.start_channels()
