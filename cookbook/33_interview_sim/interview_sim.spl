@@ -81,10 +81,10 @@ $$;
 -- ── Main workflow ───────────────────────────────────────────────────────────
 
 WORKFLOW interview_sim
-    INPUT:  @role_key      TEXT DEFAULT '',
-            @candidate_id  TEXT DEFAULT '',
-            @role          TEXT DEFAULT '',
-            @focus         TEXT DEFAULT '',
+    INPUT:  @role_key      TEXT DEFAULT "",
+            @candidate_id  TEXT DEFAULT "",
+            @role          TEXT DEFAULT "",
+            @focus         TEXT DEFAULT "",
             @difficulty    TEXT DEFAULT 'medium',
             @num_questions INT  DEFAULT 3,
             @experience    TEXT DEFAULT '5 years'

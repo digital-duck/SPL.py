@@ -1,42 +1,18 @@
 -- ============================================================
 -- Recipe 77: symbolic_math — one declarative workflow, the whole
--- verifier ladder behind it.
+-- verifier ladder behind it. Backend is a --param flip, not a rewrite:
 --
--- The capstone demo of SPL's seamless dual-processing model: the
--- probabilistic regime (GENERATE — plan, formalize, judge, narrate)
--- and the deterministic regime (TOOL_API / Lean kernel — compute,
--- typecheck, prove) compose in ONE workflow, and the deterministic
--- backend is selected DECLARATIVELY by a single input parameter:
+--   @backend = 'sympy'  — exact symbolic instances          (recipe 67)
+--   @backend = 'sage'   — instances SymPy can't reach        (recipe 75)
+--   @backend = 'lean'   — statements kernel-checked vs mathlib (recipe 76)
 --
---   @backend = 'sympy'  — exact symbolic instances        (recipe 67)
---   @backend = 'sage'   — instances SymPy can't reach:     (recipe 75)
---                          Galois groups, conics over ℚ,
---                          elliptic-curve rank, exact
---                          algebraic eigenvalues
---   @backend = 'lean'   — universally quantified STATEMENTS,
---                          kernel-checked against mathlib   (recipe 76)
+-- @enable_solver = false is the unaided-LLM baseline arm (recipe 67c).
 --
--- Same problem text, same model, same prompts wherever possible —
--- swapping the verification engine is a --param flip, not a rewrite.
--- The A/B switch from recipe 67c is kept too:
---
---   @enable_solver = true   (architecture arm)
---     Probabilistic (LLM)     — plan / formalize
---     Deterministic (backend) — compute exactly / kernel-check
---     Probabilistic (LLM)     — explain / judge faithfulness
---
---   @enable_solver = false  (baseline arm — no verifier at all)
---     Probabilistic (LLM)     — solve or "prove" the whole problem
---                               itself, one shot, unaided
---
--- Fail-fast policy (chain backends) is inherited verbatim from
--- recipe 67c: any failure inside the verified chain exits IMMEDIATELY
--- with an explicit error status and NO fallback to the LLM. Lean
--- failure policy differs by design (§B.2 of the integration plan):
--- a failed proof never blocks delivery, it only withholds the badge —
--- the run returns its badge AS the status (machine_proved /
--- statement_checked / unfaithful / unverified) so the experiment
--- harness can score it.
+-- Fail-fast policy (chain backends) inherited from recipe 67c: any
+-- failure in the verified chain exits with an explicit status, no LLM
+-- fallback. Lean differs by design (§B.2): a failed proof never blocks
+-- delivery, it only withholds the badge — the badge IS the status
+-- (machine_proved / statement_checked / unfaithful / unverified).
 --
 -- Requires: pip install sympy
 --           pip install 'spl-llm[sage]'                      (sage)
@@ -48,24 +24,19 @@
 
 IMPORT 'sympolic_tools'
 
--- ── Reusable sub-workflow: ONE chain step, CALLed once per item ──
--- The chain protocol is backend-agnostic; only the engine differs.
--- (Same "WORKFLOW calls WORKFLOW" pattern as recipe 67c.)
+-- ── One chain step, CALLed once per item; backend-agnostic protocol ──
 
 WORKFLOW solve_chain_step
   INPUT @step TEXT
-  INPUT @running_expression TEXT := ''
+  INPUT @running_expression TEXT := ""
   INPUT @backend TEXT := 'sympy'
   OUTPUT @step_summary TEXT
 DO
   CALL split_part(@step, '|', '1') INTO @raw_expression;
   CALL split_part(@step, '|', '2') INTO @operation;
-  CALL trim(@raw_expression) INTO @raw_expression;
-  CALL trim(@operation) INTO @operation;
 
-  -- Resolve PREV deterministically — never round-tripped through the LLM.
-  -- Compare lower-cased on BOTH sides: EVALUATE lower-cases the right-hand
-  -- literal but not the left-hand value, so 'PREV' = 'prev' would not match.
+  -- Resolve PREV deterministically (lower-case both sides: EVALUATE
+  -- lower-cases the literal but not the value).
   CALL lower(@raw_expression) INTO @raw_expression_lc;
   EVALUATE @raw_expression_lc
     WHEN = 'prev' THEN
@@ -101,11 +72,7 @@ DO
   CALL trim(@backend_lc) INTO @backend_lc;
 
   EVALUATE @solver_mode
-    WHEN IS 'true' THEN
-      @use_solver := 'yes'
-    WHEN IS '1' THEN
-      @use_solver := 'yes'
-    WHEN IS 'yes' THEN
+    WHEN IN ('true', '1', 'yes') THEN
       @use_solver := 'yes'
     ELSE
       @use_solver := 'no'
@@ -114,11 +81,8 @@ DO
   EVALUATE @use_solver
     WHEN = 'no' THEN
       DO
-        -- ════════════════════════════════════════════════════════
-        -- ARM B — baseline: no verifier; the LLM solves it, one shot.
-        -- For lean-type problems this means an UNCHECKED prose
-        -- "proof" — exactly the contrast the experiment measures.
-        -- ════════════════════════════════════════════════════════
+        -- ── ARM B: unaided LLM, one shot — for lean-type problems an
+        -- UNCHECKED prose "proof"; exactly the contrast measured ──
         LOGGING f"[arm=llm_only] Problem '@{@problem}' — solving with NO verifier" LEVEL INFO
 
         CALL write_file(f'{@log_dir}/chain_trace.md',
@@ -128,7 +92,7 @@ DO
         CALL trim(@result) INTO @result;
 
         EVALUATE @result
-          WHEN = '' THEN
+          WHEN = "" THEN
             LOGGING f'[arm=llm_only] FAILURE — solve_directly returned empty content' LEVEL ERROR
             RETURN '[FAILURE] The unaided LLM returned nothing for this problem.'
               WITH status = 'llm_error', arm = 'llm_only', backend = @backend_lc, steps = 0
@@ -141,17 +105,13 @@ DO
       EVALUATE @backend_lc
         WHEN = 'lean' THEN
           DO
-            -- ════════════════════════════════════════════════════════
-            -- ARM C — proof grade: the problem is a CLAIM, the verifier
-            -- is the Lean kernel over mathlib (recipes 76 + 71's
-            -- lean_payoffs, citation-first via exact? + Loogle, every
-            -- candidate kernel-checked inside find_citation).
-            -- ════════════════════════════════════════════════════════
+            -- ── ARM C: proof grade — the problem is a CLAIM, verified by
+            -- the Lean kernel over mathlib, citation-first (recipes 76/71) ──
             CALL run_python('from spl3.lean_bridge import LeanREPL; _spl_lean = LeanREPL.mathlib().start(); print("ready")') INTO @lean_status;
             LOGGING f"[arm=lean] Lean REPL (mathlib): {@lean_status}" LEVEL INFO
 
             -- ── Stage 1: formalize, capped typecheck-repair loop ──
-            @lean_stmt := '';
+            @lean_stmt := "";
             @stmt_ok_lc := 'init';
             @tries := 0;
             WHILE @tries < @max_tries DO
@@ -182,9 +142,9 @@ DO
             -- ── Stage 2 + 3: faithfulness gate, citation-first proof ──
             @faithful := 'not judged (formalization failed)';
             @badge := 'unverified';
-            @proof := '';
-            @tactics := '';
-            @citation := '';
+            @proof := "";
+            @tactics := "";
+            @citation := "";
             EVALUATE @stmt_ok_lc
               WHEN = 'true' THEN
                 @badge := 'statement_checked';
@@ -206,7 +166,7 @@ DO
                     CALL lower(@citation) INTO @citation_lc;
                     EVALUATE @citation_lc
                       WHEN = 'none' THEN
-                        @citation := ''
+                        @citation := ""
                       ELSE
                         -- Re-check the assembled theorem: the verified
                         -- statement is spliced in verbatim, the citation
@@ -260,7 +220,7 @@ DO
                         -- Lean failure never blocks delivery (§B.2): the
                         -- claim keeps its statement-checked grade, the
                         -- higher badge is withheld.
-                        @proof := ''
+                        @proof := ""
                     END
                 END
             END
@@ -277,11 +237,8 @@ DO
 
         ELSE
           DO
-            -- ════════════════════════════════════════════════════════
-            -- ARM A — instance grade: plan → verified chain → explain.
-            -- The chain engine (SymPy or Sage) is @backend — nothing
-            -- else changes.
-            -- ════════════════════════════════════════════════════════
+            -- ── ARM A: instance grade — plan → verified chain → explain;
+            -- the chain engine (SymPy or Sage) is @backend ──
             LOGGING f"[arm=solver] Problem '@{@problem}' — planning the chain (backend={@backend_lc}) ..." LEVEL INFO
 
             GENERATE decompose_problem(@problem) INTO @steps_text;
@@ -301,16 +258,14 @@ DO
             END
 
             @i := 0
-            @running_expression := ''
-            @trace := ''
+            @running_expression := ""
+            @trace := ""
 
             WHILE @i < @n_steps DO
               CALL extract_step(@steps_text, @i) INTO @step;
               CALL solve_chain_step(@step, @running_expression, @backend_lc) INTO @step_summary;
               CALL split_part(@step_summary, '|', '1') INTO @running_expression;
               CALL split_part(@step_summary, '|', '2') INTO @trace_line;
-              CALL trim(@running_expression) INTO @running_expression;
-              CALL trim(@trace_line) INTO @trace_line;
 
               @step_no := @i + 1
 
@@ -336,7 +291,7 @@ DO
 
             -- ── Fail-fast checkpoint 3: the narration came back empty ──
             EVALUATE @result
-              WHEN = '' THEN
+              WHEN = "" THEN
                 LOGGING f'[arm=solver] NARRATION FAILURE — explain_chain returned empty content' LEVEL ERROR
                 RETURN f'[NARRATION FAILURE] The chain verified correctly but the explanation step returned nothing.\nVerified chain:\n{@trace}'
                   WITH status = 'narration_error', arm = 'solver', backend = @backend_lc, steps = @n_steps

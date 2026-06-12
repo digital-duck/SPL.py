@@ -12,7 +12,7 @@ WORKFLOW plan_and_execute
     OUTPUT: @final_report TEXT
 DO
     @step_index := 0
-    @results := ''
+    @results := ""
 
     -- Phase 1: Planning — decompose task into numbered steps
     GENERATE plan(@task) INTO @plan
@@ -37,7 +37,7 @@ DO
                 GENERATE replan(@task, @plan, @step_index, @step_result) INTO @plan
                 GENERATE count_steps(@plan) INTO @step_count
                 @step_index := 0
-                @results := ''
+                @results := ""
             ELSE
                 @results := @results + '\n## Step ' + @step_index + '\n' + @step_result
                 @step_index := @step_index + 1

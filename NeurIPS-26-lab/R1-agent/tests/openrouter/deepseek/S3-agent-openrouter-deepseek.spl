@@ -7,7 +7,7 @@ $$;
 CREATE FUNCTION answer_question(question TEXT) 
 RETURNS TEXT AS $$ 
 
-Provide a concise answer to the user''s question. 
+Provide a concise answer to the user""s question. 
 $$;
 
 WORKFLOW QuestionAnswering

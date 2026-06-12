@@ -2,7 +2,7 @@ CREATE FUNCTION generate_draft(task, feedback)
 RETURNS TEXT AS $$
 You are a skilled writer. Generate a high-quality description for the following task: {task}
 If feedback is provided, use it to improve this draft: {feedback}
-Produce a clear, detailed, and well-structured response. Don''t simply repeat the task description verbatim.
+Produce a clear, detailed, and well-structured response. Don""t simply repeat the task description verbatim.
 $$;
 
 CREATE FUNCTION evaluate_draft(task, draft)

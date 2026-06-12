@@ -1,5 +1,5 @@
 WORKFLOW review_agent
-INPUT (@text TEXT DEFAULT '', @threshold REAL DEFAULT 0.8)
+INPUT (@text TEXT DEFAULT "", @threshold REAL DEFAULT 0.8)
 OUTPUT (@review TEXT)
 SECURITY (owner='system', classification='internal')
 DO

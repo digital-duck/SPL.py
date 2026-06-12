@@ -42,7 +42,7 @@ WORKFLOW video_to_image
         @fps           FLOAT  DEFAULT 1.0,
         @max_frames    INT    DEFAULT 10,
         @caption       BOOL   DEFAULT FALSE,
-        @context       TEXT   DEFAULT '',
+        @context       TEXT   DEFAULT "",
         @model         TEXT   DEFAULT 'gemma4',
         @output_dir    TEXT   DEFAULT 'cookbook/62_video_to_image/outputs',
         @log_dir       TEXT   DEFAULT 'cookbook/62_video_to_image/logs-spl'
@@ -76,7 +76,7 @@ DO
                 INTO @frame_caption
             LOGGING f'[video_to_image] caption: "{@frame_caption}"' LEVEL INFO
         ELSE
-            @frame_caption := ''
+            @frame_caption := ""
     END
 
     LOGGING f'[video_to_image] done → {@frame}' LEVEL INFO

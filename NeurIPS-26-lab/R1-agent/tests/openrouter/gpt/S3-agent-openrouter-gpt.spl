@@ -1,6 +1,6 @@
 CREATE FUNCTION DecideAction(question, context) 
 RETURNS TEXT AS $$
-You are a controller. Given the user''s question and the current context, decide the next action.
+You are a controller. Given the user""s question and the current context, decide the next action.
 
 Return ONLY valid YAML with this schema:
 action: search|answer
@@ -31,7 +31,7 @@ $$;
 
 CREATE FUNCTION AnswerQuestion(question, context) 
 RETURNS TEXT AS $$
-Answer the user''s question using the provided context.
+Answer the user""s question using the provided context.
 
 Question:
 {{question}}
@@ -47,19 +47,19 @@ WORKFLOW MermaidFlowchartToSPL
     OUTPUT @answer TEXT
 
 DO
-    @context := '';
-    @search_query := '';
-    @decision_yaml := '';
-    @parsed_state := '';
-    @decision_action := '';
-    @decision_model_answer := '';
-    @search_results := '';
-    @tool_status := '';
+    @context := "";
+    @search_query := "";
+    @decision_yaml := "";
+    @parsed_state := "";
+    @decision_action := "";
+    @decision_model_answer := "";
+    @search_results := "";
+    @tool_status := "";
     @recovered := 'no';
-    @status := '';
+    @status := "";
     @iteration := 0;
 
-    WHILE @status = '' AND @iteration < 3 DO
+    WHILE @status = "" AND @iteration < 3 DO
         @iteration := @iteration + 1;
 
         GENERATE DecideAction(@question, @context) INTO @decision_yaml;
@@ -105,14 +105,14 @@ DO
             WHEN contains('search_query:') THEN
                 @search_query := @decision_yaml;
             ELSE
-                @search_query := '';
+                @search_query := "";
         END;
 
         EVALUATE @decision_yaml
             WHEN contains('model_answer:') THEN
                 @decision_model_answer := @decision_yaml;
             ELSE
-                @decision_model_answer := '';
+                @decision_model_answer := "";
         END;
 
         EVALUATE @decision_action

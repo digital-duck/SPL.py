@@ -1117,6 +1117,29 @@ class Parser:
             prefix = self._expect(TokenType.STRING).value
             return SemanticCondition(semantic_value='startswith:' + prefix)
 
+        # IN ('a', 'b', ...) / NOT IN ('a', 'b', ...) — deterministic
+        # membership test; each element compared with `=` semantics
+        # (boolean shorthand, then numeric, then exact string). Sugar for
+        # a run of WHEN IS clauses:  WHEN IN ('true', '1', 'yes') THEN
+        if tok.type in (TokenType.IN, TokenType.NOT):
+            negate = False
+            if tok.type == TokenType.NOT:
+                self._advance()  # NOT
+                self._expect(TokenType.IN)
+                negate = True
+            else:
+                self._advance()  # IN
+            self._expect(TokenType.LPAREN)
+            in_values = [self._parse_expression()]
+            while self._check(TokenType.COMMA):
+                self._advance()
+                in_values.append(self._parse_expression())
+            self._expect(TokenType.RPAREN)
+            return ComparisonCondition(
+                operator="NOT IN" if negate else "IN",
+                right=FunctionCall(name="__in_list__", arguments=in_values),
+            )
+
         # Fall through: could be an expression-based condition
         raise ParseError(
             f"Expected condition (string literal or comparison operator), got {tok.type.name}",

@@ -69,8 +69,8 @@ $$;
 
 WORKFLOW meeting_to_actions
     INPUT:  
-        @filename      TEXT DEFAULT '',
-        @transcript    TEXT DEFAULT '',
+        @filename      TEXT DEFAULT "",
+        @transcript    TEXT DEFAULT "",
         @output_format TEXT DEFAULT 'json',
         @log_dir TEXT DEFAULT 'cookbook/04_model_showdown/logs-spl'
     OUTPUT: @output TEXT

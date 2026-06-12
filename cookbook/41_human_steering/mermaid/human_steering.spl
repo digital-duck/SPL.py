@@ -50,7 +50,7 @@ DO
 
     -- Step 3: Branch on whether feedback was provided
     EVALUATE @feedback
-        WHEN != '' THEN
+        WHEN != "" THEN
             LOGGING 'Human feedback received — refining draft' LEVEL INFO
             GENERATE refine(@draft, @feedback) INTO @final_article
         ELSE

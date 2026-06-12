@@ -12,7 +12,7 @@ WORKFLOW DecideAndAnswer
   INPUT @question TEXT;
   OUTPUT @answer TEXT;
 
-  @context := '';
+  @context := "";
   @iteration := 0;
 
   WHILE @iteration < 3 DO

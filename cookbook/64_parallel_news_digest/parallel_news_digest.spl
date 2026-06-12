@@ -63,9 +63,9 @@ $$;
 WORKFLOW summarise_single
     INPUT:
         @topic   TEXT,
-        @context TEXT    DEFAULT '',
+        @context TEXT    DEFAULT "",
         @digest_model   TEXT    DEFAULT 'gemma3',
-        @log_dir TEXT    DEFAULT ''
+        @log_dir TEXT    DEFAULT ""
     OUTPUT: @summary TEXT
 DO
     LOGGING f'[summarise_single] topic="{@topic}"' LEVEL DEBUG

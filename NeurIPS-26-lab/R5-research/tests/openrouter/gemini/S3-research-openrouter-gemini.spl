@@ -28,7 +28,7 @@ $$;
 CREATE FUNCTION Extractor(raw_results TEXT)
 RETURNS TEXT AS $$
 Extract key facts and notes from the following search results.
-Focus on accuracy and relevance. Don''t include fluff.
+Focus on accuracy and relevance. Don""t include fluff.
 Raw results: {raw_results}
 $$;
 

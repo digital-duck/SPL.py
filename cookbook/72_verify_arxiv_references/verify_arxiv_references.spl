@@ -90,7 +90,7 @@ CREATE TOOL_API extract_arxiv_id(ref_text TEXT)
 RETURNS TEXT AS PYTHON $$
 def extract_arxiv_id(ref_text: str) -> str:
     """Pull an arXiv id ('XXXX.XXXXX') from 'arXiv:...' text or an
-    arxiv.org/abs|pdf URL. Returns '' when the reference cites no arXiv id
+    arxiv.org/abs|pdf URL. Returns "" when the reference cites no arXiv id
     (books, journals, conference proceedings, ...)."""
     import re
 
@@ -100,7 +100,7 @@ def extract_arxiv_id(ref_text: str) -> str:
     m = re.search(r'arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})', ref_text, re.IGNORECASE)
     if m:
         return m.group(1)
-    return ''
+    return ""
 $$;
 
 CREATE TOOL_API lookup_arxiv(arxiv_id TEXT)
@@ -130,20 +130,20 @@ def lookup_arxiv(arxiv_id: str) -> str:
         raise RuntimeError(f'No arXiv entry found for id {arxiv_id} (withdrawn or mistyped)')
 
     def _clean(s):
-        return re.sub(r'\s+', ' ', (s or '')).strip()
+        return re.sub(r'\s+', ' ', (s or "")).strip()
 
-    title   = _clean(entry.findtext('atom:title', default='', namespaces=ns))
-    summary = _clean(entry.findtext('atom:summary', default='', namespaces=ns))
+    title   = _clean(entry.findtext('atom:title', default="", namespaces=ns))
+    summary = _clean(entry.findtext('atom:summary', default="", namespaces=ns))
     authors = [
-        _clean(a.findtext('atom:name', default='', namespaces=ns))
+        _clean(a.findtext('atom:name', default="", namespaces=ns))
         for a in entry.findall('atom:author', ns)
     ]
     authors = [a for a in authors if a]
 
-    pdf_url = ''
+    pdf_url = ""
     for link in entry.findall('atom:link', ns):
         if link.get('title') == 'pdf' or link.get('type') == 'application/pdf':
-            pdf_url = link.get('href', '')
+            pdf_url = link.get('href', "")
             break
     if not pdf_url:
         pdf_url = f'https://arxiv.org/pdf/{arxiv_id}'
@@ -165,9 +165,9 @@ def json_field(json_str: str, field: str) -> str:
 
     try:
         obj = json.loads(json_str)
-        return str(obj.get(field, ''))
+        return str(obj.get(field, ""))
     except (json.JSONDecodeError, TypeError, AttributeError):
-        return ''
+        return ""
 $$;
 
 CREATE TOOL_API download_pdf_to(pdf_url TEXT, out_dir TEXT, arxiv_id TEXT)
@@ -216,7 +216,7 @@ def init_summary_csv(csv_path: str) -> str:
     path = Path(csv_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        with path.open('w', encoding='utf-8', newline='') as fh:
+        with path.open('w', encoding='utf-8', newline="") as fh:
             writer = csv.writer(fh)
             writer.writerow(['arxiv_id', 'title', 'summary_desc', 'authors'])
     return str(path)
@@ -230,7 +230,7 @@ def append_csv_row(csv_path: str, arxiv_id: str, title: str, summary_desc: str, 
     from pathlib import Path
 
     path = Path(csv_path)
-    with path.open('a', encoding='utf-8', newline='') as fh:
+    with path.open('a', encoding='utf-8', newline="") as fh:
         writer = csv.writer(fh)
         writer.writerow([arxiv_id, title, summary_desc, authors])
     return str(path)
@@ -306,7 +306,7 @@ DO
 
         DO
             EVALUATE @arxiv_id
-                WHEN != '' THEN
+                WHEN != "" THEN
                     LOGGING f'[{@i}] arXiv:{@arxiv_id} — looking up ground-truth record' LEVEL INFO
 
                     -- Step A: ground truth from arXiv (not from the citing paper)
@@ -357,5 +357,5 @@ DO
 EXCEPTION
     WHEN OTHERS THEN
         LOGGING 'Reference verification failed' LEVEL WARN
-        RETURN '' WITH status = 'error'
+        RETURN "" WITH status = 'error'
 END

@@ -139,7 +139,7 @@ DO
     WHILE @i < @n_candidates DO
 
         -- Pick generator model — random or positional depending on @random_selection
-        CALL pick_model(@models, '', @random_selection, @i) INTO @gen_model
+        CALL pick_model(@models, "", @random_selection, @i) INTO @gen_model
         LOGGING f'[Candidate {@i}] generating with model={@gen_model}' LEVEL INFO
 
         GENERATE answer_candidate(@question) USING MODEL @gen_model INTO @candidate

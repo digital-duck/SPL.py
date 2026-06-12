@@ -129,6 +129,35 @@ def extract_step(steps_text: str, index: str) -> str:
     return lines[i] if 0 <= i < len(lines) else ""
 $$;
 
+CREATE TOOL_API validate_plan(steps_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def validate_plan(steps_text: str) -> str:
+    """Deterministic, 0-token check of the chain-protocol contract:
+    line 1 = <expression>|<operation>, every later line = PREV|<operation>,
+    every operation from the allowed vocabulary. Returns 'ok' or
+    'fail | <reason>' — catches a model that emits a fresh expression
+    mid-chain (e.g. parroting a few-shot example) before any LLM gate."""
+    allowed = {'solve', 'diff', 'integrate', 'simplify', 'expand', 'factor',
+               'series', 'apart', 'limit', 'laplace', 'inverse_laplace',
+               'trigsimp', 'summation', 'eigenvalues', 'solve_system'}
+    lines = [l.strip() for l in steps_text.splitlines() if l.strip()]
+    if not lines:
+        return 'fail | empty plan'
+    for i, line in enumerate(lines, 1):
+        if line.count('|') != 1:
+            return f'fail | line {i} is not <expression>|<operation>: {line}'
+        expr, op = (p.strip() for p in line.split('|'))
+        if not expr or not op:
+            return f'fail | line {i} has an empty field: {line}'
+        if op.split('(')[0].strip() not in allowed:
+            return f'fail | line {i} operation not in the allowed list: {op}'
+        if i == 1 and expr.upper() == 'PREV':
+            return 'fail | line 1 must carry the starting expression, not PREV'
+        if i > 1 and expr.upper() != 'PREV':
+            return f'fail | line {i} must use PREV, got a new expression: {expr}'
+    return 'ok'
+$$;
+
 -- ── Probabilistic regime: LLM prompt templates ───────────────
 
 CREATE FUNCTION decompose_problem(problem TEXT)
@@ -145,17 +174,27 @@ STRICT OUTPUT RULES (violating any of these causes the pipeline to fail):
 - The FIRST step's <expression> is the starting expression in Python/SymPy syntax:
     ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)
 - Every step AFTER the first must use the literal word PREV as the expression —
-    it means "the result of the previous step"
+    it means "the result of the previous step". NEVER write a new expression
+    after the first line.
 - <operation> must be exactly one token from this list:
     solve, diff, integrate, simplify, expand, factor,
     series, apart, limit(x,0), laplace, inverse_laplace,
     trigsimp, summation(n,1,oo), eigenvalues, solve_system
 - If the problem needs only ONE operation, output exactly one line
+- The expressions in the examples below (exp(x), x**2 - 4, sin(x)/x, ...)
+    illustrate the FORMAT only. Your first <expression> must be transcribed
+    from the Problem at the bottom — copying an expression from an example
+    is a failure.
 
 CORRECT examples:
   "differentiate e to the x and then simplify the result"
     exp(x)|diff
     PREV|simplify
+
+  "integrate 5*x**4 + 2, then expand the result, then solve for x"
+    5*x**4 + 2|integrate
+    PREV|expand
+    PREV|solve
 
   "expand (x+1) squared, then factor the expanded form"
     (x + 1)**2|expand
@@ -197,6 +236,13 @@ INCORRECT examples (DO NOT produce output like this):
   from sympy import diff    ← NO: Python import statements are forbidden
   Step 1: exp(x)|diff       ← NO: labels and numbering are forbidden
   1. exp(x)|diff             ← NO: numbered lists are forbidden
+  x**2 - 4|solve             ← NO (as a later line): every line after the
+                                first must be PREV|<operation>
+  exp(x)|diff                ← NO (when the problem says something else):
+                                this copies an example instead of the Problem
+
+Now translate ONLY the problem below. Transcribe its expression EXACTLY —
+same digits, signs, exponents — and use PREV for every step after the first.
 
 Problem: {problem}
 $$;

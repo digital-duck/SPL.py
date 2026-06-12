@@ -27,7 +27,7 @@ WORKFLOW improve_code
     INPUT:
         @code        TEXT,
         @feedback    TEXT,
-        @test_result TEXT DEFAULT '',
+        @test_result TEXT DEFAULT "",
         @lang        TEXT DEFAULT 'python',
         @improve_model       TEXT DEFAULT 'gemma4',
         @log_dir     TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'

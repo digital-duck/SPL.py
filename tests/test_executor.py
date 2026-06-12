@@ -167,6 +167,64 @@ class TestWorkflowExecution:
         result = results[0]
         assert result.committed_value == "high"
 
+    def test_evaluate_in_list(self):
+        src = """
+            WORKFLOW eval_wf
+                INPUT @mode TEXT
+                OUTPUT @label TEXT
+            DO
+                EVALUATE @mode
+                    WHEN IN ('true', '1', 'yes') THEN
+                        @label := 'on'
+                    ELSE
+                        @label := 'off'
+                END
+                COMMIT @label
+            END
+        """
+        # boolean shorthand is case-insensitive; numerics compare
+        # numerically; plain strings stay case-sensitive (same as `=`)
+        for mode, expected in [("yes", "on"), ("TRUE", "on"), ("1.0", "on"),
+                               ("no", "off"), ("YES", "off"), ("", "off")]:
+            assert _run(src, params={"mode": mode})[0].committed_value == expected
+
+    def test_evaluate_not_in_list(self):
+        src = """
+            WORKFLOW eval_wf
+                INPUT @mode TEXT
+                OUTPUT @label TEXT
+            DO
+                EVALUATE @mode
+                    WHEN NOT IN ('a', 'b') THEN
+                        @label := 'other'
+                    ELSE
+                        @label := 'listed'
+                END
+                COMMIT @label
+            END
+        """
+        assert _run(src, params={"mode": "c"})[0].committed_value == "other"
+        assert _run(src, params={"mode": "a"})[0].committed_value == "listed"
+
+    def test_evaluate_in_is_deterministic(self):
+        # IN must never fall through to an LLM-judged SemanticCondition
+        results = _run("""
+            WORKFLOW eval_wf
+                INPUT @mode TEXT
+                OUTPUT @label TEXT
+            DO
+                EVALUATE @mode
+                    WHEN IN ('x', 'y') THEN
+                        @label := 'hit'
+                    ELSE
+                        @label := 'miss'
+                END
+                COMMIT @label
+            END
+        """, params={"mode": "x"})
+        assert results[0].committed_value == "hit"
+        assert results[0].total_llm_calls == 0
+
     def test_while_loop(self):
         results = _run("""
             WORKFLOW counter

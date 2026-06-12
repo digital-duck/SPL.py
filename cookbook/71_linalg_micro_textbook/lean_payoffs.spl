@@ -158,7 +158,7 @@ DO
   LOGGING f"Lean REPL (mathlib): {@lean_status}" LEVEL INFO
 
   CALL run_python(f"print(len('{@concepts}'.split(',')))") INTO @n;
-  @summary := '';
+  @summary := "";
   @i := 0;
 
   WHILE @i < @n DO
@@ -167,7 +167,7 @@ DO
     LOGGING f"[{@i}] {@concept}: {@claim}" LEVEL INFO
 
     -- ── Stage 1: formalize, capped typecheck-repair loop ──
-    @lean_stmt := '';
+    @lean_stmt := "";
     @stmt_ok_lc := 'init';
     @tries := 0;
     WHILE @tries < @max_tries DO
@@ -198,7 +198,7 @@ DO
     -- ── Stage 2 + 3: faithfulness gate, then citation-first proof ──
     @faithful := 'not judged (formalization failed)';
     @badge_out := 'unverified';
-    @citation := '';
+    @citation := "";
     EVALUATE @stmt_ok_lc
       WHEN = 'true' THEN
         @badge_out := 'statement_checked';
@@ -216,7 +216,7 @@ DO
             CALL lower(@citation) INTO @citation_lc;
             EVALUATE @citation_lc
               WHEN = 'none' THEN
-                @citation := '';
+                @citation := "";
                 LOGGING f"{@concept}: no library citation — stays statement-checked" LEVEL INFO
               ELSE
                 -- Re-check the assembled theorem: the verified statement

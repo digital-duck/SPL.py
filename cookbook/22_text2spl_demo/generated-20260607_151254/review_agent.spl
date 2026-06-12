@@ -9,7 +9,7 @@ def draft(task: str) -> str:
         stop=None,
         temperature=0.7,
     )
-    return response[''choices''][0][''text''].strip()
+    return response[""choices""][0][""text""].strip()
 $$;
 
 CREATE TOOL_API critique(current TEXT) RETURNS TEXT AS PYTHON $$
@@ -23,7 +23,7 @@ def critique(current: str) -> str:
         stop=None,
         temperature=0.3,
     )
-    return response[''choices''][0][''text''].strip()
+    return response[""choices""][0][""text""].strip()
 $$;
 
 CREATE TOOL_API refine(current TEXT, feedback TEXT) RETURNS TEXT AS PYTHON $$
@@ -37,13 +37,13 @@ def refine(current: str, feedback: str) -> str:
         stop=None,
         temperature=0.7,
     )
-    return response[''choices''][0][''text''].strip()
+    return response[""choices""][0][""text""].strip()
 $$;
 
 CREATE FUNCTION classify(text TEXT)
 RETURNS FLOAT AS $$
   # This function is a placeholder for a more sophisticated quality assessment.
-  # In a real implementation, this would use an LLM to evaluate the text''s quality.
+  # In a real implementation, this would use an LLM to evaluate the text""s quality.
   # For now, we simulate a quality score based on the length of the text.
   return len(text) * 0.1
 $$;

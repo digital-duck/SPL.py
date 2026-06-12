@@ -7,7 +7,7 @@ DO
   @count := 5;
   WHILE @index < @count DO
     @language := GET(@languages, @index);
-    @translation := '';
+    @translation := "";
     GENERATE translate(@greeting, @language) INTO @translation;
     @results := APPEND(@results, @translation);
     @index := @index + 1;

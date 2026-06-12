@@ -20,7 +20,7 @@ Only output valid YAML. No explanation, no markdown fences.
 $$;
 
 CREATE FUNCTION AnswerQuestion(question TEXT, context TEXT) RETURNS TEXT AS $$
-You are a helpful research assistant. Using the context provided below, answer the user''s question in clear, plain prose.
+You are a helpful research assistant. Using the context provided below, answer the user""s question in clear, plain prose.
 
 Question: {question}
 
@@ -36,7 +36,7 @@ WORKFLOW ResearchAgent
 
   DO
     @context := 'No previous search';
-    @action := '';
+    @action := "";
     @iteration := 0;
     @status := 'running';
 

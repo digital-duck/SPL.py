@@ -57,10 +57,13 @@ python -c "from spl3.lean_bridge import repl_available; print(repl_available())"
 ```
 
 Idempotent; installs user-space (`~/.elan`, repo-local checkout at
-`cookbook/tools/lean/repl`). The `spl_lean` lake project is the
-`project_dir` target; `--with-mathlib` un-comments its pinned
-`[[require]]` block and pulls the olean cache (`lake exe cache get` —
-never compile mathlib from source).
+`cookbook/tools/lean/repl` by default). The whole stack is relocatable —
+`ELAN_HOME`, `SPL_LEAN_REPL_DIR`, and `SPL_LEAN_PROJECT_DIR` redirect
+both the install and the bridge's run-time discovery (see
+`docs/GUIDE/SETUP.md` §6 for the `/opt/lean` layout). The `spl_lean`
+lake project is the `project_dir` target; `--with-mathlib` un-comments
+its pinned `[[require]]` block and pulls the olean cache
+(`lake exe cache get` — never compile mathlib from source).
 
 ---
 

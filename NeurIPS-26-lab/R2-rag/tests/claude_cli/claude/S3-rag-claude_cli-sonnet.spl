@@ -1,6 +1,6 @@
 CREATE FUNCTION generate_answer(query, retrieved_document)
 RETURNS TEXT AS $$
-You are a helpful assistant. Use the retrieved document as context to answer the user''s query.
+You are a helpful assistant. Use the retrieved document as context to answer the user""s query.
 
 Query: {query}
 
@@ -8,7 +8,7 @@ Retrieved Document Context:
 {retrieved_document}
 
 Provide a clear, accurate, and comprehensive answer based solely on the context above.
-If the context doesn''t contain relevant information, acknowledge this clearly rather than guessing.
+If the context doesn""t contain relevant information, acknowledge this clearly rather than guessing.
 $$;
 
 WORKFLOW RAGPipeline

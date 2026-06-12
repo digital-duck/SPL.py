@@ -197,8 +197,8 @@ DO
   -- ── Stage 2: faithfulness judge (§B.4 — the unmachine-checkable link)
   @faithful := 'not judged (formalization failed)';
   @badge := 'unverified';
-  @proof := '';
-  @citation := '';
+  @proof := "";
+  @citation := "";
   EVALUATE @stmt_ok_lc
     WHEN = 'true' THEN
       GENERATE judge_faithfulness(@claim, @lean_stmt) INTO @faithful;
@@ -214,7 +214,7 @@ DO
       CALL lower(@citation) INTO @citation_lc;
       EVALUATE @citation_lc
         WHEN = 'none' THEN
-          @citation := ''
+          @citation := ""
         ELSE
           CALL make_theorem(@lean_stmt, @citation) INTO @proof;
           @check_code := f"print(_spl_lean.check(r'''{@proof}''')['ok'])";
@@ -261,7 +261,7 @@ DO
         ELSE
           -- Lean failure never blocks delivery (§B.2): the claim keeps
           -- its statement-checked grade, the higher badge is withheld.
-          @proof := ''
+          @proof := ""
       END
   END
 
@@ -273,7 +273,7 @@ DO
   -- machine_proved claim badge — verifier='lean' is the engine-of-record,
   -- and the verified statement is stored alongside the prose so the
   -- prose↔formal correspondence stays auditable (spl3 cache show <key>).
-  @cache_key := '';
+  @cache_key := "";
   EVALUATE @badge
     WHEN = 'machine_proved' THEN
       CALL cache_put(@claim, @report, badges='machine_proved', verifier='lean', statement=@lean_stmt) INTO @cache_key;

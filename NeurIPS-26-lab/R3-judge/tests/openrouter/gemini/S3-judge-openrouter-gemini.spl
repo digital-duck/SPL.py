@@ -6,8 +6,8 @@ $$;
 CREATE FUNCTION evaluate_content(content STRING)
 RETURNS STRING AS $$
 Analyze the following content: {{content}}
-If it meets quality standards, respond with ''PASS''. 
-If it is insufficient, respond with ''FAIL'' and provide brief feedback on what to improve.
+If it meets quality standards, respond with ""PASS"". 
+If it is insufficient, respond with ""FAIL"" and provide brief feedback on what to improve.
 $$;
 
 WORKFLOW content_refinement_process

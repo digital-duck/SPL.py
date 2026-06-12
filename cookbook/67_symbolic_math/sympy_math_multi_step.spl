@@ -37,7 +37,7 @@ IMPORT 'sympy_tools'
 
 WORKFLOW solve_one_step
   INPUT @step TEXT
-  INPUT @running_expression TEXT := ''
+  INPUT @running_expression TEXT := ""
   OUTPUT @step_summary TEXT
 DO
   CALL split_part(@step, '|', '1') INTO @raw_expression;
@@ -82,8 +82,8 @@ DO
   CALL step_count(@steps_text) INTO @n_steps;
 
   @i := 0
-  @running_expression := ''
-  @trace := ''
+  @running_expression := ""
+  @trace := ""
 
   -- Step 2 (deterministic, chained): CALL the reusable sub-workflow
   -- once per step — this is the "CALL <workflow> step-by-step" part.

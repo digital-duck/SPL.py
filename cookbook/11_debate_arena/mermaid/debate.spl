@@ -66,8 +66,8 @@ WORKFLOW debate_arena
     OUTPUT: @verdict TEXT
 DO
     @round := 0
-    @pro_history := ''
-    @con_history := ''
+    @pro_history := ""
+    @con_history := ""
 
     LOGGING f'Debate started | topic: {@topic} | rounds: {@max_rounds}' LEVEL INFO
 

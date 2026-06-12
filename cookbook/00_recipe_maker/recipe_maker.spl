@@ -143,15 +143,15 @@ $$;
 IMPORT 'tools'
 
 WORKFLOW recipe_maker
-    INPUT:  @concept     TEXT DEFAULT '',
+    INPUT:  @concept     TEXT DEFAULT "",
             @output_dir  TEXT DEFAULT 'cookbook/output/',
-            @dataset     TEXT DEFAULT '',
-            @resources   TEXT DEFAULT '',
+            @dataset     TEXT DEFAULT "",
+            @resources   TEXT DEFAULT "",
             @feedback    TEXT DEFAULT 'human'
     OUTPUT: @review_notification TEXT
 DO
     -- Step 1: Load pattern catalog (deterministic — no LLM)
-    CALL load_patterns('') INTO @patterns_catalog
+    CALL load_patterns("") INTO @patterns_catalog
 
     -- Step 2: Load user-supplied dataset if provided (deterministic — no LLM)
     CALL load_dataset(@dataset) INTO @dataset_context

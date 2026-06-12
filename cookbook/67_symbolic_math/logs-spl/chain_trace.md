@@ -1,4 +1,3 @@
-1. d/dx(3*x**2 + 4*x) = 6*x + 4
-2. simplify(6*x + 4) = 6*x + 4
-
-SANITY: FAIL | The problem asks for the original function, not its derivative.
+1. d/dx(3*x**3 - x) = 9*x**2 - 1
+2. factor(9*x**2 - 1) = (3*x - 1)*(3*x + 1)
+3. solve((3*x - 1)*(3*x + 1) = 0) -> x = [-1/3, 1/3]

@@ -11,12 +11,12 @@ DO
 
   @loop_count := 0;
   @iteration := 0;
-  @queries := '';
-  @search_results := '';
-  @facts := '';
-  @feedback := '';
-  @decision := '';
-  @report := '';
+  @queries := "";
+  @search_results := "";
+  @facts := "";
+  @feedback := "";
+  @decision := "";
+  @report := "";
 
   -- B: plan_queries
   GENERATE plan_queries(@question) INTO @queries;
@@ -58,7 +58,7 @@ DO
 
 
   -- E -> |No| -> I
-  WHEN @report == '' THEN
+  WHEN @report == "" THEN
     GENERATE write_report(@question, @facts, @decision) INTO @report;
   END;
 

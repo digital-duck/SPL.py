@@ -25,7 +25,7 @@ WORKFLOW test_generator
         @code    TEXT,
         @lang    TEXT DEFAULT 'python',
         @review_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT ''
+        @log_dir TEXT DEFAULT ""
     OUTPUT: @tests TEXT
 DO
     LOGGING f'[test_generator] lang={@lang}' LEVEL DEBUG

@@ -57,7 +57,7 @@ DO
             ) INTO @page_summary
             LOGGING 'Layer 3 done | page summary ready' LEVEL DEBUG
         ELSE
-            @page_summary := ''
+            @page_summary := ""
     END
 
     -- Quality check: does each layer faithfully represent the original?
@@ -87,7 +87,7 @@ EXCEPTION
             INTO @paragraph_summary
         GENERATE summarize(@paragraph_summary, summary_constraints('sentence'), @audience) 
             INTO @sentence_summary
-        GENERATE assemble_summary_package(@sentence_summary, @paragraph_summary, '', 'n/a', @audience) 
+        GENERATE assemble_summary_package(@sentence_summary, @paragraph_summary, "", 'n/a', @audience) 
             INTO @summary_package
         RETURN @summary_package WITH status = 'complete_chunked'
 END

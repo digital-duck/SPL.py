@@ -7,7 +7,7 @@ $$;
 
 CREATE FUNCTION answer_question(ctx) 
 RETURNS TEXT AS $$
-Using the provided context, generate a comprehensive final answer to the user''s question.
+Using the provided context, generate a comprehensive final answer to the user""s question.
 Context: {{ctx}}
 $$;
 

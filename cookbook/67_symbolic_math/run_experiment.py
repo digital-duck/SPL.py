@@ -16,11 +16,11 @@ Quick start:
   python cookbook/67_symbolic_math/run_experiment.py -s true -s false -r 3    # both solver arms
 
   python cookbook/67_symbolic_math/run_experiment.py -m m010 --dry-run
-  python cookbook/67_symbolic_math/run_experiment.py -m m010 && \
-  python cookbook/67_symbolic_math/run_analysis.py
+  python cookbook/67_symbolic_math/run_experiment.py -m m010 
 
-  python cookbook/67_symbolic_math/run_experiment.py -m "m001,m002,m010" && \
-  python cookbook/67_symbolic_math/run_analysis.py
+  python cookbook/67_symbolic_math/run_experiment.py -m "m001,m002,m010" 
+
+ python cookbook/67_symbolic_math/run_experiment.py -m "m010" -p "p003" -s true -r 1
   
 """
 
@@ -156,12 +156,13 @@ def parse_ids(values: tuple) -> list:
 MODELS = {
     "m001": ("sonnet-4-6",  "claude_cli",         "claude_cli"),
     "m002": ("gemma3",      "ollama:gemma3",       "ollama"),
-    "m003": ("gemma4:12b",  "ollama:gemma4:12b",   "ollama"),
+    "m003": ("gemma4",  "ollama:gemma4",           "ollama"),
+    # "m003": ("gemma4:12b",  "ollama:gemma4:12b",   "ollama"),
     "m004": ("qwen2.5",     "ollama:qwen2.5",      "ollama"),
     "m005": ("qwen3",       "ollama:qwen3",        "ollama"),
     "m006": ("phi3",        "ollama:phi3",         "ollama"),
     "m007": ("phi4",        "ollama:phi4",         "ollama"),
-    "m008": ("deepseek-r1", "ollama:deepseek-r1",  "ollama"),
+    "m008": ("deepseek-r1", "ollama:deepseek-r1:8b",  "ollama"),
     "m009": ("lfm2.5",      "ollama:lfm2.5",       "ollama"),
     "m010": ("rnj-1",       "ollama:rnj-1",        "ollama"),   # Essential AI 8B STEM model
 }
@@ -206,7 +207,8 @@ PROBLEMS = {
     "p020": ("T5", "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result"),
 }
 
-SCRIPT_DEFAULT = "cookbook/67_symbolic_math/sympy_llm.spl"
+# SCRIPT_DEFAULT = "cookbook/67_symbolic_math/sympy_llm.spl"
+SCRIPT_DEFAULT = "cookbook/67_symbolic_math/sympy_llm_v2.spl"
 LOG_DIR_DEFAULT = "cookbook/67_symbolic_math/logs-spl"
 
 

@@ -40,10 +40,10 @@ Return valid JSON only — no prose outside the JSON:
 $$;
 
 WORKFLOW ab_test
-    INPUT:  @experiment_id    TEXT DEFAULT '',
-            @task             TEXT DEFAULT '',
-            @prompt_a         TEXT DEFAULT '',
-            @prompt_b         TEXT DEFAULT '',
+    INPUT:  @experiment_id    TEXT DEFAULT "",
+            @task             TEXT DEFAULT "",
+            @prompt_a         TEXT DEFAULT "",
+            @prompt_b         TEXT DEFAULT "",
             @winner_threshold FLOAT DEFAULT 1.5
     OUTPUT: @winner_output TEXT
 DO

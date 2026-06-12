@@ -64,7 +64,7 @@ $$;
 WORKFLOW arxiv_morning_brief
     INPUT:
         @urls         TEXT,
-        @date         TEXT DEFAULT '',
+        @date         TEXT DEFAULT "",
         @brief_tokens INT  DEFAULT 1024,
         @chunk_tokens INT  DEFAULT 512
     OUTPUT: @brief TEXT

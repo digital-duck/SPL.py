@@ -2,64 +2,35 @@
 -- Recipe 67c: sympy_llm — an A/B harness for "architecture vs. scale"
 --
 -- Same kernel shape as sympy_math_multi_step.spl — decompose (LLM) ->
--- verified chain (SymPy) -> explain (LLM) — but wrapped behind ONE
--- boolean switch, @enable_solver, so the SAME problem and SAME model
--- can be run through two arms with a single --param flip:
+-- verified chain (SymPy) -> explain (LLM) — behind ONE switch:
+--   @enable_solver = true   plan -> verified SymPy chain -> explain
+--   @enable_solver = false  the unaided LLM, one shot (baseline)
+-- Same model, same problem, one --param flip (RQ1 of
+-- case-2-hackernews.md).
 --
---   @enable_solver = true   (architecture arm — the recipe-67 pattern)
---     Probabilistic (LLM)   — plan: decompose into an ordered chain
---     Deterministic (SymPy) — compute each step exactly, verified
---     Probabilistic (LLM)   — explain the verified chain
---
---   @enable_solver = false  (baseline arm — no kernel)
---     Probabilistic (LLM)   — solve the WHOLE problem itself, one shot,
---                             with no symbolic engine backing it up
---
--- This operationalizes RQ1 from case-2-hackernews.md: does "small model
--- + deterministic kernel beats big model alone" hold because the kernel
--- is doing real work, or would the LLM have gotten there anyway? Now
--- both arms are one flag apart — same model, same problem, same prompt
--- shapes wherever possible — which is as close to a controlled A/B as
--- a single-process experiment gets.
---
--- Fail-fast policy (deliberate, not an oversight):
--- When @enable_solver is on, ANY failure inside the verified chain —
--- a plan that decomposes into nothing usable, a step SymPy can't
--- parse, or a narration that comes back empty — exits IMMEDIATELY
--- with an explicit error status and NO fallback to the LLM. We do
--- not ask the LLM to paper over a kernel-side failure: that would
--- reintroduce exactly the hallucination risk this architecture
--- exists to remove, and would make "the chain verified cleanly" and
--- "the chain failed but the LLM smoothed it over" indistinguishable
--- in the output — precisely the ambiguity the lfm2.5 run in
--- case-2.md exposed (steps=0, yet a fluent, unverified "complete").
--- A loud, attributable failure is more useful data than a quiet,
--- lucky-looking save.
+-- Fail-fast policy: with the solver on, ANY failure in the verified
+-- chain exits immediately with an explicit status and NO LLM fallback —
+-- a loud, attributable failure is better data than a quiet save.
 --
 -- Requires: pip install sympy (or run with --self-healing)
 -- ============================================================
 
 IMPORT 'sympy_tools'
 
--- ── Reusable sub-workflow: ONE chain step, CALLed once per item ──
--- Renamed from sympy_math_multi_step.spl's `solve_one_step` to avoid
--- a registry name collision when both files in this directory load
--- side by side (same "WORKFLOW calls WORKFLOW" pattern either way —
--- see critique_workflow in cookbook/05_v3_self_refine/self_refine.spl)
+-- ── One chain step, CALLed once per item ─────────────────────
+-- Renamed from sympy_math_multi_step.spl's solve_one_step to avoid a
+-- registry collision when both files load side by side.
 
 WORKFLOW solve_chain_step
   INPUT @step TEXT
-  INPUT @running_expression TEXT := ''
+  INPUT @running_expression TEXT := ""
   OUTPUT @step_summary TEXT
 DO
   CALL split_part(@step, '|', '1') INTO @raw_expression;
   CALL split_part(@step, '|', '2') INTO @operation;
-  CALL trim(@raw_expression) INTO @raw_expression;
-  CALL trim(@operation) INTO @operation;
 
-  -- Resolve PREV deterministically — never round-tripped through the LLM.
-  -- Compare lower-cased on BOTH sides: EVALUATE lower-cases the right-hand
-  -- literal but not the left-hand value, so 'PREV' = 'prev' would not match.
+  -- Resolve PREV deterministically (lower-case both sides: EVALUATE
+  -- lower-cases the literal but not the value).
   CALL lower(@raw_expression) INTO @raw_expression_lc;
   EVALUATE @raw_expression_lc
     WHEN = 'prev' THEN
@@ -70,9 +41,8 @@ DO
 
   CALL solve_step_with_sympy(@expression, @operation) INTO @step_summary;
 
-  -- @step_summary stays '<bare_result>|<human_readable_line>' — the
-  -- caller splits it the same way; '<bare_result>' is 'sympy_error'
-  -- on failure, which the caller checks for explicitly (fail-fast).
+  -- '<bare_result>|<human_readable_line>'; bare_result is 'sympy_error'
+  -- on failure — the caller fail-fasts on it.
   RETURN @step_summary
 END;
 
@@ -81,32 +51,15 @@ END;
 WORKFLOW math_solver_ab
   INPUT @problem TEXT := 'differentiate 3*x**3 - x, then factor if needed, finally solve for x'
   INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
-
-  -- The experiment switch. Any value other than 'true'/'1'/'yes' (case-
-  -- insensitive) is treated as off — see the lower-cased EVALUATE below,
-  -- which sidesteps the same case-sensitivity gotcha solve_chain_step
-  -- works around for PREV.
   INPUT @enable_solver TEXT := 'true'
-
   OUTPUT @explanation TEXT
 DO
   CALL lower(@enable_solver) INTO @solver_mode;
 
-  -- NOTE: WHEN clauses MUST use `=`/`!=`/`IS`/`IS NOT` — a bare string
-  -- literal (`WHEN 'true' THEN`) parses as a SemanticCondition and is
-  -- judged by an LLM call ("does this text match 'true'? yes/no")
-  -- rather than compared deterministically. `IS`/`IS NOT` are sugar
-  -- for `=`/`!=` (added specifically for boolean-flavored switches like
-  -- this one — "IS 'true'" reads more naturally than "= 'true'") and
-  -- desugar to the same zero-token, case-insensitive boolean-shorthand
-  -- comparison in the executor — exactly what a deterministic
-  -- experiment-arm switch needs.
+  -- WHEN needs an operator (`=`/`IS`/`IN`) — a bare literal would parse
+  -- as an LLM-judged SemanticCondition.
   EVALUATE @solver_mode
-    WHEN IS 'true' THEN
-      @use_solver := 'yes'
-    WHEN IS '1' THEN
-      @use_solver := 'yes'
-    WHEN IS 'yes' THEN
+    WHEN IN ('true', '1', 'yes') THEN
       @use_solver := 'yes'
     ELSE
       @use_solver := 'no'
@@ -115,9 +68,7 @@ DO
   EVALUATE @use_solver
     WHEN = 'yes' THEN
       DO
-        -- ════════════════════════════════════════════════════════
-        -- ARM A — architecture: plan -> verified SymPy chain -> explain
-        -- ════════════════════════════════════════════════════════
+        -- ── ARM A: plan -> verified SymPy chain -> explain ──
         LOGGING f"[arm=solver] Problem '@{@problem}' — planning the chain ..." LEVEL INFO
 
         GENERATE decompose_problem(@problem) INTO @steps_text;
@@ -126,10 +77,7 @@ DO
 
         LOGGING f"[arm=solver] decomposed into {@n_steps} step(s):\n\n\n{@steps_text}\n\n" LEVEL INFO
 
-        -- ── Fail-fast checkpoint 1: the plan itself is unusable ──
-        -- No steps parsed out of the LLM's response at all — this is
-        -- a PLANNING failure. Exit now; do not ask the LLM to try
-        -- explaining a chain that was never computed.
+        -- Checkpoint 1: unusable plan — exit before computing anything.
         EVALUATE @n_steps
           WHEN = '0' THEN
             LOGGING f'[arm=solver] PLAN FAILURE — decompose_problem produced no usable steps' LEVEL ERROR
@@ -140,26 +88,19 @@ DO
         END
 
         @i := 0
-        @running_expression := ''
-        @trace := ''
+        @running_expression := ""
+        @trace := ""
 
         WHILE @i < @n_steps DO
           CALL extract_step(@steps_text, @i) INTO @step;
           CALL solve_chain_step(@step, @running_expression) INTO @step_summary;
           CALL split_part(@step_summary, '|', '1') INTO @running_expression;
           CALL split_part(@step_summary, '|', '2') INTO @trace_line;
-          CALL trim(@running_expression) INTO @running_expression;
-          CALL trim(@trace_line) INTO @trace_line;
 
           @step_no := @i + 1
 
-          -- ── Fail-fast checkpoint 2: the kernel rejected this step ──
-          -- The plan hand SymPy something it could not parse/compute —
-          -- a SOLVER failure, traceable directly to a bad plan. Exit
-          -- now, with the verified prefix preserved for diagnosis;
-          -- do not let the LLM narrate around a broken chain (that
-          -- is exactly the "graceful degradation" we want to MEASURE,
-          -- not paper over, in this harness).
+          -- Checkpoint 2: kernel rejected this step — exit with the
+          -- verified prefix preserved for diagnosis.
           EVALUATE @running_expression
             WHEN = 'sympy_error' THEN
               LOGGING f'[arm=solver] SOLVER FAILURE at step {@step_no}/{@n_steps}: {@trace_line}' LEVEL ERROR
@@ -179,14 +120,10 @@ DO
         GENERATE explain_chain(@problem, @trace) INTO @explanation;
         CALL trim(@explanation) INTO @explanation;
 
-        -- ── Fail-fast checkpoint 3: the narration came back empty ──
-        -- The chain verified cleanly but the EXPLANATION failed —
-        -- exactly the "(no COMMIT)" pattern in case-2.md. Surface
-        -- the verified chain itself (deterministic data already in
-        -- hand) rather than asking the LLM for a second attempt —
-        -- a retry is still a fallback to the same unreliable step.
+        -- Checkpoint 3: empty narration — surface the verified chain
+        -- itself; a retry is still a fallback to the same unreliable step.
         EVALUATE @explanation
-          WHEN = '' THEN
+          WHEN = "" THEN
             LOGGING f'[arm=solver] NARRATION FAILURE — explain_chain returned empty content' LEVEL ERROR
             RETURN f'[NARRATION FAILURE] The chain verified correctly but the explanation step returned nothing.\nVerified chain:\n{@trace}'
               WITH status = 'narration_error', arm = 'solver', steps = @n_steps
@@ -197,9 +134,7 @@ DO
 
     ELSE
       DO
-        -- ════════════════════════════════════════════════════════
-        -- ARM B — baseline: no kernel; the LLM solves it, one shot
-        -- ════════════════════════════════════════════════════════
+        -- ── ARM B: unaided LLM, one shot — no kernel ──
         LOGGING f"[arm=llm_only] Problem '@{@problem}' — solving with NO symbolic kernel" LEVEL INFO
 
         CALL write_file(f'{@log_dir}/chain_trace.md',
@@ -209,7 +144,7 @@ DO
         CALL trim(@explanation) INTO @explanation;
 
         EVALUATE @explanation
-          WHEN = '' THEN
+          WHEN = "" THEN
             LOGGING f'[arm=llm_only] FAILURE — solve_directly returned empty content' LEVEL ERROR
             RETURN '[FAILURE] The unaided LLM returned nothing for this problem.'
               WITH status = 'llm_error', arm = 'llm_only', steps = 0

@@ -401,6 +401,24 @@ class TestEvaluate:
         assert isinstance(eval_stmt.when_clauses[0].condition, ComparisonCondition)
         assert eval_stmt.when_clauses[0].condition.operator == ">"
 
+    def test_evaluate_in_list(self):
+        ast = parse("""
+            WORKFLOW w
+            DO
+              EVALUATE @mode
+                WHEN IN ('true', '1', 'yes') THEN
+                  COMMIT @mode
+                WHEN NOT IN ('a', 'b') THEN
+                  COMMIT @mode
+              END
+            END
+        """)
+        clauses = ast.statements[0].body[0].when_clauses
+        assert isinstance(clauses[0].condition, ComparisonCondition)
+        assert clauses[0].condition.operator == "IN"
+        assert [a.value for a in clauses[0].condition.right.arguments] == ["true", "1", "yes"]
+        assert clauses[1].condition.operator == "NOT IN"
+
     def test_evaluate_with_otherwise(self):
         ast = parse("""
             WORKFLOW w

@@ -1017,6 +1017,17 @@ class Executor:
                     matched = 'yes' in content or '[echo]' in content
                     _log.debug("EVALUATE semantic '%s' -> %s", sv, matched)
 
+            elif isinstance(cond, ComparisonCondition) and cond.operator in ("IN", "NOT IN"):
+                # Membership test: WHEN IN ('a', 'b', ...) THEN — each
+                # element compared with the same semantics as `=`.
+                values = [self._eval_expression(arg, state)
+                          for arg in getattr(cond.right, "arguments", [])]
+                matched = any(self._in_values_equal(eval_value, v) for v in values)
+                if cond.operator == "NOT IN":
+                    matched = not matched
+                _log.debug("EVALUATE %s %s %s -> %s",
+                           eval_value[:20], cond.operator, values, matched)
+
             elif isinstance(cond, ComparisonCondition):
                 # Boolean shorthand: WHEN = TRUE / WHEN = FALSE
                 right_str = self._eval_expression(cond.right, state).lower()
@@ -1435,6 +1446,18 @@ class Executor:
         elif isinstance(expr, NamedArg):
             return self._eval_expression(expr.value, state)
         return str(expr)
+
+    @staticmethod
+    def _in_values_equal(left: str, right: str) -> bool:
+        """Per-element equality for IN / NOT IN — mirrors `=` semantics:
+        boolean shorthand (case-insensitive 'true'/'false'), then numeric,
+        then exact string."""
+        if right.lower() in ("true", "false"):
+            return left.lower() == right.lower()
+        try:
+            return float(left) == float(right)
+        except (ValueError, TypeError):
+            return left == right
 
     def _compare(self, left: float, op: str, right: float) -> bool:
         """Evaluate a numeric comparison."""

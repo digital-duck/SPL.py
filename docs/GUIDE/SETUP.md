@@ -2,8 +2,10 @@
 
 Everything needed to run the full SPL stack — core CLI, the cookbook, and the
 complete verifier ladder (SymPy → SageMath → Lean 4 + mathlib) — starting from
-a clean Ubuntu install. Written against Ubuntu 22.04/24.04, verified on the
-dev machine 2026-06-11.
+a clean Ubuntu install. Written against Ubuntu 22.04/24.04; ladder verified
+end-to-end on the original dev machine 2026-06-11. The `/opt/lean` relocatable
+layout (§6) was added 2026-06-12 for machines that keep big toolchains on a
+dedicated HDD mount.
 
 **What `pyproject.toml` covers, and what it cannot:**
 
@@ -34,12 +36,22 @@ toolchain is largely self-contained, but a system linker avoids surprises.
 
 **Disk budget** (plan ~15 GB free for the full ladder):
 
-| Component | Size |
-|---|---|
-| conda env `spl123` (incl. passagemath wheels ~1.3 GB) | ~4 GB |
-| `~/.elan` (Lean toolchains) | ~2.7 GB |
-| `cookbook/tools/lean/repl` (pinned REPL build) | ~0.2 GB |
-| `cookbook/tools/lean/spl_lean` with mathlib olean cache | ~7.4 GB |
+| Component | Size | Location (recommended) |
+|---|---|---|
+| conda env `spl123` (incl. passagemath wheels ~1.3 GB) | ~4 GB | conda's env dir (`/home`, HDD) |
+| `/opt/lean/elan` (Lean toolchains, `ELAN_HOME`) | ~2.7 GB | `/opt` (HDD) |
+| `/opt/lean/repl` (pinned REPL build, `SPL_LEAN_REPL_DIR`) | ~0.2 GB | `/opt` (HDD) |
+| `/opt/lean/spl_lean` + mathlib olean cache (`SPL_LEAN_PROJECT_DIR`) | ~7.4 GB | `/opt` (HDD) |
+
+> **Storage note:** keep the big, infrequently-updated pieces off the SSD.
+> SageMath is **not a standalone app** here — it's passagemath pip wheels
+> inside the conda env, so it lives wherever the env lives (the conda
+> default under `/home` is fine when `/home` is on the HDD). The Lean stack
+> (~10 GB total) is fully relocatable: §6 directs all of it to `/opt/lean`
+> via three environment variables that both `setup_lean.sh` (install time)
+> and `spl3/lean_bridge.py` (run time) honor. Leaving the variables unset
+> keeps the legacy layout (`~/.elan` + in-repo `cookbook/tools/lean/`) —
+> both layouts are supported.
 
 ---
 
@@ -49,6 +61,9 @@ Install Miniconda (skip if conda is already present):
 
 ```bash
 curl -fsSLo /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+# Install to ~/miniconda3 — lands on HDD when /home is on a spinning disk
+# (the passagemath wheels ~1.3 GB live inside the env, so they follow it).
+# Avoid an SSD path for the conda root.
 bash /tmp/miniconda.sh -b -p "$HOME/miniconda3"
 "$HOME/miniconda3/bin/conda" init bash
 exec bash   # reload the shell so `conda` is on PATH
@@ -173,9 +188,25 @@ One idempotent script provisions everything, pinned to `v4.30.0`
 and the bridge are kept in sync in-repo):
 
 ```bash
+# One-time: create a user-owned home for the Lean stack on the big HDD.
+# (/opt is root-owned; this is the only sudo in the whole Lean setup.)
+sudo install -d -o "$USER" -g "$USER" /opt/lean
+
+# Direct the entire Lean stack (~10 GB) to /opt/lean. These three variables
+# are read by setup_lean.sh at INSTALL time and by spl3/lean_bridge.py at
+# RUN time, so they must be set in every shell — persist them in ~/.bashrc:
+cat >> ~/.bashrc <<'EOF'
+export ELAN_HOME=/opt/lean/elan
+export SPL_LEAN_REPL_DIR=/opt/lean/repl
+export SPL_LEAN_PROJECT_DIR=/opt/lean/spl_lean
+EOF
+source ~/.bashrc
+# (Skip this block entirely to use the legacy layout: ~/.elan plus
+#  in-repo cookbook/tools/lean/ — fine when /home is on the HDD.)
+
 # Stage 1 — elan + pinned leanprover-community/repl + spl_lean lake project.
-# First run downloads a Lean toolchain (~2.7 GB into ~/.elan) and builds the
-# REPL; allow 10–20 minutes.
+# First run downloads a Lean toolchain (~2.7 GB into $ELAN_HOME) and builds
+# the REPL; allow 10–20 minutes. Stage 1 is stdlib-only — no mathlib yet.
 bash cookbook/tools/lean/setup_lean.sh
 
 # Stage 2 — mathlib (needed by recipes 71/77; recipe 76 runs stdlib-only).
@@ -247,6 +278,10 @@ is live on the machine.
   subsequent runs of `setup_lean.sh` are near-instant (idempotent).
 - **Lean smoke run fails with "repl not found"** — the error message itself
   carries the setup command; it means §6 stage 1 hasn't run on this machine.
+- **Lean works in one shell but not another (after the `/opt/lean` layout)** —
+  the three `ELAN_HOME` / `SPL_LEAN_*` variables aren't exported in that
+  shell; they must come from `~/.bashrc` (§6), not a one-off `export`. The
+  bridge falls back to `~/.elan` + in-repo paths when they're unset.
 - **Sage kernel missing under `--kernel-name sagemath`** — `spl3 run` fails
   fast with the registration command (§5); the in-process route (recipe 77)
   works without it.

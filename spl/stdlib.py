@@ -184,11 +184,22 @@ def rpad(value: str, width: str, fill: str = " ") -> str:
 
 
 @spl_tool
-def split_part(value: str, delimiter: str, part: str) -> str:
-    """SPLIT_PART(value, delimiter, part) — 1-based part after splitting on delimiter."""
+def split_part(value: str, delimiter: str, part: str, trim: str = "true") -> str:
+    """SPLIT_PART(value, delimiter, part [, trim]) — 1-based part after splitting on delimiter.
+
+    The part comes back whitespace-trimmed by default: delimited protocol
+    lines ('a | b') are padded for readability and virtually every caller
+    wants the bare field (list_get behaves the same way). Pass trim='false'
+    to keep the raw part, padding included.
+    """
     parts = str(value).split(str(delimiter))
     idx = int(part) - 1
-    return parts[idx] if 0 <= idx < len(parts) else ""
+    if not (0 <= idx < len(parts)):
+        return ""
+    raw = parts[idx]
+    if str(trim).strip().lower() in {"false", "0", "no"}:
+        return raw
+    return raw.strip()
 
 
 @spl_tool

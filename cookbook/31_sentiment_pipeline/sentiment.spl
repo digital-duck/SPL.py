@@ -55,8 +55,8 @@ $$;
 -- ── Main workflow ───────────────────────────────────────────────────────────
 
 WORKFLOW sentiment_pipeline
-    INPUT:  @filename  TEXT DEFAULT '',
-            @items     TEXT DEFAULT '',
+    INPUT:  @filename  TEXT DEFAULT "",
+            @items     TEXT DEFAULT "",
             @delimiter TEXT DEFAULT '\n',
             @domain    TEXT DEFAULT 'general'
     OUTPUT: @report TEXT

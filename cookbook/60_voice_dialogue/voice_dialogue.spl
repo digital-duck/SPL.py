@@ -44,7 +44,7 @@ $$;
 WORKFLOW voice_dialogue
     INPUT:
         @audio_in     AUDIO  DEFAULT 'cookbook/60_voice_dialogue/sample/question.wav',
-        @context      TEXT   DEFAULT '',
+        @context      TEXT   DEFAULT "",
         @persona      TEXT   DEFAULT 'a helpful assistant',
         @llm_model    TEXT   DEFAULT 'lfm2.5',
         @tts_voice    TEXT   DEFAULT 'alloy',

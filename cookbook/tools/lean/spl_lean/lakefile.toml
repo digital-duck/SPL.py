@@ -12,7 +12,7 @@ name = "SplLean"
 # Enabled by `setup_lean.sh --with-mathlib` (~5 GB olean cache via
 # `lake exe cache get`) — strictly optional, the bridge and all tests
 # work stdlib-only.
-[[require]]
-name = "mathlib"
-scope = "leanprover-community"
-rev = "v4.30.0"
+# [[require]]
+# name = "mathlib"
+# scope = "leanprover-community"
+# rev = "v4.30.0"

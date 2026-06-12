@@ -35,7 +35,7 @@ $$;
 WORKFLOW test_code
     INPUT:
         @code    TEXT,
-        @spec    TEXT DEFAULT '',
+        @spec    TEXT DEFAULT "",
         @lang    TEXT DEFAULT 'python',
         @test_model   TEXT DEFAULT 'gemma4',
         @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'

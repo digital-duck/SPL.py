@@ -91,8 +91,14 @@ class LeanNotFound(RuntimeError):
 # ---------------------------------------------------------------------------
 
 def _elan_bin_dir() -> Optional[Path]:
-    """Directory containing elan-managed shims (lake, lean), if present."""
-    d = Path.home() / ".elan" / "bin"
+    """Directory containing elan-managed shims (lake, lean), if present.
+
+    Honors ``$ELAN_HOME`` (elan's standard relocation variable, e.g. when
+    the toolchain lives on a big disk like ``/opt/lean/elan``); falls back
+    to ``~/.elan``.
+    """
+    home = os.environ.get("ELAN_HOME")
+    d = (Path(home) if home else Path.home() / ".elan") / "bin"
     return d if (d / "lake").exists() else None
 
 

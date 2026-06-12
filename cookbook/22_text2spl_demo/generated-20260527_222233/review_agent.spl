@@ -3,7 +3,7 @@ CREATE TOOL_API get_item(items TEXT, idx TEXT) RETURNS TEXT AS PYTHON $$
 import json
 def get_item(items: str, idx: str) -> str:
     try:
-        items_list = items.split('','')
+        items_list = items.split("","")
         return items_list[int(idx)]
     except (IndexError, ValueError) as e:
         return f"error: {e}"

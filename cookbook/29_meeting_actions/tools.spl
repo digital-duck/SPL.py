@@ -29,7 +29,7 @@ def extract_speakers(text):
     # "Attendees: Alice (PM), Bob (Backend), ..."
     for m in re.finditer(r'Attendees?:\s*(.+)', text, re.IGNORECASE):
         for part in m.group(1).split(","):
-            name = re.sub(r'\s*\(.*?\)', '', part).strip()
+            name = re.sub(r'\s*\(.*?\)', "", part).strip()
             if name and name not in seen:
                 seen.add(name)
                 speakers.append(name)

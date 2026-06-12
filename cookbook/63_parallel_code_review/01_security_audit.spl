@@ -28,7 +28,7 @@ WORKFLOW security_audit
         @code    TEXT,
         @lang    TEXT DEFAULT 'python',
         @review_model   TEXT DEFAULT 'gemma3',
-        @log_dir TEXT DEFAULT ''
+        @log_dir TEXT DEFAULT ""
     OUTPUT: @feedback TEXT
 DO
     LOGGING f'[security_audit] lang={@lang}' LEVEL DEBUG

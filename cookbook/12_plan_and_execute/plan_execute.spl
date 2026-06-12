@@ -219,14 +219,14 @@ $$;
 WORKFLOW plan_and_execute
     INPUT:
         @task TEXT DEFAULT 'Build a REST API for a todo app',
-        @output_dir TEXT DEFAULT '',
+        @output_dir TEXT DEFAULT "",
         @max_steps INTEGER DEFAULT 5,
         @max_replans INTEGER DEFAULT 3,
         @log_dir TEXT DEFAULT 'cookbook/12_plan_and_execute/logs-spl'
     OUTPUT: @final_report TEXT
 DO
     @step_index := 0
-    @results := ''
+    @results := ""
     @replan_count := 0
     
     LOGGING f'Plan-and-Execute | task: {@task}' LEVEL INFO
@@ -261,7 +261,7 @@ DO
                         GENERATE replan(@task, @plan, @step_index, @step_result) INTO @plan
                         GENERATE count_steps(@plan, @max_steps) INTO @step_count
                         @step_index := 0
-                        @results := ''
+                        @results := ""
                 END
             ELSE
                 @results := @results || '\n## Step ' || @step_index || '\n' || @step_result

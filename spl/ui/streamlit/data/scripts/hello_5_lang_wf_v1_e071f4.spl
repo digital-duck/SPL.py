@@ -2,7 +2,7 @@ WORKFLOW say_hello_multilingual
   INPUT @languages LIST
   OUTPUT @greetings TEXT
 DO
-  @greetings := '';
+  @greetings := "";
   @index := 0;
   WHILE @index < 5 DO
     GENERATE translate('Good Night', @languages[@index]) INTO @greeting;

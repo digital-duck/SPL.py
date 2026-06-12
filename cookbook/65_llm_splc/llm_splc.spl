@@ -159,7 +159,7 @@ WORKFLOW llm_splc
         @spl_file       TEXT,
         @target         TEXT DEFAULT 'langgraph',
         @model          TEXT DEFAULT 'claude-cli',
-        @output_file    TEXT DEFAULT '',
+        @output_file    TEXT DEFAULT "",
         @log_dir        TEXT DEFAULT 'cookbook/65_llm_splc/logs'
     OUTPUT: @implementation TEXT
 DO
@@ -199,7 +199,7 @@ DO
 
     -- Step 4: Write output file if requested
     EVALUATE @output_file
-        WHEN != '' THEN
+        WHEN != "" THEN
             CALL write_file(@output_file, @implementation) INTO NONE
             LOGGING f'Output written to {@output_file}' LEVEL INFO
         ELSE
@@ -218,5 +218,5 @@ EXCEPTION
         RETURN @implementation WITH status = 'partial', reason = 'generation_error'
     WHEN FileNotFound THEN
         LOGGING f'FileNotFound: {@spl_file}' LEVEL ERROR
-        RETURN '' WITH status = 'error', reason = 'spl_file_not_found'
+        RETURN "" WITH status = 'error', reason = 'spl_file_not_found'
 END

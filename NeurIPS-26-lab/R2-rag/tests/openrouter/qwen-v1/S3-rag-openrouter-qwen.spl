@@ -14,12 +14,12 @@ DO
     @embeddings := [];
     @index := NULL;
     @query_embedding := NULL;
-    @search_results := '';
-    @distance_check := '';
-    @response := '';
+    @search_results := "";
+    @distance_check := "";
+    @response := "";
     @metadata := {};
     @iteration := 0;
-    @error_status := '';
+    @error_status := "";
 
     @texts := ['doc1.txt', 'doc2.txt', 'doc3.txt'];
 

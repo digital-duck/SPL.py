@@ -88,21 +88,21 @@ DO
     -- Keys: analyze | generate | review | improve | test | document | extract | judge
     -- Any key absent or empty falls back to @pipeline_model.
     @m_analyze  := @task_models['analyze']
-    EVALUATE @m_analyze  WHEN = '' THEN @m_analyze  := @pipeline_model END
+    EVALUATE @m_analyze  WHEN = "" THEN @m_analyze  := @pipeline_model END
     @m_generate := @task_models['generate']
-    EVALUATE @m_generate WHEN = '' THEN @m_generate := @pipeline_model END
+    EVALUATE @m_generate WHEN = "" THEN @m_generate := @pipeline_model END
     @m_review   := @task_models['review']
-    EVALUATE @m_review   WHEN = '' THEN @m_review   := @pipeline_model END
+    EVALUATE @m_review   WHEN = "" THEN @m_review   := @pipeline_model END
     @m_improve  := @task_models['improve']
-    EVALUATE @m_improve  WHEN = '' THEN @m_improve  := @pipeline_model END
+    EVALUATE @m_improve  WHEN = "" THEN @m_improve  := @pipeline_model END
     @m_test     := @task_models['test']
-    EVALUATE @m_test     WHEN = '' THEN @m_test     := @pipeline_model END
+    EVALUATE @m_test     WHEN = "" THEN @m_test     := @pipeline_model END
     @m_document := @task_models['document']
-    EVALUATE @m_document WHEN = '' THEN @m_document := @pipeline_model END
+    EVALUATE @m_document WHEN = "" THEN @m_document := @pipeline_model END
     @m_extract  := @task_models['extract']
-    EVALUATE @m_extract  WHEN = '' THEN @m_extract  := @pipeline_model END
+    EVALUATE @m_extract  WHEN = "" THEN @m_extract  := @pipeline_model END
     @m_judge    := @task_models['judge']
-    EVALUATE @m_judge    WHEN = '' THEN @m_judge    := @pipeline_model END
+    EVALUATE @m_judge    WHEN = "" THEN @m_judge    := @pipeline_model END
 
     LOGGING f'[code_pipeline] started | lang={@lang} max_cycles={@max_cycles} check_closure={@check_closure}' LEVEL INFO
     LOGGING f'[code_pipeline] spec="{@spec}"' LEVEL INFO
@@ -137,7 +137,7 @@ DO
         CALL review_code(@code, @lang, @m_review, @log_dir) INTO @feedback
 
         LOGGING f'[code_pipeline] cycle={@cycle} | step 1: improve' LEVEL INFO
-        CALL improve_code(@code, @feedback, '', @lang, @m_improve, @log_dir) INTO @code
+        CALL improve_code(@code, @feedback, "", @lang, @m_improve, @log_dir) INTO @code
 
         LOGGING f'[code_pipeline] cycle={@cycle} | step 2: test' LEVEL INFO
         CALL test_code(@code, @spec, @lang, @m_test, @log_dir) INTO @test_result

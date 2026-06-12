@@ -2,8 +2,8 @@ WORKFLOW self_refine_product_description
   INPUT @product_info TEXT
   OUTPUT @final_description TEXT
 DO
-  @current_description := '';
-  @feedback := '';
+  @current_description := "";
+  @feedback := "";
   @quality := 0.0;
   @iteration := 0;
   @max_iterations := 5;

@@ -201,6 +201,62 @@ than a bespoke proof of a bespoke statement, and it costs near-zero proof
 tokens. The system's job is not to do new mathematics. Its job is to make
 "an LLM said so" auditable.
 
+## A run from this morning, and a hypothesis about training targets
+
+A fresh receipt (2026-06-12), this one a *caught failure*. I ran the
+recipe-67 v2 harness — same chain protocol, now with sanity gates — using
+`rnj-1`, Essential AI's 8B model trained specifically for STEM, on the
+case-2 cubic ("differentiate 3x³ − x, then factor if needed, finally solve
+for x"). The decomposition came back:
+
+```
+exp(x)|diff
+PREV|factor
+x**2 - 4|solve
+```
+
+Look closely: every fragment is copied verbatim from the prompt's few-shot
+examples. The model didn't misread the problem — it never read it. It
+assembled an answer-shaped plan out of the exemplars. The kernel then
+verified each step flawlessly (the steps were valid math, just nobody's
+question), a plan-level LLM gate — the same model judging its own plan —
+waved it through, and only the chain-level gate caught it: `fail | wrong
+starting expression: step 1 differentiates exp(x) but problem asks to
+differentiate 3*x**3-x`. Status `sanity_error`, explanation withheld,
+verified trace preserved. The taxonomy worked; it just worked two LLM calls
+later than it should have.
+
+What shipped because of this run: a **deterministic, zero-token plan
+validator** now runs before any LLM gate. The chain protocol is mechanically
+checkable — line 1 carries the expression, every later line must be
+`PREV|<operation>`, every operation from a fixed vocabulary — and this exact
+plan dies at line 3 (`x**2 - 4` where `PREV` is required) in microseconds,
+for free. The failure taxonomy now separates `plan_format_error`
+(deterministic, protocol violated) from `plan_sanity_error` (LLM gate,
+plan ≠ intent) from `solver_error` (kernel rejected a step). Defense in
+depth, cheapest check first.
+
+The hypothesis this run suggests — held loosely, N=1, written down before
+the data as usual: the model did not fail at mathematics. The kernel does
+the mathematics. It failed at *transcription* and *protocol citizenship* —
+exactly the two jobs the dual-processing architecture actually needs from
+the LLM. Optimizing models for STEM is a mission I agree with; the open
+question is the target. **Training toward end-to-end answer production may
+optimize the wrong target; the same budget aimed at faithful formalization
+and routing would be worth more.** A model rewarded for emitting
+answer-shaped output may even be actively worse at emitting a plan and
+stopping — benchmark-style tuning and pipeline citizenship could be in
+tension, not alignment.
+
+That sentence is falsifiable with the instrument already in this repo: the
+taxonomy separates "couldn't translate" (`plan_*_error` rates) from
+"couldn't compute" (`solver_error`, and the solver-off baseline arm). Run
+STEM-tuned and general instruction-tuned models at comparable size across
+the same battery: if the general models out-translate the STEM-tuned one
+while both lean on the kernel, the architecture-vs-scale question from the
+v0.1 benchmark acquires a sharper sibling — **architecture vs training
+target**.
+
 ## The honest limits
 
 **The formalization-correspondence gap.** `machine_proved` means "this Lean
@@ -256,6 +312,51 @@ line is shipped and exercised in recipes 76 and 77. I am labeling the gap
 rather than hiding it, because the gap between "runs today" and "vision
 slide" is exactly what this project is about measuring.
 
+### The training-side dual: a referral network, not a polymath
+
+The rnj-1 section above ends in a hypothesis about training *targets*. Here
+is its constructive form. Medicine deliberately separates diagnosis-and-
+referral from specialist practice — we do not ask every doctor to be
+generalist and specialist at once, because the combined role fails at both.
+The model worth training is the **general practitioner**: not a network that
+computes Galois groups in its weights, but one with deep knowledge of the
+*solver ecosystem* — what each deterministic engine can verify, in which
+formalism, at what cost — whose skills are triage ("this is an
+elliptic-curve rank question"), referral ("that is Sage/mwrank, not SymPy —
+and definitely not me"), translation into the specialist's dialect, reading
+the lab report back, and the Tier-4 skill nothing currently rewards: knowing
+when *no* specialist covers it and saying so.
+
+The nearest prior art is Berkeley's Gorilla — an LLM trained on API
+documentation to emit correct API calls — and today's function-calling
+fine-tunes. But those treat tools as flat JSON schemas. SymPy, Sage, Z3,
+and Lean/mathlib are not schemas; they are formalisms with semantics,
+capability boundaries, and naming cultures. And the referral network does
+not stop at deterministic engines: Lean tactic-writing is itself a
+*specialist LLM* skill (the ReProver/llmstep niche), so the realistic end
+state is a generalist router in front of small specialist models in front
+of kernels — Gorilla's idea, extended from APIs to solvers to models
+themselves. MCP standardized how agents *discover* tools; what is missing
+is a model trained to be good at the discovery-and-referral job itself.
+Two design consequences follow. Concepts belong in weights, signatures
+belong in retrieval: solver APIs drift, so the GP should read capability
+manifests at run time (RAG over the specialist directory) rather than
+memorize version-bound signatures — the same logical/physical split SPL
+already applies to workflows. And triage happens at every logical level:
+which formalism, which engine, which model, which cached result — routing
+all the way down.
+
+The part that makes this more than a position piece: **the training data is
+free and self-verifying.** Sample an expression, compute ground truth with
+the engine, render the problem back into natural language — a verified
+(problem → engine → formulation → result) tuple with zero human labeling.
+And the verifier ladder is a graded, unfakeable reward function:
+`validate_plan` passes or fails deterministically, the kernel accepts or
+rejects, the gates rule on faithfulness. The harness this repo built to
+*measure* models is, structurally, the harness you would use to *train*
+this one — and the cookbook is accidentally its textbook: dozens of worked
+referrals, each one (problem shape → engine → protocol → verified outcome).
+
 The application I care most about is not benchmarks. It is the
 micro-textbook pipeline (recipes 70–74): generated educational content that
 learners only ever receive with a claim-axis badge on it, built to be
@@ -302,6 +403,9 @@ and every workflow degrades to the rung it can reach.
 - Not that the recipe-67 anecdote generalizes. The pre-registered benchmark
   in [v0.1](hackernews-v0.1.md) exists to find out, and its predictions are
   written down before the data so the run can prove me wrong.
+- Not that one `rnj-1` run indicts STEM-tuned models. It is a single
+  transcript that generated a falsifiable hypothesis about training
+  *targets*, plus the instrument to test it — nothing more.
 
 The claim is narrower and checkable: two declarative constructs, three
 epistemic grades of verification behind them, engine-of-record and badge

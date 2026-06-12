@@ -1,57 +1,54 @@
 -- ============================================================
 -- Recipe 67c v2: sympy_llm_v2 — A/B harness + plan-sanity gate
 --
--- Delta from sympy_llm.spl (one new step, two new failure classes):
--- after the verified chain completes and BEFORE the explain step,
--- an LLM sanity gate checks the verified trace against the ORIGINAL
--- problem statement. If the gate does not return PASS, the run
--- fails fast with the verified trace preserved — the explain step
--- never runs.
+-- Delta from sympy_llm.spl: two LLM sanity gates, both binary
+-- (pass / fail | reason), both one-directional — they can only
+-- withhold, never vouch; the math is vouched for by the kernel alone:
+--   plan gate  (checkpoint 2, pre-execution):  decomposed plan vs problem
+--   chain gate (checkpoint 4, post-execution): verified trace vs problem
 --
--- Why this gate exists (the gap checkpoints 1–2 cannot cover):
--- checkpoint 1 catches an unusable plan, checkpoint 2 catches a step
--- the kernel rejects — both STRUCTURAL failures. But a plan can be
--- structurally perfect and still answer the wrong question: the
--- planner transcribes `3*x**3 - x` as `3*x**3 - 1`, or emits `diff`
--- where the problem asked to integrate, or stops at `factor` when
--- the problem asked to solve. SymPy then verifies the wrong thing
--- flawlessly. The informal-problem ↔ plan link is the one
--- probabilistic link nothing else checks — the chain-level analog
--- of the formalization-correspondence gap in recipe 76 (§B.4 of
--- docs/DEV/sage_lean_integration_plan.md), and the gate mirrors that
--- design: a probabilistic check on the one probabilistic link, with
--- ONE-DIRECTIONAL authority — it can only WITHHOLD the explanation
--- (fail fast), never repair the chain or vouch for it. The math is
--- vouched for by the kernel alone.
---
--- Honest caveats, consistent with the harness's purpose:
--- - The gate is one extra LLM call per run (arm A only).
--- - It is graded by (usually) the same model that planned the chain
---   — self-grading risk. Mitigation: the gate sees only (problem,
---   trace), never the plan text, and its job is comparison, not
---   re-derivation.
--- - It can false-reject a correct chain. In this harness that is a
---   FEATURE: 'sanity_error' is a new, separately-countable outcome
---   class (RQ2/RQ3 of case-2-hackernews.md), not a silent retry.
---
--- Fail-fast policy inherited unchanged from sympy_llm.spl: any
--- failure inside the verified path exits immediately with an
--- explicit status and NO fallback to the LLM. The gate's failures
--- split into two statuses so the taxonomy stays clean:
---   sanity_error      — the gate ran and said FAIL (plan ≠ intent)
---   sanity_gate_error — the gate itself returned nothing usable
+-- Fail-fast policy inherited from sympy_llm.spl: any failure in the
+-- verified path exits immediately with an explicit status, no LLM
+-- fallback — arm B (enable_solver=false) IS the unaided baseline, so a
+-- model that cannot even decompose the problem fails fast here rather
+-- than degrading into the very thing arm B measures.
 --
 -- Requires: pip install sympy (or run with --self-healing)
 -- ============================================================
 
 IMPORT 'sympy_tools'
 
--- ── Sanity-gate prompt (defined here, not in sympy_tools, so the
--- v1 harness is untouched and the two files can A/B against each
--- other). Same strict one-line verdict contract as recipe 77's
--- judge_faithfulness: a terse, deterministically-parseable reply is
--- the whole point — '|' is the house delimiter, split_part the
--- parser, exactly as in the chain protocol itself.
+-- Gate prompts live here (not in sympy_tools) so the v1 harness stays
+-- untouched for A/B runs. Binary one-line verdict: pass / fail.
+
+CREATE FUNCTION sanity_check_plan(problem TEXT, plan TEXT)
+RETURNS TEXT AS $$
+A student asked: "{problem}"
+
+A planner translated it into this ordered plan, one step per line in the
+format <expression>|<operation>, where PREV means "the result of the
+previous step":
+{plan}
+
+Your ONLY job is to check whether this plan sets up the question that
+was actually asked. Do NOT execute any math. Check ONLY for:
+
+- Wrong starting expression: line 1 does not transcribe the expression
+  stated in the problem. FIRST extract the expression from the problem
+  statement, THEN compare it to line 1 symbol by symbol — every digit,
+  sign, exponent, and function name must match. If the problem says
+  7*y**2 - y and line 1 says anything else, that is a fail.
+- Wrong operation: the problem asks for one operation (e.g. integrate)
+  but the plan uses another (e.g. diff)
+- Missing final step: the problem asks for a final result (e.g. "solve
+  for x") that the plan never reaches
+- Extra steps that change what the final result means
+
+Reply with EXACTLY one line and nothing else:
+  pass
+or
+  fail | <one short reason>
+$$;
 
 CREATE FUNCTION sanity_check_chain(problem TEXT, trace TEXT)
 RETURNS TEXT AS $$
@@ -73,29 +70,25 @@ is already machine-verified. Check ONLY for plan-level mismatches:
 - Extra steps that change what the final result means
 
 Reply with EXACTLY one line and nothing else:
-  PASS
+  pass
 or
-  FAIL | <one short reason>
+  fail | <one short reason>
 $$;
 
--- ── Reusable sub-workflow: ONE chain step, CALLed once per item ──
--- Suffixed _v2 to avoid a registry name collision when this file and
--- sympy_llm.spl load side by side (the same collision-avoidance move
--- sympy_llm.spl itself made against sympy_math_multi_step.spl).
+-- ── One chain step, CALLed once per item ─────────────────────
+-- _v2 suffix avoids a registry collision when this file and
+-- sympy_llm.spl load side by side.
 
 WORKFLOW solve_chain_step_v2
   INPUT @step TEXT
-  INPUT @running_expression TEXT := ''
+  INPUT @running_expression TEXT := ""
   OUTPUT @step_summary TEXT
 DO
   CALL split_part(@step, '|', '1') INTO @raw_expression;
   CALL split_part(@step, '|', '2') INTO @operation;
-  CALL trim(@raw_expression) INTO @raw_expression;
-  CALL trim(@operation) INTO @operation;
 
-  -- Resolve PREV deterministically — never round-tripped through the LLM.
-  -- Compare lower-cased on BOTH sides: EVALUATE lower-cases the right-hand
-  -- literal but not the left-hand value, so 'PREV' = 'prev' would not match.
+  -- Resolve PREV deterministically (lower-case both sides: EVALUATE
+  -- lower-cases the literal but not the value).
   CALL lower(@raw_expression) INTO @raw_expression_lc;
   EVALUATE @raw_expression_lc
     WHEN = 'prev' THEN
@@ -106,9 +99,8 @@ DO
 
   CALL solve_step_with_sympy(@expression, @operation) INTO @step_summary;
 
-  -- @step_summary stays '<bare_result>|<human_readable_line>' — the
-  -- caller splits it the same way; '<bare_result>' is 'sympy_error'
-  -- on failure, which the caller checks for explicitly (fail-fast).
+  -- '<bare_result>|<human_readable_line>'; bare_result is 'sympy_error'
+  -- on failure — the caller fail-fasts on it.
   RETURN @step_summary
 END;
 
@@ -117,32 +109,15 @@ END;
 WORKFLOW math_solver_ab_v2
   INPUT @problem TEXT := 'differentiate 3*x**3 - x, then factor if needed, finally solve for x'
   INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
-
-  -- The experiment switch. Any value other than 'true'/'1'/'yes' (case-
-  -- insensitive) is treated as off — see the lower-cased EVALUATE below,
-  -- which sidesteps the same case-sensitivity gotcha solve_chain_step_v2
-  -- works around for PREV.
   INPUT @enable_solver TEXT := 'true'
-
   OUTPUT @explanation TEXT
 DO
   CALL lower(@enable_solver) INTO @solver_mode;
 
-  -- NOTE: WHEN clauses MUST use `=`/`!=`/`IS`/`IS NOT` — a bare string
-  -- literal (`WHEN 'true' THEN`) parses as a SemanticCondition and is
-  -- judged by an LLM call ("does this text match 'true'? yes/no")
-  -- rather than compared deterministically. `IS`/`IS NOT` are sugar
-  -- for `=`/`!=` (added specifically for boolean-flavored switches like
-  -- this one — "IS 'true'" reads more naturally than "= 'true'") and
-  -- desugar to the same zero-token, case-insensitive boolean-shorthand
-  -- comparison in the executor — exactly what a deterministic
-  -- experiment-arm switch needs.
+  -- WHEN needs an operator (`=`/`IS`/`IN`) — a bare literal would parse
+  -- as an LLM-judged SemanticCondition.
   EVALUATE @solver_mode
-    WHEN IS 'true' THEN
-      @use_solver := 'yes'
-    WHEN IS '1' THEN
-      @use_solver := 'yes'
-    WHEN IS 'yes' THEN
+    WHEN IN ('true', '1', 'yes') THEN
       @use_solver := 'yes'
     ELSE
       @use_solver := 'no'
@@ -151,10 +126,7 @@ DO
   EVALUATE @use_solver
     WHEN = 'yes' THEN
       DO
-        -- ════════════════════════════════════════════════════════
-        -- ARM A — architecture: plan -> verified SymPy chain ->
-        --         sanity gate -> explain
-        -- ════════════════════════════════════════════════════════
+        -- ── ARM A: plan -> verified SymPy chain -> sanity gate -> explain ──
         LOGGING f"[arm=solver] Problem '@{@problem}' — planning the chain ..." LEVEL INFO
 
         GENERATE decompose_problem(@problem) INTO @steps_text;
@@ -163,10 +135,7 @@ DO
 
         LOGGING f"[arm=solver] decomposed into {@n_steps} step(s):\n\n\n{@steps_text}\n\n" LEVEL INFO
 
-        -- ── Fail-fast checkpoint 1: the plan itself is unusable ──
-        -- No steps parsed out of the LLM's response at all — this is
-        -- a PLANNING failure. Exit now; do not ask the LLM to try
-        -- explaining a chain that was never computed.
+        -- Checkpoint 1: unusable plan (structural) — exit before computing.
         EVALUATE @n_steps
           WHEN = '0' THEN
             LOGGING f'[arm=solver] PLAN FAILURE — decompose_problem produced no usable steps' LEVEL ERROR
@@ -176,27 +145,49 @@ DO
               WITH status = 'plan_error', arm = 'solver', steps = 0
         END
 
+        -- Checkpoint 2a (deterministic, 0-token): chain-protocol format —
+        -- line 1 carries the expression, every later line is PREV|<op>.
+        CALL validate_plan(@steps_text) INTO @plan_format;
+        EVALUATE @plan_format
+          WHEN IS NOT 'ok' THEN
+            LOGGING f'[arm=solver] PLAN FORMAT FAILURE — {@plan_format}' LEVEL ERROR
+            CALL write_file(f'{@log_dir}/chain_trace.md',
+              f'(plan failed the deterministic format check)\n{@steps_text}\nPLAN FORMAT: {@plan_format}\n') INTO NONE;
+            RETURN f'[PLAN FORMAT FAILURE] The decomposed plan violates the chain protocol: {@plan_format}\nPlan:\n{@steps_text}'
+              WITH status = 'plan_format_error', arm = 'solver', steps = 0
+        END
+
+        -- Checkpoint 2b (LLM): plan sanity gate — a model that cannot
+        -- decompose the problem fails fast BEFORE any kernel work.
+        GENERATE sanity_check_plan(@problem, @steps_text) INTO @plan_verdict_raw;
+        CALL split_part(@plan_verdict_raw, '|', '1') INTO @plan_verdict;
+        CALL lower(@plan_verdict) INTO @plan_verdict;
+
+        EVALUATE @plan_verdict
+          WHEN IS NOT 'pass' THEN
+            LOGGING f'[arm=solver] PLAN SANITY FAILURE — gate verdict: {@plan_verdict_raw}' LEVEL ERROR
+            CALL write_file(f'{@log_dir}/chain_trace.md',
+              f'(plan failed the sanity gate)\n{@steps_text}\nPLAN SANITY: {@plan_verdict_raw}\n') INTO NONE;
+            RETURN f'[PLAN SANITY FAILURE] The decomposed plan does not set up the problem as asked.\nGate verdict: {@plan_verdict_raw}\nPlan:\n{@steps_text}'
+              WITH status = 'plan_sanity_error', arm = 'solver', steps = 0
+        END
+
+        LOGGING f'[arm=solver] plan sanity gate: pass' LEVEL INFO
+
         @i := 0
-        @running_expression := ''
-        @trace := ''
+        @running_expression := ""
+        @trace := ""
 
         WHILE @i < @n_steps DO
           CALL extract_step(@steps_text, @i) INTO @step;
           CALL solve_chain_step_v2(@step, @running_expression) INTO @step_summary;
           CALL split_part(@step_summary, '|', '1') INTO @running_expression;
           CALL split_part(@step_summary, '|', '2') INTO @trace_line;
-          CALL trim(@running_expression) INTO @running_expression;
-          CALL trim(@trace_line) INTO @trace_line;
 
           @step_no := @i + 1
 
-          -- ── Fail-fast checkpoint 2: the kernel rejected this step ──
-          -- The plan hand SymPy something it could not parse/compute —
-          -- a SOLVER failure, traceable directly to a bad plan. Exit
-          -- now, with the verified prefix preserved for diagnosis;
-          -- do not let the LLM narrate around a broken chain (that
-          -- is exactly the "graceful degradation" we want to MEASURE,
-          -- not paper over, in this harness).
+          -- Checkpoint 3: kernel rejected this step — exit with the
+          -- verified prefix preserved for diagnosis.
           EVALUATE @running_expression
             WHEN = 'sympy_error' THEN
               LOGGING f'[arm=solver] SOLVER FAILURE at step {@step_no}/{@n_steps}: {@trace_line}' LEVEL ERROR
@@ -213,63 +204,31 @@ DO
 
         CALL write_file(f'{@log_dir}/chain_trace.md', @trace) INTO NONE;
 
-        -- ── Fail-fast checkpoint 3 (NEW in v2): the sanity gate ──
-        -- The chain verified cleanly — but did it answer the question
-        -- that was ASKED? A wrong transcription, wrong operation, or
-        -- missing final step all verify flawlessly while answering
-        -- the wrong question. The gate compares the verified trace
-        -- against the original problem statement; anything other
-        -- than PASS exits HERE, before any narration exists to dress
-        -- the mismatch up as an answer. One-directional authority:
-        -- the gate can withhold the explanation, never vouch for the
-        -- math.
+        -- Checkpoint 4: chain sanity gate. Binary verdict — first '|'
+        -- field, lower-cased; anything but 'pass' (including an empty
+        -- or malformed reply) fails fast.
         GENERATE sanity_check_chain(@problem, @trace) INTO @verdict_raw;
-        CALL trim(@verdict_raw) INTO @verdict_raw;
-
-        -- Gate infrastructure failure (empty verdict) is its own
-        -- outcome class — "the gate said FAIL" and "the gate broke"
-        -- must stay distinguishable in the experiment data.
-        EVALUATE @verdict_raw
-          WHEN = '' THEN
-            LOGGING f'[arm=solver] SANITY GATE FAILURE — sanity_check_chain returned empty content' LEVEL ERROR
-            CALL write_file(f'{@log_dir}/chain_trace.md',
-              f'{@trace}\nSANITY: (gate returned empty verdict)\n') INTO NONE;
-            RETURN f'[SANITY GATE FAILURE] The chain verified correctly but the sanity gate returned nothing.\nVerified chain:\n{@trace}'
-              WITH status = 'sanity_gate_error', arm = 'solver', steps = @n_steps
-        END
-
-        -- Parse the one-line verdict deterministically: first '|'
-        -- field, trimmed, lower-cased — the same house pattern as
-        -- the chain protocol itself. 'PASS' proceeds; everything
-        -- else (including a malformed verdict) fails fast — a gate
-        -- that cannot hold its own one-line contract is itself a
-        -- measurable contract violation, not a pass.
         CALL split_part(@verdict_raw, '|', '1') INTO @verdict;
-        CALL trim(@verdict) INTO @verdict;
         CALL lower(@verdict) INTO @verdict;
 
         EVALUATE @verdict
           WHEN IS NOT 'pass' THEN
-            LOGGING f'[arm=solver] SANITY FAILURE — verified chain does not answer the problem as asked: {@verdict_raw}' LEVEL ERROR
+            LOGGING f'[arm=solver] SANITY FAILURE — gate verdict: {@verdict_raw}' LEVEL ERROR
             CALL write_file(f'{@log_dir}/chain_trace.md',
               f'{@trace}\nSANITY: {@verdict_raw}\n') INTO NONE;
-            RETURN f'[SANITY FAILURE] The chain verified correctly but does not answer the problem as asked.\nGate verdict: {@verdict_raw}\nVerified chain:\n{@trace}'
+            RETURN f'[SANITY FAILURE] The chain verified correctly but the sanity gate did not pass it.\nGate verdict: {@verdict_raw}\nVerified chain:\n{@trace}'
               WITH status = 'sanity_error', arm = 'solver', steps = @n_steps
         END
 
-        LOGGING f'[arm=solver] sanity gate: PASS — chain answers the problem as asked' LEVEL INFO
+        LOGGING f'[arm=solver] sanity gate: pass — chain answers the problem as asked' LEVEL INFO
 
         GENERATE explain_chain(@problem, @trace) INTO @explanation;
         CALL trim(@explanation) INTO @explanation;
 
-        -- ── Fail-fast checkpoint 4: the narration came back empty ──
-        -- The chain verified cleanly but the EXPLANATION failed —
-        -- exactly the "(no COMMIT)" pattern in case-2.md. Surface
-        -- the verified chain itself (deterministic data already in
-        -- hand) rather than asking the LLM for a second attempt —
-        -- a retry is still a fallback to the same unreliable step.
+        -- Checkpoint 5: empty narration — surface the verified chain
+        -- itself; a retry is still a fallback to the same unreliable step.
         EVALUATE @explanation
-          WHEN = '' THEN
+          WHEN = "" THEN
             LOGGING f'[arm=solver] NARRATION FAILURE — explain_chain returned empty content' LEVEL ERROR
             RETURN f'[NARRATION FAILURE] The chain verified correctly but the explanation step returned nothing.\nVerified chain:\n{@trace}'
               WITH status = 'narration_error', arm = 'solver', steps = @n_steps
@@ -280,12 +239,8 @@ DO
 
     ELSE
       DO
-        -- ════════════════════════════════════════════════════════
-        -- ARM B — baseline: no kernel; the LLM solves it, one shot
-        -- (NO sanity gate here, deliberately: this arm measures the
-        -- unaided LLM, and bolting a verifier onto the baseline
-        -- would contaminate the A/B contrast the harness exists for.)
-        -- ════════════════════════════════════════════════════════
+        -- ── ARM B: unaided LLM, one shot (no gate — it would
+        -- contaminate the A/B contrast) ──
         LOGGING f"[arm=llm_only] Problem '@{@problem}' — solving with NO symbolic kernel" LEVEL INFO
 
         CALL write_file(f'{@log_dir}/chain_trace.md',
@@ -295,7 +250,7 @@ DO
         CALL trim(@explanation) INTO @explanation;
 
         EVALUATE @explanation
-          WHEN = '' THEN
+          WHEN = "" THEN
             LOGGING f'[arm=llm_only] FAILURE — solve_directly returned empty content' LEVEL ERROR
             RETURN '[FAILURE] The unaided LLM returned nothing for this problem.'
               WITH status = 'llm_error', arm = 'llm_only', steps = 0

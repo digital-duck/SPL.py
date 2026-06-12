@@ -6,7 +6,7 @@ You are a helpful assistant. Based on the provided context:
 Please answer the following question:
 {user_query}
 
-If the answer isn''t in the context, say you don''t know.
+If the answer isn""t in the context, say you don""t know.
 $$;
 
 WORKFLOW RagIndexingAndQuery

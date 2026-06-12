@@ -1,6 +1,6 @@
 CREATE FUNCTION classify_intent(query TEXT)
 RETURNS TEXT AS $$
-  Determine the user''s intent based on the query.
+  Determine the user""s intent based on the query.
   Possible intents: booking_flight, setting_reminder, getting_weather, playing_music.
   Return the intent as a string.
 $$;

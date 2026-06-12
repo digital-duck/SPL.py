@@ -1,5 +1,5 @@
 WORKFLOW intent_router
-    INPUT: @user_input TEXT, @context TEXT DEFAULT ''
+    INPUT: @user_input TEXT, @context TEXT DEFAULT ""
     OUTPUT: @handler_response TEXT
 DO
     -- Step 1: Classify the user intent

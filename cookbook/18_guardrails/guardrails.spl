@@ -27,8 +27,8 @@
 IMPORT 'tools'
 
 WORKFLOW guardrails_pipeline
-    INPUT:  @input_id   TEXT DEFAULT '',
-            @user_input TEXT DEFAULT ''
+    INPUT:  @input_id   TEXT DEFAULT "",
+            @user_input TEXT DEFAULT ""
     OUTPUT: @safe_response TEXT
     SECURITY: CLASSIFICATION: internal
 DO

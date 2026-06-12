@@ -106,7 +106,7 @@ WORKFLOW stock_analysis
   INPUT @days INT := 30
   OUTPUT @report TEXT
 DO
-  @report := '';
+  @report := "";
 
   -- Native LIST iteration: splits @tickers by comma automatically
   WHILE @ticker IN @tickers DO

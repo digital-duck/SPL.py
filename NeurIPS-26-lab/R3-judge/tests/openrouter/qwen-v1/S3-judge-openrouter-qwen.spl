@@ -17,10 +17,10 @@ DO
     @attempts := 0;
     @score := 0;
     @verdict := 'FAIL';
-    @final_description := '';
-    @feedback := '';
-    @draft := '';
-    @judgment := '';
+    @final_description := "";
+    @feedback := "";
+    @draft := "";
+    @judgment := "";
 
     WHILE @attempts < 3 AND @score < 7 DO
         DO
@@ -48,7 +48,7 @@ DO
         END;
     END;
 
-    EVALUATE @final_description WHEN = '' THEN
+    EVALUATE @final_description WHEN = "" THEN
         @final_description := @draft;
     END;
 

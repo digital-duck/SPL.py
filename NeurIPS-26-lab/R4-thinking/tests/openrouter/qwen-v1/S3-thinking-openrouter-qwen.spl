@@ -13,7 +13,7 @@ DO
   @next_thought_needed := 'true';
   @iteration := 0;
   @step_counter := 0;
-  @reasoning_trace := '';
+  @reasoning_trace := "";
 
   WHILE @next_thought_needed == 'true' AND @iteration < 3 DO
     @iteration := @iteration + 1;
