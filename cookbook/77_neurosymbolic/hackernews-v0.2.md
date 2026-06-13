@@ -178,8 +178,8 @@ proved by an LLM tactic script (`intro n; exact Nat.le_self_pow (by decide)
 n`), kernel-checked on the first try; and a repair-cap exhaustion run that
 correctly degraded to statement-checked with the badge withheld and delivery
 not blocked. From
-[recipe 71](../71_linalg_micro_textbook/readme.md)'s `lean_payoffs.spl`, a
-post-pass over real micro-textbook entries: `rank_nullity` and
+[recipe 71](../71_linalg_concept_book/readme.md)'s `lean_payoffs.spl`, a
+post-pass over real concept-book entries: `rank_nullity` and
 `diagonalization` promoted to `machine_verified, machine_proved` with
 kernel-checked mathlib citations and the audited statement stored;
 `spectral_theorem` found no citation and **correctly stayed**
@@ -358,7 +358,7 @@ this one — and the cookbook is accidentally its textbook: dozens of worked
 referrals, each one (problem shape → engine → protocol → verified outcome).
 
 The application I care most about is not benchmarks. It is the
-micro-textbook pipeline (recipes 70–74): generated educational content that
+concept-book pipeline (recipes 70–74): generated educational content that
 learners only ever receive with a claim-axis badge on it, built to be
 re-runnable by anyone, anywhere, on local models. That is the long game.
 

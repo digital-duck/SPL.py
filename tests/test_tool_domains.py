@@ -1,4 +1,4 @@
-"""Tests for the tool-advocacy micro-textbook domains.
+"""Tests for the tool-advocacy concept-book domains.
 
 E-book concept graphs (publisher: Digital Duck) — the trilogy
 "Book I finds it, Book II proves it, Book III measures it":
@@ -6,7 +6,7 @@ E-book concept graphs (publisher: Digital Duck) — the trilogy
   - lean_proving_graph.yaml   — "Proving Math the Lean Way"       (2026-06-10)
   - python_science_graph.yaml — "Doing Science with Python"       (2026-06-11)
 
-Both compile through recipe 74 (build_micro_textbook.spl --lang
+Both compile through recipe 74 (build_concept_book.spl --lang
 python/domain_textbook) with zero engine changes — the test of the
 generalization claim is that *authoring a textbook is writing YAML*.
 """
@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_domain_textbook"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_concept_book"))
 
 import graph_lib  # noqa: E402
 

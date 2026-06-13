@@ -141,7 +141,7 @@ CREATE FUNCTION write_section(concept TEXT, book_context TEXT)
 RETURN TEXT
 AS $$
 You are an expert linear algebra author writing one self-contained section of
-a micro-textbook that follows Sheldon Axler's "Linear Algebra Done Right" (4e).
+a concept-book that follows Sheldon Axler's "Linear Algebra Done Right" (4e).
 
 {book_context}
 
@@ -173,7 +173,7 @@ $$;
 CREATE FUNCTION write_chapter_intro(sections TEXT)
 RETURN TEXT
 AS $$
-Write a single short paragraph (2-3 sentences) introducing a micro-textbook
+Write a single short paragraph (2-3 sentences) introducing a concept-book
 chapter titled "Vector Spaces", covering these sections in order: {sections}.
 Mention that the chapter builds from concrete examples (Rn, Cn) up to the
 abstract definition of a vector space and its subspaces. No headers, no

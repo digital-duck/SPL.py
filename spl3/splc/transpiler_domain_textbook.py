@@ -9,7 +9,7 @@ against `linalg_graph.yaml` or `geometry_graph.yaml` (or any future
 
 This is possible because recipe 74 split the frozen `linalg_graph.py`/
 `geometry_graph.py` pattern into `graph_lib.py` (one shared, YAML-driven
-algorithm library — see `cookbook/74_domain_textbook/graph_lib.py`) plus a
+algorithm library — see `cookbook/74_concept_book/graph_lib.py`) plus a
 declarative `{domain}_graph.yaml` per domain. The setup cell therefore imports
 ONE fixed module (`graph_lib`) and defers the *data* choice to
 `graph_lib.load_domain(domain_yaml)`.

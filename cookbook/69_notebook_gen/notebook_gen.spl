@@ -65,9 +65,17 @@ WORKFLOW notebook_gen
     INPUT:
         @topic       TEXT DEFAULT 'eigenvalues and eigenvectors',
         @matrix_a    TEXT DEFAULT '[[4, 1], [2, 3]]',
-        @output_path TEXT DEFAULT 'cookbook/69_notebook_gen/output/eigenvalues.ipynb'
+        @output_path TEXT DEFAULT 'cookbook/69_notebook_gen/output/eigenvalues.ipynb',
+        @log_dir     TEXT DEFAULT 'cookbook/69_notebook_gen/logs-spl'
     OUTPUT: @notebook_path TEXT
 DO
+    CALL now_iso() INTO @run_ts;
+    CALL replace(@run_ts, ':', '') INTO @run_ts;
+    @log_file := f'{@log_dir}/chain_trace-{@run_ts}.md';
+
+    CALL write_file(@log_file,
+        f"# Notebook Generator — chain trace\n\n**Topic:** {@topic}\n**Matrix:** {@matrix_a}\n**Output:** {@output_path}\n**Started:** {@run_ts}\n\n") INTO NONE;
+
     -- ── Step 1: kernel setup ─────────────────────────────────
     -- Import once; all subsequent run_python steps share this
     -- kernel session — imports and variables persist.
@@ -79,8 +87,12 @@ print(f"A = {A}")
 
     LOGGING f'Matrix: {@matrix_repr}' LEVEL INFO
 
+    CALL write_file(@log_file,
+        f"## Step 1 — Kernel setup\n**Matrix repr:** {@matrix_repr}\n\n", 'a') INTO NONE;
+
     -- ── Step 2: deterministic eigendecomposition ─────────────
     -- Uses A from step 1. No re-import needed — state persists.
+    CALL now_iso() INTO @t2;
     CALL run_python('
 eigendata = A.eigenvects()
 parts = []
@@ -93,8 +105,12 @@ print(_eigen_summary)
 
     LOGGING f'Eigendata: {@eigen_summary}' LEVEL INFO
 
+    CALL write_file(@log_file,
+        f"## Step 2 — Eigendecomposition (at {@t2})\n**Eigenpairs:** {@eigen_summary}\n\n", 'a') INTO NONE;
+
     -- ── Step 3: deterministic verification ───────────────────
     -- A*v == lambda*v exactly (SymPy symbolic equality, not float).
+    CALL now_iso() INTO @t3;
     CALL run_python('
 checks = []
 for lam, mult, vecs in eigendata:
@@ -106,11 +122,22 @@ print(", ".join(checks))
 
     LOGGING f'Verification: {@verification}' LEVEL INFO
 
+    CALL write_file(@log_file,
+        f"## Step 3 — Verification (at {@t3})\n**Checks:** {@verification}\n\n", 'a') INTO NONE;
+
     -- ── Step 4: LLM writes the introduction ──────────────────
+    CALL now_iso() INTO @t4;
     GENERATE write_intro(@topic, @matrix_a) INTO @intro_text
 
+    CALL write_file(@log_file,
+        f"## Step 4 — LLM intro (at {@t4})\n{@intro_text}\n\n", 'a') INTO NONE;
+
     -- ── Step 5: LLM explains the eigenvalues ─────────────────
+    CALL now_iso() INTO @t5;
     GENERATE explain_eigenvalues(@matrix_a, @eigen_summary) INTO @explanation_text
+
+    CALL write_file(@log_file,
+        f"## Step 5 — LLM explanation (at {@t5})\n{@explanation_text}\n\n", 'a') INTO NONE;
 
     -- ── Step 6: assemble and write the .ipynb ─────────────────
     -- tools.spl (CREATE TOOL_API) handles text assembly safely — no string escaping
@@ -121,6 +148,10 @@ print(", ".join(checks))
     ) INTO @notebook_path
 
     LOGGING f'Notebook written: {@notebook_path}' LEVEL INFO
+
+    CALL now_iso() INTO @t_done;
+    CALL write_file(@log_file,
+        f"## Step 6 — Notebook assembled (at {@t_done})\n**Path:** {@notebook_path}\n\n---\n*status: complete*\n", 'a') INTO NONE;
 
     COMMIT @notebook_path
 

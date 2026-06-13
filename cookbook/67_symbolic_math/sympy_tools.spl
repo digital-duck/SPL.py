@@ -105,6 +105,26 @@ def solve_step_with_sympy(expression: str, operation: str) -> str:
             eqs = sympify(expression.strip())
             result = sym_solve(eqs, [x, y, z])
             return f"{result}|solve_system({expression}) = {result}"
+        elif op in ('dsolve', 'ode_solve'):
+            from sympy import Function as Func, dsolve as sym_dsolve, Eq
+            y_f = Func('y')
+            local_ns = {'y': y_f, 'Eq': Eq, 'x': x, 'n': n, 't': t, 's': s}
+            ode = sympify(expression.strip(), locals=local_ns)
+            result = sym_dsolve(ode)
+            return f"{result}|dsolve({expression}) = {result}"
+        elif op in ('dsolve_ic', 'ode_solve_ic'):
+            from sympy import Function as Func, dsolve as sym_dsolve, Eq
+            y_f = Func('y')
+            local_ns = {'y': y_f, 'Eq': Eq, 'x': x, 'n': n, 't': t, 's': s}
+            # eval preserves the Python dict for ICs; sympify would lose the dict type
+            parsed = eval(expression.strip(), local_ns)  # noqa: S307
+            if not (isinstance(parsed, (list, tuple)) and len(parsed) == 2):
+                return f"sympy_error|dsolve_ic expects [Eq(ODE), {{y(0): val}}]: {expression}"
+            ode_eq, ics = parsed[0], parsed[1]
+            if not isinstance(ics, dict):
+                return f"sympy_error|dsolve_ic second element must be a dict of ICs: {ics}"
+            result = sym_dsolve(ode_eq, ics=ics)
+            return f"{result}|dsolve_ic({expression}) = {result}"
         else:
             return f"sympy_error|unknown operation '{op}' — not in kernel"
     except Exception as e:
@@ -139,7 +159,7 @@ def validate_plan(steps_text: str) -> str:
     mid-chain (e.g. parroting a few-shot example) before any LLM gate."""
     allowed = {'solve', 'diff', 'integrate', 'simplify', 'expand', 'factor',
                'series', 'apart', 'limit', 'laplace', 'inverse_laplace',
-               'trigsimp', 'summation', 'eigenvalues', 'solve_system'}
+               'trigsimp', 'summation', 'eigenvalues', 'solve_system', 'dsolve', 'dsolve_ic'}
     lines = [l.strip() for l in steps_text.splitlines() if l.strip()]
     if not lines:
         return 'fail | empty plan'
@@ -149,6 +169,8 @@ def validate_plan(steps_text: str) -> str:
         expr, op = (p.strip() for p in line.split('|'))
         if not expr or not op:
             return f'fail | line {i} has an empty field: {line}'
+        if '\\' in expr:
+            return f'fail | line {i} expression contains LaTeX markup: {expr}'
         if op.split('(')[0].strip() not in allowed:
             return f'fail | line {i} operation not in the allowed list: {op}'
         if i == 1 and expr.upper() == 'PREV':
@@ -179,7 +201,10 @@ STRICT OUTPUT RULES (violating any of these causes the pipeline to fail):
 - <operation> must be exactly one token from this list:
     solve, diff, integrate, simplify, expand, factor,
     series, apart, limit(x,0), laplace, inverse_laplace,
-    trigsimp, summation(n,1,oo), eigenvalues, solve_system
+    trigsimp, summation(n,1,oo), eigenvalues, solve_system,
+    dsolve, dsolve_ic
+- dsolve   — general ODE solution (no initial conditions)
+- dsolve_ic — IVP: expression MUST be [Eq(ODE), {y(0): val, ...}]
 - If the problem needs only ONE operation, output exactly one line
 - The expressions in the examples below (exp(x), x**2 - 4, sin(x)/x, ...)
     illustrate the FORMAT only. Your first <expression> must be transcribed
@@ -228,7 +253,17 @@ CORRECT examples:
     s/(s**2 + 4)|inverse_laplace
     PREV|laplace
 
+  "find the general solution to y'(x) = y(x)"
+    Eq(y(x).diff(x), y(x))|dsolve
+
+  "solve the ODE y'(x) = y(x) with initial condition y(0) = 1"
+    [Eq(y(x).diff(x), y(x)), {y(0): 1}]|dsolve_ic
+
+  "solve the second-order ODE y''(x) - 3*y'(x) + 2*y(x) = 0"
+    Eq(y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x), 0)|dsolve
+
 INCORRECT examples (DO NOT produce output like this):
+  \boxed{sin(x)*cos(x)}|integrate  ← NO: LaTeX wrappers in expressions are forbidden
   ```plaintext              ← NO: code fences are forbidden
   exp(x)|diff
   ```
@@ -261,18 +296,73 @@ Write a clear, friendly explanation in less than 6 sentences that:
 Do not re-derive any step — trust the computed chain above as exact.
 $$;
 
-CREATE FUNCTION solve_directly(problem TEXT)
+CREATE FUNCTION solve_directly(problem TEXT, number_of_sentences TEXT DEFAULT "8")
 RETURNS TEXT AS $$
 A student asked: "{problem}"
 
 There is NO symbolic math engine backing you up this time — every
 computation must be done correctly by you, from scratch.
 
-Write a clear, friendly walkthrough in less than 8 sentences that:
+Write a clear, friendly walkthrough in less than {number_of_sentences} sentences that:
 1. Restates what the problem is asking in plain English
 2. Shows your own working, step by step, in order — state the exact
    result of each step as you derive it (do not skip steps)
 3. Gives the final answer plainly at the end
 
 Show your work. Do not state any result you have not derived above.
+$$;
+
+
+CREATE FUNCTION sanity_check_plan(problem TEXT, plan TEXT)
+RETURNS TEXT AS $$
+A student asked the following question: "{problem}"
+
+A planner translated it into this ordered plan, one step per line in the
+format <expression>|<operation>, where PREV means "the result of the
+previous step":
+{plan}
+
+Your ONLY job is to check whether this plan sets up the question that
+was actually asked. Do NOT execute any math. Check ONLY for:
+
+- Wrong starting expression: line 1 does not transcribe the expression
+  stated in the problem. FIRST extract the expression from the problem
+  statement, THEN compare it to line 1 symbol by symbol — every digit,
+  sign, exponent, and function name must match. If the problem says
+  7*y**2 - y and line 1 says anything else, that is a fail.
+- Wrong operation: the problem asks for one operation (e.g. integrate)
+  but the plan uses another (e.g. diff)
+- Missing final step: the problem asks for a final result (e.g. "solve
+  for x") that the plan never reaches
+- Extra steps that change what the final result means
+
+Reply with EXACTLY one line and nothing else:
+  pass
+or
+  fail | <one short reason>
+$$;
+
+CREATE FUNCTION sanity_check_chain(problem TEXT, trace TEXT)
+RETURNS TEXT AS $$
+A student asked the following question: "{problem}"
+
+A symbolic math engine computed this chain of EXACT steps, in order:
+{trace}
+
+Your ONLY job is to check whether this chain answers the question that
+was actually asked. Do NOT re-verify the arithmetic — every step above
+is already machine-verified. Check ONLY for plan-level mismatches:
+
+- Wrong starting expression: step 1 does not operate on the expression
+  stated in the problem (changed coefficient, sign, exponent, function)
+- Wrong operation: the problem asks for one operation (e.g. integrate)
+  but the chain performs another (e.g. differentiate)
+- Missing final step: the problem asks for a final result (e.g. "solve
+  for x") that the chain never reaches
+- Extra steps that change what the final result means
+
+Reply with EXACTLY one line and nothing else:
+  pass
+or
+  fail | <one short reason>
 $$;

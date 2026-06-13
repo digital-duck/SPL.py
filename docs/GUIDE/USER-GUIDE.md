@@ -240,7 +240,7 @@ the same two SPL constructs (`SOLVE`/`ASSERT`) at every rung. Worked recipes:
 |--------|--------------|
 | `cookbook/75_sage_math` | Sage kernel: Galois groups, conics over ℚ, elliptic-curve rank |
 | `cookbook/76_lean_proof` | Lean proof checking + LLM repair loop + mathlib citation path |
-| `cookbook/71_linalg_micro_textbook/lean_payoffs.spl` | Post-pass promoting real textbook entries to `machine_proved` |
+| `cookbook/71_linalg_concept_book/lean_payoffs.spl` | Post-pass promoting real textbook entries to `machine_proved` |
 | `cookbook/77_neurosymbolic` | Capstone: SymPy + SageMath + Lean behind ONE workflow — the backend is a `--param backend=` flip; 29-problem battery + A/B experiment harness |
 
 Design background: `docs/DEV/sage_lean_integration_plan.md` (fully implemented).
@@ -974,7 +974,7 @@ spl3 splc compile agent.spl --lang python/crewai --llm --adapter openrouter -m q
 
 # Domain notebook under the SageMath kernel — the .ipynb declares kernelspec 'sagemath'
 # (see §4.2 for installing the Sage kernel; docs/DEV/spl3-sagemath.md for details)
-spl3 splc compile build_micro_textbook.spl --lang python/domain_textbook --kernel-name sagemath
+spl3 splc compile build_concept_book.spl --lang python/domain_textbook --kernel-name sagemath
 ```
 
 ### Supported targets
@@ -983,7 +983,7 @@ spl3 splc compile build_micro_textbook.spl --lang python/domain_textbook --kerne
 |----------|-----------|-------|
 | `python/pocketflow` | Deterministic | Default for NDD experiments |
 | `python/langgraph` | Deterministic | |
-| `python/linalg` | Deterministic | Domain target — compiles `SOLVE`/`ASSERT` graph + verification workflows to a runnable Jupyter notebook (DODA: no LLM call needed to compile). See [recipe 71](../../cookbook/71_linalg_micro_textbook/readme.md) and **Style profiles** below |
+| `python/linalg` | Deterministic | Domain target — compiles `SOLVE`/`ASSERT` graph + verification workflows to a runnable Jupyter notebook (DODA: no LLM call needed to compile). See [recipe 71](../../cookbook/71_linalg_concept_book/readme.md) and **Style profiles** below |
 | `go` | Deterministic | |
 | `ts` | Deterministic | |
 | `python/crewai` | LLM only | Requires `--llm` |
@@ -1002,7 +1002,7 @@ profile to an instruction block once, and that block is threaded into every
 verdict because of it — **style is orthogonal to truth**: one verified body of
 mathematics, five very different reading experiences.
 
-`cookbook/71_linalg_micro_textbook/style_profiles.py` ships five profiles:
+`cookbook/71_linalg_concept_book/style_profiles.py` ships five profiles:
 
 | Style | Audience | Tone | Structure |
 |---|---|---|---|
@@ -1023,19 +1023,19 @@ identical regardless of which style is selected; only the generated prose
 differs:
 
 ```bash
-spl3 run cookbook/71_linalg_micro_textbook/build_micro_textbook.spl \
+spl3 run cookbook/71_linalg_concept_book/build_concept_book.spl \
     --kernel --adapter ollama --model gemma3 \
     -p style=feynman -p target=spectral_theorem
 ```
 
-See [cookbook recipe 71](../../cookbook/71_linalg_micro_textbook/readme.md)
+See [cookbook recipe 71](../../cookbook/71_linalg_concept_book/readme.md)
 for the full pipeline: concept graph → productivity-ordered curriculum →
 style-guided generation → symbolic verification (SymPy) → notebook
 compilation.
 
 ### Inspecting, sharing, and composing concept graphs (`scripts/concept_graph.py`)
 
-Every micro-textbook domain (e.g. `linalg_graph.py` for recipe 71,
+Every concept-book domain (e.g. `linalg_graph.py` for recipe 71,
 `geometry_graph.py` for recipe 73) is a self-contained Python module that
 exposes `build() -> networkx.DiGraph` — the same graph the `productivity_order`
 / `reducible` / `learning_path` checks above operate on. `scripts/concept_graph.py`
@@ -1070,7 +1070,7 @@ module, or a path to a `.json` graph written by `export`/`compose` — so
 exported and composed graphs flow straight back through the same CLI.
 `compose` is the framework's first mechanical step toward authoring concept
 graphs that span multiple fields — exactly the kind of "too daunting to
-publish by hand" task the micro-textbook framework exists to make tractable.
+publish by hand" task the concept-book framework exists to make tractable.
 See [`scripts/README-concept_graph.md`](../../scripts/README-concept_graph.md)
 for the full command reference.
 
@@ -1336,7 +1336,7 @@ WORKFLOW answer_on_demand
     CALL cache_get(@concept) INTO @section
     EVALUATE @section:
         WHEN miss:
-            CALL build_micro_textbook(@concept) INTO @section
+            CALL build_concept_book(@concept) INTO @section
             CALL cache_put(@concept, @section) INTO @cache_key
     APPEND @section TO @lesson
     COMMIT @lesson

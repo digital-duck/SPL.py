@@ -128,8 +128,8 @@ From [recipe 76](../76_lean_proof/readme.md), the proof-grade loop:
 | for any natural n, n² ≥ n | LLM tactic `intro n; exact Nat.le_self_pow (by decide) n`, kernel-checked first try | `machine_proved` |
 | (repair cap exhausted) | degraded to statement-checked; delivery not blocked | badge withheld |
 
-From [recipe 71](../71_linalg_micro_textbook/readme.md)'s `lean_payoffs.spl`,
-a post-pass over real micro-textbook entries: `rank_nullity` and
+From [recipe 71](../71_linalg_concept_book/readme.md)'s `lean_payoffs.spl`,
+a post-pass over real concept-book entries: `rank_nullity` and
 `diagonalization` were promoted to `machine_verified, machine_proved` with
 kernel-checked mathlib citations and the audited statement stored;
 `spectral_theorem` found no citation and **correctly stayed**
@@ -189,7 +189,7 @@ END
 
 Draft → falsify → formalize → search mathlib: the conjecture-triage loop
 researchers already run by hand, with the probabilistic and deterministic
-steps composing in one file. The micro-textbook pipeline (recipes 70–74) is
+steps composing in one file. The concept-book pipeline (recipes 70–74) is
 the same architecture pointed at education — generated content that learners
 only ever receive with a claim-axis badge on it — and that, not benchmark
 wins, is the application we care most about.

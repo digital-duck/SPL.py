@@ -137,13 +137,13 @@ dispatches on an engine:
 | `_notebook()` emits the kernelspec from `kernel_name` (`sagemath` → SageMath/sage) and records `splc.kernel_name` in notebook provenance metadata | `spl3/splc/transpiler_domain_graph.py` |
 | `kernel_name` override parameter on the engine + all three domain transpilers | `transpiler_linalg.py`, `transpiler_intro_geometry.py`, `transpiler_domain_textbook.py` |
 | `splc compile --kernel-name NAME` CLI option (domain notebook targets) | `spl3/splc/cli.py` |
-| `graph_lib.verify_content(section, domain_data, verifier="")` — engine dispatch matching the per-node `verifier:` YAML attribute; `"sage"` branch; `"sage\|sympy"` prefers Sage, falls back to SymPy; engine-of-record in the return (`pass (sage)`) while the no-arg path stays plain `pass` (backward compatible with `EVALUATE ... WHEN contains("fail")`) | `cookbook/74_domain_textbook/graph_lib.py` |
+| `graph_lib.verify_content(section, domain_data, verifier="")` — engine dispatch matching the per-node `verifier:` YAML attribute; `"sage"` branch; `"sage\|sympy"` prefers Sage, falls back to SymPy; engine-of-record in the return (`pass (sage)`) while the no-arg path stays plain `pass` (backward compatible with `EVALUATE ... WHEN contains("fail")`) | `cookbook/74_concept_book/graph_lib.py` |
 | 10 tests: kernelspec emission (default / sagemath / unknown-name fallback / cells invariant) + verifier dispatch (default / explicit / unknown / fallback tier / live Sage) | `tests/test_sage_target.py` |
 
 Verified end-to-end:
 
 ```
-$ spl3 splc compile build_micro_textbook.spl --lang python/domain_textbook --kernel-name sagemath ...
+$ spl3 splc compile build_concept_book.spl --lang python/domain_textbook --kernel-name sagemath ...
 kernelspec: {'display_name': 'SageMath', 'language': 'sage', 'name': 'sagemath'}
 splc:       {'target': 'python/domain_textbook', 'domain_library': 'graph_lib.py', 'kernel_name': 'sagemath'}
 ```
@@ -179,12 +179,12 @@ concepts instead.)
 
 | Change | Where |
 |---|---|
-| `verify_right_triangle(a,b,c)` — exact a²+b²=c² over ℚ | `cookbook/74_domain_textbook/graph_lib.py` |
+| `verify_right_triangle(a,b,c)` — exact a²+b²=c² over ℚ | `cookbook/74_concept_book/graph_lib.py` |
 | `verify_distance_squared(x1,y1,x2,y2,d²)` — distance formula, d² keeps everything rational | `graph_lib.py` |
 | `verify_polygon_area(vertices, claimed)` — exact shoelace; handles `"1/2"`-style rational coords | `graph_lib.py` |
 | All three: sage→sympy **absence** fallback with engine-of-record (`pass (sage)`); a wrong claim fails with the first available engine — fallback never masks a verdict | `graph_lib.py` |
 | `pythagorean_theorem`, `distance_formula`, `area` nodes → `verifier: sage\|sympy`, `lab:` points at the verifier function | `geometry_graph.yaml` |
-| **SageManifolds seed** — `sphere_scalar_curvature(r)`: round S² built with charts + metric, Ricci scalar computed symbolically, equals **2/r² exactly** (`2` at r=1, `1/2` at r=2). Sage-only by nature → the `verifier: "sage"` fail-fast case. Verifier-shaped wrapper included | `cookbook/74_domain_textbook/classical_mechanics_seed.py` |
+| **SageManifolds seed** — `sphere_scalar_curvature(r)`: round S² built with charts + metric, Ricci scalar computed symbolically, equals **2/r² exactly** (`2` at r=1, `1/2` at r=2). Sage-only by nature → the `verifier: "sage"` fail-fast case. Verifier-shaped wrapper included | `cookbook/74_concept_book/classical_mechanics_seed.py` |
 | 10 tests (exact pass/fail, rational coords, forced-engine, YAML declarations, live curvature) | `tests/test_sage_target.py` |
 
 The seed is the proof that the differential-geometry machinery the future
@@ -197,7 +197,7 @@ The seed is the proof that the differential-geometry machinery the future
 
 Part A is done. The first post-ladder domain is also authored:
 
-**`mechanics_graph.yaml`** (2026-06-10, `cookbook/74_domain_textbook/`) — the
+**`mechanics_graph.yaml`** (2026-06-10, `cookbook/74_concept_book/`) — the
 classical-mechanics concept graph, 28 nodes / 49 edges: two radicals
 (*kinematics*: position, time; *dynamics*: mass, force) → velocity …
 Lagrangian → Euler–Lagrange → **normal_modes** (the README's stated payoff;

@@ -1,0 +1,21 @@
+{
+  "splc_version": "0.1.0",
+  "generated_at": "2026-06-07T20:00:45.017557+00:00",
+  "source": {
+    "spl_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/74_concept_book/build_concept_book.spl",
+    "spl_sha256": "32d9f3089c171583"
+  },
+  "target": {
+    "lang": "python/domain_textbook",
+    "label": "Python \u2014 generic domain concept-book (.ipynb; @domain_yaml resolved at runtime via graph_lib)",
+    "output_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/74_concept_book/targets/python_domain_textbook/build_concept_book_python_domain_textbook.ipynb"
+  },
+  "compilation": {
+    "adapter": "claude_cli",
+    "model": null,
+    "references": [],
+    "rag_enabled": true,
+    "rag_k": 3
+  },
+  "doda_note": "This file is a splc-compiled physical artifact. The source .spl file is the invariant logical view. To retarget, run: splc --spl <source.spl> --lang <new-target>"
+}

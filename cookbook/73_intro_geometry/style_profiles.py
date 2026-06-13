@@ -1,4 +1,4 @@
-"""Style profiles for micro-textbook content generation.
+"""Style profiles for concept-book content generation.
 
 Each profile defines HOW verified content is written — tone, depth, audience,
 structure — without changing WHAT is true.  The symbolic checks (verify_geometry,
@@ -7,7 +7,7 @@ reducible) are style-agnostic; only the prose adapts.
 A profile is resolved to a style_guide string by style_instruction(), which is
 called via SOLVE in the SPL workflow and injected into every GENERATE prompt.
 
-Identical copy of cookbook/71_linalg_micro_textbook/style_profiles.py's five
+Identical copy of cookbook/71_linalg_concept_book/style_profiles.py's five
 original profiles, PLUS two new ones — ``middle_school`` and ``high_school`` —
 added because intro geometry (unlike spectral-theorem-grade linear algebra) is
 exactly the domain where K-12 audiences are the natural readers, not an

@@ -55,11 +55,12 @@ path so the tool definition lives alongside the workflow as plain SPL source.
 
 ```bash
 spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
-    --kernel --adapter ollama
+    --kernel --adapter claude_cli
 
 # With a custom topic and matrix
 spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
-    --kernel --adapter ollama \
+    --kernel --adapter claude_cli \
+    -p output_path=cookbook/69_notebook_gen/output/dot_prod.ipynb \
     -p topic="dot products and orthogonality" \
     -p matrix_a="[[1, 0], [0, -1]]"
 ```

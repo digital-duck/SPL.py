@@ -14,7 +14,7 @@ whose nodes carry at least:
     composed_of : list[str] (direct prerequisites; empty for primitives)
 
 and whose edges u → v mean "u is a prerequisite of v".  ``linalg_graph.py``
-(cookbook/71_linalg_micro_textbook) and ``geometry_graph.py``
+(cookbook/71_linalg_concept_book) and ``geometry_graph.py``
 (cookbook/73_intro_geometry) are worked examples — each is fully
 self-contained (by design: see cookbook/70's readme on why domain libraries
 duplicate their graph algorithms rather than share an implementation that
@@ -55,6 +55,12 @@ from typing import Iterable
 
 import click
 import networkx as nx
+
+try:
+    import yaml as _yaml
+    _YAML_AVAILABLE = True
+except ImportError:
+    _YAML_AVAILABLE = False
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +244,518 @@ def _to_ascii(graph: nx.DiGraph) -> str:
     return "\n".join(lines).rstrip()
 
 
-_RENDERERS = {"mermaid": _to_mermaid, "dot": _to_dot, "ascii": _to_ascii}
+def _to_html(graph: nx.DiGraph, domain_name: str = "") -> str:
+    """Render a 4-panel interactive learning environment (self-contained, vis.js CDN).
+
+    Layout (CSS grid):
+      Left sidebar  │  Concept graph (vis.js, BFS levels)  │  Notes sidebar
+                    ├──────────────────────────────────────│
+                    │  Explanation panel                    │
+
+    BFS longest-path levels replace YAML tier values so application nodes
+    always land at the bottom (they often have tier=0 in YAML).
+    Notes are auto-saved to localStorage per node.
+    """
+    nodes_data = []
+    for node, attrs in graph.nodes(data=True):
+        kind = attrs.get("kind", "concept")
+        tier = attrs.get("tier", 0)
+        color_map = {
+            "primitive":   {"background": "#e8f5e9", "border": "#2e7d32"},
+            "concept":     {"background": "#e3f2fd", "border": "#1565c0"},
+            "application": {"background": "#fff3e0", "border": "#ef6c00"},
+        }
+        color = color_map.get(kind, color_map["concept"])
+        prereqs = attrs.get("composed_of") or attrs.get("needs") or []
+        nodes_data.append({
+            "id":      node,
+            "label":   node.replace("_", " "),
+            "kind":    kind,
+            "tier":    tier,
+            "defines": attrs.get("defines", ""),
+            "prereqs": prereqs,
+            "verifier": attrs.get("verifier", ""),
+            "lab":     attrs.get("lab", ""),
+            "play":    attrs.get("play", ""),
+            "color":   color,
+            "font":    {"size": 13},
+        })
+    edges_data = [{"from": u, "to": v} for u, v in graph.edges()]
+
+    graph_json = json.dumps({"nodes": nodes_data, "edges": edges_data}, ensure_ascii=False)
+    title = f"Concept Graph — {domain_name}" if domain_name else "Concept Graph"
+    domain_key = domain_name.replace(" ", "_").lower() or "graph"
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{font-family:system-ui,sans-serif;background:#f0f2f5;overflow:hidden;height:100vh}}
+.app{{
+  display:grid;
+  grid-template-columns:230px 1fr 210px;
+  grid-template-rows:60vh 40vh;
+  height:100vh;
+  gap:0;
+}}
+/* ── Left sidebar: learning path ── */
+#path-sidebar{{
+  grid-column:1;grid-row:1/3;
+  background:#f5f6f8;color:#2a2a2a;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  border-right:1px solid #dde0e6;
+}}
+#path-header{{
+  padding:14px 14px 10px;
+  border-bottom:1px solid #dde0e6;
+  flex-shrink:0;
+}}
+#path-header h1{{font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:#888;margin-bottom:2px;font-weight:700}}
+#path-header .domain-name{{font-size:11px;color:#555;margin-top:4px}}
+#path-steps{{flex:1;overflow-y:auto;padding:8px 0}}
+#path-steps .hint{{color:#aaa;font-size:12px;text-align:center;padding:24px 12px;line-height:1.5}}
+.step-item{{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 12px;cursor:pointer;
+  border-left:3px solid transparent;
+  transition:background .15s;
+}}
+.step-item:hover{{background:#ebebf0}}
+.step-item.active{{background:#e8eef8;border-left-color:#4a90d9}}
+.step-item.target{{background:#eaf5ea;border-left-color:#4caf50}}
+.step-num{{min-width:20px;font-size:10px;font-weight:700;color:#bbb;padding-top:2px;flex-shrink:0}}
+.step-item.target .step-num{{color:#4caf50}}
+.step-label{{font-size:12px;font-weight:600;color:#333;line-height:1.4}}
+.step-def{{font-size:10px;color:#888;margin-top:2px;line-height:1.4}}
+.step-kind{{display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:700;margin-left:4px}}
+#path-count{{font-size:10px;color:#aaa;margin-top:3px}}
+/* ── Graph panel ── */
+#graph-panel{{
+  grid-column:2;grid-row:1;
+  position:relative;background:#fff;
+  border-bottom:2px solid #dde;
+}}
+#graph-container{{width:100%;height:100%}}
+#legend{{
+  position:absolute;top:10px;right:10px;
+  background:rgba(255,255,255,.9);border:1px solid #ddd;
+  border-radius:6px;padding:8px 10px;font-size:11px;
+  display:flex;gap:10px;flex-wrap:wrap;
+}}
+.leg{{display:flex;align-items:center;gap:4px}}
+.leg-dot{{width:11px;height:11px;border-radius:2px;border:2px solid;flex-shrink:0}}
+/* ── Explanation panel ── */
+#explain-panel{{
+  grid-column:2;grid-row:2;
+  background:#fff;overflow-y:auto;
+  padding:16px 20px;
+}}
+#explain-panel .empty{{color:#aaa;font-size:13px;padding:20px 0;text-align:center}}
+#explain-panel .node-title{{
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}}
+#explain-panel .node-title h2{{font-size:16px;color:#1e3a5f}}
+.badge{{
+  display:inline-block;padding:2px 8px;border-radius:10px;
+  font-size:11px;font-weight:700;
+}}
+.badge.primitive{{background:#e8f5e9;color:#2e7d32}}
+.badge.concept{{background:#e3f2fd;color:#1565c0}}
+.badge.application{{background:#fff3e0;color:#ef6c00}}
+.tier-tag{{font-size:11px;color:#999;margin-left:auto}}
+#explain-panel .defines{{
+  font-size:14px;color:#333;line-height:1.6;margin-bottom:12px;
+  padding:10px 12px;background:#f8f9fb;border-radius:6px;
+  border-left:3px solid #90b4e8;
+}}
+#explain-panel .section-label{{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:#999;margin-bottom:6px;
+}}
+#explain-panel .prereq-list{{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}}
+.prereq-chip{{
+  padding:3px 9px;border-radius:12px;font-size:11px;
+  background:#e3f2fd;color:#1565c0;cursor:pointer;
+  border:1px solid #90caf9;transition:background .12s;
+}}
+.prereq-chip:hover{{background:#bbdefb}}
+#explain-panel .meta-row{{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}}
+.meta-item{{font-size:12px;color:#555}}
+.meta-item b{{color:#1e3a5f}}
+#explain-panel .play-hint{{
+  font-size:12px;color:#5a5a5a;line-height:1.6;
+  padding:8px 12px;background:#fffde7;border-radius:6px;
+  border-left:3px solid #ffd54f;margin-bottom:8px;
+}}
+/* ── Notes sidebar ── */
+#notes-sidebar{{
+  grid-column:3;grid-row:1/3;
+  background:#fafaf8;
+  border-left:2px solid #e8e8e0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}}
+#notes-header{{
+  padding:12px 12px 8px;
+  border-bottom:1px solid #e0e0d8;
+  flex-shrink:0;
+}}
+#notes-header h2{{font-size:12px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.06em}}
+#notes-node-label{{font-size:11px;color:#999;margin-top:2px}}
+#notes-textarea{{
+  flex:1;border:none;resize:none;
+  padding:12px;font-size:12px;line-height:1.6;
+  font-family:inherit;background:#fafaf8;color:#333;
+  outline:none;
+}}
+#notes-actions{{
+  padding:8px 10px;border-top:1px solid #e8e8e0;flex-shrink:0;
+  display:flex;gap:6px;align-items:center;
+}}
+#notes-actions button{{
+  font-size:11px;padding:4px 10px;border-radius:4px;
+  border:1px solid #ccc;background:#fff;cursor:pointer;color:#444;
+}}
+#notes-actions button:hover{{background:#f0f0e8}}
+#notes-with-entries{{
+  border-top:1px solid #e8e8e0;flex-shrink:0;
+  max-height:35vh;overflow-y:auto;
+}}
+.note-entry{{
+  padding:6px 12px;cursor:pointer;
+  border-bottom:1px solid #f0f0e8;
+  font-size:11px;
+}}
+.note-entry:hover{{background:#f0efe8}}
+.note-entry .note-node{{font-weight:600;color:#555}}
+.note-entry .note-preview{{color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+/* ── kind badge colours in sidebar ── */
+.primitive-k{{background:#e8f5e9;color:#2e7d32}}
+.concept-k{{background:#e3f2fd;color:#1565c0}}
+.application-k{{background:#fff3e0;color:#ef6c00}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- LEFT: learning path sidebar -->
+<aside id="path-sidebar">
+  <div id="path-header">
+    <h1>Learning Path</h1>
+    <div class="domain-name">{domain_name}</div>
+    <div id="path-count"></div>
+  </div>
+  <div id="path-steps">
+    <div class="hint">Click any node in the graph<br>to see its learning path</div>
+  </div>
+</aside>
+
+<!-- CENTRE TOP: concept graph -->
+<div id="graph-panel">
+  <div id="graph-container"></div>
+  <div id="legend">
+    <div class="leg"><div class="leg-dot" style="background:#e8f5e9;border-color:#2e7d32"></div>primitive</div>
+    <div class="leg"><div class="leg-dot" style="background:#e3f2fd;border-color:#1565c0"></div>concept</div>
+    <div class="leg"><div class="leg-dot" style="background:#fff3e0;border-color:#ef6c00"></div>application</div>
+  </div>
+</div>
+
+<!-- CENTRE BOTTOM: explanation panel -->
+<div id="explain-panel">
+  <div class="empty">Select a node to see its definition, prerequisites, and learning context.</div>
+</div>
+
+<!-- RIGHT: notes sidebar -->
+<aside id="notes-sidebar">
+  <div id="notes-header">
+    <h2>Notes</h2>
+    <div id="notes-node-label">no node selected</div>
+  </div>
+  <textarea id="notes-textarea" placeholder="Type notes here&#10;(auto-saved per node)"></textarea>
+  <div id="notes-actions">
+    <button onclick="exportNotes()">Export JSON</button>
+    <button onclick="clearNote()">Clear</button>
+  </div>
+  <div id="notes-with-entries"></div>
+</aside>
+
+</div><!-- .app -->
+
+<script>
+const RAW = {graph_json};
+const DOMAIN_KEY = "{domain_key}";
+
+// ── index ──────────────────────────────────────────────────────────────────
+const nodeIndex = {{}};
+RAW.nodes.forEach(n => nodeIndex[n.id] = n);
+
+const prereqOf  = {{}};  // id → ids that are direct prerequisites OF id
+const dependsOn = {{}};  // id → ids that id feeds into
+RAW.nodes.forEach(n => {{ prereqOf[n.id] = []; dependsOn[n.id] = []; }});
+RAW.edges.forEach(e => {{
+  prereqOf[e.to].push(e.from);
+  dependsOn[e.from].push(e.to);
+}});
+
+// ── BFS longest-path levels (fixes application nodes at wrong tier) ─────────
+const bfsLevels = (() => {{
+  const levels = {{}};
+  const successors = {{}};
+  RAW.nodes.forEach(n => {{ levels[n.id] = -1; successors[n.id] = []; }});
+  RAW.edges.forEach(e => successors[e.from].push(e.to));
+  const sources = RAW.nodes.filter(n => !RAW.edges.some(e => e.to === n.id));
+  const queue = sources.map(n => n.id);
+  queue.forEach(n => levels[n] = 0);
+  let i = 0;
+  while (i < queue.length) {{
+    const cur = queue[i++];
+    for (const succ of successors[cur]) {{
+      const nl = levels[cur] + 1;
+      if (levels[succ] < nl) {{ levels[succ] = nl; queue.push(succ); }}
+    }}
+  }}
+  return levels;
+}})();
+
+// ── graph algorithms ────────────────────────────────────────────────────────
+function getAncestors(targetId) {{
+  const visited = new Set();
+  const queue = [targetId];
+  while (queue.length) {{
+    const cur = queue.shift();
+    for (const p of prereqOf[cur])
+      if (!visited.has(p)) {{ visited.add(p); queue.push(p); }}
+  }}
+  return visited;
+}}
+
+function topoSort(nodeSet) {{
+  const inDeg = {{}};
+  nodeSet.forEach(n => inDeg[n] = 0);
+  nodeSet.forEach(n => {{ for (const p of prereqOf[n]) if (nodeSet.has(p)) inDeg[n]++; }});
+  const reach = {{}};
+  nodeSet.forEach(n => {{
+    let r = 0;
+    nodeSet.forEach(m => {{ if (m !== n && getAncestors(m).has(n)) r++; }});
+    reach[n] = r;
+  }});
+  const heap = [];
+  nodeSet.forEach(n => {{ if (inDeg[n] === 0) heap.push(n); }});
+  heap.sort((a, b) => (reach[b] - reach[a]) || a.localeCompare(b));
+  const result = [];
+  while (heap.length) {{
+    const node = heap.shift();
+    result.push(node);
+    for (const succ of dependsOn[node]) {{
+      if (!nodeSet.has(succ)) continue;
+      if (--inDeg[succ] === 0) {{
+        heap.push(succ);
+        heap.sort((a, b) => (reach[b] - reach[a]) || a.localeCompare(b));
+      }}
+    }}
+  }}
+  return result;
+}}
+
+// ── vis.js network ──────────────────────────────────────────────────────────
+const container = document.getElementById('graph-container');
+const visNodes = new vis.DataSet(RAW.nodes.map(n => ({{
+  id: n.id,
+  label: n.label.replace(/ /g, '\\n'),
+  level: bfsLevels[n.id] !== undefined ? bfsLevels[n.id] : n.tier,
+  color: n.color,
+  font: n.font,
+  title: `<b>${{n.label}}</b> [${{n.kind}}]<br>${{n.defines || ''}}`,
+  shape: n.kind === 'concept' ? 'ellipse' : 'box',
+}})));
+const visEdges = new vis.DataSet(RAW.edges.map((e, i) => ({{
+  id: i, from: e.from, to: e.to,
+  arrows: 'to', color: {{color: '#c8ccd4'}}, width: 1,
+}})));
+const network = new vis.Network(container, {{nodes: visNodes, edges: visEdges}}, {{
+  layout: {{ hierarchical: {{
+    enabled: true, direction: 'UD',
+    sortMethod: 'directed', levelSeparation: 85, nodeSpacing: 130,
+  }} }},
+  physics: {{ enabled: false }},
+  interaction: {{ hover: true, tooltipDelay: 150 }},
+  edges: {{ smooth: {{ type: 'cubicBezier', forceDirection: 'vertical' }} }},
+}});
+
+const C_PATH   = {{background: '#fff9c4', border: '#f9a825'}};
+const C_TARGET = {{background: '#ffe082', border: '#e65100'}};
+
+function resetColors() {{
+  visNodes.update(RAW.nodes.map(n => ({{id: n.id, color: n.color}})));
+  visEdges.update(RAW.edges.map((e, i) => ({{id: i, color: {{color: '#c8ccd4'}}, width: 1}})));
+}}
+
+// ── explanation panel ───────────────────────────────────────────────────────
+function renderExplanation(node) {{
+  const kclass = node.kind;
+  const prereqChips = (node.prereqs || []).map(p =>
+    `<span class="prereq-chip" onclick="selectNode('${{p}}')">${{p.replace(/_/g,' ')}}</span>`
+  ).join('');
+  const metaItems = [
+    node.verifier ? `<span class="meta-item"><b>Verifier:</b> ${{node.verifier}}</span>` : '',
+    node.lab      ? `<span class="meta-item"><b>Lab:</b> ${{node.lab}}</span>` : '',
+  ].filter(Boolean).join('');
+  const playHtml = node.play
+    ? `<div class="section-label">Try it</div><div class="play-hint">${{node.play}}</div>`
+    : '';
+
+  document.getElementById('explain-panel').innerHTML = `
+    <div class="node-title">
+      <h2>${{node.label}}</h2>
+      <span class="badge ${{kclass}}">${{kclass}}</span>
+      <span class="tier-tag">BFS level ${{bfsLevels[node.id] ?? node.tier}}</span>
+    </div>
+    ${{node.defines ? `<div class="defines">${{node.defines}}</div>` : ''}}
+    ${{prereqChips ? `<div class="section-label">Prerequisites</div><div class="prereq-list">${{prereqChips}}</div>` : ''}}
+    ${{metaItems ? `<div class="meta-row">${{metaItems}}</div>` : ''}}
+    ${{playHtml}}
+  `;
+}}
+
+// ── learning path sidebar ───────────────────────────────────────────────────
+function renderPathSidebar(orderedPath, targetId) {{
+  const stepsEl = document.getElementById('path-steps');
+  const countEl = document.getElementById('path-count');
+  countEl.textContent = orderedPath.length
+    ? `${{orderedPath.length}} step${{orderedPath.length !== 1 ? 's' : ''}} to learn first`
+    : 'Root concept — no prerequisites';
+
+  const target = nodeIndex[targetId];
+  const kc = k => `${{k.charAt(0).toUpperCase() + k.slice(1)}}`;
+
+  stepsEl.innerHTML = orderedPath.map((n, i) => {{
+    const nd = nodeIndex[n];
+    return `<div class="step-item" onclick="selectNode('${{n}}')">
+      <span class="step-num">${{i + 1}}.</span>
+      <div>
+        <div class="step-label">${{nd.label}}
+          <span class="step-kind ${{nd.kind}}-k">${{nd.kind}}</span>
+        </div>
+        ${{nd.defines ? `<div class="step-def">${{nd.defines}}</div>` : ''}}
+      </div>
+    </div>`;
+  }}).join('') + `<div class="step-item target">
+    <span class="step-num">▶</span>
+    <div>
+      <div class="step-label">${{target.label}}
+        <span class="step-kind ${{target.kind}}-k">${{target.kind}}</span>
+      </div>
+      ${{target.defines ? `<div class="step-def">${{target.defines}}</div>` : ''}}
+    </div>
+  </div>`;
+}}
+
+// ── notes (localStorage) ────────────────────────────────────────────────────
+let currentNodeId = null;
+
+function noteKey(nodeId) {{ return `concept_notes_${{DOMAIN_KEY}}_${{nodeId}}`; }}
+
+function loadNote(nodeId) {{
+  return localStorage.getItem(noteKey(nodeId)) || '';
+}}
+
+function saveNote(nodeId, text) {{
+  if (text.trim()) localStorage.setItem(noteKey(nodeId), text);
+  else localStorage.removeItem(noteKey(nodeId));
+  renderNotesList();
+}}
+
+function renderNotesList() {{
+  const container = document.getElementById('notes-with-entries');
+  const entries = RAW.nodes
+    .filter(n => localStorage.getItem(noteKey(n.id)))
+    .map(n => ({{id: n.id, label: n.label, preview: localStorage.getItem(noteKey(n.id)).slice(0, 60)}}));
+  if (!entries.length) {{ container.innerHTML = ''; return; }}
+  container.innerHTML = entries.map(e =>
+    `<div class="note-entry" onclick="selectNode('${{e.id}}')">
+      <div class="note-node">${{e.label}}</div>
+      <div class="note-preview">${{e.preview}}</div>
+    </div>`
+  ).join('');
+}}
+
+function switchNotes(nodeId) {{
+  if (currentNodeId !== null) {{
+    saveNote(currentNodeId, document.getElementById('notes-textarea').value);
+  }}
+  currentNodeId = nodeId;
+  document.getElementById('notes-textarea').value = loadNote(nodeId);
+  document.getElementById('notes-node-label').textContent =
+    nodeIndex[nodeId]?.label || nodeId;
+}}
+
+function clearNote() {{
+  document.getElementById('notes-textarea').value = '';
+  if (currentNodeId) saveNote(currentNodeId, '');
+}}
+
+function exportNotes() {{
+  const notes = {{}};
+  RAW.nodes.forEach(n => {{
+    const v = localStorage.getItem(noteKey(n.id));
+    if (v) notes[n.id] = v;
+  }});
+  const blob = new Blob([JSON.stringify(notes, null, 2)], {{type: 'application/json'}});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${{DOMAIN_KEY}}_notes.json`;
+  a.click();
+}}
+
+document.getElementById('notes-textarea').addEventListener('input', () => {{
+  if (currentNodeId) saveNote(currentNodeId, document.getElementById('notes-textarea').value);
+}});
+
+// ── unified node select ─────────────────────────────────────────────────────
+function selectNode(nodeId) {{
+  if (!nodeIndex[nodeId]) return;
+  network.selectNodes([nodeId]);
+  handleSelect(nodeId);
+}}
+
+function handleSelect(targetId) {{
+  const node = nodeIndex[targetId];
+
+  renderExplanation(node);
+  switchNotes(targetId);
+
+  const ancestors = getAncestors(targetId);
+  const pathSet = new Set([...ancestors]);
+  const orderedPath = topoSort(pathSet);
+
+  renderPathSidebar(orderedPath, targetId);
+
+  resetColors();
+  visNodes.update(orderedPath.map(n => ({{id: n, color: C_PATH}})));
+  visNodes.update([{{id: targetId, color: C_TARGET}}]);
+  visEdges.update(RAW.edges.map((e, i) => {{
+    const inPath = pathSet.has(e.from) && (pathSet.has(e.to) || e.to === targetId);
+    return {{id: i, color: {{color: inPath ? '#f9a825' : '#c8ccd4'}}, width: inPath ? 2 : 1}};
+  }}));
+}}
+
+network.on('click', params => {{
+  if (params.nodes.length) handleSelect(params.nodes[0]);
+}});
+
+// initialise notes list on load
+renderNotesList();
+</script>
+</body>
+</html>"""
+
+
+_RENDERERS = {"mermaid": _to_mermaid, "dot": _to_dot, "ascii": _to_ascii, "html": None}
 
 
 # ---------------------------------------------------------------------------
@@ -261,9 +778,113 @@ class _GraphModule:
         return self._graph
 
 
+def _load_yaml_graph(path: Path) -> nx.DiGraph:
+    """Build a DiGraph from a concept-graph YAML file (74_concept_book format).
+
+    Handles primitives (no composed_of), concepts (composed_of list),
+    and applications (needs list).  Edges u→v mean "u is prerequisite of v".
+    """
+    if not _YAML_AVAILABLE:
+        raise click.ClickException("PyYAML is required to load .yaml graphs: pip install pyyaml")
+    raw = _yaml.safe_load(path.read_text(encoding="utf-8"))
+    g = nx.DiGraph()
+    g.graph["domain"] = raw.get("domain", path.stem)
+
+    def _add_nodes(section: dict, kind: str) -> None:
+        for name, attrs in (section or {}).items():
+            prereqs = attrs.get("composed_of") or attrs.get("needs") or []
+            g.add_node(name,
+                kind=kind,
+                tier=attrs.get("tier", 0),
+                defines=attrs.get("defines", ""),
+                composed_of=prereqs,
+                verifier=attrs.get("verifier", ""),
+                lab=attrs.get("lab", ""),
+                play=attrs.get("play", ""),
+                domain=attrs.get("domain", ""),
+            )
+            for prereq in prereqs:
+                g.add_edge(prereq, name)
+
+    _add_nodes(raw.get("primitives", {}), "primitive")
+    _add_nodes(raw.get("concepts", {}), "concept")
+    _add_nodes(raw.get("applications", {}), "application")
+    return g
+
+
+def _graph_to_yaml(graph: nx.DiGraph) -> str:
+    """Serialise a concept-graph DiGraph to canonical YAML (SPL concept-book format).
+
+    Output sections: domain → primitives → concepts → applications.
+    Each section is sorted by tier then name.  Application prereqs use ``needs:``
+    to match the authoring convention; all others use ``composed_of:``.
+
+    The result is valid PyYAML-loadable text and is designed to be easy to
+    hand-edit — short strings stay inline, strings containing special YAML
+    characters are single-quoted, and each section gets a blank-line separator.
+    """
+    if not _YAML_AVAILABLE:
+        raise click.ClickException("PyYAML required to write YAML: pip install pyyaml")
+
+    def _scalar(value: str) -> str:
+        """Return value as a safe inline YAML scalar (single-quoted when needed)."""
+        if not value:
+            return "''"
+        # Characters that require quoting in YAML bare scalars
+        needs_quote = any(c in value for c in ":#{}[]|>&*!,?@`\"'") or value[0] in "-"
+        if needs_quote:
+            return "'" + value.replace("'", "''") + "'"
+        return value
+
+    def _list_block(items: list[str], indent: str) -> list[str]:
+        return [f"{indent}- {item}" for item in items]
+
+    domain_name = graph.graph.get("domain", "")
+    by_kind: dict[str, list[tuple[str, dict]]] = {"primitive": [], "concept": [], "application": []}
+    for node, attrs in graph.nodes(data=True):
+        kind = attrs.get("kind", "concept")
+        by_kind.setdefault(kind, []).append((node, dict(attrs)))
+    for kind in by_kind:
+        by_kind[kind].sort(key=lambda x: (x[1].get("tier", 0), x[0]))
+
+    lines: list[str] = []
+    if domain_name:
+        lines.append(f"domain: {_scalar(domain_name)}")
+    lines.append("")
+
+    def _write_section(kind: str, section_key: str, prereq_key: str) -> None:
+        nodes = by_kind.get(kind, [])
+        if not nodes:
+            return
+        lines.append(f"{section_key}:")
+        for name, attrs in nodes:
+            lines.append(f"  {name}:")
+            if attrs.get("defines"):
+                lines.append(f"    defines: {_scalar(attrs['defines'])}")
+            tier = attrs.get("tier")
+            if tier is not None:
+                lines.append(f"    tier: {int(tier)}")
+            prereqs = attrs.get("composed_of") or []
+            if prereqs:
+                lines.append(f"    {prereq_key}:")
+                lines.extend(_list_block(prereqs, "    "))
+            for key in ("verifier", "lab", "play", "domain"):
+                val = attrs.get(key, "")
+                if val:
+                    lines.append(f"    {key}: {_scalar(str(val))}")
+        lines.append("")
+
+    _write_section("primitive", "primitives", "composed_of")
+    _write_section("concept",   "concepts",   "composed_of")
+    _write_section("application", "applications", "needs")
+    return "\n".join(lines)
+
+
 def _load_domain(domain: str):
-    """Load a domain module by import name, ``.py`` file path, or ``.json`` graph."""
+    """Load a domain module by import name, ``.py`` file path, ``.yaml``, or ``.json`` graph."""
     path = Path(domain)
+    if domain.endswith(".yaml") or domain.endswith(".yml"):
+        return _GraphModule(_load_yaml_graph(path))
     if domain.endswith(".json"):
         data = json.loads(path.read_text(encoding="utf-8"))
         return _GraphModule(nx.node_link_graph(data, directed=True, multigraph=False))
@@ -430,15 +1051,36 @@ def order(domain, weight):
 @click.option("--target", "-t", default=None,
               help="Restrict to the ancestor closure of this node (instead of the full graph).")
 @click.option("--output", "-o", type=click.Path(dir_okay=False, writable=True), default=None,
-              help="Write to a file instead of stdout.")
-@click.pass_obj
-def visualize(domain, fmt, target, output):
-    """Render the concept graph as mermaid / graphviz-dot / a tiered ascii outline."""
+              help="Write to a file instead of stdout.  For --format html, defaults to "
+                   "<domain>.html in the current directory.")
+@click.pass_context
+def visualize(ctx, fmt, target, output):
+    """Render the concept graph as mermaid / graphviz-dot / ascii / interactive html.
+
+    The html format produces a self-contained page: click any node to see its
+    productivity-ordered learning path highlighted in the graph.
+    """
+    domain = ctx.obj
     graph = domain.graph
+    domain_name = domain._name or ""
     if target:
         if not in_graph(graph, target):
             raise click.ClickException(f"Unknown node: {target!r}")
         graph = restrict(graph, ancestors(graph, target) | {target})
+
+    if fmt == "html":
+        stem = Path(domain_name).stem if domain_name else "concept_graph"
+        text = _to_html(graph, domain_name=stem)
+        if output:
+            out_path = Path(output)
+        else:
+            # default: <domain_dir>/output/html/<stem>.html
+            domain_dir = Path(domain_name).parent if domain_name else Path(".")
+            out_path = domain_dir / "output" / "html" / f"{stem}.html"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(text, encoding="utf-8")
+        click.echo(f"Wrote interactive HTML ({graph.number_of_nodes()} nodes) → {out_path}")
+        return
 
     text = _RENDERERS[fmt](graph)
     if output:
@@ -450,12 +1092,32 @@ def visualize(domain, fmt, target, output):
 
 @cli.command()
 @click.argument("output", type=click.Path(dir_okay=False, writable=True))
+@click.option("--format", "fmt",
+              type=click.Choice(["yaml", "json"]), default=None,
+              help="Output format. Inferred from the file extension when omitted "
+                   "(.yaml/.yml → yaml, anything else → json).")
 @click.option("--target", "-t", multiple=True,
               help="Export only the ancestor closure of these nodes (repeatable). "
                    "Default: export the full graph.")
 @click.pass_obj
-def export(domain, output, target):
-    """Export the graph (or a domain-specific subgraph) to JSON for sharing."""
+def export(domain, output, fmt, target):
+    """Export the graph (or a subgraph) to YAML or JSON for sharing / reuse.
+
+    YAML is the preferred format — it supports hand-editing and comments.
+    JSON (networkx node-link format) is useful for programmatic consumers and
+    can be loaded back via ``--domain file.json`` or ``import``.
+
+    \b
+        # Export full graph to YAML (canonical, shareable)
+        python concept_graph.py --domain linalg_graph.py export linalg.yaml
+
+        # Export the ancestor closure of one concept to JSON
+        python concept_graph.py --domain linalg.yaml export eigen.json -t eigenpair
+
+        # Export subgraph to YAML then use it as its own domain
+        python concept_graph.py --domain linalg.yaml export core.yaml -t spectral_theorem
+        python concept_graph.py --domain core.yaml stats
+    """
     graph = domain.graph
     if target:
         keep = set(target)
@@ -465,10 +1127,20 @@ def export(domain, output, target):
             keep |= ancestors(graph, t)
         graph = restrict(graph, keep)
 
-    data = nx.node_link_data(graph)
-    Path(output).write_text(json.dumps(data, indent=2), encoding="utf-8")
+    out_path = Path(output)
+    # Infer format from extension when not explicit
+    resolved_fmt = fmt or ("yaml" if out_path.suffix.lower() in (".yaml", ".yml") else "json")
+
+    if resolved_fmt == "yaml":
+        if not _YAML_AVAILABLE:
+            raise click.ClickException("PyYAML required for YAML export: pip install pyyaml")
+        out_path.write_text(_graph_to_yaml(graph), encoding="utf-8")
+    else:
+        data = nx.node_link_data(graph)
+        out_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
     click.echo(f"Exported {graph.number_of_nodes()} nodes / {graph.number_of_edges()} "
-               f"edges to {output}")
+               f"edges → {output} ({resolved_fmt})")
 
 
 @cli.command()
@@ -480,7 +1152,7 @@ def compose(domains, output):
     """Compose several domain graphs into one hybrid concept graph.
 
     Authoring a concept graph that spans multiple fields by hand is exactly
-    the kind of "too daunting to publish" task the micro-textbook framework
+    the kind of "too daunting to publish" task the concept-book framework
     exists to make tractable — `compose` takes that first mechanical step:
     union the domains' nodes and edges into one graph and write it out as
     JSON (the same shareable shape `export` produces, so the result flows
@@ -521,22 +1193,161 @@ def compose(domains, output):
 @cli.command(name="import")
 @click.argument("input_file", type=click.Path(exists=True, dir_okay=False))
 def import_cmd(input_file):
-    """Load a previously exported concept graph and report on its shape.
+    """Load a concept graph from any supported format and report its shape.
 
-    Unlike the other commands, this one needs no --domain — it reports
-    purely on the JSON file being inspected.
+    Accepts .yaml/.yml (SPL concept-book format), .json (networkx node-link),
+    or a .py domain module exposing ``build() -> DiGraph``.  No ``--domain``
+    flag needed — the file itself is the source.
+
+    \b
+        python concept_graph.py import linalg_graph.yaml
+        python concept_graph.py import linalg_graph.py
+        python concept_graph.py import hybrid.json
+
+    Typical reuse workflow:
+      1. import a graph to inspect it
+      2. export a subgraph (ancestor closure of key concepts) to a new YAML
+      3. compose two graphs into a hybrid
+      4. pass the result as --domain to visualize / stats / path
     """
-    data = json.loads(Path(input_file).read_text(encoding="utf-8"))
-    loaded = nx.node_link_graph(data, directed=True, multigraph=False)
+    module = _load_domain(input_file)
+    loaded = module.build()
+
+    ext = Path(input_file).suffix.lower()
+    fmt_label = {".yaml": "yaml", ".yml": "yaml", ".json": "json", ".py": "python module"}.get(ext, ext)
+    domain_name = loaded.graph.get("domain", "") if loaded.graph else ""
+    domain_tag = f" (domain: {domain_name})" if domain_name else ""
 
     click.echo(f"Loaded {loaded.number_of_nodes()} nodes / {loaded.number_of_edges()} "
-               f"edges from {input_file}")
-    click.echo(f"Acyclic: {acyclic(loaded)}")
+               f"edges from {input_file} [{fmt_label}]{domain_tag}")
+    click.echo(f"Acyclic   : {acyclic(loaded)}")
+    primitives = [n for n, d in loaded.nodes(data=True) if d.get("kind") == "primitive"]
+    click.echo(f"Reducible : {reducible(loaded, primitives)}")
     by_kind: dict[str, int] = {}
     for _, attrs in loaded.nodes(data=True):
-        by_kind[attrs.get("kind", "?")] = by_kind.get(attrs.get("kind", "?"), 0) + 1
+        k = attrs.get("kind", "?")
+        by_kind[k] = by_kind.get(k, 0) + 1
     for kind, count in sorted(by_kind.items()):
         click.echo(f"  {kind:11}: {count}")
+
+
+@cli.command()
+@click.argument("output", type=click.Path(dir_okay=False, writable=True))
+@click.option("--force", is_flag=True, default=False,
+              help="Overwrite output file if it already exists.")
+@click.pass_obj
+def convert(domain, output, force):
+    """Convert any concept-graph format to canonical YAML.
+
+    YAML is the first-class concept-graph format in SPL — it supports comments,
+    is easy to author and diff, and is the canonical input for concept-book
+    generation and the HTML visualiser.  Use this command to migrate graphs:
+
+    \b
+        # Python domain module → YAML
+        python concept_graph.py --domain linalg_graph.py convert linalg_graph.yaml
+
+        # networkx JSON export → YAML
+        python concept_graph.py --domain hybrid.json convert hybrid.yaml
+
+        # Round-trip check: reload the YAML and diff stats
+        python concept_graph.py --domain linalg_graph.yaml stats
+
+    The output YAML follows the 74_concept_book structure:
+    domain → primitives → concepts → applications, sorted by tier then name.
+    Primitive and concept prereqs use ``composed_of:``, application prereqs use
+    ``needs:`` — matching the hand-authored YAML convention.
+
+    Nodes that carry no ``kind`` attribute are written as concepts.  Tier values
+    are inferred from the graph topology (longest-path from sources) for any node
+    whose stored tier is 0 and that has in-edges — this corrects the common case
+    where JSON-exported graphs have lost tier information.
+    """
+    if not _YAML_AVAILABLE:
+        raise click.ClickException("PyYAML required: pip install pyyaml")
+
+    out_path = Path(output)
+    if out_path.exists() and not force:
+        raise click.ClickException(
+            f"{output!r} already exists — pass --force to overwrite.")
+
+    graph = domain.graph
+
+    # Repair missing / stale tier values via longest-path from sources.
+    # Sources (in-degree 0) get tier 0; every other node gets
+    # max(tier of predecessors) + 1.  Only applied where the stored tier
+    # would place a node above all its prerequisites (a sign of missing data).
+    topo = list(nx.topological_sort(graph))
+    computed: dict[str, int] = {}
+    for node in topo:
+        preds = list(graph.predecessors(node))
+        computed[node] = max((computed[p] for p in preds), default=-1) + 1
+    for node in graph.nodes():
+        stored = graph.nodes[node].get("tier", 0)
+        if stored == 0 and computed[node] > 0:
+            graph.nodes[node]["tier"] = computed[node]
+
+    yaml_text = _graph_to_yaml(graph)
+    out_path.write_text(yaml_text, encoding="utf-8")
+
+    by_kind: dict[str, int] = {}
+    for _, attrs in graph.nodes(data=True):
+        k = attrs.get("kind", "concept")
+        by_kind[k] = by_kind.get(k, 0) + 1
+    summary = ", ".join(f"{v} {k}s" for k, v in sorted(by_kind.items()))
+    click.echo(f"Wrote {graph.number_of_nodes()} nodes ({summary}), "
+               f"{graph.number_of_edges()} edges → {output}")
+
+
+@cli.command()
+@click.argument("output", required=False, default=None,
+                type=click.Path(dir_okay=False, writable=True))
+@click.option("--include-book", "-b", "book_html", default=None,
+              type=click.Path(exists=True),
+              help="Path to a generated concept-book HTML to bundle alongside the graph.")
+@click.pass_context
+def share(ctx, output, book_html):
+    """Bundle the concept graph (YAML + HTML navigator) into a shareable .zip.
+
+    The zip contains:
+      <stem>_graph.yaml          — the source graph (canonical, editable)
+      <stem>_graph.html          — the interactive navigator (vis.js, self-contained)
+      <stem>_concept_book.html   — (optional) the generated concept-book HTML
+
+    Open the .html files directly in any browser — no server required.
+    Use ``publish`` (coming in Phase 5) for formal, vetted distribution.
+
+    OUTPUT defaults to <stem>_share.zip in the current directory.
+    """
+    import zipfile
+
+    domain = ctx.obj
+    domain_name = domain._name or "concept_graph"
+    # Strip trailing _graph suffix so chinese_characters_graph → chinese_characters
+    raw_stem = Path(domain_name).stem
+    stem = raw_stem[:-6] if raw_stem.endswith("_graph") else raw_stem
+
+    # Generate the HTML navigator into a temp string
+    graph = domain.graph
+    html_text = _to_html(graph, domain_name=stem)
+
+    # Re-serialize the graph to canonical YAML
+    yaml_text = _graph_to_yaml(graph)
+
+    out_path = Path(output) if output else Path(f"{stem}_share.zip")
+
+    with zipfile.ZipFile(out_path, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr(f"{stem}_graph.yaml", yaml_text)
+        zf.writestr(f"{stem}_graph.html", html_text)
+        if book_html:
+            book_path = Path(book_html)
+            zf.write(book_path, arcname=f"{stem}_concept_book.html")
+
+    contents = [f"{stem}_graph.yaml", f"{stem}_graph.html"]
+    if book_html:
+        contents.append(f"{stem}_concept_book.html")
+    click.echo(f"Wrote share bundle ({', '.join(contents)}) → {out_path}")
+    click.echo("Recipient: unzip and open the .html file(s) in any browser.")
 
 
 if __name__ == "__main__":

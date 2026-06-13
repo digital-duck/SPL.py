@@ -1,7 +1,7 @@
 """Intro Geometry concept graph — python/intro_geometry domain library.
 
 Part of the ``python/intro_geometry`` splc target (Layer 2 of the
-neurosymbolic SPL roadmap — see cookbook/71_linalg_micro_textbook for the
+neurosymbolic SPL roadmap — see cookbook/71_linalg_concept_book for the
 first instance of this pattern, ``linalg_graph.py``).  Loaded into the
 IPython kernel at workflow start:
 

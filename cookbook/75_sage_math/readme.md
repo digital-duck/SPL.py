@@ -65,6 +65,7 @@ principle as the plan's fallback-tiering design (§A.2).
 ## Prerequisites
 
 ```bash
+conda activate spl123
 pip install 'spl-llm[sage]'                          # passagemath wheels — no source build
 python -m sage.repl.ipython_kernel.install --user    # register the 'sagemath' kernel spec
 jupyter kernelspec list                              # verify: 'sagemath' should be listed
@@ -75,11 +76,11 @@ jupyter kernelspec list                              # verify: 'sagemath' should
 ```bash
 # Default problem: Galois group of x^5 - x - 1
 spl3 run cookbook/75_sage_math/basic_sagemath.spl \
-    --adapter ollama --model gemma3 --kernel-name sagemath
+    --llm ollama:gemma3 --kernel-name sagemath
 
 # Rational point on a conic (Legendre-style question)
 spl3 run cookbook/75_sage_math/basic_sagemath.spl \
-    --adapter ollama --model gemma3 --kernel-name sagemath \
+    --llm claude_cli --kernel-name sagemath \
     --param problem="does x^2 + y^2 = 3*z^2 have a rational solution?"
 
 # Elliptic curve rank (curve 11a1)
@@ -89,7 +90,7 @@ spl3 run cookbook/75_sage_math/basic_sagemath.spl \
 
 # Exact factorization over Q
 spl3 run cookbook/75_sage_math/basic_sagemath.spl \
-    --adapter ollama --model gemma3 --kernel-name sagemath \
+    --llm claude_cli --kernel-name sagemath \
     --param problem="factor x^4 - 1 over the rationals"
 ```
 
@@ -175,7 +176,7 @@ fails immediately at the preflight —
 ## Where this goes next (per the plan)
 
 - **A-2** — `verifier: "sage"` nodes in `graph_lib` + domain YAML
-  `kernel_name`, so micro-textbook notebooks (recipes 71/73/74) carry the Sage
+  `kernel_name`, so concept-book notebooks (recipes 71/73/74) carry the Sage
   kernel in their `.ipynb` metadata.
 - **A-4** — upgrade geometry-domain verifiers (conics, projective duality) to
   Sage, seed `classical_mechanics` with SageManifolds.

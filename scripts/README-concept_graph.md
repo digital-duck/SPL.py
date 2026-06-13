@@ -1,8 +1,8 @@
 # concept_graph.py — generic concept-graph CLI
 
 A standalone command-line tool that inspects, visualizes, shares, and
-composes *any* concept graph produced for the micro-textbook framework
-(see [cookbook recipe 71](../cookbook/71_linalg_micro_textbook/readme.md)) —
+composes *any* concept graph produced for the concept-book framework
+(see [cookbook recipe 71](../cookbook/71_linalg_concept_book/readme.md)) —
 without the domain graph's module needing to import or know about this tool.
 
 ## The contract
@@ -16,7 +16,7 @@ build() -> networkx.DiGraph
 
 whose nodes carry at least `kind` (`"primitive" | "concept" | "application"`),
 `tier`, `defines`, and `composed_of`, and whose edges `u → v` mean "u is a
-prerequisite of v". `cookbook/71_linalg_micro_textbook/linalg_graph.py` and
+prerequisite of v". `cookbook/71_linalg_concept_book/linalg_graph.py` and
 `cookbook/73_intro_geometry/geometry_graph.py` are worked examples.
 
 Domain modules stay **fully self-contained** by design — each owns its own

@@ -21,59 +21,6 @@ IMPORT 'sympy_tools'
 -- Gate prompts live here (not in sympy_tools) so the v1 harness stays
 -- untouched for A/B runs. Binary one-line verdict: pass / fail.
 
-CREATE FUNCTION sanity_check_plan(problem TEXT, plan TEXT)
-RETURNS TEXT AS $$
-A student asked: "{problem}"
-
-A planner translated it into this ordered plan, one step per line in the
-format <expression>|<operation>, where PREV means "the result of the
-previous step":
-{plan}
-
-Your ONLY job is to check whether this plan sets up the question that
-was actually asked. Do NOT execute any math. Check ONLY for:
-
-- Wrong starting expression: line 1 does not transcribe the expression
-  stated in the problem. FIRST extract the expression from the problem
-  statement, THEN compare it to line 1 symbol by symbol — every digit,
-  sign, exponent, and function name must match. If the problem says
-  7*y**2 - y and line 1 says anything else, that is a fail.
-- Wrong operation: the problem asks for one operation (e.g. integrate)
-  but the plan uses another (e.g. diff)
-- Missing final step: the problem asks for a final result (e.g. "solve
-  for x") that the plan never reaches
-- Extra steps that change what the final result means
-
-Reply with EXACTLY one line and nothing else:
-  pass
-or
-  fail | <one short reason>
-$$;
-
-CREATE FUNCTION sanity_check_chain(problem TEXT, trace TEXT)
-RETURNS TEXT AS $$
-A student asked: "{problem}"
-
-A symbolic math engine computed this chain of EXACT steps, in order:
-{trace}
-
-Your ONLY job is to check whether this chain answers the question that
-was actually asked. Do NOT re-verify the arithmetic — every step above
-is already machine-verified. Check ONLY for plan-level mismatches:
-
-- Wrong starting expression: step 1 does not operate on the expression
-  stated in the problem (changed coefficient, sign, exponent, function)
-- Wrong operation: the problem asks for one operation (e.g. integrate)
-  but the chain performs another (e.g. differentiate)
-- Missing final step: the problem asks for a final result (e.g. "solve
-  for x") that the chain never reaches
-- Extra steps that change what the final result means
-
-Reply with EXACTLY one line and nothing else:
-  pass
-or
-  fail | <one short reason>
-$$;
 
 -- ── One chain step, CALLed once per item ─────────────────────
 -- _v2 suffix avoids a registry collision when this file and
@@ -127,7 +74,7 @@ DO
     WHEN = 'yes' THEN
       DO
         -- ── ARM A: plan -> verified SymPy chain -> sanity gate -> explain ──
-        LOGGING f"[arm=solver] Problem '@{@problem}' — planning the chain ..." LEVEL INFO
+        LOGGING f"[arm=solver] Problem: '{@problem}' — planning the chain ..." LEVEL INFO
 
         GENERATE decompose_problem(@problem) INTO @steps_text;
         CALL trim(@steps_text) INTO @steps_text;
@@ -165,7 +112,7 @@ DO
 
         EVALUATE @plan_verdict
           WHEN IS NOT 'pass' THEN
-            LOGGING f'[arm=solver] PLAN SANITY FAILURE — gate verdict: {@plan_verdict_raw}' LEVEL ERROR
+            LOGGING f'[arm=solver] PLAN SANITY FAILURE — gate verdict: {@plan_verdict} (raw: {@plan_verdict_raw})' LEVEL ERROR
             CALL write_file(f'{@log_dir}/chain_trace.md',
               f'(plan failed the sanity gate)\n{@steps_text}\nPLAN SANITY: {@plan_verdict_raw}\n') INTO NONE;
             RETURN f'[PLAN SANITY FAILURE] The decomposed plan does not set up the problem as asked.\nGate verdict: {@plan_verdict_raw}\nPlan:\n{@steps_text}'

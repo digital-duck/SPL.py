@@ -85,19 +85,19 @@ SUPPORTED_LANGS: dict[str, dict] = {
         "framework": "pocketflow",
     },
     "python/linalg": {
-        "label":     "Python — linalg micro-textbook (.ipynb via linalg_graph)",
+        "label":     "Python — linalg concept-book (.ipynb via linalg_graph)",
         "ext":       ".ipynb",
         "extras":    ["requirements.txt"],
         "framework": "linalg",
     },
     "python/intro_geometry": {
-        "label":     "Python — intro geometry micro-textbook (.ipynb via geometry_graph)",
+        "label":     "Python — intro geometry concept-book (.ipynb via geometry_graph)",
         "ext":       ".ipynb",
         "extras":    ["requirements.txt"],
         "framework": "intro_geometry",
     },
     "python/domain_textbook": {
-        "label":     "Python — generic domain micro-textbook (.ipynb; @domain_yaml resolved at runtime via graph_lib)",
+        "label":     "Python — generic domain concept-book (.ipynb; @domain_yaml resolved at runtime via graph_lib)",
         "ext":       ".ipynb",
         "extras":    ["requirements.txt"],
         "framework": "domain_textbook",

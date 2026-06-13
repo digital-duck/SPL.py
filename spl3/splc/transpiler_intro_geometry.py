@@ -74,7 +74,7 @@ class IntroGeometryTranspiler(DomainGraphTranspiler):
 
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
-        nb_json = IntroGeometryTranspiler("build_micro_textbook", spl_dir=Path(".")).transpile(program)
+        nb_json = IntroGeometryTranspiler("build_concept_book", spl_dir=Path(".")).transpile(program)
         Path("out.ipynb").write_text(nb_json)
     """
 

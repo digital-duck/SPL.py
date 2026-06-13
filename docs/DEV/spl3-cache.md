@@ -7,7 +7,7 @@
 
 ## 1. Motivation
 
-The micro-textbook workflow is LLM-intensive by design: generating and verifying
+The concept-book workflow is LLM-intensive by design: generating and verifying
 every concept section in a knowledge graph costs dozens of LLM calls per run.
 Good caching is not a performance optimisation — it is what makes iterative
 development of a large project economically feasible, and what makes on-demand
@@ -203,13 +203,13 @@ purged. Natural audit trail; safe rollback to any prior verified state.
 **Fragment-level caching** — cache static prompt prefixes (pedagogical
 guidelines, domain description, rubric) separately from dynamic per-concept
 suffixes. Reduces token cost on Layer 1 misses by enabling Anthropic/OpenAI
-prefix caching to hit more aggressively. For the micro-textbook: the workflow
+prefix caching to hit more aggressively. For the concept-book: the workflow
 preamble (domain, graph structure, primitives) is the cacheable prefix; the
 per-concept generation call is the dynamic suffix.
 
 **Dependency-graph invalidation** — the build-system pattern (Make, Bazel, Nix,
 Nix derivations). When upstream node X changes, all downstream nodes that depend
-on X are invalidated. For the micro-textbook: if `linear_combination` is
+on X are invalidated. For the concept-book: if `linear_combination` is
 regenerated (new content hash), all concepts whose `composed_of` references
 `linear_combination` get new dependency hashes → their Layer 2 keys change →
 automatic miss → re-generate on next request.
@@ -474,7 +474,7 @@ This is efficient — no blob re-serialization on promotion.
 
 ## 8. Provenance Integration
 
-The content cache is the physical implementation of the micro-textbook
+The content cache is the physical implementation of the concept-book
 trust-badge pipeline. Badges accumulate on two independent axes:
 
 ```
@@ -556,7 +556,7 @@ GENERATE write_section(@concept, @graph) INTO @section
 stale entries are served with a warning — useful during rubric transitions where
 you want to serve old content while re-generation runs in the background.
 
-### 10.3 `cache_get` / `cache_put` (no new syntax — already in micro-textbook design)
+### 10.3 `cache_get` / `cache_put` (no new syntax — already in concept-book design)
 
 The `answer_on_demand` workflow already uses:
 
@@ -564,7 +564,7 @@ The `answer_on_demand` workflow already uses:
 CALL cache_get(@concept) INTO @section
 EVALUATE @section:
     WHEN miss:
-        CALL build_micro_textbook(@concept) INTO @section
+        CALL build_concept_book(@concept) INTO @section
         CALL cache_put(@concept, @section)
 APPEND @section TO @lesson
 ```
@@ -576,7 +576,7 @@ This maps directly to `ContentCache.get()` and `ContentCache.put()`. Register
 
 ## 11. Integration Points
 
-### 11.1 `build_micro_textbook` — warm vs cold run
+### 11.1 `build_concept_book` — warm vs cold run
 
 The `FOR @concept IN @order DO` loop checks Layer 2 before each generation:
 
@@ -586,7 +586,7 @@ warm run (second time):  every concept is a Layer 2 hit → near-zero LLM cost
 partial run (rubric bump): invalidated concepts regenerate; unaffected hits serve
 ```
 
-A fully warm cache makes subsequent runs of `build_micro_textbook` essentially
+A fully warm cache makes subsequent runs of `build_concept_book` essentially
 free. This is critical for the iterative development workflow: tweak a rubric,
 invalidate affected concepts, re-run — only the changed subtree is regenerated.
 
@@ -680,13 +680,13 @@ is a valid future optimisation but out of scope here.
 - [ ] `CACHE BY` clause in lexer / parser / AST
 - [ ] `UNLESS STALE` modifier
 - [ ] Executor: auto-compute `@dep_hashes` from graph ancestors when `CACHE BY` is present
-- [ ] Integration tests via `.spl` fixtures using the micro-textbook `build_micro_textbook` workflow
+- [ ] Integration tests via `.spl` fixtures using the concept-book `build_concept_book` workflow
 - [ ] Verify cold→warm run cost delta matches expected Layer 2 hit rate
 
 ### Phase 4 — Stack integration
 - [ ] Wire `spl3 judge --promote` to `cache.promote()` (closes loop with spl3-judge.md)
 - [ ] `spl3 cache stats` integrated into NDD leaderboard: "tokens saved via Layer 2" column
-- [ ] Pre-warmed cache export bundled with micro-textbook deliverable
+- [ ] Pre-warmed cache export bundled with concept-book deliverable
 - [ ] Design doc for Layer 3 (Momagrid peer cache sharing)
 
 ---

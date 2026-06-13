@@ -8,8 +8,8 @@ body of prose
 
 ## What this demonstrates
 
-A **trimmed-down** micro-textbook generator — just enough machinery to test
-the basic framework before tackling [recipe 71](../71_linalg_micro_textbook),
+A **trimmed-down** concept-book generator — just enough machinery to test
+the basic framework before tackling [recipe 71](../71_linalg_concept_book),
 which drives the same kind of pipeline off a 37-node concept graph. Where
 recipe 71 asks "does the *whole curriculum* compile to a notebook?", recipe 70
 asks a narrower question first: **"does verified content survive being asked
@@ -146,7 +146,7 @@ worth capturing before scaling generation across distributed workers (e.g.
 Momagrid), where knowing which sections are cache hits vs. fresh LLM calls
 determines how work should be scheduled and split.
 
-[Recipe 71](../71_linalg_micro_textbook) instruments the same way but through
+[Recipe 71](../71_linalg_concept_book) instruments the same way but through
 `_now()` / `_elapsed()` kernel helpers (via `SOLVE`, since its workflows are
 compiled to notebooks rather than run directly) — same signal, different
 plumbing for a different execution substrate.

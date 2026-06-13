@@ -3,8 +3,8 @@
 > Drafted 2026-06-10 against the current codebase (IPython kernel, `SOLVE`/`ASSERT`,
 > `python/<domain>` splc targets, `spl3 judge`, `spl3 cache` all shipped).
 > Companion design docs in the zinets repo:
-> `zinets/docs/arxiv/micro-textbook/README.md` and
-> `zinets/docs/arxiv/micro-textbook/ideas/neurosymbolic_spl_landscape_design_implementation.md`.
+> `zinets/docs/arxiv/concept-book/README.md` and
+> `zinets/docs/arxiv/concept-book/ideas/neurosymbolic_spl_landscape_design_implementation.md`.
 
 **One-line goal:** keep `SOLVE`/`ASSERT` exactly as they are, and widen what stands
 behind them — SageMath widens verification *coverage* (more domains, stronger CAS),
@@ -24,7 +24,7 @@ expressed declaratively in SPL and fully auditable (§6).
    integration work doubles as the guided curriculum the landscape doc calls for
    ("then breadth as needed: … Lean 4 with mathlib — a larger lift").
 
-2. **Micro-textbook enhancement.** SymPy proved the generate-then-verify loop for
+2. **Concept-book enhancement.** SymPy proved the generate-then-verify loop for
    Linear Algebra. Sage unlocks the next domain targets on the generalization path
    (`python/classical_mechanics` via SageManifolds, richer geometry, abstract
    algebra via GAP); Lean upgrades the strongest claims in a textbook from
@@ -38,7 +38,7 @@ expressed declaratively in SPL and fully auditable (§6).
    probabilistic (`GENERATE`) and deterministic (`SOLVE`/`ASSERT`) steps composing
    seamlessly. No orchestration framework offers machine-checked verification at
    the language level. The verifier ladder is SPL's claim to that ground, and the
-   micro-textbook is its first end-to-end demonstration.
+   concept-book is its first end-to-end demonstration.
 
 ---
 
@@ -56,7 +56,7 @@ This is the **verifier ladder**: numeric spot-check (NumPy) → exact symbolic
 instance (SymPy/Sage) → machine-checked proof (Lean). Same two SPL constructs at
 every rung.
 
-**Locked design decisions this plan must not violate** (from the micro-textbook README):
+**Locked design decisions this plan must not violate** (from the concept-book README):
 
 - No new SPL constructs. `SOLVE`/`ASSERT` are sufficient.
 - The IPython kernel is the universal interface — native engines are thin-wrapped
@@ -79,7 +79,7 @@ Sage is an umbrella CAS wrapping Maxima, GAP, Singular, PARI, FLINT — and it
   classification over ℚ; `sympy.geometry` is thin here.
 - **`python/classical_mechanics`** — SageManifolds for differential geometry /
   tensor calculus (Lagrangian mechanics payoff concepts).
-- **Future domains** — abstract algebra (GAP: a group-theory micro-textbook),
+- **Future domains** — abstract algebra (GAP: a group-theory concept-book),
   number theory (PARI), commutative algebra (Singular). Each is just a new
   `<domain>_graph.yaml` with `verifier: "sage"` nodes; the SPL workflow is unchanged.
 
@@ -201,7 +201,7 @@ canonical at implementation time, not the filename written here.
 
 ### B.1 Role: proof-grade verification and mathlib as citation authority
 
-Three concrete uses inside the micro-textbook pipeline, in increasing ambition:
+Three concrete uses inside the concept-book pipeline, in increasing ambition:
 
 1. **Statement checking** — the LLM formalizes a textbook claim as a Lean
    statement; we elaborate `example : <stmt> := by sorry`. If it typechecks (only
@@ -231,7 +231,7 @@ things on orthogonal axes**:
 
 A section can carry any combination — a kernel-checked statement with confusing
 exposition still needs review, and human review need not wait for AI review (the
-micro-textbook process is agile, not a waterfall). `canonical` remains the
+concept-book process is agile, not a waterfall). `canonical` remains the
 composite end state: strongest available badge on *both* axes. Within the claim
 axis the ordering is strict (`machine_proved` outranks `machine_verified`);
 across axes there is no ordering. B-4 implements this as a badge *set* in cache
@@ -349,7 +349,7 @@ not "the textbook claim is proved." Mitigations, all in scope:
 | ID | Deliverable | Size | Status |
 |---|---|---|---|
 | B-1 | `lean_bridge` prototype: REPL session mgmt (incl. `env`-id hygiene, §B.2), `lean_check`, timeout/restart, tests | M | **shipped** 2026-06-11 — `spl3/lean_bridge.py` (`LeanREPL`: persistent `leanprover-community/repl` pinned `v4.30.0`; every check in a fresh env forked from the warm base — definitions verified not to leak; timeout → transparent restart, crash recovery; `statement_ok` / `check` / `feedback` / `find`; `repl_available()` test guard) + `cookbook/tools/lean/setup_lean.sh` (elan + pinned repl build). 15/15 tests green against the **live** REPL (`tests/test_lean_bridge.py`). See [`spl3-lean.md`](./spl3-lean.md) |
-| B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M | **shipped** 2026-06-11 — statement check (Stage 1, capped typecheck-repair loop) + LLM faithfulness judge (Stage 2) live in recipe 76; recipe-71 wiring delivered as `cookbook/71_linalg_micro_textbook/lean_payoffs.spl`, the post-pass over the build run's payoff concepts (Lean stays off the default pipeline path, §B.4). Here UNFAITHFUL *gates* the badge (real textbook entries), unlike recipe 76 where it is only reported. Verified end-to-end against live mathlib: `rank_nullity` and `diagonalization` promoted to the `machine_verified,machine_proved` badge set with the audited statement stored; `spectral_theorem` found no citation and correctly stayed `machine_verified` |
+| B-2 | Statement-level checking (`lean_statement_ok`) wired into recipe 71 for 3–5 payoff concepts, + `spl3 judge` faithfulness check on the formalization (§B.4) | M | **shipped** 2026-06-11 — statement check (Stage 1, capped typecheck-repair loop) + LLM faithfulness judge (Stage 2) live in recipe 76; recipe-71 wiring delivered as `cookbook/71_linalg_concept_book/lean_payoffs.spl`, the post-pass over the build run's payoff concepts (Lean stays off the default pipeline path, §B.4). Here UNFAITHFUL *gates* the badge (real textbook entries), unlike recipe 76 where it is only reported. Verified end-to-end against live mathlib: `rank_nullity` and `diagonalization` promoted to the `machine_verified,machine_proved` badge set with the audited statement stored; `spectral_theorem` found no citation and correctly stayed `machine_verified` |
 | B-3 | Proof checking + repair-loop recipe (`cookbook/76_lean_proof/`) | M | **shipped** 2026-06-11 — `lean_proof.spl` rewritten against the real B-1 API (the 2026-06-10 prepared draft is in git history) and verified end-to-end: `machine_proved` via both the citation path (`Nat.add_comm`, zero proof tokens) and the LLM-tactic path (`Nat.le_self_pow`); repair-cap exhaustion correctly degrades to `statement_checked` without blocking delivery (§B.2 contract). See recipe readme for verified runs |
 | B-4 | `machine_proved` badge: badge-*set* model refactor across `cache/types|meta|content|cli` + `judge --cache-key` (ordinal today — §B.1), tier-naming reconciliation (`human_verified` vs `canonical`), prose+statement side-by-side rendering | M | **shipped** 2026-06-11 — badge set on two axes in `cache.types` (`CLAIM_BADGES`/`EXPOSITION_BADGES`, axis-local `satisfies()`, derived `is_canonical()`); `promote()` adds badges; `min_badge` filter no longer lets `ai_reviewed` satisfy `machine_verified` (the old ordinal did); `statement` column + `spl3 cache show` prose↔formal rendering; recipe 76 writes `machine_proved` + `verifier='lean'` + statement on kernel-checked success (verified end-to-end). Naming reconciled: `human_verified` is the exposition-axis top badge, `canonical` is derived-only (★ in CLI). Legacy DBs/exports migrate automatically |
 | B-5 | *(stretch)* mathlib-citation mode — `exact?` with suggestion parsing, or Loogle/LeanSearch (§B.1 caveat); claims link to mathlib lemma names | M/R | **shipped** 2026-06-11 — `LeanREPL.find()` (`exact?` + suggestion parsing) citation-first in recipe 76 Stage 3a; mathlib project wiring landed (`LeanREPL.mathlib()`, `setup_lean.sh --with-mathlib`, `mathlib_available()` test guard); `find_citation()` adds the Loogle HTTP fallback (`loogle_pattern()` derives the query from the proposition's conclusion) with **every** candidate kernel-checked before it counts — the network is a search hint, never a trust source. Exercised end-to-end by `lean_payoffs.spl` (B-2 row) |
@@ -405,7 +405,7 @@ The rule: *never learn ahead of the milestone that needs it.*
 | B-2 | mathlib naming conventions, `exact?`/`apply?`, searching mathlib (Loogle, Moogle) | *Mathematics in Lean* (free) — https://leanprover-community.github.io/mathematics_in_lean/ |
 | B-3 | Basic tactics (`simp`, `ring`, `linarith`, `norm_num`), reading Lean error messages (this feeds the repair-loop prompts) | *Mathematics in Lean* ch. 2–5; Lean Zulip archive |
 
-The payoff structure mirrors the micro-textbook's own thesis: the verifier you
+The payoff structure mirrors the concept-book's own thesis: the verifier you
 build to check the author's content *is* the lab the learner plays in. Here, the
 integration you build to check SPL workflows is the curriculum you learn Sage and
 Lean through.

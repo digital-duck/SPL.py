@@ -90,7 +90,7 @@ cd ~/projects/digital-duck/SPL.py
 pip install -e ".[kernel,sage,dev]"
 
 # Cookbook prerequisites NOT declared in pyproject.toml:
-#   sympy    — recipes 67/71/77 (the SymPy rung) and the micro-textbook verifiers
+#   sympy    — recipes 67/71/77 (the SymPy rung) and the concept-book verifiers
 #   networkx — recipes 71/74 (domain concept graphs)
 pip install sympy networkx
 ```
@@ -231,11 +231,13 @@ python -c "from spl3.lean_bridge import repl_available, mathlib_available; print
 # → True True
 
 # Stdlib tier (fast, ~5 s warm-up):
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli
+spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3  # claude_cli
 
 # Mathlib tier (first warm-up imports mathlib, 10–40 s):
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
-    --param backend=lean --param problem="the square of any real number is nonnegative"
+spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel \
+  --llm ollama:gemma3 \
+  --param backend=lean --param problem="the square of any real number is nonnegative"
+  # --llm claude_cli \
 # → Badge: machine_proved (citation path, e.g. sq_nonneg)
 ```
 

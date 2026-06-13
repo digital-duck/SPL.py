@@ -42,8 +42,6 @@ WORKFLOW solve_one_step
 DO
   CALL split_part(@step, '|', '1') INTO @raw_expression;
   CALL split_part(@step, '|', '2') INTO @operation;
-  CALL trim(@raw_expression) INTO @raw_expression;
-  CALL trim(@operation) INTO @operation;
 
   -- Resolve the PREV placeholder deterministically — the running
   -- expression never makes a round trip through the LLM. Compare
@@ -75,7 +73,6 @@ WORKFLOW math_solver_multi_step
 DO
   -- Step 1 (probabilistic): LLM decomposes the problem into an ordered chain
   GENERATE decompose_problem(@problem) INTO @steps_text;
-  CALL trim(@steps_text) INTO @steps_text;
 
   LOGGING f"Problem '@{@problem}' decomposed into:\n\n\n{@steps_text}\n\n" LEVEL INFO
 
@@ -94,8 +91,6 @@ DO
     CALL solve_one_step(@step, @running_expression) INTO @step_summary;
     CALL split_part(@step_summary, '|', '1') INTO @running_expression;
     CALL split_part(@step_summary, '|', '2') INTO @trace_line;
-    CALL trim(@running_expression) INTO @running_expression;
-    CALL trim(@trace_line) INTO @trace_line;
 
     -- f-string interpolation only substitutes bare {@var} placeholders
     -- (no inline arithmetic), so compute the 1-based display index first

@@ -183,14 +183,24 @@ WORKFLOW problem_generator
   INPUT @topic      TEXT := 'quadratic equations'
   INPUT @difficulty TEXT := 'medium'
   INPUT @numbers    TEXT := '1,2,3'
+  INPUT @log_dir    TEXT := 'cookbook/68_problem_generator/logs-spl'
   OUTPUT @lesson    TEXT
 DO
   -- Build lesson header with LLM-written intro
   GENERATE write_lesson_intro(@topic, @difficulty, @numbers) INTO @intro;
   @lesson := '# ' + @topic + ' — Practice Problems\n\n' + @intro + '\n\n---\n\n';
 
+  CALL now_iso() INTO @run_ts;
+  CALL replace(@run_ts, ':', '') INTO @run_ts;
+  @log_file := f'{@log_dir}/chain_trace-{@run_ts}.md';
+
+  CALL write_file(@log_file,
+    f"# Problem Generator — chain trace\n\n**Topic:** {@topic}\n**Difficulty:** {@difficulty}\n**Problems:** {@numbers}\n**Started:** {@run_ts}\n\n") INTO NONE;
+
   -- Answer-first loop: SymPy computes exact answer, LLM writes around it
   WHILE @n IN @numbers DO
+    CALL now_iso() INTO @t_problem;
+
     -- Deterministic: SymPy generates expression + exact answer
     CALL generate_math_problem(@topic, @difficulty) INTO @raw;
 
@@ -205,10 +215,20 @@ DO
             + @problem_text + '\n\n'
             + '<details><summary>Worked Solution</summary>\n\n'
             + @solution + '\n\n</details>\n\n---\n\n';
+
+    CALL write_file(@log_file,
+      f"## Problem {@n} (at {@t_problem})\n**Raw:** {@raw}\n\n**Question:** {@problem_text}\n\n**Solution:** {@solution}\n\n---\n\n", 'a') INTO NONE;
   END;
+
+  CALL now_iso() INTO @t_done;
+  CALL write_file(@log_file,
+    f"## Final lesson (at {@t_done})\n{@lesson}\n\n---\n*status: complete*\n", 'a') INTO NONE;
 
   RETURN @lesson WITH status = 'complete';
 EXCEPTION
   WHEN BudgetExceeded THEN
+    CALL now_iso() INTO @t_done;
+    CALL write_file(@log_file,
+      f"## Exception — BudgetExceeded (at {@t_done})\n**Partial lesson:** {@lesson}\n\n---\n*status: budget_limit*\n", 'a') INTO NONE;
     RETURN @lesson WITH status = 'budget_limit';
 END;

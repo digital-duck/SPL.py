@@ -6,7 +6,7 @@
 -- Given a free-form natural-language @question, resolve it to the nearest
 -- concept node, generate a learning path from the learner's current state
 -- to that concept, and answer in the requested style. Unlike
--- build_micro_textbook (which produces a full linear textbook), this
+-- build_concept_book (which produces a full linear textbook), this
 -- workflow is the "ask anything, get the shortest path to understanding it"
 -- entry point — same graph, same verifier, same style machinery, different
 -- traversal: gap()/learning_path() instead of ancestors()/productivity_order().
@@ -110,7 +110,7 @@ DO
         LOGGING f"Section {@_i}: {@concept}" LEVEL INFO
 
         -- 4a. Content cache lookup — same write-once, content-addressed
-        --     pattern as build_micro_textbook.spl: a verified section for
+        --     pattern as build_concept_book.spl: a verified section for
         --     a given concept, once produced, is reused across every
         --     question that happens to route through it.
         CALL cache_get(@concept) INTO @section

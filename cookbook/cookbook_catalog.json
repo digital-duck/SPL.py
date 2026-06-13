@@ -1321,7 +1321,7 @@
       "dir": "68_problem_generator",
       "log": "problem_generator",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "agentic",
       "tier": 2,
       "requires": [
@@ -1344,7 +1344,7 @@
       "dir": "69_notebook_gen",
       "log": "notebook_gen",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "agentic",
       "tier": 2,
       "requires": [
@@ -1378,18 +1378,18 @@
     },
     {
       "id": "71",
-      "name": "Linear Algebra Micro-Textbook Generator",
-      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified micro-textbook pipeline \u2014 compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view \u2192 physical notebook artifact)",
+      "name": "Linear Algebra Concept-Book Generator",
+      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline \u2014 compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view \u2192 physical notebook artifact)",
       "args": [
         "spl3",
         "splc",
         "compile",
-        "cookbook/71_linalg_micro_textbook/build_micro_textbook.spl",
+        "cookbook/71_linalg_concept_book/build_concept_book.spl",
         "--lang",
         "python/linalg"
       ],
-      "dir": "71_linalg_micro_textbook",
-      "log": "linalg_micro_textbook",
+      "dir": "71_linalg_concept_book",
+      "log": "linalg_concept_book",
       "is_active": true,
       "approval_status": "new",
       "category": "compilation",
@@ -1428,12 +1428,12 @@
     },
     {
       "id": "73",
-      "name": "Intro Geometry Micro-Textbook Generator",
+      "name": "Intro Geometry Concept-Book Generator",
       "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Authored spec-first, DODA-style \u2014 .spl workflows validate cleanly but the python/intro_geometry splc target doesn't exist yet (tracked in README-todo.md)",
       "args": [
         "spl3",
         "validate",
-        "cookbook/73_intro_geometry/build_micro_textbook.spl"
+        "cookbook/73_intro_geometry/build_concept_book.spl"
       ],
       "dir": "73_intro_geometry",
       "log": "intro_geometry",
@@ -1444,6 +1444,51 @@
       "requires": [
         "networkx",
         "sympy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "74",
+      "name": "Concept-Book Generator",
+      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml — compiled once, runs against any domain shaped the same way.",
+      "args": [
+        "spl3",
+        "validate",
+        "cookbook/74_concept_book/build_concept_book.spl"
+      ],
+      "dir": "74_concept_book",
+      "log": "concept_book",
+      "is_active": false,
+      "approval_status": "approved",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "75",
+      "name": "SageMath Solver",
+      "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/75_sage_math/basic_sagemath.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--kernel-name",
+        "sagemath"
+      ],
+      "dir": "75_sage_math",
+      "log": "sage_math",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "sagemath"
       ],
       "excluded_adapters": []
     }

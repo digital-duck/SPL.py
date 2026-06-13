@@ -720,7 +720,7 @@ def cache_get(concept: str, rubric_version: str = "v1", params_json: str = "{}")
         CALL cache_get(@concept) INTO @section
         EVALUATE @section:
             WHEN miss:
-                CALL build_micro_textbook(@concept) INTO @section
+                CALL build_concept_book(@concept) INTO @section
                 CALL cache_put(@concept, @section)
     """
     try:

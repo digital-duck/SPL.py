@@ -1,0 +1,227 @@
+-- Layer 4a: build_concept_book.spl  (recipe 74 — generic domain concept-book)
+-- Same end-to-end concept-book generation as recipe 71 (linalg) and
+-- recipe 73 (intro_geometry) — but ONE source compiles against EITHER
+-- domain, selected at notebook *runtime* via @domain_yaml.
+--
+-- Logical view (DODA): the physical artifact is produced by
+--   splc --lang python/domain_textbook build_concept_book.spl
+--
+-- The setup cell resolves @domain_yaml (a filename like 'linalg_graph.yaml'
+-- or 'geometry_graph.yaml') through graph_lib.load_domain() at notebook
+-- run time, then builds @graph / @primitives / @domain_data from it — see
+-- transpiler_domain_textbook.py's "runtime-resolved DomainConfig".
+--
+-- Recipe 71 needed two verifiers (verify_math + shape_check); recipe 73
+-- needed one (verify_geometry). Recipe 74 needs ONE generic call —
+-- graph_lib.verify_content(section, domain_data) — that dispatches on
+-- domain_data["domain"] internally. That collapse from "N domain-specific
+-- verifier CALLs" to "one CALL verify_content(...)" is the proof this
+-- recipe exists to deliver: the *shape* of verification generalizes too,
+-- not just the graph data and algorithms.
+--
+-- Style: @style selects a profile from style_profiles.py (shared verbatim
+-- with recipes 71/73 — see readme.md for why a copy lives here too).
+--
+-- HTML output: @output_html (default 'concept_book.html', '' to skip)
+-- produces a self-contained HTML page with MathJax, two-column layout
+-- (TOC sidebar + content), and clean academic typography. This is the
+-- primary artifact; PDF derives from it via browser print or weasyprint.
+
+-- ── Prompt templates ────────────────────────────────────────────────────────
+-- Domain-neutral on purpose: the same prompt text must read naturally whether
+-- @domain_yaml resolves to linear algebra or intro geometry (or a future
+-- domain). Domain-specific framing comes from {concept}/{context}/{style_guide}
+-- — supplied by the resolved graph and style profile, not hardcoded here.
+
+CREATE FUNCTION write_section(concept TEXT, context TEXT, style_guide TEXT, language TEXT)
+RETURN TEXT
+AS $$
+You are an expert author writing a concept-book section.
+
+{style_guide}
+
+Write a self-contained section for the concept: {concept}
+Surrounding context: {context}
+
+Begin the section with a level-2 Markdown heading: ## {concept}
+
+Follow the structure and length specified in the STYLE GUIDE above exactly.
+Use LaTeX for all mathematics and notation.
+Write the narrative in language: {language}  (ISO 639-1 code, e.g. "en", "zh", "fr", "es").
+Mathematical notation and LaTeX remain in their standard form regardless of language.
+Output only the section text. No preamble, no metadata.
+$$;
+
+CREATE FUNCTION refine_section(section TEXT, feedback TEXT, style_guide TEXT)
+RETURN TEXT
+AS $$
+You are an expert author. Revise the section below based on the feedback
+provided. Keep all correct content; fix only what is flagged. Maintain the
+style described below throughout the revision.
+
+{style_guide}
+
+SECTION:
+{section}
+
+FEEDBACK:
+{feedback}
+
+Output the revised section only. No preamble. No commentary.
+$$;
+
+CREATE FUNCTION write_payoff(target TEXT, applications TEXT, style_guide TEXT)
+RETURN TEXT
+AS $$
+You are an expert author writing the capstone of a concept-book.
+
+{style_guide}
+
+The textbook culminates in the concept: {target}
+Applications this concept unlocks: {applications}
+
+Write a "Payoff" section that:
+1. Explains what {target} achieves and why it is the natural endpoint.
+2. Shows how it connects to each listed application domain.
+3. Ends with an invitation to explore one application in depth.
+
+Begin with: ## Payoff
+
+Follow the length and structure in the STYLE GUIDE above.
+Use LaTeX for mathematics and notation. Output only the section. No preamble.
+$$;
+
+-- ── Main workflow ────────────────────────────────────────────────────────────
+
+WORKFLOW build_concept_book
+    INPUT:
+        @domain_yaml TEXT DEFAULT 'linalg_graph.yaml',
+        @target TEXT DEFAULT 'spectral_theorem',
+        @style TEXT DEFAULT 'textbook',
+        @primitive_budget INT DEFAULT 2,
+        @payoff_weight FLOAT DEFAULT 1.5,
+        @language TEXT DEFAULT 'en',
+        @output_html TEXT DEFAULT 'concept_book.html',
+        @log_dir TEXT DEFAULT 'cookbook/74_concept_book/logs-spl'
+    OUTPUT:
+        @textbook TEXT
+DO
+    -- 0. Timing + logging setup
+    SOLVE @t_workflow_start FLOAT := _now()
+    SOLVE @_ts TEXT := now_iso()
+    SOLVE @_ts_safe TEXT := '@@_ts@@'.replace(':', '-').replace('T', '_')
+    SOLVE @log_file TEXT := '@@log_dir@@/chain_trace-@@_ts_safe@@.md'
+    CALL write_file(@log_file, "# Concept-Book Run\n\ndomain: @@domain_yaml@@\ntarget: @@target@@\nstarted: @@_ts@@\n\n", "w") INTO @_
+
+    -- 1. Resolve style profile once (deterministic — no LLM involved)
+    SOLVE @style_guide TEXT := style_instruction(@style)
+
+    LOGGING f"Domain: {@domain_yaml}  Style: {@style}" LEVEL INFO
+
+    -- 2. Verify the resolved concept graph is well-formed (deterministic
+    --    checks — @graph / @primitives / @domain_data come from @domain_yaml,
+    --    loaded once in the setup cell via graph_lib.load_domain()).
+    ASSERT acyclic(@graph)
+
+    ASSERT reducible(@graph, @primitives)
+
+    -- 3. Scope to target concept and compute teaching order
+    SOLVE @needed SET := ancestors(@graph, @target)
+
+    SOLVE @order LIST := productivity_order(restrict(@graph, @needed), weight=@payoff_weight)
+
+    SOLVE @order_len INT := len(@order)
+
+    LOGGING f"Teaching {@order_len} concepts toward {@target}" LEVEL INFO
+    CALL write_file(@log_file, f"## Teaching order ({@order_len} concepts)\n\n" + "\n".join(f"- {c}" for c in @order) + "\n\n", "a") INTO @_
+
+    -- 4. Generate and verify one section per concept in dependency order
+    @textbook := ""
+    @_i := 0
+
+    WHILE @_i < @order_len DO
+        SOLVE @concept TEXT := @order[@_i]
+        SOLVE @t_section_start FLOAT := _now()
+
+        LOGGING f"Section {@_i}: {@concept}" LEVEL INFO
+
+        -- 4a. Content cache lookup — concept id is the cache key's identity.
+        --     Write-once, content-addressed (Layer 2): a hit costs zero LLM
+        --     calls and skips straight past generation AND verification,
+        --     because what's cached here was already verified before being
+        --     stored (see cache_put below — only post-ASSERT/verify_content
+        --     content ever reaches the cache). Mirrors the pattern proven in
+        --     cookbook/70_linalg_core_concepts/ and recipes 71/73.
+        CALL cache_get(@concept) INTO @section
+        EVALUATE @section
+            WHEN = "miss" THEN
+                LOGGING f"cache MISS for {@concept} — generating with the LLM" LEVEL INFO
+
+                -- 4b. Generate the section for this concept (style + language injected)
+                GENERATE write_section(@concept, @concept, @style_guide, @language) INTO @section
+
+                -- 4c. Primitive budget: no more than primitive_budget new primitives per section
+                ASSERT new_primitives(@section, @primitives) <= @primitive_budget
+                    OTHERWISE GENERATE refine_section(@section, "introduce at most one new primitive per section", @style_guide) INTO @section
+
+                -- 4d. Generic content verification — graph_lib.verify_content()
+                --     dispatches on domain_data["domain"] internally, so this
+                --     ONE call replaces recipe 71's verify_math+shape_check
+                --     pair AND recipe 73's verify_geometry, regardless of
+                --     which @domain_yaml is loaded. That collapse is the
+                --     whole point of recipe 74.
+                CALL verify_content(@section, @domain_data) INTO @check
+                EVALUATE @check
+                    WHEN contains("fail") THEN
+                        GENERATE refine_section(@section, @check, @style_guide) INTO @section
+                    ELSE
+                        LOGGING "Content verified" LEVEL INFO
+                END
+
+                -- 4e. Store the now-verified section — write-once, immutable (CAS)
+                CALL cache_put(@concept, @section) INTO @cache_key
+                LOGGING f"Stored verified section — cache key {@cache_key}" LEVEL INFO
+            ELSE
+                LOGGING f"cache HIT for {@concept} — reusing verified section (0 LLM calls)" LEVEL INFO
+        END
+
+        SOLVE @section_elapsed FLOAT := _elapsed(@t_section_start)
+        LOGGING f"[timing] {@concept}: {@section_elapsed:.1f}s" LEVEL INFO
+
+        -- Accumulate: always prefix with ## heading so HTML builder can split cleanly
+        @textbook := @textbook + "\n\n---\n\n## @@concept@@\n\n" + @section
+        CALL write_file(@log_file, f"### {@concept} ({@section_elapsed:.1f}s)\n\n" + @section + "\n\n", "a") INTO @_
+        @_i := @_i + 1
+    END
+
+    -- 5. Capstone: tie target to its payoff applications
+    SOLVE @apps LIST := applications_of(@graph, @target)
+
+    SOLVE @t_payoff_start FLOAT := _now()
+
+    GENERATE write_payoff(@target, @apps, @style_guide) INTO @capstone
+
+    SOLVE @payoff_elapsed FLOAT := _elapsed(@t_payoff_start)
+    LOGGING f"[timing] payoff: {@payoff_elapsed:.1f}s" LEVEL INFO
+
+    @textbook := @textbook + "\n\n---\n\n" + @capstone
+
+    SOLVE @total_elapsed FLOAT := _elapsed(@t_workflow_start)
+    LOGGING f"[timing] workflow total: {@total_elapsed:.1f}s for {@order_len} sections + payoff" LEVEL INFO
+
+    LOGGING f"Concept-book complete — domain: {@domain_yaml}  style: {@style}" LEVEL INFO
+    CALL write_file(@log_file, f"## Run complete\n\ntotal: {@total_elapsed:.1f}s\n", "a") INTO @_
+
+    -- 6. HTML output (primary artifact — self-contained, MathJax, TOC sidebar)
+    --    Set @output_html='' to skip file generation and return only @textbook.
+    EVALUATE @output_html
+        WHEN != "" THEN
+            CALL build_html_page(@textbook, @domain_yaml, @target, @language) INTO @html_content
+            CALL write_file(@output_html, @html_content, "w") INTO @_
+            LOGGING f"HTML concept-book written → {@output_html}" LEVEL INFO
+        ELSE
+            LOGGING "HTML output skipped (output_html='')" LEVEL INFO
+    END
+
+    COMMIT @textbook
+END

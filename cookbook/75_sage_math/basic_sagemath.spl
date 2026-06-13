@@ -83,6 +83,10 @@ DO
   SOLVE @sage_banner TEXT := version()
   LOGGING f"Verifier engine: {@sage_banner}" LEVEL INFO
 
+  CALL now_iso() INTO @run_ts;
+  CALL replace(@run_ts, ':', '') INTO @run_ts;
+  @log_file := f'{@log_dir}/chain_trace-{@run_ts}.md';
+
   -- Inject symbolic x, y, z into the kernel globals (Sage predefines
   -- only x). The conic branch below needs all three.
   SOLVE @_xyz TEXT := str(var('x y z'))
@@ -91,13 +95,14 @@ DO
   GENERATE parse_math_problem(@problem) INTO @parsed;
   CALL trim(@parsed) INTO @parsed;
 
-  LOGGING f"Problem '{@problem}' is translated into Sage:\n '{@parsed}'" LEVEL INFO
+  LOGGING f"Problem '{@problem}' is translated into Sage:\n\n\n '{@parsed}'\n\n" LEVEL INFO
 
   -- Extract expression and operation by splitting on '|'
   CALL split_part(@parsed, '|', '1') INTO @expression;
   CALL split_part(@parsed, '|', '2') INTO @operation;
-  CALL trim(@expression) INTO @expression;
-  CALL trim(@operation) INTO @operation;
+
+  CALL write_file(@log_file,
+    f"# Sage Solver — chain trace\n\n**Engine:** {@sage_banner}\n\n## Step 1 — LLM parse\n**Problem:** {@problem}\n**Parsed:** {@parsed}\n**Expression:** {@expression}\n**Operation:** {@operation}\n") INTO NONE;
 
   -- Step 2 (deterministic): exact computation, routed to the Sage kernel
   -- by SOLVE itself — no TOOL_API wrapper, the kernel namespace *is* Sage.
@@ -106,6 +111,7 @@ DO
   -- turns ^ into power, and the symbolic x/y/z coerce into QQ[...].
   -- Lower-case both sides before EVALUATE — see recipe 67's gotcha list.
   CALL lower(@operation) INTO @operation_lc;
+  SOLVE @_t0 TEXT := str(__import__('time').perf_counter())
   EVALUATE @operation_lc
     WHEN = 'galois' THEN
       SOLVE @sage_result TEXT := str(QQ['x'](@expression).galois_group())
@@ -118,18 +124,27 @@ DO
     ELSE
       @sage_result := 'unsupported_operation'
   END
+  SOLVE @elapsed TEXT := '%.3fs' % (__import__('time').perf_counter() - float('@@_t0@@'))
 
   -- Kernel state persists across statements (A-1 parity property):
   -- _spl_solve_result is still live from the last SOLVE above.
   ASSERT len(str(_spl_solve_result)) > 0
 
-  LOGGING f"Sage computed: {@sage_result}" LEVEL INFO
+  LOGGING f"Sage computed: {@sage_result} (elapsed: {@elapsed})" LEVEL INFO
+
+  CALL write_file(@log_file,
+    f"## Step 2 — Sage computation\n**Operation:** {@operation_lc}\n**Result:** {@sage_result}\n**Elapsed:** {@elapsed}\n", 'a') INTO NONE;
 
   -- Step 3 (probabilistic): LLM explains the exact result in plain English
   GENERATE explain_solution(@problem, @sage_result) INTO @explanation;
 
+  CALL write_file(@log_file,
+    f"## Step 3 — LLM explanation\n{@explanation}\n\n---\n*status: complete*\n", 'a') INTO NONE;
+
   RETURN @explanation WITH status = 'complete';
 EXCEPTION
   WHEN BudgetExceeded THEN
+    CALL write_file(@log_file,
+      f"## Exception — BudgetExceeded\n**Partial result:** {@sage_result}\n\n---\n*status: budget_limit*\n", 'a') INTO NONE;
     RETURN @sage_result WITH status = 'budget_limit';
 END;

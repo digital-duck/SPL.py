@@ -148,9 +148,9 @@ advertised `verifier='sage'` since A-3, but nothing had exercised it.
 
 ## 6. What shipped (B-2/B-5 remainders) — recipe 71 `lean_payoffs`
 
-`cookbook/71_linalg_micro_textbook/lean_payoffs.spl` — the B-2 post-pass:
-statement-level Lean checking for the micro-textbook's payoff concepts,
-run *after* a `build_micro_textbook` run so Lean stays off the default
+`cookbook/71_linalg_concept_book/lean_payoffs.spl` — the B-2 post-pass:
+statement-level Lean checking for the concept-book's payoff concepts,
+run *after* a `build_concept_book` run so Lean stays off the default
 pipeline path (§B.4 scope discipline). Same stage spine as recipe 76, with
 two deliberate differences:
 

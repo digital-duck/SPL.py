@@ -34,13 +34,14 @@ ALL_PROBLEMS=(
 ALL_MODELS=(
     "sonnet-4-6|claude_cli|claude_cli"
     "gemma3|ollama:gemma3|ollama"
-    "gemma4:12b|ollama:gemma4:12b|ollama"
+    "gemma4|ollama:gemma4|ollama"
     "qwen2.5|ollama:qwen2.5|ollama"
     "qwen3|ollama:qwen3|ollama"
     "phi3|ollama:phi3|ollama"
     "phi4|ollama:phi4|ollama"
-    "deepseek-r1|ollama:deepseek-r1|ollama"
+    "deepseek-r1|ollama:deepseek-r1:8b|ollama"
     "lfm2.5|ollama:lfm2.5|ollama"
+    "rnj-1|ollama:rnj-1|ollama"
 )
 
 # ── Axis 3: Solver toggle (requires sympy_llm.spl) ───────────────────────────

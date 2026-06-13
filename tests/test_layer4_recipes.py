@@ -2,7 +2,7 @@
 
 Covers:
   - linalg_graph: gap() and learning_path() helper functions
-  - build_micro_textbook.spl: parses, compiles to valid .ipynb, correct cell structure
+  - build_concept_book.spl: parses, compiles to valid .ipynb, correct cell structure
   - answer_on_demand.spl: parses, compiles to valid .ipynb, correct cell structure
   - Transpiler fixes: _spl_expr handles FStringLiteral/BinaryOp, EVALUATE contains: prefix,
     GENERATE uses function param names for positional args, _spl_condition renders Condition
@@ -18,7 +18,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..",
-                                "cookbook", "71_linalg_micro_textbook"))
+                                "cookbook", "71_linalg_concept_book"))
 
 import linalg_graph as lg
 from spl.lexer import Lexer
@@ -30,7 +30,7 @@ from pathlib import Path
 # Helpers
 # ---------------------------------------------------------------------------
 
-_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_micro_textbook"
+_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_concept_book"
 
 
 def _compile(recipe: str) -> dict:
@@ -132,38 +132,38 @@ class TestLearningPath:
 
 
 # ---------------------------------------------------------------------------
-# B. build_micro_textbook.spl — parse and compile
+# B. build_concept_book.spl — parse and compile
 # ---------------------------------------------------------------------------
 
 class TestBuildMicroTextbookParse:
     def test_file_exists(self):
-        assert (_COOKBOOK / "build_micro_textbook.spl").exists()
+        assert (_COOKBOOK / "build_concept_book.spl").exists()
 
     def test_parses_without_error(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
         assert program is not None
 
     def test_has_three_create_functions(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
         from spl.ast_nodes import CreateFunctionStatement
         fns = [s for s in program.statements if isinstance(s, CreateFunctionStatement)]
         assert len(fns) == 3
 
-    def test_has_workflow_named_build_micro_textbook(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+    def test_has_workflow_named_build_concept_book(self):
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
         from spl.ast_nodes import WorkflowStatement
         wfs = [s for s in program.statements if isinstance(s, WorkflowStatement)]
         assert len(wfs) == 1
-        assert wfs[0].name == "build_micro_textbook"
+        assert wfs[0].name == "build_concept_book"
 
     def test_workflow_inputs(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
         from spl.ast_nodes import WorkflowStatement
@@ -174,7 +174,7 @@ class TestBuildMicroTextbookParse:
         assert "payoff_weight" in names
 
     def test_workflow_output(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         tokens = Lexer(src).tokenize()
         program = SPL3Parser(tokens).parse()
         from spl.ast_nodes import WorkflowStatement
@@ -184,7 +184,7 @@ class TestBuildMicroTextbookParse:
 
 class TestBuildMicroTextbookNotebook:
     def setup_method(self):
-        self.nb = _compile("build_micro_textbook")
+        self.nb = _compile("build_concept_book")
 
     def test_valid_nbformat4(self):
         assert self.nb["nbformat"] == 4
@@ -196,7 +196,7 @@ class TestBuildMicroTextbookNotebook:
         cell = self.nb["cells"][0]
         assert cell["cell_type"] == "markdown"
         src = _cell_src(cell)
-        assert "build micro textbook" in src.lower()
+        assert "build concept" in src.lower()
 
     def test_setup_cell_imports_linalg_graph(self):
         setup = self.nb["cells"][1]
@@ -288,7 +288,7 @@ class TestBuildMicroTextbookNotebook:
 
 class TestBuildMicroTextbookPrompts:
     def setup_method(self):
-        self.nb = _compile("build_micro_textbook")
+        self.nb = _compile("build_concept_book")
 
     def test_prompts_cell_exists(self):
         cell = self.nb["cells"][2]

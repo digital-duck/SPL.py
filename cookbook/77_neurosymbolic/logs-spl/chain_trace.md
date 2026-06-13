@@ -1,3 +1,1 @@
-1. d/dx(3*x**3 - x) = 9*x**2 - 1
-2. factor(9*x**2 - 1) = (3*x - 1)*(3*x + 1)
-3. solve((3*x - 1)*(3*x + 1) = 0) -> x = [-1/3, 1/3]
+1. galois_group(x**5 - x - 1 over QQ) = Transitive group number 5 of degree 5

@@ -489,7 +489,7 @@ class TestRoundTrip:
 CREATE FUNCTION write_section(concept TEXT, graph TEXT)
 RETURN TEXT
 AS $$
-Write a micro-textbook section for the concept: {concept}.
+Write a concept-book section for the concept: {concept}.
 $$
 
 WORKFLOW build_textbook

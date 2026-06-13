@@ -1,7 +1,7 @@
 -- ============================================================
 -- Recipe 70a: Chapter 1, Section 1A — Rn and Cn
 --
--- A trimmed-down micro-textbook generator that targets exactly
+-- A trimmed-down concept-book generator that targets exactly
 -- ONE section of Axler's "Linear Algebra Done Right" (4e),
 -- Chapter 1 "Vector Spaces", Section 1A "Rn and Cn":
 --   https://linear.axler.net/
@@ -29,7 +29,7 @@
 -- ============================================================
 
 -- ── Deterministic regime: trimmed domain data (concept → context) ────────────
--- A miniature stand-in for cookbook/71_linalg_micro_textbook/linalg_graph.py:
+-- A miniature stand-in for cookbook/71_linalg_concept_book/linalg_graph.py:
 -- just enough structure (concept id → book context, concept id → required
 -- terms) to drive generation and verification without a full concept graph.
 -- Both chapter-1 scripts ship an identical copy so each runs standalone —
@@ -148,7 +148,7 @@ CREATE FUNCTION write_section(concept TEXT, book_context TEXT)
 RETURN TEXT
 AS $$
 You are an expert linear algebra author writing one self-contained section of
-a micro-textbook that follows Sheldon Axler's "Linear Algebra Done Right" (4e).
+a concept-book that follows Sheldon Axler's "Linear Algebra Done Right" (4e).
 
 {book_context}
 

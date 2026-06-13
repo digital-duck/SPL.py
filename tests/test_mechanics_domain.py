@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_domain_textbook"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_concept_book"))
 
 import graph_lib  # noqa: E402
 

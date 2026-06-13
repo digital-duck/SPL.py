@@ -7,7 +7,7 @@
   },
   "target": {
     "lang": "python/linalg",
-    "label": "Python \u2014 linalg micro-textbook (.ipynb via linalg_graph)",
+    "label": "Python \u2014 linalg concept-book (.ipynb via linalg_graph)",
     "output_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/70_linalg_core_concepts/targets/python_linalg/chapter-1-vector-spaces-1A-real-complex_python_linalg.ipynb"
   },
   "compilation": {

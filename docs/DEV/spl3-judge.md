@@ -275,7 +275,7 @@ ASSERT quality(@section) >= 7.0
     OTHERWISE RETRY GENERATE refine_section(@section, @verdict.feedback)
 ```
 
-This closes the gap identified in the micro-textbook design: `ASSERT` is currently
+This closes the gap identified in the concept-book design: `ASSERT` is currently
 limited to deterministic / symbolic checks. A `USING JUDGE` modifier extends it
 to probabilistic quality gates while preserving the ASSERT syntax.
 
@@ -304,9 +304,9 @@ spl3 judge S5-spec.md --criteria spl-compliance --llm claude_cli:claude-opus-4-6
 `judge` measures absolute quality of the reconstructed spec (one-input evaluation).
 Both signals are useful and complementary — the NDD leaderboard can track both.
 
-### 7.3 Micro-textbook `ai_reviewed` trust tier
+### 7.3 Concept-book `ai_reviewed` trust tier
 
-The promotion pipeline in the micro-textbook design:
+The promotion pipeline in the concept-book design:
 ```
 machine_generated --(spl3 judge criteria=correctness)--> ai_reviewed
                   --(human review)---------------------> human_verified
@@ -319,7 +319,7 @@ the bar to `MEDIUM` confidence minimum before promotion.
 
 ### 7.4 `run_python` verifier loop
 
-For the Jupyter kernel integration (§9 of the micro-textbook design), the
+For the Jupyter kernel integration (§9 of the concept-book design), the
 symbolic verifier (`verify_math`, `shape_check`) produces a deterministic result.
 `spl3 judge` handles the non-symbolic layer — prose quality, intuition, analogy
 correctness — that SymPy cannot check. The two verifiers are complementary:
@@ -336,7 +336,7 @@ mode already in `spl3/compare/tiers/semantic.py`.
 
 ### `correctness`
 Criteria: factual accuracy, mathematical correctness, logical consistency,
-no contradictions. Used by micro-textbook ai_reviewed tier.
+no contradictions. Used by concept-book ai_reviewed tier.
 
 ### `clarity`
 Criteria: prose clarity, completeness, appropriate level of detail, no ambiguity.
@@ -380,7 +380,7 @@ and `prompt_template` fields — loadable via `--criteria path/to/rubric.yaml`.
 - [ ] Wire `spl3 compare --mode llm` to delegate to `run_judge`
 - [ ] NDD pipeline: add `--judge-mode judge|compare|both` flag to `spl3 ndd`
 - [ ] Leaderboard: add judge score column alongside compare score
-- [ ] Micro-textbook: `ai_review.yaml` rubric tuned to math-content correctness
+- [ ] Concept-book: `ai_review.yaml` rubric tuned to math-content correctness
 
 ---
 

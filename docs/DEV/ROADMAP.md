@@ -2,7 +2,7 @@
 
 > Last reviewed against the codebase: **2026-06-10**.
 >
-> **Current focus (2026-06):** the micro-textbook / neurosymbolic track (§4.5–§4.8).
+> **Current focus (2026-06):** the concept-book / neurosymbolic track (§4.5–§4.8).
 > Next up: SageMath + Lean verifier backends — see
 > [`sage_lean_integration_plan.md`](./sage_lean_integration_plan.md). Long-term aim:
 > SPL as a seamless deterministic + probabilistic agentic orchestration language
@@ -145,7 +145,7 @@ and vibing to a new target.
 
 ### ✅ `spl3 cache` — Layer 2 content cache
 
-Persistent content cache for expensive LLM generations (micro-textbook sections,
+Persistent content cache for expensive LLM generations (concept-book sections,
 notebook cells). Provenance tiers, TTL semantics, cascading invalidation along the
 concept graph (`invalidate vector` → invalidates `span`, `eigenpair`, …), and
 export/import for team sharing without a live remote store. CLI: `spl3 cache
@@ -248,7 +248,7 @@ just *how much*.
 ** [Put-Off] **
 
 Deterministic transpilers now cover `go`, `ts`, `python/langgraph`, `python/pocketflow`,
-and the three domain micro-textbook targets (`python/linalg`, `python/intro_geometry`,
+and the three domain concept-book targets (`python/linalg`, `python/intro_geometry`,
 `python/domain_textbook`). Still LLM-only: `python` (plain), `python/crewai`,
 `python/autogen`, `python/liquid`. A deterministic transpiler for the remaining
 targets would:
@@ -317,7 +317,7 @@ through the kernel; state (imports, variables, SymPy symbols) persists across st
 Implemented in `parser.py`, `kernel.py` (out-of-process `jupyter_client` backend +
 in-process `KernelSession` fallback); see `docs/DEV/SPL-kernel-execution-design.md`
 and `tests/test_solve_assert.py` / `test_kernel.py`. Powers the symbolic-math and
-micro-textbook recipes (67–74).
+concept-book recipes (67–74).
 
 ---
 
@@ -332,13 +332,13 @@ tool registry, and validated workflow tools can be promoted into it. See
 
 ---
 
-### ✅ 4.7 Domain micro-textbook targets — parameterized `python/<domain>` engine
+### ✅ 4.7 Domain concept-book targets — parameterized `python/<domain>` engine
 
 Three deterministic `.ipynb` compile targets: `python/linalg`, `python/intro_geometry`,
 and the generic `python/domain_textbook` (domain supplied as a YAML concept graph,
 resolved at runtime via `graph_lib`). Includes style profiles, concept-graph tooling
 (`scripts/concept_graph.py` — inspect, visualize, share, compose hybrid multi-domain
-graphs), and cookbook recipes 69–74 (notebook gen, linalg core concepts, micro-textbook,
+graphs), and cookbook recipes 69–74 (notebook gen, linalg core concepts, concept-book,
 intro geometry, domain textbook). The `transpiler_linalg.py` → `transpiler_domain_*.py`
 generalization landed 2026-06-07.
 
@@ -362,7 +362,7 @@ changes — both are pure backend work behind the existing constructs:
   new trust tier `machine_proved` above `machine_verified` — CAS checks *instances*,
   Lean checks *statements*. Larger lift; strictly optional dependency.
 
-**Why this matters beyond the micro-textbook:** the verifier ladder
+**Why this matters beyond the concept-book:** the verifier ladder
 (NumPy → SymPy/Sage → Lean) behind the same two constructs is the concrete form of
 SPL's ambition — seamless deterministic + probabilistic orchestration that no
 agent framework offers at the language level, aimed at researchers' daily
@@ -778,7 +778,7 @@ DIVERGED). A dedicated `spl3 diff` command would add no distinct value.
 | 4.4 | Semantic linting in `validate` | Quality | — | — | ✅ Done |
 | 4.5 | `SOLVE`/`ASSERT` + IPython kernel | Language | — | — | ✅ Done |
 | 4.6 | `CREATE TOOL_API` + tool registry | Language | — | — | ✅ Done |
-| 4.7 | Domain micro-textbook targets (`python/<domain>`) | Compiler | — | — | ✅ Done |
+| 4.7 | Domain concept-book targets (`python/<domain>`) | Compiler | — | — | ✅ Done |
 | 4.8a | SageMath kernel backend (verifier coverage) | Language | Low | High | **Current focus** |
 | 4.8b | Lean 4 + mathlib proof backend (`machine_proved` tier) | Language | High | Very High | **Current focus** |
 | 5.1 | VS Code extension | DX | — | — | ✅ Done |

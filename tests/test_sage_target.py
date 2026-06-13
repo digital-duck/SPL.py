@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_domain_textbook"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "cookbook" / "74_concept_book"))
 
 import graph_lib  # noqa: E402
 from spl.lexer import Lexer  # noqa: E402
@@ -239,7 +239,7 @@ class TestExactGeometryVerifiers:
     def test_geometry_yaml_nodes_declare_fallback_tier(self):
         data = graph_lib.load_domain(
             Path(__file__).resolve().parents[1]
-            / "cookbook" / "74_domain_textbook" / "geometry_graph.yaml"
+            / "cookbook" / "74_concept_book" / "geometry_graph.yaml"
         )
         concepts = data["concepts"]
         for node in ("pythagorean_theorem", "distance_formula", "area"):

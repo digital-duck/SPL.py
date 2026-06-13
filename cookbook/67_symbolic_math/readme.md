@@ -7,7 +7,7 @@ prompt-design philosophy:
 
 | File | Workflow | Handles |
 |---|---|---|
-| [`symbolic_math.spl`](symbolic_math.spl) | `math_solver` | a problem that needs **one** symbolic operation |
+| [`hello_symbolic_math.spl`](hello_symbolic_math.spl) | `math_solver` | a problem that needs **one** symbolic operation |
 | [`sympy_math_multi_step.spl`](sympy_math_multi_step.spl) | `math_solver_multi_step` | a problem that needs a **chain** of operations, run step-by-step via `CALL <workflow>` |
 
 ## What this demonstrates
@@ -48,16 +48,16 @@ pip install sympy
 ## Run
 
 ```bash
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3
 
 # Custom problem
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3 \
     --param problem="differentiate 3x cubed plus 2x"
 
 # With self-healing (auto-installs sympy if missing)
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3 --self-healing \
     --param problem="integrate sine of x"
 ```
@@ -105,7 +105,7 @@ explain the whole verified chain once (LLM)
 
 ## What this adds
 
-`symbolic_math.spl` handles problems that resolve to **one** `<expression>|<operation>`
+`hello_symbolic_math.spl` handles problems that resolve to **one** `<expression>|<operation>`
 pair. Many real problems don't — *"differentiate e\*\*x and then simplify the
 result"*, *"expand (x+1) squared, then factor the expanded form"* — they're a
 **chain**, where each operation acts on the previous one's exact result.
@@ -287,7 +287,7 @@ the chain, at a fraction of the token cost.
 
 ## SPL Benefits — a reflection
 
-Going from "solve one symbolic operation" (`symbolic_math.spl`) to "solve a
+Going from "solve one symbolic operation" (`hello_symbolic_math.spl`) to "solve a
 *chained sequence* of operations" (`sympy_math_multi_step.spl`) is a genuinely
 good showcase of why a **declarative agentic workflow language** is worth having
 — not just that it works, but *why* it's worth it.

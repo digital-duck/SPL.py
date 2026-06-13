@@ -153,7 +153,7 @@ class TestSageSpike:
         assert sage.execute("2^3") == "8"
 
     def test_domain_library_runs_under_sage_python(self, sage):
-        lib = Path(__file__).resolve().parents[1] / "cookbook" / "71_linalg_micro_textbook"
+        lib = Path(__file__).resolve().parents[1] / "cookbook" / "71_linalg_concept_book"
         sage.execute(f"import sys; sys.path.insert(0, {str(lib)!r})")
         sage.execute("import linalg_graph; G = linalg_graph.build()")
         assert sage.execute("linalg_graph.acyclic(G)") == "True"

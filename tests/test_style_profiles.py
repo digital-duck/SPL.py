@@ -3,7 +3,7 @@
 Covers:
   - style_profiles: all 5 profiles exist, correct fields, get_style_profile(),
     style_instruction(), available_styles()
-  - build_micro_textbook.spl: @style INPUT, @style_guide SOLVE cell, all
+  - build_concept_book.spl: @style INPUT, @style_guide SOLVE cell, all
     GENERATE calls pass style_guide to format()
   - answer_on_demand.spl: same; resolve_target is style-agnostic
   - Cross-style: different styles produce different style_guide strings but
@@ -21,7 +21,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..",
-                                "cookbook", "71_linalg_micro_textbook"))
+                                "cookbook", "71_linalg_concept_book"))
 
 from style_profiles import (
     STYLE_PROFILES,
@@ -34,7 +34,7 @@ from spl3.parser import SPL3Parser
 from spl3.splc.transpiler_linalg import LinalgTranspiler
 from pathlib import Path
 
-_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_micro_textbook"
+_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_concept_book"
 _STYLES = ["textbook", "feynman", "flashcard", "instructor", "research"]
 
 
@@ -139,16 +139,16 @@ class TestStyleProfilesModule:
 
 
 # ---------------------------------------------------------------------------
-# B. build_micro_textbook.spl — style integration
+# B. build_concept_book.spl — style integration
 # ---------------------------------------------------------------------------
 
 class TestBuildMicroTextbookStyle:
     def setup_method(self):
-        self.nb = _compile("build_micro_textbook")
+        self.nb = _compile("build_concept_book")
         self.all_src = _all_src(self.nb)
 
     def test_style_input_declared(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         assert "@style TEXT" in src
 
     def test_style_guide_solve_cell_present(self):
@@ -212,17 +212,17 @@ class TestBuildMicroTextbookStyleProfiles:
     def test_notebook_structure_is_style_invariant(self):
         """Compilation output has same cell count regardless of style input.
         Style is a runtime parameter — the structure is fixed at compile time."""
-        nb = _compile("build_micro_textbook")
+        nb = _compile("build_concept_book")
         # Cell count is deterministic (25 since the timing instrumentation —
         # SOLVE @t_*_start / @*_elapsed + LOGGING [timing] — was added)
         assert len(nb["cells"]) == 25
 
     def test_default_style_is_textbook(self):
-        src = (_COOKBOOK / "build_micro_textbook.spl").read_text()
+        src = (_COOKBOOK / "build_concept_book.spl").read_text()
         assert "'textbook'" in src or '"textbook"' in src
 
     def test_setup_cell_has_style_param_default(self):
-        nb = _compile("build_micro_textbook")
+        nb = _compile("build_concept_book")
         setup_src = _cell_src(nb["cells"][1])
         # Params are now config-driven (env → ~/.spl/config → default) rather
         # than hardcoded literals; 'textbook' remains the default.

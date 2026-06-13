@@ -1,4 +1,4 @@
-# Recipe 73 — Intro Geometry Micro-Textbook Generator
+# Recipe 73 — Intro Geometry Concept-Book Generator
 
 **Pattern:** domain concept graph (`geometry_graph.py`) + style profiles
 (`style_profiles.py`) + `SOLVE` / `ASSERT` (deterministic) + `GENERATE` /
@@ -19,7 +19,7 @@ notebook artifact)
 ## What this demonstrates
 
 A complete **neurosymbolic authoring pipeline** for an intro-geometry
-micro-textbook, where a pre-built concept graph drives *what* gets taught and
+concept-book, where a pre-built concept graph drives *what* gets taught and
 in *what order* (deterministically), while the LLM only ever writes and revises
 prose *within* the structure the graph guarantees is sound:
 
@@ -105,7 +105,7 @@ learners are its primary audience, not an edge case.
 
 ## Two workflows
 
-### `build_micro_textbook.spl` — full curriculum toward a target
+### `build_concept_book.spl` — full curriculum toward a target
 
 ```
 SOLVE @style_guide := style_instruction(@style)             -- resolve prose style once
@@ -179,14 +179,14 @@ structure, function signatures, and control flow are sound — *before* any
 compile target exists for it:
 
 ```bash
-spl3 validate cookbook/73_intro_geometry/build_micro_textbook.spl
+spl3 validate cookbook/73_intro_geometry/build_concept_book.spl
 spl3 validate cookbook/73_intro_geometry/answer_on_demand.spl
 ```
 
 Both currently report `OK` with only the same class of flow-analysis warnings
 (`@var used before assignment`, `WHILE … no max_iterations`, `CALL target …
 not found in CREATE FUNCTION declarations`) that `spl3 validate` *also* raises
-against the upstream, working `cookbook/71_linalg_micro_textbook/*.spl` files —
+against the upstream, working `cookbook/71_linalg_concept_book/*.spl` files —
 i.e. these are pre-existing validator quirks (its flow analyzer doesn't yet
 trace `EVALUATE`/`WHILE` bindings or recognize domain-target setup-cell
 helpers), not defects introduced here.
@@ -195,7 +195,7 @@ The **physical artifact** — once `python/intro_geometry` exists — would be a
 runnable Jupyter notebook produced the same deterministic way recipe 71's is:
 
 ```bash
-spl3 splc compile cookbook/73_intro_geometry/build_micro_textbook.spl \
+spl3 splc compile cookbook/73_intro_geometry/build_concept_book.spl \
     --lang python/intro_geometry      # ← target doesn't exist yet
 
 spl3 splc compile cookbook/73_intro_geometry/answer_on_demand.spl \
@@ -241,7 +241,7 @@ against, instead of a hypothetical one.
 Not runnable yet — see "The transpiler gap" above. Once
 `python/intro_geometry` exists, this section will mirror recipe 71's://
 `pip install networkx jupyter sympy`, then `jupyter nbconvert --to notebook
---execute cookbook/73_intro_geometry/build_micro_textbook_python_intro_geometry.ipynb`,
+--execute cookbook/73_intro_geometry/build_concept_book_python_intro_geometry.ipynb`,
 with `GEOMETRY_GRAPH_DIR` / `SPL_MODEL` env-var overrides for locating
 `geometry_graph.py` / `style_profiles.py` and choosing the LLM.
 
