@@ -4,13 +4,165 @@ build_html_page: convert the accumulated markdown textbook to a self-contained
 HTML page with MathJax, a two-column layout (TOC sidebar + content), and clean
 academic typography.  Called from build_concept_book.spl after all sections are
 generated and verified.
+
+Domain wrapper tools: graph_lib and style_profiles functions are wrapped here
+as @spl_tool callables so they can be used with CALL in build_concept_book.spl.
+The loaded domain graph is cached in _DOMAIN_CACHE for the process lifetime.
 """
 from __future__ import annotations
 
 import re
+import time
+from pathlib import Path
 
 from spl.tools import spl_tool
 
+# ── Module-level domain cache ─────────────────────────────────────────────────
+# Keyed by domain_yaml filename.  Populated by setup_domain() on first CALL.
+
+_CB_DIR = Path(__file__).parent
+_DOMAIN_CACHE: dict[str, dict] = {}
+_MODULE_CACHE: dict[str, object] = {}
+
+
+def _cb_module(name: str):
+    """Import a module from the cookbook/74_concept_book/ directory (cached)."""
+    if name not in _MODULE_CACHE:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(name, _CB_DIR / f"{name}.py")
+        mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
+        spec.loader.exec_module(mod)  # type: ignore[union-attr]
+        _MODULE_CACHE[name] = mod
+    return _MODULE_CACHE[name]
+
+
+def _domain(domain_yaml: str) -> dict:
+    """Return cached domain entry; raises KeyError if setup_domain not called yet."""
+    return _DOMAIN_CACHE[domain_yaml]
+
+
+# ── Domain lifecycle tool ─────────────────────────────────────────────────────
+
+@spl_tool
+def setup_domain(domain_yaml: str, target: str, payoff_weight: str = "1.5") -> str:
+    """Load domain, validate graph, compute teaching order.
+
+    Caches the loaded graph, domain data, primitives, and teaching order.
+    Raises ValueError if the graph is cyclic or not reducible to primitives.
+    Returns the teaching order as a newline-separated list.
+    """
+    gl = _cb_module("graph_lib")
+    data = gl.load_domain(domain_yaml)  # type: ignore[attr-defined]
+    graph = gl.build(data)  # type: ignore[attr-defined]
+    primitives = list(data.get("primitives", {}).keys())
+
+    if not gl.acyclic(graph):  # type: ignore[attr-defined]
+        raise ValueError(f"Domain graph '{domain_yaml}' has cycles — fix the YAML before generating")
+    if not gl.reducible(graph, primitives):  # type: ignore[attr-defined]
+        raise ValueError(f"Domain graph '{domain_yaml}' has concepts that don't reduce to primitives")
+
+    needed = gl.ancestors(graph, target) | {target}  # type: ignore[attr-defined]
+    restricted = gl.restrict(graph, needed)  # type: ignore[attr-defined]
+    order = gl.productivity_order(restricted, weight=float(payoff_weight))  # type: ignore[attr-defined]
+    apps = gl.applications_of(graph, target)  # type: ignore[attr-defined]
+
+    _DOMAIN_CACHE[domain_yaml] = {
+        "gl": gl,
+        "data": data,
+        "graph": graph,
+        "primitives": primitives,
+        "order": order,
+        "target": target,
+        "apps": apps,
+    }
+    return "\n".join(order)
+
+
+# ── Order accessors ───────────────────────────────────────────────────────────
+
+@spl_tool
+def order_length(domain_yaml: str) -> str:
+    """Return the number of concepts in the teaching order as a string integer."""
+    return str(len(_domain(domain_yaml)["order"]))
+
+
+@spl_tool
+def order_item(domain_yaml: str, index: str) -> str:
+    """Return the concept at position index (0-based) in the teaching order."""
+    return _domain(domain_yaml)["order"][int(index)]
+
+
+@spl_tool
+def order_bullets(domain_yaml: str) -> str:
+    """Return the teaching order as a markdown bullet list."""
+    return "\n".join(f"- {c}" for c in _domain(domain_yaml)["order"])
+
+
+@spl_tool
+def apps_list(domain_yaml: str) -> str:
+    """Return applications of the target concept as a comma-separated string."""
+    return ", ".join(_domain(domain_yaml)["apps"])
+
+
+# ── Content checks ────────────────────────────────────────────────────────────
+
+@spl_tool
+def count_new_primitives(section: str, domain_yaml: str) -> str:
+    """Return the number of primitive names found in section text."""
+    cache = _domain(domain_yaml)
+    count = cache["gl"].new_primitives(section, cache["primitives"])  # type: ignore[attr-defined]
+    return str(count)
+
+
+@spl_tool
+def verify_section(section: str, domain_yaml: str) -> str:
+    """Run domain-specific content verification; returns 'ok' or a failure message."""
+    cache = _domain(domain_yaml)
+    return cache["gl"].verify_content(section, cache["data"])  # type: ignore[attr-defined]
+
+
+# ── Style ─────────────────────────────────────────────────────────────────────
+
+@spl_tool
+def get_style_guide(style: str) -> str:
+    """Return the style instruction text for the given style profile name."""
+    sp = _cb_module("style_profiles")
+    return sp.style_instruction(style)  # type: ignore[attr-defined]
+
+
+# ── Timing ────────────────────────────────────────────────────────────────────
+
+@spl_tool
+def now_float() -> str:
+    """Return the current monotonic time as a float string (for elapsed timing)."""
+    return str(time.monotonic())
+
+
+@spl_tool
+def elapsed_secs(start: str) -> str:
+    """Return seconds elapsed since the monotonic time stored in start."""
+    return f"{time.monotonic() - float(start):.1f}"
+
+
+@spl_tool
+def sanitize_ts(ts: str) -> str:
+    """Convert an ISO timestamp to a filename-safe string (colons and T replaced)."""
+    return ts.replace(":", "-").replace("T", "_")
+
+
+@spl_tool
+def make_log_path(log_dir: str, ts_safe: str) -> str:
+    """Construct the chain-trace log file path from directory and safe timestamp."""
+    return f"{log_dir}/chain_trace-{ts_safe}.md"
+
+
+@spl_tool
+def needs_primitive_refinement(count: str, budget: str) -> str:
+    """Return 'yes' if count exceeds budget, else 'no'."""
+    return "yes" if int(count) > int(budget) else "no"
+
+
+# ── HTML builder ──────────────────────────────────────────────────────────────
 
 @spl_tool
 def build_html_page(textbook_md: str, domain_yaml: str, target: str, language: str = "en") -> str:
