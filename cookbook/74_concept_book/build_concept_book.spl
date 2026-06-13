@@ -33,7 +33,7 @@
 -- domain). Domain-specific framing comes from {concept}/{context}/{style_guide}
 -- — supplied by the resolved graph and style profile, not hardcoded here.
 
-CREATE FUNCTION write_section(concept TEXT, context TEXT, style_guide TEXT, language TEXT)
+CREATE FUNCTION write_section(concept TEXT, label TEXT, context TEXT, style_guide TEXT, language TEXT)
 RETURN TEXT
 AS $$
 You are an expert author writing a concept-book section.
@@ -43,7 +43,7 @@ You are an expert author writing a concept-book section.
 Write a self-contained section for the concept: {concept}
 Surrounding context: {context}
 
-Begin the section with a level-2 Markdown heading: ## {concept}
+Begin the section with a level-2 Markdown heading: ## {label}
 
 Follow the structure and length specified in the STYLE GUIDE above exactly.
 Use LaTeX for all mathematics and notation.
@@ -101,7 +101,7 @@ WORKFLOW build_concept_book
         @primitive_budget INT DEFAULT 2,
         @payoff_weight FLOAT DEFAULT 1.5,
         @language TEXT DEFAULT 'en',
-        @output_html TEXT DEFAULT 'concept_book.html',
+        @output_dir TEXT DEFAULT '',
         @log_dir TEXT DEFAULT 'cookbook/74_concept_book/logs-spl'
     OUTPUT:
         @textbook TEXT
@@ -137,11 +137,12 @@ DO
 
         -- Content cache lookup (Layer 2): a hit costs zero LLM calls
         CALL cache_get(@concept) INTO @section
+        CALL concept_label(@concept) INTO @_label
         EVALUATE @section
             WHEN = "miss" THEN
                 LOGGING f"cache MISS for {@concept} — generating with the LLM" LEVEL INFO
 
-                GENERATE write_section(@concept, @concept, @style_guide, @language) INTO @section
+                GENERATE write_section(@concept, @_label, @concept, @style_guide, @language) INTO @section
 
                 -- Primitive budget check
                 CALL count_new_primitives(@section, @domain_yaml) INTO @_prim_count
@@ -171,7 +172,13 @@ DO
         CALL elapsed_secs(@t_section_start) INTO @section_elapsed
         LOGGING f"[timing] {@concept}: {@section_elapsed}s" LEVEL INFO
 
-        @textbook := @textbook + "\n\n---\n\n## @@concept@@\n\n" + @section
+        @textbook := @textbook + "\n\n---\n\n" + @section
+        EVALUATE @output_dir
+            WHEN != "" THEN
+                CALL write_concept_html(@concept, @section, @domain_yaml, @output_dir) INTO @_
+            ELSE
+                LOGGING "Concept HTML skipped" LEVEL INFO
+        END
         CALL write_file(@log_file, f"### {@concept} ({@section_elapsed}s)\n\n" + @section + "\n\n", "a") INTO @_
         @_i := @_i + 1
     END
@@ -193,15 +200,14 @@ DO
     LOGGING f"Concept-book complete — domain: {@domain_yaml}  style: {@style}" LEVEL INFO
     CALL write_file(@log_file, f"## Run complete\n\ntotal: {@total_elapsed}s\n", "a") INTO @_
 
-    -- 4. HTML output (primary artifact — self-contained, MathJax, TOC sidebar)
-    --    Set @output_html='' to skip file generation and return only @textbook.
-    EVALUATE @output_html
+    -- 4. Book index: TOC page linking to individual concept_{name}.html files.
+    --    Set @output_dir='' to skip HTML generation.
+    EVALUATE @output_dir
         WHEN != "" THEN
-            CALL build_html_page(@textbook, @domain_yaml, @target, @language) INTO @html_content
-            CALL write_file(@output_html, @html_content, "w") INTO @_
-            LOGGING f"HTML concept-book written → {@output_html}" LEVEL INFO
+            CALL build_book_index(@domain_yaml, @target, @language, @output_dir, @capstone) INTO @_book_path
+            LOGGING f"Book index written → {@_book_path}" LEVEL INFO
         ELSE
-            LOGGING "HTML output skipped (output_html='')" LEVEL INFO
+            LOGGING "HTML output skipped (output_dir='')" LEVEL INFO
     END
 
     COMMIT @textbook

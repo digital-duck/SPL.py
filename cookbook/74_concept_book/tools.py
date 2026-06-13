@@ -1,9 +1,8 @@
 """Tools for recipe 74 — concept-book generator.
 
-build_html_page: convert the accumulated markdown textbook to a self-contained
-HTML page with MathJax, a two-column layout (TOC sidebar + content), and clean
-academic typography.  Called from build_concept_book.spl after all sections are
-generated and verified.
+Component-based HTML output:
+  write_concept_html  — one standalone page per concept (called inside the loop)
+  build_book_index    — TOC index page linking to concept pages (called at end)
 
 Domain wrapper tools: graph_lib and style_profiles functions are wrapped here
 as @spl_tool callables so they can be used with CALL in build_concept_book.spl.
@@ -162,44 +161,82 @@ def needs_primitive_refinement(count: str, budget: str) -> str:
     return "yes" if int(count) > int(budget) else "no"
 
 
-# ── HTML builder ──────────────────────────────────────────────────────────────
+# ── HTML builder — component-based ───────────────────────────────────────────
+
+def _render(template: str, **kwargs: str) -> str:
+    """Substitute {key} placeholders; safe with CSS/JS that contain literal braces."""
+    for k, v in kwargs.items():
+        template = template.replace('{' + k + '}', v)
+    return template
+
 
 @spl_tool
-def build_html_page(textbook_md: str, domain_yaml: str, target: str, language: str = "en") -> str:
-    """Convert a markdown concept-book to a self-contained HTML file.
+def concept_label(concept: str) -> str:
+    """Return the human-readable label for a concept ID (underscores → spaces, title-case)."""
+    return concept.replace('_', ' ').title()
 
-    Sections are separated by '\\n---\\n' dividers in textbook_md.  Each
-    section is expected to begin with a '## concept_name' heading (added by the
-    workflow via the accumulation step).  MathJax v3 renders all LaTeX.
-    """
-    domain = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
-    domain_title = domain.replace('_', ' ').title()
-    target_title = target.replace('_', ' ')
-    lang_attr = f' lang="{language}"' if language and language != "en" else ' lang="en"'
 
-    raw_parts = re.split(r'\n+---\n+', textbook_md)
-    raw_parts = [p.strip() for p in raw_parts if p.strip()]
-
-    toc_items: list[str] = []
-    sections_html: list[str] = []
-
-    for i, part in enumerate(raw_parts):
-        m = re.match(r'^#+\s*(.+?)(?:\s*\n|$)', part)
-        title = m.group(1).strip() if m else f'Section {i + 1}'
-        slug = re.sub(r'\W+', '-', title.lower()).strip('-')
-        toc_items.append(f'<li><a href="#{slug}">{_esc(title)}</a></li>')
-        sections_html.append(f'<section id="{slug}">\n{_md_to_html(part)}\n</section>')
-
-    toc_html = '<ol>\n' + '\n'.join(toc_items) + '\n</ol>'
-    body_content = '\n\n'.join(sections_html)
-
-    return _HTML_TEMPLATE.format(
-        domain_title=domain_title,
-        target_title=target_title,
-        lang_attr=lang_attr,
-        toc=toc_html,
-        body=body_content,
+@spl_tool
+def write_concept_html(concept: str, section: str, domain_yaml: str, output_dir: str) -> str:
+    """Write a standalone HTML page for one concept to output_dir/concept_{concept}.html."""
+    if not output_dir:
+        return ""
+    domain_id = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
+    domain_title = _esc(domain_id.replace('_', ' ').title())
+    label = concept.replace('_', ' ').title()
+    # Normalize first H2 heading: LLM may write ## concept_id; replace with ## Concept Label
+    section = re.sub(
+        r'^##\s+' + re.escape(concept) + r'[ \t]*$',
+        f'## {label}',
+        section, count=1, flags=re.MULTILINE,
     )
+    back_url = f'../../#/domain/{domain_id}'
+    html = _render(
+        _CONCEPT_PAGE_TEMPLATE,
+        lang_attr=' lang="en"',
+        concept_title=_esc(label),
+        domain_title=domain_title,
+        back_url=back_url,
+        body=_md_to_html(section),
+    )
+    out = Path(output_dir) / f"concept_{concept}.html"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(html, encoding="utf-8")
+    return str(out)
+
+
+@spl_tool
+def build_book_index(domain_yaml: str, target: str, language: str, output_dir: str, payoff: str) -> str:
+    """Build book_{target}.html — a TOC index linking to individual concept pages."""
+    if not output_dir:
+        return ""
+    cache = _domain(domain_yaml)
+    order: list[str] = cache["order"]
+    domain = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
+    domain_title = _esc(domain.replace('_', ' ').title())
+    lang_attr = f' lang="{language}"' if language and language != 'en' else ' lang="en"'
+
+    toc_items = []
+    for concept in order:
+        label = _esc(concept.replace('_', ' ').title())
+        cls = ' class="toc-target"' if concept == target else ''
+        toc_items.append(f'<li{cls}><a href="concept_{concept}.html">{label}</a></li>')
+    toc_html = '<ol>\n' + '\n'.join(toc_items) + '\n</ol>'
+
+    domain_id = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
+    back_url = f'../../#/domain/{domain_id}'
+    html = _render(
+        _BOOK_INDEX_TEMPLATE,
+        lang_attr=lang_attr,
+        domain_title=domain_title,
+        target_title=_esc(target.replace('_', ' ').title()),
+        back_url=back_url,
+        toc=toc_html,
+        payoff=_md_to_html(payoff),
+    )
+    out = Path(output_dir) / f"book_{target}.html"
+    out.write_text(html, encoding="utf-8")
+    return str(out)
 
 
 # ── internal helpers ──────────────────────────────────────────────────────────
@@ -221,7 +258,9 @@ def _md_to_html(md: str) -> str:
     lines = md.split('\n')
     out: list[str] = []
     in_code = False
+    in_dmath = False   # inside a multi-line $$ ... $$ block
     code_buf: list[str] = []
+    math_buf: list[str] = []
     para_buf: list[str] = []
 
     def flush_para() -> None:
@@ -230,7 +269,7 @@ def _md_to_html(md: str) -> str:
             para_buf.clear()
 
     for line in lines:
-        # Fenced code blocks
+        # ── fenced code blocks ────────────────────────────────────────────────
         if line.startswith('```'):
             if in_code:
                 out.append(f'<pre><code>{_esc(chr(10).join(code_buf))}</code></pre>')
@@ -244,7 +283,30 @@ def _md_to_html(md: str) -> str:
             code_buf.append(line)
             continue
 
-        # Headings
+        # ── display math ($$ ... $$) ──────────────────────────────────────────
+        # A line that is *only* $$ (possibly with whitespace) is a block delimiter.
+        # A line like $$...$$ (content on same line) is a self-closing block.
+        if re.match(r'^\s*\$\$', line):
+            stripped = line.strip()
+            # Self-contained: $$ ... $$ on one line (content between the delimiters)
+            if stripped != '$$' and stripped.endswith('$$') and len(stripped) > 4:
+                flush_para()
+                out.append(line)
+                continue
+            # Toggle multi-line block
+            if in_dmath:
+                out.append('$$\n' + '\n'.join(math_buf) + '\n$$')
+                math_buf.clear()
+                in_dmath = False
+            else:
+                flush_para()
+                in_dmath = True
+            continue
+        if in_dmath:
+            math_buf.append(line)
+            continue
+
+        # ── headings ──────────────────────────────────────────────────────────
         m = re.match(r'^(#{1,6})\s+(.+)$', line)
         if m:
             flush_para()
@@ -254,17 +316,11 @@ def _md_to_html(md: str) -> str:
             out.append(f'<h{lvl} id="{slug}">{text}</h{lvl}>')
             continue
 
-        # List items (bullet or numbered)
+        # ── list items (bullet or numbered) ───────────────────────────────────
         m = re.match(r'^(?:[-*]|\d+\.)\s+(.+)$', line)
         if m:
             flush_para()
             out.append(f'<li>{_inline_md(m.group(1))}</li>')
-            continue
-
-        # Display math (lines that are pure $$ ... $$)
-        if re.match(r'^\s*\$\$', line):
-            flush_para()
-            out.append(line)
             continue
 
         # Horizontal rule
@@ -284,60 +340,104 @@ def _md_to_html(md: str) -> str:
     return '\n'.join(out)
 
 
-_HTML_TEMPLATE = """\
+_SHARED_CSS = """\
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}"""
+
+_MATHJAX_HEAD = """\
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\\\(','\\\\)']], displayMath: [['$$','$$'],['\\\\[','\\\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>"""
+
+_CONCEPT_PAGE_TEMPLATE = """\
 <!DOCTYPE html>
 <html{lang_attr}>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Concept-Book: {target_title} — {domain_title}</title>
-<script>
-MathJax = {{
-  tex: {{ inlineMath: [['$','$'],['\\\\(','\\\\)']], displayMath: [['$$','$$'],['\\\\[','\\\\]']] }},
-  options: {{ skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }}
-}};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<title>{concept_title} | {domain_title}</title>
+""" + _MATHJAX_HEAD + """
 <style>
-*{{box-sizing:border-box;margin:0;padding:0}}
-body{{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}}
-.page{{display:grid;grid-template-columns:260px 1fr;min-height:100vh}}
-nav{{position:sticky;top:0;height:100vh;overflow-y:auto;
-     background:#1e3a5f;color:#e8f0fe;padding:24px 16px}}
-nav h2{{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;
-        color:#90b4e8;margin-bottom:14px}}
-nav ol{{list-style:decimal inside;padding:0}}
-nav li{{margin-bottom:7px;font-size:.85rem;line-height:1.4}}
-nav a{{color:#a8c8f0;text-decoration:none}}
-nav a:hover{{color:#fff}}
-main{{padding:48px 64px;max-width:860px}}
-h1.book-title{{font-size:2rem;color:#1e3a5f;margin-bottom:4px}}
-.subtitle{{color:#666;margin-bottom:48px;font-size:1rem;font-style:italic}}
-section{{margin-bottom:56px;border-top:1px solid #e0e0d8;padding-top:40px}}
-section:first-of-type{{border-top:none;padding-top:0}}
-h2{{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}}
-h3{{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}}
-h4{{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}}
-p{{margin-bottom:16px;font-size:1rem}}
-li{{margin-bottom:6px;margin-left:24px;font-size:1rem}}
-pre{{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
-     padding:16px 20px;overflow-x:auto;margin:16px 0}}
-code{{font-family:Menlo,Consolas,monospace;font-size:.87em}}
-p code{{background:#f0f0ea;padding:1px 4px;border-radius:3px}}
-@media(max-width:768px){{.page{{grid-template-columns:1fr}}
-nav{{position:relative;height:auto}}}}
+""" + _SHARED_CSS + """
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
 </style>
 </head>
 <body>
 <div class="page">
-  <nav>
+  <header>
+    <a href="{back_url}" class="back">← {domain_title}</a>
+  </header>
+  <main>
+    {body}
+  </main>
+</div>
+</body>
+</html>"""
+
+_BOOK_INDEX_TEMPLATE = """\
+<!DOCTYPE html>
+<html{lang_attr}>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept Book: {target_title} — {domain_title}</title>
+""" + _MATHJAX_HEAD + """
+<style>
+""" + _SHARED_CSS + """
+.page{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+nav.toc{position:sticky;top:0;height:100vh;overflow-y:auto;
+        background:#1e3a5f;color:#e8f0fe;padding:24px 16px}
+nav.toc .back{color:#a8c8f0;margin-bottom:20px}
+nav.toc .back:hover{color:#fff}
+nav.toc h2{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;
+           color:#90b4e8;margin-bottom:14px;font-family:system-ui,sans-serif}
+nav.toc ol{list-style:decimal inside;padding:0}
+nav.toc li{margin-bottom:7px;font-size:.85rem;line-height:1.4;font-family:system-ui,sans-serif}
+nav.toc a{color:#a8c8f0;text-decoration:none}
+nav.toc a:hover{color:#fff}
+nav.toc li.toc-target{font-weight:700}
+nav.toc li.toc-target a{color:#fff}
+main{padding:48px 64px;max-width:860px}
+h1.book-title{font-size:2rem;color:#1e3a5f;margin-bottom:4px}
+.subtitle{color:#666;margin-bottom:48px;font-size:1rem;font-style:italic;font-family:system-ui,sans-serif}
+section{margin-bottom:56px;border-top:1px solid #e0e0d8;padding-top:40px}
+section:first-of-type{border-top:none;padding-top:0}
+@media(max-width:768px){.page{grid-template-columns:1fr}
+nav.toc{position:relative;height:auto}}
+</style>
+</head>
+<body>
+<div class="page">
+  <nav class="toc">
+    <a href="{back_url}" class="back">← {domain_title}</a>
     <h2>Contents</h2>
     {toc}
   </nav>
   <main>
-    <h1 class="book-title">Concept-Book: {target_title}</h1>
-    <p class="subtitle">Domain: {domain_title}&nbsp;&middot;&nbsp;Generated by SPL stack</p>
-    {body}
+    <h1 class="book-title">Concept Book: {target_title}</h1>
+    <p class="subtitle">{domain_title} &middot; Generated by SPL</p>
+    <section>
+      {payoff}
+    </section>
   </main>
 </div>
 </body>
