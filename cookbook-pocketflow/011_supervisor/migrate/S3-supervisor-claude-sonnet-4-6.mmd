@@ -1,0 +1,20 @@
+flowchart TD
+    A([Start]) --> B[Receive User Question]
+    B --> C[Initialize Research Agent]
+    subgraph InnerAgent["Inner Agent Loop"]
+    C --> D{Search or Answer?}
+    D -->|Search| E[Execute Web Search]
+    E --> F[Collect Search Results]
+    F --> G[Reason over Results]
+    G --> D
+    D -->|Answer| H[Generate Candidate Answer]
+    end
+    H --> I[Submit to Supervisor]
+    subgraph Supervisor["Supervisor Validation"]
+    I --> J{Answer Valid?}
+    J -->|Valid| K[Accept Answer]
+    J -->|"Nonsensical or<br/>Fabricated"| L[Reject Answer]
+    end
+    K --> M([Return Verified Answer])
+    L --> N[Force Retry]
+    N --> C

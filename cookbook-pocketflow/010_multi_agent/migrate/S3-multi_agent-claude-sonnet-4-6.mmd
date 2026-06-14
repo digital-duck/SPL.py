@@ -1,0 +1,14 @@
+flowchart TD
+    A([Start]) --> B["Initialize Game<br/>target word + forbidden list<br/>turn = 0"]
+    B --> C["Hinter Agent<br/>Generate hint without<br/>forbidden words"]
+    C --> D["Send hint to<br/>message queue"]
+    D --> E["Guesser Agent<br/>Read hint + prior guesses<br/>Produce guess"]
+    E --> F{Correct guess?}
+    F -->|Yes| G["Game Won<br/>Announce target word"]
+    F -->|No| H["Log wrong guess<br/>turn += 1"]
+    H --> I{Turn limit<br/>reached?}
+    I -->|Yes| J["Game Over<br/>Target unrevealed"]
+    I -->|No| K["Update Guesser<br/>with wrong guess history"]
+    K --> C
+    G --> L([End])
+    J --> L

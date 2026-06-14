@@ -1,0 +1,10 @@
+{"ts": "20260614T105936", "recipe": "010_multi_agent", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "pass", "elapsed": 52.3}, "S2": {"status": "pass", "elapsed": 6.0}, "S3": {"status": "pass", "elapsed": 97.7}}, "overall": "pass"}
+{"ts": "20260614T105936", "recipe": "011_supervisor", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "pass", "elapsed": 57.0}, "S2": {"status": "pass", "elapsed": 5.8}, "S3": {"status": "pass", "elapsed": 98.9}}, "overall": "pass"}
+{"ts": "20260614T105936", "recipe": "012_batch_node", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "pass", "elapsed": 44.1}, "S2": {"status": "pass", "elapsed": 7.6}, "S3": {"status": "fail", "elapsed": 1.7}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "013_batch_flow", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.6}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "015_chat_memory", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.9}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "016_mcp", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.7}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "018_debate", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.5}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "019_agentic_rag", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.6}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "020_heartbeat", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.7}}, "overall": "fail"}
+{"ts": "20260614T105936", "recipe": "021_self_healing", "adapter": "claude_cli", "model": "claude-sonnet-4-6", "steps": {"S1": {"status": "fail", "elapsed": 1.7}}, "overall": "fail"}

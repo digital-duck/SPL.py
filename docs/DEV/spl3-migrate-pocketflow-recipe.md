@@ -31,10 +31,31 @@ This migration serves three purposes:
    folder with explicit attribution, so the community can see both
    representations side-by-side and the work gives back to the ecosystem.
 
-The guiding principle: 
-- curate agentic workflow patterns from other framework such as pocketflow, langgraph
-- enhance SPL's expressiveness as a language.
-- build a SPL workflow registry 
+The guiding principle:
+- **Curate** agentic workflow patterns from open-source frameworks (PocketFlow, LangGraph, …)
+- **Enhance** SPL's expressiveness as a language — patterns that recur across recipes reveal missing primitives and stdlib gaps
+- **Build a SPL workflow registry** — a searchable catalog of named workflows that can be `IMPORT`-ed, `CALL`-ed, or deployed to Momagrid
+
+### Why the registry matters — SPL's strategic moat
+
+SPL is a new language and faces the classic adoption challenge: *why learn it if there are
+no libraries?* The registry is the answer. A rich catalog of validated, portable agentic
+workflows is SPL's "secret sauce" — the IP that differentiates it from every other
+LLM framework.
+
+> **The registry is SPL's npm.** Once it reaches critical mass, it becomes the
+> best reason to adopt SPL: instant access to battle-tested workflow patterns
+> that work across 14+ LLM providers without code changes.
+
+| Benefit | How |
+|---------|-----|
+| **Adoption** | Lowers the barrier to "why SPL?" — users get a library, not a blank page |
+| **Code RAG** | Registry examples feed `text2spl` / `mmd2spl` retrieval, improving LLM translation quality directly |
+| **Stdlib evolution** | When 5+ recipes define the same helper (e.g. `parse_yaml`), the registry makes that signal visible → promote to stdlib |
+| **Momagrid distribution** | Registered workflows push to Momagrid Hub and become remotely `CALL`-able without code changes |
+| **Cross-framework benchmarking** | Same workflow in PocketFlow Python + SPL side-by-side enables expressiveness, token-count, and readability comparisons — useful for academic / NeurIPS work |
+| **`spl3 vibe` quality** | Registry grows the example pool for one-shot NL → SPL generation |
+| **Open-source reciprocity** | MIT-licensed PocketFlow / LangGraph patterns credited alongside their SPL equivalents — builds community goodwill |
 
 ---
 

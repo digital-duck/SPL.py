@@ -1,0 +1,23 @@
+flowchart TD
+    A([Start]) --> B["Load CSV File"]
+    B --> C["Split into Fixed-Size<br/>Row Chunks"]
+    C --> D["Batch Prep:<br/>Enumerate Chunks"]
+    D --> E1["Chunk 1:<br/>Compute Summary"]
+    D --> E2["Chunk 2:<br/>Compute Summary"]
+    D --> E3["Chunk N:<br/>Compute Summary"]
+    subgraph PARALLEL ["Parallel BatchNode Execution"]
+    E1
+    E2
+    E3
+    end
+    E1 --> F["Merge All<br/>Chunk Results"]
+    E2 --> F
+    E3 --> F
+    F --> G["Compute Global Totals"]
+    G --> H["Total Revenue"]
+    G --> I["Average Sale"]
+    G --> J["Transaction Count"]
+    H --> K["Display Final Summary"]
+    I --> K
+    J --> K
+    K --> L([End])
