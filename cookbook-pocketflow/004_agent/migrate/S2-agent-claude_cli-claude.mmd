@@ -1,0 +1,16 @@
+    flowchart TD
+    A([Start]) --> B["Initialize<br/>@question from CLI<br/>@context = 'No previous search'"]
+    B --> C["GENERATE decide_action<br/>LLM produces fenced YAML block"]
+    C --> D{"YAML parse<br/>success?"}
+    D -->|No| E["Force block scalars<br/>on known keys, retry"]
+    E --> F{"Retry parse<br/>success?"}
+    F -->|No| Z([ValueError / Exception])
+    F -->|Yes| G{"EVALUATE<br/>@decision.action?"}
+    D -->|Yes| G
+    G -->|action == search| H["Set @search_query<br/>from @decision"]
+    H --> I["CALL search_web<br/>DuckDuckGo(@search_query)"]
+    I --> J["Append SEARCH + RESULTS<br/>block to @context"]
+    J -->|loop back| C
+    G -->|action == answer| K["GENERATE answer_question<br/>LLM synthesizes prose answer"]
+    K --> L["Store result<br/>as @answer"]
+    L --> M(["RETURN @answer<br/>status = done"])
