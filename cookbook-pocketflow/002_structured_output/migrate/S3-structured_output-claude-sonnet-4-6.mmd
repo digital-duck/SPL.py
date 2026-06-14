@@ -1,0 +1,14 @@
+flowchart TD
+    A([Start]) --> B["Load plain-text<br/>resume + skill list"]
+    B --> C["Extract candidate info<br/>(name, email)"]
+    C --> D["Parse work experience<br/>entries"]
+    D --> E["Match skills against<br/>predefined skill list"]
+    E --> F{All required<br/>fields found?}
+    F -->|No| G["Flag missing fields<br/>/ request clarification"]
+    G --> H([End - Incomplete])
+    F -->|Yes| I["Build structured<br/>YAML document"]
+    I --> J{YAML<br/>valid?}
+    J -->|No| K["Fix validation<br/>errors"]
+    K --> I
+    J -->|Yes| L["Output normalized<br/>candidate record"]
+    L --> M([End - Success])

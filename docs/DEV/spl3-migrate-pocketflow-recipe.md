@@ -1,4 +1,4 @@
-# Migrating PocketFlow Recipes to SPL — `cookbook-pocketflow/`
+# Migrating Agentic Workflow Recipes to SPL — `cookbook-pocketflow/` and beyond
 
 ## Motivation
 
@@ -31,8 +31,10 @@ This migration serves three purposes:
    folder with explicit attribution, so the community can see both
    representations side-by-side and the work gives back to the ecosystem.
 
-The guiding principle: **borrow workflow patterns freely, credit the source,
-and surface anything that improves SPL's expressiveness as a language.**
+The guiding principle: 
+- curate agentic workflow patterns from other framework such as pocketflow, langgraph
+- enhance SPL's expressiveness as a language.
+- build a SPL workflow registry 
 
 ---
 
@@ -54,13 +56,17 @@ Each entry:
 cookbook-pocketflow/
 └── 004_agent/
     ├── agent.spl          # migrated SPL workflow
-    ├── tools.py           # @spl_tool helpers (if needed)
+    ├── tools.spl          # CREATE TOOL_API helpers (if needed; replaces tools.py)
     ├── README.md          # what it demonstrates + attribution
     └── migrate/
         ├── S1-*-spec.md   # splc describe output (archived)
         ├── S2-*.mmd       # text2mmd Mermaid topology (archived)
         └── S3-*.spl       # raw mmd2spl output before polish
 ```
+
+> **No `tools.py` / `@spl_tool` decorator approach.** All helper tools go in
+> `tools.spl` as `CREATE TOOL_API` blocks so they run inside SPL's persistent
+> kernel session — no separate Python module or decorator registry needed.
 
 `README.md` header template for attribution:
 
@@ -176,12 +182,16 @@ Migrate after Tiers 1–4 are complete.
 
 ---
 
-## Pipeline: 3-step IR path
+## Pipeline: 3-step IR path + optional S4
 
 ```
-pocketflow-<recipe>/        S1-spec.md        S2.mmd          S3.spl
-    spl3 splc describe   ──►  text2mmd   ──►  mmd2spl   ──►  cookbook-pocketflow/
+pocketflow-<recipe>/        S1-spec.md        S2.mmd          S3.spl          tools.spl
+    spl3 splc describe   ──►  text2mmd   ──►  mmd2spl   ──►  promote   ──►  (S4 manual)
 ```
+
+S4 is only needed when the source has non-LLM Python helpers in `utils.py`.
+Port each helper into `tools.spl` as a `CREATE TOOL_API ... AS PYTHON $$ ... $$` block.
+Skip S4 for recipes where `utils.py` only wraps `call_llm`.
 
 > **Note:** Use `spl3 splc describe` (not `spl3 describe`) for Python source.
 > `spl3 describe` generates a spec from an existing **`.spl` file**.
@@ -229,6 +239,16 @@ spl3 mmd2spl "$OUT/S2-$RECIPE-$MODEL.mmd" \
 
 # ⚠️ HUMAN CHECKPOINT — spl3 validate + spl3 run smoke test; polish then promote
 cp "$OUT/S3-$RECIPE-$MODEL.spl" "$DEST/$RECIPE.spl"
+
+# S4 (optional) — port utils.py helpers into tools.spl using CREATE TOOL_API
+# Only needed when the PocketFlow recipe has non-LLM Python helper functions.
+# Recipes where utils.py only has call_llm (chat, structured_output, workflow,
+# map_reduce, chat_guardrail) need no tools.spl — SPL handles LLM calls natively.
+#
+# For recipes with real tools (agent → search_web; rag → embed/chunk/faiss;
+# thinking → YAML/thought helpers), create tools.spl manually:
+#
+# $DEST/tools.spl  →  one CREATE TOOL_API block per helper function
 ```
 
 ### Batch helper script
@@ -288,18 +308,45 @@ echo "Done → $DEST/$RECIPE.spl"
 | S3 | Truncation when inner ` ```yaml ` fence hit by regex | fixed in spl3 |
 | S3 | Semicolons after INPUT/OUTPUT declarations | fix prompt; remove manually |
 | S3 | Nested `DO...END;` wrappers | fix prompt; remove extra `END;` |
+| S3 | LLM preamble + `___SPL_BEGIN___` + truncated body | re-run S3 (regeneration usually fixes it) |
 
 ---
 
 ## Execution Order
 
 ```
-Phase 0 (now)        Seed 5 NeurIPS recipes → 004, 005, 014, 017, 032
-Phase 1 (week 1)     Tier 1 remaining: 001-003, 006, 008
+Phase 0 (done)       Seed 5 NeurIPS recipes → 004, 005, 014, 017, 032  + tools.spl
+Phase 1 (done)       Tier 1 remaining: 001, 002, 003, 006, 008  ✅ all validated
 Phase 2 (week 2)     Tier 2: 010-021
 Phase 3 (week 3)     Tier 3: 030-034 + Tier 4: 040-041
 Phase 4 (ongoing)    Tier 5: 050-064 as needed
 ```
+
+---
+
+## Expanded Scope — Multi-Framework Registry
+
+The guiding principle extends beyond PocketFlow to any open-source agentic workflow framework:
+
+| Source framework | Location | Status |
+|-----------------|----------|--------|
+| PocketFlow | `cookbook-pocketflow/` | active (phases 0-1 done) |
+| LangGraph | `cookbook-langgraph/` (planned) | not started |
+
+### SPL Workflow Registry (planned)
+
+Each migrated recipe is a candidate for the SPL workflow registry: a searchable catalog
+of named workflows that can be `IMPORT`-ed or `CALL`-ed by other workflows.
+
+Registry design principles:
+- Each recipe's canonical `.spl` + `tools.spl` pair is the unit of registration.
+- Registry key: `{framework}/{name}` (e.g. `pocketflow/agent`, `langgraph/react_agent`)
+- `spl3 registry list` — enumerate available workflows
+- `spl3 registry push <dir>` — promote a recipe to the registry
+- `spl3 registry pull pocketflow/agent` — fetch and install locally
+
+This is implemented in `spl3/hub_registry.py` for Momagrid-hosted workflows;
+local registry support is in `spl3/registry.py`.
 
 ---
 

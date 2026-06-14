@@ -1,0 +1,15 @@
+flowchart TD
+    A([Start]) --> B[Receive User Message]
+    B --> C{Heuristic Check<br/>Travel-related?}
+    C -->|No| R1[Reject with<br/>Off-topic Message]
+    C -->|Yes| D[LLM Judge<br/>Topic Validation]
+    D --> E{LLM Verdict<br/>Travel-related?}
+    E -->|No| R2[Reject with<br/>Off-topic Message]
+    E -->|Yes| F[Forward to<br/>Travel Advisor LLM]
+    F --> G[Generate Travel<br/>Advice Response]
+    G --> H[Return Response<br/>to User]
+    R1 --> I{Continue<br/>Conversation?}
+    R2 --> I
+    H --> I
+    I -->|Yes| B
+    I -->|No| Z([End])

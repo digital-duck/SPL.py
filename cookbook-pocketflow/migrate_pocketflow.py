@@ -164,6 +164,9 @@ migrate/
 └── S3-{name}-{tag}.spl       # raw mmd2spl output (= {name}.spl)
 ```
 
+tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
+Recipes whose utils.py only wraps call_llm need no tools.spl.
+
 > TODO: enrich this README — describe SPL pattern, key constructs, tool dependencies.
 """, encoding="utf-8")
 

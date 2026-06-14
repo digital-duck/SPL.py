@@ -61,6 +61,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS results (
             id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id         TEXT,
             source_file    TEXT    NOT NULL,
             mid            TEXT,
             label          TEXT,
@@ -101,6 +102,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
         "ALTER TABLE results ADD COLUMN decomposition TEXT",
         "ALTER TABLE results ADD COLUMN output TEXT",
         "ALTER TABLE results ADD COLUMN backend TEXT",
+        "ALTER TABLE results ADD COLUMN run_id TEXT",
     ]:
         try:
             conn.execute(stmt)
@@ -117,6 +119,7 @@ def write_cell_to_db(
     solver: str, run: int,
     metrics: dict,
 ) -> None:
+    run_id  = f"{mid}-{pid}-{'T' if solver == 'true' else 'F'}-{run}"
     status  = metrics["status"]
     passed  = int(cell_is_pass(status, solver, backend))
     llm     = int(metrics["llm_calls"])   if metrics["llm_calls"]  != "?" else None
@@ -129,12 +132,12 @@ def write_cell_to_db(
         conn.execute(
             """
             INSERT OR REPLACE INTO results
-                (source_file, mid, label, pid, tier, backend, problem,
+                (run_id, source_file, mid, label, pid, tier, backend, problem,
                  solver, run, pass, status, output_preview, output,
                  llm_calls, latency_ms, steps, spl_log, decomposition)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
-            (source_file, mid, label, pid, tier, backend, problem,
+            (run_id, source_file, mid, label, pid, tier, backend, problem,
              solver, run, passed, status, preview, output,
              llm, lat, steps, metrics["spl_log"], decomp),
         )
@@ -178,58 +181,97 @@ MODELS = {
     "m010": ("rnj-1",       "ollama:rnj-1",        "ollama"),   # Essential AI 8B STEM model
 }
 
+# ── Thinking-mode models (reference, not used in experiments) ─────────────────
+# Detected 2026-06-14 via scripts/detect_thinking_mode.py (probe: "what is 10!?").
+# These models run extended chain-of-thought by default and exhaust the token
+# budget before emitting structured output — incompatible with the expr|op
+# contract required by the solver arm.  Do not add to MODELS without first
+# disabling thinking mode (e.g. qwen3 /no_think flag, deepseek-r1 system prompt).
+# id → (label, adapter, provider, indicator)
+MODELS_THINK = {
+    "t001": ("qwen3",        "ollama:qwen3",        "ollama", "Ollama thinking field"),
+    "t002": ("deepseek-r1",  "ollama:deepseek-r1",  "ollama", "Ollama thinking field"),
+    "t003": ("deepseek-r1:8b","ollama:deepseek-r1:8b","ollama","Ollama thinking field"),
+    "t004": ("lfm2.5",       "ollama:lfm2.5",       "ollama", "found <think> tag"),
+    "t005": ("qwen3.5:0.8b", "ollama:qwen3.5:0.8b", "ollama", "Ollama thinking field"),
+    "t006": ("qwen3.5:4b",   "ollama:qwen3.5:4b",   "ollama", "Ollama thinking field"),
+    "t007": ("qwen3.5:9b",   "ollama:qwen3.5:9b",   "ollama", "Ollama thinking field"),
+    "t008": ("phi4",         "ollama:phi4",          "ollama", "verbose preamble (123 words before answer)"),
+    "t009": ("tinyllama",    "ollama:tinyllama",     "ollama", "verbose preamble (98 words before answer)"),
+}
+
 # ── Axis 1: Problem battery (ordered easy → hard) ────────────────────────────
 # id → (tier, backend, problem-text)
-# p001–p020 are recipe 67's battery kept verbatim, with the compute engine
-# swapped from SymPy to SageMath (the per-problem default; --backend sympy
-# re-runs the identical battery on the old rung). p021–p024 are Sage-only
-# operations (PARI under the umbrella); p025–p029 are prose CLAIMS proved
-# against mathlib by the Lean arm (tier P = proof grade).
+#
+# Active (default 400-cell run): p001–p020 — 10 SymPy (T0–T2) + 10 Sage (T3–T5)
+#   T0–T2 use SymPy: classical polynomial algebra, limits, Taylor series, trig
+#   T3–T5 use Sage: integration with exact algebraic output, eigenvalues, ODEs,
+#                   Laplace transforms, infinite sums
+#
+# Disabled (run explicitly with -p <id>):
+#   p021–p024 (T6): Sage-only operations SymPy cannot do — re-enable once
+#                   the core 400-cell results are in hand
+#   p025–p029 (Lean): future work, needs mathematician collaborator for mathlib
 PROBLEMS = {
-    # ── Tier 0: single-step ──────────────────────────────────────────────────
-    "p001": ("T0", "sage", "differentiate x**4 - 2*x**2 + 1"),
-    "p011": ("T0", "sage", "simplify the rational expression (x**2 - 1) / (x - 1)"),
+    # ── Tier 0: single-step  [sympy] ─────────────────────────────────────────
+    "p001": ("T0", "sympy", "differentiate x**4 - 2*x**2 + 1"),
+    "p011": ("T0", "sympy", "simplify the rational expression (x**2 - 1) / (x - 1)"),
 
-    # ── Tier 1: polynomial multi-step ────────────────────────────────────────
-    "p002": ("T1", "sage", "expand (x+1)**2, then factor the expanded form"),
-    "p003": ("T1", "sage", "differentiate 3*x**3-x, then factor if needed, finally solve for x"),
-    "p004": ("T1", "sage", "expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0"),
-    "p012": ("T1", "sage", "find the partial fraction decomposition of 1 / (x**2 - 1)"),
+    # ── Tier 1: polynomial multi-step  [sympy] ───────────────────────────────
+    "p002": ("T1", "sympy", "expand (x+1)**2, then factor the expanded form"),
+    "p003": ("T1", "sympy", "differentiate 3*x**3-x, then factor if needed, finally solve for x"),
+    "p004": ("T1", "sympy", "expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0"),
+    "p012": ("T1", "sympy", "find the partial fraction decomposition of 1 / (x**2 - 1)"),
 
-    # ── Tier 2: transcendental / limits / series / trig ──────────────────────
-    "p005": ("T2", "sage", "differentiate exp(x) and simplify it if necessary"),
-    "p006": ("T2", "sage", "find the limit of sin(x) divided by x as x approaches 0"),
-    "p013": ("T2", "sage", "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5"),
-    "p014": ("T2", "sage", "simplify sin(x)**2 + cos(x)**2 using trigonometric identities"),
+    # ── Tier 2: transcendental / limits / series / trig  [sympy] ────────────
+    "p005": ("T2", "sympy", "differentiate exp(x) and simplify it if necessary"),
+    "p006": ("T2", "sympy", "find the limit of sin(x) divided by x as x approaches 0"),
+    "p013": ("T2", "sympy", "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5"),
+    "p014": ("T2", "sympy", "simplify sin(x)**2 + cos(x)**2 using trigonometric identities"),
 
-    # ── Tier 3: integration / systems / linear algebra ───────────────────────
+    # ── Tier 3: integration / systems / linear algebra  [sage] ───────────────
+    # Sage returns exact algebraic eigenvalues (e.g. (5±√33)/2, not floats)
+    # and arc-trig integrals in closed form.
     "p007": ("T3", "sage", "integrate the square root of (4 minus x squared)"),
     "p008": ("T3", "sage", "find the integral of sin(x) times cos(x), then simplify the result"),
     "p015": ("T3", "sage", "solve the system of equations x + y = 5 and x - y = 1 for x and y"),
     "p016": ("T3", "sage", "find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]"),
 
-    # ── Tier 4: transforms / ODEs / summation / roots ────────────────────────
+    # ── Tier 4: transforms / ODEs / summation / roots  [sage] ────────────────
+    # Sage handles Laplace transforms, ODEs, and infinite sums with exact output
+    # (sum of 1/n² = π²/6, not a decimal approximation).
     "p009": ("T4", "sage", "find the Laplace transform of exp(-2*t)"),
     "p017": ("T4", "sage", "solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1"),
     "p018": ("T4", "sage", "compute the symbolic sum of 1 over n squared from n equals 1 to infinity"),
     "p019": ("T4", "sage", "find all roots of x**4 - 1 and express each root in simplified form"),
 
-    # ── Tier 5: expert ───────────────────────────────────────────────────────
+    # ── Tier 5: expert  [sage] ───────────────────────────────────────────────
     "p010": ("T5", "sage", "find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0"),
     "p020": ("T5", "sage", "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result"),
 
-    # ── Tier 6: Sage-only — operations SymPy cannot do ───────────────────────
+    # ── Tier 6: Sage-only — operations SymPy cannot do  [DISABLED] ───────────
+    # Re-enable with -p p021 etc. once core 400-cell run is complete.
     "p021": ("T6", "sage", "find the Galois group of the polynomial x**5 - x - 1 over the rational numbers"),
     "p022": ("T6", "sage", "determine whether the conic x**2 + y**2 = 3*z**2 has a rational point, and find one if it exists"),
     "p023": ("T6", "sage", "compute the rank of the elliptic curve y^2 + y = x^3 - x^2 - 10*x - 20"),
     "p024": ("T6", "sage", "factor the polynomial x**12 - 1 into irreducible factors over the rational numbers"),
 
-    # ── Tier P: proof grade — prose claims kernel-checked against mathlib ────
+    # ── Tier P: proof grade — Lean 4 + mathlib  [DISABLED, future work] ──────
+    # Requires mathematician collaborator for mathlib tactics.
+    # Run explicitly: -p p025 --backend lean (needs Lean + mathlib installed).
     "p025": ("P1", "lean", "addition of natural numbers is commutative"),
     "p026": ("P1", "lean", "the square of any real number is nonnegative"),
     "p027": ("P1", "lean", "for any two real numbers a and b, the absolute value of a + b is at most the absolute value of a plus the absolute value of b"),
     "p028": ("P2", "lean", "there are infinitely many prime numbers"),
     "p029": ("P2", "lean", "the sum of two even natural numbers is even"),
+}
+
+# Problems excluded from default runs; still accessible via explicit -p <id>.
+# T6: enable after the core 400-cell results are in hand.
+# Lean: future work — requires mathematician collaborator for mathlib.
+DISABLED_PROBLEMS: set[str] = {
+    "p021", "p022", "p023", "p024",   # T6 Sage-only (deferred)
+    "p025", "p026", "p027", "p028", "p029",  # Lean (future work)
 }
 
 BACKENDS = ("sympy", "sage", "lean")
@@ -439,7 +481,8 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
             click.echo(f"  {mid:<12}  {label:<14}  {adapter}")
         click.echo("\nProblem IDs  (use with -p):")
         for pid, (tier, pbackend, text) in PROBLEMS.items():
-            click.echo(f"  {pid:<6}  [{tier}/{pbackend:<5}]  {text[:64]}")
+            flag = "  [disabled]" if pid in DISABLED_PROBLEMS else ""
+            click.echo(f"  {pid:<6}  [{tier}/{pbackend:<5}]  {text[:58]}{flag}")
         return
 
     # Expand comma/space-delimited input before any validation or selection
@@ -459,11 +502,13 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                 f"'{pid}' not found. Run --list to see available problem IDs.",
                 param_hint="--problem")
 
-    # Resolve selections (preserve declaration order)
+    # Resolve selections (preserve declaration order).
+    # Disabled problems are skipped unless the user named them explicitly via -p.
     sel_models   = {k: v for k, v in MODELS.items()
                     if not model_ids   or k in model_ids}
     sel_problems = {k: v for k, v in PROBLEMS.items()
-                    if not problem_ids or k in problem_ids}
+                    if (not problem_ids or k in problem_ids)
+                    and (problem_ids or k not in DISABLED_PROBLEMS)}
 
     use_solver_param = "symbolic_math" in script
     total = len(sel_models) * len(sel_problems) * len(solver_modes) * runs

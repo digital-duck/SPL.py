@@ -1,0 +1,8 @@
+flowchart TD
+    A([Start]) --> B["Initialize<br/>Conversation History"]
+    B --> C["Collect User Input"]
+    C --> D{Exit Keyword?}
+    D -->|Yes| E([End])
+    D -->|No| F["Call LLM with<br/>Last N Messages"]
+    F --> G["Append Reply to<br/>Conversation History"]
+    G --> C

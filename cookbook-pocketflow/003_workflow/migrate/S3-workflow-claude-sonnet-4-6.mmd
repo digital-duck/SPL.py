@@ -1,0 +1,17 @@
+flowchart TD
+    A([Start]) --> B["Input: topic string"]
+    B --> C["Step 1: Outline Generation<br/>LLM call -> structured YAML outline"]
+    C --> D["Parse YAML<br/>Extract section list"]
+    D --> E{Sections extracted?}
+    E -->|No| F["Error: Invalid outline"]
+    F --> Z([End])
+    E -->|Yes| G["Step 2: Parallel Section Drafting<br/>CALL PARALLEL per section"]
+    G --> H["Draft Section 1"]
+    G --> I["Draft Section 2"]
+    G --> J["Draft Section N"]
+    H --> K["Collect all drafted sections"]
+    I --> K
+    J --> K
+    K --> L["Step 3: Style Rewriting<br/>LLM call -> conversational polish"]
+    L --> M["Output: polished article"]
+    M --> Z
