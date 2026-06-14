@@ -1301,7 +1301,7 @@
       "dir": "67_symbolic_math",
       "log": "symbolic_math",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "agentic",
       "tier": 2,
       "requires": [
@@ -1368,7 +1368,7 @@
       "dir": "70_linalg_core_concepts",
       "log": "linalg_core_concepts",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "agentic",
       "tier": 2,
       "requires": [
@@ -1391,7 +1391,7 @@
       "dir": "71_linalg_concept_book",
       "log": "linalg_concept_book",
       "is_active": true,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "compilation",
       "tier": 2,
       "requires": [
@@ -1429,7 +1429,7 @@
     {
       "id": "73",
       "name": "Intro Geometry Concept-Book Generator",
-      "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Authored spec-first, DODA-style \u2014 .spl workflows validate cleanly but the python/intro_geometry splc target doesn't exist yet (tracked in README-todo.md)",
+      "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Both build_concept_book and answer_on_demand notebooks validated end-to-end.",
       "args": [
         "spl3",
         "validate",
@@ -1437,8 +1437,8 @@
       ],
       "dir": "73_intro_geometry",
       "log": "intro_geometry",
-      "is_active": false,
-      "approval_status": "wip",
+      "is_active": true,
+      "approval_status": "approved",
       "category": "compilation",
       "tier": 2,
       "requires": [
@@ -1489,6 +1489,29 @@
       "tier": 2,
       "requires": [
         "sagemath"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "76",
+      "name": "Lean Proof Verifier",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/76_lean_proof/lean_proof.spl",
+        "--kernel",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "76_lean_proof",
+      "log": "lean_proof",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "lean4"
       ],
       "excluded_adapters": []
     }

@@ -75,7 +75,7 @@ are completely **style-agnostic** — only the writing adapts.
 
 ### `build_concept_book.spl` — full curriculum toward a target
 
-```
+```spl
 SOLVE @style_guide := style_instruction(@style)             -- resolve prose style once
 ASSERT acyclic(@graph)                                       -- graph sanity (deterministic)
 ASSERT reducible(@graph, @primitives)
@@ -100,7 +100,7 @@ the target concept to the real-world domains it unlocks.
 
 ### `answer_on_demand.spl` — personalised concept slice from a question
 
-```
+```spl
 SOLVE @style_guide  := style_instruction(@style)
 GENERATE resolve_target(@question, concept_names())          -- NL question → concept node
 ASSERT in_graph(@graph, @target) OTHERWISE GENERATE resolve_target(...)  -- re-resolve on miss

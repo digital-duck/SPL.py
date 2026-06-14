@@ -50,7 +50,9 @@ from spl.ast_nodes import (
     FStringLiteral,
     GenerateIntoStatement,
     Literal,
+    ListLiteral,
     LoggingStatement,
+    MapLiteral,
     NamedArg,
     ParamRef,
     SemanticCondition,
@@ -210,14 +212,21 @@ _SETUP_TEMPLATE = """\
 import sys, os, json, time
 from pathlib import Path
 
-# Locate {{GRAPH_FILE}} (cookbook recipe directory or current dir)
+# Locate {{GRAPH_FILE}} — tries: script dir, env var, CWD, 1-2 levels up
+# (notebook lives in targets/python_X/ which is 2 levels below the recipe dir),
+# then falls back to a glob search under cookbook/ for the repo-root launch case.
 _SEARCH = [
-    Path(__file__).parent if "__file__" in dir() else Path("."),
+    Path(__file__).parent if "__file__" in dir() else Path(".").resolve(),
     Path(os.environ.get("{{GRAPH_DIR_ENV}}", ".")),
     Path("."),
+    Path(".."),
+    Path("../.."),
 ]
+for _g in sorted(Path(".").glob("cookbook/**/{{GRAPH_FILE}}")):
+    _SEARCH.insert(0, _g.parent)
+    break
 for _p in _SEARCH:
-    _p = _p.resolve()
+    _p = Path(_p).resolve()
     if (_p / "{{GRAPH_FILE}}").exists():
         sys.path.insert(0, str(_p))
         break
@@ -332,6 +341,9 @@ def _now() -> float:
 
 def _elapsed(start: float) -> float:
     return time.time() - start
+
+def join(lst, sep=", ") -> str:
+    return sep.join(str(x) for x in lst)
 
 # ── Workflow parameters (override before running or use papermill) ────────────
 {param_defaults}
@@ -848,6 +860,12 @@ class DomainGraphTranspiler:
             parts = [self._render_condition(c) for c in expr.conditions]
             op = " and " if expr.conjunctions and expr.conjunctions[0] == "AND" else " or "
             return op.join(parts)
+        if isinstance(expr, ListLiteral):
+            items = ", ".join(self._expr_py(e) for e in expr.elements)
+            return f"[{items}]"
+        if isinstance(expr, MapLiteral):
+            pairs = ", ".join(f"{self._expr_py(k)}: {self._expr_py(v)}" for k, v in expr.pairs)
+            return f"{{{pairs}}}"
         return f"# EXPR({type(expr).__name__})"
 
     def _spl_arg(self, arg) -> str:
@@ -916,7 +934,9 @@ class DomainGraphTranspiler:
         if isinstance(cond, CompoundCondition):
             # spl3 CompoundCondition has left/right/operator
             if hasattr(cond, "left") and hasattr(cond, "right"):
-                return f"{self._spl_condition(cond.left)} {cond.operator} {self._spl_condition(cond.right)}"
+                return (f"{self._spl_condition(getattr(cond, 'left'))}"
+                        f" {getattr(cond, 'operator')}"
+                        f" {self._spl_condition(getattr(cond, 'right'))}")
             # spl base CompoundCondition has conditions/conjunctions lists
             parts = [self._spl_condition(c) for c in cond.conditions]
             conj = f" {cond.conjunctions[0]} " if cond.conjunctions else " AND "

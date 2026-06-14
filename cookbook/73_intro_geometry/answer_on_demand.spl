@@ -92,9 +92,9 @@ DO
 
     -- 3. Compute the gap between what the learner already knows and the target,
     --    then order that gap into a teachable learning path
-    SOLVE @missing SET := gap(@graph, @learner_state, @target)
+    SOLVE @missing SET := gap(@graph, @target, @learner_state)
 
-    SOLVE @path LIST := learning_path(@graph, @learner_state, @target)
+    SOLVE @path LIST := learning_path(@graph, @target, @learner_state)
 
     SOLVE @path_len INT := len(@path)
 

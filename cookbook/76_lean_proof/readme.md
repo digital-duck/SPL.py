@@ -15,7 +15,7 @@ expressed declaratively.
 
 ## What it demonstrates
 
-```
+```spl
 @claim (prose)
    │ GENERATE formalize_claim                LLM   (probabilistic)
    ▼
@@ -99,14 +99,14 @@ bash cookbook/tools/lean/setup_lean.sh   # elan + pinned repl v4.30.0, built wit
 # Default claim: "addition of natural numbers is commutative"
 spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli
 
+# Local model
+spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3
+
 # Your own claim
 spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli \
     --param claim="for any natural number n, n^2 >= n" \
     --param max_tries=3
 
-# Local model
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel \
-    --adapter ollama --model gemma3
 ```
 
 ## Verified example runs (2026-06-11, `--llm claude_cli`)

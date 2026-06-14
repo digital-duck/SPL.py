@@ -40,7 +40,7 @@ dep_hashes)*, never by "which script generated it" or "in what order".
 
 ## Architecture
 
-```
+```sql
 CALL section_context(@concept)  → deterministic: concept id → book-context string fed to the LLM
 CALL section_terms(@concept)    → deterministic: concept id → required-terms checklist
 CALL cache_get(@concept)        → deterministic: CAS lookup; returns content or sentinel "miss"
@@ -64,7 +64,7 @@ END
 `cache_get` returns the literal string `"miss"` on a cache miss. The dispatch
 on that sentinel is written as:
 
-```
+```sql
 EVALUATE @section
   WHEN = 'miss' THEN ...
 ```

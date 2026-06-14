@@ -107,7 +107,7 @@ learners are its primary audience, not an edge case.
 
 ### `build_concept_book.spl` — full curriculum toward a target
 
-```
+```spl
 SOLVE @style_guide := style_instruction(@style)             -- resolve prose style once
 ASSERT acyclic(@graph)                                       -- graph sanity (deterministic)
 ASSERT reducible(@graph, @primitives)
@@ -131,7 +131,7 @@ ties the target concept to the real-world domains it unlocks.
 
 ### `answer_on_demand.spl` — personalised concept slice from a question
 
-```
+```spl
 SOLVE @style_guide  := style_instruction(@style)
 GENERATE resolve_target(@question, concept_names())          -- NL question → concept node
 ASSERT in_graph(@graph, @target) OTHERWISE GENERATE resolve_target(...)  -- re-resolve on miss
@@ -195,11 +195,22 @@ The **physical artifact** — once `python/intro_geometry` exists — would be a
 runnable Jupyter notebook produced the same deterministic way recipe 71's is:
 
 ```bash
+conda activate spl123
+pip install ipykernel
+python -m ipykernel install --user --name spl123 --display-name "Python (spl123)"
+
 spl3 splc compile cookbook/73_intro_geometry/build_concept_book.spl \
     --lang python/intro_geometry      # ← target doesn't exist yet
 
 spl3 splc compile cookbook/73_intro_geometry/answer_on_demand.spl \
     --lang python/intro_geometry      # ← target doesn't exist yet
+
+
+# run notebook
+jupyter notebook cookbook/73_intro_geometry/targets/python_intro_geometry/answer_on_demand_python_intro_geometry.ipynb
+# select spl123 kernel
+
+
 ```
 
 Each SPL construct would map deterministically to one or more notebook cells,

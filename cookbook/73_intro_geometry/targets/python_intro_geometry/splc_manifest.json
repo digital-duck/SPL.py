@@ -1,0 +1,21 @@
+{
+  "splc_version": "0.1.0",
+  "generated_at": "2026-06-14T02:48:58.685611+00:00",
+  "source": {
+    "spl_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/73_intro_geometry/build_concept_book.spl",
+    "spl_sha256": "2ccd30da319fa37b"
+  },
+  "target": {
+    "lang": "python/intro_geometry",
+    "label": "Python \u2014 intro geometry concept-book (.ipynb via geometry_graph)",
+    "output_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/73_intro_geometry/targets/python_intro_geometry/build_concept_book_python_intro_geometry.ipynb"
+  },
+  "compilation": {
+    "adapter": "claude_cli",
+    "model": null,
+    "references": [],
+    "rag_enabled": true,
+    "rag_k": 3
+  },
+  "doda_note": "This file is a splc-compiled physical artifact. The source .spl file is the invariant logical view. To retarget, run: splc --spl <source.spl> --lang <new-target>"
+}
