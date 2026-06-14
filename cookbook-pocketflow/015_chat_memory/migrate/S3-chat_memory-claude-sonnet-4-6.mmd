@@ -1,0 +1,17 @@
+flowchart TD
+    A([Start]) --> B[Receive User Input]
+    B --> C["Embed User Query<br/>via Vector Model"]
+    C --> D["Search Archive<br/>Top-1 Semantic Match"]
+    D --> E["Load Short-Term Window<br/>Last 3 Exchanges"]
+    E --> F["Build LLM Context<br/>Window + Archive Hit"]
+    F --> G[Call LLM]
+    G --> H[Generate Response]
+    H --> I[Display Response to User]
+    I --> J["Append Exchange<br/>to Short-Term Window"]
+    J --> K{Window Full?}
+    K -->|Yes| L["Evict Oldest Exchange<br/>Embed + Archive It"]
+    K -->|No| M[Keep Window As-Is]
+    L --> N{Continue Chat?}
+    M --> N
+    N -->|Yes| B
+    N -->|No| O([End])

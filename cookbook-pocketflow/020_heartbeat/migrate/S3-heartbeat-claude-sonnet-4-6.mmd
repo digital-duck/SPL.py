@@ -1,0 +1,13 @@
+flowchart TD
+    A([Start]) --> B["Initialize<br/>cycle counter"]
+    B --> C{More cycles?}
+    C -->|No| Z([End])
+    C -->|Yes| D["Poll email inbox"]
+    D --> E{New emails?}
+    E -->|No| F["Sleep until<br/>next interval"]
+    F --> G["Increment cycle"]
+    G --> C
+    E -->|Yes| H["LLM: Summarize<br/>message"]
+    H --> I["LLM: Suggest<br/>reply action"]
+    I --> J["Log summary<br/>and action"]
+    J --> F

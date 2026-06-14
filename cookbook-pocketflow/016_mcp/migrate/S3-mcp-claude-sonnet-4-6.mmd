@@ -1,0 +1,12 @@
+flowchart TD
+    A([Start]) --> B["Receive User<br/>Math Question"]
+    B --> C["Discover Available<br/>MCP Tools at Runtime"]
+    C --> D["Send Question + Tool List<br/>to LLM"]
+    D --> E["LLM Selects Tool<br/>and Extracts Parameters"]
+    E --> F{MCP Mode<br/>Enabled?}
+    F -->|Yes| G["Invoke MCP-Hosted<br/>Tool with Parameters"]
+    F -->|No| H["Invoke Local Embedded<br/>Tool with Parameters"]
+    G --> I["Collect Tool Result"]
+    H --> I
+    I --> J["Return Final Answer<br/>to User"]
+    J --> K([End])

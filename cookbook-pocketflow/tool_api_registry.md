@@ -10,6 +10,17 @@ stdlib promotion candidates.
 
 ---
 
+## String / comparison helpers
+
+| Function | Signature | Source | Stdlib? | Recipe |
+|----------|-----------|--------|---------|--------|
+| `strings_equal` | `(a TEXT, b TEXT) → TEXT` | tools.spl | **candidate** | 042_nodejs_upgrade_agent |
+
+> `EVALUATE ... WHEN = "value"` handles literal comparisons, but comparing two *variables* requires
+> a helper. `strings_equal` fills that gap — a strong stdlib candidate.
+
+---
+
 ## YAML / structured-data helpers
 
 | Function | Signature | Source | Stdlib? | Recipe |

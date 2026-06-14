@@ -1,0 +1,11 @@
+flowchart TD
+    A([Start]) --> B["Receive User Question"]
+    B --> C["Load Document Store<br/>(summaries + content)"]
+    C --> D["Display Document<br/>Summaries to Agent"]
+    D --> E{"Has enough<br/>context?"}
+    E -->|No| F["Agent Selects<br/>Next Document"]
+    F --> G["Retrieve Full<br/>Document Content"]
+    G --> H["Accumulate Context<br/>from Document"]
+    H --> E
+    E -->|Yes| I["Generate Final Answer<br/>from Accumulated Context"]
+    I --> J([End])

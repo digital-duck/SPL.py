@@ -1,0 +1,11 @@
+flowchart TD
+    A([Start]) --> B["Load PDF Invoice"]
+    B --> C["LLM Vision Extraction<br/>(vendor, customer, line items, tax, total)"]
+    C --> D["Parse Structured Fields"]
+    D --> E["Deterministic Arithmetic Validation"]
+    E --> F{Math Correct?}
+    F -->|Pass| G["Mark Invoice Valid"]
+    F -->|Fail| H["Flag Discrepancies"]
+    G --> I["Output Structured Invoice Data"]
+    H --> I
+    I --> J([End])

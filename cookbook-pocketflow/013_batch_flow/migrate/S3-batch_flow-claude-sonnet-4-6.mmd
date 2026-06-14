@@ -1,0 +1,12 @@
+flowchart TD
+    A([Start]) --> B["Define image list<br/>(img1, img2, img3)"]
+    B --> C["Define filter list<br/>(grayscale, blur, sepia)"]
+    C --> D{More images?}
+    D -->|No| Z([End])
+    D -->|Yes| E[Select next image]
+    E --> F{More filters?}
+    F -->|No| D
+    F -->|Yes| G[Select next filter]
+    G --> H["Apply filter<br/>to image"]
+    H --> I["Write result<br/>to output/"]
+    I --> F

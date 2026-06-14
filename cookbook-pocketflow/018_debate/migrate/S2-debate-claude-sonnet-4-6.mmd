@@ -1,0 +1,13 @@
+flowchart TD
+    A([Start]) --> B["Receive Claim<br/>from User"]
+    B --> C[Advocate A<br/>Argues FOR Claim]
+    B --> D[Advocate B<br/>Argues AGAINST Claim]
+    C --> E["Collect Both<br/>Arguments"]
+    D --> E
+    E --> F[Judge Reviews<br/>Both Arguments]
+    F --> G[Judge Scores<br/>Each Argument]
+    G --> H{Winner<br/>Determined?}
+    H -->|Yes| I[Declare Winner<br/>with Reasoning]
+    H -->|No| J[Judge Requests<br/>Clarification]
+    J --> F
+    I --> K([End])

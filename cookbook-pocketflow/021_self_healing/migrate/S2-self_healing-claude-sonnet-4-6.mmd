@@ -1,0 +1,13 @@
+flowchart TD
+    A([Start]) --> B["Input:<br/>Plain-language Description"]
+    B --> C[LLM Generates Mermaid Code]
+    C --> D[Mermaid CLI Validation]
+    D --> E{Valid Syntax?}
+    E -->|Yes| F[Output Compiled Diagram]
+    E -->|No| G[Extract Compiler Errors]
+    G --> H{Max Retries<br/>Reached?}
+    H -->|No| I["Feed Errors +<br/>Prior Code to LLM"]
+    H -->|Yes| J[Report Failure]
+    I --> C
+    F --> K([End])
+    J --> K

@@ -1,0 +1,14 @@
+flowchart TD
+    A([Start]) --> B["Load Lead List<br/>(raw prospects)"]
+    B --> C[Iterate Over Leads]
+    C --> D["Enrich Lead<br/>with Company Context"]
+    D --> E["LLM Fit Scoring<br/>(rate prospect)"]
+    E --> F{High Score?}
+    F -->|Yes| G["Generate Personalized<br/>Cold Email"]
+    F -->|No| H[Skip Lead]
+    G --> I["Store Enriched Profile<br/>+ Draft Email"]
+    H --> J{More Leads?}
+    I --> J
+    J -->|Yes| C
+    J -->|No| K["Output: Scored Leads<br/>+ Ready-to-Send Emails"]
+    K --> L([End])

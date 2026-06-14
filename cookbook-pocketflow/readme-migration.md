@@ -22,16 +22,17 @@
 | 014 | thinking | 0 | ✅ done | 5/10 | hand-written | Inner YAML validation loop; many helpers |
 | 017 | judge | 0 | ✅ done | 3/10 | none | Pure GENERATE loop; no tools |
 | 032 | deep_research | 0 | ✅ done | 5/10 | none | CALL PARALLEL + nested WHILE; stdlib search_web sufficient |
-| 010 | multi_agent | 2 | — | | | |
-| 011 | supervisor | 2 | — | | | |
-| 012 | batch_node | 2 | — | | | |
-| 013 | batch_flow | 2 | — | | | |
-| 015 | chat_memory | 2 | — | | | |
-| 016 | mcp | 2 | — | | | |
-| 018 | debate | 2 | — | | | |
-| 019 | agentic_rag | 2 | — | | | |
-| 020 | heartbeat | 2 | — | | | |
-| 021 | self_healing | 2 | — | | | |
+| 042 | nodejs_upgrade_agent | 4 | ✅ done | 7/10 | hand-written | Original SPL recipe (not PocketFlow migration); 3 sub-workflows + 9 tools; discovered WHEN = vs equals() syntax |
+| 010 | multi_agent | 2 | ✅ done | 4/10 | inline (S3) | Clean pass |
+| 011 | supervisor | 2 | ✅ done | 4/10 | inline (S3) | Clean pass |
+| 012 | batch_node | 2 | ✅ done | 4/10 | inline (S3) | S3 failed first run (session limit); clean on retry |
+| 013 | batch_flow | 2 | ✅ done | 4/10 | inline (S3) | Session limit on first run; clean on retry |
+| 015 | chat_memory | 2 | ✅ done | 5/10 | inline (S3) | S3 took 216s — largest phase-2 recipe |
+| 016 | mcp | 2 | ✅ done | 5/10 | inline (S3) | MCP tool dispatch pattern |
+| 018 | debate | 2 | ✅ done | 4/10 | inline (S3) | Adversarial 2-agent + judge |
+| 019 | agentic_rag | 2 | ✅ done | 5/10 | inline (S3) | Agent-decides-which-docs pattern |
+| 020 | heartbeat | 2 | ✅ done | 5/10 | inline (S3) | Periodic monitoring + nested WORKFLOW |
+| 021 | self_healing | 2 | ✅ done | 5/10 | inline (S3) | Self-repair WHILE + EVALUATE |
 | 030 | lead_generation | 3 | — | | | |
 | 031 | invoice | 3 | — | | | |
 | 033 | text2sql | 3 | — | | | |
@@ -91,7 +92,8 @@ See [`tool_api_registry.md`](tool_api_registry.md) — quick-lookup of all
 
 ## Next Steps
 
-- [ ] Phase 2: Tier 2 recipes (010–021) — expect tools.spl needed for 019_agentic_rag
+- [x] Phase 2: Tier 2 recipes (010–021) — all 10/10 validated ✅ (no tools.spl needed; S3 generated inline)
+- [ ] Phase 3: Tier 3 recipes (030–034) + Tier 4 (040–041)
 - [ ] Promote `parse_yaml`, `extract_yaml_field`, `append_turn` to stdlib (see registry)
 - [ ] Automate S4: add LLM-assisted `utils.py → tools.spl` conversion step to pipeline
 - [ ] Start `cookbook-langgraph/` following same structure
