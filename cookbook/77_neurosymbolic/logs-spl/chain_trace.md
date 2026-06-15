@@ -1,3 +1,1 @@
-1. solve_system([x + y - 5, x - y - 1]) = [
-[x == 3, y == 2]
-]
+(solver disabled for this run — no verified chain; the LLM solved it unaided)
