@@ -21,6 +21,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 4. [spl3 run](#4-spl3-run)
    - [4.1 Basic options](#41-basic-options)
    - [4.2 IPython kernel (`--kernel`)](#42-ipython-kernel---kernel)
+   - [4.3 Durable execution (`--persistence`)](#43-durable-execution---persistence)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
@@ -41,6 +42,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 22. [Debugging LLM Prompts](#22-debugging-llm-prompts)
 23. [Claude Code `/spl3` Skill](#23-claude-code-spl3-skill)
 24. [Command reference](#24-command-reference)
+25. [PocketFlow Cookbook Recipes](#25-pocketflow-cookbook-recipes)
 
 ---
 
@@ -147,6 +149,8 @@ spl3 run <file.spl> [OPTIONS]
 | `--kernel-scope` | `session` | Kernel lifecycle: `session` or `workflow` |
 | `--kernel-timeout` | `60.0` | Per-cell execution timeout in seconds |
 | `--kernel-name NAME` | `python3` | Jupyter kernel spec to run kernel steps under (e.g. `sagemath`). A non-default value implies `--kernel`. |
+| `--persistence BACKEND` | off | Enable durable execution: `sqlite` (local), `postgres` (production), `dbos` (cloud). Checkpoints every GENERATE/CALL step. See §4.3. |
+| `--workflow-id ID` | auto-UUID | Run identifier for persistence. Pass the same ID to resume a crashed run from its last checkpoint. |
 
 ```bash
 # Basic run
@@ -338,6 +342,137 @@ KernelExecutionError: ZeroDivisionError: division by zero
 
 `--kernel` always uses `IPythonKernel`.  `KernelSession` is used internally
 for `CREATE TOOL_API` definitions and does not require `jupyter_client`.
+
+---
+
+### 4.3 Durable Execution (`--persistence`)
+
+By default SPL workflows are stateless across crashes: if a 50-step research agent
+fails at step 43, you restart from zero. `--persistence` enables **crash recovery and
+exactly-once execution** — completed GENERATE and CALL steps are never re-run.
+
+**Key principle (DODA):** the `.spl` file never changes. Persistence is a physical
+decision resolved at runtime via flags, exactly like `--adapter` selects the LLM
+provider.
+
+```bash
+# Stateless (default)
+spl3 run workflow.spl --adapter ollama -m gemma3
+
+# Durable local — SQLite, zero extra dependencies
+spl3 run workflow.spl --adapter ollama -m gemma3 --persistence sqlite
+
+# Durable production — PostgreSQL (pip install asyncpg + SPL_PG_DSN env var)
+spl3 run workflow.spl --adapter ollama -m gemma3 --persistence postgres
+
+# Durable cloud — DBOS (pip install dbos + DBOS_DATABASE_URL)
+spl3 run workflow.spl --adapter ollama -m gemma3 --persistence dbos \
+  --workflow-id my-run-001
+
+# Resume a crashed run — pass the same workflow-id
+spl3 run workflow.spl --adapter ollama -m gemma3 --persistence sqlite \
+  --workflow-id my-run-001
+```
+
+When `--workflow-id` is omitted a UUID is auto-generated and printed, so you can
+pass it back on resume.
+
+#### Backends at a glance
+
+| Backend | When to use | Setup |
+|---------|------------|-------|
+| `sqlite` | Local dev, single-node | Zero deps — DB at `~/.spl/workflows.db` |
+| `postgres` | Production, multi-node | `pip install asyncpg` + `export SPL_PG_DSN=postgresql://...` |
+| `dbos` | Cloud-grade, HITL dashboard | `pip install dbos` + `export DBOS_DATABASE_URL=postgresql://...` |
+
+All three backends implement the same `PersistenceBackend` interface —
+swap backends without touching the `.spl` file or the executor.
+
+#### What gets checkpointed
+
+Only the two non-idempotent operation types are checkpointed:
+
+| SPL statement | Checkpointed? | Why |
+|---------------|:---:|-----|
+| `GENERATE … INTO @var` | ✅ | LLM call — expensive and non-deterministic |
+| `CALL tool() INTO @var` | ✅ | Tool execution — may have side effects |
+| `@var := expression` | — | Cheap, deterministic; re-derived from saved state |
+| `EVALUATE … WHEN` | — | Pure conditional on already-checkpointed vars |
+| `WHILE condition DO` | — | Loop guard is deterministic given saved state |
+
+Each checkpoint stores the full `@var` snapshot, so on resume the executor
+restores the complete workflow state from the last successful step and continues.
+
+#### HITL — Human-in-the-Loop
+
+No new SPL keywords are needed. Approval gates use standard `CALL`:
+
+```spl
+WORKFLOW review_and_publish
+  INPUT @draft TEXT, @workflow_id TEXT
+  OUTPUT @published TEXT
+DO
+  GENERATE edit_draft(@draft) INTO @polished;
+
+  -- Suspend indefinitely until a human approves (survives restarts)
+  CALL wait_for_approval(@workflow_id, "approve_draft") INTO @decision;
+
+  EVALUATE @decision
+    WHEN contains("approved") THEN
+      CALL publish(@polished) INTO @published;
+    ELSE
+      @published := "rejected";
+  END;
+
+  RETURN @published WITH status = "complete";
+END;
+```
+
+`wait_for_approval` and `send_approval` are automatically registered as CALL
+targets when `--persistence` is active. An external system (CLI, webhook, dashboard)
+unblocks the waiting workflow:
+
+```bash
+spl3 workflow send-event \
+  --workflow-id my-run-001 \
+  --key approve_draft \
+  --value "approved"
+```
+
+#### `spl3 workflow` subcommand
+
+```bash
+# List all durable runs
+spl3 workflow list
+spl3 workflow list --status running
+
+# Show completed steps and current @var state
+spl3 workflow status --workflow-id my-run-001
+
+# Send a HITL event to unblock a waiting workflow
+spl3 workflow send-event --workflow-id my-run-001 --key approve_draft --value approved
+
+# Resume a crashed workflow from last checkpoint
+spl3 workflow resume workflow.spl --workflow-id my-run-001 --adapter ollama
+```
+
+#### Design notes
+
+- **Global step counter:** parent and sub-workflows (`CALL workflow_name()`) share
+  one executor instance. The step counter is global across all nested calls — no
+  namespace collisions between sub-workflow steps.
+- **Top-level only lifecycle:** `start_workflow` / `finish_workflow` are called only
+  once at the top-level entry point, not recursively for each sub-workflow CALL.
+- **`PersistenceBackend` as shared contract:** the abstract interface is the contract
+  between SPL.py and Momagrid — both codebases implement the same six methods
+  (`start_workflow`, `get_step_result`, `checkpoint`, `finish_workflow`,
+  `wait_for_event`, `send_event`). A Momagrid-native backend can be swapped in with
+  `--persistence momagrid` without any other changes.
+- **PostgreSQL HITL:** the `postgres` backend uses LISTEN/NOTIFY for sub-millisecond
+  event delivery — no polling. `send_event` calls `pg_notify(channel, value)` so
+  any suspended `wait_for_event` wakes up immediately.
+
+Full design document: `docs/DEV/spl3-state-management-dbos.md`.
 
 ---
 
@@ -1827,6 +1962,13 @@ spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
               [--kernel-name NAME]                     # kernel spec, e.g. sagemath (implies --kernel)
               [--kernel-scope session|workflow]        # default: session
               [--kernel-timeout FLOAT]                 # default: 60.0 s
+              [--persistence sqlite|postgres|dbos]     # durable execution (§4.3)
+              [--workflow-id ID]                       # run ID; auto-UUID when omitted
+
+spl3 workflow list [--backend sqlite|postgres|dbos] [--status running|complete|error]
+spl3 workflow status --workflow-id ID [--backend sqlite|postgres|dbos]
+spl3 workflow send-event --workflow-id ID --key KEY --value VALUE [--backend ...]
+spl3 workflow resume <file.spl> --workflow-id ID [--adapter] [--model] [--backend ...]
 spl3 describe <file.spl | folder/> [--adapter] [--model] [--prompt]
 spl3 text2spl "<description>" [--adapter] [--mode auto|prompt|workflow] [--prompt]
 spl3 text2mmd "<description>|<file.md>" [--adapter] [--style flowchart|graph|sequence] [--prompt]
@@ -1928,4 +2070,148 @@ spl3 migrate <source>
 spl3 install-skill            # install /spl3 skill to ~/.claude (global)
               [--local]       # install to ./.claude (project-scoped)
               [--dry-run]     # preview changes without writing files
+```
+
+---
+
+## 25. PocketFlow Cookbook Recipes
+
+`cookbook-pocketflow/` contains **41 SPL recipes** ported from the
+[PocketFlow cookbook](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook),
+covering the full range of agentic workflow patterns. Each recipe is a self-contained
+`.spl` + `tools.spl` pair that runs with any SPL adapter — the same `.spl` works on
+`ollama`, `claude_cli`, `openrouter`, and `momagrid` without modification.
+
+### Location
+
+```
+cookbook-pocketflow/
+  000_hello_world/
+  001_qa/
+  ...
+  064_visualization/
+  readme-migration.md    ← full recipe catalog and migration notes
+```
+
+### Recipe catalog by phase
+
+| Phase | Recipes | Patterns demonstrated |
+|-------|---------|----------------------|
+| **1 — Core** | 000–009 | Hello world, QA, structured output, chat history, LLM orchestration |
+| **2 — Agentic** | 010–019 | ReAct agents, decision making, multi-agent handoff |
+| **3 — Memory & storage** | 020–039 | Memory agents, multi-modal, web search, async parallel |
+| **4 — Advanced agents** | 040–042 | Coding agents, skill agents, Node.js upgrade agent |
+| **5 — Specialized** | 050–064 | Batch processing, map-reduce, RAG, crawlers, PDF vision |
+
+### Quick-start examples
+
+```bash
+# Hello world (no tools needed)
+spl3 run cookbook-pocketflow/000_hello_world/hello_world.spl \
+  --adapter ollama -m gemma3
+
+# ReAct agent with tool use
+spl3 run cookbook-pocketflow/010_agent/agent.spl \
+  --adapter claude_cli -m claude-sonnet-4-6 \
+  -p task="find the population of Tokyo"
+
+# Multi-agent supervisor
+spl3 run cookbook-pocketflow/013_multi_agent/multi_agent.spl \
+  --adapter ollama -m gemma3 \
+  -p topic="climate change solutions"
+
+# Async parallel batch (N tasks run concurrently)
+spl3 run cookbook-pocketflow/036_async_parallel_batch/async_parallel_batch.spl \
+  --adapter ollama -m gemma3
+
+# Coding agent (writes and runs Python)
+spl3 run cookbook-pocketflow/040_coding_agent/coding_agent.spl \
+  --adapter claude_cli -m claude-sonnet-4-6 \
+  -p task="write a function to compute fibonacci numbers"
+
+# Node.js upgrade agent (framework-aware, template-guided)
+spl3 run cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_agent.spl \
+  --adapter claude_cli \
+  -p project_dir="./my-next-app" \
+  -p target_node="20"
+```
+
+### Agentic workflow pattern coverage
+
+The PocketFlow recipes extend SPL's built-in cookbook with 21 distinct agentic
+patterns:
+
+| Pattern | SPL construct | Representative recipe |
+|---------|--------------|----------------------|
+| Single LLM call | `GENERATE` | 000_hello_world, 001_qa |
+| Structured output | `GENERATE` + `CALL parse_field` | 003_structured_output |
+| Chat history | `@history :=` accumulation | 004_chat_history |
+| LLM cascade / orchestration | chained `GENERATE` | 005_llm_orchestration |
+| ReAct agent | `WHILE` + `EVALUATE` + `CALL` | 010_agent |
+| Multi-agent handoff | `CALL` sub-workflows | 013_multi_agent |
+| Supervisor pattern | `EVALUATE` routing + `CALL` | 015_multi_agent_supervisor |
+| HITL approval gate | `CALL wait_for_approval` | any `--persistence` workflow |
+| Tool use | `CREATE TOOL_API` + `CALL` | 002_tool_use, 040_coding_agent |
+| Memory (episodic) | `CALL` store/retrieve tools | 022_memory |
+| Multi-modal (image) | `GENERATE` with `IMAGE` param | 024_multi_modal |
+| Web search | `CREATE TOOL_API` (search) | 030_web_search |
+| Async parallel | `CALL PARALLEL … END` | 036_async_parallel_batch |
+| Batch / map-reduce | `WHILE` + `CALL PARALLEL` | 050_batch, 053_map_reduce |
+| RAG pipeline | `CALL embed` + `CALL retrieve` | 055_rag |
+| PDF/vision extraction | `GENERATE` with `IMAGE` param | 061_pdf_vision |
+| Web crawler | `WHILE` + `CALL fetch` | 058_tool_crawler |
+| Code generation + execution | `CALL run_python` + `ASSERT` | 040_coding_agent |
+| Self-refinement | `WHILE` quality gate | 005_self_refine (see main cookbook) |
+| Evaluate / branch | `EVALUATE … WHEN … ELSE` | 033_streaming_output |
+| Exception handling | `EXCEPTION WHEN … THEN` | 039_async_streaming |
+
+### SPL patterns used across PocketFlow recipes
+
+```spl
+-- Tool defined inline (no tools.py needed for simple tools)
+CREATE TOOL_API search_web(query TEXT) RETURNS TEXT AS PYTHON $
+import requests
+def search_web(query):
+    ...
+$;
+
+-- Parallel fan-out over a list of tasks
+CALL PARALLEL
+  CALL summarize(@task1) INTO @sum1;
+  CALL summarize(@task2) INTO @sum2;
+  CALL summarize(@task3) INTO @sum3;
+END;
+
+-- Crash-safe long-running agent
+spl3 run agent.spl --adapter claude_cli \
+  --persistence sqlite --workflow-id agent-run-001
+```
+
+### Notes for recipe authors
+
+- All `CREATE TOOL_API` Python bodies use `'single'` quotes — never `''double-single''`
+  (PostgreSQL SQL style is invalid Python and will fail at load time).
+- Recipes that need `pdf2image` or `playwright` document the `pip install` in their
+  `readme.md`; those packages are not bundled with `spl-llm`.
+- See `cookbook-pocketflow/readme-migration.md` for the complete recipe status,
+  pitfall list, and pattern coverage taxonomy.
+
+### Running the full PocketFlow suite
+
+```bash
+# All active recipes, local Ollama
+python cookbook/run_all.py \
+  --catalog cookbook-pocketflow/cookbook_catalog.json \
+  --adapter ollama --model gemma3
+
+# Specific recipes by ID
+python cookbook/run_all.py \
+  --catalog cookbook-pocketflow/cookbook_catalog.json \
+  --ids 010,013,015,040
+
+# Against Momagrid distributed grid
+export MOMAGRID_HUB_URL=http://192.168.0.184:9000
+python cookbook/run_all.py \
+  --catalog cookbook-pocketflow/cookbook_catalog.json \
+  --adapter momagrid --workers 10
 ```
