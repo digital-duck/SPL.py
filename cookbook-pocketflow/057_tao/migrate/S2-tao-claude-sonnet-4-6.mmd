@@ -1,0 +1,9 @@
+flowchart TD
+    A([Start]) --> B["Receive<br/>Natural-Language Query"]
+    B --> C["Thought:<br/>Reason about query &amp; choose action"]
+    C --> D["Action:<br/>Select &amp; call tool"]
+    D --> E["Observation:<br/>Receive tool result"]
+    E --> F{Sufficient<br/>answer?}
+    F -->|No - iterate| C
+    F -->|Yes| G["Synthesize<br/>Final Answer"]
+    G --> H([End])

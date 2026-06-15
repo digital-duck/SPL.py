@@ -1,0 +1,10 @@
+flowchart TD
+    A([Start]) --> B[Ask user for topic]
+    B --> C[Build prompt with topic<br/>and rejected jokes]
+    C --> D[Call LLM to generate joke]
+    D --> E[Display joke to user]
+    E --> F{User approves?}
+    F -->|Yes| G[Accept joke]
+    F -->|No| H[Record rejected joke]
+    H --> C
+    G --> I([End])

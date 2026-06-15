@@ -76,7 +76,8 @@ class SPL3Executor(SPL2Executor):
     """SPL 3.0 executor, extending SPL 2.0 with the extended type system."""
 
     def __init__(self, *args, kernel: bool = False, kernel_scope: str = "session",
-                 kernel_timeout: float = 60.0, kernel_name: str = "python3", **kwargs):
+                 kernel_timeout: float = 60.0, kernel_name: str = "python3",
+                 persistence=None, workflow_id: str | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
 
@@ -88,6 +89,14 @@ class SPL3Executor(SPL2Executor):
             self._kernel = IPythonKernel(scope=kernel_scope, timeout=kernel_timeout,
                                          kernel_name=kernel_name)
             self._register_run_python()
+
+        # Persistence backend for durable execution (sqlite, postgres, dbos)
+        self._persistence = persistence
+        self._workflow_id = workflow_id
+        self._step_counter: int = 0      # global across parent + all sub-workflows
+        self._persistence_started: bool = False   # guards top-level-only lifecycle
+        if persistence is not None:
+            self._register_hitl_tools()
 
     def _register_run_python(self) -> None:
         """Register run_python(@code) as a synchronous @spl_tool."""
@@ -105,6 +114,23 @@ class SPL3Executor(SPL2Executor):
 
         self.functions.register_tool("run_python", run_python)
         _log.info("IPython kernel registered: CALL run_python(@code) INTO @result")
+
+    def _register_hitl_tools(self) -> None:
+        """Register wait_for_approval / send_approval as built-in CALL targets."""
+        persistence = self._persistence
+
+        async def wait_for_approval(workflow_id: str, event_key: str,
+                                    timeout_seconds: str = "") -> str:
+            t = float(timeout_seconds) if timeout_seconds else None
+            return await persistence.wait_for_event(workflow_id, event_key, t)
+
+        async def send_approval(workflow_id: str, event_key: str, value: str) -> str:
+            await persistence.send_event(workflow_id, event_key, value)
+            return "sent"
+
+        self.functions.register_tool("wait_for_approval", wait_for_approval)
+        self.functions.register_tool("send_approval", send_approval)
+        _log.info("HITL tools registered: wait_for_approval / send_approval")
 
     def close(self) -> None:
         """Shut down the IPython kernel (if running) then delegate to SPL 2.0 close."""
@@ -315,17 +341,44 @@ class SPL3Executor(SPL2Executor):
     _MULTIMODAL_TYPES = {"IMAGE", "AUDIO", "VIDEO"}
 
     async def _exec_generate_into(self, stmt, state):
-        """Override to dispatch to generate_multimodal() when a GENERATE
-        function has one or more IMAGE-, AUDIO-, or VIDEO-typed parameters.
+        """Persistence wrapper + multimodal dispatch for GENERATE statements.
 
-        Strategy:
-          1. Inspect the first GENERATE segment's function definition.
-          2. If no multimodal params are found, delegate entirely to the SPL 2.0
-             implementation (zero overhead for all text-only workflows).
-          3. If multimodal params are present, encode each arg via the matching
-             codec (encode_image / encode_audio), build a content array
-             [TextPart, ...MediaParts], and call adapter.generate_multimodal().
+        Persistence (opt-in):
+          - Increments global step counter and checks cache for exactly-once.
+          - Checkpoints after successful execution.
+
+        Multimodal dispatch:
+          - Delegates to generate_multimodal() when any param is IMAGE/AUDIO/VIDEO.
+          - Falls through to SPL 2.0 for text-only workflows (zero overhead).
         """
+        _pers = self._persistence
+        _wfid = self._workflow_id
+        step_idx: int | None = None
+        step_name: str | None = None
+
+        if _pers is not None and _wfid is not None:
+            step_idx = self._step_counter
+            self._step_counter += 1
+            first_gc = stmt.generate_clause
+            fn_name = getattr(first_gc, "function_name", step_idx) if first_gc else step_idx
+            step_name = f"GENERATE:{fn_name}"
+            cached = await _pers.get_step_result(_wfid, step_idx)
+            if cached is not None:
+                _log.info("Skipping step %d (%s) — cached", step_idx, step_name)
+                if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
+                    state.set_var(stmt.target_variable, cached)
+                return
+
+        await self._exec_generate_into_impl(stmt, state)
+
+        if _pers is not None and _wfid is not None and step_idx is not None:
+            tgt = stmt.target_variable
+            result = state.get_var(tgt) if tgt and tgt not in ("NONE", "_") else ""
+            await _pers.checkpoint(_wfid, step_idx, step_name or "", result,
+                                   dict(state.variables))
+
+    async def _exec_generate_into_impl(self, stmt, state):
+        """Multimodal dispatch implementation (separated for persistence wrapping)."""
         first_gen = stmt.generate_clause
         if first_gen is None:
             return await super()._exec_generate_into(stmt, state)
@@ -538,19 +591,20 @@ class SPL3Executor(SPL2Executor):
     # ------------------------------------------------------------------ #
 
     async def execute_workflow(self, stmt, params=None):
-        """Execute a WORKFLOW statement with SPL 3.0 type coercion.
+        """Execute a WORKFLOW statement with SPL 3.0 type coercion and optional
+        persistence lifecycle.
 
-        Before delegating to the SPL 2.0 executor, coerces incoming params
-        for INT- and FLOAT-typed INPUT parameters:
-
+        Type coercion (always active):
           INT / INTEGER  →  int(float(value))   (handles '42', '42.0', etc.)
           FLOAT          →  float(value)
+          IMAGE/AUDIO/VIDEO → pass through unchanged (file path / data URI)
 
-        IMAGE, AUDIO, VIDEO params are passed through as-is (file paths or
-        data URIs); encoding is handled by the LLM adapter at inference time.
-
-        All other types use SPL 2.0's existing behavior (str conversion).
+        Persistence lifecycle (opt-in via --persistence flag, top-level only):
+          - Calls start_workflow on first run, or resumes from saved checkpoint.
+          - Sub-workflow CALL invocations reuse the same executor and bypass
+            this block via the _persistence_started guard.
         """
+        # --- Type coercion ---
         if params and stmt.inputs:
             params = dict(params)  # don't mutate caller's dict
             for inp in stmt.inputs:
@@ -567,9 +621,31 @@ class SPL3Executor(SPL2Executor):
                         params[inp.name] = str(coerce_to_float(str(params[inp.name])))
                     except ValueError as e:
                         _log.warning("FLOAT coercion failed for %s: %s", inp.name, e)
-                # IMAGE / AUDIO / VIDEO: pass through unchanged (file path / data URI)
 
-        return await super().execute_workflow(stmt, params=params)
+        # --- Persistence lifecycle (top-level only) ---
+        if self._persistence is None or self._workflow_id is None or self._persistence_started:
+            return await super().execute_workflow(stmt, params=params)
+
+        self._persistence_started = True
+        wf_id = self._workflow_id
+        wf_name = getattr(stmt, "name", "workflow")
+        saved_vars = await self._persistence.start_workflow(wf_id, wf_name, params or {})
+
+        if saved_vars:
+            _log.info("Resuming %s from checkpoint (%d vars)", wf_id, len(saved_vars))
+            merged = dict(params or {})
+            merged.update(saved_vars)
+            params = merged
+
+        try:
+            result = await super().execute_workflow(stmt, params=params)
+            status = getattr(result, "status", "complete") if result else "complete"
+            value = getattr(result, "content", str(result)) if result else ""
+            await self._persistence.finish_workflow(wf_id, value, status)
+            return result
+        except Exception as exc:
+            await self._persistence.finish_workflow(wf_id, str(exc), "error")
+            raise
 
     # ------------------------------------------------------------------ #
     # Sub-workflow CALL argument resolution                                 #
@@ -658,30 +734,57 @@ class SPL3Executor(SPL2Executor):
     # ------------------------------------------------------------------ #
 
     async def _exec_call(self, stmt, state) -> None:
-        """Execute CALL, with optional self-healing on ModuleNotFoundError.
+        """Execute CALL with persistence checkpointing and optional self-healing.
 
-        When self_healing is active, catches ToolFailed whose __cause__ is a
-        ModuleNotFoundError, pip-installs the missing package, and retries
-        once.  If the direct install fails (module name ≠ package name), a
-        single LLM call resolves the correct package name before the retry.
-        Capped at 2 attempts total; raises on second failure.
+        Persistence (opt-in):
+          - Exactly-once: returns cached result if step already completed.
+          - Checkpoints result after successful execution.
+
+        Self-healing (opt-in via --kernel --self-healing):
+          - Catches ModuleNotFoundError, pip-installs the missing package, retries once.
+          - If direct install fails, LLM resolves the correct package name first.
         """
+        _pers = self._persistence
+        _wfid = self._workflow_id
+        step_idx: int | None = None
+        step_name: str | None = None
+
+        # Persistence: exactly-once check
+        if _pers is not None and _wfid is not None:
+            step_idx = self._step_counter
+            self._step_counter += 1
+            step_name = f"CALL:{stmt.procedure_name}"
+            cached = await _pers.get_step_result(_wfid, step_idx)
+            if cached is not None:
+                _log.info("Skipping step %d (%s) — cached", step_idx, step_name)
+                tgt = getattr(stmt, "target_variable", None)
+                if tgt and tgt not in ("NONE", "_"):
+                    state.set_var(tgt, cached)
+                return
+
+        # Self-healing execution
         kernel = self._kernel
         if not (kernel and getattr(kernel, "self_healing", False)):
             await self._exec_call_inner(stmt, state)
-            return
+        else:
+            from spl.executor import ToolFailed
+            for attempt in range(2):
+                try:
+                    await self._exec_call_inner(stmt, state)
+                    break
+                except ToolFailed as exc:
+                    cause = exc.__cause__
+                    if attempt == 0 and isinstance(cause, ModuleNotFoundError):
+                        await self._self_heal_module(cause)
+                    else:
+                        raise
 
-        from spl.executor import ToolFailed
-        for attempt in range(2):
-            try:
-                await self._exec_call_inner(stmt, state)
-                return
-            except ToolFailed as exc:
-                cause = exc.__cause__
-                if attempt == 0 and isinstance(cause, ModuleNotFoundError):
-                    await self._self_heal_module(cause)
-                else:
-                    raise
+        # Persistence: checkpoint after success
+        if _pers is not None and _wfid is not None and step_idx is not None:
+            tgt = getattr(stmt, "target_variable", None)
+            result = state.get_var(tgt) if tgt and tgt not in ("NONE", "_") else ""
+            await _pers.checkpoint(_wfid, step_idx, step_name or "", result,
+                                   dict(state.variables))
 
     async def _exec_call_inner(self, stmt, state) -> None:
         """Registry-aware CALL dispatch (extracted for self-healing retry support).

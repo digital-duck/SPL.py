@@ -1,0 +1,9 @@
+flowchart TD
+    A([Start]) --> B["Get user ingredient input"]
+    B --> C["Async HTTP fetch<br/>candidate recipes"]
+    C --> D["LLM selects<br/>best recipe"]
+    D --> E["Present suggestion<br/>to user"]
+    E --> F{User approves?}
+    F -->|Yes| G["Confirm recipe<br/>recommendation"]
+    F -->|No| C
+    G --> H([End])

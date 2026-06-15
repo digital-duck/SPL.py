@@ -1,0 +1,17 @@
+flowchart TD
+    A([Start]) --> B["Input: Website URL"]
+    B --> C["Initialize Crawler<br/>Seed URL + Domain Scope"]
+    C --> D["Fetch Page HTML"]
+    D --> E["Extract Text<br/>+ Links"]
+    E --> F{Links Found<br/>in Domain?}
+    F -->|Yes| G["Add New URLs<br/>to Queue"]
+    G --> H{Queue<br/>Empty?}
+    F -->|No| H
+    H -->|No| D
+    H -->|Yes| I["Batch Pages<br/>for LLM Analysis"]
+    I --> J["LLM: Summarize<br/>Classify + Tag Topics"]
+    J --> K{All Batches<br/>Processed?}
+    K -->|No| J
+    K -->|Yes| L["Aggregate Results<br/>into Report"]
+    L --> M["Structured Report:<br/>Summaries, Topics,<br/>Content Types"]
+    M --> N([End])

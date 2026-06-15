@@ -1,0 +1,14 @@
+flowchart TD
+    A([Start]) --> B["Receive text task<br/>+ skills directory"]
+    B --> C[Scan skills directory<br/>for .md files]
+    C --> D[Extract keywords<br/>from each skill file]
+    D --> E[Match task against<br/>skill keywords]
+    E --> F{Match found?}
+    F -->|Yes| G[Select best-fit<br/>skill file]
+    F -->|No| H[Use default<br/>skill / fallback]
+    G --> I[Load skill Markdown<br/>as prompt template]
+    H --> I
+    I --> J[Inject task into<br/>skill template]
+    J --> K[Send prompt to LLM]
+    K --> L[Receive LLM response]
+    L --> M([End])

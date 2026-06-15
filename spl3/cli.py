@@ -538,9 +538,17 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--kernel-name", default="python3", show_default=True, metavar="NAME",
               help="Jupyter kernel spec to run kernel steps under (e.g. 'sagemath' "
                    "for SageMath). A non-default value implies --kernel.")
+@click.option("--persistence", default=None, metavar="BACKEND",
+              type=click.Choice(["sqlite", "postgres", "dbos"]),
+              help="Enable durable execution: 'sqlite' (local), 'postgres' (production), "
+                   "or 'dbos' (cloud). Checkpoints every GENERATE/CALL step; "
+                   "resume with --workflow-id.")
+@click.option("--workflow-id", default=None, metavar="ID",
+              help="Workflow run ID for persistence. Auto-generated UUID if omitted. "
+                   "Pass the same ID to resume a crashed run from its last checkpoint.")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_module, allowed_tools,
-        kernel, kernel_scope, kernel_timeout, kernel_name):
+        kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -573,16 +581,29 @@ def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_modul
         except KernelSpecNotFound as exc:
             raise click.ClickException(str(exc))
 
+    # Persistence backend setup
+    persistence_backend = None
+    if persistence:
+        import uuid as _uuid
+        from spl3.persistence import get_backend
+        if workflow_id is None:
+            workflow_id = str(_uuid.uuid4())
+            click.echo(f"[persistence] workflow-id: {workflow_id}")
+        persistence_backend = get_backend(persistence)
+        click.echo(f"[persistence] backend={persistence}  workflow-id={workflow_id}")
+
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
                               tools_module, allowed_tools,
                               kernel=kernel, kernel_scope=kernel_scope,
-                              kernel_timeout=kernel_timeout, kernel_name=kernel_name))
+                              kernel_timeout=kernel_timeout, kernel_name=kernel_name,
+                              persistence=persistence_backend, workflow_id=workflow_id))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
                         tools_module=None, allowed_tools=None,
                         kernel=False, kernel_scope="session", kernel_timeout=60.0,
-                        kernel_name="python3"):
+                        kernel_name="python3",
+                        persistence=None, workflow_id=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -636,7 +657,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     capturing = _CapturingAdapter(_inner_adapter)
     executor = Executor(adapter=capturing,
                         kernel=kernel, kernel_scope=kernel_scope,
-                        kernel_timeout=kernel_timeout, kernel_name=kernel_name)
+                        kernel_timeout=kernel_timeout, kernel_name=kernel_name,
+                        persistence=persistence, workflow_id=workflow_id)
     executor.composer = WorkflowComposer(registry, executor)
     if kernel:
         click.echo(f"IPython kernel: enabled (name={kernel_name}, scope={kernel_scope}, "
@@ -746,6 +768,148 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
             started_at=started_at,
         )
         click.echo(f"Log:     {log_path}")
+
+
+# ------------------------------------------------------------------ #
+# spl workflow — durable run management                               #
+# ------------------------------------------------------------------ #
+
+@main.group()
+def workflow():
+    """Manage durable workflow runs (persistence required)."""
+
+
+def _workflow_backend(backend_name: str, **kwargs):
+    """Load a persistence backend or raise a helpful error."""
+    try:
+        from spl3.persistence import get_backend
+        return get_backend(backend_name, **kwargs)
+    except Exception as exc:
+        raise click.ClickException(str(exc))
+
+
+@workflow.command("list")
+@click.option("--backend", default="sqlite", type=click.Choice(["sqlite", "postgres", "dbos"]),
+              help="Persistence backend to query.")
+@click.option("--status", "filter_status", default=None,
+              help="Filter by status: running, complete, error.")
+def workflow_list(backend, filter_status):
+    """List all durable workflow runs."""
+    import sqlite3, json
+    from pathlib import Path
+
+    if backend != "sqlite":
+        raise click.ClickException(
+            "workflow list currently supports 'sqlite' only. "
+            "For postgres/dbos, query the workflows table directly."
+        )
+    db = Path("~/.spl/workflows.db").expanduser()
+    if not db.exists():
+        click.echo("No workflow database found. Run a workflow with --persistence sqlite first.")
+        return
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    sql = "SELECT workflow_id, workflow_name, status, created_at, updated_at FROM workflows"
+    args = []
+    if filter_status:
+        sql += " WHERE status = ?"
+        args.append(filter_status)
+    sql += " ORDER BY created_at DESC"
+    rows = conn.execute(sql, args).fetchall()
+    conn.close()
+    if not rows:
+        click.echo("No workflow runs found.")
+        return
+    click.echo(f"{'ID':<38}  {'NAME':<30}  {'STATUS':<10}  UPDATED")
+    click.echo("-" * 90)
+    for r in rows:
+        import datetime
+        ts = datetime.datetime.fromtimestamp(r["updated_at"]).strftime("%Y-%m-%d %H:%M:%S")
+        click.echo(f"{r['workflow_id']:<38}  {r['workflow_name']:<30}  {r['status']:<10}  {ts}")
+
+
+@workflow.command("status")
+@click.option("--workflow-id", required=True, help="Workflow run ID.")
+@click.option("--backend", default="sqlite", type=click.Choice(["sqlite", "postgres", "dbos"]))
+def workflow_status(workflow_id, backend):
+    """Show completed steps and current state for a workflow run."""
+    import sqlite3
+    from pathlib import Path
+
+    if backend != "sqlite":
+        raise click.ClickException("workflow status currently supports 'sqlite' only.")
+    db = Path("~/.spl/workflows.db").expanduser()
+    if not db.exists():
+        raise click.ClickException("No workflow database found.")
+    conn = sqlite3.connect(db)
+    conn.row_factory = sqlite3.Row
+    wf = conn.execute(
+        "SELECT * FROM workflows WHERE workflow_id = ?", (workflow_id,)
+    ).fetchone()
+    if not wf:
+        raise click.ClickException(f"No run found with ID: {workflow_id}")
+
+    click.echo(f"\nWorkflow : {wf['workflow_name']}  ({workflow_id})")
+    click.echo(f"Status   : {wf['status']}")
+    if wf["result"]:
+        click.echo(f"Result   : {wf['result'][:200]}")
+
+    steps = conn.execute(
+        "SELECT step_idx, step_name, completed_at FROM steps"
+        " WHERE workflow_id = ? ORDER BY step_idx",
+        (workflow_id,),
+    ).fetchall()
+    conn.close()
+    if steps:
+        click.echo(f"\nCompleted steps ({len(steps)}):")
+        for s in steps:
+            import datetime
+            ts = datetime.datetime.fromtimestamp(s["completed_at"]).strftime("%H:%M:%S")
+            click.echo(f"  [{s['step_idx']:3d}] {s['step_name']:<50}  {ts}")
+    else:
+        click.echo("\nNo steps completed yet.")
+
+
+@workflow.command("send-event")
+@click.option("--workflow-id", required=True, help="Target workflow run ID.")
+@click.option("--key", required=True, help="Event key (must match wait_for_approval key).")
+@click.option("--value", required=True, help="Event value (e.g. 'approved' or 'rejected').")
+@click.option("--backend", default="sqlite", type=click.Choice(["sqlite", "postgres", "dbos"]))
+def workflow_send_event(workflow_id, key, value, backend):
+    """Send a HITL event to a waiting workflow (unblocks wait_for_approval)."""
+    async def _send():
+        b = _workflow_backend(backend)
+        await b.send_event(workflow_id, key, value)
+        click.echo(f"Event sent: workflow={workflow_id}  key={key}  value={value}")
+
+    asyncio.run(_send())
+
+
+@workflow.command("resume")
+@click.argument("spl_file")
+@click.option("--workflow-id", required=True, help="Run ID to resume from its last checkpoint.")
+@click.option("--adapter", default="ollama", help="LLM adapter.")
+@click.option("--model", "-m", default=None, help="LLM model.")
+@click.option("--backend", default="sqlite", type=click.Choice(["sqlite", "postgres", "dbos"]),
+              help="Persistence backend.")
+@click.pass_context
+def workflow_resume(ctx, spl_file, workflow_id, adapter, model, backend):
+    """Resume a crashed or interrupted workflow from its last checkpoint.
+
+    Equivalent to:
+        spl3 run FILE --persistence BACKEND --workflow-id ID
+    """
+    from pathlib import Path
+    from spl3.persistence import get_backend
+    path = Path(spl_file)
+    if not path.exists():
+        raise click.ClickException(f"File not found: {path}")
+
+    # Load saved params from DB to avoid re-specifying them
+    persistence_backend = get_backend(backend)
+    click.echo(f"[resume] workflow-id={workflow_id}  backend={backend}")
+    asyncio.run(_run_workflow(path, adapter, model, {}, ctx.obj.get("hub"),
+                              persistence=persistence_backend, workflow_id=workflow_id))
 
 
 # ------------------------------------------------------------------ #

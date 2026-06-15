@@ -1,0 +1,6 @@
+flowchart TD
+    A([Start]) --> B["Receive Input<br/>title + description"]
+    B --> C[Initialize DB Schema]
+    C --> D[Insert Task]
+    D --> E[Retrieve All Tasks]
+    E --> F(["End: Task List"])

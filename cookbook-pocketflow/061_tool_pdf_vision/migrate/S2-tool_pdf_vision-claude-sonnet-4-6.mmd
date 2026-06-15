@@ -1,0 +1,16 @@
+flowchart TD
+    A([Start]) --> B["Scan input directory<br/>for PDF files"]
+    B --> C{PDFs found?}
+    C -->|No| D([End])
+    C -->|Yes| E[Select next PDF]
+    E --> F["Convert PDF pages<br/>to images"]
+    F --> G[Select next page image]
+    G --> H["Send page image to<br/>Vision LLM (GPT-4 Vision)"]
+    H --> I["Extract OCR text<br/>as Markdown"]
+    I --> J{More pages?}
+    J -->|Yes| G
+    J -->|No| K["Append page text<br/>to PDF result"]
+    K --> L{More PDFs?}
+    L -->|Yes| E
+    L -->|No| M["Write combined Markdown<br/>to output file"]
+    M --> D

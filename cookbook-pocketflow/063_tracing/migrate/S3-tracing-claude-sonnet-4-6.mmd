@@ -1,0 +1,24 @@
+flowchart TD
+    A([Start]) --> B["Apply @trace_flow()<br/>Decorator"]
+    B --> C[Instantiate PocketFlow Nodes]
+    C --> D[Begin Flow Execution]
+    D --> E["Node: prep phase"]
+    E --> F["Langfuse: log prep<br/>inputs + timing"]
+    F --> G{prep OK?}
+    G -->|Error| H["Langfuse: record<br/>exception + metadata"]
+    H --> Z([End])
+    G -->|Success| I["Node: exec phase"]
+    I --> J["Langfuse: log exec<br/>inputs + timing"]
+    J --> K{exec OK?}
+    K -->|Error| L["Langfuse: record<br/>exception + metadata"]
+    L --> Z
+    K -->|Success| M["Node: post phase"]
+    M --> N["Langfuse: log post<br/>inputs + timing"]
+    N --> O{post OK?}
+    O -->|Error| P["Langfuse: record<br/>exception + metadata"]
+    P --> Z
+    O -->|Success| Q["Langfuse: flush<br/>trace span"]
+    Q --> R{More nodes?}
+    R -->|Yes| E
+    R -->|No| S["Langfuse: finalize<br/>distributed trace"]
+    S --> Z

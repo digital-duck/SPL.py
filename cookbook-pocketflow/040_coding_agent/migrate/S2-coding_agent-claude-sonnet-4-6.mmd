@@ -1,0 +1,21 @@
+flowchart TD
+    A([Start]) --> B["Receive failing<br/>test suite"]
+    B --> C[Inspect codebase<br/>structure]
+    C --> D[Read skeleton<br/>functions]
+    D --> E[LLM analyzes<br/>action history]
+    E --> F[Select next action]
+    F --> G{Action type?}
+    G -->|Inspect| H[List/inspect files]
+    G -->|Read| I[Read file contents]
+    G -->|Patch| J[Write code patch]
+    G -->|Run tests| K[Execute test suite]
+    H --> E
+    I --> E
+    J --> E
+    K --> L{All tests pass?}
+    L -->|No| M{Max iterations<br/>reached?}
+    M -->|No| E
+    M -->|Yes| N["Report failure:<br/>incomplete implementation"]
+    L -->|Yes| O["Report success:<br/>all tests passing"]
+    N --> P([End])
+    O --> P

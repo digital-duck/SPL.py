@@ -1,0 +1,10 @@
+flowchart TD
+    A([Start]) --> B["Receive plain-text<br/>search query"]
+    B --> C["Call SerpAPI<br/>with query"]
+    C --> D{Results<br/>returned?}
+    D -->|No results| E["Return error<br/>/ empty response"]
+    D -->|Results found| F["Pass results<br/>to LLM"]
+    F --> G["Synthesize analysis:<br/>Summary + Key Facts<br/>+ Follow-up Queries"]
+    G --> H["Return structured<br/>briefing to user"]
+    E --> I([End])
+    H --> I

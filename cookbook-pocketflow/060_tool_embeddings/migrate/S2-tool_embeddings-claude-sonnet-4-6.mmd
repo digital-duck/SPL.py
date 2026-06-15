@@ -1,0 +1,9 @@
+flowchart TD
+    A([Start]) --> B["Receive Text Input"]
+    B --> C["Call OpenAI<br/>Embeddings API"]
+    C --> D{API Response OK?}
+    D -->|Success| E["Extract Embedding Vector"]
+    D -->|Error| F["Handle API Error"]
+    F --> G([End - Failed])
+    E --> H["Return Dense Vector"]
+    H --> I([End - Success])

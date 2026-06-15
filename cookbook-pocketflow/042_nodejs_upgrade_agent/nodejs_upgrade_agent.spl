@@ -7,9 +7,16 @@ IMPORT 'tools'
 
 -- ── Prompts ──────────────────────────────────────────────────────────────────
 
-CREATE FUNCTION analyze_breaking_changes(pkg_json TEXT, outdated TEXT, target_node TEXT)
+CREATE FUNCTION analyze_breaking_changes(pkg_json TEXT, outdated TEXT,
+                                         target_node TEXT, project_type TEXT,
+                                         template TEXT)
 RETURNS TEXT AS $$
 You are a Node.js upgrade specialist.
+
+Project type: {project_type}
+
+Upgrade guidance for this project type:
+{template}
 
 Current package.json:
 {pkg_json}
@@ -170,7 +177,8 @@ WORKFLOW nodejs_upgrade_agent
   INPUT  @project_dir TEXT,
          @target_node TEXT := "20",
          @max_heal_attempts TEXT := "5",
-         @report_path TEXT := "upgrade_report.md"
+         @report_path TEXT := "upgrade_report.md",
+         @template_path TEXT := ""
   OUTPUT @report TEXT
 DO
   -- Phase 1: Pre-upgrade analysis (deterministic) ─────────────────────────────
@@ -179,7 +187,12 @@ DO
   CALL list_outdated(@project_dir) INTO @outdated;
   CALL list_count(@all_files) INTO @file_count;
 
-  GENERATE analyze_breaking_changes(@pkg_json, @outdated, @target_node)
+  -- Phase 1.5: Detect framework + load upgrade template ───────────────────────
+  CALL detect_project_type(@pkg_json) INTO @project_type;
+  CALL load_upgrade_template(@template_path, @project_type) INTO @analysis_template;
+
+  GENERATE analyze_breaking_changes(@pkg_json, @outdated, @target_node,
+                                    @project_type, @analysis_template)
     INTO @upgrade_plan;
 
   -- install upgraded packages before touching source files

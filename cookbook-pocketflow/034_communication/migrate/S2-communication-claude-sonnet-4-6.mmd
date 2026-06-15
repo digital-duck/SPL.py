@@ -1,0 +1,11 @@
+flowchart TD
+    A([Start]) --> B[Initialize<br/>Shared Store]
+    B --> C[Get User Input]
+    C --> D{Exit<br/>Signal?}
+    D -->|Yes| E[Display Final<br/>Statistics]
+    D -->|No| F[Count Words<br/>in Input]
+    F --> G[Update Shared Store<br/>text count / word count]
+    G --> H[Compute Average<br/>Words per Text]
+    H --> I[Display Running<br/>Statistics]
+    I --> C
+    E --> J([End])

@@ -1,0 +1,20 @@
+flowchart TD
+    A([Start]) --> B["Load Markdown File"]
+    B --> C["Parse Target Languages"]
+    C --> D["Spawn Parallel Translations"]
+    D --> E1["Translate to Language 1"]
+    D --> E2["Translate to Language 2"]
+    D --> E3["Translate to Language N"]
+    E1 --> F1{"Format<br/>Preserved?"}
+    E2 --> F2{"Format<br/>Preserved?"}
+    E3 --> F3{"Format<br/>Preserved?"}
+    F1 -->|Yes| G1["Save .md File<br/>Language 1"]
+    F1 -->|No| E1
+    F2 -->|Yes| G2["Save .md File<br/>Language 2"]
+    F2 -->|No| E2
+    F3 -->|Yes| G3["Save .md File<br/>Language N"]
+    F3 -->|No| E3
+    G1 --> H["Collect Results"]
+    G2 --> H
+    G3 --> H
+    H --> I([End])

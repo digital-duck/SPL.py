@@ -1,0 +1,19 @@
+flowchart TD
+    Start([Start]) --> ValidatePayment
+    subgraph Payment["Payment Sub-Workflow"]
+    ValidatePayment[Validate Payment] --> ProcessPayment[Process Payment]
+    ProcessPayment --> PaymentOK{Payment OK?}
+    PaymentOK -->|Fail| ValidatePayment
+    PaymentOK -->|Pass| PaymentDone[Write Payment Status]
+    end
+    subgraph Inventory["Inventory Sub-Workflow"]
+    CheckStock[Check Stock] --> ReserveItems[Reserve Items]
+    ReserveItems --> InventoryDone[Write Inventory Status]
+    end
+    subgraph Shipping["Shipping Sub-Workflow"]
+    CreateShipment[Create Shipment] --> AssignCarrier[Assign Carrier]
+    AssignCarrier --> ShippingDone[Write Shipping Status]
+    end
+    PaymentDone --> CheckStock
+    InventoryDone --> CreateShipment
+    ShippingDone --> End([End])

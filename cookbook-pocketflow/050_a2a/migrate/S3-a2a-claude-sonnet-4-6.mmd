@@ -1,0 +1,26 @@
+flowchart TD
+    A([Start]) --> B[Receive Question]
+    B --> C["Reason: Analyze question<br/>and gathered context"]
+    C --> D{Need more<br/>information?}
+    D -->|Yes| E["Act: Search the web"]
+    E --> F["Observe: Parse<br/>search results"]
+    F --> C
+    D -->|No| G[Synthesize final answer]
+    G --> H([End])
+    subgraph A2A_Layer["A2A HTTP Service Layer"]
+    I[A2A JSON-RPC Server]
+    J[Route incoming request]
+    K[Return response to caller]
+    end
+    subgraph ReAct_Loop["ReAct Agent Loop"]
+    C
+    D
+    E
+    F
+    G
+    end
+    L([Client / Agent]) --> I
+    I --> J
+    J --> B
+    G --> K
+    K --> L

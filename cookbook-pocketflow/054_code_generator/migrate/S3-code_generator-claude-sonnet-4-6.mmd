@@ -1,0 +1,16 @@
+flowchart TD
+    A([Start]) --> B["Receive coding<br/>problem description"]
+    B --> C[Generate test cases]
+    C --> D[Implement Python solution]
+    D --> E[Execute all tests in parallel]
+    E --> F{All tests pass?}
+    F -->|Yes| G[Return verified function]
+    G --> H([End])
+    F -->|No| I{Max iterations<br/>reached?}
+    I -->|Yes| J[Return best attempt<br/>with failure report]
+    J --> H
+    I -->|No| K[Analyze test failures]
+    K --> L{Revise tests,<br/>code, or both?}
+    L -->|Revise tests| C
+    L -->|Revise code| D
+    L -->|Revise both| C

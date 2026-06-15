@@ -1,0 +1,15 @@
+flowchart TD
+    A([Start]) --> B[Display Menu]
+    B --> C[Accept User Input]
+    C --> D{Exit?}
+    D -->|Yes| E([End])
+    D -->|No| F{Transformation?}
+    F -->|uppercase| G[Convert to Uppercase]
+    F -->|lowercase| H[Convert to Lowercase]
+    F -->|reverse| I[Reverse String]
+    F -->|collapse whitespace| J[Collapse Whitespace]
+    G --> K[Display Result]
+    H --> K
+    I --> K
+    J --> K
+    K --> B

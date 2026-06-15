@@ -1,0 +1,12 @@
+flowchart TD
+    A([Start]) --> B["Read DB Schema"]
+    B --> C["Generate SQL<br/>from NL Question"]
+    C --> D["Execute SQL<br/>against SQLite"]
+    D --> E{Execution OK?}
+    E -->|Yes| F["Return Results"]
+    E -->|No| G{Max Attempts<br/>Reached?}
+    G -->|No| H["LLM Debug:<br/>Fix SQL Error"]
+    H --> D
+    G -->|Yes| I["Surface Failure<br/>to Caller"]
+    F --> J([End])
+    I --> J

@@ -101,7 +101,7 @@ WORKFLOW build_concept_book
         @primitive_budget INT DEFAULT 2,
         @payoff_weight FLOAT DEFAULT 1.5,
         @language TEXT DEFAULT 'en',
-        @output_dir TEXT DEFAULT '',
+        @output_dir TEXT DEFAULT "",
         @log_dir TEXT DEFAULT 'cookbook/74_concept_book/logs-spl'
     OUTPUT:
         @textbook TEXT

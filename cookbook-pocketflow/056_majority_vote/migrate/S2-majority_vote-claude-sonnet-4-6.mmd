@@ -1,0 +1,15 @@
+flowchart TD
+    A([Start]) --> B["Receive reasoning question"]
+    B --> C["Launch N parallel LLM attempts"]
+    C --> D1["Attempt 1"]
+    C --> D2["Attempt 2"]
+    C --> D3["Attempt N"]
+    D1 --> E["Collect all answers"]
+    D2 --> E
+    D3 --> E
+    E --> F["Tally answer frequencies"]
+    F --> G{Consensus<br/>found?}
+    G -->|Yes| H["Return most frequent answer"]
+    G -->|No - tie| I["Return first majority candidate"]
+    H --> J([End])
+    I --> J
