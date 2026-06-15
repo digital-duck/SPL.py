@@ -83,7 +83,7 @@ DO
       DO
         -- ── ARM B: unaided LLM, one shot — for lean-type problems an
         -- UNCHECKED prose "proof"; exactly the contrast measured ──
-        LOGGING f"[arm=llm_only] Problem '@{@problem}' — solving with NO verifier" LEVEL INFO
+        LOGGING f"[arm=llm_only] Problem '{@problem}' — solving with NO verifier" LEVEL INFO
 
         CALL write_file(f'{@log_dir}/chain_trace.md',
           '(solver disabled for this run — no verified chain; the LLM solved it unaided)\n') INTO NONE;
@@ -239,10 +239,10 @@ DO
           DO
             -- ── ARM A: instance grade — plan → verified chain → explain;
             -- the chain engine (SymPy or Sage) is @backend ──
-            LOGGING f"[arm=solver] Problem '@{@problem}' — planning the chain (backend={@backend_lc}) ..." LEVEL INFO
+            LOGGING f"[arm=solver] Problem '{@problem}' — planning the chain (backend={@backend_lc}) ..." LEVEL INFO
 
-            GENERATE decompose_problem(@problem) INTO @steps_text;
-            CALL trim(@steps_text) INTO @steps_text;
+            GENERATE decompose_problem(@problem) WITH OUTPUT BUDGET 1500 TOKENS INTO @steps_text;
+            CALL strip_fences(@steps_text) INTO @steps_text;
             CALL step_count(@steps_text) INTO @n_steps;
 
             LOGGING f"[arm=solver] decomposed into {@n_steps} step(s):\n\n\n{@steps_text}\n\n" LEVEL INFO

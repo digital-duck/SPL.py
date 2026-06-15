@@ -1,1 +1,3 @@
-1. galois_group(x**5 - x - 1 over QQ) = Transitive group number 5 of degree 5
+1. solve_system([x + y - 5, x - y - 1]) = [
+[x == 3, y == 2]
+]

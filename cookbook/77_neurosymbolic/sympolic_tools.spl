@@ -282,11 +282,17 @@ CREATE TOOL_API strip_fences(text TEXT)
 RETURNS TEXT AS PYTHON $$
 def strip_fences(text: str) -> str:
     """Remove markdown code fences and surrounding noise from LLM output."""
+    import re
     s = text.strip()
-    if s.startswith("```"):
-        lines = [ln for ln in s.splitlines() if not ln.strip().startswith("```")]
-        s = "\n".join(lines).strip()
-    return s.rstrip(".").strip().replace("'''", "")
+    # Case 1: entire output wrapped in a single fence block (``` or ~~~, any lang tag)
+    m = re.match(r'^(?:```|~~~)[^\n]*\n(.*?)\n?(?:```|~~~)\s*$', s, re.DOTALL)
+    if m:
+        s = m.group(1)
+    else:
+        # Case 2: stray fence lines scattered through otherwise plain output
+        s = re.sub(r'^(?:```|~~~)[^\n]*$', '', s, flags=re.MULTILINE)
+        s = re.sub(r'\n{2,}', '\n', s)  # collapse blank lines left by removed fences
+    return s.strip().replace("'''", "")
 $$;
 
 CREATE TOOL_API make_theorem(stmt TEXT, tactics TEXT)

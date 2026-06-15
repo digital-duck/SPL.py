@@ -23,6 +23,7 @@ Quick start:
   python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p003 --backend sympy
   python cookbook/77_neurosymbolic/run_experiment.py                           # all models, all problems
   python cookbook/77_neurosymbolic/run_experiment.py -s true -s false -r 3    # both solver arms
+  python cookbook/77_neurosymbolic/run_experiment.py -p p003 --backend sympy -s true -r 1    # test a single cell with the solver arm and sympy backend
 """
 
 import json
@@ -169,14 +170,14 @@ def parse_ids(values: tuple) -> list:
 # IDs use zero-padded m001–m999 so alphabetical order == numerical order,
 # making log filenames and automated parsing unambiguous at any scale.
 MODELS = {
-    "m001": ("sonnet-4-6",  "claude_cli",         "claude_cli"),
+    "m001": ("sonnet-4-6",  "claude_cli",          "claude_cli"),
     "m002": ("gemma3",      "ollama:gemma3",       "ollama"),
-    "m003": ("gemma4:12b",  "ollama:gemma4:12b",   "ollama"),
+    "m003": ("gemma4:e2b",  "ollama:gemma4:e2b",   "ollama"),
     "m004": ("qwen2.5",     "ollama:qwen2.5",      "ollama"),
-    "m005": ("qwen3",       "ollama:qwen3",        "ollama"),
+    "m005": ("deepseek-v2:16b",       "ollama:deepseek-v2:16b",        "ollama"),
     "m006": ("phi3",        "ollama:phi3",         "ollama"),
     "m007": ("phi4",        "ollama:phi4",         "ollama"),
-    "m008": ("deepseek-r1", "ollama:deepseek-r1",  "ollama"),
+    "m008": ("llama3.2",    "ollama:llama3.2",     "ollama"),
     "m009": ("lfm2.5",      "ollama:lfm2.5",       "ollama"),
     "m010": ("rnj-1",       "ollama:rnj-1",        "ollama"),   # Essential AI 8B STEM model
 }
