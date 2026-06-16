@@ -9,7 +9,7 @@ Usage:
   python cookbook/77_neurosymbolic/analyze_experiment.py
   python cookbook/77_neurosymbolic/analyze_experiment.py --db path/to/db.sqlite
   python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
-  python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md --source exp-...
+  python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md --source exp-20260615-073849
   python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
 """
 

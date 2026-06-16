@@ -95,9 +95,14 @@ def load_all() -> pd.DataFrame:
 def load_runs() -> pd.DataFrame:
     with get_conn() as conn:
         try:
-            runs = pd.read_sql(
-                "SELECT * FROM imports ORDER BY imported_at DESC", conn
-            )
+            runs = pd.read_sql("""
+                SELECT i.*,
+                       MAX(r.imported_at) AS stopped_at
+                FROM imports i
+                LEFT JOIN results r ON r.source_file = i.source_file
+                GROUP BY i.source_file
+                ORDER BY i.imported_at DESC
+            """, conn)
         except Exception:
             runs = pd.DataFrame()
         if runs.empty:
@@ -106,7 +111,8 @@ def load_runs() -> pd.DataFrame:
                        COUNT(*) AS rows_inserted,
                        NULL     AS rows_total,
                        NULL     AS log_path,
-                       MIN(imported_at) AS imported_at
+                       MIN(imported_at) AS imported_at,
+                       MAX(imported_at) AS stopped_at
                 FROM results
                 GROUP BY source_file
                 ORDER BY imported_at DESC
@@ -237,6 +243,18 @@ def main() -> None:
                 solver_sub = sub[sub["solver"] == "true"] if done else pd.DataFrame()
                 solver_pass = int(solver_sub["pass"].sum()) if not solver_sub.empty else 0  # type: ignore[arg-type]
                 backends_seen = sorted(sub["backend"].dropna().unique()) if done else []
+                started  = r.get("imported_at") or ""
+                stopped  = r.get("stopped_at") or ""
+                duration = "—"
+                if started and stopped and started != stopped:
+                    try:
+                        from datetime import datetime
+                        fmt = "%Y-%m-%d %H:%M:%S"
+                        dt  = datetime.strptime(stopped[:19], fmt) - datetime.strptime(started[:19], fmt)
+                        s   = int(dt.total_seconds())
+                        duration = f"{s//3600}h {s%3600//60}m {s%60}s" if s >= 3600 else f"{s//60}m {s%60}s"
+                    except Exception:
+                        duration = "—"
                 exp_rows.append({
                     "source":       sf,
                     "planned":      r.get("rows_total") or "—",
@@ -246,7 +264,9 @@ def main() -> None:
                     "solver_pass":  f"{solver_pass}/{len(solver_sub)}" if not solver_sub.empty else "—",
                     "backends":     ", ".join(BACKEND_LABEL.get(b, b) for b in backends_seen),
                     "log_path":     r.get("log_path") or "—",
-                    "started_at":   r.get("imported_at", ""),
+                    "started_at":   started,
+                    "stopped_at":   stopped,
+                    "duration":     duration,
                 })
             st.dataframe(pd.DataFrame(exp_rows), hide_index=True, use_container_width=True)
 
