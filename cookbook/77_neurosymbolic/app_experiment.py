@@ -74,6 +74,7 @@ def init_db() -> None:
             "ALTER TABLE results ADD COLUMN backend TEXT",
             "ALTER TABLE results ADD COLUMN decomposition TEXT",
             "ALTER TABLE results ADD COLUMN output TEXT",
+            "ALTER TABLE results ADD COLUMN hostname TEXT",
         ]:
             try:
                 conn.execute(stmt)
@@ -243,6 +244,7 @@ def main() -> None:
                 solver_sub = sub[sub["solver"] == "true"] if done else pd.DataFrame()
                 solver_pass = int(solver_sub["pass"].sum()) if not solver_sub.empty else 0  # type: ignore[arg-type]
                 backends_seen = sorted(sub["backend"].dropna().unique()) if done else []
+                hostname_val = sub["hostname"].iloc[0] if (done and "hostname" in sub.columns) else "—"
                 started  = r.get("imported_at") or ""
                 stopped  = r.get("stopped_at") or ""
                 duration = "—"
@@ -257,6 +259,7 @@ def main() -> None:
                         duration = "—"
                 exp_rows.append({
                     "source":       sf,
+                    "hostname":     hostname_val,
                     "planned":      r.get("rows_total") or "—",
                     "recorded":     done,
                     "passed":       passed,
@@ -301,7 +304,7 @@ def main() -> None:
                 return "\n".join(lines)
 
             display: pd.DataFrame = cast(pd.DataFrame, df[[
-                "id", "run_id", "source_file", "mid", "label", "pid", "tier",
+                "id", "run_id", "hostname", "source_file", "mid", "label", "pid", "tier",
                 "backend", "solver", "run", "pass", "status",
                 "llm_calls", "latency_ms", "steps", "decomposition", "output_preview", "notes",
             ]].copy())

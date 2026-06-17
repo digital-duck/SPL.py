@@ -28,6 +28,7 @@ Quick start:
 
 import json
 import re
+import socket
 import sqlite3
 import subprocess
 from datetime import datetime
@@ -63,6 +64,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
         CREATE TABLE IF NOT EXISTS results (
             id             INTEGER PRIMARY KEY AUTOINCREMENT,
             run_id         TEXT,
+            hostname       TEXT,
             source_file    TEXT    NOT NULL,
             mid            TEXT,
             label          TEXT,
@@ -104,6 +106,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
         "ALTER TABLE results ADD COLUMN output TEXT",
         "ALTER TABLE results ADD COLUMN backend TEXT",
         "ALTER TABLE results ADD COLUMN run_id TEXT",
+        "ALTER TABLE results ADD COLUMN hostname TEXT",
     ]:
         try:
             conn.execute(stmt)
@@ -119,6 +122,7 @@ def write_cell_to_db(
     pid: str, mid: str, label: str, tier: str, backend: str, problem: str,
     solver: str, run: int,
     metrics: dict,
+    hostname: str = "",
 ) -> None:
     run_id  = f"{mid}-{pid}-{'T' if solver == 'true' else 'F'}-{run}"
     status  = metrics["status"]
@@ -133,12 +137,12 @@ def write_cell_to_db(
         conn.execute(
             """
             INSERT OR REPLACE INTO results
-                (run_id, source_file, mid, label, pid, tier, backend, problem,
+                (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
                  solver, run, pass, status, output_preview, output,
                  llm_calls, latency_ms, steps, spl_log, decomposition)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
-            (run_id, source_file, mid, label, pid, tier, backend, problem,
+            (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
              solver, run, passed, status, preview, output,
              llm, lat, steps, metrics["spl_log"], decomp),
         )
@@ -540,6 +544,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                         )
         return
 
+    hostname    = socket.gethostname()
     timestamp   = datetime.now().strftime("%Y%m%d-%H%M%S")
     log_path    = Path(log_dir) / f"recipe-77-log-{timestamp}.md"
     source_file = f"exp-{timestamp}"
@@ -555,6 +560,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     )
     db_conn.commit()
 
+    click.echo(f"Hostname     : {hostname}")
     click.echo(f"Log          : {log_path}")
     click.echo(f"DB           : {db}  (source={source_file})\n")
 
@@ -582,7 +588,8 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                         # backends, so it is passed uniformly.
                         cmd = ["spl3", "run", script, "--kernel",
                                "--llm", adapter,
-                               "--param", f"problem={problem}"]
+                               "--param", f"problem={problem}",
+                               "--param", f"hostname={hostname}"]
                         if use_solver_param:
                             cmd += ["--param", f"backend={cell_backend}",
                                     "--param", f"enable_solver={solver_mode}"]
@@ -594,10 +601,11 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                             f"\n## {label} ({provider})"
                             f" — backend={cell_backend}"
                             f" — solver={solver_mode} — run {run_no}\n\n"
-                            f"_Tier: {tier} | Problem ID: `{pid}`_\n\n"
+                            f"_Tier: {tier} | Problem ID: `{pid}` | Host: `{hostname}`_\n\n"
                             f"```bash\n"
                             f"(spl123) $ spl3 run {script} --kernel --llm {adapter} \\\n"
-                            f'   --param problem="{problem}"{extra_md}\n'
+                            f'   --param problem="{problem}" \\\n'
+                            f'   --param hostname="{hostname}"{extra_md}\n'
                             f"```\n\n```output\n"
                         )
                         log.flush()
@@ -611,6 +619,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                             db_conn, source_file,
                             pid, mid, label, tier, cell_backend, problem,
                             solver_mode, run_no, metrics,
+                            hostname=hostname,
                         )
 
                         completed += 1

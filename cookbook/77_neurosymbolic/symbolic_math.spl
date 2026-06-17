@@ -65,11 +65,14 @@ WORKFLOW neurosymbolic_solver
   INPUT @enable_solver TEXT := 'true'
   INPUT @max_tries INT := 3
   INPUT @log_dir TEXT := 'cookbook/77_neurosymbolic/logs-spl'
+  INPUT @hostname TEXT := ''
   OUTPUT @result TEXT
 DO
   CALL lower(@enable_solver) INTO @solver_mode;
   CALL lower(@backend) INTO @backend_lc;
   CALL trim(@backend_lc) INTO @backend_lc;
+
+  LOGGING f"[neurosymbolic_solver] host={@hostname} backend={@backend_lc} solver={@solver_mode}" LEVEL INFO
 
   EVALUATE @solver_mode
     WHEN IN ('true', '1', 'yes') THEN
