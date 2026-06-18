@@ -21,7 +21,12 @@
 --      abstract (summary_desc — fluency/condensation only; the
 --      facts come from arXiv, not from the model),
 --   6. Appends one row per verified reference to summary.csv
---      (arxiv_id, title, summary_desc, authors).
+--      (arxiv_id, title, summary_desc, authors),
+--   7. Logs every skipped reference to summary-skipped.csv
+--      (ref_index, arxiv_id, reason, ref_text) — covers entries
+--      with no arXiv id and entries where lookup/download failed,
+--   8. Writes all log messages to both console and a timestamped
+--      log file under ~/.spl/logs/ via the spl_log TOOL_API.
 --
 -- Reuses the download/cache shape of cookbook/47_arxiv_morning_brief
 -- (download_arxiv_pdf -> download_pdf_to: rate-limited GET, write
@@ -29,10 +34,9 @@
 -- loop structure, generalised from "list of URLs" to "parsed
 -- reference entries with a lookup-then-download step."
 --
--- Note: TOOL_API bodies are defined INLINE here (not in a separate
--- tools.spl + IMPORT) — IMPORT only registers WORKFLOW definitions
--- across files, not CREATE TOOL_API / CREATE FUNCTION blocks; the
--- executor loads TOOL_APIs solely from the top-level program AST.
+-- Note: most TOOL_API bodies are defined INLINE here. The logging
+-- tools (init_spl_log, spl_log) live in stdlib_log and must be
+-- promoted first:  spl3 tool-api promote cookbook/tools/stdlib_log.spl
 --
 -- Why this matters: a reviewer (Opus 4.8) fact-checked one of our
 -- own citations by hand and found a misattributed author list —
@@ -42,18 +46,23 @@
 --
 -- Run:
 --   spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
---       --adapter ollama --model gemma3 \
+--       --llm ollama:gemma3 \
 --       in_refs="$(cat references.md)" \
 --       out_dir="cookbook/72_verify_arxiv_references/output"
 -- ============================================================
 
 -- ── TOOL_API: deterministic helpers ───────────────────────────
+-- init_spl_log / spl_log come from stdlib_log (promoted to ~/.spl/tool_apis/)
 
 CREATE TOOL_API parse_references(raw TEXT)
 RETURNS TEXT AS PYTHON $$
 def parse_references(raw: str) -> str:
     """Scan raw text for arXiv citations and return a deduped JSON list of
     entry strings, one per distinct arXiv id found.
+
+    *raw* can be either inline text or a file path — if it looks like
+    a path to an existing file (no newlines, file exists on disk), its
+    contents are read first.
 
     No '## References' heading or blank-line-separated bibliography format
     is required — this looks for the citation patterns themselves
@@ -65,6 +74,11 @@ def parse_references(raw: str) -> str:
     to their first occurrence."""
     import json
     import re
+    from pathlib import Path
+
+    text = raw.strip()
+    if '\n' not in text and Path(text).is_file():
+        text = Path(text).read_text(encoding='utf-8')
 
     pattern = re.compile(
         r'arxiv\s*:\s*(\d{4}\.\d{4,5})'
@@ -74,7 +88,7 @@ def parse_references(raw: str) -> str:
 
     seen: set[str] = set()
     entries: list[str] = []
-    for line in raw.splitlines():
+    for line in text.splitlines():
         for m in pattern.finditer(line):
             arxiv_id = m.group(1) or m.group(2)
             if arxiv_id in seen:
@@ -215,10 +229,9 @@ def init_summary_csv(csv_path: str) -> str:
 
     path = Path(csv_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    if not path.exists():
-        with path.open('w', encoding='utf-8', newline="") as fh:
-            writer = csv.writer(fh)
-            writer.writerow(['arxiv_id', 'title', 'summary_desc', 'authors'])
+    with path.open('w', encoding='utf-8', newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(['arxiv_id', 'title', 'summary_desc', 'authors'])
     return str(path)
 $$;
 
@@ -227,12 +240,36 @@ RETURNS TEXT AS PYTHON $$
 def append_csv_row(csv_path: str, arxiv_id: str, title: str, summary_desc: str, authors: str) -> str:
     """Append one verified-reference row to summary.csv."""
     import csv
+    import re
     from pathlib import Path
+
+    def _oneline(s: str) -> str:
+        return re.sub(r'\s*[\r\n]+\s*', ' ', s).strip()
 
     path = Path(csv_path)
     with path.open('a', encoding='utf-8', newline="") as fh:
         writer = csv.writer(fh)
-        writer.writerow([arxiv_id, title, summary_desc, authors])
+        writer.writerow([_oneline(arxiv_id), _oneline(title),
+                         _oneline(summary_desc), _oneline(authors)])
+    return str(path)
+$$;
+
+CREATE TOOL_API append_skipped_row(csv_path TEXT, ref_index TEXT, arxiv_id TEXT, reason TEXT, ref_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def append_skipped_row(csv_path: str, ref_index: str, arxiv_id: str, reason: str, ref_text: str) -> str:
+    """Append one skipped-reference row to summary-skipped.csv.
+    Creates the file with headers on first write."""
+    import csv
+    from pathlib import Path
+
+    path = Path(csv_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    needs_header = not path.exists()
+    with path.open('a', encoding='utf-8', newline="") as fh:
+        writer = csv.writer(fh)
+        if needs_header:
+            writer.writerow(['ref_index', 'arxiv_id', 'reason', 'ref_text'])
+        writer.writerow([ref_index, arxiv_id, reason, ref_text])
     return str(path)
 $$;
 
@@ -268,13 +305,16 @@ $$;
 CREATE FUNCTION digest_writer(title TEXT, abstract TEXT)
 RETURN TEXT
 AS $$
-You are a technical editor preparing a citation-verification table. Below is the title and abstract of a paper as recorded on arXiv (the source of truth — not the citing paper's description of it).
+You are a technical editor preparing a citation-verification table.
+Below is the title and abstract of a paper as recorded 
+on arXiv (the source of truth — not the citing paper''s description of it).
 
 Title: {title}
 
 Abstract: {abstract}
 
-Write a digest of the paper's core contribution, method, and key result in fewer than 5 sentences. Write plain prose only — no headings, no bullet points, no markdown formatting, no preamble such as "This paper...".
+Write a digest of the paper''s core contribution, method, and key result in fewer than 5 sentences. 
+Write plain prose only — no headings, no bullet points, no markdown formatting, no preamble such as "This paper...".
 $$;
 
 -- ── Workflow ──────────────────────────────────────────────────
@@ -285,15 +325,18 @@ WORKFLOW verify_arxiv_references
         @out_dir TEXT DEFAULT 'cookbook/72_verify_arxiv_references/output'
     OUTPUT: @summary_csv TEXT
 DO
-    LOGGING 'Verify arXiv References — starting' LEVEL INFO
+    CALL init_spl_log('verify_arxiv_references') INTO @log_file
+    CALL spl_log('Verify arXiv References — starting', 'INFO', @log_file) INTO @log_file
 
     CALL parse_references(@in_refs) INTO @refs
     CALL list_count(@refs) INTO @n
-    LOGGING f'References parsed: {@n}' LEVEL INFO
+    CALL spl_log(f'References parsed: {@n}', 'INFO', @log_file) INTO @log_file
 
     @csv_path := f'{@out_dir}/summary.csv'
     CALL init_summary_csv(@csv_path) INTO @csv_path
-    LOGGING f'Summary CSV: {@csv_path}' LEVEL INFO
+    CALL spl_log(f'Summary CSV: {@csv_path}', 'INFO', @log_file) INTO @log_file
+
+    @skipped_csv_path := f'{@out_dir}/summary-skipped.csv'
 
     @i        := 0
     @verified := 0
@@ -307,7 +350,7 @@ DO
         DO
             EVALUATE @arxiv_id
                 WHEN != "" THEN
-                    LOGGING f'[{@i}] arXiv:{@arxiv_id} — looking up ground-truth record' LEVEL INFO
+                    CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — looking up ground-truth record', 'INFO', @log_file) INTO @log_file
 
                     -- Step A: ground truth from arXiv (not from the citing paper)
                     CALL lookup_arxiv(@arxiv_id) INTO @meta_json
@@ -318,7 +361,7 @@ DO
 
                     -- Step B: download the PDF (cached, rate-limited)
                     CALL download_pdf_to(@pdf_url, @out_dir, @arxiv_id) INTO @pdf_path
-                    LOGGING f'[{@i}] downloaded -> {@pdf_path}' LEVEL DEBUG
+                    CALL spl_log(f'[{@i}] downloaded -> {@pdf_path}', 'DEBUG', @log_file) INTO @log_file
 
                     -- Step C: <5-sentence digest of the verified abstract
                     GENERATE digest_writer(@title, @abstract)
@@ -328,17 +371,20 @@ DO
                     -- Step D: record the verified row
                     CALL append_csv_row(@csv_path, @arxiv_id, @title, @summary_desc, @authors) INTO @csv_path
                     @verified := @verified + 1
-                    LOGGING f'[{@i}] verified: "{@title}" ({@authors})' LEVEL INFO
+                    CALL spl_log(f'[{@i}] verified: "{@title}" ({@authors})', 'INFO', @log_file) INTO @log_file
                 ELSE
-                    LOGGING f'[{@i}] no arXiv id in reference — likely a book/journal source, skipping' LEVEL DEBUG
+                    CALL spl_log(f'[{@i}] no arXiv id in reference — likely a book/journal source, skipping', 'DEBUG', @log_file) INTO @log_file
+                    CALL append_skipped_row(@skipped_csv_path, @i, '', 'no_arxiv_id', @ref_text) INTO @skipped_csv_path
                     @skipped := @skipped + 1
             END
         EXCEPTION
             WHEN ToolError THEN
-                LOGGING f'[{@i}] arXiv:{@arxiv_id} — lookup/download failed, skipping' LEVEL WARN
+                CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — lookup/download failed, skipping', 'WARN', @log_file) INTO @log_file
+                CALL append_skipped_row(@skipped_csv_path, @i, @arxiv_id, 'lookup_or_download_failed', @ref_text) INTO @skipped_csv_path
                 @skipped := @skipped + 1
             WHEN OTHERS THEN
-                LOGGING f'[{@i}] arXiv:{@arxiv_id} — unexpected error, skipping' LEVEL WARN
+                CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — unexpected error, skipping', 'WARN', @log_file) INTO @log_file
+                CALL append_skipped_row(@skipped_csv_path, @i, @arxiv_id, 'unexpected_error', @ref_text) INTO @skipped_csv_path
                 @skipped := @skipped + 1
         END
 
@@ -346,16 +392,18 @@ DO
     END
 
     -- ── Summary ──────────────────────────────────────────────
-    LOGGING f'Done — {@verified} verified / {@skipped} skipped of {@n} references. Summary: {@csv_path}' LEVEL INFO
+    CALL spl_log(f'Done — {@verified} verified / {@skipped} skipped of {@n} references. Summary: {@csv_path} | Skipped: {@skipped_csv_path}', 'INFO', @log_file) INTO @log_file
 
     RETURN @csv_path WITH
-        status      = 'complete',
-        total_refs  = @n,
-        verified    = @verified,
-        skipped     = @skipped
+        status           = 'complete',
+        total_refs       = @n,
+        verified         = @verified,
+        skipped          = @skipped,
+        skipped_csv_path = @skipped_csv_path,
+        log_file         = @log_file
 
 EXCEPTION
     WHEN OTHERS THEN
-        LOGGING 'Reference verification failed' LEVEL WARN
+        CALL spl_log('Reference verification failed', 'WARN', @log_file) INTO @log_file
         RETURN "" WITH status = 'error'
 END

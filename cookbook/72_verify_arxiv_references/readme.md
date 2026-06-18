@@ -39,11 +39,18 @@ For each entry in `@in_refs`:
    from the model.
 6. **Record** — append one row to `summary.csv`:
    `arxiv_id, title, summary_desc, authors`.
+7. **Log skipped** — every skipped reference (no arXiv id, lookup/download
+   failure, unexpected error) gets a row in `summary-skipped.csv`:
+   `ref_index, arxiv_id, reason, ref_text`.
 
 Everything is wrapped in a per-reference `DO ... EXCEPTION ... END` block
 (mirroring recipe 47's per-paper loop): a lookup failure, a download error, or
 an unexpected exception logs a warning and moves on to the next reference
 rather than aborting the whole run.
+
+All log messages are written to both console and a timestamped log file under
+`~/.spl/logs/` via the `spl_log` TOOL_API — no SPL source is dumped into the
+log, only the workflow's own `[LEVEL] message` lines.
 
 ---
 
@@ -106,10 +113,11 @@ recipe is built to surface.
 ### Full run — verify our paper's reference list
 
 ```bash
+cd ~/projects/digital-duck/SPL.py
 spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
-    --adapter ollama --model phi3 \
-    in_refs="$(cat cookbook/72_verify_arxiv_references/neurosymbolic-spl-refs.txt)" \
-    out_dir="cookbook/72_verify_arxiv_references/output"
+    --llm ollama:gemma3 \
+    --param in_refs="cookbook/72_verify_arxiv_references/spl-dual-mode-refs.txt \
+    --param out_dir="cookbook/72_verify_arxiv_references/output"
 ```
 
 `neurosymbolic-spl-refs.txt` holds the real `## References` block from our
@@ -127,7 +135,8 @@ out_dir/
 ├── 2501.12948.pdf
 ├── 2510.25975.pdf
 ├── ...
-└── summary.csv
+├── summary.csv
+└── summary-skipped.csv
 ```
 
 ```csv
@@ -135,6 +144,16 @@ arxiv_id,title,summary_desc,authors
 2510.25975,"SymCode: <actual title>","<<5-sentence digest of the real abstract>","<actual author list>"
 ...
 ```
+
+`summary-skipped.csv` records every reference that could not be verified:
+
+```csv
+ref_index,arxiv_id,reason,ref_text
+3,,no_arxiv_id,"Russell, S. & Norvig, P. (2020). Artificial Intelligence: ..."
+7,9999.99999,lookup_or_download_failed,"arXiv:9999.99999 — ..."
+```
+
+A timestamped log file is also written to `~/.spl/logs/verify_arxiv_references-YYYYMMDD-HHMMSS.log`.
 
 Compare `summary.csv` row-by-row against the citations in
 `neurosymbolic-spl-refs.txt` — any mismatch in title or authors is a

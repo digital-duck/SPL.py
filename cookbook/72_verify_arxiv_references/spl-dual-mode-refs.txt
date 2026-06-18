@@ -1,0 +1,49 @@
+## References
+
+[1] Q. Wu et al., "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation," arXiv:2308.08155, August 2023.
+
+[2] J. Moura, "CrewAI: Framework for Orchestrating Role-Playing Autonomous AI Agents," 2024.
+
+[3] M. Stonebraker and G. Kemnitz, "The POSTGRES Next Generation Database Management System," CACM, 1991.
+
+[4] Oracle Corporation, "PL/SQL User's Guide and Reference," 1992.
+
+[5] L. Beurer-Kellner et al., "Prompting Is Programming: A Query Language for Large Language Models," arXiv:2212.06094, PLDI 2023.
+
+[6] O. Khattab et al., "DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines," arXiv:2310.03714, ICLR 2024.
+
+[7] L. Zheng et al., "SGLang: Efficient Execution of Structured Language Model Programs," arXiv:2312.07104, NeurIPS 2024.
+
+[8] S. Amini, Y. Benajiba et al., "Open Agent Specification (Agent Spec): A Unified Representation for AI Agents," arXiv:2510.04173, October 2025.
+
+[9] I. Daunis, "A Declarative Language for Building and Orchestrating LLM-Powered Agent Workflows," arXiv:2512.19769, December 2025.
+
+[10] A. M. Gliozzo, J. Lee, and N. Defosse, "Agentics 2.0: Logical Transduction Algebra for Agentic Data Workflows," arXiv:2603.04241, March 2026.
+
+[11] G. Trooskens, A. Karlsberg, A. Sharma et al., "Compiled AI: Deterministic Code Generation for LLM-Based Workflow Automation," arXiv:2604.05150, April 2026.
+
+[12] L. Qiu, Y. Ye, and Z. Gao, "Blueprint First, Model Second: A Framework for Deterministic LLM Workflow," arXiv:2508.02721, August 2025.
+
+[13] B. Liu et al., "LLM+P: Empowering Large Language Models with Optimal Planning Proficiency," arXiv:2304.11477, April 2023.
+
+[14] S. Szeider, "MCP-Solver: Integrating Language Models with Constraint Programming Systems," arXiv:2501.00539, SAT 2025.
+
+[15] K. Hua, D. Wang, Y. Gu, and X. Ma, "DUPLEX: Agentic Dual-System Planning via LLM-Driven Information Extraction," arXiv:2603.23909, March 2026.
+
+[16] T. Trinh et al., "Solving Olympiad Geometry Without Human Demonstrations," Nature 625(7995):476–482, 2024.
+
+[17] K. Yang et al., "LeanDojo: Theorem Proving with Retrieval-Augmented Language Models," arXiv:2306.15626, NeurIPS 2023.
+
+[18] G. Lample et al., "HyperTree Proof Search for Neural Theorem Proving," arXiv:2205.11491, NeurIPS 2022.
+
+[19] M. Chen et al., "Evaluating Large Language Models Trained on Code," arXiv:2107.03374, July 2021.
+
+[20] Y. Li et al., "Competition-Level Code Generation with AlphaCode," arXiv:2203.07814, Science 2022.
+
+[21] D. Kahneman, "Thinking, Fast and Slow," Farrar, Straus and Giroux, 2011.
+
+[22] Wen G. Gong, "Momagrid: A Decentralized Inference Grid for LLM Workflows," unpublished manuscript, 2025. GitHub: https://github.com/digital-duck/momagrid. PDF: https://github.com/digital-duck/dd-work/blob/main/docs/Momagrid-arxiv.pdf
+
+[23] ACM, "Compositional AI Beyond LLMs: System Implications of Neuro-Symbolic-Probabilistic Architectures," in Proceedings of the 52nd Annual ACM SIGPLAN Symposium on Principles and Practice of Programming Languages (ASPLOS 2026), ACM DL: 10.1145/3760250.3762235, April 2026.
+
+[24] N. Schuler, V. Scotti, and R. Mirandola, "Beyond Monolithic Models: Symbolic Seams for Composable Neuro-Symbolic Architectures," arXiv:2603.15087, March 2026.

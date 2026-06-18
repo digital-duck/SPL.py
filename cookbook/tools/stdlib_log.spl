@@ -1,0 +1,50 @@
+-- ============================================================
+-- stdlib_log — Logging TOOL_API library
+-- Dual-output logging: prints to console and appends to a
+-- timestamped log file under ~/.spl/logs/.
+-- Promote:  spl3 tool-api promote cookbook/tools/stdlib_log.spl
+-- ============================================================
+
+CREATE TOOL_API init_spl_log(workflow_name TEXT)
+RETURNS TEXT AS PYTHON $$
+def init_spl_log(workflow_name: str) -> str:
+    """Create a timestamped log file under ~/.spl/logs/ and return its path."""
+    from datetime import datetime
+    from pathlib import Path
+
+    log_dir = Path.home() / '.spl' / 'logs'
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.now().strftime('%Y%m%d-%H%M%S')
+    log_file = log_dir / f'{workflow_name}-{ts}.log'
+
+    with log_file.open('w', encoding='utf-8') as fh:
+        fh.write(f'# SPL Log: {workflow_name}\n')
+        fh.write(f'# Started: {datetime.now().isoformat()}\n\n')
+
+    return str(log_file)
+$$;
+
+CREATE TOOL_API spl_log(message TEXT, severity TEXT, log_file TEXT)
+RETURNS TEXT AS PYTHON $$
+def spl_log(message: str, severity: str, log_file: str) -> str:
+    """Log to both console (stdout/stderr) and the log file."""
+    import sys
+    from datetime import datetime
+    from pathlib import Path
+
+    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    severity = severity.upper()
+
+    line = f'[{severity}] {message}'
+    if severity in ('WARN', 'ERROR'):
+        print(line, file=sys.stderr)
+    else:
+        print(line)
+
+    path = Path(log_file)
+    with path.open('a', encoding='utf-8') as fh:
+        fh.write(f'[{ts}] [{severity}] {message}\n')
+
+    return log_file
+$$;

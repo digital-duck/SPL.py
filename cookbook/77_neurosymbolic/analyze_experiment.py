@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-analyze_experiment.py — Generate paper-ready markdown tables from the Recipe-77 DB.
+analyze_experiment.py — Generate paper-ready tables AND figures from the Recipe-77 DB.
 
 Works for any run count (-r 1, -r 3, -r 5): aggregates mean pass rate per
 (model × problem × solver) cell across repetitions, then builds all tables.
@@ -11,6 +11,8 @@ Usage:
   python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
   python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md --source exp-20260615-073849
   python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
+  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/
+  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/ --source exp-20260615-191224
 """
 
 import argparse
@@ -379,6 +381,161 @@ def build_markdown(source: str, rows: list[dict]) -> str:
     return "\n".join(sections)
 
 
+# ── Figure generation ────────────────────────────────────────────────────────
+
+def _check_plot_deps():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import numpy as np
+        return plt, sns, np
+    except ImportError as e:
+        sys.exit(f"Missing plotting dependency: {e}\n"
+                 "Install: pip install matplotlib seaborn numpy")
+
+
+def fig_heatmap_solver(cells: dict, models: list[tuple], tiers: list[str],
+                       out_dir: Path) -> Path:
+    """Solver arm pass-rate heatmap: models (rows) × tiers (columns)."""
+    plt, sns, np = _check_plot_deps()
+    from collections import defaultdict
+
+    data: dict = defaultdict(lambda: defaultdict(list))
+    for c in cells.values():
+        if c["solver"] == "true":
+            data[c["mid"]][c["tier"]].append(c["mean_pass"])
+
+    labels = [label for _, label in models]
+    matrix = []
+    for mid, _ in models:
+        row = []
+        for t in tiers:
+            ps = data[mid][t]
+            row.append(sum(ps) / len(ps) * 100 if ps else 0)
+        matrix.append(row)
+
+    arr = np.array(matrix)
+    fig, ax = plt.subplots(figsize=(5.5, 5))
+    sns.heatmap(arr, annot=True, fmt=".0f", cmap="YlGnBu",
+                xticklabels=tiers, yticklabels=labels,
+                vmin=0, vmax=100, linewidths=0.5,
+                annot_kws={"fontsize": 9},
+                cbar_kws={"label": "Pass rate (%)", "shrink": 0.8}, ax=ax)
+    ax.set_title("Solver Arm Pass Rate: Model × Tier (%)", fontsize=11, pad=10)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(axis='x', labelsize=9)
+    ax.tick_params(axis='y', labelsize=9)
+
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        p = out_dir / f"recipe77-heatmap-latex.{ext}"
+        fig.savefig(p, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] heatmap → {out_dir}/recipe77-heatmap-latex.{{pdf,png}}")
+    return out_dir / "recipe77-heatmap-latex.pdf"
+
+
+def fig_bootstrap_ci(conn: sqlite3.Connection, source: str,
+                     models: list[tuple], out_dir: Path) -> Path:
+    """Bootstrap 95% CI bar chart for solver arm pass rates."""
+    plt, sns, np = _check_plot_deps()
+
+    rng = np.random.default_rng(42)
+    labels_out, means, ci_lo, ci_hi = [], [], [], []
+
+    for mid, label in models:
+        rows = conn.execute(
+            "SELECT pass FROM results WHERE source_file=? AND solver='true' AND mid=?",
+            (source, mid)).fetchall()
+        passes = np.array([r[0] for r in rows])
+        n = len(passes)
+        obs = 100 * passes.mean()
+        boots = np.array([100 * rng.choice(passes, size=n, replace=True).mean()
+                          for _ in range(10_000)])
+        lo, hi = np.percentile(boots, [2.5, 97.5])
+        labels_out.append(label)
+        means.append(obs)
+        ci_lo.append(obs - lo)
+        ci_hi.append(hi - obs)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    y = range(len(labels_out))
+    ax.barh(y, means, xerr=[ci_lo, ci_hi], capsize=4,
+            color=sns.color_palette("YlGnBu", len(labels_out)),
+            edgecolor="grey", linewidth=0.5)
+    ax.set_yticks(list(y))
+    ax.set_yticklabels(labels_out)
+    ax.set_xlabel("Solver Arm Pass Rate (%)")
+    ax.set_title("Solver Arm Pass Rate with 95% Bootstrap CI", fontsize=13, pad=12)
+    ax.set_xlim(0, 105)
+    ax.invert_yaxis()
+    for i, m in enumerate(means):
+        ax.text(m + ci_hi[i] + 1.5, i, f"{m:.0f}%", va="center", fontsize=9)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(out_dir / f"recipe77-bootstrap-ci.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] bootstrap CI → {out_dir}/recipe77-bootstrap-ci.{{pdf,png}}")
+    return out_dir / "recipe77-bootstrap-ci.pdf"
+
+
+def fig_pass_comparison(cells: dict, models: list[tuple], out_dir: Path) -> Path:
+    """Side-by-side bar chart: solver verified% vs LLM-only output%."""
+    plt, _sns, np = _check_plot_deps()
+    from collections import defaultdict
+
+    solver_pass: dict = defaultdict(list)
+    llm_pass: dict = defaultdict(list)
+    for c in cells.values():
+        if c["solver"] == "true":
+            solver_pass[c["mid"]].append(c["mean_pass"])
+        else:
+            llm_pass[c["mid"]].append(c["mean_pass"])
+
+    labels_out = [label for _, label in models]
+    s_pcts = [100 * sum(solver_pass[mid]) / len(solver_pass[mid]) for mid, _ in models]
+    l_pcts = [100 * sum(llm_pass[mid]) / len(llm_pass[mid]) for mid, _ in models]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x = np.arange(len(labels_out))
+    w = 0.35
+    ax.bar(x - w/2, s_pcts, w, label="Solver (machine-verified)", color="#4c72b0")
+    ax.bar(x + w/2, l_pcts, w, label="LLM-only (output production)", color="#dd8452")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels_out, rotation=30, ha="right")
+    ax.set_ylabel("Pass rate (%)")
+    ax.set_title("Machine-Verified Correctness vs Unverified Output Production",
+                 fontsize=12, pad=12)
+    ax.legend()
+    ax.set_ylim(0, 110)
+    for i, (s, l) in enumerate(zip(s_pcts, l_pcts)):
+        ax.text(i - w/2, s + 1, f"{s:.0f}", ha="center", fontsize=8)
+        ax.text(i + w/2, l + 1, f"{l:.0f}", ha="center", fontsize=8)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(out_dir / f"recipe77-pass-comparison.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] pass comparison → {out_dir}/recipe77-pass-comparison.{{pdf,png}}")
+    return out_dir / "recipe77-pass-comparison.pdf"
+
+
+def generate_figures(conn: sqlite3.Connection, source: str, rows: list[dict],
+                     out_dir: Path) -> str:
+    """Generate all figures and return summary markdown."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cells  = aggregate(rows)
+    models = _sorted_models(cells)
+    tiers  = _tiers_present(cells)
+
+    fig_heatmap_solver(cells, models, tiers, out_dir)
+    fig_bootstrap_ci(conn, source, models, out_dir)
+    fig_pass_comparison(cells, models, out_dir)
+    return ""
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -392,6 +549,8 @@ def main() -> None:
                         help="Output .md path (default: stdout)")
     parser.add_argument("--list-sources", action="store_true",
                         help="List available experiment runs and exit")
+    parser.add_argument("--figures", default=None, metavar="DIR",
+                        help="Generate figures (heatmap, bootstrap CI, LLM accuracy) into DIR")
     args = parser.parse_args()
 
     db_path = Path(args.db)
@@ -416,13 +575,18 @@ def main() -> None:
     if not rows:
         sys.exit(f"No rows found for source: {source}")
 
+    if args.figures:
+        fig_dir = Path(args.figures)
+        acc_md = generate_figures(conn, source, rows, fig_dir)
+        print(f"\n{acc_md}")
+
     md = build_markdown(source, rows)
 
     if args.out:
         out_path = Path(args.out)
         out_path.write_text(md)
         print(f"Written: {out_path}  ({len(rows)} rows, {len(md)} chars)")
-    else:
+    elif not args.figures:
         print(md)
 
 

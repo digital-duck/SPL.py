@@ -51,8 +51,6 @@ def _write_run_log(
     stem: str,
     adapter_name: str,
     model_name: str,
-    source: str,
-    last_prompt: str,
     result,
     started_at: datetime,
 ) -> Path:
@@ -84,16 +82,7 @@ def _write_run_log(
         f"- **Tokens:** {in_tok} in / {out_tok} out",
         f"- **Latency:** {latency:.0f}ms",
         f"- **Timestamp:** {ts_human}",
-        "",
-        "## SPL Source",
-        "",
-        "```spl",
-        source.rstrip(),
-        "```",
     ]
-
-    if last_prompt:
-        lines += ["", "## Final Prompt", "", "```prompt", last_prompt.rstrip(), "```"]
 
     lines += ["", "## Output", "", "```output", output.rstrip(), "```"]
 
@@ -712,6 +701,16 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     for _stmt in _imported_functions:
         executor.functions.register(_stmt)
 
+    # Load promoted TOOL_API libraries from registry (~/.spl/tool_apis/)
+    try:
+        from spl3.tool_api_registry import load_all_into_executor
+        _n_libs = load_all_into_executor(executor)
+        if _n_libs:
+            _log.debug("Loaded %d TOOL_API library file(s) from registry", _n_libs)
+    except Exception as _exc:
+        _log.warning("TOOL_API registry load failed (non-fatal): %s", _exc)
+
+    # Inline TOOL_API blocks from the .spl file (override library tools on collision)
     from types import SimpleNamespace
     executor._load_tool_apis(SimpleNamespace(statements=_imported_tool_apis))
 
@@ -762,8 +761,6 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
             stem=stem,
             adapter_name=adapter_name,
             model_name=resolved_model,
-            source=source,
-            last_prompt=capturing.last_prompt,
             result=log_result,
             started_at=started_at,
         )
@@ -4749,6 +4746,49 @@ def cmd_tool_api_promote(spl_file, name, force):
     except ValueError as exc:
         click.echo(f"Error: {exc}", err=True)
         raise SystemExit(1)
+
+
+@cmd_tool_api.command("search", short_help="Search TOOL_API functions by name or keyword.")
+@click.argument("query", metavar="QUERY")
+@click.option("--stdlib", is_flag=True,
+              help="Also search built-in stdlib tools.")
+def cmd_tool_api_search(query, stdlib):
+    """Search registered TOOL_API functions whose name or parameter names
+    contain QUERY (case-insensitive).
+
+    \b
+    Examples:
+        spl3 tool-api search log
+        spl3 tool-api search csv --stdlib
+    """
+    from spl3.tool_api_registry import list_tools
+
+    q = query.lower()
+    hits: list = []
+    for t in list_tools(include_stdlib=stdlib):
+        searchable = t.name.lower()
+        for p in t.parameters:
+            searchable += " " + p.name.lower()
+        if q in searchable:
+            hits.append(t)
+
+    if not hits:
+        click.echo(f"No tools matching '{query}'.")
+        if not stdlib:
+            click.echo("Tip: add --stdlib to include built-in tools.")
+        return
+
+    by_source: dict[str, list] = {}
+    for t in hits:
+        by_source.setdefault(t.source, []).append(t)
+
+    click.echo(f"{len(hits)} tool(s) matching '{query}':\n")
+    for src, sigs in sorted(by_source.items()):
+        label = "stdlib (built-in)" if src == "stdlib" else f"{src}.spl"
+        click.echo(f"  [{label}]")
+        for t in sigs:
+            click.echo(f"    CALL {t.spl_signature()}")
+        click.echo()
 
 
 @cmd_tool_api.command("remove", short_help="Remove a library from the registry.")

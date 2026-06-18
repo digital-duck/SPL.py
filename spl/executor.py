@@ -1282,17 +1282,11 @@ class Executor:
         # 3. SPL PROCEDURE
         proc = self.functions.get_procedure(stmt.procedure_name)
         if proc is None:
-            _log.warning("Procedure '%s' not found — no tool, no builtin, no procedure; using LLM fallback", stmt.procedure_name)
-            # Fallback: use LLM to simulate the procedure
-            args_text = [self._eval_expression(a, state) for a in stmt.arguments]
-            prompt = f"Execute procedure: {stmt.procedure_name}({', '.join(args_text)})"
-            self._check_budget(state)
-            result = await self.adapter.generate(prompt=prompt, max_tokens=1000,
-                                                 model=self.default_model)
-            state.record_llm_call(result)
-            if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
-                state.set_var(stmt.target_variable, result.content)
-            return
+            raise ToolFailed(
+                f"Procedure '{stmt.procedure_name}' not found — no tool, no builtin, "
+                f"no procedure registered. Check spelling or ensure the TOOL_API "
+                f"library is promoted (spl3 tool-api promote)."
+            )
 
         # Execute the procedure body with its own state
         proc_state = WorkflowState()
