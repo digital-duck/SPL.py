@@ -107,6 +107,57 @@ python cookbook/77_neurosymbolic/run_experiment.py -m "m001,m010"   # full batte
 MODELS=m001 PROBLEMS=p025 bash cookbook/77_neurosymbolic/run_experiment.sh
 ```
 
+## Streamlit Dashboard
+
+After running experiments, visualize and explore results via the interactive dashboard:
+
+```bash
+conda activate spl123
+streamlit run cookbook/77_neurosymbolic/app_experiment.py
+```
+
+Open your browser to `http://localhost:8501`. The dashboard provides:
+
+- **Runs tab**: Overview of all experiment runs, pass rates, backend breakdown, duration
+- **Results tab**: Filterable table of all results (model × problem × solver × run) with per-cell details (decomposition, output, notes)
+- **Log Viewer tab**: Individual SPL run logs with quick filters (solver_error, plan_error, Sage failures)
+- **Analysis tab**: Aggregated metrics by model/tier, heatmaps (model × tier pass rate), backend comparison, failure mode breakdown
+- **Edit / Notes tab**: Manual notes and status correction per result row
+
+Filters across all views: models, tiers, backends, solver on/off, status, pass/fail, free-text search.
+
+## Analysis & Paper Tables
+
+Generate paper-ready markdown tables and figures from experiment results:
+
+```bash
+# Print all tables for the latest run to stdout
+python cookbook/77_neurosymbolic/analyze_experiment.py
+
+# Specify a run by source ID
+python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
+
+# Generate figures (heatmap, bootstrap CI, pass comparison) as PDF/PNG
+python cookbook/77_neurosymbolic/analyze_experiment.py --figures ./figs --source exp-20260615-073849
+
+# List all available experiment runs in the database
+python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
+
+# Save markdown tables to a file
+python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md
+```
+
+The analyzer aggregates results across multiple runs per cell (e.g., `--backend sympy --backend sage` runs 3 times each), computes mean pass rates, and outputs:
+
+- **Pass rates** by model and arm (solver vs. LLM-only)
+- **Latency** comparison
+- **Per-tier breakdown** for both arms
+- **Failure mode counts** (solver_error, plan_error, silent_failure, etc.)
+- **Backend comparison** (SymPy vs Sage vs Lean pass rates side-by-side)
+- **Figures**: heatmaps, bootstrap CI bars, and solver vs. LLM-only pass-rate comparison
+
+All tables are formatted for direct copy into the paper (markdown, LaTeX-compatible).
+
 ## Pass criteria
 
 | Arm | Pass statuses |

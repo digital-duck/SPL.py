@@ -32,7 +32,7 @@ Quick start:
   python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p003 --backend sympy
   python cookbook/77_neurosymbolic/run_experiment.py                          # all models, all problems
   python cookbook/77_neurosymbolic/run_experiment.py -s true -s false -r 3    # both solver arms
-  python cookbook/77_neurosymbolic/run_experiment.py -p p003 --backend sympy -s true -r 1    # test a single cell with the solver arm and sympy backend
+  python cookbook/77_neurosymbolic/run_experiment.py -r 1 -p p003 --backend sympy -s true    # test a single cell with the solver arm and sympy backend
 """
 
 import json
