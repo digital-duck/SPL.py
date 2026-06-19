@@ -77,7 +77,7 @@ class MomagridAdapter(LLMAdapter):
     def __init__(
         self,
         hub_url: str | None = None,
-        default_model: str = "llama3.2",
+        default_model: str = "gemma3",
         timeout: int = 300,
         poll_interval: float = 2.0,
         min_tier: str = "BRONZE",

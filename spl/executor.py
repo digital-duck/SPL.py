@@ -235,7 +235,7 @@ class WorkflowState:
 class Executor:
     """Execute SPL 2.0 PROMPT and WORKFLOW statements."""
 
-    DEFAULT_MAX_ITERATIONS = 100
+    DEFAULT_MAX_ITERATIONS = 3
 
     # Default safety caps — override via config or constructor args
     DEFAULT_MAX_LLM_CALLS   = 25

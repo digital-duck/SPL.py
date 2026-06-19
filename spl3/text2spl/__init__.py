@@ -70,7 +70,6 @@ Rules:
 - The function name inside $$ MUST match the TOOL_API name.
 - Return "error: <msg>" on failure — no unhandled exceptions.
 - All imports go inside the $$ body.
-- Use '' (two single quotes) for apostrophes inside $$ bodies.
 
 --- CREATE FUNCTION (probabilistic / LLM regime) ---
 
@@ -81,7 +80,6 @@ $$;
 Rules:
 - Parameters have NO @ prefix.
 - Use {param} (curly braces) for template slots inside $$ bodies.
-- Use '' (two single quotes) for apostrophes inside $$ bodies.
 
 --- WORKFLOW ---
 
@@ -101,11 +99,11 @@ Rules:
 Variable assignment:     @var := expression;
 Deterministic tool call: CALL <tool_api>(@arg1, @arg2) INTO @var;
 LLM call:                GENERATE <function>(@arg) INTO @var;
-Return:                  RETURN @var WITH status = 'complete';
+Return:                  RETURN @var WITH status = "complete";
 
 Conditional branching:
   EVALUATE @var
-    WHEN contains('token') THEN
+    WHEN contains("token") THEN
       <statements>
     ELSE
       <statements>
@@ -131,8 +129,8 @@ ModelOverloaded, QualityBelowThreshold, MaxIterationsReached,
 BudgetExceeded, NodeUnavailable
 
 --- Condition syntax ---
-Numeric/boolean: @var > 0.8, @var = 'done', @count < 5  (use = not ==)
-String content:  EVALUATE @var WHEN contains('token') THEN ...
+Numeric/boolean: @var > 0.8, @var = "done", @count < 5  (use = not ==)
+String content:  EVALUATE @var WHEN contains("token") THEN ...
 
 == STRICT RULES ==
 
@@ -187,10 +185,10 @@ DO
         GENERATE refine(@current, @feedback) INTO @current;
     END;
   END;
-  RETURN @current WITH status = 'complete', iterations = @iteration;
+  RETURN @current WITH status = "complete", iterations = @iteration;
 EXCEPTION
   WHEN BudgetExceeded THEN
-    RETURN @current WITH status = 'budget_limit';
+    RETURN @current WITH status = "budget_limit";
 END;
 
 Example 2 -- Mixed regime (deterministic data fetch + LLM interpretation):
@@ -218,21 +216,21 @@ CREATE FUNCTION interpret(ticker TEXT, data TEXT) RETURNS TEXT AS $$
 $$;
 
 WORKFLOW market_report
-  INPUT @tickers TEXT := 'GOOG,META,MSFT'
-  INPUT @years TEXT := '2'
+  INPUT @tickers TEXT := "GOOG,META,MSFT"
+  INPUT @years TEXT := "2"
   INPUT @max_tickers INTEGER := 3
   OUTPUT @report TEXT
 DO
   @i := 0;
-  @report := '';
+  @report := "";
   WHILE @i < @max_tickers DO
     CALL get_item(@tickers, @i) INTO @ticker;
     CALL fetch_data(@ticker, @years) INTO @data;
     GENERATE interpret(@ticker, @data) INTO @summary;
-    @report := @report + @ticker + ': ' + @summary + '\n';
+    @report := @report + @ticker + ": " + @summary + "\n";
     @i := @i + 1;
   END;
-  RETURN @report WITH status = 'complete';
+  RETURN @report WITH status = "complete";
 END;
 
 Example 3 -- Classification with exception handling (LLM only):
@@ -243,11 +241,11 @@ WORKFLOW safe_classify
 DO
   DO
     GENERATE classify(@text) INTO @label;
-    RETURN @label WITH status = 'complete';
+    RETURN @label WITH status = "complete";
   EXCEPTION
     WHEN HallucinationDetected THEN
-      @label := 'unknown';
-      RETURN @label WITH status = 'fallback';
+      @label := "unknown";
+      RETURN @label WITH status = "fallback";
     WHEN ModelOverloaded THEN
       RETRY;
   END;

@@ -28,7 +28,7 @@ class OpenRouterAdapter(LLMAdapter):
         self,
         api_key: str | None = None,
         base_url: str = OPENROUTER_URL,
-        default_model: str = "anthropic/claude-sonnet-4-5",
+        default_model: str = "qwen/qwen3-8b",
         timeout: int = 180,
     ):
         if httpx is None:

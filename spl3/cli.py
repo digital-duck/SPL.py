@@ -2655,7 +2655,7 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
             for node_id, node in nodes.items():
                 if node["type"] == "process":
                     var_name = _re.sub(r'\W+', '_', node["label"].lower())
-                    spl_lines.append(f"  @{var_name} := '';")
+                    spl_lines.append(f'  @{var_name} := "";')
 
             # Add main logic
             process_nodes = [n for n in nodes.values() if n["type"] == "process"]
@@ -2684,8 +2684,8 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
                     decision = decision_nodes[0]
                     spl_lines.extend([
                         f"      EVALUATE @{var_name}",
-                        f"        WHEN contains('complete') THEN",
-                        f"          RETURN @{var_name} WITH status = 'complete';",
+                        f'        WHEN contains("complete") THEN',
+                        f'          RETURN @{var_name} WITH status = "complete";',
                         f"        ELSE",
                         f"          @iteration := @iteration + 1;",
                         "      END;"
@@ -2710,10 +2710,10 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
                     decision = decision_nodes[0]
                     spl_lines.extend([
                         f"  EVALUATE @{var_name}",
-                        f"    WHEN contains('condition') THEN",
-                        f"      @result := 'path_a';",
+                        f'    WHEN contains("condition") THEN',
+                        f'      @result := "path_a";',
                         f"    ELSE",
-                        f"      @result := 'path_b';",
+                        f'      @result := "path_b";',
                         "  END;"
                     ])
 
