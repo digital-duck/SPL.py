@@ -22,6 +22,99 @@ Expected speedup vs run_experiment.py (sequential):
   - With 6 workers on a 400-cell run: ~67 cells per worker = ~10-15 min speedup vs. ~60+ min sequential
 
 Note: Requires conda activate spl123 + MOMAGRID_HUB_URL environment variable.
+
+Architecture — distribution granularity and design rationale
+============================================================
+
+Momagrid dispatches at the LLM-CALL level, not the workflow level.
+
+Each experiment cell runs as a separate `spl3 run` subprocess on the
+REQUESTER host.  Inside that subprocess, the SPL executor orchestrates
+the full workflow (WHILE loops, EVALUATE branches, CALL chains) locally.
+Only GENERATE nodes — the probabilistic LLM calls — are routed through
+the MomagridAdapter to the Hub, which dispatches each call to a WORKER
+node that has the requested model loaded.
+
+Two parallelism levels coexist in this script:
+
+  Level A — LLM-call routing (--momagrid, default ON):
+    effective_adapter() rewrites each model's adapter string to
+    "momagrid:<label>", so every GENERATE inside the spl3 subprocess
+    hits the Hub instead of a local Ollama instance.  The workflow
+    orchestration still runs on the requester.
+
+  Level B — cell-level concurrency (--workers N, default 6):
+    ThreadPoolExecutor runs N cells concurrently.  Each cell is an
+    independent spl3 subprocess; the Hub load-balances their LLM calls
+    across all available worker nodes.  N > 1 requires --momagrid
+    because local Ollama can only serve one model at a time.
+
+Solver execution — always local, by design (DODA)
+--------------------------------------------------
+All deterministic computation runs on the REQUESTER host:
+
+  - TOOL_API (solve_step_with_sympy, solve_step_with_sage):
+    Python functions exec()'d into the spl3 executor's tool table.
+    They import sympy / sage.all and run in-process.
+
+  - SOLVE @var := expr / CALL run_python(@code):
+    Executed on the local IPython kernel (spl3/kernel.py), started
+    by the --kernel flag.
+
+  - Lean REPL (LeanREPL.mathlib()):
+    Runs as a local subprocess managed by the kernel session.
+
+Worker nodes never see solver code — they only handle LLM inference.
+This is the DODA invariant: the .spl file is the logical specification;
+all physical decisions (provider, parallelism, infrastructure) are
+resolved at execution time via --adapter and --model flags.
+
+Kernel bottleneck — known limitation and mitigation
+----------------------------------------------------
+With Level B parallelism, each of the N concurrent `spl3 run`
+subprocesses starts its own IPython kernel instance.  This means:
+
+  - N solver arms run in parallel, each with its own kernel — no
+    contention between cells.  Subprocess isolation gives us a natural
+    "kernel pool" of size N without explicit pooling.
+
+  - However, each kernel loads SymPy or Sage into its own process,
+    consuming memory.  With N=6 workers and Sage (which loads PARI,
+    GAP, etc.), this can use ~2-4 GB per worker.  Monitor RSS if
+    running on memory-constrained machines.
+
+  - If we ever move to in-process workflow execution (multiple workflows
+    sharing a single executor), the single kernel WOULD become a
+    bottleneck.  That path would require an explicit kernel pool
+    (KernelSession pool with acquire/release) or per-workflow kernel
+    scoping.  For now, subprocess isolation avoids this by construction.
+
+  - On worker nodes (which only run Ollama inference), solver packages
+    (sympy, sage, lean) are NOT required and should not be installed.
+    The node registration contract is: GPU + Ollama + model weights.
+
+Host tracking — requester vs response worker
+----------------------------------------------
+Each cell records two host identities:
+
+  hostname         — the REQUESTER: the machine that runs this script,
+                     orchestrates the workflow, and executes all solver
+                     logic.  Set once via socket.gethostname().
+
+  response_worker  — the WORKER(S): the Momagrid agent(s) that handled
+                     the LLM calls for this cell.  Parsed from the spl3
+                     CLI "Workers:" output line, which aggregates the
+                     agent_name returned by the Hub for each GENERATE.
+                     When an agent registers with the Hub, it provides
+                     an agent_name (which may differ from its hostname
+                     if the user configures a custom name).  If no
+                     agent_name is set, the Hub defaults to hostname.
+                     A single cell may hit multiple workers if the Hub
+                     load-balances across them (e.g. solver arm: 2-3
+                     GENERATE calls could land on different nodes).
+
+  For local runs (--no-momagrid), response_worker is empty because the
+  adapter is not Momagrid and GenerationResult.response_worker is "".
 """
 
 import json
@@ -108,6 +201,7 @@ def init_db(db_path: str) -> sqlite3.Connection:
         "ALTER TABLE results ADD COLUMN backend TEXT",
         "ALTER TABLE results ADD COLUMN run_id TEXT",
         "ALTER TABLE results ADD COLUMN hostname TEXT",
+        "ALTER TABLE results ADD COLUMN response_worker TEXT DEFAULT ''",
     ]:
         try:
             conn.execute(stmt)
@@ -134,18 +228,21 @@ def write_cell_to_db(
     preview = metrics["output_preview"]
     output  = metrics.get("output") or ""
     decomp  = json.dumps(metrics["decomposition"]) if metrics.get("decomposition") else None
+    rw      = metrics.get("response_worker") or ""
     try:
         conn.execute(
             """
             INSERT OR REPLACE INTO results
                 (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
                  solver, run, pass, status, output_preview, output,
-                 llm_calls, latency_ms, steps, spl_log, decomposition)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 llm_calls, latency_ms, steps, spl_log, decomposition,
+                 response_worker)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
              solver, run, passed, status, preview, output,
-             llm, lat, steps, metrics["spl_log"], decomp),
+             llm, lat, steps, metrics["spl_log"], decomp,
+             rw),
         )
         conn.execute(
             "UPDATE imports SET rows_inserted = rows_inserted + 1 WHERE source_file = ?",
@@ -312,6 +409,7 @@ def stream_run(cmd: list, log_file) -> tuple:
         "latency_ms": "?", "steps": "?", "spl_log": "?",
         "output_preview": "?", "output": "",
         "decomposition": None,
+        "response_worker": "",
     }
     # Track where the current status value came from so lower-priority
     # sources cannot overwrite a better one.
@@ -344,6 +442,7 @@ def stream_run(cmd: list, log_file) -> tuple:
             if in_output and (
                 s.startswith("LLM calls:") or s.startswith("Log:")
                 or s.startswith("Status:") or s.startswith("Output:")
+                or s.startswith("Workers:")
             ):
                 full = "\n".join(output_lines).strip()
                 metrics["output"]         = full
@@ -383,6 +482,9 @@ def stream_run(cmd: list, log_file) -> tuple:
                 if m:
                     metrics["llm_calls"] = m.group(1)
                     metrics["latency_ms"] = m.group(2)
+
+            elif s.startswith("Workers:"):
+                metrics["response_worker"] = s.split(":", 1)[1].strip()
 
             elif s.startswith("Log:"):
                 metrics["spl_log"] = s.split(":", 1)[1].strip()
@@ -684,11 +786,13 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
         with _print_lock:
             completed_count[0] += 1
             outcome = "✓" if passed else "✗"
+            worker_info = f"  worker={metrics['response_worker']}" if metrics.get("response_worker") else ""
             click.echo(
                 f"\n  [{completed_count[0]}/{total}] {cell}"
                 f" → {outcome} {metrics['status']}"
                 f"  llm_calls={metrics['llm_calls']}"
                 f"  latency={metrics['latency_ms']}ms"
+                f"{worker_info}"
             )
         return cell, metrics, passed
 

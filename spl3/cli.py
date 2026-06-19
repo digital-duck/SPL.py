@@ -729,6 +729,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
         click.echo(f"Output:  {result.committed_value or '(no COMMIT)'}")
         click.echo(f"LLM calls: {result.total_llm_calls}  "
                    f"Latency: {result.total_latency_ms:.0f}ms")
+        if result.response_workers:
+            click.echo(f"Workers: {', '.join(sorted(result.response_workers))}")
         log_result = result
 
     else:

@@ -16,6 +16,7 @@ class GenerationResult:
     total_tokens: int
     latency_ms: float
     cost_usd: float | None = None
+    response_worker: str = ""
 
 
 class LLMAdapter(ABC):

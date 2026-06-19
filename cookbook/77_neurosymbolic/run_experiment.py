@@ -15,34 +15,22 @@ Requires: conda activate spl123   (spl3 must be on PATH)
   Sage problems:  pip install 'spl-llm[sage]'
   Lean problems:  bash cookbook/tools/lean/setup_lean.sh --with-mathlib
 
-Momagrid dispatch (Level A — LLM calls routed through Hub):
-  export MOMAGRID_HUB_URL=http://192.168.0.184:9000
-  python cookbook/77_neurosymbolic/run_experiment.py --via-momagrid
-
-Momagrid parallel (Level B — cells dispatched concurrently via Hub):
-  python cookbook/77_neurosymbolic/run_experiment.py --via-momagrid --workers 6
-  # Future: when DBOS Hub DB is available, results flow to global Hub DB
-  # instead of local SQLite, enabling cross-requester global analysis.
-
 Quick start:
   python cookbook/77_neurosymbolic/run_experiment.py --list
   python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p021          # smoke: Galois (sage)
   python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p025          # smoke: Lean citation
   python cookbook/77_neurosymbolic/run_experiment.py -m "m006,m007" -p "p003 p005" --dry-run
   python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p003 --backend sympy
-  python cookbook/77_neurosymbolic/run_experiment.py                          # all models, all problems
+  python cookbook/77_neurosymbolic/run_experiment.py                           # all models, all problems
   python cookbook/77_neurosymbolic/run_experiment.py -s true -s false -r 3    # both solver arms
-  python cookbook/77_neurosymbolic/run_experiment.py -r 1 -p p003 --backend sympy -s true    # test a single cell with the solver arm and sympy backend
+  python cookbook/77_neurosymbolic/run_experiment.py -p p003 --backend sympy -s true -r 1    # test a single cell with the solver arm and sympy backend
 """
 
 import json
-import os
 import re
 import socket
 import sqlite3
 import subprocess
-import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
 
@@ -486,17 +474,8 @@ def stream_run(cmd: list, log_file) -> tuple:
               help="Print all available model and problem IDs, then exit.")
 @click.option("--dry-run", is_flag=True,
               help="Show the commands that would run without executing them.")
-@click.option("--via-momagrid", "-M", is_flag=True,
-              help="Level A: route all LLM calls through the Momagrid hub. "
-                   "Replaces each model adapter with momagrid:<label>. "
-                   "Hub URL from MOMAGRID_HUB_URL env var.")
-@click.option("--workers", "-w", default=1, show_default=True,
-              help="Level B: number of cells to run concurrently. "
-                   "Requires --via-momagrid. Uses ThreadPoolExecutor; "
-                   "each worker holds its own SQLite connection. "
-                   "Future: cells will flow to Hub DB (DBOS) for global analysis.")
 def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
-         db, show_list, dry_run, via_momagrid, workers):
+         db, show_list, dry_run):
     """Run the Recipe-77 neurosymbolic experiment across up to 5 axes:
     problems (Axis 1), models (Axis 2), solver on/off (Axis 3),
     repetitions (Axis 4), and the backend override (Axis 5).
@@ -510,9 +489,6 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
             flag = "  [disabled]" if pid in DISABLED_PROBLEMS else ""
             click.echo(f"  {pid:<6}  [{tier}/{pbackend:<5}]  {text[:58]}{flag}")
         return
-
-    if workers > 1 and not via_momagrid:
-        raise click.UsageError("--workers > 1 requires --via-momagrid (-M).")
 
     # Expand comma/space-delimited input before any validation or selection
     model_ids    = parse_ids(model_ids)
@@ -539,17 +515,6 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                     if (not problem_ids or k in problem_ids)
                     and (problem_ids or k not in DISABLED_PROBLEMS)}
 
-    # Level A: build per-model adapter strings.
-    # --via-momagrid replaces each adapter with momagrid:<label>, routing
-    # every LLM call through the Hub.  The Hub selects a worker node by model
-    # name; set MOMAGRID_HUB_URL before running.
-    def effective_adapter(label: str, orig_adapter: str) -> str:
-        if not via_momagrid:
-            return orig_adapter
-        # Strip any existing "provider:" prefix; the Hub resolves by model label.
-        model_name = label
-        return f"momagrid:{model_name}"
-
     use_solver_param = "symbolic_math" in script
     total = len(sel_models) * len(sel_problems) * len(solver_modes) * runs
 
@@ -560,15 +525,10 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     click.echo(f"Backend      : {backend or 'per-problem default'}")
     click.echo(f"Runs/cell    : {runs}")
     click.echo(f"Total cells  : {total}")
-    if via_momagrid:
-        hub_url = os.environ.get("MOMAGRID_HUB_URL", "http://localhost:9000")
-        dispatch = f"Level B — {workers} parallel workers" if workers > 1 else "Level A — sequential"
-        click.echo(f"Momagrid     : {hub_url}  [{dispatch}]")
 
     if dry_run:
         click.echo("\n--- DRY RUN ---")
-        for mid, (label, orig_adapter, _) in sel_models.items():
-            adapter = effective_adapter(label, orig_adapter)
+        for mid, (label, adapter, _) in sel_models.items():
             for pid, (tier, pbackend, problem) in sel_problems.items():
                 cell_backend = backend or pbackend
                 for solver_mode in solver_modes:
@@ -590,9 +550,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     source_file = f"exp-{timestamp}"
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 
-    # Open DB and register this experiment run.
-    # Level B uses per-thread connections; the shared connection here is only
-    # used for the initial import record and the sequential fallback.
+    # Open DB and register this experiment run
     db_conn = init_db(db)
     db_conn.execute(
         """INSERT OR IGNORE INTO imports
@@ -606,131 +564,79 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     click.echo(f"Log          : {log_path}")
     click.echo(f"DB           : {db}  (source={source_file})\n")
 
-    # Build the full cell list so Level B can dispatch them in any order.
-    cells = [
-        (mid, label, effective_adapter(label, orig_adapter), provider,
-         pid, tier, pbackend, problem, solver_mode, run_no)
-        for mid, (label, orig_adapter, provider) in sel_models.items()
-        for pid, (tier, pbackend, problem) in sel_problems.items()
-        for solver_mode in solver_modes
-        for run_no in range(1, runs + 1)
-    ]
-
-    # Thread-safety: each worker opens its own SQLite connection (WAL mode is
-    # not required — per-thread connections avoid all locking contention).
-    _print_lock = threading.Lock()
-    completed_count = [0]   # mutable int shared across threads
-
-    def run_cell(cell_args: tuple) -> tuple:
-        """Execute one (model × problem × solver × run) cell.
-
-        Returns (cell_label, metrics, passed) for the caller to tally.
-        Each invocation opens and closes its own SQLite connection so that
-        Level B parallel dispatch never shares a connection across threads.
-        """
-        (mid, label, adapter, provider,
-         pid, tier, pbackend, problem, solver_mode, run_no) = cell_args
-
-        cell_backend = backend or pbackend
-        cell = (f"[{pid}/{mid}] backend={cell_backend}"
-                f" solver={solver_mode} run={run_no}")
-
-        cmd = ["spl3", "run", script, "--kernel",
-               "--llm", adapter,
-               "--param", f"problem={problem}",
-               "--param", f"hostname={hostname}"]
-        if use_solver_param:
-            cmd += ["--param", f"backend={cell_backend}",
-                    "--param", f"enable_solver={solver_mode}"]
-
-        extra_md = (f" \\\n   --param backend={cell_backend}"
-                    f" \\\n   --param enable_solver={solver_mode}"
-                    if use_solver_param else "")
-
-        # Per-thread log append (coarse — block while writing the header).
-        with _print_lock:
-            click.echo(f"\n{'='*54}")
-            click.echo(f" {cell}")
-            click.echo(f" {label} ({provider})")
-            click.echo(f" Problem ({tier}): {problem[:65]}")
-            click.echo(f"{'='*54}")
-
-        # Write the markdown log header for this cell.
-        with _print_lock:
-            with open(log_path, "a") as log:
-                log.write(
-                    f"\n## {label} ({provider})"
-                    f" — backend={cell_backend}"
-                    f" — solver={solver_mode} — run {run_no}\n\n"
-                    f"_Tier: {tier} | Problem ID: `{pid}` | Host: `{hostname}`_\n\n"
-                    f"```bash\n"
-                    f"(spl123) $ spl3 run {script} --kernel --llm {adapter} \\\n"
-                    f'   --param problem="{problem}" \\\n'
-                    f'   --param hostname="{hostname}"{extra_md}\n'
-                    f"```\n\n```output\n"
-                )
-
-        # Run the cell; stream output to console + a per-cell buffer.
-        import io
-        cell_log = io.StringIO()
-        _, metrics = stream_run(cmd, cell_log)
-        cell_output = cell_log.getvalue()
-
-        with _print_lock:
-            with open(log_path, "a") as log:
-                log.write(cell_output)
-                log.write("```\n\n")
-
-        # Persist via a fresh per-thread connection.
-        thread_conn = init_db(db)
-        write_cell_to_db(
-            thread_conn, source_file,
-            pid, mid, label, tier, cell_backend, problem,
-            solver_mode, run_no, metrics,
-            hostname=hostname,
-        )
-        thread_conn.close()
-
-        passed = cell_is_pass(metrics["status"], solver_mode, cell_backend)
-        with _print_lock:
-            completed_count[0] += 1
-            outcome = "✓" if passed else "✗"
-            click.echo(
-                f"\n  [{completed_count[0]}/{total}] {cell}"
-                f" → {outcome} {metrics['status']}"
-                f"  llm_calls={metrics['llm_calls']}"
-                f"  latency={metrics['latency_ms']}ms"
-            )
-        return cell, metrics, passed
-
     with open(log_path, "w") as log:
         log.write(f"# Recipe-77 experiment run {timestamp}\n\n"
                   f"DB source: `{source_file}`\n\n")
 
-    if workers > 1:
-        # Level B: parallel cell dispatch via ThreadPoolExecutor.
-        # Each thread runs one cell; all write to the same SQLite file via
-        # independent connections (safe; SQLite serialises writes internally).
-        # TODO (DBOS): replace thread_conn with Hub DB writes when the
-        #   Momagrid Hub exposes a DBOS-backed results endpoint, so that
-        #   results from multiple requesters aggregate into a global DB.
-        with ThreadPoolExecutor(max_workers=workers) as pool:
-            futures = {pool.submit(run_cell, c): c for c in cells}
-            for fut in as_completed(futures):
-                try:
-                    fut.result()
-                except Exception as exc:
-                    c = futures[fut]
-                    click.echo(f"\n  [ERROR] cell {c[0]}/{c[4]} failed: {exc}", err=True)
-    else:
-        # Sequential path (Level A or no Momagrid).
-        for cell_args in cells:
-            run_cell(cell_args)
+        completed = 0
+        for mid, (label, adapter, provider) in sel_models.items():
+            for pid, (tier, pbackend, problem) in sel_problems.items():
+                cell_backend = backend or pbackend
+                for solver_mode in solver_modes:
+                    for run_no in range(1, runs + 1):
+
+                        cell = (f"[{pid}/{mid}] backend={cell_backend}"
+                                f" solver={solver_mode} run={run_no}")
+                        click.echo(f"\n{'='*54}")
+                        click.echo(f" {cell}")
+                        click.echo(f" {label} ({provider})")
+                        click.echo(f" Problem ({tier}): {problem[:65]}")
+                        click.echo(f"{'='*54}")
+
+                        # --kernel: the lean arm keeps its REPL state in the
+                        # persistent kernel session; harmless for the chain
+                        # backends, so it is passed uniformly.
+                        cmd = ["spl3", "run", script, "--kernel",
+                               "--llm", adapter,
+                               "--param", f"problem={problem}",
+                               "--param", f"hostname={hostname}"]
+                        if use_solver_param:
+                            cmd += ["--param", f"backend={cell_backend}",
+                                    "--param", f"enable_solver={solver_mode}"]
+
+                        extra_md = (f" \\\n   --param backend={cell_backend}"
+                                    f" \\\n   --param enable_solver={solver_mode}"
+                                    if use_solver_param else "")
+                        log.write(
+                            f"\n## {label} ({provider})"
+                            f" — backend={cell_backend}"
+                            f" — solver={solver_mode} — run {run_no}\n\n"
+                            f"_Tier: {tier} | Problem ID: `{pid}` | Host: `{hostname}`_\n\n"
+                            f"```bash\n"
+                            f"(spl123) $ spl3 run {script} --kernel --llm {adapter} \\\n"
+                            f'   --param problem="{problem}" \\\n'
+                            f'   --param hostname="{hostname}"{extra_md}\n'
+                            f"```\n\n```output\n"
+                        )
+                        log.flush()
+
+                        _, metrics = stream_run(cmd, log)
+                        log.write("```\n\n")
+                        log.flush()
+
+                        # Persist to DB — single source of truth for analysis
+                        write_cell_to_db(
+                            db_conn, source_file,
+                            pid, mid, label, tier, cell_backend, problem,
+                            solver_mode, run_no, metrics,
+                            hostname=hostname,
+                        )
+
+                        completed += 1
+                        passed = cell_is_pass(metrics["status"], solver_mode,
+                                              cell_backend)
+                        outcome = "✓" if passed else "✗"
+                        click.echo(
+                            f"\n  [{completed}/{total}] {cell}"
+                            f" → {outcome} {metrics['status']}"
+                            f"  llm_calls={metrics['llm_calls']}"
+                            f"  latency={metrics['latency_ms']}ms"
+                        )
 
     db_conn.close()
 
     click.echo(f"\n{'='*54}")
-    click.echo(f" Done — {completed_count[0]}/{total} run(s) completed.")
+    click.echo(f" Done — {completed}/{total} run(s) completed.")
     click.echo(f" Log : {log_path}")
     click.echo(f" DB  : {db}  (source={source_file})")
     click.echo(f"{'='*54}")

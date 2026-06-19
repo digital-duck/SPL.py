@@ -71,6 +71,7 @@ class WorkflowResult:
     total_cost_usd: float = 0.0
     committed_value: str | None = None
     committed_options: dict[str, str] = field(default_factory=dict)
+    response_workers: set[str] = field(default_factory=set)
 
 
 # ================================================================
@@ -190,6 +191,7 @@ class WorkflowState:
         self.total_output_tokens: int = 0
         self.total_latency_ms: float = 0
         self.total_cost_usd: float = 0.0
+        self.response_workers: set[str] = set()
         
         # RETRY overrides (temporary for the current statement attempt)
         self.current_overrides: dict[str, str] = {}
@@ -226,6 +228,8 @@ class WorkflowState:
         self.total_output_tokens += result.output_tokens
         self.total_latency_ms += result.latency_ms
         self.total_cost_usd += result.cost_usd or 0.0
+        if result.response_worker:
+            self.response_workers.add(result.response_worker)
 
 
 # ================================================================
@@ -703,6 +707,7 @@ class Executor:
             total_cost_usd=state.total_cost_usd,
             committed_value=state.committed_value,
             committed_options=state.committed_options,
+            response_workers=set(state.response_workers),
         )
 
     async def _execute_body(self, stmts: list, state: WorkflowState):
@@ -1316,6 +1321,7 @@ class Executor:
         state.total_output_tokens += proc_state.total_output_tokens
         state.total_latency_ms += proc_state.total_latency_ms
         state.total_cost_usd += proc_state.total_cost_usd
+        state.response_workers |= proc_state.response_workers
 
         if stmt.target_variable and stmt.target_variable not in ("NONE", "_") and proc_state.committed_value:
             state.set_var(stmt.target_variable, proc_state.committed_value)

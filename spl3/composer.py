@@ -25,7 +25,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from spl3.status import raise_if_failed
 
@@ -41,6 +41,7 @@ class SubWorkflowResult:
     status: str
     latency_ms: float
     total_llm_calls: int
+    response_workers: set[str] = field(default_factory=set)
 
 
 class WorkflowComposer:
@@ -105,6 +106,7 @@ class WorkflowComposer:
             status=result.status,
             latency_ms=latency,
             total_llm_calls=result.total_llm_calls,
+            response_workers=set(result.response_workers),
         )
 
     async def call_parallel(

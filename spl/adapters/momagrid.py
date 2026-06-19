@@ -194,6 +194,7 @@ class MomagridAdapter(LLMAdapter):
             total_tokens=input_tokens + output_tokens,
             latency_ms=latency_ms,
             cost_usd=0.0,  # Momagrid uses reward credits, not USD
+            response_worker=result.get("agent_name", ""),
         )
 
     async def _poll_task(self, task_id: str) -> dict:

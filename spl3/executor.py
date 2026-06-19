@@ -728,6 +728,7 @@ class SPL3Executor(SPL2Executor):
             state.set_var(sub_result.output_var, sub_result.output_value)
             state.total_llm_calls += sub_result.total_llm_calls
             state.total_latency_ms += sub_result.latency_ms
+            state.response_workers |= sub_result.response_workers
 
     # ------------------------------------------------------------------ #
     # CALL statement — registry-aware override with self-healing           #
@@ -816,6 +817,7 @@ class SPL3Executor(SPL2Executor):
                     state.set_var(into_var, sub_result.output_value)
                 state.total_llm_calls += sub_result.total_llm_calls
                 state.total_latency_ms += sub_result.latency_ms
+                state.response_workers |= sub_result.response_workers
                 return
 
         await super()._exec_call(stmt, state)
