@@ -1,6 +1,9 @@
 #!/bin/bash
 # Pull all ollama models required for recipe-77 experiments
 
+
+# sudo chown -R ollama:ollama /usr/share/ollama/.ollama/models/
+
 set -e
 
 # Models extracted from run_experiment.py MODELS dict (excluding claude_cli)
