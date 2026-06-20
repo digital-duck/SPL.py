@@ -46,6 +46,8 @@ dependencies = [
     # Jupyter kernel management (required by spl3 run for kernelspec detection)
     "jupyter_client>=8.0",
     "ipykernel>=6.0",
+    # symbolic math (used by SOLVE/ASSERT kernel expressions)
+    "sympy>=1.12",
 ]
 
 [project.optional-dependencies]

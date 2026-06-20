@@ -187,20 +187,36 @@ One idempotent script provisions everything, pinned to `v4.30.0`
 (the pin must match `REPL_REVISION` in `spl3/lean_bridge.py` — the script
 and the bridge are kept in sync in-repo):
 
+> **macOS note:** macOS does not create a group named after your username
+> (unlike Linux). Use `$(id -gn)` for the group — it resolves to your
+> primary group (typically `staff`). The command below already does this.
+> Also substitute `~/.zshrc` for `~/.bashrc` if your shell is zsh
+> (the macOS default since Catalina).
+
 ```bash
 # One-time: create a user-owned home for the Lean stack on the big HDD.
 # (/opt is root-owned; this is the only sudo in the whole Lean setup.)
-sudo install -d -o "$USER" -g "$USER" /opt/lean
+sudo install -d -o "$USER" -g "$(id -gn)" /opt/lean
 
 # Direct the entire Lean stack (~10 GB) to /opt/lean. These three variables
 # are read by setup_lean.sh at INSTALL time and by spl3/lean_bridge.py at
-# RUN time, so they must be set in every shell — persist them in ~/.bashrc:
+# RUN time, so they must be set in every shell — persist them in ~/.bashrc
+# (Linux) :
 cat >> ~/.bashrc <<'EOF'
 export ELAN_HOME=/opt/lean/elan
+export PATH="$ELAN_HOME/bin:$PATH"
 export SPL_LEAN_REPL_DIR=/opt/lean/repl
 export SPL_LEAN_PROJECT_DIR=/opt/lean/spl_lean
 EOF
 source ~/.bashrc
+
+# (macOS)
+cat >> ~/.zshrc <<'EOF'
+export ELAN_HOME=/opt/lean/elan
+export SPL_LEAN_REPL_DIR=/opt/lean/repl
+export SPL_LEAN_PROJECT_DIR=/opt/lean/spl_lean
+EOF
+source ~/.zshrc
 # (Skip this block entirely to use the legacy layout: ~/.elan plus
 #  in-repo cookbook/tools/lean/ — fine when /home is on the HDD.)
 
@@ -276,8 +292,16 @@ is live on the machine.
 
 - **`spl3: command not found`** — the env isn't activated; `conda activate
   spl123` first (never call the binary by absolute path).
+- **macOS: `install: unknown group <username>`** — macOS does not auto-create
+  a group named after your username. Replace `-g "$USER"` with `-g "$(id -gn)"`
+  (resolves to your primary group, usually `staff`):
+  `sudo install -d -o "$USER" -g "$(id -gn)" /opt/lean`
 - **`lake build` is slow the first time** — it is downloading a toolchain;
   subsequent runs of `setup_lean.sh` are near-instant (idempotent).
+- **`lake: command not found`** — `$ELAN_HOME/bin` is not on PATH in that
+  shell. Fix: `export PATH="/opt/lean/elan/bin:$PATH"` for the session, or
+  add `export PATH="$ELAN_HOME/bin:$PATH"` to `~/.zshrc` / `~/.bashrc`
+  (after the `ELAN_HOME` export) and reload.
 - **Lean smoke run fails with "repl not found"** — the error message itself
   carries the setup command; it means §6 stage 1 hasn't run on this machine.
 - **Lean works in one shell but not another (after the `/opt/lean` layout)** —
@@ -287,6 +311,11 @@ is live on the machine.
 - **Sage kernel missing under `--kernel-name sagemath`** — `spl3 run` fails
   fast with the registration command (§5); the in-process route (recipe 77)
   works without it.
+- **mathlib cache download times out** — `lake exe cache get` downloads ~8459
+  files from Azure CDN and can time out on a few of them. The script now
+  retries automatically (up to 3×). If it still fails, re-run manually:
+  `cd /opt/lean/spl_lean && lake exe cache get && lake build` — already-
+  downloaded files are kept; only the missing ones are fetched.
 - **mathlib warm-up per process** — the first Lean check in a run pays the
   mathlib import (10–40 s); every later check in the same run branches off
   the warm environment.

@@ -22,6 +22,13 @@
 # ============================================================
 set -euo pipefail
 
+# macOS (BSD sed) requires -i '' for in-place editing; GNU sed accepts -i alone.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    sedi() { sed -i '' "$@"; }
+else
+    sedi() { sed -i "$@"; }
+fi
+
 REPL_REVISION="v4.30.0"          # keep in sync with spl3/lean_bridge.py
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WITH_MATHLIB=0
@@ -65,10 +72,20 @@ if [[ "$WITH_MATHLIB" == 1 ]]; then
     if ! grep -q '^\[\[require\]\]' "$PROJECT_DIR/lakefile.toml"; then
         echo "[setup_lean] enabling mathlib require (pinned $REPL_REVISION) ..."
         # Uncomment the pinned [[require]] block scaffolded in lakefile.toml
-        sed -i 's/^# *\(\[\[require\]\]\)/\1/; s/^# *\(name = "mathlib"\)/\1/; s/^# *\(scope = "leanprover-community"\)/\1/; s/^# *\(rev = .*\)/\1/' \
+        sedi 's/^# *\(\[\[require\]\]\)/\1/; s/^# *\(name = "mathlib"\)/\1/; s/^# *\(scope = "leanprover-community"\)/\1/; s/^# *\(rev = .*\)/\1/' \
             "$PROJECT_DIR/lakefile.toml"
     fi
-    ( cd "$PROJECT_DIR" && lake update mathlib && lake exe cache get && lake build )
+    # lake exe cache get can time out on flaky CDN connections; retry up to 3 times.
+    (
+        cd "$PROJECT_DIR"
+        lake update mathlib
+        for attempt in 1 2 3; do
+            echo "[setup_lean] lake exe cache get (attempt $attempt/3) ..."
+            lake exe cache get && break
+            [[ $attempt -lt 3 ]] && echo "[setup_lean] retrying in 5 s ..." && sleep 5
+        done
+        lake build
+    )
     echo "[setup_lean] mathlib ready — start the bridge with imports=['Mathlib']"
 fi
 

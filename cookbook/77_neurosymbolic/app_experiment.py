@@ -158,6 +158,23 @@ def fmt_lat(v) -> str:
     return f"{v/1000:.1f}s" if pd.notna(v) and v is not None else "?"
 
 
+@st.dialog("Confirm deletion")
+def _confirm_delete_run(source_file: str) -> None:
+    st.warning(f"Delete run **`{source_file}`**?")
+    st.caption("This permanently removes all result rows for this run from the database.")
+    c1, c2 = st.columns(2)
+    with c1:
+        if st.button("Yes, delete", type="primary", use_container_width=True):
+            with get_conn() as conn:
+                conn.execute("DELETE FROM results WHERE source_file=?", (source_file,))
+                conn.execute("DELETE FROM imports  WHERE source_file=?", (source_file,))
+            st.cache_data.clear()
+            st.rerun()
+    with c2:
+        if st.button("Cancel", use_container_width=True):
+            st.rerun()
+
+
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -272,7 +289,7 @@ def main() -> None:
                     "duration":     duration,
                 })
             runs_display = pd.DataFrame(exp_rows)
-            st.caption(f"{len(runs_display)} runs  · click a row to select for deletion")
+            st.caption(f"{len(runs_display)} runs  · click a row to see details")
             runs_sel = st.dataframe(  # pyright: ignore[reportCallIssue]
                 runs_display, hide_index=True, use_container_width=True,
                 on_select="rerun", selection_mode="single-row",
@@ -281,16 +298,38 @@ def main() -> None:
                                  if runs_sel and hasattr(runs_sel, "selection") else [])
             if selected_run_rows:
                 run_row_idx = selected_run_rows[0]
-                to_del = str(cast(pd.Series, runs_display["source"]).iloc[run_row_idx])
+                sel_row = cast(pd.Series, runs_display.iloc[run_row_idx])
+                to_del  = str(sel_row["source"])
+
                 st.divider()
-                st.caption(f"Selected: **{to_del}**  — removes all result rows for this run.")
-                if st.button("Delete run", type="secondary"):
-                    with get_conn() as conn:
-                        conn.execute("DELETE FROM results WHERE source_file=?", (to_del,))
-                        conn.execute("DELETE FROM imports WHERE source_file=?", (to_del,))
-                    st.success(f"Deleted: {to_del}")
-                    st.cache_data.clear()
-                    st.rerun()
+                st.markdown(f"**Selected run:** `{to_del}`")
+
+                # ── Attribute grid ────────────────────────────────────────────
+                a1, a2, a3, a4 = st.columns(4)
+                a1.metric("Planned",     sel_row.get("planned", "—"))
+                a2.metric("Recorded",    sel_row.get("recorded", "—"))
+                a3.metric("Passed",      sel_row.get("passed", "—"))
+                a4.metric("Pass rate",   sel_row.get("pass_rate", "—"))
+
+                b1, b2, b3, b4 = st.columns(4)
+                b1.metric("Solver pass", sel_row.get("solver_pass", "—"))
+                b2.metric("Duration",    sel_row.get("duration", "—"))
+                b3.metric("Hostname",    sel_row.get("hostname", "—") or "—")
+                b4.metric("Backends",    sel_row.get("backends", "—") or "—")
+
+                c1, c2 = st.columns(2)
+                c1.text_input("Started at",  value=str(sel_row.get("started_at") or "—"),
+                              disabled=True, key="run_started")
+                c2.text_input("Stopped at",  value=str(sel_row.get("stopped_at") or "—"),
+                              disabled=True, key="run_stopped")
+
+                log_val = str(sel_row.get("log_path") or "—")
+                st.text_input("Log path", value=log_val, disabled=True, key="run_log")
+
+                # ── Delete at the end with confirmation dialog ─────────────
+                st.divider()
+                if st.button("Delete run", type="secondary", key="btn_del_run"):
+                    _confirm_delete_run(to_del)
 
     # ── Results ────────────────────────────────────────────────────────────────
     with tab_res:
