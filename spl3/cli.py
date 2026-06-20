@@ -12,9 +12,15 @@ Commands:
 import asyncio
 import logging
 from datetime import datetime
+from importlib.metadata import version as _pkg_version
 from pathlib import Path
 
 import click
+
+try:
+    _SPL_VERSION = _pkg_version("spl-llm")
+except Exception:
+    _SPL_VERSION = "unknown"
 
 _log = logging.getLogger("spl.cli")
 
@@ -90,7 +96,11 @@ def _write_run_log(
     return log_path
 
 
-@click.group()
+@click.group(
+    help=f"SPL 3.0 — Declarative Structured Prompt Language (v{_SPL_VERSION}).",
+    context_settings=dict(terminal_width=120),
+)
+@click.version_option(_SPL_VERSION, "--version", "-V", prog_name="spl3")
 @click.option("--hub", default=None, envvar="SPL3_HUB", help="Momagrid Hub URL")
 @click.option("--verbose", "-v", is_flag=True)
 @click.pass_context
