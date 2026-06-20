@@ -43,7 +43,8 @@ harness scores proof-grade outcomes honestly.
 |---|---|
 | `sympolic_tools.spl` | Shared TOOL_API + FUNCTION library — both chain kernels (`solve_step_with_sympy`, `solve_step_with_sage`, same `<bare>\|<readable>` protocol and `solver_error` sentinel), Lean helpers (`strip_fences`, `make_theorem`, `lean_report`), and all LLM prompt templates (decompose/explain/solve-directly + the mathlib formalize/judge/tactics set) |
 | `symbolic_math.spl` | The workflow: `neurosymbolic_solver` routes on `@backend` (sympy \| sage \| lean) and `@enable_solver` (verified arm vs LLM-only baseline); `solve_chain_step` dispatches one chain step to the chosen engine |
-| `run_experiment.py` | CLI harness (cloned from recipe 67): problems × models × solver × runs, with a per-problem default backend and a `--backend` override axis; results in SQLite |
+| `run_experiment.py` | CLI harness: problems × models × solver × runs, sequential; m001–m010 including claude_cli reference; results in SQLite |
+| `run_experiment_momagrid.py` | Distributed variant: routes LLM calls through Momagrid Hub, parallel cell dispatch via `--workers N`; auto-skips non-ollama models (m001); same SQLite DB |
 | `run_experiment.sh` | Thin driver: activates `spl123`, forwards to `run_experiment.py` (env-var presets `MODELS` / `PROBLEMS` / `SOLVER_MODES` / `BACKEND` / `N_RUNS` still work, recipe-67 style) |
 
 ## The problem battery
@@ -106,6 +107,88 @@ python cookbook/77_neurosymbolic/run_experiment.py -m "m001,m010"   # full batte
 # or via the driver (recipe-67 style env presets)
 MODELS=m001 PROBLEMS=p025 bash cookbook/77_neurosymbolic/run_experiment.sh
 ```
+
+## Running on Mac Mini over Momagrid (distributed grid)
+
+`run_experiment_momagrid.py` is the distributed variant of the harness.
+It routes all LLM inference through a [Momagrid Hub](https://github.com/digital-duck/momagrid)
+and dispatches cells concurrently across GPU worker nodes, reducing wall-clock
+time from ~60 min (sequential) to ~20 min with 3 workers.
+
+### Setup
+
+**On the Mac Mini (requester / orchestrator):**
+```bash
+conda activate spl123
+export MOMAGRID_HUB_URL=http://<hub-ip>:9000   # persist in ~/.zshrc
+```
+The Mac Mini orchestrates all workflow logic — SPL executor, IPython kernel
+(SymPy / Sage / Lean), SQLite writes. It never runs model inference.
+
+**On each GPU worker node** (only Ollama + model weights required):
+```bash
+# worker nodes do NOT need sympy, sage, or lean installed
+ollama serve
+# register with the Hub so it can dispatch to this node
+```
+
+### Architecture
+
+```
+Mac Mini (requester)
+  ├── SPL executor    — WHILE / EVALUATE / CALL orchestration
+  ├── IPython kernel  — SymPy / Sage / Lean solver logic
+  ├── SQLite writer   — experiment_results.db
+  └── spl3 subproc ──► Momagrid Hub ──► GPU node A (gemma3, qwen2.5, ...)
+                                    ──► GPU node B (phi4, llama3.2, ...)
+                                    ──► GPU node C (rnj-1, deepseek-v2, ...)
+```
+
+Each `spl3 run` subprocess runs its workflow locally; only `GENERATE` nodes
+(the LLM calls) are routed through the Hub to a worker that has the requested
+model loaded.
+
+### Model roster
+
+`m001` (claude_cli / sonnet-4-6) is **excluded automatically** — momagrid
+workers only serve Ollama inference. `m001` runs in `run_experiment.py`
+(sequential) as the reference ceiling. The momagrid run covers the 9
+open-source models (`m002`–`m010`), which is the actual subject of measurement.
+
+| Run script | Models | Purpose |
+|---|---|---|
+| `run_experiment.py` | m001–m010 (10) | Sequential baseline; sonnet sets the reference ceiling |
+| `run_experiment_momagrid.py` | m002–m010 (9) | Grid run; open-source models, parallelised across GPUs |
+
+### Commands
+
+```bash
+# Smoke test — 1 model, 1 problem, dry run
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py \
+    -m m002 -p p003 --dry-run
+
+# Verify 360-cell plan (9 models × 20 problems × 2 arms)
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py --dry-run
+
+# Launch — 3 workers (one per GPU node)
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 3
+
+# Override backend for the whole run (e.g. re-score on SymPy rung)
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 3 --backend sympy
+
+# Disable momagrid — fall back to local Ollama (sequential)
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py --no-momagrid
+```
+
+Results are written to the same `experiment_results.db` as `run_experiment.py`,
+so `app_experiment.py` shows both runs side-by-side for direct sonnet vs.
+open-source comparison.
+
+### Expected timing (3 GPU workers)
+
+| Sequential (`run_experiment.py`) | Momagrid 3× (`run_experiment_momagrid.py`) |
+|---|---|
+| 400 cells, ~60 min | 360 cells, ~20 min (~3× speedup) |
 
 ## Streamlit Dashboard
 

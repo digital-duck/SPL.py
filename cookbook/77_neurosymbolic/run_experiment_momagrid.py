@@ -9,8 +9,12 @@ and workers > 1 enables parallel cell dispatch (Level B).
 
 Key differences from run_experiment.py:
   - --via-momagrid is enabled by default (use --no-momagrid to disable)
-  - --workers defaults to 6 (highly tuned for typical LAN grids; adjust per your hardware)
-  - Results still flow to local SQLite DB for immediate analysis
+  - --workers defaults to 6 (tune to your GPU count; 3 workers = 1 cell/GPU)
+  - Non-ollama models (m001 / claude_cli) are skipped automatically — momagrid
+    workers only serve Ollama inference.  claude_cli is intentionally excluded:
+    it serves as a reference ceiling in run_experiment.py (sequential), while
+    this script measures the 9 open-source models under grid conditions.
+  - Results still flow to the same local SQLite DB for unified analysis
 
 Run with:
   export MOMAGRID_HUB_URL=http://192.168.0.184:9000
@@ -117,6 +121,7 @@ Each cell records two host identities:
   adapter is not Momagrid and GenerationResult.response_worker is "".
 """
 
+import io
 import json
 import os
 import re
@@ -631,15 +636,23 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                     and (problem_ids or k not in DISABLED_PROBLEMS)}
 
     # Level A: build per-model adapter strings.
-    # Momagrid is ENABLED by default; replaces each adapter with momagrid:<label>,
-    # routing every LLM call through the Hub. The Hub selects a worker node by model
-    # name; set MOMAGRID_HUB_URL before running.
+    # Momagrid is ENABLED by default; replaces each ollama adapter with
+    # momagrid:<label>, routing every LLM call through the Hub.
+    # Non-ollama models (e.g. claude_cli) cannot run on momagrid workers
+    # and are excluded from the run entirely when --momagrid is active.
     def effective_adapter(label: str, orig_adapter: str) -> str:
-        if not via_momagrid:
+        if not via_momagrid or not orig_adapter.startswith("ollama"):
             return orig_adapter
-        # Strip any existing "provider:" prefix; the Hub resolves by model label.
-        model_name = label
-        return f"momagrid:{model_name}"
+        return f"momagrid:{label}"
+
+    if via_momagrid:
+        skipped = {k: v for k, v in sel_models.items()
+                   if not v[1].startswith("ollama")}
+        if skipped:
+            labels = ", ".join(f"{k} ({v[0]}/{v[1]})" for k, v in skipped.items())
+            click.echo(f"Skipping (non-ollama, incompatible with momagrid): {labels}")
+        sel_models = {k: v for k, v in sel_models.items()
+                      if v[1].startswith("ollama")}
 
     use_solver_param = "symbolic_math" in script
     total = len(sel_models) * len(sel_problems) * len(solver_modes) * runs
@@ -738,16 +751,13 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                     f" \\\n   --param enable_solver={solver_mode}"
                     if use_solver_param else "")
 
-        # Per-thread log append (coarse — block while writing the header).
+        # Print console header and write markdown log header atomically.
         with _print_lock:
             click.echo(f"\n{'='*54}")
             click.echo(f" {cell}")
             click.echo(f" {label} ({provider})")
             click.echo(f" Problem ({tier}): {problem[:65]}")
             click.echo(f"{'='*54}")
-
-        # Write the markdown log header for this cell.
-        with _print_lock:
             with open(log_path, "a") as log:
                 log.write(
                     f"\n## {label} ({provider})"
@@ -762,7 +772,6 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                 )
 
         # Run the cell; stream output to console + a per-cell buffer.
-        import io
         cell_log = io.StringIO()
         _, metrics = stream_run(cmd, cell_log)
         cell_output = cell_log.getvalue()
@@ -821,9 +830,9 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     click.echo(f" Log : {log_path}")
     click.echo(f" DB  : {db}  (source={source_file})")
     click.echo(f"{'='*54}\n")
-    click.echo(f"📊 Wall-clock time and throughput analysis:")
-    click.echo(f"   Compare this run's duration against run_experiment.py (sequential)")
-    click.echo(f"   Expected speedup with {workers} workers: ~{max(1, 10//workers)}x faster")
+    click.echo(f"Wall-clock analysis:")
+    click.echo(f"   Compare this run's duration against run_experiment.py (sequential).")
+    click.echo(f"   Expected speedup with {workers} workers: ~{workers}x faster")
 
 
 if __name__ == "__main__":
