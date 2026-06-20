@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transport | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="transport">Transport</h2>
+<p>Transport is a fundamental concept in mathematics, particularly in calculus and analysis. It refers to the process of moving or transforming a quantity from one place to another while preserving its essential properties.</p>
+<p>Formally, given two metric spaces (X, d_X) and (Y, d_Y), a transport map T: X ↦ Y is a measurable function such that for every x ∈ X and y ∈ Y, we have:</p>
+<p>d_X(x, x') = d_Y(T(x), T(x'))</p>
+<p>This equation represents the preservation of distances under the transformation T. The set of all transport maps between two metric spaces (X, d_X) and (Y, d_Y) is denoted by C(X, Y).</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the case where X = [0, 1] ⊂ ℝ with the standard Euclidean distance d_X(x, y) = |x - y|, and Y = [0, 1] ⊂ ℝ with d_Y(u, v) = |u - v|. We want to find a transport map T: [0, 1] ↦ [0, 1] such that the following condition is satisfied:</p>
+<p>d_X(x, x') = d_Y(T(x), T(x'))</p>
+<p>Let's assume that T(x) = ax + (1-a)x' for some fixed x' ∈ Y. Then we can write:</p>
+<p>d_X(x, x') = |x - x'| = |a x + (1-a)x' - a x| = |(1-a)(x-x')|</p>
+<p>d_Y(T(x), T(x')) = |ax + (1-a)x' - ax| = |(1-a)(x'-x)|</p>
+<p>We want to find the value of a such that:</p>
+<p>|(1-a)(x-x')| = |(1-a)(x'-x)|</p>
+<p>This is true for all x, x' ∈ [0, 1] if and only if a = 1/2. Therefore, the transport map T(x) = (1/2)x + (1/2)x' satisfies the required condition.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The Kantorovich-Rubinstein theorem states that for any two metric spaces (X, d_X), (Y, d_Y), and any measurable function f: X ↦ Y, there exists a transport map T: X ↦ Y such that:</p>
+<p>f(x) = min_f(y)f(T^{-1}(y))</p>
+<p>where f^(-1) denotes the inverse of f.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the variables and function
+x, x_prime, y, a = sp.symbols('x x\' y a')
+
+# Calculate the distances
+dx = sp.Abs(x - x')
+dy_T = sp.Abs(a*x + (1-a)*x' - a*x)
+dy_x_prime = sp.Abs(x' - x)
+
+# Equate the distances using sympy's Eq function
+eq = sp.Eq(dx, dy_T)
+print(eq)
+
+# Solve for 'a'
+sol_a = sp.solve(eq, a)[0]
+print(sol_a)</code></pre>
+  </main>
+</div>
+</body>
+</html>

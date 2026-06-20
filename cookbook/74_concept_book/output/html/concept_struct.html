@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Struct | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="struct">Struct</h2>
+<p>A struct is a collection of variables of different data types that are stored together in memory. It allows for efficient access and manipulation of multiple values as if they were individual variables.</p>
+<h3 id="definition">Definition</h3>
+<p>Formally, a struct can be defined as:</p>
+<pre><code>struct S = { x: int; y: float; z: bool }</code></pre>
+<p>In this definition, <code>S</code> is the name of the struct, and <code>x</code>, <code>y</code>, and <code>z</code> are its constituent fields. The data types for each field determine their respective values.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider a university student's information that can be represented as a struct:</p>
+<pre><code>Student = { name: string; major: string; gpa: float }</code></pre>
+<p>Suppose we have the following student data:</p>
+<p>| Name | Major   | GPA | | --- | --- | --- | | John | CS      | 3.5 |</p>
+<p>We can create a <code>Student</code> struct with this data as follows:</p>
+<pre><code>student = Student(name="John", major="CS", gpa=3.5)</code></pre>
+<p>Now, we can access individual fields of the <code>student</code> struct using their names:</p>
+<pre><code>print(student.name)  # Output: John
+print(student.major)  # Output: CS
+print(student.gpa)    # Output: 3.5</code></pre>
+<h3 id="key-theorem">Key Theorem</h3>
+<p><strong>The Struct Update Rule</strong></p>
+<p>Given a struct <code>s</code> and updates <code>x=s.x + 1</code>, then the new struct can be computed as:</p>
+<pre><code>new_s = s + { x: s.x + 1 }</code></pre>
+<p>where <code>+</code> denotes the struct update operation.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>from sympy import symbols, Struct
+
+# Define the variables
+x, y, z = symbols('x y z')
+
+# Create a struct using SymPy's Struct class
+S = Struct(x=x, y=y, z=z)
+print(S)  # Output: Struct(x=x, y=y, z=z)
+
+# Update the struct
+new_S = S + {x: x+1}
+print(new_S)  # Output: Struct(x=1, y=y, z=z)</code></pre>
+  </main>
+</div>
+</body>
+</html>

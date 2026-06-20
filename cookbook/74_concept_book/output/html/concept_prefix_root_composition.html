@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prefix Root Composition | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="prefix-root-composition">Prefix Root Composition</h2>
+<p>Prefix root composition is a fundamental operation in algebraic manipulations that allows for the simplification of expressions by combining two operations: prefixing and rooting.</p>
+<h3 id="definition">Definition</h3>
+<p>Given an expression \(f(x)\) and a polynomial \(g(x)\), the prefix root composition of \(f(x)\) with respect to \(g(x)\) is defined as: \[ \text{pr}(f(x), g(x)) = f(g(x)) \]</p>
+<p>In other words, we first apply the root operation to the input of function \(f\), and then apply function \(f\) to the result. This operation combines the concepts of function composition and radical expressions.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the expression \(f(x) = x^2 + 3x - 4\) and the polynomial \(g(x) = x - 1\). We can perform prefix root composition as follows:</p>
+<p>\[ \text{pr}(f(x), g(x)) = f(g(x)) = (g(x))^2 + 3(g(x)) - 4 \]</p>
+<p>Substituting \(g(x)\), we get: \[ \text{pr}(f(x), g(x)) = ((x-1)^2) + 3((x-1)) - 4 \] \[ \text{pr}(f(x), g(x)) = (x^2 - 2x + 1) + 3x - 3 - 4 \] \[ \text{pr}(f(x), g(x)) = x^2 + x - 6 \]</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The prefix root composition is a one-to-one correspondence between the set of all expressions of \(f(g(x))\) and the set of all expressions of the form \(a(b(c))^n\), where \(a, b, c, n \in \mathbb{R}\).</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>from sympy import symbols, expand
+
+# Define variables
+x = symbols('x')
+
+# Define functions
+f = x**2 + 3*x - 4
+g = x - 1
+
+# Perform prefix root composition
+result = f.subs(x, g)
+
+# Expand the result
+expanded_result = expand(result)
+print(expanded_result)</code></pre>
+  </main>
+</div>
+</body>
+</html>

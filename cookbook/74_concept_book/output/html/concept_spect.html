@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spect | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="spect">Spect</h2>
+<p>A spectrum is a mathematical object that describes the distribution of some quantity over a range of values or frequencies. In various fields such as physics, engineering, and signal processing, spectra are used to analyze and interpret data.</p>
+<p>Formally, given a function $f: \mathbb{R} \to \mathbb{C}$ (where $\mathbb{R}$ is the set of real numbers and $\mathbb{C}$ is the set of complex numbers), a spectrum can be defined as:</p>
+$$\text{spectrum}(f) = \int_{-\infty}^{\infty} |f(x)| dx$$
+<p>This definition captures the idea that the spectrum of a function represents the total amount of "energy" or "power" contained in the function over all possible frequencies.</p>
+<p>Here's an example to illustrate this concept. Suppose we have a signal $x(t)$, which is a mathematical representation of a physical phenomenon (such as sound or light). The power spectral density (PSD) of $x(t)$ can be computed using the following formula:</p>
+$$S_{xx}(f) = \int_{-\infty}^{\infty} |X(f)|^2 df$$
+<p>where $X(f)$ is the discrete Fourier transform of $x(t)$. The spectrum of the signal, denoted by $\text{spectrum}(x(t))$, can then be obtained by taking the square root of both sides:</p>
+$$\text{spectrum}(x(t)) = \sqrt{S_{xx}(f)}$$
+<p>Key Theorem: Parseval's theorem states that for any function $f$ with a finite energy, its spectrum is equal to twice its time-domain representation. Mathematically, this can be expressed as:</p>
+$$\int_{-\infty}^{\infty} f(x) dx = 2 \text{spectrum}(f)$$
+<p>Lab Cell (SymPy):</p>
+<pre><code>import sympy as sp
+
+# Define a function
+x = sp.symbols('x')
+f = sp.sin(x)
+
+# Compute the spectrum of f
+spectrum_f = sp.integrate(sp.Abs(f), (x, -sp.oo, sp.oo))
+print(spectrum_f)</code></pre>
+<p>This code computes the spectrum of the sine function using SymPy's <code>integrate</code> function to evaluate the integral over all real numbers. The output will be twice the energy of the signal, as predicted by Parseval's theorem.</p>
+  </main>
+</div>
+</body>
+</html>

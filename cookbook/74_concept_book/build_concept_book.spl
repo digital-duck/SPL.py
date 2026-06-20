@@ -101,6 +101,7 @@ WORKFLOW build_concept_book
         @primitive_budget INT DEFAULT 2,
         @payoff_weight FLOAT DEFAULT 1.5,
         @language TEXT DEFAULT 'en',
+        @output_html TEXT DEFAULT "",
         @output_dir TEXT DEFAULT "",
         @log_dir TEXT DEFAULT 'cookbook/74_concept_book/logs-spl'
     OUTPUT:
@@ -112,6 +113,16 @@ DO
     CALL sanitize_ts(@_ts) INTO @_ts_safe
     CALL make_log_path(@log_dir, @_ts_safe) INTO @log_file
     CALL write_file(@log_file, "# Concept-Book Run\n\ndomain: @@domain_yaml@@\ntarget: @@target@@\nstarted: @@_ts@@\n\n", "w") INTO @_
+
+    -- 0.5. If @output_html is given, derive @output_dir from its parent directory.
+    --      @output_html wins over @output_dir when both are set.
+    EVALUATE @output_html
+        WHEN != "" THEN
+            CALL dir_of_file(@output_html) INTO @output_dir
+            LOGGING f"output_html set — writing concept pages to {@output_dir}" LEVEL INFO
+        ELSE
+            LOGGING "output_html not set — using output_dir directly" LEVEL INFO
+    END
 
     -- 1. Load domain, validate graph structure, compute teaching order
     --    setup_domain raises ToolFailed if the graph has cycles or is not
@@ -201,13 +212,20 @@ DO
     CALL write_file(@log_file, f"## Run complete\n\ntotal: {@total_elapsed}s\n", "a") INTO @_
 
     -- 4. Book index: TOC page linking to individual concept_{name}.html files.
-    --    Set @output_dir='' to skip HTML generation.
+    --    Set @output_dir='' (and @output_html='') to skip HTML generation.
     EVALUATE @output_dir
         WHEN != "" THEN
             CALL build_book_index(@domain_yaml, @target, @language, @output_dir, @capstone) INTO @_book_path
             LOGGING f"Book index written → {@_book_path}" LEVEL INFO
+            EVALUATE @output_html
+                WHEN != "" THEN
+                    CALL copy_file(@_book_path, @output_html) INTO @_
+                    LOGGING f"Single-file HTML → {@output_html}" LEVEL INFO
+                ELSE
+                    LOGGING f"Book available at {@_book_path}" LEVEL INFO
+            END
         ELSE
-            LOGGING "HTML output skipped (output_dir='')" LEVEL INFO
+            LOGGING "HTML output skipped (output_dir='' and output_html='')" LEVEL INFO
     END
 
     COMMIT @textbook

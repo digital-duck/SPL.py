@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suffix Derivation | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="suffix-derivation">Suffix Derivation</h2>
+<p>Suffix derivation is a fundamental concept in mathematical analysis that enables us to construct new functions from existing ones by applying specific rules. In this context, we will focus on the suffix derivation technique used to generate derivatives of functions.</p>
+<h3 id="definition">Definition</h3>
+<p>Given a function $f(x)$ and a polynomial $p(x) = \sum_{i=0}^{n} c_i x^i$, the suffix derivative of $f(x)$ with respect to $p(x)$ is denoted as $\frac{d}{dx}[f(x)p(x)]$. It can be computed using the product rule for differentiation.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the function $f(x) = e^x$ and the polynomial $p(x) = 3x + 2$. We want to find the suffix derivative of $f(x)$ with respect to $p(x)$.</p>
+<p>We can write the expression $\frac{d}{dx}[f(x)p(x)]$ using the product rule as: \begin{align*} \frac{d}{dx}[e^x(3x+2)] &= \left(\frac{d}{dx}f(x)\right)(3x+2) + f(x) \left(\frac{d}{dx}(3x+2)\right) \\ &= e^x (3x+2) + e^x (3) \\ &= e^x(3x+5) \end{align*}</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The suffix derivative of a function $f(x)$ with respect to a polynomial $p(x) = \sum_{i=0}^{n} c_i x^i$ is given by the formula:</p>
+$$
+\frac{d}{dx}[f(x)p(x)] = \left(\frac{df(x)}{dx}\right)(p(x)) + f(x) \left(\frac{dp(x)}{dx}\right)
+$$
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the variables and functions
+x, y = sp.symbols('x y')
+f = sp.exp(x)
+p = 3*x + 2
+
+# Compute the suffix derivative of f(x) with respect to p(x)
+suffix_derivative = sp.diff(f*p, x)
+
+print(suffix_derivative)</code></pre>
+<p>This code computes the suffix derivative of $f(x)$ with respect to $p(x)$ and prints the result.</p>
+  </main>
+</div>
+</body>
+</html>

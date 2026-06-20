@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predict | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="predict">Predict</h2>
+<p>Predict in the context of mathematical modeling refers to the process of estimating or forecasting future events or behavior based on past data, trends, and patterns. In various fields such as economics, finance, epidemiology, and climate science, prediction is a crucial tool for making informed decisions, predicting outcomes, and understanding complex systems.</p>
+<h3 id="definition">Definition</h3>
+<p>Prediction can be viewed as an optimization problem where the goal is to minimize the difference between observed and predicted values. Mathematically, this can be formulated as:</p>
+$$\min_{\theta} \sum_{i=1}^{n} (y_i - f(x_i, \theta))^2$$
+<p>where $y_i$ represents the observed value at time step $i$, $x_i$ is the input or feature vector, $\theta$ is the model parameter, and $f(x_i, \theta)$ is the predicted output.</p>
+<h3 id="worked-example-simple-linear-regression">Worked Example: Simple Linear Regression</h3>
+<p>Consider a scenario where we want to predict house prices based on the number of bedrooms. We collect data on 10 houses with their corresponding prices and bedroom counts:</p>
+<p>| Bedrooms | Price | | --- | --- | | 2    | $150,000 | | 3    | $200,000 | | 4    | $250,000 | | ...   | ...   |</p>
+<p>We fit a simple linear regression model to the data:</p>
+$$y = \beta_0 + \beta_1 x$$
+<p>where $x$ is the number of bedrooms and $\beta_0$ and $\beta_1$ are model parameters.</p>
+<p>Using ordinary least squares (OLS), we find that $\hat{\beta}_1 = 50,000$ and $\hat{\beta}_0 = -25,000$. We then use this model to predict the price for a house with 3 bedrooms:</p>
+$$\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x = -25,000 + 50,000(3) = $75,000$$
+<h3 id="key-theorem-bayes-rule">Key Theorem: Bayes' Rule</h3>
+<p>Bayes' rule provides a framework for updating the probability of a hypothesis based on new evidence. In the context of prediction, Bayes' rule can be used to update the predictive distribution of a model as more data becomes available.</p>
+<p>Let $\pi_0$ be the prior probability of the null hypothesis $H_0$, and let $\mathcal{D}_i$ be the observed data at time step $i$. Then, Bayes' rule states:</p>
+$$\pi_{i+1}(|H_0|) = \frac{\pi_i(|H_0|)P(D_i|H_0)}{\sum_{j=0}^J \pi_i(|H_j|)P(D_i|H_j)}$$
+<p>where $\pi_i(|H_k|)$ is the posterior probability of hypothesis $H_k$ at time step $i$, and $P(D_i|H_k)$ is the likelihood of observing data $D_i$ under hypothesis $H_k$.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import numpy as np
+from sympy import symbols, Eq, solve
+
+# Define variables
+x = symbols('x')
+y = symbols('y')
+
+# Simple linear regression model
+beta0, beta1 = symbols('beta0 beta1')
+model = Eq(y, beta0 + beta1 * x)
+
+# Observed data
+data_x = np.array([2, 3, 4])
+data_y = np.array([150000, 200000, 250000])
+
+# Ordinary least squares (OLS) estimation
+X = np.vstack([np.ones(len(data_x)), data_x]).T
+theta = solve(Eq(X.T @ X * theta - X.T @ y, 0), symbols('beta0 beta1')).values
+
+print("Estimated model parameters:")
+print(f"beta0: {theta[0]}")
+print(f"beta1: {theta[1]}")
+
+# Predict house price for a house with 3 bedrooms
+x_new = 3
+y_pred = theta[0] + theta[1] * x_new
+print(f"Predicted house price: ${y_pred:.2f}")</code></pre>
+  </main>
+</div>
+</body>
+</html>

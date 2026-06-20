@@ -574,6 +574,23 @@ const network = new vis.Network(container, {{nodes: visNodes, edges: visEdges}},
   edges: {{ smooth: {{ type: 'cubicBezier', forceDirection: 'vertical' }} }},
 }});
 
+// Sort nodes at the same BFS level alphabetically (left-to-right by name)
+network.once('afterDrawing', function() {{
+  const pos = network.getPositions();
+  const byY = {{}};
+  Object.entries(pos).forEach(([id, p]) => {{
+    const key = Math.round(p.y);
+    if (!byY[key]) byY[key] = [];
+    byY[key].push({{id, x: p.x, y: p.y}});
+  }});
+  Object.values(byY).forEach(group => {{
+    if (group.length < 2) return;
+    const sorted = [...group].sort((a, b) => a.id.localeCompare(b.id));
+    const xs = group.map(n => n.x).sort((a, b) => a - b);
+    sorted.forEach((node, i) => network.moveNode(node.id, xs[i], node.y));
+  }});
+}});
+
 const C_PATH   = {{background: '#fff9c4', border: '#f9a825'}};
 const C_TARGET = {{background: '#ffe082', border: '#e65100'}};
 

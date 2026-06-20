@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre- | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="pre">Pre-</h2>
+<h3 id="definition">Definition</h3>
+<p>Precondition is a mathematical concept used to describe a necessary condition or requirement that must be satisfied before a certain event or process can occur. In other words, it is a condition that must hold true for an input or situation in order for the desired outcome or behavior to take place.</p>
+<p>Formally, let $X$ be a set of inputs and $Y$ be a set of outputs. The precondition of an output $y \in Y$ is denoted as $\mathcal{P}(y)$ and is defined as:</p>
+$$\mathcal{P}(y) = \{x \in X | f(x) = y\}$$
+<p>where $f: X \to Y$ is a function that maps inputs to outputs.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider a simple example of a calculator function that takes an input $x$ and returns the result of $x^2$. Suppose we want to calculate the preconditions for the output $y = 25$.</p>
+$$\mathcal{P}(25) = \{x \in X | f(x) = 25\} = \{-5, 5\}$$
+<p>This means that in order to obtain the output $y = 25$, the input must be either $-5$ or $5$. If the input is not one of these values, the function will not produce the desired output.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The precondition theorem states that:</p>
+<li>For any input $x \in X$, if $\mathcal{P}(f(x)) = \emptyset$, then $f(x)$ has no preconditions.</li>
+<li>If $\mathcal{P}(f(x))$ is not empty, then there exists an output $y \in Y$ such that $f(x) = y$ and $\mathcal{P}(y) = \mathcal{P}(f(x))$.</li>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+x = sp.symbols('x')
+f = x**2
+precondition = {x: f}
+
+print(precondition)</code></pre>
+<p>This code defines a function <code>f</code> that takes an input <code>x</code> and returns the result of $x^2$. It then defines the precondition for the output $y = 25$ using the <code>precondition</code> dictionary. The output will be <code>{x: x**2}</code>, which represents the preconditions for the output $y = 25$.</p>
+  </main>
+</div>
+</body>
+</html>

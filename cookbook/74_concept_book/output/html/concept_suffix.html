@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suffix | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="suffix">Suffix</h2>
+<p>A suffix is a sequence of characters that follows another sequence of characters in a word or phrase. In linguistic terms, it refers to the part of a word that comes after the root and prefix (if present). For example, in the word "unpredictable," "un" is the prefix and "able" is the root with a suffix.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the following words:</p>
+<li>cat</li>
+<li>happy</li>
+<li>running</li>
+<p>We can identify the roots by looking at the base part of each word. The roots are "cat," "hap," and "run." To form these words, we have added prefixes ("un-" for "unhappy") and suffixes.</p>
+<p>| Word | Root | Prefix/Suffix | | --- | --- | --- | | cat   | cat  | -     | | happy | hap  | un-    | | running| run  | ing-   |</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The suffix can be classified into different types, such as:</p>
+<li>-able (e.g. happy)</li>
+<li>-ing (e.g. running)</li>
+<li>-less (e.g. unhappy)</li>
+<p>These classifications are based on the sound and meaning of the suffix.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the variables
+x = sp.symbols('x')
+
+# Define a function to calculate the root with prefix/suffix
+def calculate_word(root, prefix=None, suffix=None):
+    if prefix:
+        return f"{prefix}{root}"
+    elif suffix:
+        return f"{root}{suffix}"
+    else:
+        return root
+
+# Calculate and print the words using the function
+print(calculate_word('cat'))  # cat
+print(calculate_word('happy', 'un-'))  # unhappy
+print(calculate_word('run', '', '-ing'))  # running</code></pre>
+  </main>
+</div>
+</body>
+</html>

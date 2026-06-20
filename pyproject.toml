@@ -43,6 +43,9 @@ dependencies = [
     "dd-logging>=0.1.2",
     # LLM provider SDKs
     "anthropic>=0.25.0",
+    # Jupyter kernel management (required by spl3 run for kernelspec detection)
+    "jupyter_client>=8.0",
+    "ipykernel>=6.0",
 ]
 
 [project.optional-dependencies]

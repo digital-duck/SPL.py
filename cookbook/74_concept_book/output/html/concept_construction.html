@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="construction">Construction</h2>
+<p>Construction is a fundamental concept in mathematics that serves as the foundation for various branches of algebra, geometry, and analysis. In essence, it refers to the process of building or creating mathematical structures such as points, lines, planes, and other geometric objects from axioms.</p>
+<h3 id="definition">Definition</h3>
+<p>Given a set $A$ of geometric elements (such as points, lines, or planes), a construction is a rule that associates with each element in $A$ a new object, often referred to as the "image" or "image point" of that element. The goal of a construction is to create an equivalence relation between the original elements of $A$ and their images.</p>
+<p>Formally, let $(A, \sim)$ be a set with a binary operation $\sim$, called the equivalence relation, such that:</p>
+<li>Reflexivity: for all $a \in A$, $a \sim a$</li>
+<li>Symmetry: for all $a, b \in A$, if $a \sim b$ then $b \sim a$</li>
+<li>Transitivity: for all $a, b, c \in A$, if $a \sim b$ and $b \sim c$, then $a \sim c$</li>
+<p>A construction is then defined as an equivalence relation $(A, \sim)$ that satisfies the above properties.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider a simple example of constructing points on a line. Let $\mathbb{R}$ be the set of real numbers and define the binary operation $+\) on it. Suppose we want to construct two new points $x$ and $y$ such that $x + y = 5$. We can do this by defining the equivalence relation $(\mathbb{R}, +)$ as follows:</p>
+$$a \sim b \iff a + b = 5$$
+<p>Here, the equivalence class of an element $a$ is defined as $\{b \in \mathbb{R} | a + b = 5\}$.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The construction process can be generalized using the following theorem:</p>
+<p><strong>Axiom of Construction</strong></p>
+<p>Given a set $A$ and a rule $f: A \to B$, where $B$ is another set, the rule $(A, f)$ defines a construction from $A$ to $B$. This rule satisfies the properties of reflexivity, symmetry, and transitivity if and only if $f$ is injective.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>from sympy import symbols, Eq
+
+# Define variables
+x, y = symbols('x y')
+
+# Define the equation
+eq = Eq(x + y, 5)
+
+# Solve for x
+solution_x = [i for i in range(-10, 11) if eq.subs(y, i)]
+
+print(solution_x)</code></pre>
+<p>In this code snippet, we define two variables $x$ and $y$, an equation $x + y = 5$, and use SymPy to solve for the possible values of $x$. The output will be a list of integers from -10 to 10 that satisfy the equation.</p>
+  </main>
+</div>
+</body>
+</html>

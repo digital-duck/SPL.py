@@ -129,6 +129,26 @@ def get_style_guide(style: str) -> str:
     return sp.style_instruction(style)  # type: ignore[attr-defined]
 
 
+# ── File utilities ───────────────────────────────────────────────────────────
+
+@spl_tool
+def dir_of_file(path: str) -> str:
+    """Return the parent directory of a file path (creates it if needed)."""
+    p = Path(path).parent
+    p.mkdir(parents=True, exist_ok=True)
+    return str(p)
+
+
+@spl_tool
+def copy_file(src: str, dst: str) -> str:
+    """Copy src to dst (creates parent dirs). Returns dst path."""
+    import shutil
+    dst_path = Path(dst)
+    dst_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src, dst_path)
+    return str(dst_path)
+
+
 # ── Timing ────────────────────────────────────────────────────────────────────
 
 @spl_tool

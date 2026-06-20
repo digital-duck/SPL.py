@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transportable | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="transportable">Transportable</h2>
+<p>A transportable is a mathematical object that can be mapped from one structure to another while preserving its essential properties. In other words, a transportable is an equivalence class of structures that are "essentially similar" in some sense.</p>
+<h3 id="definition">Definition</h3>
+<p>Given two algebraic structures $A$ and $B$ of the same type, we say that $A$ is <strong>transportable</strong> to $B$ if there exists a bijection $\phi: A \rightarrow B$ such that for all morphisms $f: A \rightarrow C$ and $g: B \rightarrow C$, the following diagram commutes:</p>
+$$
+A @>{\phi}>> B \\
+@V{f}VV @VV{g}V \\
+C @>>> C
+\end{CD}$$
+
+In particular, if $F$ is an endofunctor of a category $\mathcal{C}$ and $X$ is an object in $\mathcal{C}$, we say that the functor $F$ is **transportable** to itself on the object $X$ if there exists a natural transformation $\eta: F \rightarrow 1_X$ such that for all morphisms $f: X \rightarrow Y$, the following diagram commutes:
+
+$$
+<p>F(X) @>{\eta_X}>> 1_{F(X)} \\ @V{F(f)}VV @VV{\mathrm{id}_{F(Y)}}V \\ F(Y) @>>> F(Y) \end{CD}$$</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the category $\mathbf{R}$ of real numbers with addition as the operation. Let $f: \mathbb{R} \rightarrow \mathbb{R}$ be defined by $f(x) = 2x$. We claim that the functor $F$ given by $F(X) = X + 1$ is transportable to itself on $\mathbb{R}$.</p>
+<p>To show this, we need to define a natural transformation $\eta: F \rightarrow 1_{\mathbb{R}}$. Let $\eta_X: F(\mathbb{R}) \rightarrow 1_{F(\mathbb{R})}$ be given by $\eta_X(x) = x - 1$ for all $x \in \mathbb{R}$. It is easy to check that the diagram commutes:</p>
+$$
+F(\mathbb{R}) @>{\eta_X}>> 1_{F(\mathbb{R})} \\
+@V{F(f)}VV @VV{\mathrm{id}_{F(\mathbb{R})}}V \\
+F(\mathbb{R}) @>>> F(\mathbb{R})
+\end{CD}$$
+
+Therefore, the functor $F$ is transportable to itself on $\mathbb{R}$.
+
+### Key Theorem
+If $F$ is a transportable endofunctor of a category $\mathcal{C}$ and $\eta: F \rightarrow 1_C$ is a natural transformation on an object $X$, then the functor $F$ preserves limits.
+
+Proof: Let $D$ be a limit of a diagram in $\mathcal{C}$. We need to show that $F(D)$ is also a limit. Since $\eta$ is a natural transformation, we have a commutative diagram:
+
+$$
+<p>F(X) @>{\mathrm{id}}>> F(X) \\ @V{\alpha}VV @VV{\beta}V \\ D @>>> D \end{CD}$$</p>
+<p>where $(X, \alpha)$ and $(Y, \beta)$ are the limit cones of the diagram over $X$ and $Y$, respectively. Since $\eta_X: F(X) \rightarrow 1_{F(X)}$ is a natural transformation, we have that:</p>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portable | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="portable">Portable</h2>
+<p>A portable object is a mathematical concept that describes a rectangular region with a fixed orientation, allowing it to be transformed into any other rectangle while preserving its proportions.</p>
+<h3 id="definition">Definition</h3>
+<p>Formally, a rectangle $P$ of dimensions $2a \times 2b$ can be considered as a portable object if there exists a scaling transformation $\alpha_P: \mathbb{R}^2 \to \mathbb{R}^2$ such that:</p>
+$$\alpha_P(x) = (ax + c, bx + d)$$
+<p>where $(c,d)$ is the translation vector of $P$, and $a,b > 0$. This transformation satisfies the condition that it preserves the aspect ratio of $P$.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Suppose we have a rectangular portrait of size $2 \times 3$ with its top-left corner at the origin. We want to transform this rectangle into a new rectangle of size $4 \times 6$ while preserving its orientation. To do so, we can apply the scaling transformation $\alpha_P(x) = (x, x)$ to each point $(x,y)$ of the original rectangle.</p>
+<p>The resulting transformed portrait has dimensions $2 \times 3$, and it is centered at the origin with a translation vector $(1,1)$.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>If we are given a rectangular region $P$ with fixed orientation but non-integer dimensions, then there exists a unique scaling transformation $\alpha_P: \mathbb{R}^2 \to \mathbb{R}^2$ that preserves its aspect ratio.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the symbols for the rectangle dimensions
+a = sp.symbols('a')
+b = sp.symbols('b')
+
+# Define the scaling transformation alpha_P(x) = (ax + c, bx + d)
+c = sp.symbols('c')
+d = sp.symbols('d')
+x, y = sp.symbols('x y')
+
+alpha_P = lambda x: (a*x + c, b*y + d)
+
+# Verify that alpha_P preserves the aspect ratio
+print(sp.Eq(alpha_P(x)[0]/alpha_P(x)[1], a/b))</code></pre>
+<p>In this code snippet, we define the symbols $a,b,c,d,x,y$ and the scaling transformation $\alpha_P$. We then verify that the transformation satisfies the condition of preserving the aspect ratio by computing the ratio of the transformed dimensions.</p>
+  </main>
+</div>
+</body>
+</html>

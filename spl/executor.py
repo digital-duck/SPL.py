@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import os
 import time
 from dataclasses import dataclass, field
 
@@ -239,11 +240,11 @@ class WorkflowState:
 class Executor:
     """Execute SPL 2.0 PROMPT and WORKFLOW statements."""
 
-    DEFAULT_MAX_ITERATIONS = 15
+    DEFAULT_MAX_ITERATIONS   = int(os.environ.get("SPL_WHILE_MAX_ITER", "15"))
 
     # Default safety caps — override via config or constructor args
-    DEFAULT_MAX_LLM_CALLS   = 25
-    DEFAULT_MAX_TOTAL_TOKENS = 100_000
+    DEFAULT_MAX_LLM_CALLS   = int(os.environ.get("SPL_MAX_LLM_CALLS",   "25"))
+    DEFAULT_MAX_TOTAL_TOKENS = int(os.environ.get("SPL_MAX_TOTAL_TOKENS", "100000"))
 
     def __init__(
         self,

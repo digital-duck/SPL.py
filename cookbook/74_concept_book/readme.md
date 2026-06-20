@@ -456,6 +456,7 @@ python scripts/concept_graph.py \
   visualize --format html
 # → output/html/english_morphology_graph.html
 
+export SPL_WHILE_MAX_ITER=50  # adjust for big concept-book
 spl3 run cookbook/74_concept_book/build_concept_book.spl \
   --tools cookbook/74_concept_book/tools.py \
   --param domain_yaml=english_morphology_graph.yaml \

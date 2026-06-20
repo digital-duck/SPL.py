@@ -271,19 +271,26 @@ def main() -> None:
                     "stopped_at":   stopped,
                     "duration":     duration,
                 })
-            st.dataframe(pd.DataFrame(exp_rows), hide_index=True, use_container_width=True)
-
-            st.divider()
-            st.subheader("Delete a run")
-            st.caption("Removes all result rows for this experiment source.")
-            to_del = st.selectbox("Run to delete", runs_df["source_file"].tolist())
-            if st.button("Delete run", type="secondary"):
-                with get_conn() as conn:
-                    conn.execute("DELETE FROM results WHERE source_file=?", (to_del,))
-                    conn.execute("DELETE FROM imports WHERE source_file=?", (to_del,))
-                st.success(f"Deleted: {to_del}")
-                st.cache_data.clear()
-                st.rerun()
+            runs_display = pd.DataFrame(exp_rows)
+            st.caption(f"{len(runs_display)} runs  · click a row to select for deletion")
+            runs_sel = st.dataframe(  # pyright: ignore[reportCallIssue]
+                runs_display, hide_index=True, use_container_width=True,
+                on_select="rerun", selection_mode="single-row",
+            )
+            selected_run_rows = (runs_sel.selection.rows  # type: ignore[union-attr]
+                                 if runs_sel and hasattr(runs_sel, "selection") else [])
+            if selected_run_rows:
+                run_row_idx = selected_run_rows[0]
+                to_del = str(cast(pd.Series, runs_display["source"]).iloc[run_row_idx])
+                st.divider()
+                st.caption(f"Selected: **{to_del}**  — removes all result rows for this run.")
+                if st.button("Delete run", type="secondary"):
+                    with get_conn() as conn:
+                        conn.execute("DELETE FROM results WHERE source_file=?", (to_del,))
+                        conn.execute("DELETE FROM imports WHERE source_file=?", (to_del,))
+                    st.success(f"Deleted: {to_del}")
+                    st.cache_data.clear()
+                    st.rerun()
 
     # ── Results ────────────────────────────────────────────────────────────────
     with tab_res:

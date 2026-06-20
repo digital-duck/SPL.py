@@ -96,6 +96,7 @@ def _write_run_log(
 @click.pass_context
 def main(ctx, hub, verbose):
     """SPL 3.0 — Declarative Structured Prompt Language."""
+    _load_spl_config_into_env()
     logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
     ctx.ensure_object(dict)
     ctx.obj["hub"] = hub
@@ -289,6 +290,19 @@ def _config_write(data: dict[str, str]) -> None:
     _config_write_file(_SPL_CONFIG_FILE, data)
 
 
+def _load_spl_config_into_env() -> None:
+    """Load ~/.spl/config into os.environ so executor class-level defaults pick them up.
+
+    Shell env vars already set take precedence — config file only fills gaps.
+    Also loads .env from CWD when present, with the same no-overwrite rule.
+    """
+    import os
+    for path in (_SPL_CONFIG_FILE, Path(".env")):
+        for k, v in _config_read_file(path).items():
+            if v and k not in os.environ:
+                os.environ[k] = v
+
+
 def _dotenv_format(data: dict[str, str], header: str = "") -> str:
     """Render a dict as .env-format text."""
     lines = []
@@ -313,6 +327,77 @@ def cmd_configure():
     The VibeSCOPE .env is auto-discovered from VIBESCOPE_PROJECT_DIR or
     common locations. Override by setting VIBESCOPE_PROJECT_DIR in ~/.spl/config.
     """
+
+
+@cmd_configure.command("init")
+@click.option("--from", "from_file", default=None, metavar="FILE",
+              help="Source .env file. Defaults to .env then example.env in CWD.")
+@click.option("--overwrite", is_flag=True,
+              help="Overwrite keys already present in ~/.spl/config.")
+@click.option("--dry-run", is_flag=True,
+              help="Show what would be written without modifying any file.")
+def cmd_configure_init(from_file, overwrite, dry_run):
+    """Bootstrap ~/.spl/config from example.env or a given .env file.
+
+    Copies non-empty values from the source into ~/.spl/config, skipping
+    keys already configured (use --overwrite to replace them).
+
+    \b
+      spl3 configure init                       # from example.env or .env in CWD
+      spl3 configure init --from /path/.env     # explicit source
+      spl3 configure init --overwrite           # replace existing keys too
+      spl3 configure init --dry-run             # preview without writing
+    """
+    # Discover source file
+    if from_file:
+        src = Path(from_file).expanduser()
+        if not src.exists():
+            raise click.ClickException(f"File not found: {src}")
+    else:
+        for candidate in (Path(".env"), Path("example.env")):
+            if candidate.exists():
+                src = candidate
+                break
+        else:
+            raise click.ClickException(
+                "No .env or example.env found in the current directory.\n"
+                "Pass an explicit file: spl3 configure init --from /path/to/example.env"
+            )
+
+    incoming = _config_read_file(src)
+    # Strip blank values (template placeholders like KEY=)
+    incoming = {k: v for k, v in incoming.items() if v}
+
+    if not incoming:
+        raise click.ClickException(f"No non-empty KEY=VALUE pairs found in {src}")
+
+    existing = _config_read_file(_SPL_CONFIG_FILE)
+    to_write: dict[str, str] = {}
+    skipped: list[str] = []
+    for k, v in incoming.items():
+        if k in existing and not overwrite:
+            skipped.append(k)
+        else:
+            to_write[k] = v
+
+    tag = "  (dry-run)" if dry_run else ""
+    click.echo(f"\n  Bootstrapping ~/.spl/config from {src}{tag}\n")
+    col_w = max(len(k) for k in incoming) + 2
+    if to_write:
+        click.echo(f"  {'KEY'.ljust(col_w)}  VALUE")
+        click.echo(f"  {'-' * col_w}  -----")
+        for k, v in to_write.items():
+            click.echo(f"  {k.ljust(col_w)}  {v}")
+    if skipped:
+        click.echo(f"\n  Skipped (already set — use --overwrite to replace):")
+        for k in skipped:
+            click.echo(f"    {k}")
+
+    if to_write and not dry_run:
+        _config_write_file(_SPL_CONFIG_FILE, to_write)
+        click.echo(f"\n  Wrote {len(to_write)} key(s) → {_SPL_CONFIG_FILE}")
+    elif dry_run:
+        click.echo("\n  (dry-run: no files written)")
 
 
 @cmd_configure.command("set")
@@ -377,8 +462,10 @@ def cmd_configure_get(keys, source):
     src_path = _resolve_source(source) if source != "spl" else _SPL_CONFIG_FILE
     data = _config_read_file(src_path)
 
-    if not data:
+    import os
+    if not data and not keys:
         click.echo(f"No configuration found in {src_path}")
+        click.echo("  Run: spl3 configure init   (bootstrap from example.env / .env)")
         return
 
     if keys:
@@ -390,11 +477,14 @@ def cmd_configure_get(keys, source):
                     requested[k2] = data.get(k2, "(not set)")
         data = requested
 
-    col_w = max(len(k) for k in data) + 2
-    click.echo(f"\n  {'KEY'.ljust(col_w)}  VALUE")
-    click.echo(f"  {'-' * col_w}  -----")
+    col_w   = max((len(k) for k in data), default=10) + 2
+    val_w   = max((len(v) for v in data.values()), default=5) + 2
+    click.echo(f"\n  {'KEY'.ljust(col_w)}  {'FILE VALUE'.ljust(val_w)}  EFFECTIVE (env)")
+    click.echo(f"  {'-' * col_w}  {'-' * val_w}  ---------------")
     for k, v in data.items():
-        click.echo(f"  {k.ljust(col_w)}  {v}")
+        effective = os.environ.get(k, "(not in env)")
+        marker = "" if effective == v or v == "(not set)" else "  ← overridden"
+        click.echo(f"  {k.ljust(col_w)}  {v.ljust(val_w)}  {effective}{marker}")
     click.echo(f"\n  Source: {src_path}")
 
 

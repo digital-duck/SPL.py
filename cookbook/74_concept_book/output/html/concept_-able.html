@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>-Able | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="able">-Able</h2>
+<p>The concept of -able is a binary predicate that takes one argument, an element from a set, and returns a boolean value indicating whether the element possesses some inherent property or characteristic.</p>
+<p>Formally, we can define -able as follows:</p>
+<p>Let X be a set. For any $x \in X$, we say that x is -able if there exists a function f: X → ℝ such that f(x) ≥ 0.</p>
+<p>In other words, -able is a property of an element x in the set X, where the presence or absence of this property can be quantified by the value of the real number f(x).</p>
+<p>Worked Example:</p>
+<p>Consider a set X of real numbers, and define a function f: X → ℝ as follows:</p>
+<p>f(x) = e^x</p>
+<p>for all $x \in X$. Then, we say that x is -able if there exists a positive real number k such that f(k) ≥ k. For example, the number 1 is -able because there exists a function f that satisfies this condition.</p>
+<p>Key Theorem:</p>
+<p>If X is a set of real numbers and f: X → ℝ is a non-negative function, then for any $x \in X$, we have x ≤ -able iff f(x) ≥ k for some positive real number k.</p>
+<p>Lab Cell (SymPy):</p>
+<pre><code>from sympy import symbols, exp
+
+# Define the variable x
+x = symbols('x')
+
+# Define the function f(x)
+f_x = exp(x)
+
+# Find a value of x such that f(x) &gt;= x
+for i in range(-10, 11):
+    if f_x.subs(x, i) &gt;= i:
+        print(f"Found -able element: {i}")</code></pre>
+<p>This code finds all real numbers x for which there exists a positive real number k such that f(x) ≥ k. The output will be the first value of x that satisfies this condition, indicating that it is indeed -able.</p>
+  </main>
+</div>
+</body>
+</html>

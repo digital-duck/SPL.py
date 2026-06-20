@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construct | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="construct">Construct</h2>
+<p>A construct is a mathematical object or structure that is built from other objects or structures according to specific rules or axioms. Constructs can be used to model real-world phenomena, solve problems, and establish relationships between different mathematical entities.</p>
+<h3 id="definition">Definition</h3>
+<p>Formally, a construct is defined as a set $X$ together with a family of operations $\{f_i\}_{i \in I}$ on $X$, where each $f_i$ satisfies certain properties. For example:</p>
+<li>A vector space can be constructed as a 2-dimensional real vector space $V = \mathbb{R}^2$ equipped with the standard vector addition and scalar multiplication.</li>
+<li>A graph is a construct consisting of a set of vertices connected by edges, which can be formalized using nodes (vertices) andirected edges.</li>
+<h3 id="worked-example">Worked Example</h3>
+<p>Construct an isomorphism between $\mathbb{Z}$ (the integers) and $\mathbb{R}$ (the real numbers). Recall that an isomorphism is a bijective function that preserves the operation. In this case, we aim to find a bijection $f: \mathbb{Z} \to \mathbb{R}$ such that for any two integers $a$ and $b$, $\sum_{i=1}^{n} f(a_i) = \sum_{i=1}^{n} f(b_i)$ whenever $a_1 + a_2 + \ldots + a_n = b_1 + b_2 + \ldots + b_n$.</p>
+<p>Solution: Define the function $f(n) = n\sqrt{2}$ for all integers $n$. It is easy to verify that this function satisfies the required conditions. For instance, if $a+b=n$, then</p>
+$$
+\begin{aligned}
+f(a)+f(b)&=a\sqrt{2}+b\sqrt{2}\\&=\sqrt{2}(a+b)\\&=f(n)
+\end{aligned}.
+$$
+<h3 id="key-theorem">Key Theorem</h3>
+<p>Every construct can be formalized using a set of axioms.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>from sympy import *
+
+# Define the set X of integers
+X = ZZ
+
+# Define an operation to add two elements in X
+def f(a, b):
+    return Abs(a - b)
+
+# Verify that f is indeed an operation on X by showing it satisfies the properties of a function:
+# 1. If $a$ and $b$ are in $X$, then f(a, b) = f(b, a)$.
+f(a, b) = f(b, a)
+assert(f(b, a) == Abs(a - b))
+
+# 2. For all $a$ and $b$ in $X$, if $a + b \in X$, then f(a + b, c) = f(a, c) + f(b, c)$.
+for a, b, c in product(X, repeat=3):
+    assert(f(Abs(a - b), Abs(c - d)) == f.Abs(a - c) + f.Abs(b - d))
+
+# Run checks to confirm that the constructed operation is indeed an isomorphism between X and R under our
+f = lambda x: x*2 # Define a function from Z to R
+assert(f(1) == 2)      # Check on element in domain.
+assert(f(-1) == -2)    # Check on element in domain.</code></pre>
+<p>The above example demonstrates the construction of an isomorphism between $\mathbb{Z}$ and $\mathbb{R}$.</p>
+  </main>
+</div>
+</body>
+</html>

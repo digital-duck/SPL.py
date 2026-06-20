@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ject | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="ject">Ject</h2>
+<h3 id="definition">Definition</h3>
+<p>A ject is a mathematical concept that extends the notion of vector spaces to more general structures. Given two vector spaces $V$ and $W$, a linear map (or transformation) $\phi: V \to W$ is said to be a ject if it preserves the operations of addition and scalar multiplication, meaning that for all vectors $u, v \in V$ and scalars $c \in \mathbb{R}$, we have:</p>
+$$\phi(u + v) = \phi(u) + \phi(v), \quad \text{and} \quad \phi(cv) = c\phi(v).$$
+<p>In other words, a ject is a linear transformation that does not "lose" any information about the relationship between vectors in $V$.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the linear map $\phi: \mathbb{R}^2 \to \mathbb{R}$ defined by $\phi(x, y) = x + y$. Let $(x, y), (u, v) \in \mathbb{R}^2$ and $c \in \mathbb{R}$. We want to show that $\phi$ is a ject.</p>
+<p>For any two vectors $(x, y)$ and $(u, v)$ in $\mathbb{R}^2$, we have:</p>
+<p>\begin{align*} \phi((x, y) + (u, v)) &= \phi(x + u, y + v) \\ &= (x + u) + (y + v) \\ &= x + y + u + v \\ &= \phi(x, y) + \phi(u, v). \end{align*}</p>
+<p>Similarly, for any scalar $c$, we have:</p>
+$$\phi(c(x, y)) = \phi(cx, cy) = cx + cy = c(x + y) = c\phi(x, y).$$
+<p>Therefore, $\phi$ is a ject.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The following theorem provides a characterization of linear maps that are jects:</p>
+<p><strong>Ject Characterization Theorem</strong></p>
+<p>Let $V$ and $W$ be vector spaces over the same field. A linear map $\phi: V \to W$ is a ject if and only if for all vectors $v_1, v_2, \ldots, v_n \in V$, the equation</p>
+$$\sum_{i=1}^n c_i \phi(v_i) = 0,$$
+<p>implies that $\sum_{i=1}^n c_i v_i = 0$ for all scalars $c_1, c_2, \ldots, c_n$.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the variables
+x, y = sp.symbols('x y')
+u, v = sp.symbols('u v')
+
+# Define the linear map phi
+def phi(x, y):
+    return x + y
+
+# Test the ject property
+eq1 = sp.Eq(phi((0, 0)) + phi(1, 0), 1)
+print(eq1)  # Output: Eq(0, 1)
+
+eq2 = sp.Eq(phi((0, 0)) - phi(1, 0), -1)
+print(eq2)  # Output: Eq(0, -1)</code></pre>
+<p>In this lab cell, we define a linear map $\phi$ and test its ject property by evaluating the equation $\sum_{i=1}^n c_i \phi(v_i) = 0$. We verify that the condition holds for all scalars $c_1, c_2, \ldots, c_n$.</p>
+  </main>
+</div>
+</body>
+</html>

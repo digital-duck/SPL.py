@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reject | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="reject">Reject</h2>
+<h3 id="definition">Definition</h3>
+<p>In the context of decision theory and optimization, a reject is a value that is not selected or chosen as part of an optimal solution. In other words, a reject is an element that does not meet the criteria for optimality.</p>
+<p>Formally, given a set of possible solutions $\mathcal{S}$ and a criterion for optimality $f: \mathcal{S} \to \mathbb{R}$, we define a reject as follows:</p>
+$$\text{reject}(\mathcal{S}, f) = \{s \in \mathcal{S} : f(s) < f^*(s)\},$$
+<p>where $f^*$ denotes the optimal value function.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider a university admissions problem where we want to select students with the highest GPAs. Let $\mathcal{S}$ be the set of all admitted students, and let $f(s)$ denote the GPA of student $s$. Suppose we have two students, Alice and Bob, with GPAs 3.5 and 3.2, respectively. We want to maximize the average GPA of our incoming class.</p>
+<p>Let's define a function that calculates the average GPA:</p>
+$$g(\mathcal{S}) = \frac{1}{|\mathcal{S}|} \sum_{s \in \mathcal{S}} f(s).$$
+<p>We can evaluate $g$ for different subsets of students and keep track of the maximum value. Suppose we have a set $\mathcal{T}$ containing Alice, Bob, and another student Charlie with GPA 3.1. We find that:</p>
+<p>\begin{align*} g(\mathcal{T}) &= \frac{1}{3} (f(Alice) + f(Bob) + f(Charlie)) \\ &= \frac{1}{3} (3.5 + 3.2 + 3.1) \\ &= 3.26. \end{align*}</p>
+<p>However, if we add Charlie to the set $\mathcal{T}$ and remove Bob, we get:</p>
+$$g(\{\text{Alice}, \text{Charlie}\}) = \frac{1}{2} (f(Alice) + f(Charlie)) = 3.35.$$
+<p>In this case, removing Bob from consideration is a rejection of his application in favor of Alice's.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The following theorem provides a necessary and sufficient condition for optimality:</p>
+<p><strong>Rejection Criterion</strong></p>
+<p>Given a function $f: \mathcal{S} \to \mathbb{R}$ and a criterion for optimality, $\text{reject}(\mathcal{S}, f)$ is non-empty if and only if there exists an optimal solution $s^* \in \mathcal{S}$ such that:</p>
+$$\forall s \in \mathcal{S} : f(s) < f(s^*).$$
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define the function for GPA
+def g(S):
+    return sum(sp.symbols('f' + str(i)) for i in range(len(S))) / len(S)
+
+# Evaluate g for different subsets of students
+S = ['Alice', 'Bob', 'Charlie']
+T = S[:2] + ['Charlie']
+
+print(g(T))</code></pre>
+<p>This code evaluates the function $g$ for different subsets of students and prints the result.</p>
+  </main>
+</div>
+</body>
+</html>

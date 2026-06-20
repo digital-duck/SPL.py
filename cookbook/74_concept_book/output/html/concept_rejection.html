@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rejection | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="rejection">Rejection</h2>
+<p>Rejection is a fundamental concept in decision-making and statistics that plays a crucial role in various fields, including machine learning, data analysis, and quality control.</p>
+<h3 id="definition">Definition</h3>
+<p>In general, rejection refers to the act of refusing or dismissing something, such as an offer, a proposal, or a hypothesis. In mathematical terms, rejection can be defined as a binary outcome where one option is selected and the other is discarded. This concept is often used in statistical testing, where we reject a null hypothesis if it is deemed insufficient evidence to support it.</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider a scenario where we are trying to determine whether a new product meets our quality standards. We collect a sample of products and perform a series of tests to evaluate their performance. Suppose the test results show that 90% of the products meet our standards, while 10% do not. In this case, we might reject the null hypothesis that all products meet our standards (H0) in favor of the alternative hypothesis that some products do not meet our standards (H1). We would reject H0 if the p-value associated with the test statistic is less than a certain significance level (e.g., 0.05).</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The Neyman-Pearson lemma states that when testing two hypotheses, we should always reject the null hypothesis if the likelihood ratio is greater than the critical value. Mathematically, this can be expressed as:</p>
+$$\frac{L(\theta_1)}{L(\theta_0)} > k$$
+<p>where $L(\theta)$ represents the likelihood function, $\theta_0$ and $\theta_1$ are the null and alternative hypotheses, respectively, and $k$ is the critical value.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>import sympy as sp
+
+# Define variables
+x = sp.symbols('x')
+p0 = 0.5  # Probability of success under H0
+p1 = 0.7  # Probability of success under H1
+
+# Likelihood ratio function
+def likelihood_ratio(p):
+    return (p**2) / ((1-p)**2)
+
+# Critical value (e.g., 0.05)
+critical_value = 5
+
+# Evaluate the likelihood ratio at p0 and p1
+lr_h0 = likelihood_ratio(p0)
+lr_h1 = likelihood_ratio(p1)
+
+print("Likelihood Ratio under H0:", lr_h0)
+print("Likelihood Ratio under H1:", lr_h1)
+
+if lr_h0 &gt; critical_value:
+    print("Reject H0")
+else:
+    print("Fail to reject H0")</code></pre>
+  </main>
+</div>
+</body>
+</html>

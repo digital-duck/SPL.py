@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Re- | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="re">Re-</h2>
+<p>Reconstruction of functions is a crucial concept in calculus, particularly when dealing with piecewise functions or functions with gaps.</p>
+<h3 id="definition">Definition</h3>
+<p>Given a function $f: \mathbb{R} \rightarrow \mathbb{R}$ and a non-empty set $\Phi$ of points that are not in the domain of $f$, the reconstruction of $f$ is denoted by $\tilde{f}$, and defined as:</p>
+$$
+\begin{array}{ll}
+f(x), & \text{if } x \notin \Phi \\
+L_x, & \text{if } x \in \Phi
+\end{array}
+\right.$$
+
+where $L_x$ is a linear function that interpolates $f$ at the points in $\Phi$.
+
+### Worked Example
+
+Consider the function $f(x) = \begin{cases} 0, & \text{if } x < 1 \\ 2x - 1, & \text{if } x \geq 1. \end{cases}$ and let $\Phi = \{1/2\}$. Then, the reconstruction of $f$ is:
+
+$$
+<p>\begin{array}{ll} 0, & \text{if } x < 1 \\ 2x - 1, & \text{if } x \in [0, 1] \cup (1, 2] \\ L_{1/2}, & \text{if } x = 1/2 \end{array} \right.$$</p>
+<p>where $L_{1/2}$ is the linear function that interpolates $f$ at $x=1/2$. Solving for $L_{1/2}$, we find:</p>
+$$L_{1/2}(x) = f(0) + \frac{f(1) - f(0)}{1-0} (x-0) = 0 + \frac{1}{2} x = \frac{x}{2}.$$
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The reconstruction theorem states that if $f: [a, b] \rightarrow \mathbb{R}$ is a function with a non-empty set of discontinuities $\Phi$, then the reconstruction $\tilde{f}$ is a piecewise linear function on $[a, b]$.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code>from sympy import symbols, Piecewise
+
+x = symbols('x')
+
+# Define the original function f(x)
+def f(x):
+    if x &lt; 1:
+        return 0
+    else:
+        return 2*x - 1
+
+# Define the linear interpolation L_x at point x=1/2
+L_x = (x-1)/3
+
+# Define the reconstruction of f(x) using a piecewise function
+tilde_f = Piecewise((0, x &lt; 1), (2*x - 1, x &gt;= 1))
+
+print(tilde_f)</code></pre>
+<p>This code defines the original function $f(x)$ and the linear interpolation $L_x$ at point $x=1/2$, then uses SymPy's <code>Piecewise</code> function to define the reconstruction $\tilde{f}$ of $f(x)$.</p>
+  </main>
+</div>
+</body>
+</html>

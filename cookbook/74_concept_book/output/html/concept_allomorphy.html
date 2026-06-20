@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Allomorphy | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="allomorphy">Allomorphy</h2>
+<p>Allomorphy refers to a branch of syntax that studies the distribution and patterning of allomorphs, which are forms of words or morphemes that differ from one another in their phonological or orthographic realizations.</p>
+<h3 id="definition">Definition</h3>
+<p>An allomorph is a form of a morpheme (a unit of meaning) that differs from others in its form, often due to changes in pronunciation, spelling, or both. Allomorphy can be observed in various languages, including English, where it is manifested through the use of different forms of words such as "bit" (the past tense of "bite") and "beat" (a verb meaning to strike or hit).</p>
+<h3 id="worked-example">Worked Example</h3>
+<p>Consider the English word "go". In its base form, the morpheme /g/ has two allomorphic variants: [ɡ] (as in "gold") and [ɔː] (as in "go"). The first variant is used before vowels, while the second variant is used before consonants. Using this information, we can sketch a possible proof of the allomorphy of /g/, which would involve demonstrating that there exists a non-constant function mapping the set of vowels onto the real numbers such that for each vowel, the corresponding value in the image of this function differs from the value in the image of another vowel.</p>
+<h3 id="key-theorem">Key Theorem</h3>
+<p>The Law of Allomorphy states that if a morpheme has allomorphic variants, then there exists an allomorphical hierarchy, where each level of the hierarchy corresponds to a particular set of allomorphs. This theorem provides a foundation for understanding the distribution and patterning of allomorphs in languages.</p>
+<h3 id="lab-cell-sympy">Lab Cell (SymPy)</h3>
+<pre><code># Define variables for the two variants of /g/
+g_gold = "gold"
+g_go = "go"
+
+# Define functions to map vowels to the real numbers
+def vowel_to_G(vowel):
+    if vowel == 'a':
+        return g_gold
+    elif vowel == 'e':
+        return g_gold
+    # Add more cases for other vowels as needed
+    else:
+        raise ValueError("Invalid vowel")
+
+def vowel_to_Go(vowel):
+    if vowel == 'a':
+        return g_go
+    elif vowel == 'e':
+        return g_go
+    # Add more cases for other vowels as needed
+    else:
+        raise ValueError("Invalid vowel")</code></pre>
+<p>Note: This is a simplified example and does not represent the full complexity of allomorphy in language.</p>
+  </main>
+</div>
+</body>
+</html>
