@@ -112,7 +112,7 @@ DO
     CALL now_iso() INTO @_ts
     CALL sanitize_ts(@_ts) INTO @_ts_safe
     CALL make_log_path(@log_dir, @_ts_safe) INTO @log_file
-    CALL write_file(@log_file, "# Concept-Book Run\n\ndomain: @@domain_yaml@@\ntarget: @@target@@\nstarted: @@_ts@@\n\n", "w") INTO @_
+    CALL write_file(@log_file, f"# Concept-Book Run\n\ndomain: {@domain_yaml}\ntarget: {@target}\nstarted: {@_ts}\n\n", "w") INTO @_
 
     -- 0.5. If @output_html is given, derive @output_dir from its parent directory.
     --      @output_html wins over @output_dir when both are set.
@@ -134,7 +134,7 @@ DO
 
     LOGGING f"Domain: {@domain_yaml}  Style: {@style}" LEVEL INFO
     LOGGING f"Teaching {@order_len} concepts toward {@target}" LEVEL INFO
-    CALL write_file(@log_file, f"## Teaching order ({@order_len} concepts)\n\n@@_order_bullets@@\n\n", "a") INTO @_
+    CALL write_file(@log_file, f"## Teaching order ({@order_len} concepts)\n\n{@_order_bullets}\n\n", "a") INTO @_
 
     -- 2. Generate and verify one section per concept in dependency order
     @textbook := ""
@@ -228,5 +228,5 @@ DO
             LOGGING "HTML output skipped (output_dir='' and output_html='')" LEVEL INFO
     END
 
-    COMMIT @textbook
+    RETURN @textbook
 END

@@ -135,6 +135,8 @@ def apply_filters(df: pd.DataFrame, f: dict) -> pd.DataFrame:
         r = r[r["solver"].isin(f["solvers"])]
     if f.get("statuses"):
         r = r[r["status"].isin(f["statuses"])]
+    if f.get("hostnames"):
+        r = r[r["hostname"].isin(f["hostnames"])]
     if f.get("pass_filter") == "Pass":
         r = r[r["pass"] == 1]
     elif f.get("pass_filter") == "Fail":
@@ -191,42 +193,62 @@ def main() -> None:
     with st.sidebar:
         st.header("Filters")
 
+        _FILTER_KEYS = [
+            "f_sources", "f_models", "f_tiers", "f_backends",
+            "f_solvers", "f_statuses", "f_hostnames", "f_pass", "f_search",
+        ]
+        # Phase-2 of Clear: pop filter keys BEFORE any widget is instantiated.
+        if st.session_state.pop("_clear_filters", False):
+            for k in _FILTER_KEYS:
+                st.session_state.pop(k, None)
+
         src_opts = runs_df["source_file"].tolist() if not runs_df.empty else []
-        sel_sources = st.multiselect("Experiment run", src_opts)
+        sel_sources = st.multiselect("Experiment run", src_opts, key="f_sources")
 
         if all_df.empty:
-            model_opts = tier_opts = backend_opts = status_opts = []
+            model_opts = tier_opts = backend_opts = status_opts = hostname_opts = []
             model_labels: dict = {}
         else:
             model_opts    = sorted(all_df["mid"].dropna().unique())
             tier_opts     = sorted(all_df["tier"].dropna().unique())
             backend_opts  = sorted(all_df["backend"].dropna().unique())
             status_opts   = sorted(all_df["status"].dropna().unique())
+            hostname_opts = sorted(all_df["hostname"].dropna().unique()) if "hostname" in all_df.columns else []
             model_labels  = (all_df.drop_duplicates("mid")
                              .set_index("mid")["label"].to_dict())
 
         sel_models   = st.multiselect(
-            "Model", model_opts,
+            "Model", model_opts, key="f_models",
             format_func=lambda m: f"{m}  ({model_labels.get(m, '')})",
         )
-        sel_tiers    = st.multiselect("Tier", tier_opts)
+        sel_tiers    = st.multiselect("Tier", tier_opts, key="f_tiers")
         sel_backends = st.multiselect(
-            "Backend", backend_opts,
+            "Backend", backend_opts, key="f_backends",
             format_func=lambda b: BACKEND_LABEL.get(b, b),
         )
-        sel_solvers  = st.multiselect("Solver arm", ["true", "false"])
-        sel_statuses = st.multiselect("Status", status_opts)
-        pass_filter  = st.radio("Pass / Fail", ["All", "Pass", "Fail"], horizontal=True)
-        search       = st.text_input("Search", placeholder="model · problem · status · backend")
+        sel_solvers  = st.multiselect("Solver arm", ["true", "false"], key="f_solvers")
+        sel_statuses  = st.multiselect("Status", status_opts, key="f_statuses")
+        sel_hostnames = st.multiselect("Hostname", hostname_opts, key="f_hostnames")
+        pass_filter  = st.radio("Pass / Fail", ["All", "Pass", "Fail"],
+                                horizontal=True, key="f_pass")
+        search       = st.text_input("Search", placeholder="model · problem · status · backend",
+                                     key="f_search")
 
-        if st.button("Refresh", use_container_width=True):
-            st.cache_data.clear()
-            st.rerun()
+        btn_col1, btn_col2 = st.columns(2)
+        with btn_col1:
+            if st.button("Refresh", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
+        with btn_col2:
+            if st.button("Clear", use_container_width=True):
+                # Phase-1: set flag and rerun so keys are popped before widgets render.
+                st.session_state["_clear_filters"] = True
+                st.rerun()
 
     filters = dict(
         sources=sel_sources, models=sel_models, tiers=sel_tiers,
         backends=sel_backends, solvers=sel_solvers, statuses=sel_statuses,
-        pass_filter=pass_filter, search=search,
+        hostnames=sel_hostnames, pass_filter=pass_filter, search=search,
     )
     df = apply_filters(all_df, filters)
 
@@ -252,16 +274,31 @@ def main() -> None:
         if runs_df.empty:
             st.info("No runs yet — run run_experiment.py to populate the database.")
         else:
+            filters_active = any([
+                sel_sources, sel_models, sel_tiers, sel_backends,
+                sel_solvers, sel_statuses, sel_hostnames, pass_filter != "All", search,
+            ])
             exp_rows = []
             for _, r in runs_df.iterrows():
-                sf   = r["source_file"]
-                sub  = cast(pd.DataFrame, all_df[all_df["source_file"] == sf]) if not all_df.empty else pd.DataFrame()
+                sf  = r["source_file"]
+                # Use the sidebar-filtered df so all filters apply to run stats.
+                sub = cast(pd.DataFrame, df[df["source_file"] == sf]) if not df.empty else pd.DataFrame()
                 done = len(sub)
+                if done == 0 and filters_active:
+                    continue  # hide runs with no matching rows under current filter
+                # AND semantics for multi-backend selection: the run must contain
+                # ALL selected backends, not merely any one of them.
+                if done > 0 and len(sel_backends) > 1:
+                    present = set(sub["backend"].dropna().unique())
+                    if not set(sel_backends).issubset(present):
+                        continue
                 passed = int(sub["pass"].sum()) if done else 0  # type: ignore[arg-type]
                 solver_sub = sub[sub["solver"] == "true"] if done else pd.DataFrame()
                 solver_pass = int(solver_sub["pass"].sum()) if not solver_sub.empty else 0  # type: ignore[arg-type]
                 backends_seen = sorted(sub["backend"].dropna().unique()) if done else []
-                hostname_val = sub["hostname"].iloc[0] if (done and "hostname" in sub.columns) else "—"
+                # hostname from unfiltered all_df so it survives any filter
+                all_sub = cast(pd.DataFrame, all_df[all_df["source_file"] == sf]) if not all_df.empty else pd.DataFrame()
+                hostname_val = all_sub["hostname"].iloc[0] if (not all_sub.empty and "hostname" in all_sub.columns) else "—"
                 started  = r.get("imported_at") or ""
                 stopped  = r.get("stopped_at") or ""
                 duration = "—"
@@ -289,7 +326,10 @@ def main() -> None:
                     "duration":     duration,
                 })
             runs_display = pd.DataFrame(exp_rows)
-            st.caption(f"{len(runs_display)} runs  · click a row to see details")
+            caption = f"{len(runs_display)} runs  · click a row to see details"
+            if filters_active:
+                caption += "  · ⚑ stats reflect current sidebar filter"
+            st.caption(caption)
             runs_sel = st.dataframe(  # pyright: ignore[reportCallIssue]
                 runs_display, hide_index=True, use_container_width=True,
                 on_select="rerun", selection_mode="single-row",
