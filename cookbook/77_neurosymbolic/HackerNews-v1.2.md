@@ -1,4 +1,4 @@
-# What If LLM Workflow Could Be Written Like SQL?
+# What If LLM Workflow Could Be Orchestrated Like Writing SQL?
 
 *Repo: [github.com/digital-duck/SPL.py](https://github.com/digital-duck/SPL.py) (Apache 2.0)*
 
