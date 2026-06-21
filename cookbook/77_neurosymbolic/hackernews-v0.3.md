@@ -112,13 +112,32 @@ lightweight process that polls the hub for tasks. That description fits a
 gaming PC, a home server — and an enterprise MacBook fleet. Apple Silicon
 runs Ollama with Metal GPU acceleration out of the box. An organization with
 hundreds of MacBooks sitting idle overnight already owns a meaningful
-distributed inference cluster; it just isn't wired up yet. No new hardware
-budget, no external API calls, no data leaving the building. The hub lives on
-the LAN, the agents live on the laptops, the models run on-device. If a
-laptop closes its lid mid-task, the hub requeues it. Workers are disposable
-by design. The batch workload — overnight experiment runs, document
-processing, code review queues, anything that doesn't need sub-second latency
-— drops in without changing a line of workflow code.
+distributed inference cluster; it just isn't wired up yet.
+
+This is why Momagrid and SPL were designed: **token tax and data privacy are
+now real organizational problems.** Token tax is the per-call cost that
+accumulates every time a GENERATE step routes to an external API — and at
+scale, with batch workloads running continuously, it becomes a significant
+line item. Privacy is the other side: every token sent to an external
+provider is data that left the building. For enterprises dealing with
+proprietary documents, source code, or regulated content, that is not a
+theoretical concern.
+
+The on-device alternative eliminates both. No new hardware budget. No
+external API calls. No data egress. The hub lives on the LAN, the agents
+live on the laptops, the models run on-device. If a laptop closes its lid
+mid-task, the hub requeues it — workers are disposable by design. The batch
+workload — overnight experiment runs, document processing, code review
+queues, anything that does not need sub-second latency — drops in without
+changing a line of workflow code.
+
+**The same argument applies to schools.** A university or high school with
+a laptop fleet — students' MacBooks, a computer lab, a few idle workstations
+— can run the same stack. Free, local, private inference for educational
+AI workflows, with no dependency on commercial API availability or budget
+allocation per student. The concept-book pipeline this project is ultimately
+building toward (recipes 70–74: generated, verified educational content) is
+designed to run exactly here.
 
 ## The 400-cell benchmark, first results
 
