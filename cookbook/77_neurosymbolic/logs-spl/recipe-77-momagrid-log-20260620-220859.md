@@ -15062,3 +15062,10488 @@ _Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
 ```
 
 ```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the limit of sin(x) divided by x as x approaches 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 5c39059d-fbd1-409c-9369-12d3ba2cf3cb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5c39059d-fbd1-409c-9369-12d3ba2cf3cb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 5c39059d-fbd1-409c-9369-12d3ba2cf3cb completed by agent mac-wens-Mac-mini.local in 12986ms (12 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 12 tokens, 16100ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (22 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)/x|limit(x,0)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 27 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 144ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] limit(sin(x)/x, x->0) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 9bc35af1-69e9-41df-99eb-0a8a2bdce8bf submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9bc35af1-69e9-41df-99eb-0a8a2bdce8bf "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 9bc35af1-69e9-41df-99eb-0a8a2bdce8bf completed by agent mac-wens-Mac-mini.local in 64792ms (162 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 162 tokens, 66296ms
+INFO:spl.executor:GENERATE chain done -> @result (616 chars total)
+INFO:spl.executor:RETURN: 616 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  The problem asks us to find out what happens to the value of the expression \(\frac{\sin(x)}{x}\) as \(x\) gets closer and closer to 0. When we look at this situation mathematically, there's a well-known result that tells us exactly what occurs in this limit scenario. Specifically, when you calculate the limit of \(\frac{\sin(x)}{x}\) as \(x\) approaches 0, it evaluates to 1. This result holds true because, near zero, the sine function behaves almost linearly with respect to \(x\), making their ratio approach 1. So, the final answer is that the limit of \(\frac{\sin(x)}{x}\) as \(x\) approaches 0 is indeed 1.
+LLM calls: 2  Latency: 82542ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222038.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 36bf280e-b319-4a4f-bd29-0de36f4cd57b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/36bf280e-b319-4a4f-bd29-0de36f4cd57b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 36bf280e-b319-4a4f-bd29-0de36f4cd57b completed by agent wengong in 21911ms (509 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 509 tokens, 24107ms
+INFO:spl.executor:GENERATE chain done -> @result (1421 chars total)
+INFO:spl.executor:RETURN: 1421 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks us to find and simplify the integral of the product of sine and cosine functions, specifically \(\int \sin(x) \cos(x) \, dx\).
+
+1. **Choose a substitution method:** We can use the trigonometric identity or substitution method. Here, let's use substitution: let \( u = \sin(x) \). Then, the derivative is \( du = \cos(x) \, dx \), which implies \( \cos(x) \, dx = du \).
+
+2. **Rewrite the integral:** Substitute \( u = \sin(x) \) and \( \cos(x) \, dx = du \) into the integral:
+   \[
+   \int \sin(x) \cos(x) \, dx = \int u \, du
+   \]
+
+3. **Integrate with respect to \( u \):** The integral of \( u \) with respect to \( u \) is:
+   \[
+   \frac{u^2}{2} + C
+   \]
+   where \( C \) is the constant of integration.
+
+4. **Substitute back in terms of \( x \):** Replace \( u \) with \(\sin(x)\):
+   \[
+   \frac{\sin^2(x)}{2} + C
+   \]
+
+5. **Simplify using a trigonometric identity:** We can use the identity \(\sin(2x) = 2\sin(x)\cos(x)\). Therefore, \(\sin(x)\cos(x) = \frac{1}{2}\sin(2x)\).
+
+6. **Rewrite the integral using this identity:**
+   \[
+   \int \sin(x) \cos(x) \, dx = \int \frac{1}{2} \sin(2x) \, dx
+   \]
+
+7. **Integrate with respect to \( x \):** The integral of \(\frac{1}{2} \sin(2x)\) is:
+   \[
+   -\frac{1}{4} \cos(2x) + C
+   \]
+
+Thus, the integral of \(\sin(x) \cos(x)\) can be expressed in two equivalent forms:
+\[
+\frac{\sin^2(x)}{2} + C \quad \text{or} \quad -\frac{1}{4} \cos(2x) + C
+\]
+LLM calls: 1  Latency: 24108ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222142.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'integrate the square root of (4 minus x squared)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c2037ae9-fb3e-4e54-b8a0-355a38a0deb6 completed by agent papa-game in 42029ms (880 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 880 tokens, 44190ms
+INFO:spl.executor:GENERATE chain done -> @result (2186 chars total)
+INFO:spl.executor:RETURN: 2186 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks us to find the integral of the function \(\sqrt{4 - x^2}\) with respect to \(x\). To solve this, we recognize that the integrand resembles the equation of a circle, suggesting a trigonometric substitution. We use the substitution \(x = 2\sin\theta\), which implies \(dx = 2\cos\theta \, d\theta\). Substituting these into the integral gives:
+
+\[
+\int \sqrt{4 - (2\sin\theta)^2} \cdot 2\cos\theta \, d\theta = \int \sqrt{4 - 4\sin^2\theta} \cdot 2\cos\theta \, d\theta
+\]
+
+Simplifying inside the square root:
+
+\[
+= \int \sqrt{4(1 - \sin^2\theta)} \cdot 2\cos\theta \, d\theta = \int \sqrt{4\cos^2\theta} \cdot 2\cos\theta \, d\theta
+\]
+
+This simplifies to:
+
+\[
+= \int 2|\cos\theta| \cdot 2\cos\theta \, d\theta = \int 4\cos^2\theta \, d\theta
+\]
+
+Since \(\theta\) is in the range where \(\sin\theta\) is valid for our substitution (\(-\frac{\pi}{2} \leq \theta \leq \frac{\pi}{2}\)), \(\cos\theta\) is non-negative, so \(|\cos\theta| = \cos\theta\). Thus:
+
+\[
+= \int 4\cos^2\theta \, d\theta
+\]
+
+Using the identity \(\cos^2\theta = \frac{1 + \cos(2\theta)}{2}\), we have:
+
+\[
+= \int 4 \cdot \frac{1 + \cos(2\theta)}{2} \, d\theta = \int (2 + 2\cos(2\theta)) \, d\theta
+\]
+
+This splits into two integrals:
+
+\[
+= \int 2 \, d\theta + \int 2\cos(2\theta) \, d\theta
+\]
+
+The first integral is straightforward:
+
+\[
+= 2\theta
+\]
+
+For the second integral, use the substitution \(u = 2\theta\), \(du = 2d\theta\), or \(d\theta = \frac{1}{2}du\):
+
+\[
+= \int 2\cos(2\theta) \, d\theta = \int 2\cos(u) \cdot \frac{1}{2} \, du = \int \cos(u) \, du
+\]
+
+This evaluates to:
+
+\[
+= \sin(u) = \sin(2\theta)
+\]
+
+Putting it all together:
+
+\[
+= 2\theta + \sin(2\theta) + C
+\]
+
+Now, revert back to \(x\) using \(x = 2\sin\theta\), so \(\sin\theta = \frac{x}{2}\). Therefore, \(\theta = \arcsin\left(\frac{x}{2}\right)\). Also, \(\sin(2\theta) = 2\sin\theta\cos\theta = 2\cdot\frac{x}{2}\cdot\sqrt{1-\left(\frac{x}{2}\right)^2} = x\sqrt{1-\frac{x^2}{4}}\).
+
+Thus, the integral in terms of \(x\) is:
+
+\[
+= 2\arcsin\left(\frac{x}{2}\right) + x\sqrt{1-\frac{x^2}{4}} + C
+\]
+
+So, the final answer is:
+
+\[
+\int \sqrt{4 - x^2} \, dx = 2\arcsin\left(\frac{x}{2}\right) + x\sqrt{1-\frac{x^2}{4}} + C
+\]
+LLM calls: 1  Latency: 44191ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222122.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 77f51188-3475-4be5-844f-eb386e4bb4ab submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77f51188-3475-4be5-844f-eb386e4bb4ab "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 77f51188-3475-4be5-844f-eb386e4bb4ab completed by agent wengong in 8471ms (16 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 16 tokens, 10068ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (42 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sin(x)*cos(x)|integrate  
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 62 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1918ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] integral of sin(x)*cos(x) dx = -1/2*cos(x)^2 + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 53 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 7ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(-1/2*cos(x)^2) = -1/2*cos(x)^2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 42f1c741-da6b-46ca-ab9f-97e3653e3208 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/42f1c741-da6b-46ca-ab9f-97e3653e3208 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 42f1c741-da6b-46ca-ab9f-97e3653e3208 completed by agent wengong in 27841ms (162 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 162 tokens, 30137ms
+INFO:spl.executor:GENERATE chain done -> @result (594 chars total)
+INFO:spl.executor:RETURN: 594 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  The question asks for the integral of the product of sine and cosine functions with respect to \( x \), followed by a simplification of the result. First, we find the indefinite integral of \(\sin(x) \cdot \cos(x)\). The symbolic math engine provides the exact antiderivative as \(-\frac{1}{2} \cos^2(x) + C\), where \(C\) is the constant of integration. Next, we simplify this expression. In this case, the simplification step confirms that \(-\frac{1}{2} \cos^2(x)\) is already in its simplest form. Therefore, the final answer for the integral, simplified, is \(-\frac{1}{2} \cos^2(x) + C\).
+LLM calls: 2  Latency: 42132ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222132.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6d2d6777-c4fd-4d68-aee6-b2f6330d1107 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6d2d6777-c4fd-4d68-aee6-b2f6330d1107 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6d2d6777-c4fd-4d68-aee6-b2f6330d1107 completed by agent mac-wens-Mac-mini.local in 14680ms (18 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 18 tokens, 18090ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (38 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+[x + y - 5, x - y - 1]|solve_system
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 80 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1881ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] solve_system([x + y - 5, x - y - 1]) = [
+[x == 3, y == 2]
+]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c4db51c5-855c-4f90-bf02-4adc8b2bc958 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c4db51c5-855c-4f90-bf02-4adc8b2bc958 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c4db51c5-855c-4f90-bf02-4adc8b2bc958 completed by agent papa-game in 10098ms (207 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 207 tokens, 12067ms
+INFO:spl.executor:GENERATE chain done -> @result (713 chars total)
+INFO:spl.executor:RETURN: 713 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks us to find the values of \( x \) and \( y \) that satisfy both equations: \( x + y = 5 \) and \( x - y = 1 \). We can solve this system of equations by using a method called substitution or elimination, but here we see it's solved directly. The result from solving the system is given as \( [x == 3, y == 2] \), meaning that when we substitute these values back into both original equations, they hold true. Specifically, for the equation \( x + y = 5 \), substituting \( x = 3 \) and \( y = 2 \) gives us \( 3 + 2 = 5 \). For the equation \( x - y = 1 \), substituting the same values results in \( 3 - 2 = 1 \). Therefore, the solution to the system of equations is \( x = 3 \) and \( y = 2 \).
+LLM calls: 2  Latency: 32040ms
+Workers: mac-wens-Mac-mini.local, papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222146.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task df952d5f-742c-46c8-96b6-e4ec9ac2da6b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/df952d5f-742c-46c8-96b6-e4ec9ac2da6b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task df952d5f-742c-46c8-96b6-e4ec9ac2da6b completed by agent mac-wens-Mac-mini.local in 18723ms (188 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 188 tokens, 20132ms
+INFO:spl.executor:GENERATE chain done -> @result (532 chars total)
+INFO:spl.executor:RETURN: 532 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the values of \( x \) and \( y \) that satisfy both equations: \( x + y = 5 \) and \( x - y = 1 \).
+
+First, let's add the two equations together:
+
+\[ 
+(x + y) + (x - y) = 5 + 1 
+\]
+
+This simplifies to:
+
+\[ 
+2x = 6 
+\]
+
+Now, divide both sides by 2 to solve for \( x \):
+
+\[ 
+x = 3 
+\]
+
+Next, substitute \( x = 3 \) back into the first equation to find \( y \):
+
+\[ 
+3 + y = 5 
+\]
+
+Subtract 3 from both sides:
+
+\[ 
+y = 2 
+\]
+
+So, the solution to the system of equations is \( x = 3 \) and \( y = 2 \).
+LLM calls: 1  Latency: 20133ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222201.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c1351540-d04e-4c05-8087-eb56dd4c0a68 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1351540-d04e-4c05-8087-eb56dd4c0a68 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c1351540-d04e-4c05-8087-eb56dd4c0a68 completed by agent wengong in 29050ms (544 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 544 tokens, 30130ms
+INFO:spl.executor:GENERATE chain done -> @result (1393 chars total)
+INFO:spl.executor:RETURN: 1393 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  To find the eigenvalues of a 2x2 matrix, we need to solve for values \(\lambda\) where the determinant of the matrix \(A - \lambda I\) is zero. Here, the matrix \(A\) is given by:
+
+\[ A = \begin{bmatrix} 1 & 2 \\ 3 & 4 \end{bmatrix}. \]
+
+The identity matrix \(I\) for a 2x2 matrix is:
+
+\[ I = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}. \]
+
+Subtracting \(\lambda I\) from \(A\), we have:
+
+\[ A - \lambda I = \begin{bmatrix} 1 - \lambda & 2 \\ 3 & 4 - \lambda \end{bmatrix}. \]
+
+Next, we find the determinant of this matrix:
+
+\[ \text{det}(A - \lambda I) = (1 - \lambda)(4 - \lambda) - (2)(3). \]
+
+Expanding the expression gives:
+
+\[ (1 - \lambda)(4 - \lambda) = 4 - \lambda - 4\lambda + \lambda^2 = \lambda^2 - 5\lambda + 4. \]
+
+Substituting back, we have:
+
+\[ \text{det}(A - \lambda I) = \lambda^2 - 5\lambda + 4 - 6. \]
+
+Simplifying further:
+
+\[ \lambda^2 - 5\lambda - 2. \]
+
+To find the eigenvalues, solve the equation:
+
+\[ \lambda^2 - 5\lambda - 2 = 0. \]
+
+Using the quadratic formula \(\lambda = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}\), where \(a = 1\), \(b = -5\), and \(c = -2\):
+
+\[ \lambda = \frac{-(-5) \pm \sqrt{(-5)^2 - 4(1)(-2)}}{2(1)}. \]
+
+This simplifies to:
+
+\[ \lambda = \frac{5 \pm \sqrt{25 + 8}}{2}. \]
+
+\[ \lambda = \frac{5 \pm \sqrt{33}}{2}. \]
+
+Thus, the eigenvalues of the matrix are:
+
+\[ \lambda_1 = \frac{5 + \sqrt{33}}{2}, \quad \lambda_2 = \frac{5 - \sqrt{33}}{2}. \]
+LLM calls: 1  Latency: 30131ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222207.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the Laplace transform of exp(-2*t)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task b732ef4c-bc84-415b-8f9d-e9464a0a1610 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b732ef4c-bc84-415b-8f9d-e9464a0a1610 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task b732ef4c-bc84-415b-8f9d-e9464a0a1610 completed by agent papa-game in 21273ms (451 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 451 tokens, 24135ms
+INFO:spl.executor:GENERATE chain done -> @result (1175 chars total)
+INFO:spl.executor:RETURN: 1175 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the Laplace transform of the function \( e^{-2t} \). The Laplace transform of a function \( f(t) \), denoted by \( \mathcal{L}\{f(t)\} \), is defined as:
+
+\[
+\mathcal{L}\{f(t)\} = \int_0^\infty e^{-st} f(t) \, dt
+\]
+
+where \( s \) is a complex number. For our specific function \( f(t) = e^{-2t} \), we substitute it into the definition:
+
+\[
+\mathcal{L}\{e^{-2t}\} = \int_0^\infty e^{-st} e^{-2t} \, dt
+\]
+
+We can combine the exponents in the integrand:
+
+\[
+= \int_0^\infty e^{-(s+2)t} \, dt
+\]
+
+This integral is a standard exponential integral. The antiderivative of \( e^{-(s+2)t} \) with respect to \( t \) is:
+
+\[
+\frac{e^{-(s+2)t}}{-(s+2)}
+\]
+
+Now we evaluate this from 0 to infinity:
+
+\[
+= \left[ \frac{e^{-(s+2)t}}{-(s+2)} \right]_0^\infty
+\]
+
+At the upper limit (\( t = \infty \)), \( e^{-(s+2)t} \) approaches 0 if \( \text{Re}(s+2) > 0 \), which ensures convergence. At the lower limit (\( t = 0 \)), it becomes:
+
+\[
+= \left( 0 - \frac{1}{-(s+2)} \right)
+\]
+
+Simplifying this expression gives us:
+
+\[
+= \frac{1}{s+2}
+\]
+
+Therefore, the Laplace transform of \( e^{-2t} \) is:
+
+\[
+\frac{1}{s+2}, \quad \text{for } \text{Re}(s) > -2
+\]
+LLM calls: 1  Latency: 24136ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222219.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'integrate the square root of (4 minus x squared)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 509fc5d1-c06f-48d1-8672-384763d047d8 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509fc5d1-c06f-48d1-8672-384763d047d8 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 509fc5d1-c06f-48d1-8672-384763d047d8 completed by agent papa-game in 43687ms (17 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 17 tokens, 46189ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (40 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sqrt(4 - x**2)|integrate  
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 113 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1855ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] integral of sqrt(4 - x**2) dx = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 128 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 15ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)) = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f8c17c51-f421-4630-af9b-4e073a438b12 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f8c17c51-f421-4630-af9b-4e073a438b12 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f8c17c51-f421-4630-af9b-4e073a438b12 completed by agent mac-wens-Mac-mini.local in 33975ms (261 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 261 tokens, 36202ms
+INFO:spl.executor:GENERATE chain done -> @result (792 chars total)
+INFO:spl.executor:RETURN: 792 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  You're trying to find the integral of the square root of \(4 - x^2\) with respect to \(x\). Let's walk through how this is done step by step. First, we use a method involving trigonometric substitution or recognize it as an arc-related function, which gives us the result: \(\frac{1}{2}\sqrt{-x^2 + 4} \cdot x + 2 \arcsin\left(\frac{1}{2}x\right) + C\), where \(C\) is the constant of integration. Next, we check if this expression can be simplified further; however, in this case, it remains unchanged: \(\frac{1}{2}\sqrt{-x^2 + 4} \cdot x + 2 \arcsin\left(\frac{1}{2}x\right)\). So, the final answer for the integral of \(\sqrt{4 - x^2}\) with respect to \(x\) is:
+
+\[
+\frac{1}{2}x\sqrt{4-x^2} + 2 \arcsin\left(\frac{x}{2}\right) + C
+\] 
+
+where \(C\) represents the constant of integration.
+LLM calls: 2  Latency: 84263ms
+Workers: mac-wens-Mac-mini.local, papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222122.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d44dd081-7f1b-4fdd-9a6c-df7c2136a190 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d44dd081-7f1b-4fdd-9a6c-df7c2136a190 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d44dd081-7f1b-4fdd-9a6c-df7c2136a190 completed by agent wengong in 15953ms (353 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 353 tokens, 18090ms
+INFO:spl.executor:GENERATE chain done -> @result (1241 chars total)
+INFO:spl.executor:RETURN: 1241 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to solve a differential equation where the rate of change of \( y \) with respect to \( x \), denoted as \( y'(x) \), is equal to \( y(x) \). Additionally, we are given an initial condition that when \( x = 0 \), the value of \( y \) should be 1. This type of equation is a first-order linear differential equation with constant coefficients.
+
+To solve this differential equation, start by rewriting it in standard form:
+
+\[ y'(x) = y(x). \]
+
+This suggests an exponential growth model where the solution can generally be expressed as:
+
+\[ y(x) = Ce^{kx}, \]
+
+where \( C \) and \( k \) are constants to be determined. Since the derivative of \( e^{kx} \) is \( ke^{kx} \), comparing with \( y'(x) = y(x) \) implies that \( k = 1 \). Thus, our solution takes the form:
+
+\[ y(x) = Ce^x. \]
+
+Now, apply the initial condition \( y(0) = 1 \):
+
+Substitute \( x = 0 \) into the equation: 
+
+\[ y(0) = Ce^{0} = C \cdot 1 = C. \]
+
+Since \( y(0) = 1 \), it follows that:
+
+\[ C = 1. \]
+
+Therefore, substituting back, the solution to the differential equation is:
+
+\[ y(x) = e^x. \]
+
+Thus, the final answer is:
+
+The function \( y(x) = e^x \) satisfies both the differential equation and the initial condition given in the problem.
+LLM calls: 1  Latency: 18092ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222238.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e5967272-2885-49c7-9a2f-b64d68affbb2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e5967272-2885-49c7-9a2f-b64d68affbb2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e5967272-2885-49c7-9a2f-b64d68affbb2 completed by agent papa-game in 18664ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 22133ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (32 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x) - y(x)|ode_solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 64 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1868ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x) - y(x) = 0) -> Eq(y(x), C1*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task b3ba1b8d-5932-4360-a7e4-6b29912b78e9 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3ba1b8d-5932-4360-a7e4-6b29912b78e9 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task b3ba1b8d-5932-4360-a7e4-6b29912b78e9 completed by agent papa-game in 13101ms (272 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 272 tokens, 16093ms
+INFO:spl.executor:GENERATE chain done -> @result (864 chars total)
+INFO:spl.executor:RETURN: 864 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks us to find a function \( y(x) \) such that its derivative with respect to \( x \), denoted as \( y'(x) \), is equal to the function itself, \( y(x) \). Additionally, we know that when \( x = 0 \), the value of the function \( y(0) \) must be 1. 
+
+To solve this, we start with the differential equation: \( y'(x) - y(x) = 0 \). Using a symbolic math engine to solve this, it gives us the general solution: \( y(x) = C_1 \cdot e^x \), where \( C_1 \) is an arbitrary constant.
+
+Next, we apply the initial condition \( y(0) = 1 \) to find the specific value of \( C_1 \). Substituting \( x = 0 \) into the general solution, we get: \( y(0) = C_1 \cdot e^0 = C_1 \cdot 1 = C_1 \). Since \( y(0) = 1 \), it follows that \( C_1 = 1 \).
+
+Therefore, the specific solution to the differential equation with the given initial condition is: \( y(x) = e^x \).
+LLM calls: 2  Latency: 40095ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222222.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e86587cc-a395-43cb-9d17-fa3d5879313f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e86587cc-a395-43cb-9d17-fa3d5879313f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e86587cc-a395-43cb-9d17-fa3d5879313f completed by agent papa-game in 11700ms (18 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 18 tokens, 14076ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (31 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+[[1, 2], [3, 4]]|eigenvalues
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 115 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1870ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] eigenvalues([[1, 2], [3, 4]]) = [-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 52c53287-9b18-4469-8170-09d6176bc341 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/52c53287-9b18-4469-8170-09d6176bc341 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 52c53287-9b18-4469-8170-09d6176bc341 completed by agent mac-wens-Mac-mini.local in 40545ms (192 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 192 tokens, 42237ms
+INFO:spl.executor:GENERATE chain done -> @result (633 chars total)
+INFO:spl.executor:RETURN: 633 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks us to find the eigenvalues of a 2x2 matrix where the first row is [1, 2] and the second row is [3, 4]. To do this, we use the symbolic math engine, which calculates these values precisely. The result from the calculation is expressed as two numbers: \(-\frac{1}{2}\sqrt{33} + \frac{5}{2}\) and \(\frac{1}{2}\sqrt{33} + \frac{5}{2}\). These are the exact eigenvalues of the matrix. In simpler terms, these values tell us about certain properties related to the transformation described by this matrix. Thus, the final eigenvalues are \(-\frac{1}{2}\sqrt{33} + \frac{5}{2}\) and \(\frac{1}{2}\sqrt{33} + \frac{5}{2}\).
+LLM calls: 2  Latency: 58185ms
+Workers: mac-wens-Mac-mini.local, papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222207.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the Laplace transform of exp(-2*t)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 17323768-95c7-40e6-be63-3ada049e242b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17323768-95c7-40e6-be63-3ada049e242b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 17323768-95c7-40e6-be63-3ada049e242b completed by agent wengong in 21839ms (8 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 8 tokens, 24147ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (17 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+exp(-2*t)|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 50 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1849ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] laplace_transform(exp(-2*t)) = 1/(s + 2)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 7a77b01b-d58c-4915-830b-36788258e026 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7a77b01b-d58c-4915-830b-36788258e026 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 7a77b01b-d58c-4915-830b-36788258e026 completed by agent wengong in 23680ms (222 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 222 tokens, 24140ms
+INFO:spl.executor:GENERATE chain done -> @result (782 chars total)
+INFO:spl.executor:RETURN: 782 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The question asks us to find the Laplace transform of the function \( e^{-2t} \). The Laplace transform is a mathematical operation that converts a time-domain function into a frequency-domain representation. For this specific function, we apply the standard formula for finding the Laplace transform of an exponential decay function.
+
+Firstly, recall the general form: the Laplace transform of \( e^{at} \) is given by \( \frac{1}{s-a} \), where \( s \) is a complex number parameter. In our case, the function is \( e^{-2t} \). Here, \( a = -2 \).
+
+By substituting \( a = -2 \) into the formula, we get:
+
+\[ \text{Laplace transform of } e^{-2t} = \frac{1}{s - (-2)} = \frac{1}{s + 2}. \]
+
+Thus, the final answer for the Laplace transform of \( e^{-2t} \) is \( \frac{1}{s + 2} \).
+LLM calls: 2  Latency: 50138ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222215.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d48613f2-7929-4ef0-bd31-4c1dc32baacf submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d48613f2-7929-4ef0-bd31-4c1dc32baacf "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d48613f2-7929-4ef0-bd31-4c1dc32baacf completed by agent wengong in 9177ms (26 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 26 tokens, 12103ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (60 chars total)
+[INFO] [arm=solver] decomposed into 4 step(s):
+
+
+x**4 - 1|solve  
+PREV|simplify  
+PREV|factor  
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2076ms (0 LLM calls)
+[INFO] [arm=solver][step 1/4] solve(x**4 - 1 = 0) -> x = [I, -1, -I, 1]
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/4] simplify([I, -1, -I, 1]) = [I, -1, -I, 1]
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 60 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/4: [I, -1, -I, 1]: unable to factor [I, -1, -I, 1]
+INFO:spl.executor:RETURN: 220 chars | status=solver_error, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/4 could not be computed: [I, -1, -I, 1]: unable to factor [I, -1, -I, 1]
+Verified chain up to this point:
+1. solve(x**4 - 1 = 0) -> x = [I, -1, -I, 1]
+2. simplify([I, -1, -I, 1]) = [I, -1, -I, 1]
+
+LLM calls: 1  Latency: 14181ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222256.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c8958088-e960-4ea9-b85d-75c197d29674 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c8958088-e960-4ea9-b85d-75c197d29674 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c8958088-e960-4ea9-b85d-75c197d29674 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c8958088-e960-4ea9-b85d-75c197d29674 completed by agent papa-game in 1133ms (17 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 17 tokens, 2026ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (32 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+1/n**2|summation(n,1,oo)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 47 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1980ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] sum(1/n**2, n=1..+Infinity) = 1/6*pi^2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3406d0f3-69d0-467e-b302-6f1853cd1b7e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3406d0f3-69d0-467e-b302-6f1853cd1b7e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3406d0f3-69d0-467e-b302-6f1853cd1b7e completed by agent mac-wens-Mac-mini.local in 32226ms (160 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 160 tokens, 34161ms
+INFO:spl.executor:GENERATE chain done -> @result (587 chars total)
+INFO:spl.executor:RETURN: 587 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks us to find the sum of the series where we add up the values of 1 divided by n squared for every positive integer n, continuing this process indefinitely. 
+
+To solve it, we start with the expression \(\sum_{n=1}^{\infty} \frac{1}{n^2}\). This notation means you are summing the series starting from \(n = 1\) and going to infinity.
+
+The symbolic math engine calculates this infinite series and finds that it equals \(\frac{1}{6}\pi^2\).
+
+Thus, when we add up all these terms of \(\frac{1}{n^2}\) for every positive integer n, the total sum is exactly \(\frac{\pi^2}{6}\).
+LLM calls: 2  Latency: 38169ms
+Workers: mac-wens-Mac-mini.local, papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222243.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 92147b31-17f0-49dc-8f78-1e9c0146cb90 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/92147b31-17f0-49dc-8f78-1e9c0146cb90 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/92147b31-17f0-49dc-8f78-1e9c0146cb90 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/92147b31-17f0-49dc-8f78-1e9c0146cb90 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 92147b31-17f0-49dc-8f78-1e9c0146cb90 completed by agent wengong in 2995ms (27 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 27 tokens, 4036ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (53 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)|ode_solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 113 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1894ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0) -> Eq(y(x), (C1 + C2*exp(x))*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 402364ec-93d3-41a7-9310-e9d5957d8c51 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/402364ec-93d3-41a7-9310-e9d5957d8c51 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 402364ec-93d3-41a7-9310-e9d5957d8c51 completed by agent wengong in 14458ms (314 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 314 tokens, 16070ms
+INFO:spl.executor:GENERATE chain done -> @result (1043 chars total)
+INFO:spl.executor:RETURN: 1043 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks us to find a general solution for a second-order linear homogeneous differential equation given by \( y''(x) - 3y'(x) + 2y(x) = 0 \). We'll solve it using symbolic computation. The first step involves applying the method of solving such equations, which typically involves finding characteristic roots.
+
+The differential operator can be represented as a polynomial: \( r^2 - 3r + 2 = 0 \). Solving this quadratic equation for \( r \), we find the roots to be \( r_1 = 1 \) and \( r_2 = 2 \).
+
+These roots indicate that the general solution is constructed from exponential functions of these roots. Therefore, the solution takes the form: 
+
+\[ y(x) = C_1 e^{r_1 x} + C_2 e^{r_2 x} \]
+
+Substituting the values of \( r_1 \) and \( r_2 \), we have:
+
+\[ y(x) = C_1 e^x + C_2 e^{2x} \]
+
+So, the general solution to the differential equation is \( y(x) = (C_1 + C_2 \cdot e^x) \cdot e^x \), which simplifies to \( y(x) = C_1 e^x + C_2 e^{2x} \). Here, \( C_1 \) and \( C_2 \) are arbitrary constants determined by initial conditions.
+LLM calls: 2  Latency: 22001ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222306.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3208f7da-e547-48c1-9220-c5c5ab72c8df submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3208f7da-e547-48c1-9220-c5c5ab72c8df "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3208f7da-e547-48c1-9220-c5c5ab72c8df completed by agent papa-game in 39505ms (565 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 565 tokens, 42218ms
+INFO:spl.executor:GENERATE chain done -> @result (1567 chars total)
+INFO:spl.executor:RETURN: 1567 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking for the sum of the series where each term is \( \frac{1}{n^2} \), starting from \( n = 1 \) and going to infinity. This can be written as:
+
+\[
+S = \sum_{n=1}^{\infty} \frac{1}{n^2}
+\]
+
+This particular series is known as the Basel problem, which was famously solved by Leonhard Euler in the 18th century. To find this sum, we need to consider a few important mathematical insights:
+
+1. The function \( f(x) = x^{-s} \), for \( s > 1 \), is related to the Riemann zeta function \( \zeta(s) \). Specifically, when \( s = 2 \), it becomes \( \zeta(2) = \sum_{n=1}^{\infty} n^{-2} \).
+
+2. Euler's approach involved expanding the sine function into an infinite product using its roots at integer multiples of \( \pi \): 
+
+   \[
+   \sin(\pi x) = \pi x \prod_{n=1}^{\infty} \left( 1 - \frac{x^2}{n^2} \right)
+   \]
+
+3. By considering the Taylor series expansion for \( \sin(\pi x) \), which is:
+
+   \[
+   \sin(\pi x) = \pi x - \frac{(\pi x)^3}{6} + \cdots
+   \]
+
+4. Comparing coefficients from both expressions, Euler deduced that:
+
+   \[
+   \prod_{n=1}^{\infty} \left( 1 - \frac{x^2}{n^2} \right) = x \cdot \prod_{n=1}^{\infty} \left( 1 - \frac{1}{n^2} \right)
+   \]
+
+5. Matching the coefficient of \( x^3 \) from both series expansions, Euler found that:
+
+   \[
+   -\frac{\pi^2}{6} = -\sum_{n=1}^{\infty} \frac{1}{n^2}
+   \]
+
+6. Solving for the sum gives:
+
+   \[
+   \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
+   \]
+
+Thus, the final answer is that the symbolic sum of \( \frac{1}{n^2} \) from \( n = 1 \) to infinity is:
+
+\[
+\frac{\pi^2}{6}
+\]
+LLM calls: 1  Latency: 42218ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222247.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4da817f6-32dc-49a9-a6dd-68cf4fbc3c84 completed by agent papa-game in 38910ms (330 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 330 tokens, 40220ms
+INFO:spl.executor:GENERATE chain done -> @result (881 chars total)
+INFO:spl.executor:RETURN: 881 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find all the solutions, or roots, of the equation \(x^4 - 1 = 0\) and express each solution in its simplest form.
+
+First, let's rewrite the equation:  
+\[ x^4 - 1 = 0 \]
+
+We can recognize this as a difference of squares:  
+\[ x^4 - 1 = (x^2)^2 - 1^2 \]  
+This allows us to factor it as:  
+\[ (x^2 - 1)(x^2 + 1) = 0 \]
+
+Next, we solve each factor separately. Start with \(x^2 - 1 = 0\):  
+\[ x^2 - 1 = 0 \]  
+\[ x^2 = 1 \]  
+Taking the square root of both sides gives:  
+\[ x = \pm 1 \]
+
+Now, solve \(x^2 + 1 = 0\):  
+\[ x^2 + 1 = 0 \]  
+\[ x^2 = -1 \]  
+Taking the square root of both sides gives:  
+\[ x = \pm i \]  
+where \(i\) is the imaginary unit, defined as \(i^2 = -1\).
+
+Thus, combining all solutions from both factors, we have four roots:  
+\[ x = 1, -1, i, -i \]
+
+In summary, the roots of the equation \(x^4 - 1 = 0\) are \(x = 1, -1, i, -i\).
+LLM calls: 1  Latency: 40221ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222303.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate x**4 - 2*x**2 + 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 2edfd439-81f8-4cdc-a4da-49a0a9fcbf35 completed by agent wengong in 10565ms (248 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 248 tokens, 14073ms
+INFO:spl.executor:GENERATE chain done -> @result (737 chars total)
+INFO:spl.executor:RETURN: 737 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the derivative of the function x^4 - 2x^2 + 1.
+
+Step 1: To differentiate this function, we'll apply the power rule of differentiation, which states that if f(x) = x^n, then f'(x) = nx^(n-1).
+
+Step 2: Let's start by differentiating the first term, x^4. Applying the power rule, we get 4x^(4-1) = 4x^3.
+
+Step 3: Next, we'll differentiate the second term, -2x^2. Again, using the power rule, we get -2(2)x^(2-1) = -4x.
+
+Step 4: Finally, let's differentiate the third term, which is a constant (+1). The derivative of a constant is always 0.
+
+Step 5: Now, we'll combine the results from steps 2-4 to find the final derivative: x^3 - 4x + 0 = x^3 - 4x
+
+Therefore, the derivative of x^4 - 2x^2 + 1 is x^3 - 4x.
+LLM calls: 1  Latency: 14074ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222330.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a88a0d1b-172d-4409-b33f-7e15141ba09c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a88a0d1b-172d-4409-b33f-7e15141ba09c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a88a0d1b-172d-4409-b33f-7e15141ba09c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a88a0d1b-172d-4409-b33f-7e15141ba09c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a88a0d1b-172d-4409-b33f-7e15141ba09c completed by agent wengong in 2698ms (28 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 28 tokens, 4041ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (46 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+(x**2 - 1)/ (x - 1)|simplify
+PREV|(x**2 - 1)/x
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 43 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 186ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] simplify((x**2 - 1)/ (x - 1)) = x + 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 67 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/2: unknown operation '(x**2 - 1)/x' — not in SymPy kernel
+INFO:spl.executor:RETURN: 178 chars | status=solver_error, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/2 could not be computed: unknown operation '(x**2 - 1)/x' — not in SymPy kernel
+Verified chain up to this point:
+1. simplify((x**2 - 1)/ (x - 1)) = x + 1
+
+LLM calls: 1  Latency: 4228ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222343.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task b76297bb-180f-4c1e-a9e3-0aa52f9475ce submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b76297bb-180f-4c1e-a9e3-0aa52f9475ce "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b76297bb-180f-4c1e-a9e3-0aa52f9475ce "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b76297bb-180f-4c1e-a9e3-0aa52f9475ce "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b76297bb-180f-4c1e-a9e3-0aa52f9475ce "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task b76297bb-180f-4c1e-a9e3-0aa52f9475ce completed by agent wengong in 3143ms (193 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 193 tokens, 6042ms
+INFO:spl.executor:GENERATE chain done -> @result (615 chars total)
+INFO:spl.executor:RETURN: 615 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem is asking to simplify the rational expression (x^2 - 1) / (x - 1). To do this, we'll start by factoring the numerator.
+
+First, let's factor x^2 - 1:
+x^2 - 1 = (x + 1)(x - 1)
+
+Now that we have factored the numerator, let's substitute it back into the original expression:
+
+((x + 1)(x - 1)) / (x - 1)
+
+Next, notice that both (x + 1) and (x - 1) appear in the numerator and denominator. We can cancel them out, but we need to make sure that x ≠ 1, because dividing by zero is undefined.
+
+(x + 1) cancels out:
+(x - 1) / 1
+
+Finally, since anything divided by 1 is itself, our simplified expression is:
+
+x - 1
+LLM calls: 1  Latency: 6043ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222344.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task aa5e429a-2ba5-4932-a628-1694c92611b4 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/aa5e429a-2ba5-4932-a628-1694c92611b4 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task aa5e429a-2ba5-4932-a628-1694c92611b4 completed by agent wengong in 15886ms (25 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 25 tokens, 16107ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (58 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 59 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2015ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] inverse_laplace_transform(s/(s**2 + 4)) = cos(2*t)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 53 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] laplace_transform(cos(2*t)) = s/(s^2 + 4)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 9f4f8a38-da2c-476c-9ae0-7af7e90a1054 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9f4f8a38-da2c-476c-9ae0-7af7e90a1054 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 9f4f8a38-da2c-476c-9ae0-7af7e90a1054 completed by agent papa-game in 19845ms (180 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 180 tokens, 22127ms
+INFO:spl.executor:GENERATE chain done -> @result (669 chars total)
+INFO:spl.executor:RETURN: 669 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  The problem asks us to first find the inverse Laplace transform of the expression \( \frac{s}{s^2 + 4} \), and then confirm our result by taking its Laplace transform again. Starting with the given function \( \frac{s}{s^2 + 4} \), we apply the inverse Laplace transform, which gives us the time-domain function \( \cos(2t) \). Next, to verify this result, we take the Laplace transform of \( \cos(2t) \). This calculation brings us back to the original expression in the frequency domain: \( \frac{s}{s^2 + 4} \). Since both transformations confirm each other, our final answer is that the inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is indeed \( \cos(2t) \).
+LLM calls: 2  Latency: 40252ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222311.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 851bb053-e2e0-4642-bbec-988916d2f917 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/851bb053-e2e0-4642-bbec-988916d2f917 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/851bb053-e2e0-4642-bbec-988916d2f917 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/851bb053-e2e0-4642-bbec-988916d2f917 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 851bb053-e2e0-4642-bbec-988916d2f917 completed by agent wengong in 2128ms (31 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 31 tokens, 4031ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (58 chars total)
+[INFO] [arm=solver] decomposed into 4 step(s):
+
+
+3*x**3 - x|diff
+PREV|x*(3*x**2 - 1)
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 40 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 149ms (0 LLM calls)
+[INFO] [arm=solver][step 1/4] d/dx(3*x**3 - x) = 9*x**2 - 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 69 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/4: unknown operation 'x*(3*x**2 - 1)' — not in SymPy kernel
+INFO:spl.executor:RETURN: 172 chars | status=solver_error, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/4 could not be computed: unknown operation 'x*(3*x**2 - 1)' — not in SymPy kernel
+Verified chain up to this point:
+1. d/dx(3*x**3 - x) = 9*x**2 - 1
+
+LLM calls: 1  Latency: 4182ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222352.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x+1)**2, then factor the expanded form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 40fe3e79-9ad5-41a3-8d48-6b612aadc58c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40fe3e79-9ad5-41a3-8d48-6b612aadc58c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40fe3e79-9ad5-41a3-8d48-6b612aadc58c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40fe3e79-9ad5-41a3-8d48-6b612aadc58c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40fe3e79-9ad5-41a3-8d48-6b612aadc58c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 40fe3e79-9ad5-41a3-8d48-6b612aadc58c completed by agent wengong in 3570ms (285 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 285 tokens, 6037ms
+INFO:spl.executor:GENERATE chain done -> @result (758 chars total)
+INFO:spl.executor:RETURN: 758 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem is asking us to:
+
+1. Square the binomial (x+1) and write down the expanded form.
+2. Factor the resulting quadratic expression.
+
+Here are the step-by-step calculations:
+
+First, we need to expand (x+1)^2 using the formula (a+b)^2 = a^2 + 2ab + b^2.
+
+Step 1: Calculate x^2
+x^2 = x * x
+
+Step 2: Multiply by 2ab (where a is x and b is 1)
+2ab = 2 * x * 1 = 2x
+
+Step 3: Add the squared term (b^2 where b is 1)
+b^2 = 1^2 = 1
+
+Now, let's combine all these terms:
+
+x^2 + 2x + 1
+
+And that's the expanded form of (x+1)^2!
+
+Next, we need to factor x^2 + 2x + 1. We can do this by looking for two numbers whose product is 1 and whose sum is 2.
+
+Those numbers are 1 and 1, so we can write:
+
+x^2 + 2x + 1 = (x+1)(x+1)
+
+The final answer is: x^2 + 2x + 1 = (x+1)^2
+LLM calls: 1  Latency: 6038ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222351.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate x**4 - 2*x**2 + 1' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3ffa474e-70c2-4fba-a2f7-f78be9623043 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ffa474e-70c2-4fba-a2f7-f78be9623043 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3ffa474e-70c2-4fba-a2f7-f78be9623043 completed by agent wengong in 15487ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 18086ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (22 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+x**4 - 2*x**2 + 1|diff
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 51 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 157ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] d/dx(x**4 - 2*x**2 + 1) = 4*x**3 - 4*x
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4294b162-7715-41bd-b09a-98f52a62b3dc submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4294b162-7715-41bd-b09a-98f52a62b3dc "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4294b162-7715-41bd-b09a-98f52a62b3dc completed by agent papa-game in 8500ms (131 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 131 tokens, 10060ms
+INFO:spl.executor:GENERATE chain done -> @result (505 chars total)
+INFO:spl.executor:RETURN: 505 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  The student is trying to find the derivative of the polynomial x^4 - 2x^2 + 1 with respect to x.
+
+First, we start with the original expression: x^4 - 2x^2 + 1
+The symbolic math engine tells us that its derivative is:
+4*x**3 - 4*x
+
+This is the result of taking the first step in differentiating the original expression. The next step involves differentiating each term inside the parentheses, but since there are no more terms to differentiate, this is the final result.
+
+So, the final answer is: 4x^3 - 4x
+LLM calls: 2  Latency: 28305ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222328.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x+1)**2, then factor the expanded form' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 594e4496-9d31-4980-9365-aca8a1444296 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/594e4496-9d31-4980-9365-aca8a1444296 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/594e4496-9d31-4980-9365-aca8a1444296 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/594e4496-9d31-4980-9365-aca8a1444296 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 594e4496-9d31-4980-9365-aca8a1444296 completed by agent wengong in 611ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 4034ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (29 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+(x + 1)**2|expand
+PREV|factor
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 50 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 146ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] expand((x + 1)**2) = x**2 + 2*x + 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 46 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] factor(x**2 + 2*x + 1) = (x + 1)**2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0e04cfc2-a46d-4fb6-be24-5dd20880c6a1 completed by agent papa-game in 4024ms (118 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 118 tokens, 6033ms
+INFO:spl.executor:GENERATE chain done -> @result (451 chars total)
+INFO:spl.executor:RETURN: 451 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  Here's a clear explanation:
+
+The student is asking us to expand the expression (x + 1)^2 and then factor the resulting quadratic equation.
+
+Let's start by expanding the squared binomial: we get x^2 + 2x + 1.
+
+Next, we take this expanded form and factor it. Since the terms are all present in the original expression with a coefficient of 1 (except for the squared term), they can be factored out as a square: (x + 1)^2.
+
+The final answer is: (x + 1)^2
+LLM calls: 2  Latency: 10216ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222348.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d61383ff-881e-4eaf-b93a-2822060871f1 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d61383ff-881e-4eaf-b93a-2822060871f1 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d61383ff-881e-4eaf-b93a-2822060871f1 completed by agent mac-wens-Mac-mini.local in 52469ms (435 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 435 tokens, 54269ms
+INFO:spl.executor:GENERATE chain done -> @result (1250 chars total)
+INFO:spl.executor:RETURN: 1250 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the general solution for a second-order linear homogeneous differential equation, specifically \( y''(x) - 3y'(x) + 2y(x) = 0 \). 
+
+To solve this, we first assume a solution of the form \( y(x) = e^{rx} \), where \( r \) is a constant to be determined. Substituting \( y(x) = e^{rx} \) into the differential equation gives:
+
+1. Compute derivatives: \( y'(x) = re^{rx} \) and \( y''(x) = r^2e^{rx} \).
+2. Substitute into the ODE: \( r^2e^{rx} - 3re^{rx} + 2e^{rx} = 0 \).
+3. Factor out \( e^{rx} \): \( e^{rx}(r^2 - 3r + 2) = 0 \).
+
+Since \( e^{rx} \neq 0 \), we set the characteristic equation to zero: 
+
+4. Solve \( r^2 - 3r + 2 = 0 \).
+
+This is a quadratic equation, which can be factored as:
+
+5. Factor the quadratic: \( (r - 1)(r - 2) = 0 \).
+
+Setting each factor equal to zero gives the roots:
+
+6. Solve for \( r \): \( r - 1 = 0 \) or \( r - 2 = 0 \), so \( r = 1 \) and \( r = 2 \).
+
+These roots indicate that the general solution is a linear combination of the solutions corresponding to each root:
+
+7. Write the general solution: \( y(x) = C_1e^{x} + C_2e^{2x} \),
+
+where \( C_1 \) and \( C_2 \) are arbitrary constants.
+
+Thus, the final answer is:
+
+The general solution is \( y(x) = C_1e^{x} + C_2e^{2x} \).
+LLM calls: 1  Latency: 54270ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222306.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ce1b72d0-1970-4a2e-aa42-a4f607788fc2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ce1b72d0-1970-4a2e-aa42-a4f607788fc2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ce1b72d0-1970-4a2e-aa42-a4f607788fc2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ce1b72d0-1970-4a2e-aa42-a4f607788fc2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ce1b72d0-1970-4a2e-aa42-a4f607788fc2 completed by agent papa-game in 3533ms (272 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 272 tokens, 4032ms
+INFO:spl.executor:GENERATE chain done -> @result (894 chars total)
+INFO:spl.executor:RETURN: 894 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  Here's a step-by-step walkthrough:
+
+We need to expand, differentiate, simplify, factor, and solve for x = 0 the expression (x-2)^3.
+
+Step 1: Expand (x-2)^3 using the binomial expansion formula:
+(x-2)^3 = x^3 - 6x^2(2) + 15x^1(4) - 16x^0
+= x^3 - 12x^2 + 60x - 8
+
+Step 2: Differentiate the expanded expression with respect to x:
+d/dx (x^3 - 12x^2 + 60x - 8) = 3x^2 - 24x + 60
+
+Step 3: Simplify the derivative by dividing through by a common factor if possible. No common factors can be divided out in this case.
+
+Step 4: Factor the derivative, if possible. The quadratic expression cannot be factored further.
+
+Step 5: Set the simplified (and possibly factored) expression equal to zero and solve for x:
+3x^2 - 24x + 60 = 0
+
+Unfortunately there is no obvious solution in this case (or for that matter any solutions will require either non-trivial algebraic manipulations or a numerical solution).
+LLM calls: 1  Latency: 4033ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222357.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ae10adff-fccf-4513-881e-13cb86415835 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae10adff-fccf-4513-881e-13cb86415835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae10adff-fccf-4513-881e-13cb86415835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae10adff-fccf-4513-881e-13cb86415835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae10adff-fccf-4513-881e-13cb86415835 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ae10adff-fccf-4513-881e-13cb86415835 completed by agent wengong in 4338ms (272 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 272 tokens, 6052ms
+INFO:spl.executor:GENERATE chain done -> @result (920 chars total)
+INFO:spl.executor:RETURN: 920 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  Here's a step-by-step walkthrough to solve the problem:
+
+The student wants me to differentiate the expression 3*x**3 - x, then factor if needed, and finally solve for x.
+
+Step 1: Differentiate 3*x**3
+To find the derivative of 3*x**3, I'll apply the power rule of differentiation, which states that if f(x) = x^n, then f'(x) = n*x^(n-1). In this case, n = 3. So, the derivative of 3*x**3 is 9*x**2.
+
+Step 2: Differentiate -x
+Using the same power rule, I'll find the derivative of -x, which is simply -1, since x^n becomes -n*x^(n-1).
+
+Step 3: Combine the derivatives
+Now, I'll combine the derivatives of 3*x**3 and -x. The result is 9*x**2 - 1.
+
+Step 4: Factor if needed (not applicable in this case)
+Since we've already simplified the expression to a single term with no like terms or common factors that can be factored out, we don't need to factor it further.
+
+Final answer:
+The derivative of 3*x**3 - x is 9*x**2 - 1.
+LLM calls: 1  Latency: 6052ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222357.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8c8da817-60d7-40ae-b0ea-44201af74efe submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8c8da817-60d7-40ae-b0ea-44201af74efe "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8c8da817-60d7-40ae-b0ea-44201af74efe "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8c8da817-60d7-40ae-b0ea-44201af74efe completed by agent wengong in 1026ms (29 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 29 tokens, 2025ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (61 chars total)
+[INFO] [arm=solver] decomposed into 5 step(s):
+
+
+(x-2)^3|expand
+PREV|diff
+PREV|simplify
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 67 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 151ms (0 LLM calls)
+[INFO] [arm=solver][step 1/5] expand((x-2)^3) = x**3 - 6*x**2 + 12*x - 8
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 70 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 3ms (0 LLM calls)
+[INFO] [arm=solver][step 2/5] d/dx(x**3 - 6*x**2 + 12*x - 8) = 3*x**2 - 12*x + 12
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 68 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 33ms (0 LLM calls)
+[INFO] [arm=solver][step 3/5] simplify(3*x**2 - 12*x + 12) = 3*x**2 - 12*x + 12
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 54 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 4/5] factor(3*x**2 - 12*x + 12) = 3*(x - 2)**2
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 34 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2ms (0 LLM calls)
+[INFO] [arm=solver][step 5/5] solve(3*(x - 2)**2 = 0) -> x = 2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 498ee888-a158-4479-a8d0-e0a4a0891c67 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/498ee888-a158-4479-a8d0-e0a4a0891c67 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/498ee888-a158-4479-a8d0-e0a4a0891c67 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/498ee888-a158-4479-a8d0-e0a4a0891c67 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/498ee888-a158-4479-a8d0-e0a4a0891c67 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 498ee888-a158-4479-a8d0-e0a4a0891c67 completed by agent papa-game in 3006ms (215 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 215 tokens, 6037ms
+INFO:spl.executor:GENERATE chain done -> @result (675 chars total)
+INFO:spl.executor:RETURN: 675 chars | status=complete, arm=solver, backend=sympy, steps=5
+
+Status:  complete
+Output:  Here's a clear explanation of the problem and its solution:
+
+The student is asking to solve for x when the derivative of the function f(x) = (x-2)^3 is equal to zero. To do this, we need to take the derivative of f(x), simplify it, factor the result, and then set it equal to zero.
+
+First, we expand the original function: (x-2)^3 = x^3 - 6*x^2 + 12*x - 8
+
+Next, we find the derivative of this expanded function: d/dx(x^3 - 6*x^2 + 12*x - 8) = 3*x**2 - 12*x + 12
+
+The expression is already simplified, so we move on to factoring. Factoring out a common factor, we get: 3*(x - 2)**2
+
+Now, we set the factored expression equal to zero and solve for x: 3*(x - 2)**2 = 0 -> x = 2
+LLM calls: 2  Latency: 8255ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222357.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate exp(x) and simplify it if necessary' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 1b7e196c-f96c-41ad-8a6a-4001aa43ace3 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b7e196c-f96c-41ad-8a6a-4001aa43ace3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b7e196c-f96c-41ad-8a6a-4001aa43ace3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b7e196c-f96c-41ad-8a6a-4001aa43ace3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b7e196c-f96c-41ad-8a6a-4001aa43ace3 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 1b7e196c-f96c-41ad-8a6a-4001aa43ace3 completed by agent wengong in 3655ms (296 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 296 tokens, 6041ms
+INFO:spl.executor:GENERATE chain done -> @result (882 chars total)
+INFO:spl.executor:RETURN: 882 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  So, let's differentiate exp(x) and simplify if necessary.
+
+We want to find the derivative of exp(x), which is a function that takes x as input and returns its exponential value.
+
+To do this, we'll use the definition of a derivative: 
+
+f'(x) = lim(h -> 0) [f(x+h) - f(x)]/h
+
+Here, f(x) = exp(x). So, we need to plug this into our formula:
+
+f'(x) = lim(h -> 0) [exp(x+h) - exp(x)]/h
+
+Now, let's expand the exponential functions using the fact that exp(a+b) = exp(a) * exp(b):
+
+f'(x) = lim(h -> 0) [(exp(x)) * (exp(h)) - exp(x)]/h
+         = lim(h -> 0) [exp(x) * (1 + h) - exp(x)]/h
+
+Now, factor out the exp(x) term:
+
+f'(x) = lim(h -> 0) [exp(x)(1 + h - 1)]/h 
+        = lim(h -> 0) [exp(x)(h)]/h
+         = lim(h -> 0) exp(x)
+
+As h approaches zero, we can see that the denominator and numerator will both become very small. Thus,
+
+f'(x) = exp(x)
+
+So, our derivative is simply exp(x).
+LLM calls: 1  Latency: 6043ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222404.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 32cc23b6-4afd-4e5a-94e6-9e0a233f1279 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/32cc23b6-4afd-4e5a-94e6-9e0a233f1279 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 32cc23b6-4afd-4e5a-94e6-9e0a233f1279 completed by agent papa-game in 7791ms (406 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 406 tokens, 10067ms
+INFO:spl.executor:GENERATE chain done -> @result (1185 chars total)
+INFO:spl.executor:RETURN: 1185 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The student is asking me to find the partial fraction decomposition of the function 1 / (x**2 - 1). This means we need to express this rational function as a sum of simpler fractions, called partial fractions.
+
+First, let's factorize the denominator x**2 - 1. We can do this by recognizing that it is a difference of squares: x**2 - 1 = (x + 1)(x - 1).
+
+Now, we want to express 1 / (x**2 - 1) as a sum of two fractions with denominators (x + 1) and (x - 1). Let's call the numerator of the first fraction A and the numerator of the second fraction B. Then, we can write:
+
+1 / ((x + 1)(x - 1)) = A / (x + 1) + B / (x - 1)
+
+To find the values of A and B, we need to clear the fractions by multiplying both sides of the equation by (x + 1)(x - 1):
+
+1 = A(x - 1) + B(x + 1)
+
+Now, let's choose some convenient values for x that will allow us to solve for A and B. If we set x = 1, then:
+
+1 = A(0) + B(2)
+1 = 2B
+
+So, B = 1/2.
+
+If we set x = -1, then:
+
+1 = A(-2) + B(0)
+1 = -2A
+
+So, A = -1/2.
+
+Now that we have found the values of A and B, we can write the partial fraction decomposition of 1 / (x**2 - 1):
+
+1 / ((x + 1)(x - 1)) = (-1/2) / (x + 1) + (1/2) / (x - 1)
+
+This is the final answer.
+LLM calls: 1  Latency: 10069ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222401.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate exp(x) and simplify it if necessary' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 2d1c39d8-56e9-444a-8159-c8cd994d8976 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2d1c39d8-56e9-444a-8159-c8cd994d8976 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2d1c39d8-56e9-444a-8159-c8cd994d8976 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2d1c39d8-56e9-444a-8159-c8cd994d8976 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 2d1c39d8-56e9-444a-8159-c8cd994d8976 completed by agent wengong in 519ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 4035ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (25 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+exp(x)|diff
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 28 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 197ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] d/dx(exp(x)) = exp(x)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 32 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 53ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(exp(x)) = exp(x)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6faf0a1b-5cac-4905-8e1e-6efdbc8b9067 completed by agent wengong in 3490ms (143 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 143 tokens, 6048ms
+INFO:spl.executor:GENERATE chain done -> @result (607 chars total)
+INFO:spl.executor:RETURN: 607 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  Here's a clear explanation:
+
+The student is asking us to find the derivative of the function exp(x) and simplify it if necessary.
+
+First, let's differentiate exp(x). The symbolic math engine tells us that d/dx(exp(x)) = exp(x).
+
+Next, we need to see if we can simplify this result. The symbolic math engine says that simplify(exp(x)) = exp(x), which means the expression is already in its simplest form.
+
+So, what did we learn? We found that the derivative of exp(x) is also exp(x). And, since exp(x) can't be simplified further, our final answer is:
+
+The derivative and simplified form of exp(x) is: exp(x)
+LLM calls: 2  Latency: 10334ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222402.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the limit of sin(x) divided by x as x approaches 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4bd06389-f7bd-40c9-90ef-499f1549bf1d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4bd06389-f7bd-40c9-90ef-499f1549bf1d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4bd06389-f7bd-40c9-90ef-499f1549bf1d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4bd06389-f7bd-40c9-90ef-499f1549bf1d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4bd06389-f7bd-40c9-90ef-499f1549bf1d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4bd06389-f7bd-40c9-90ef-499f1549bf1d completed by agent papa-game in 4596ms (350 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 350 tokens, 6044ms
+INFO:spl.executor:GENERATE chain done -> @result (1198 chars total)
+INFO:spl.executor:RETURN: 1198 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  Here's a walkthrough to find the limit of sin(x) divided by x as x approaches 0:
+
+The problem is asking us to find the value that sin(x)/x approaches as x gets arbitrarily close to 0.
+
+Step 1: We know that sin(0) = 0, so let's plug in x = 0 into the function. This gives us 0/0, which is an indeterminate form.
+
+Step 2: To deal with this form, we can try multiplying both the numerator and denominator by a small number, say h. We'll replace x with h, so our new expression becomes sin(h)/h.
+
+Step 3: Now we have a slightly different problem. As h gets arbitrarily close to 0, we want to see what happens to sin(h)/h.
+
+Step 4: Let's try using the Taylor series for sin(x), which is sin(x) = x - x^3/3! + x^5/5! - ...
+
+Step 5: If we plug in h instead of x, our expression becomes h - h^3/3! + h^5/5! - ...
+
+Step 6: Now let's simplify this expression by dividing each term by h. We get 1 - h^2/3! + h^4/5! - ...
+
+Step 7: As we continue to divide, the terms will get smaller and smaller. In the limit as h approaches 0, all the higher-order terms go away.
+
+Step 8: So, we're left with 1 in the numerator and 0 in the denominator. This means that sin(x)/x approaches 1 as x gets arbitrarily close to 0.
+LLM calls: 1  Latency: 6045ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222410.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the limit of sin(x) divided by x as x approaches 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ba2ecd5a-7391-491f-b61a-8907014a5d0f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ba2ecd5a-7391-491f-b61a-8907014a5d0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ba2ecd5a-7391-491f-b61a-8907014a5d0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ba2ecd5a-7391-491f-b61a-8907014a5d0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ba2ecd5a-7391-491f-b61a-8907014a5d0f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ba2ecd5a-7391-491f-b61a-8907014a5d0f completed by agent papa-game in 2993ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 6037ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (19 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)/x|limit(x,0)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 27 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 222ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] limit(sin(x)/x, x->0) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 79c33c33-54b1-4bae-850c-29c0a8479965 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79c33c33-54b1-4bae-850c-29c0a8479965 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79c33c33-54b1-4bae-850c-29c0a8479965 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79c33c33-54b1-4bae-850c-29c0a8479965 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 79c33c33-54b1-4bae-850c-29c0a8479965 completed by agent wengong in 2211ms (145 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 145 tokens, 4036ms
+INFO:spl.executor:GENERATE chain done -> @result (587 chars total)
+INFO:spl.executor:RETURN: 587 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  Here's a clear explanation of the problem and its steps:
+
+The student is trying to find the limit of sin(x) divided by x as x gets arbitrarily close to 0. In plain English, this means we want to see what happens to the ratio of sine of x to x itself when x approaches 0 from both sides.
+
+Here are the steps taken by the symbolic math engine:
+1. The first step is to calculate the limit of sin(x) divided by x as x approaches 0.
+2. According to the chain, this result equals 1.
+3. Therefore, the final answer to the problem is that the limit of sin(x) divided by x as x approaches 0 is 1.
+LLM calls: 2  Latency: 10296ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222406.md
+```
+
+
+## llama3.2 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 315e2fd1-756a-4af6-9577-f150b5470c2b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/315e2fd1-756a-4af6-9577-f150b5470c2b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/315e2fd1-756a-4af6-9577-f150b5470c2b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/315e2fd1-756a-4af6-9577-f150b5470c2b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 315e2fd1-756a-4af6-9577-f150b5470c2b completed by agent wengong in 2684ms (13 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 13 tokens, 4037ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (20 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+1 / (x**2 - 1)|apart
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 85 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 174ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] apart(1 / (x**2 - 1)) = -1/(2*(x + 1)) + 1/(2*(x - 1))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 903cebca-9f10-4b68-ad42-603a5c50fd0b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/903cebca-9f10-4b68-ad42-603a5c50fd0b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 903cebca-9f10-4b68-ad42-603a5c50fd0b completed by agent mac-wens-Mac-mini.local in 11748ms (187 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 187 tokens, 14074ms
+INFO:spl.executor:GENERATE chain done -> @result (663 chars total)
+INFO:spl.executor:RETURN: 663 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  The student wants to find a way to rewrite the fraction 1 / (x**2 - 1) into simpler parts, called partial fractions.
+
+Here's how we get there:
+
+* The symbolic math engine starts by finding an equivalent expression for 1 / (x**2 - 1). It decides that this can be broken down into two separate fractions: one with a negative sign and a denominator of x + 1, and another with a positive sign and a denominator of x - 1.
+* The exact result is -1/(2*(x + 1)) + 1/(2*(x - 1)). This means that we can rewrite the original fraction as this combination of two simpler fractions.
+
+So, the partial fraction decomposition of 1 / (x**2 - 1) is:
+
+-1/(2*(x + 1)) + 1/(2*(x - 1))
+LLM calls: 2  Latency: 18286ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222359.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a5717659-4f0a-4b7b-af1b-b9d1aaeb0000 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5717659-4f0a-4b7b-af1b-b9d1aaeb0000 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5717659-4f0a-4b7b-af1b-b9d1aaeb0000 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a5717659-4f0a-4b7b-af1b-b9d1aaeb0000 completed by agent wengong in 517ms (5 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 5 tokens, 2028ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (13 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)|series
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 72 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 165ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] series(sin(x), x=0, deg≤5) = x**5/120 - x**3/6 + x
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0288e49b-e478-4344-8e87-ad439f37feb2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0288e49b-e478-4344-8e87-ad439f37feb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0288e49b-e478-4344-8e87-ad439f37feb2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0288e49b-e478-4344-8e87-ad439f37feb2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0288e49b-e478-4344-8e87-ad439f37feb2 completed by agent wengong in 3797ms (121 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 121 tokens, 4034ms
+INFO:spl.executor:GENERATE chain done -> @result (381 chars total)
+INFO:spl.executor:RETURN: 381 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  The student wants to expand the sine function as a Taylor series around x = 0, keeping terms up to degree 5.
+
+Here's how it was computed:
+
+1. First, we found the result of `series(sin(x), x=0, deg≤5)`, which is equal to...
+2. ...x**5/120 - x**3/6 + x.
+
+And that's it! The final Taylor series expansion of sin(x) around x = 0, keeping terms up to degree 5 is:
+
+x**5/120 - x**3/6 + x
+LLM calls: 2  Latency: 6229ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222411.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 95d22a61-7dd8-47be-a5b7-43030aebef45 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/95d22a61-7dd8-47be-a5b7-43030aebef45 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/95d22a61-7dd8-47be-a5b7-43030aebef45 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/95d22a61-7dd8-47be-a5b7-43030aebef45 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/95d22a61-7dd8-47be-a5b7-43030aebef45 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/95d22a61-7dd8-47be-a5b7-43030aebef45 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 95d22a61-7dd8-47be-a5b7-43030aebef45 completed by agent papa-game in 6547ms (327 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 327 tokens, 8062ms
+INFO:spl.executor:GENERATE chain done -> @result (871 chars total)
+INFO:spl.executor:RETURN: 871 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  Here is a step-by-step walkthrough to expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5:
+
+The problem is asking us to find the Taylor series expansion of sin(x) around x = 0, including only terms up to degree 5.
+
+Step 1: Recall the formula for the Taylor series of a function f(x) around x = 0:
+f(x) = f(0) + f'(0)x + f''(0)(x^2)/2! + f'''(0)(x^3)/3! + ...
+
+For sin(x), we know that f(x) = sin(x). We need to find the derivatives of sin(x) and evaluate them at x = 0.
+
+Step 2: Find the first few derivatives of sin(x):
+f'(x) = cos(x)
+f''(x) = -sin(x)
+f'''(x) = -cos(x)
+
+Evaluate these derivatives at x = 0:
+f(0) = sin(0) = 0
+f'(0) = cos(0) = 1
+f''(0) = -sin(0) = 0
+f'''(0) = -cos(0) = -1
+
+Step 3: Plug these values into the Taylor series formula:
+sin(x) = (0) + (1)(x) + (0)((x^2)/2!) + (-1)((x^3)/3!)
+
+Simplifying, we get:
+
+sin(x) = x - (x^3)/6
+LLM calls: 1  Latency: 8063ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222413.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c8421344-d9f4-4717-a964-b2c70cbf01bc submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c8421344-d9f4-4717-a964-b2c70cbf01bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c8421344-d9f4-4717-a964-b2c70cbf01bc "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c8421344-d9f4-4717-a964-b2c70cbf01bc completed by agent wengong in 606ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 2031ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (30 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)**2 + cos(x)**2|trigsimp
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 37 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 155ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] trigsimp(sin(x)**2 + cos(x)**2) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 923ed514-28b1-4079-93d0-cff6c886d0de submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/923ed514-28b1-4079-93d0-cff6c886d0de "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/923ed514-28b1-4079-93d0-cff6c886d0de "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/923ed514-28b1-4079-93d0-cff6c886d0de "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 923ed514-28b1-4079-93d0-cff6c886d0de completed by agent wengong in 1868ms (111 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 111 tokens, 4029ms
+INFO:spl.executor:GENERATE chain done -> @result (460 chars total)
+INFO:spl.executor:RETURN: 460 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  The student wants to simplify the expression sin(x)^2 + cos(x)^2 using trigonometric identities.
+
+Here's how we get from there to the result: first, trigsimp converts the exponentials into basic functions of x. Then, it simplifies the resulting expression by combining the like terms (the squared sine and cosine). Next, it uses the identity sin^2(x) + cos^2(x) = 1, which is a fundamental property of trigonometric functions.
+
+The final answer is: $\boxed{1}$
+LLM calls: 2  Latency: 6217ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222417.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 27ed33b1-fae1-42d4-9052-d8b6bc613d48 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27ed33b1-fae1-42d4-9052-d8b6bc613d48 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27ed33b1-fae1-42d4-9052-d8b6bc613d48 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27ed33b1-fae1-42d4-9052-d8b6bc613d48 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27ed33b1-fae1-42d4-9052-d8b6bc613d48 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27ed33b1-fae1-42d4-9052-d8b6bc613d48 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 27ed33b1-fae1-42d4-9052-d8b6bc613d48 completed by agent mac-wens-Mac-mini.local in 7289ms (138 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 138 tokens, 8061ms
+INFO:spl.executor:GENERATE chain done -> @result (463 chars total)
+INFO:spl.executor:RETURN: 463 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem is asking us to simplify the expression sin(x)^2 + cos(x)^2 using trigonometric identities.
+
+Here's our step-by-step solution:
+
+1. We start with the given expression: sin(x)^2 + cos(x)^2
+2. Using the Pythagorean identity, we know that (sin(x))^2 + (cos(x))^2 = 1.
+3. Since this equation is true for all values of x, we can replace (sin(x))^2 + (cos(x))^2 with 1 in our original expression.
+4. So, sin(x)^2 + cos(x)^2 becomes 1.
+
+The final answer is: 1
+LLM calls: 1  Latency: 8062ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222417.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 35e1527e-b54e-425c-87f3-23c6d16548b9 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/35e1527e-b54e-425c-87f3-23c6d16548b9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/35e1527e-b54e-425c-87f3-23c6d16548b9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/35e1527e-b54e-425c-87f3-23c6d16548b9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/35e1527e-b54e-425c-87f3-23c6d16548b9 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 35e1527e-b54e-425c-87f3-23c6d16548b9 completed by agent wengong in 3465ms (267 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 267 tokens, 6062ms
+INFO:spl.executor:GENERATE chain done -> @result (735 chars total)
+INFO:spl.executor:RETURN: 735 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the integral of sin(x) times cos(x), which can be written as:
+
+∫sin(x)cos(x) dx
+
+To solve this, we can use the trigonometric identity for the product of sine and cosine:
+
+sin(x)cos(x) = (1/2)[sin(2x) + sin(-2x)]
+
+We'll start by rewriting the integral using this identity:
+
+∫(1/2)[sin(2x) + sin(-2x)] dx
+
+Now, we can integrate each term separately. The integral of sin(u) is -cos(u), so:
+
+∫sin(2x) dx = -1/2 cos(2x)
+
+And the integral of sin(-u) is also -cos(u), since the negative sign in front doesn't change the result:
+
+∫sin(-2x) dx = 1/2 cos(2x)
+
+Now, we'll combine these results:
+
+∫(1/2)[sin(2x) + sin(-2x)] dx = (1/2)(-1/2 cos(2x) + 1/2 cos(2x)) = 0
+
+So, the final answer is:
+
+∫sin(x)cos(x) dx = 0
+LLM calls: 1  Latency: 6063ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222424.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8aae49d0-7230-477d-9f6d-5f2b86c4683f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8aae49d0-7230-477d-9f6d-5f2b86c4683f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8aae49d0-7230-477d-9f6d-5f2b86c4683f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8aae49d0-7230-477d-9f6d-5f2b86c4683f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8aae49d0-7230-477d-9f6d-5f2b86c4683f completed by agent wengong in 1833ms (16 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 16 tokens, 4039ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (32 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+x + y - 5|x + y - 1|solve_system
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 63 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1454ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 1/1: unknown operation 'x + y - 1' — not in Sage kernel
+INFO:spl.executor:RETURN: 133 chars | status=solver_error, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 1/1 could not be computed: unknown operation 'x + y - 1' — not in Sage kernel
+Verified chain up to this point:
+
+LLM calls: 1  Latency: 5494ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222426.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'integrate the square root of (4 minus x squared)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 7333f02b-2d7d-4b8b-92ff-9d62e138236e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7333f02b-2d7d-4b8b-92ff-9d62e138236e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 7333f02b-2d7d-4b8b-92ff-9d62e138236e completed by agent papa-game in 11607ms (926 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 926 tokens, 14073ms
+INFO:spl.executor:GENERATE chain done -> @result (2685 chars total)
+INFO:spl.executor:RETURN: 2685 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  So, the student is asking to find the integral of the square root of (4 - x^2). This means we need to find the antiderivative of √(4 - x^2).
+
+Step 1: To start, we can rewrite the expression inside the square root as a difference of squares:
+
+4 - x^2 = (2)^2 - (x)^2 = (2 + x)(2 - x)
+
+Now we have √((2 + x)(2 - x)).
+
+Step 2: We can now use the power rule and chain rule to integrate this expression. The power rule states that ∫(x^n) dx = (x^(n+1))/(n+1). However, in this case, we have a product inside the square root.
+
+Step 3: To handle this product, we'll apply the substitution method. Let u = 2 + x and du/dx = 1. This means du = dx.
+
+Step 4: Now we can rewrite the integral as ∫√(u(u-1)) du.
+
+Step 5: Next, we can simplify the expression inside the square root by using the difference of squares formula:
+
+u(u-1) = u^2 - u
+
+So our integral becomes ∫√(u^2 - u) du.
+
+Step 6: To integrate this expression, we'll use a substitution that will make it easier. Let v = u^2 - u and dv/du = 2u - 1. This means du = (dv)/(2u-1).
+
+Step 7: However, we still need to deal with the square root. We can rewrite √(u^2 - u) as √((u)^2 - (√u)^2) which is a difference of squares and thus becomes √(u)^2 - (√u)^2 = (u-√u) using difference of squares rules
+
+
+So we get: ∫[(u)-√u] dv.
+
+Step 8: Now our integral can be rewritten in terms of v as ∫[(u)-√u] dv. Substituting back, this becomes ∫[(u)-√(2 + x)] * (dv)/(2u-1).
+
+
+But we don't have u in the denominator yet. We can get rid of it by multiplying both sides by the reciprocal of 2u-1
+
+
+We now simplify to ∫[((u)^2)/((2u-1)) - (√(2 + x))] * dv.
+
+
+Step 9: Let's rewrite ((u)^2)/((2u-1)) as u/((2u-1)) = (2x+2)/(2x) which simplifies to 2/2 + 2/x
+
+
+So now, we have: ∫[2 + 2/x - √(2 + x)] * dv/((2 + x))
+
+
+Step 10: Now we rewrite the expression as a single fraction with a common denominator of (2+x): (∫[(2x + 2)/(2 + x) - √(2 + x)]
+
+
+Step 11: So this can be written as ((∫[2x + 2]/((2 + x))) - (∫[√(2 + x)]) * dv/((2 + x))
+
+
+Now we have two integrals.
+
+
+The first one is a simple power rule integral ∫[(2x + 2)/((2+x))]dv which becomes: (∫[(2x+2)]dv)/((2+x))
+
+
+Which, after simplification and integrating by parts on the first part of the expression yields: (x^2/2 + x)/((2+x)).
+
+
+The second one is an integral for which there are no basic antiderivatives that can be expressed in closed form so we will leave it as it is (∫[√(2+x)]dv)
+
+
+Combining these two results gives: ((x^2/2) + x)/((2+x)) - ∫[√(2+x)]dv
+
+
+Now, recall that u = 2 + x. Recall that du/dx = 1.
+
+
+We can now rewrite the integral as: -∫[√u]du by letting √(2 + x) become √(u).
+
+
+Thus we get our final answer of ((-u^(3/2))/((3/2))) which after substitution for u is: (-((2+x)^3/6))
+LLM calls: 1  Latency: 14074ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222418.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'integrate the square root of (4 minus x squared)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 2ccd260f-39d5-4527-9330-f58ee15ebcf3 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2ccd260f-39d5-4527-9330-f58ee15ebcf3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2ccd260f-39d5-4527-9330-f58ee15ebcf3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/2ccd260f-39d5-4527-9330-f58ee15ebcf3 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 2ccd260f-39d5-4527-9330-f58ee15ebcf3 completed by agent wengong in 2269ms (21 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 21 tokens, 4048ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (47 chars total)
+[INFO] [arm=solver] decomposed into 3 step(s):
+
+
+sqrt(4-x**2)|integrate
+PREV|simplify
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 111 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2474ms (0 LLM calls)
+[INFO] [arm=solver][step 1/3] integral of sqrt(4-x**2) dx = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 128 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 13ms (0 LLM calls)
+[INFO] [arm=solver][step 2/3] simplify(1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)) = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 120 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 3/3] solve(1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) = 0) -> x = -4*arcsin(1/2*x)/sqrt(-x^2 + 4)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 449c6727-0ddb-4126-9ed3-40cfcf8dd16d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/449c6727-0ddb-4126-9ed3-40cfcf8dd16d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 449c6727-0ddb-4126-9ed3-40cfcf8dd16d completed by agent papa-game in 8641ms (227 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 227 tokens, 10046ms
+INFO:spl.executor:GENERATE chain done -> @result (728 chars total)
+INFO:spl.executor:RETURN: 728 chars | status=complete, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  Here's a clear explanation of the problem:
+
+The student is asking to find the integral of the square root of (4 minus x squared), which means finding the antiderivative of sqrt(4-x^2).
+
+Step 1: The symbolic math engine found that the integral of sqrt(4-x^2) dx equals 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C. This means we have an antiderivative, but it's in a form with constants and trigonometric functions.
+
+Step 2: The engine simplified the expression to get the same result as Step 1, which is 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x).
+
+Step 3: Now we set this antiderivative equal to zero and solve for x. This gives us an equation that leads to the final answer.
+
+The final answer is x = -4*arcsin(1/2*x)/sqrt(-x^2 + 4).
+LLM calls: 2  Latency: 16584ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222418.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6c72c458-af60-4980-aa31-16a497cc71e9 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6c72c458-af60-4980-aa31-16a497cc71e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6c72c458-af60-4980-aa31-16a497cc71e9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6c72c458-af60-4980-aa31-16a497cc71e9 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6c72c458-af60-4980-aa31-16a497cc71e9 completed by agent wengong in 2868ms (204 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 204 tokens, 4046ms
+INFO:spl.executor:GENERATE chain done -> @result (618 chars total)
+INFO:spl.executor:RETURN: 618 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to solve a system of two linear equations:
+
+x + y = 5 ... (Equation 1)
+x - y = 1 ... (Equation 2)
+
+Our goal is to find the values of x and y that satisfy both equations.
+
+To do this, we can add Equation 1 and Equation 2 together. This gives us:
+
+(x + y) + (x - y) = 5 + 1
+x + x = 6
+2x = 6
+
+Dividing both sides by 2 gives us:
+
+x = 3
+
+Now that we have the value of x, we can substitute it back into one of the original equations to find the value of y. Let's use Equation 1:
+
+x + y = 5
+3 + y = 5
+
+Subtracting 3 from both sides gives us:
+
+y = 2
+
+So, the solution to the system is x = 3 and y = 2.
+LLM calls: 1  Latency: 4046ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222431.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task de16e825-03c6-49af-8516-6d97666eb786 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/de16e825-03c6-49af-8516-6d97666eb786 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/de16e825-03c6-49af-8516-6d97666eb786 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/de16e825-03c6-49af-8516-6d97666eb786 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task de16e825-03c6-49af-8516-6d97666eb786 completed by agent wengong in 579ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 4031ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (37 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sin(x)*cos(x)|integrate
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 62 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1862ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] integral of sin(x)*cos(x) dx = -1/2*cos(x)^2 + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 53 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 6ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(-1/2*cos(x)^2) = -1/2*cos(x)^2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 40655571-c91f-4541-876f-0209de0c3c7d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40655571-c91f-4541-876f-0209de0c3c7d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40655571-c91f-4541-876f-0209de0c3c7d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40655571-c91f-4541-876f-0209de0c3c7d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40655571-c91f-4541-876f-0209de0c3c7d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40655571-c91f-4541-876f-0209de0c3c7d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 40655571-c91f-4541-876f-0209de0c3c7d completed by agent mac-wens-Mac-mini.local in 7765ms (147 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 147 tokens, 8058ms
+INFO:spl.executor:GENERATE chain done -> @result (550 chars total)
+INFO:spl.executor:RETURN: 550 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  Here's a clear and friendly explanation:
+
+We're trying to find the integral of sin(x) times cos(x). This means we want to calculate the area under the curve of y = sin(x)cos(x) from x = 0 to infinity (or any other bounds).
+
+The first step is to compute the integral, which gives us -1/2*cos(x)^2 + C. Don't worry about what "C" represents yet!
+
+Next, we simplify the expression -1/2*cos(x)^2. This means we just rewrite it in a cleaner form without any extra terms.
+
+So, after simplifying the expression from step 1, we're left with... -1/2*cos(x)^2!
+LLM calls: 2  Latency: 13959ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222422.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d47a95cb-87da-4ef2-b613-0cf0fed7cb33 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d47a95cb-87da-4ef2-b613-0cf0fed7cb33 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d47a95cb-87da-4ef2-b613-0cf0fed7cb33 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d47a95cb-87da-4ef2-b613-0cf0fed7cb33 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d47a95cb-87da-4ef2-b613-0cf0fed7cb33 completed by agent wengong in 1276ms (20 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 20 tokens, 4040ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (32 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+[1, 2]|eigenvalues
+PREV|[[3, 4]]
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 89 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1994ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 1/2: [1, 2]: ECL says: charpoly: matrix must be square; found 2 rows, 3 columns.
+INFO:spl.executor:RETURN: 158 chars | status=solver_error, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 1/2 could not be computed: [1, 2]: ECL says: charpoly: matrix must be square; found 2 rows, 3 columns.
+Verified chain up to this point:
+
+LLM calls: 1  Latency: 6035ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222432.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 413f46c4-6f19-4a0e-89cb-69b3754155da submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/413f46c4-6f19-4a0e-89cb-69b3754155da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/413f46c4-6f19-4a0e-89cb-69b3754155da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/413f46c4-6f19-4a0e-89cb-69b3754155da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/413f46c4-6f19-4a0e-89cb-69b3754155da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/413f46c4-6f19-4a0e-89cb-69b3754155da "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 413f46c4-6f19-4a0e-89cb-69b3754155da completed by agent papa-game in 6590ms (493 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 493 tokens, 8060ms
+INFO:spl.executor:GENERATE chain done -> @result (1395 chars total)
+INFO:spl.executor:RETURN: 1395 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  Here's a walkthrough to find the eigenvalues of the 2 by 2 matrix:
+
+The problem is asking us to find the values λ (lambda) that make the equation det(A - λI) = 0, where A is the given 2x2 matrix and I is the identity matrix. In this case, the matrix A has rows [1, 2] and [3, 4], so it looks like:
+
+A = | 1  2 |
+    | 3  4 |
+
+The first step is to write down the equation det(A - λI) = 0. Since A is a 2x2 matrix, we can assume I is also a 2x2 matrix with identity elements on the diagonal (i.e., 1s). Let's call our assumed identity matrix:
+
+I = | 1  0 |
+    | 0  1 |
+
+Now, let's calculate A - λI by subtracting each element of A from the corresponding element of λI:
+
+A - λI = | 1-λ 2-0 |
+          | 3-0 4-1 |
+
+Simplifying this expression gives us a new matrix with elements (1-λ, 2), (3, 4-1):
+
+A - λI = | 1-λ 2 |
+          | 3   3  |
+
+Next, we need to calculate the determinant of A - λI. The formula for the determinant of a 2x2 matrix is:
+
+det(M) = M[0][0] * M[1][1] - M[0][1] * M[1][0]
+
+where [i][j] denotes the element in row i, column j.
+
+Applying this formula to A - λI gives us:
+
+det(A-λI) = (1-λ)*3 - 2*3
+
+Expanding and simplifying this expression gives us:
+
+det(A-λI) = 3 - 3λ - 6
+= -3λ - 3
+
+To find the eigenvalues, we set det(A-λI) equal to zero and solve for λ:
+
+-3λ - 3 = 0
+
+Adding 3 to both sides gives us:
+
+-3λ = 3
+
+Dividing both sides by -3 gives us our final answer:
+
+λ = -1
+LLM calls: 1  Latency: 8061ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222433.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 1df1527a-a6ed-4807-bc33-d6d83cf35962 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1df1527a-a6ed-4807-bc33-d6d83cf35962 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1df1527a-a6ed-4807-bc33-d6d83cf35962 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1df1527a-a6ed-4807-bc33-d6d83cf35962 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 1df1527a-a6ed-4807-bc33-d6d83cf35962 completed by agent wengong in 3368ms (258 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 258 tokens, 4032ms
+INFO:spl.executor:GENERATE chain done -> @result (841 chars total)
+INFO:spl.executor:RETURN: 841 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  Let's solve the ordinary differential equation y'(x) = y(x) with the initial condition y(0) = 1.
+
+We're looking for a function y(x) whose derivative is equal to itself, and we know that at x=0, y(x) equals 1. We can start by guessing a solution of the form y(x) = e^x. Now, let's take the derivative of our guess using the power rule: if y(x) = e^(x), then y'(x) = e^(x).
+
+Since we're told that y'(x) = y(x), we can equate our guess for y'(x) with our guess for y(x): e^(x) = e^x. This is true, so our guess y(x) = e^x satisfies the differential equation.
+
+Now that we know our guess is correct, we can use the initial condition to find the specific value of the constant: since y(0) = 1 and y(x) = e^x, it follows that 1 = e^(0). And since e^(0) is just e^0, which equals 1, our solution is indeed correct.
+
+The final answer is: y(x) = e^x.
+LLM calls: 1  Latency: 4033ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222439.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the Laplace transform of exp(-2*t)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 07e2eacb-4afc-471a-af19-02e42c1550bf submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/07e2eacb-4afc-471a-af19-02e42c1550bf "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 07e2eacb-4afc-471a-af19-02e42c1550bf completed by agent papa-game in 9023ms (374 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 374 tokens, 10058ms
+INFO:spl.executor:GENERATE chain done -> @result (999 chars total)
+INFO:spl.executor:RETURN: 999 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find the Laplace transform of the function exp(-2t). To do this, we will use the definition of the Laplace transform:
+
+L{f(t)} = ∫[0,∞) f(t)e^(-st) dt
+
+where s is a complex number.
+
+Let's start by substituting f(t) = exp(-2t) into the equation:
+
+L{exp(-2t)} = ∫[0,∞) exp(-2t)e^(-st) dt
+
+Now, we can combine the two exponential functions using the property of exponents that states a^m * a^n = a^(m+n):
+
+L{exp(-2t)} = ∫[0,∞) exp(-(s+2)t) dt
+
+Next, we need to find the integral of this function. To do this, we can use the fact that ∫e^(at) dt = (1/a)e^(at) + C, where C is a constant:
+
+L{exp(-2t)} = (1/-(s+2))e^(-(s+2)t) | [0,∞)
+
+Now, we need to evaluate this expression at the limits of integration. As t approaches infinity, exp(-(s+2)t) approaches 0. When t = 0, exp(-(s+2)t) = e^(-2s). Therefore:
+
+L{exp(-2t)} = (1/-(s+2))(e^(-2s) - 0)
+
+Simplifying this expression, we get:
+
+L{exp(-2t)} = (-1)/(s+2)e^(-2s)
+
+So, the Laplace transform of exp(-2t) is (-1)/(s+2)e^(-2s).
+LLM calls: 1  Latency: 10059ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222435.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the Laplace transform of exp(-2*t)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 73d1aa45-b185-4970-bd10-ba3aafaa1a64 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/73d1aa45-b185-4970-bd10-ba3aafaa1a64 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/73d1aa45-b185-4970-bd10-ba3aafaa1a64 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 73d1aa45-b185-4970-bd10-ba3aafaa1a64 completed by agent wengong in 465ms (8 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 8 tokens, 2032ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (17 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+exp(-2*t)|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 50 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2226ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] laplace_transform(exp(-2*t)) = 1/(s + 2)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 10128bad-1101-4870-afba-b29bbc1f5177 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/10128bad-1101-4870-afba-b29bbc1f5177 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/10128bad-1101-4870-afba-b29bbc1f5177 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/10128bad-1101-4870-afba-b29bbc1f5177 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/10128bad-1101-4870-afba-b29bbc1f5177 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 10128bad-1101-4870-afba-b29bbc1f5177 completed by agent mac-wens-Mac-mini.local in 5861ms (110 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 110 tokens, 6028ms
+INFO:spl.executor:GENERATE chain done -> @result (406 chars total)
+INFO:spl.executor:RETURN: 406 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The student is trying to find the Laplace transform of the exponential function exp(-2*t). Here's how we get there:
+
+1. We're given the function exp(-2*t) and asked to find its Laplace transform.
+2. The symbolic math engine calculates that exp(-2*t) can be represented as 1/(s + 2).
+3. Therefore, the Laplace transform of exp(-2*t) is equal to this expression.
+
+The final answer is: $\boxed{\frac{1}{s+2}}$
+LLM calls: 2  Latency: 10287ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222435.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task acb4ed38-850a-4749-95b8-eb261312f5ab submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/acb4ed38-850a-4749-95b8-eb261312f5ab "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/acb4ed38-850a-4749-95b8-eb261312f5ab "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task acb4ed38-850a-4749-95b8-eb261312f5ab completed by agent wengong in 507ms (12 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 12 tokens, 2034ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (25 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x) - y(x)|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 64 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1787ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x) - y(x) = 0) -> Eq(y(x), C1*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task bd0cc71c-c87c-49ef-b46b-68f701d6340c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bd0cc71c-c87c-49ef-b46b-68f701d6340c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bd0cc71c-c87c-49ef-b46b-68f701d6340c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bd0cc71c-c87c-49ef-b46b-68f701d6340c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bd0cc71c-c87c-49ef-b46b-68f701d6340c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task bd0cc71c-c87c-49ef-b46b-68f701d6340c completed by agent wengong in 3133ms (141 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 141 tokens, 6040ms
+INFO:spl.executor:GENERATE chain done -> @result (512 chars total)
+INFO:spl.executor:RETURN: 512 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The student asked to solve a differential equation where the rate of change (y'(x)) is equal to the current value of y(x) itself, with an initial condition that y(0) = 1. 
+
+Here's how the computer broke it down:
+
+* It started by combining the given equations into one: dsolve(y(x).diff(x) - y(x) = 0)
+* Then it solved for y(x): Eq(y(x), C1*exp(x))
+
+So, the solution to the differential equation is an exponential function of x, with a constant multiplier (C1). In other words, the final answer is: y(x) = C1*e^x.
+LLM calls: 2  Latency: 9863ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222436.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 227b2dc8-f036-465e-84f6-3d22bd13cfde submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/227b2dc8-f036-465e-84f6-3d22bd13cfde "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/227b2dc8-f036-465e-84f6-3d22bd13cfde "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/227b2dc8-f036-465e-84f6-3d22bd13cfde "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 227b2dc8-f036-465e-84f6-3d22bd13cfde completed by agent papa-game in 3576ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 4033ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (27 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+1. summation(n,1,oo)|1/n**2
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 68 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1683ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 1/1: 1. summation(n,1,oo): invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 138 chars | status=solver_error, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 1/1 could not be computed: 1. summation(n,1,oo): invalid syntax (<string>, line 1)
+Verified chain up to this point:
+
+LLM calls: 1  Latency: 5718ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222441.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a6fe9b34-79dd-4e4c-8610-c3632322e061 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a6fe9b34-79dd-4e4c-8610-c3632322e061 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a6fe9b34-79dd-4e4c-8610-c3632322e061 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a6fe9b34-79dd-4e4c-8610-c3632322e061 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a6fe9b34-79dd-4e4c-8610-c3632322e061 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a6fe9b34-79dd-4e4c-8610-c3632322e061 completed by agent papa-game in 3448ms (259 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 259 tokens, 6055ms
+INFO:spl.executor:GENERATE chain done -> @result (809 chars total)
+INFO:spl.executor:RETURN: 809 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to calculate the sum of 1/n^2 from n=1 to infinity.
+
+Step 1: We start by writing out the first few terms of the series:
+
+1/1^2 + 1/2^2 + 1/3^2 + ...
+
+Step 2: Let's calculate the value of each term individually:
+
+1/1^2 = 1
+1/2^2 = 1/4
+1/3^2 = 1/9
+
+So, the series becomes:
+1 + 1/4 + 1/9 + ...
+
+Step 3: Now, let's try to add up a few more terms:
+
+1 + 1/4 + 1/9 + 1/16 + 1/25 + ...
+
+Step 4: Notice that each term is smaller than the previous one. This means we can keep adding more and more terms indefinitely.
+
+Step 5: However, it's clear that this series will never converge to a specific value because as n gets larger, 1/n^2 approaches zero.
+
+Step 6: Since the sum diverges (or goes to infinity), we cannot assign a finite value to this infinite series.
+
+The final answer is: Diverges
+LLM calls: 1  Latency: 6056ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222444.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e4bcc2b0-7fa5-434b-afca-ab7002cf9df8 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4bcc2b0-7fa5-434b-afca-ab7002cf9df8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4bcc2b0-7fa5-434b-afca-ab7002cf9df8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4bcc2b0-7fa5-434b-afca-ab7002cf9df8 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e4bcc2b0-7fa5-434b-afca-ab7002cf9df8 completed by agent wengong in 2872ms (219 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 219 tokens, 4038ms
+INFO:spl.executor:GENERATE chain done -> @result (737 chars total)
+INFO:spl.executor:RETURN: 737 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to find all roots of the equation x**4 - 1 = 0 and express each root in simplified form.
+
+Step 1: To solve this equation, we first need to isolate the variable x by moving 1 to the other side of the equation. So, we get:
+
+x**4 = 1
+
+Step 2: Since 1 is equal to 1*1*1*1 and -1 is equal to (-1)*(-1)*(-1)*(-1), we can rewrite both sides as:
+
+x**4 = (1)**4
+x**4 = (-1)**4
+
+Step 3: Now, since the exponent 4 on both sides of the equation are equal, we can equate the values inside the parentheses. This gives us two possible equations:
+
+x = 1 or x = -1
+
+Step 4: Since there is no additional operations to be performed in either case, these are the simplified roots.
+
+The final answer is: $\boxed{1}$ and $\boxed{-1}$.
+LLM calls: 1  Latency: 4039ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222446.md
+```
+
+
+## llama3.2 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:llama3.2 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0aa4b22c-be26-49a6-90c3-5c57b64cfb5c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0aa4b22c-be26-49a6-90c3-5c57b64cfb5c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0aa4b22c-be26-49a6-90c3-5c57b64cfb5c completed by agent mac-wens-Mac-mini.local in 85727ms (379 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 379 tokens, 88340ms
+INFO:spl.executor:GENERATE chain done -> @result (1110 chars total)
+INFO:spl.executor:RETURN: 1110 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  Let's break down the problem: You need to find the inverse Laplace transform of the function \( \frac{s}{s^2 + 4} \) and then verify it by taking its Laplace transform.
+
+1. **Identify the form**: The given function is \( \frac{s}{s^2 + 4} \). This resembles the standard Laplace transform pair for cosine: \( \mathcal{L}\{\cos(at)\} = \frac{s}{s^2 + a^2} \).
+
+2. **Recognize parameters**: Here, \( a^2 = 4 \), so \( a = 2 \).
+
+3. **Inverse Laplace transform**: Using the standard form, we identify that the inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is \( \cos(2t) \).
+
+Now, let's verify by taking the Laplace transform of \( \cos(2t) \):
+
+1. **Laplace transform formula**: Recall that \( \mathcal{L}\{\cos(at)\} = \frac{s}{s^2 + a^2} \).
+
+2. **Apply to our function**: For \( \cos(2t) \), we have \( a = 2 \). Thus, the Laplace transform is:
+   \[
+   \mathcal{L}\{\cos(2t)\} = \frac{s}{s^2 + 2^2} = \frac{s}{s^2 + 4}
+   \]
+
+3. **Verification**: This matches our original function \( \frac{s}{s^2 + 4} \).
+
+**Final Answer**: The inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is \( \cos(2t) \).
+LLM calls: 1  Latency: 88341ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222322.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 11c297b5-6ddd-43c8-a9cf-fb57fce9ca58 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/11c297b5-6ddd-43c8-a9cf-fb57fce9ca58 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/11c297b5-6ddd-43c8-a9cf-fb57fce9ca58 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/11c297b5-6ddd-43c8-a9cf-fb57fce9ca58 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 11c297b5-6ddd-43c8-a9cf-fb57fce9ca58 completed by agent papa-game in 2147ms (26 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 26 tokens, 4043ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (50 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)|ode_solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 113 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1754ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0) -> Eq(y(x), (C1 + C2*exp(x))*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 378949bf-fb0f-4529-b734-f2838d775654 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/378949bf-fb0f-4529-b734-f2838d775654 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/378949bf-fb0f-4529-b734-f2838d775654 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/378949bf-fb0f-4529-b734-f2838d775654 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/378949bf-fb0f-4529-b734-f2838d775654 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 378949bf-fb0f-4529-b734-f2838d775654 completed by agent papa-game in 3223ms (177 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 177 tokens, 6034ms
+INFO:spl.executor:GENERATE chain done -> @result (721 chars total)
+INFO:spl.executor:RETURN: 721 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The student wants to find the general solution to a second-order ordinary differential equation (ODE) that describes how a quantity changes over time.
+
+Here's what happens next:
+
+1. The symbolic math engine takes the ODE and differentiates it with respect to x, which gives us y'(x).
+2. It then substitutes this new expression for y'(x) into the original ODE.
+3. After some algebraic manipulations, the equation simplifies to a first-order linear ODE that can be solved.
+4. The final result is an equation that expresses y(x) as a linear combination of two exponential functions: C1 and C2*exp(x), where exp(x) is short for "e to the power of x".
+
+The general solution to the given ODE is:
+
+y(x) = (C1 + C2*exp(x))*exp(x)
+LLM calls: 2  Latency: 11833ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222447.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c1dae466-a86b-47a6-b198-752260db3dd7 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c1dae466-a86b-47a6-b198-752260db3dd7 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c1dae466-a86b-47a6-b198-752260db3dd7 completed by agent wengong in 8900ms (788 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 788 tokens, 10062ms
+INFO:spl.executor:GENERATE chain done -> @result (2198 chars total)
+INFO:spl.executor:RETURN: 2198 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is asking us to:
+
+* Compute the inverse Laplace transform of s / (s^2 + 4), which means finding a function f(t) such that the Laplace transform of f(t) equals s / (s^2 + 4).
+* Verify our answer by taking the Laplace transform of the result we obtained.
+
+Here's how we can do it:
+
+Step 1: We know that the inverse Laplace transform of 1 / (s^2 + a^2) is sin(at) and cos(at). In this case, a = 2. So, the inverse Laplace transform of s / (s^2 + 4) should be a function of t that involves these trigonometric functions.
+
+Step 2: To find the specific form of this function, we can use partial fraction decomposition to rewrite s / (s^2 + 4) as a sum of simpler fractions. This will allow us to identify the corresponding inverse Laplace transform.
+
+Step 3: Using partial fraction decomposition, we can write:
+
+s / (s^2 + 4) = A / (s - 2i) + B / (s + 2i)
+
+where A and B are constants. To find these constants, we can equate the numerators:
+
+s = A(s + 2i) + B(s - 2i)
+
+Step 4: Now, let's solve for A and B by choosing suitable values of s. If we set s = 2i, we get:
+
+2i = A(2i + 2i)
+= A \* 4i
+
+So, A = 1 / (4i) = -i / 4.
+
+Step 5: Similarly, if we set s = -2i, we get:
+
+-2i = B(-2i - 2i)
+= B \* (-4i)
+
+So, B = 1 / 4i = i / 4.
+
+Step 6: Now that we have the values of A and B, we can rewrite our original expression as:
+
+s / (s^2 + 4) = (-i / 4)(1 / (s - 2i)) + (i / 4)(1 / (s + 2i))
+
+Step 7: The inverse Laplace transform of these two terms are -sin(2it) and cos(2it), respectively. Therefore, the inverse Laplace transform of s / (s^2 + 4) is:
+
+f(t) = (-i / 4) \* sin(2t) + (i / 4) \* cos(2t)
+
+Step 8: To verify our answer, we can take the Laplace transform of f(t). Using the linearity property and the fact that the Laplace transform of sin(at) is 1 / (s^2 + a^2) and the Laplace transform of cos(at) is s / (s^2 + a^2), we get:
+
+L{f(t)} = L{-i/4 \* sin(2t) + i/4 \* cos(2t)}
+
+= (-i/4) \* 1 / (s^2 + 4) + (i/4) \* s / (s^2 + 4)
+
+Step 9: Simplifying the expression, we get:
+
+L{f(t)} = s / (s^2 + 4)
+
+which is equal to our original expression! This verifies that f(t) is indeed the inverse Laplace transform of s / (s^2 + 4).
+
+The final answer is: 
+f(t) = (-i/4) \* sin(2t) + (i/4) \* cos(2t).
+LLM calls: 1  Latency: 10063ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222451.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 675f02ee-ef39-4124-9733-531b6b2fbc3e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/675f02ee-ef39-4124-9733-531b6b2fbc3e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 675f02ee-ef39-4124-9733-531b6b2fbc3e completed by agent mac-wens-Mac-mini.local in 11444ms (477 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 477 tokens, 14088ms
+INFO:spl.executor:GENERATE chain done -> @result (1554 chars total)
+INFO:spl.executor:RETURN: 1554 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  Here's a clear and friendly walkthrough to solve the given ODE:
+
+The problem is asking us to find the general solution to the second-order differential equation y''(x) - 3*y'(x) + 2*y(x) = 0.
+
+Step 1: To start, let's assume that the solution has the form y(x) = e^(rx), where r is a constant. We'll substitute this expression for y(x) and its derivatives into the ODE.
+
+Step 2: Differentiating y(x) = e^(rx) gives us y'(x) = re^(rx) and y''(x) = r^2e^(rx). Now we can plug these expressions back into the ODE:
+
+r^2e^(rx) - 3(re^(rx)) + 2e^(rx) = 0
+
+Step 3: We can simplify this equation by factoring out e^(rx), since it's present in all three terms. This gives us:
+
+e^(rx)(r^2 - 3r + 2) = 0
+
+Step 4: For the product of two functions to be zero, at least one of the factors must be zero. So we can set each factor equal to zero and solve for r:
+
+1. e^(rx) = 0 -> This is never true since e^(rx) > 0 for all real x.
+
+2. r^2 - 3r + 2 = 0
+
+We can solve this quadratic equation by factoring or using the quadratic formula. Using factoring, we get:
+
+(r-1)(r-2) = 0
+
+So r = 1 or r = 2 are the solutions to this part of the equation.
+
+Step 5: Since we have a pair of linearly independent solutions (e^(x), e^(2x)), they form a basis for the general solution. We'll write down the general solution by adding together arbitrary multiples of each:
+
+y(x) = c1*e^(x) + c2*e^(2x)
+
+Where c1 and c2 are arbitrary constants.
+
+Step 6: Combining our steps we get the following final answer:
+The general solution to the differential equation is y(x) = c1*e^(x) + c2*e^(2x).
+LLM calls: 1  Latency: 14089ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222448.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ca4c5e60-2093-4dbc-9c86-4e234492c284 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca4c5e60-2093-4dbc-9c86-4e234492c284 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca4c5e60-2093-4dbc-9c86-4e234492c284 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ca4c5e60-2093-4dbc-9c86-4e234492c284 completed by agent papa-game in 648ms (26 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 26 tokens, 2028ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (54 chars total)
+[INFO] [arm=solver] decomposed into 3 step(s):
+
+
+s/(s**2 + 4)|laplace
+PREV|inverse_laplace
+PREV|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 57 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2017ms (0 LLM calls)
+[INFO] [arm=solver][step 1/3] laplace_transform(s/(s**2 + 4)) = 1/(s^2 + 4)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 66 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 52ms (0 LLM calls)
+[INFO] [arm=solver][step 2/3] inverse_laplace_transform(1/(s^2 + 4)) = 1/2*sin(2*t)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 57 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2ms (0 LLM calls)
+[INFO] [arm=solver][step 3/3] laplace_transform(1/2*sin(2*t)) = 1/(s^2 + 4)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 9726b2b6-ccf8-4024-b416-8d922f9d4a88 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9726b2b6-ccf8-4024-b416-8d922f9d4a88 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9726b2b6-ccf8-4024-b416-8d922f9d4a88 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9726b2b6-ccf8-4024-b416-8d922f9d4a88 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9726b2b6-ccf8-4024-b416-8d922f9d4a88 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/9726b2b6-ccf8-4024-b416-8d922f9d4a88 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 9726b2b6-ccf8-4024-b416-8d922f9d4a88 completed by agent wengong in 6827ms (155 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 155 tokens, 8058ms
+INFO:spl.executor:GENERATE chain done -> @result (573 chars total)
+INFO:spl.executor:RETURN: 573 chars | status=complete, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  The student wants to find the original function that was used to get a specific Laplace transform. Here's how we can break it down:
+
+1. We start with a function s / (s**2 + 4) and take its Laplace transform, which gives us 1/(s^2 + 4).
+2. Next, we find the inverse of this Laplace transform, which is equivalent to asking "what original function would produce this result?" The answer is 1/2*sin(2*t).
+3. Finally, we take the Laplace transform of this new function and get back our starting point.
+
+So, the original function s / (s**2 + 4) can be expressed as 1/2*sin(2*t).
+LLM calls: 2  Latency: 12159ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222450.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 17553fb9-cd5f-4bdb-9172-879de338747e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17553fb9-cd5f-4bdb-9172-879de338747e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17553fb9-cd5f-4bdb-9172-879de338747e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17553fb9-cd5f-4bdb-9172-879de338747e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/17553fb9-cd5f-4bdb-9172-879de338747e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 17553fb9-cd5f-4bdb-9172-879de338747e completed by agent wengong in 3218ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 6048ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (28 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+x**4 - 1|solve
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2059ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] solve(x**4 - 1 = 0) -> x = [I, -1, -I, 1]
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify([I, -1, -I, 1]) = [I, -1, -I, 1]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 428c346a-4b45-4fe8-953d-c3f3badc6063 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/428c346a-4b45-4fe8-953d-c3f3badc6063 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 428c346a-4b45-4fe8-953d-c3f3badc6063 completed by agent mac-wens-Mac-mini.local in 8890ms (138 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 138 tokens, 12072ms
+INFO:spl.executor:GENERATE chain done -> @result (459 chars total)
+INFO:spl.executor:RETURN: 459 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  The student wants to find all the roots of the equation x^4 - 1 = 0 and express each root in its simplest form.
+
+Here's how we solve it:
+We start by solving the equation x^4 - 1 = 0, which gives us the roots: I, -1, -I, and 1.
+Next, we simplify these roots to their most basic form, but since they are already in their simplest form (as indicated by the engine), we just list them as is.
+So, the final answer is: The roots of x^4 - 1 = 0 are I, -1, -I, and 1.
+LLM calls: 2  Latency: 20181ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-llama3.2-20260620-222446.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate x**4 - 2*x**2 + 1' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4e76afc6-0cb2-40ed-bdac-bc07ff74bf59 completed by agent papa-game in 16287ms (1062 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1062 tokens, 18108ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (4225 chars total)
+[INFO] [arm=solver] decomposed into 32 step(s):
+
+
+<think>
+We need to produce a translation of the given math problem into an ordered list of symbolic operations. The problem: "differentiate x**4 - 2*x**2 + 1". So we must start with the expression in Python syntax: x**4 - 2*x**2 + 1. That's the first step's <expression>. Then every subsequent step must use the literal word PREV as the expression, meaning referencing the previous step's result.
+We need to differentiate this polynomial. The derivative is 4*x**3 - 4*x. So we have:
+Step 1: x**4 - 2*x**2 + 1 | (some operation? Actually first line must be the starting expression in Python syntax, which is "x**4 - 2*x**2 + 1". No operation after it.
+Then step 2: differentiate that expression. According to rule, we need to use PREV referencing previous step's result. The operation for differentiation is "diff". So we have:
+x**4 - 2*x**2 + 1 | diff
+But the instruction says: Every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". NEVER write a new expression after the first line. Wait, they say "Every step AFTER the first line must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line." That seems contradictory: The first line is just the starting expression. Then each subsequent line should have PREV|...? Actually reading earlier: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x). Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line."
+Interpretation: The first line is just the starting expression. Then each subsequent line should be something like "PREV|operation". But they also say "use the literal word PREV as the expression". That might mean that the operation argument must be "PREV"? Wait, the examples show:
+"differentiate e to the x and then simplify the result"
+exp(x)|diff
+PREV|simplify
+Here, the first line is "exp(x)" (the starting expression). Then second line: "PREV|simplify". So they used PREV as the operation token? Actually in that example, the operation is "simplify", not "PREV". The instruction says: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line." That seems to be contradictory. Let's examine examples more carefully.
+The given correct examples:
+1. "differentiate e to the x and then simplify the result"
+   exp(x)|diff
+   PREV|simplify
+So they have two lines: first line is the starting expression (exp(x)). Second line uses PREV|simplify, where PREV refers to previous step's result (which is exp(x)). So the operation token is "simplify". The instruction says "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." That seems to be describing that you should reference the previous step using the word PREV, not necessarily that the operation argument is "PREV". It's ambiguous. But examples show they used "simplify" after referencing PREV. So we follow that pattern.
+Thus for our problem: Starting expression: x**4 - 2*x**2 + 1
+Second line: PREV|diff (since diff is the operation). That yields derivative.
+But maybe they want to include the operation token "diff". The format: <expression>|<operation>. So after first line, we have "PREV|diff". That matches examples. So step 2: PREV|diff
+Thus final output:
+x**4 - 2*x**2 + 1
+PREV|diff
+But need to ensure no extra spaces? The format says "<expression>|<operation>" with no spaces around |? In examples they have "exp(x)|diff" (no spaces). So we should follow that: "x**4 - 2*x**2 + 1|PREV|diff"? Wait, the first line is just the expression. The second line must be "PREV|diff". That would be two lines:
+x**4 - 2*x**2 + 1
+PREV|diff
+That's correct.
+Check if any other steps needed? Since we only have one differentiation operation, it's a single step after the first. So that's fine.
+Thus output exactly those two lines.
+</think>
+x**4 - 2*x**2 + 1
+PREV|diff
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 207ms (0 LLM calls)
+[INFO] [arm=solver][step 1/32] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 802 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/32] We need to produce a translation of the given math problem into an ordered list of symbolic operations. The problem: "differentiate x**4 - 2*x**2 + 1". So we must start with the expression in Python syntax: x**4 - 2*x**2 + 1. That's the first step's <expression>. Then every subsequent step must use the literal word (<think>) as the expression, meaning referencing the previous step's result. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 186 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/32] We need to differentiate this polynomial. The derivative is 4*x**3 - 4*x. So we have: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 197 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 4/32: Step 1: x**4 - 2*x**2 + 1: Sympify of expression 'could not parse 'Step 1: x**4 - 2*x**2 + 1'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 810 chars | status=solver_error, arm=solver, backend=sympy, steps=4
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 4/32 could not be computed: Step 1: x**4 - 2*x**2 + 1: Sympify of expression 'could not parse 'Step 1: x**4 - 2*x**2 + 1'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to produce a translation of the given math problem into an ordered list of symbolic operations. The problem: "differentiate x**4 - 2*x**2 + 1". So we must start with the expression in Python syntax: x**4 - 2*x**2 + 1. That's the first step's <expression>. Then every subsequent step must use the literal word (<think>) as the expression, meaning referencing the previous step's result. (pass-through)
+3. We need to differentiate this polynomial. The derivative is 4*x**3 - 4*x. So we have: (pass-through)
+
+LLM calls: 1  Latency: 18319ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222451.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate x**4 - 2*x**2 + 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 7ed6ba7a-13ca-43ce-9ede-3bb1a80fb31b completed by agent papa-game in 15550ms (960 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 960 tokens, 16080ms
+INFO:spl.executor:GENERATE chain done -> @result (3035 chars total)
+INFO:spl.executor:RETURN: 3035 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; must do manually. Provide less than 8 sentences total. That's tricky: each sentence can be long but we need to include restating problem, working steps, and final answer. Probably around 5-6 sentences.
+
+We need to differentiate (i.e., factor? simplify?) x**4 - 2*x**2 + 1. This is a quadratic in y = x^2: y^2 - 2y + 1 = (y-1)^2 = (x^2 - 1)^2 = (x-1)^2 (x+1)^2? Actually (x^2 - 1)^2 = ((x-1)(x+1))^2 = (x-1)^2 (x+1)^2. So factorization: (x^2 - 1)^2 = (x-1)^2 (x+1)^2. Or expand to original. So the differentiation could be factoring or simplifying. Usually "differentiate" might mean differentiate with respect to x, but that would be derivative: d/dx (x^4 - 2x^2 + 1) = 4x^3 - 4x = 4x(x^2 - 1). But the problem says "differentiate x**4 - 2*x**2 + 1". In algebra context, differentiate could mean factor? However typical math tasks: "differentiate" means find derivative. But they ask to show working step by step and state exact result of each step. Could be factoring. Let's assume they want factorization.
+
+Thus we need to restate: The problem asks to factor the expression x^4 - 2x^2 + 1. Then show steps: Recognize it as a perfect square trinomial, rewrite as (x^2)^2 - 2(x^2) + 1 = (x^2 - 1)^2, then factor further: x^2 - 1 = (x-1)(x+1), so final factorization: (x-1)^2 (x+1)^2. Provide final answer.
+
+We need to do that in less than 8 sentences. Let's craft maybe 5 sentences:
+
+1. The problem asks you to factor the polynomial x**4 - 2*x**2 + 1 into its simplest algebraic form.
+2. First, treat it as a quadratic in y = x^2: y^2 - 2y + 1 = (y - 1)^2.
+3. Substitute back y = x^2 to get (x^2 - 1)^2.
+4. Then factor the difference of squares: x^2 - 1 = (x - 1)(x + 1), so the full factorization is ((x - 1)(x + 1))^2, which expands to (x - 1)^2 (x + 1)^2.
+5. Thus the final simplified factored form of the expression is (x - 1)^2 (x + 1)^2.
+
+That's 5 sentences, each ending with a period. That satisfies less than 8 sentences. No extra commentary. No bold, no markdown. Provide plain text.
+
+Check: Sentence 1 restates problem. Sentence 2 shows working step: treat as quadratic, result (y-1)^2. Sentence 3 substitute back. Sentence 4 factor difference of squares and final factorization. Sentence 5 gives final answer. That works.
+
+Make sure we didn't skip steps. Yes.
+
+Thus output.
+</think>
+The problem asks you to factor the polynomial x**4 - 2*x**2 + 1 into its simplest algebraic form. First, treat it as a quadratic in y = x^2: y^2 - 2y + 1 = (y - 1)^2. Substitute back y = x^2 to obtain (x^2 - 1)^2. Next, factor the difference of squares: x^2 - 1 = (x - 1)(x + 1), giving the full factorization ((x - 1)(x + 1))^2, which equals (x - 1)^2 (x + 1)^2. Thus the final simplified factored form of the expression is (x - 1)^2 (x + 1)^2.
+LLM calls: 1  Latency: 16080ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222459.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3278b82d-10c6-4dcb-a8ad-842b7036a3fb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3278b82d-10c6-4dcb-a8ad-842b7036a3fb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3278b82d-10c6-4dcb-a8ad-842b7036a3fb completed by agent mac-wens-Mac-mini.local in 12252ms (662 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 662 tokens, 14088ms
+INFO:spl.executor:GENERATE chain done -> @result (2655 chars total)
+INFO:spl.executor:RETURN: 2655 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must do manually. Provide less than 8 sentences total. That's tricky: each sentence can be long, but we need to include restating problem, showing working step by step, stating exact result of each step, and final answer. Must not skip steps. So maybe 5-6 sentences.
+
+We need to restate: "Simplify the rational expression (x^2 - 1)/(x - 1)". Show factoring numerator: x^2 - 1 = (x-1)(x+1). Then cancel factor (x-1) provided x ≠ 1. So simplified expression is x + 1, with note that x ≠ 1.
+
+We need to state each step as we derive it. So sentence 1: restate problem. Sentence 2: factor numerator. Sentence 3: write fraction after factoring. Sentence 4: cancel common factor (x-1) noting domain restriction. Sentence 5: final simplified expression. That's 5 sentences, which is less than 8. No extra commentary.
+
+Make sure we don't skip steps. Provide plain English restatement, then working. Let's craft:
+
+1. The problem asks you to simplify the rational expression \(\frac{x^{2}-1}{x-1}\) by canceling any common factors.  
+2. First factor the numerator using the difference of squares: \(x^{2}-1 = (x-1)(x+1)\).  
+3. Substituting this factorization gives \(\frac{(x-1)(x+1)}{x-1}\).  
+4. Since the factor \((x-1)\) appears in both numerator and denominator, it can be canceled, provided \(x \neq 1\) to avoid division by zero.  
+5. After canceling, the expression reduces to the simpler form \(x+1\).
+
+That's 5 sentences, each ending with period. That satisfies less than 8 sentences. No extra formatting? The instruction says no bold/markdown unless asked. So we should not use LaTeX? It didn't forbid but it's okay. But we can keep plain text. However the problem statement includes math symbols; we can include them as needed. Probably fine.
+
+Make sure we don't skip steps: factoring, substitution, cancellation, final answer. Yes.
+
+Thus final answer.
+</think>
+The problem asks you to simplify the rational expression \(\frac{x^{2}-1}{x-1}\) by canceling any common factors. First factor the numerator using the difference of squares: \(x^{2}-1 = (x-1)(x+1)\). Substituting this factorization gives \(\frac{(x-1)(x+1)}{x-1}\). Since the factor \((x-1)\) appears in both numerator and denominator, it can be canceled, provided \(x \neq 1\) to avoid division by zero. After canceling, the expression reduces to the simpler form \(x+1\).
+LLM calls: 1  Latency: 14089ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222502.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6124782e-fb55-4d22-bc40-de973ea3f5f8 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6124782e-fb55-4d22-bc40-de973ea3f5f8 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6124782e-fb55-4d22-bc40-de973ea3f5f8 completed by agent papa-game in 10441ms (862 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 862 tokens, 12087ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (3596 chars total)
+[INFO] [arm=solver] decomposed into 23 step(s):
+
+
+<think>
+We need to parse the problem: "differentiate 3*x**3-x, then factor if needed, finally solve for x". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, no extra text.
+First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.
+Then every step after must use literal word PREV as the expression — meaning referencing previous step's result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let's think: differentiate 3*x**3 - x => derivative is 9*x**2 - 1. That's a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you'd factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after PREV referencing previous expression.
+Thus second line: PREV|factor
+Then third line: solve for x? Wait, the problem says "differentiate ... then factor if needed, finally solve for x". So after factoring we have an expression; solving for x from what? Possibly they want to solve the derivative equation = 0? Or maybe they want to find roots of original function? Actually ambiguous. Let's read: "differentiate 3*x**3-x, then factor if needed, finally solve for x". Usually you differentiate a function and then solve something like set derivative equal to zero? But not explicitly given. However typical tasks: differentiate, then solve the resulting equation (maybe derivative = 0). Or maybe they want to find roots of original expression after differentiation? Let's think: The phrase "differentiate ... then factor if needed, finally solve for x" could mean we differentiate, then factor the derivative, and then solve that factored expression for x (i.e., find its roots). That would be solving 9*x**2 - 1 = 0. So final step: solve(9*x**2 - 1) maybe using solve? The allowed operation tokens include "solve". Yes, we can use solve. So third line: PREV|solve
+Thus steps:
+1. "3*x**3 - x"
+2. PREV|factor
+3. PREV|solve
+But need to ensure each step uses proper syntax: first expression is Python syntax: 3*x**3 - x (no parentheses around subtraction? Actually it's fine). Then second line: PREV|factor. Third line: PREV|solve.
+Check if any extra constraints: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." So we have that.
+Now ensure no extra text, no code fences, no backticks. Output exactly:
+3*x**3 - x
+PREV|factor
+PREV|solve
+That seems correct.
+But need to verify if any other steps needed: maybe they want to factor after differentiation and then solve for x from the original equation? Let's examine problem statement: "differentiate 3*x**3-x, then factor if needed, finally solve for x". Could be ambiguous but typical reading: differentiate, then factor (if needed), then solve for x (maybe of the derivative). So yes.
+Thus final answer.
+</think>
+3*x**3 - x
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 141ms (0 LLM calls)
+[INFO] [arm=solver][step 1/23] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 450 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/23] We need to parse the problem: "differentiate 3*x**3-x, then factor if needed, finally solve for x". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, no extra text. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 594 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/23] First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 3042 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 4/23] Then every step after must use literal word (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) as the expression — meaning referencing previous step's result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let's think: differentiate 3*x**3 - x => derivative is 9*x**2 - 1. That's a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you'd factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) referencing previous expression. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 3242 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 5/23: Thus second line: (Then every step after must use literal word (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) as the expression — meaning referencing previous step's result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let's think: differentiate 3*x**3 - x => derivative is 9*x**2 - 1. That's a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you'd factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) referencing previous expression.): Sympify of expression 'could not parse '(Thus second line: (Then every step after must use literal word (First step\'s <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That\'s the first line.) as the expression — meaning referencing previous step\'s result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let\'s think: differentiate 3*x**3 - x) - (> derivative is 9*x**2 - 1. That\'s a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you\'d factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step\'s <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That\'s the first line.) referencing previous expression.))'' failed, because of exception being raised:
+SyntaxError: invalid character '—' (U+2014) (<string>, line 1)
+INFO:spl.executor:RETURN: 5415 chars | status=solver_error, arm=solver, backend=sympy, steps=5
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 5/23 could not be computed: Thus second line: (Then every step after must use literal word (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) as the expression — meaning referencing previous step's result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let's think: differentiate 3*x**3 - x => derivative is 9*x**2 - 1. That's a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you'd factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) referencing previous expression.): Sympify of expression 'could not parse '(Thus second line: (Then every step after must use literal word (First step\'s <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That\'s the first line.) as the expression — meaning referencing previous step\'s result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let\'s think: differentiate 3*x**3 - x) - (> derivative is 9*x**2 - 1. That\'s a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you\'d factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step\'s <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That\'s the first line.) referencing previous expression.))'' failed, because of exception being raised:
+SyntaxError: invalid character '—' (U+2014) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to parse the problem: "differentiate 3*x**3-x, then factor if needed, finally solve for x". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, no extra text. (pass-through)
+3. First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line. (pass-through)
+4. Then every step after must use literal word (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) as the expression — meaning referencing previous step's result. The operation token must be one of allowed list. We need to differentiate, then factor if needed, then solve for x. Let's think: differentiate 3*x**3 - x => derivative is 9*x**2 - 1. That's a new expression. Then "then factor if needed". Is factoring needed? The result 9*x**2 - 1 is already factored as (3*x - 1)*(3*x + 1). But maybe they want to factor it further? Usually you'd factor the derivative, but not necessary unless asked. The phrase "then factor if needed" suggests we check if factorization simplifies something; but typical tasks: differentiate then factor if needed. Since derivative is already a simple polynomial, factoring yields (3*x - 1)*(3*x + 1). That might be considered factoring. So next step: factor(9*x**2 - 1). The operation token "factor" must be used after (First step's <expression> is the starting expression in Python syntax: that would be "3*x**3 - x"? Actually they said copy an expression from an example; we need to transcribe its expression exactly — same digits, signs, exponents. So initial expression: 3*x**3 - x. That's the first line.) referencing previous expression. (pass-through)
+
+LLM calls: 1  Latency: 12232ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222510.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x+1)**2, then factor the expanded form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f0010c72-a971-4be8-b12a-1285a060fce1 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f0010c72-a971-4be8-b12a-1285a060fce1 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f0010c72-a971-4be8-b12a-1285a060fce1 completed by agent mac-wens-Mac-mini.local in 21080ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 22109ms
+INFO:spl.executor:GENERATE chain done -> @result (3712 chars total)
+INFO:spl.executor:RETURN: 3712 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; must do manually. Provide less than 8 sentences total. That's tricky: we need to convey all steps within <=7 sentences (since less than 8). Each sentence can be long but must contain step results. We cannot skip steps, so each transformation must be stated. Let's plan:
+
+Sentence 1: Restate problem: "The task is to expand the expression (x+1)^2 and then factor the resulting polynomial." That's one sentence.
+
+Sentence 2: Expand: "(x+1)^2 = x^2 + 2x + 1". That's stating result of step 2.
+
+Sentence 3: Factor that expanded form: "Now we look for a factorization of x^2 + 2x + 1, which can be written as (x + a)(x + b) where a·b = 1 and a + b = 2, giving a = b = 1." That includes step.
+
+Sentence 4: Multiply out to verify: "Multiplying (x+1)(x+1) yields the same expression x^2 + 2x + 1, confirming the factorization." That's verification.
+
+Sentence 5: Since the quadratic is a perfect square trinomial, the factored form is simply (x + 1)^2. But we already had that; maybe they want final answer as (x+1)^2? Actually after expanding and factoring, you could write it as (x+1)^2 again, but perhaps they want to show that the factorization is (x+1)^2. However the problem says "factor the expanded form". So we have factored it as (x+1)(x+1) or (x+1)^2. That's final answer.
+
+Sentence 6: Therefore the final factored expression is (x + 1)^2. That's final answer.
+
+We need less than 8 sentences, we have 6 sentences, which is okay. No extra commentary. No bold, no markdown. Provide plain text. Ensure each step result is stated exactly as derived. Let's check: Sentence 2 states exact result of expansion. Sentence 3 states factorization result (x+1)(x+1). That's correct. Sentence 4 verifies. Sentence 5 gives final answer? Actually we already gave factorization in sentence 3; but they ask to factor the expanded form, so final answer is (x+1)^2. Could be either (x+1)(x+1) or (x+1)^2. Provide both maybe. But we must not skip steps: we have shown expansion, then factoring as product of binomials, and then note it's a perfect square. So final answer: (x+1)^2.
+
+Thus final sentence: "The final factored form is (x + 1)^2." That's the last sentence. That would be sentence 6. But we already have that in sentence 5? Actually we said factorization as (x+1)(x+1). The final answer could be that same expression, but they might want it simplified. We can combine: "Thus the factored form of the expanded expression is (x + 1)^2." That's fine.
+
+We need to ensure no extra steps omitted. Let's count sentences:
+
+1. Restate problem.
+2. Expand result.
+3. Factor result.
+4. Verify factorization.
+5. State final answer.
+
+That's 5 sentences, which is less than 8. Good.
+
+Make sure each sentence ends with a period. No bold. Provide plain text.
+
+Let's craft them:
+
+1. The task is to expand the expression (x+1)^2 and then factor the resulting polynomial.
+2. Expanding gives (x+1)^2 = x^2 + 2x + 1.
+3. Factoring the quadratic x^2 + 2x + 1 yields (x + 1)(x + 1), which is equivalent to (x+1)^2.
+4. Multiplying (x+1)(x+1) confirms that this product expands back to x^2 + 2x + 1, verifying the factorization.
+5. Therefore the final factored form of the expanded expression is (x + 1)^2.
+
+That's 5 sentences, less than 8. No extra commentary. That satisfies all requirements. Ensure no bold, no markdown. Provide that.
+</think>
+The task is to expand the expression (x+1)^2 and then factor the resulting polynomial. Expanding gives
+LLM calls: 1  Latency: 22110ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222507.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 876da08a-209b-4f81-b90c-6b051e6ebd0f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/876da08a-209b-4f81-b90c-6b051e6ebd0f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 876da08a-209b-4f81-b90c-6b051e6ebd0f completed by agent papa-game in 16135ms (1471 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1471 tokens, 18094ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (5610 chars total)
+[INFO] [arm=solver] decomposed into 38 step(s):
+
+
+<think>
+We need to translate the problem into ordered list of symbolic operations. The problem: "expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0". So we have steps:
+1. Expand (x-2)**3. That's expression: (x-2)**3. According to format, first line is the starting expression in Python syntax: (x-2)**3|expand
+2. Then differentiate the result: "differentiate the result" meaning derivative of previous step. So we need PREV|diff. The previous expression is "(x-2)**3". So after expansion, we have something like x**3 - 6*x**2 + 12*x - 8? Actually (x-2)^3 expands to x^3 - 6x^2 + 12x - 8. But we don't need to compute; just use diff operation: (x-2)**3|diff
+Thus step 2: (x-2)**3|diff
+3. Then simplify the result: "simplify it". So PREV|simplify, where PREV is the previous expression, which is "(x-2)**3|diff"? Wait careful: The rule says every step AFTER the first must use the literal word PREV as the expression — meaning that each subsequent line's expression part (the left side) should be the literal word PREV? Actually reading: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." That suggests that after the first line, we write something like "PREV|simplify". But what is the expression before that? The previous step's expression is "(x-2)**3". However they say "use the literal word PREV as the expression". Wait earlier they said: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication... Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line."
+Thus they want each subsequent line to have "PREV|<operation>" where PREV is the previous expression (the one from prior step). But they also say "use the literal word PREV as the expression". That seems contradictory: The literal word PREV is not an expression; it's a token. In examples, they had:
+"differentiate e to the x and then simplify the result"
+exp(x)|diff
+PREV|simplify
+Here, the first line is "exp(x)|diff". The second line uses PREV (the previous expression) as the left side? Actually they wrote "PREV|simplify". In that example, the previous expression was "exp(x)". So they used "PREV" token. So indeed each subsequent step's expression part is just the word PREV, not the actual expression. The operation token follows.
+Thus for our case: Step 1: (x-2)**3|expand
+Step 2: PREV|diff   (since previous expression is "(x-2)**3")
+Step 3: PREV|simplify
+Step 4: then factor that, i.e., "factor that". So we need to apply factor operation on the result of simplify. The previous expression now is the simplified expression from step 3. But we don't have its explicit form; but we can just write "PREV|factor". However we must ensure that each line after first uses PREV as the expression part, not the actual expression.
+Thus Step 4: PREV|factor
+Step 5: then solve for x = 0. That is "solve for x = 0". The operation is "solve". But they said "solve for x = 0" maybe means solving the equation? There's no explicit equation given; but we can interpret as solving the expression (the simplified polynomial) at x=0? Actually typical phrase: "solve for x = 0" might be ambiguous. However based on examples, if you have something like "find the roots of ...", they used solve. For "solve for x = 0", maybe they want to evaluate something at x=0? But there is no equation; perhaps they intend to set expression equal to zero and solve? Since we have a polynomial after factoring, solving for x=0 would be evaluating that polynomial at x=0 (which yields constant term). However the instruction: "then factor that, then solve for x = 0". So after factoring, you'd solve the equation (maybe the original expression?) But there is no explicit equation. Possibly they mean to solve the factored expression for x? Or find roots? The example "solve the system x + y = 5 and x - y = 1" gave [x + y - 5, x - y - 1]|solve_system. That's a list of equations combined into one step with solve_system. For single equation, they'd have something like "solve f(x) = 0"? But there is no explicit equation; maybe we treat the expression as an equation? Actually typical usage: "solve x**2 - 4 = 0" would be "x**2 - 4|solve". But here it's "solve for x = 0". Could be ambiguous. However given they want to factor then solve, perhaps they intend to find roots of the polynomial after factoring? Or maybe they want to set the factored expression equal to zero and solve? Since we don't have explicit equation, but we can assume solving the simplified expression (maybe it's a polynomial) for x=0 means evaluate at x=0? But that would be trivial: just plug in 0. However they'd likely expect "solve" operation on the previous expression (which is after factoring). So step 5: PREV|solve
+Thus final list:
+(x-2)**3|expand
+PREV|diff
+PREV|simplify
+PREV|factor
+PREV|solve
+But we need to ensure each line uses correct syntax: The first line must be the starting expression in Python syntax. That's (x-2)**3. There is no extra spaces? In examples they have "exp(x)|diff". So we can write "(x-2)**3|expand". Then next lines: "PREV|diff", etc.
+Check if any other constraints: No code fences, no backticks, no markdown. So plain text lines.
+Thus output:
+(x-2)**3|expand
+PREV|diff
+PREV|simplify
+PREV|factor
+PREV|solve
+Make sure there is no extra whitespace at ends. That should satisfy.
+</think>
+(x-2)**3|expand
+PREV|diff
+PREV|simplify
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 141ms (0 LLM calls)
+[INFO] [arm=solver][step 1/38] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 442 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/38] We need to translate the problem into ordered list of symbolic operations. The problem: "expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0". So we have steps: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 449 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/38: 1. Expand (x-2)**3. That's expression: (x-2)**3. According to format, first line is the starting expression in Python syntax: (x-2)**3: Sympify of expression 'could not parse "1. Expand (x-2)**3. That's expression: (x-2)**3. According to format, first line is the starting expression in Python syntax: (x-2)**3"' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 778 chars | status=solver_error, arm=solver, backend=sympy, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/38 could not be computed: 1. Expand (x-2)**3. That's expression: (x-2)**3. According to format, first line is the starting expression in Python syntax: (x-2)**3: Sympify of expression 'could not parse "1. Expand (x-2)**3. That's expression: (x-2)**3. According to format, first line is the starting expression in Python syntax: (x-2)**3"' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to translate the problem into ordered list of symbolic operations. The problem: "expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0". So we have steps: (pass-through)
+
+LLM calls: 1  Latency: 18239ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222517.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3cdc7de5-ee89-4f28-9fff-cc73868f62a0 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3cdc7de5-ee89-4f28-9fff-cc73868f62a0 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3cdc7de5-ee89-4f28-9fff-cc73868f62a0 completed by agent wengong in 30694ms (651 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 651 tokens, 34142ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (2740 chars total)
+[INFO] [arm=solver] decomposed into 16 step(s):
+
+
+<think>
+We need to produce a translation of the problem into ordered list of symbolic operations. The problem: "simplify the rational expression (x**2 - 1) / (x - 1)". According to instructions, we must output an ordered list where each step after the first uses PREV and the word PREV as the previous expression.
+First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1)
+Then subsequent steps must use PREV|... where PREV refers to the previous step's expression. The first step is that expression. Then second step: we need to simplify? Actually "simplify the rational expression" means we need to perform simplification. According to allowed operations, we have "simplify" as an operation. So after the first line, we can do PREV|simplify, where PREV refers to the previous expression (the original). That would be: ((x**2 - 1)/(x - 1)) | simplify
+But is that correct? The instruction says "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." So we can have multiple steps, but each subsequent line uses PREV|<operation>. However, they also say "If the problem needs only ONE operation, output exactly one line". Here we need to simplify a rational expression; that is a single simplification operation. So we could just have two lines: first line expression, second line PREV|simplify. That would be acceptable.
+But check if any other allowed operations like expand, factor, etc. The problem says "simplify the rational expression". Could also be done by factoring numerator and canceling? But they didn't ask to factor; just simplify. So we can use simplify operation directly on the original expression. That yields (x+1). However, the instruction: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)". So they want us to copy exactly the expression from problem. The problem includes parentheses and division. So we must preserve that.
+Thus output:
+(x**2 - 1)/(x - 1)|simplify
+But is there any need for multiple steps? Possibly they'd want "factor" or "expand"? But the instruction says "Translate this math problem into an ordered list of symbolic operations." The simplest translation: start with expression, then apply simplify. So that's one line after first.
+Thus final answer:
+(x**2 - 1)/(x - 1)|simplify
+Check for any extra spaces? They didn't forbid spaces. It should be exactly as described: <expression>|<operation>. No extra punctuation. That seems correct.
+Make sure no code fences, no backticks, no numbering. Provide plain text.
+Thus final.
+</think>
+(x**2 - 1)/(x - 1)|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 117ms (0 LLM calls)
+[INFO] [arm=solver][step 1/16] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 646 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/16] We need to produce a translation of the problem into ordered list of symbolic operations. The problem: "simplify the rational expression (x**2 - 1) / (x - 1)". According to instructions, we must output an ordered list where each step after the first uses (<think>) and the word (<think>) as the previous expression. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 262 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/16] First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1) (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 459 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 4/16: Then subsequent steps must use (First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1)): Sympify of expression 'could not parse 'Then subsequent steps must use (First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1))'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 1032 chars | status=solver_error, arm=solver, backend=sympy, steps=4
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 4/16 could not be computed: Then subsequent steps must use (First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1)): Sympify of expression 'could not parse 'Then subsequent steps must use (First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1))'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to produce a translation of the problem into ordered list of symbolic operations. The problem: "simplify the rational expression (x**2 - 1) / (x - 1)". According to instructions, we must output an ordered list where each step after the first uses (<think>) and the word (<think>) as the previous expression. (pass-through)
+3. First line: the starting expression in Python syntax. That would be "(x**2 - 1)/(x - 1)". So first line: (x**2 - 1)/(x - 1) (pass-through)
+
+LLM calls: 1  Latency: 34262ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222502.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x+1)**2, then factor the expanded form' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3965528d-ca1d-40f7-aff9-8ea38249eb8b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3965528d-ca1d-40f7-aff9-8ea38249eb8b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3965528d-ca1d-40f7-aff9-8ea38249eb8b completed by agent wengong in 34300ms (332 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 332 tokens, 36178ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (1202 chars total)
+[INFO] [arm=solver] decomposed into 16 step(s):
+
+
+<think>
+We need to produce an ordered list of symbolic operations that translates the problem statement. The problem: "expand (x+1)**2, then factor the expanded form". So we have two steps:
+First step: expand (x+1)**2. That's a Python expression: "(x + 1)**2". According to format, first line must be the expression in Python syntax: "(x + 1)**2". Then second line uses PREV and operation: "factor". So we have:
+(x + 1)**2|expand
+PREV|(x + 1)**2|factor
+But need to ensure that each step after the first uses literal word PREV as the expression, referencing the result of previous step. The second line's expression is "PREV|factor". That matches rule: every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So we have:
+(x + 1)**2|expand
+PREV|(x + 1)**2|factor
+Check if any other constraints: The output format says one step per line, nothing else. No extra text. That's exactly two lines.
+We need to ensure no code fences, no backticks, etc. So final answer:
+(x + 1)**2|expand
+PREV|(x + 1)**2|factor
+Make sure there is no trailing spaces or punctuation. That should be correct.
+</think>
+(x + 1)**2|expand
+PREV|(x + 1)**2|factor
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 142ms (0 LLM calls)
+[INFO] [arm=solver][step 1/16] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 378 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/16] We need to produce an ordered list of symbolic operations that translates the problem statement. The problem: "expand (x+1)**2, then factor the expanded form". So we have two steps: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 816 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/16] First step: expand (x+1)**2. That's a Python expression: "(x + 1)**2". According to format, first line must be the expression in Python syntax: "(x + 1)**2". Then second line uses (We need to produce an ordered list of symbolic operations that translates the problem statement. The problem: "expand (x+1)**2, then factor the expanded form". So we have two steps:) and operation: "factor". So we have: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 50 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 15ms (0 LLM calls)
+[INFO] [arm=solver][step 4/16] expand((x + 1)**2) = x**2 + 2*x + 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 65 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 5/16: unknown operation '(x + 1)**2' — not in SymPy kernel
+INFO:spl.executor:RETURN: 820 chars | status=solver_error, arm=solver, backend=sympy, steps=5
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 5/16 could not be computed: unknown operation '(x + 1)**2' — not in SymPy kernel
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to produce an ordered list of symbolic operations that translates the problem statement. The problem: "expand (x+1)**2, then factor the expanded form". So we have two steps: (pass-through)
+3. First step: expand (x+1)**2. That's a Python expression: "(x + 1)**2". According to format, first line must be the expression in Python syntax: "(x + 1)**2". Then second line uses (We need to produce an ordered list of symbolic operations that translates the problem statement. The problem: "expand (x+1)**2, then factor the expanded form". So we have two steps:) and operation: "factor". So we have: (pass-through)
+4. expand((x + 1)**2) = x**2 + 2*x + 1
+
+LLM calls: 1  Latency: 36338ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222503.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8333dc34-75c1-42ac-9f0f-ef80d28018eb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8333dc34-75c1-42ac-9f0f-ef80d28018eb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8333dc34-75c1-42ac-9f0f-ef80d28018eb completed by agent mac-wens-Mac-mini.local in 23968ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 26146ms
+INFO:spl.executor:GENERATE chain done -> @result (3621 chars total)
+INFO:spl.executor:RETURN: 3621 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show step-by-step working, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must do everything manually. Provide a solution to "differentiate 3*x**3 - x, then factor if needed, finally solve for x". Wait what does that mean? The problem statement: "differentiate 3*x**3 - x, then factor if needed, finally solve for x". Possibly they want to differentiate the expression (i.e., find derivative), then factor something, then solve for x? Or maybe they want to differentiate and then solve for x? That seems ambiguous. Usually you differentiate a function, but solving for x after differentiation doesn't make sense unless we set derivative equal to zero? Perhaps they intend: differentiate the polynomial, then factor the derivative (if needed), then solve for x (i.e., find critical points). So steps: differentiate 3x^3 - x => derivative = 9x^2 - 1. Then factor if needed: 9x^2 - 1 = (3x - 1)(3x + 1). Then solve for x? Possibly set derivative equal to zero: 9x^2 - 1 = 0 => x = ±1/3. So final answer: derivative is 9x^2 - 1, factored form (3x-1)(3x+1), and solutions x = ±1/3.
+
+We need to present in less than 8 sentences. Each sentence can be long but we must not skip steps. Provide step-by-step working, stating exact result of each step. So maybe:
+
+Sentence 1: Restate problem. Sentence 2: differentiate expression. Sentence 3: state derivative result. Sentence 4: factor that derivative. Sentence 5: set derivative equal to zero (if solving for x). Sentence 6: solve equation. Sentence 7: final answer summary. That's 7 sentences, within limit.
+
+We must not skip steps. So we need to show the exact result of each step. For example:
+
+1. The problem asks us to differentiate the polynomial 3·x³ − x, then factor the resulting expression if possible, and finally find the values of x that satisfy the derivative being zero.  
+2. Differentiating term‑by‑term using the power rule gives d/dx[3x³] = 9x² and d/dx[−x] = −1.  
+3. Adding these results yields the derivative 9x² − 1.  
+4. The derivative can be written as a difference of squares: 9x² − 1 = (3x)² − 1², which factors using the identity a² − b² = (a − B)(a + B).  
+5. Applying that identity gives the factored form (3x − 1)(3x + 1).  
+6. To solve for x we set each factor equal to zero: 3x − 1 = 0 → x = 1/3, and 3x + 1 = 0 → x = −1/3.  
+7. Thus the derivative is 9x² − 1, its factored form is (3x − 1)(3x + 1), and the critical points are x = ±1/3.
+
+That's 7 sentences, each containing a step. That satisfies less than 8 sentences. No extra commentary. No markdown unless needed? The instruction says avoid formatting unless explicitly asked. So we should not use bold or bullet points. Use plain text sentences. Provide the final answer plainly at the end (the critical points). That seems good.
+
+Check: Did we restate problem in plain English? Yes sentence 1. Show working step by step, stating exact result of each step: step2 gives derivative term-by-term; step3 gives sum; step4 shows factoring; step5 gives factored form; step6 solves; step7 final answer. That's fine.
+
+Thus produce that.
+</think>
+The problem asks us to differentiate the polynomial 3·x³ − x, then factor the resulting expression if possible, and finally find the values of x that make the derivative zero. Differentiating term‑by‑term using the power rule gives d/dx[3x³] = 9x² and d/dx[−x] = −1. Adding these results yields the derivative 9
+LLM calls: 1  Latency: 26147ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222516.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 670f15a0-99dd-4726-ab8e-d6407f47845c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/670f15a0-99dd-4726-ab8e-d6407f47845c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 670f15a0-99dd-4726-ab8e-d6407f47845c completed by agent papa-game in 17768ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 20124ms
+INFO:spl.executor:GENERATE chain done -> @result (3901 chars total)
+INFO:spl.executor:RETURN: 3901 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; must do manually. Provide plain English restatement, then steps, then final answer. Less than 8 sentences total. So we need to fit everything within <=7 sentences (since less than 8). Let's count.
+
+We can write maybe 6-7 sentences. Each sentence can be long but includes necessary info.
+
+Sentence 1: Restate problem in plain English.
+
+Sentence 2: Expand (x-2)^3 using binomial expansion or FOIL, state result.
+
+Sentence 3: Differentiate the expanded polynomial with respect to x.
+
+Sentence 4: Simplify derivative.
+
+Sentence 5: Factor the simplified derivative.
+
+Sentence 6: Solve for x = 0 (i.e., evaluate at x=0).
+
+Sentence 7: Provide final answer (maybe the value). But we need final answer plainly at the end. Could be "The solution is x = 0". That would be sentence 7, but that would be 7 sentences total, which is okay (<8). However we also need to give final answer plainly at the end; maybe we can include it in same sentence as solving for x=0. The instruction: "Gives the final answer plainly at the end". So after solving for x=0, we state the final answer. That could be "Thus, the value of x when the expression is set to zero is 0." That would be sentence 7.
+
+We need to ensure each step's result is stated exactly as derived. So in sentence 2 we must give the expanded polynomial: (x-2)^3 = x^3 - 6x^2 + 12x - 8. That's correct.
+
+Sentence 3: differentiate: derivative of that polynomial = 3x^2 - 12x + 12.
+
+Sentence 4: simplify? It's already simplified; maybe factor out 3: 3(x^2 - 4x + 4). But we could also note it's simplified. So state result: 3x^2 - 12x + 12 (or factored). We'll say "the derivative simplifies to 3x^2 - 12x + 12". That's fine.
+
+Sentence 5: factor that: 3(x^2 - 4x + 4) = 3(x-2)^2. So state that.
+
+Sentence 6: solve for x=0 in the factored form: plug x=0 into derivative? Or set original expression equal to zero? The problem says "solve for x = 0". Usually means evaluate derivative at x=0? Or find root of the expanded polynomial? It says "then differentiate the result, then simplify it, then factor that, then solve for x = 0". Likely they want to set the original expression (x-2)^3 = 0? But after differentiation we have derivative; solving for x=0 in derivative yields 12. However typical reading: after expanding and differentiating, you might set the derivative equal to zero to find critical points, then solve for x=0? Actually ambiguous. Let's interpret: The problem is "expand (x-2)^3, then differentiate the result, then simplify it, then factor that, then solve for x = 0". It could mean after differentiating and simplifying, you get an expression; then set that expression equal to zero and solve for x=0. But derivative is not zero at x=0 (since derivative at 0 is 12). So solving derivative = 0 would give something else. However they might want to find the root of the original polynomial after differentiation? That doesn't make sense. Usually you differentiate, then set derivative equal to zero to find extrema; but they ask "solve for x = 0". Could be a mistake. But we can interpret as: after simplifying the derivative, factor it, then evaluate at x=0 (i.e., plug in). So compute derivative at x=0: 3*0^2 -12*0 +12 = 12. So answer would be 12. That seems plausible.
+
+Thus final answer: x = 0? Actually they'd ask "solve for x = 0" meaning find the value of x that satisfies something after those steps. Could be ambiguous but we can state: plugging x=0 into the original expression (or derivative?) yields 0? Let's decide: The phrase "solve for x = 0" often means set the expression equal to zero and solve for x, but they didn't specify which
+LLM calls: 1  Latency: 20125ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222523.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate exp(x) and simplify it if necessary' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f51b41ea-a571-4192-b806-59f52a7dc890 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f51b41ea-a571-4192-b806-59f52a7dc890 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f51b41ea-a571-4192-b806-59f52a7dc890 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f51b41ea-a571-4192-b806-59f52a7dc890 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f51b41ea-a571-4192-b806-59f52a7dc890 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f51b41ea-a571-4192-b806-59f52a7dc890 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f51b41ea-a571-4192-b806-59f52a7dc890 completed by agent papa-game in 6694ms (355 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 355 tokens, 8054ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (1455 chars total)
+[INFO] [arm=solver] decomposed into 15 step(s):
+
+
+<think>
+We need to parse the problem: "differentiate exp(x) and simplify it if necessary". The task: translate into ordered list of symbolic operations. Output format: one step per line, each line is <expression>|<operation>. First expression must be the starting expression in Python syntax: that would be "exp(x)". Then subsequent steps use PREV referencing previous step's result.
+We need to differentiate exp(x). The derivative of exp(x) is exp(x). So we have first step: exp(x)|diff. That yields exp(x). Next step: apply simplify? The instruction says "and simplify it if necessary". Since derivative is already simple, maybe no simplification needed. But could also be just leave as is. Usually they'd want "exp(x)|simplify"? Actually the example: "differentiate e to the x and then simplify the result" gave "exp(x)|diff" then "PREV|simplify". So they used diff on exp(x) resulting in exp(x), then simplified that expression (which is same). So we need to produce:
+exp(x)|diff
+PREV|simplify
+That's two lines. That matches the pattern: first line expression and operation, second line uses PREV referencing previous step.
+Thus output:
+exp(x)|diff
+PREV|simplify
+Check constraints: No extra text. No code fences. No markdown. Provide exactly that.
+Make sure no extra spaces? The format: <expression>|<operation>. So "exp(x)|diff" is correct. Then second line: "PREV|simplify". That's fine.
+Thus final answer.
+</think>
+exp(x)|diff
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 136ms (0 LLM calls)
+[INFO] [arm=solver][step 1/15] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 555 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/15: We need to parse the problem: "differentiate exp(x) and simplify it if necessary". The task: translate into ordered list of symbolic operations. Output format: one step per line, each line is <expression>: Sympify of expression 'could not parse 'We need to parse the problem: "differentiate exp(x) and simplify it if necessary". The task: translate into ordered list of symbolic operations. Output format: one step per line, each line is <expression>'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 652 chars | status=solver_error, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/15 could not be computed: We need to parse the problem: "differentiate exp(x) and simplify it if necessary". The task: translate into ordered list of symbolic operations. Output format: one step per line, each line is <expression>: Sympify of expression 'could not parse 'We need to parse the problem: "differentiate exp(x) and simplify it if necessary". The task: translate into ordered list of symbolic operations. Output format: one step per line, each line is <expression>'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 8193ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222536.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task cc6d64f9-0f7b-432e-b899-ba537adbe030 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cc6d64f9-0f7b-432e-b899-ba537adbe030 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task cc6d64f9-0f7b-432e-b899-ba537adbe030 completed by agent wengong in 8175ms (905 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 905 tokens, 10058ms
+INFO:spl.executor:GENERATE chain done -> @result (2982 chars total)
+INFO:spl.executor:RETURN: 2982 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must do manually. Provide less than 8 sentences total. That's tricky: we need to convey restating problem, showing steps, and final answer, all within <=7 sentences (since less than 8). Each sentence can be long but must contain the required content.
+
+We need to restate: "find the partial fraction decomposition of 1/(x^2 - 1)". Then show working step by step, stating exact result of each step. So we could write something like:
+
+1. Recognize that x^2 - 1 factors as (x-1)(x+1), so we can write 1/(x^2-1) = A/(x-1) + B/(x+1). That's the first step, stating result: A/(x-1)+B/(x+1). Then find A and B by solving: 1 = A(x+1) + B(x-1). Choose convenient x values: let x=1 gives 1 = A(2) => A=1/2. Let x=-1 gives 1 = B(-2) => B=-1/2. So decomposition is (1/2)/(x-1) - (1/2)/(x+1). That's final answer.
+
+We need to ensure each step result is stated. Also we must not skip steps. So we can combine steps but still state results. Could be 4 sentences: sentence 1 restate problem, sentence 2 factor denominator, sentence 3 set up partial fractions, sentence 4 solve for A and B, sentence 5 present final decomposition. That's 5 sentences, which is less than 8. Must be clear and friendly.
+
+We need to show working step by step, stating exact result of each step. So we can write:
+
+1. The task is to decompose the rational expression 1/(x²‑1) into simpler fractions. (restate)
+
+2. First factor the denominator: x²‑1 = (x‑1)(x+1), so we write 1/(x²‑1) = A/(x‑1) + B/(x+1). (result of step 2)
+
+3. Multiply both sides by (x‑1)(x+1) to obtain 1 = A(x+1) + B(x‑1). (result after clearing denominators)
+
+4. Choose convenient values: setting x=1 gives 1 = A·2 → A = 1/2, and setting x=-1 gives 1 = B·(-2) → B = –1/2. (exact results of step 4)
+
+5. Substituting these constants yields the partial fraction decomposition (1/2)/(x‑1) – (1/2)/(x+1). (final answer)
+
+That's 5 sentences, each ending with a period. That satisfies less than 8 sentences. No extra commentary. No markdown unless requested; they didn't ask for formatting. So plain text.
+
+Check: "Show your work. Do not state any result you have not derived above." We derived A and B in step 4, so we can present them. Good.
+
+Thus final answer.
+</think>
+1. The task is to decompose the rational expression 1/(x²‑1) into simpler fractions.  
+2. First factor the denominator: x²‑1 = (x‑1)(x+1), so we write 1/(x²‑1) = A/(x‑1) + B/(x+1).  
+3. Multiply both sides by (x‑1)(x+1) to obtain 1 = A(x+1) + B(x‑1).  
+4. Choose convenient values: setting x=1 gives 1 = A·2 → A = 1/2, and setting x=-1 gives 1 = B·(-2) → B = –1/2.  
+5. Substituting these constants yields the partial fraction decomposition (1/2)/(x‑1) – (1/2)/(x+1).
+LLM calls: 1  Latency: 10059ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222536.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the limit of sin(x) divided by x as x approaches 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 710933c8-3ebd-47fb-adb8-f02d9b3940af submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/710933c8-3ebd-47fb-adb8-f02d9b3940af "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 710933c8-3ebd-47fb-adb8-f02d9b3940af completed by agent papa-game in 8309ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 10066ms
+INFO:spl.executor:GENERATE chain done -> @result (3739 chars total)
+INFO:spl.executor:RETURN: 3739 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is less than 8 sentences, includes: restate problem in plain English, show working step by step, stating exact result of each step as we derive it, no skipping steps, and give final answer plainly at the end. Also must be friendly, clear.
+
+Constraints: No symbolic math engine or proof assistant; we must do everything manually. So we can write something like:
+
+1. The problem asks for limit of sin(x)/x as x→0.
+2. Use known limit or derive using definition of derivative: derivative of sin at 0 is cos(0)=1, and derivative defined as limit (sin(x)-sin(0))/(x-0) = sin(x)/x, so limit equals cos(0)=1.
+But we need to show step by step without skipping. Could also use geometric argument: consider unit circle, area of sector vs triangles, etc. But must state each result.
+
+We need less than 8 sentences total. Let's count sentences. We can have maybe 5-6 sentences.
+
+Sentence 1: Restate problem: "The question asks for the value that the ratio sin(x)/x approaches as x gets closer and closer to zero." That's one sentence.
+
+Sentence 2: "First, we recall that this limit is a classic result often used in calculus." That's second.
+
+Sentence 3: "To derive it, consider the unit circle where an angle x corresponds to a point on the circle; the vertical coordinate of that point is sin(x), and the arc length from (1,0) to the point is x." That's third.
+
+Sentence 4: "The area of the sector formed by the angle x is (1/2)·x, while the area of the right triangle with base 1 and height sin(x) is (1/2)·sin(x), so we have (1/2)·sin(x) ≤ (1/2)·x ≤ (1/2)·tan(x)." That's fourth.
+
+Sentence 5: "Dividing each term by (1/2) x yields the inequality sin(x)/x ≤ 1 ≤ tan(x)/x, and rearranging gives sin(x)/x ≤ cos(x) ≤ tan(x)." Wait that's not correct; typical derivation uses squeeze theorem with inequalities: (sin x)/x ≤ cos x ≤ 1 for 0 < x < π/2. Actually we need to be careful. Let's do proper steps.
+
+Better: Use known limit of sin x / x = cos 0 = 1 by definition of derivative of sin at 0. But that uses derivative definition, which is also a proof. However we can present it as step: The derivative of sin x at a point a is defined as limit (sin(a+h)-sin a)/h as h→0; setting a=0 gives limit sin(x)/x = cos(0) = 1. That's one step.
+
+But the problem may want a more elementary approach, but it's okay to use derivative definition. However we need to show working step by step: state exact result of each step. So we can write:
+
+- Step 1: Write limit L = lim_{x→0} sin(x)/x.
+- Step 2: Recognize that this is exactly the definition of the derivative of f(x)=sin(x) at x=0, because f'(0) = lim_{h→0} (f(0+h)-f(0))/h = lim_{h→0} (sin(h)-sin(0))/h = lim_{h→0} sin(h)/h.
+- Step 3: Evaluate f'(x) = cos(x), so f'(0) = cos(0) = 1.
+- Step 4: Therefore, the original limit equals 1.
+
+That's four sentences. Then final answer sentence: "So the limit is 1." That would be total maybe 5 sentences, which is less than 8.
+
+We need to ensure we restate problem in plain English (sentence 1). Show working step by step, stating exact result of each step (sentences 2-4). Then final answer plainly at end (sentence 5). That satisfies constraints.
+
+Make sure no extra commentary. No markdown unless requested; not needed. So produce plain text sentences separated by periods, maybe numbered? But numbering counts as part of sentence? If we use numbers like "1." that might be considered separate sentences? It's okay but each line may be considered a sentence. Safer to write continuous sentences.
+
+Thus:
+
+"The question asks for the value that the ratio sin(x)/x approaches as x gets closer and closer to zero." That's sentence 1.
+
+"First we note that this limit is commonly used in calculus and can be found by considering
+LLM calls: 1  Latency: 10067ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222543.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3d7c7a03-2730-471c-b667-07989dc3fffb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3d7c7a03-2730-471c-b667-07989dc3fffb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3d7c7a03-2730-471c-b667-07989dc3fffb completed by agent mac-wens-Mac-mini.local in 20612ms (675 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 675 tokens, 24100ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (2690 chars total)
+[INFO] [arm=solver] decomposed into 17 step(s):
+
+
+<think>
+We need to parse the problem: "find the partial fraction decomposition of 1 / (x**2 - 1)". According to instructions, we must output an ordered list of symbolic operations, each step after the first uses PREV|<operation>. The first expression is the starting expression in Python syntax. So presumably we start with "1/(x**2 - 1)" as the initial expression. Then subsequent steps use PREV|... where PREV refers to previous step's result.
+We need to produce a sequence of operations that leads to the partial fraction decomposition. The final answer should be something like:
+1/(x**2 - 1)|apart
+But we must follow rules: each line after first must have "PREV|operation". The operation token must be exactly one from the list. For partial fraction decomposition, the operation is "apart". So we need to start with expression, then apply apart? Actually the problem says "find the partial fraction decomposition of 1/(x**2 - 1)". The direct way: use apart on that expression. According to examples, they have "expand sin(x) as a Taylor series around x=0 up to degree 5" which is "sin(x)|series". So for partial fraction decomposition, the operation is "apart". So we could do:
+1/(x**2 - 1)|apart
+But that's just one step. However they might require multiple steps? The instruction: "Translate this math problem into an ordered list of symbolic operations." It doesn't require multiple steps; if only one operation needed, output exactly one line. So we can output:
+1/(x**2 - 1)|apart
+But need to ensure that the first expression is transcribed exactly from the problem: "1 / (x**2 - 1)"? The problem says "find the partial fraction decomposition of 1 / (x**2 - 1)". Usually we would write "1/(x**2 - 1)". There's a space after slash? In examples they used "exp(x)" without spaces. So I think it's fine to use "1/(x**2 - 1)". However the instruction: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)". So they want Python syntax exactly. So we should write "1/(x**2 - 1)" (no spaces). That matches.
+Thus output:
+1/(x**2 - 1)|apart
+Check if any extra formatting: No code fences, no backticks, no markdown. Just plain text line. That seems correct.
+But need to ensure that we didn't violate any rule: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line." Since we have only one line, there is no after step. So it's fine.
+Thus final answer: 1/(x**2 - 1)|apart
+We should not include any extra spaces or lines. Provide exactly that.
+</think>
+1/(x**2 - 1)|apart
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 126ms (0 LLM calls)
+[INFO] [arm=solver][step 1/17] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 573 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/17: We need to parse the problem: "find the partial fraction decomposition of 1 / (x**2 - 1)". According to instructions, we must output an ordered list of symbolic operations, each step after the first uses (<think>): Sympify of expression 'could not parse 'We need to parse the problem: "find the partial fraction decomposition of 1 / (x**2 - 1)". According to instructions, we must output an ordered list of symbolic operations, each step after the first uses (<think>)'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 670 chars | status=solver_error, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/17 could not be computed: We need to parse the problem: "find the partial fraction decomposition of 1 / (x**2 - 1)". According to instructions, we must output an ordered list of symbolic operations, each step after the first uses (<think>): Sympify of expression 'could not parse 'We need to parse the problem: "find the partial fraction decomposition of 1 / (x**2 - 1)". According to instructions, we must output an ordered list of symbolic operations, each step after the first uses (<think>)'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 24228ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222530.md
+```
+
+
+## lfm2.5 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate exp(x) and simplify it if necessary' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 1d93e82f-55b2-4c2b-8f79-01e581ca3738 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1d93e82f-55b2-4c2b-8f79-01e581ca3738 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 1d93e82f-55b2-4c2b-8f79-01e581ca3738 completed by agent wengong in 12346ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 14094ms
+INFO:spl.executor:GENERATE chain done -> @result (3724 chars total)
+INFO:spl.executor:RETURN: 3724 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is a clear, friendly walkthrough in less than 8 sentences. It must restate the problem: differentiate exp(x) and simplify if necessary. Show own working step by step, stating exact result of each step as we derive it, not skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; we must do manually. Must be less than 8 sentences total. So we need to craft maybe 5-6 sentences, each sentence can contain multiple clauses but cannot skip steps. We need to restate problem in plain English, then show working step by step, stating exact result of each step. That means we need to write something like:
+
+"First, recall that the derivative of e^x with respect to x is e^x." That's a statement. Then "Next, apply the power rule (or known derivative) to get d/dx[e^x] = e^x." But we must show exact result of each step: maybe we need to write something like:
+
+1. Write the function: f(x)=e^x.
+2. Use the definition of derivative: f'(x)=lim_{h->0}[e^{x+h}-e^x]/h.
+3. Factor e^x: = lim_{h->0} e^x (e^h - 1)/h.
+4. Recognize limit definition of derivative of e^x at 0 equals 1, so the expression simplifies to e^x * 1 = e^x.
+5. Therefore the derivative is e^x.
+
+That would be maybe 5 sentences. That satisfies restating problem: "The problem asks you to differentiate the exponential function exp(x) and simplify if needed." Then show working step by step with exact results. End with final answer: \boxed{e^{x}}.
+
+We need less than 8 sentences, so we can do exactly 5 sentences. Ensure each sentence ends with a period. No extra commentary.
+
+Check that we didn't skip steps. We have:
+
+Sentence 1: Restate problem in plain English.
+Sentence 2: Write the function and set up derivative definition.
+Sentence 3: Factor e^x and simplify limit to get e^x * limit (e^h - 1)/h.
+Sentence 4: Use known limit that lim_{h->0}(e^h - 1)/h = 1, thus derivative simplifies to e^x.
+Sentence 5: Conclude final answer: The derivative of exp(x) is e^x.
+
+That's 5 sentences. That seems good. Ensure no extra steps like "the result of each step as you derive it". We have shown the limit definition and factoring. That should satisfy.
+
+We must not use any formatting like bold, etc. So plain text. Provide final answer in \boxed{}. The final answer is e^x. Should we include the box? Yes: \boxed{e^{x}}. That's fine.
+
+Thus final response:
+
+The problem asks you to differentiate the exponential function exp(x) and simplify if necessary. Write the function as f(x)=e^x and set up the derivative using the limit definition lim_{h→0}[e^{x+h}−e^x]/h. Factor e^x from the numerator to obtain lim_{h→0}e^x (e^h−1)/h. Recognize that the limit of (e^h−1)/h as h approaches 0 equals 1, so the expression reduces to e^x·1 = e^x. Therefore the derivative of exp(x) is e^x. \boxed{e^{x}}
+
+That's 5 sentences? Let's count: Sentence 1: "The problem asks you to differentiate the exponential function exp(x) and simplify if necessary." (1) Sentence 2: "Write the function as f(x)=e^x and set up the derivative using the limit definition lim_{h→0}[e^{x+h}−e^x]/h." (2) Sentence 3: "Factor e^x from the numerator to obtain lim_{h→0}e^x (e^h−1)/h." (3) Sentence 4: "Recognize that the limit of (e^h−1)/h as h approaches 0 equals 1, so the expression reduces to e^x·1 = e^x." (4) Sentence 5: "Therefore the derivative of exp(x) is e^x." (5) That's 5 sentences, less than 8. Good.
+
+No extra formatting. Provide that.
+</think>
+The problem asks you to differentiate the exponential function exp(x) and simplify if necessary. Write the function as f(x)=e^x and set up the derivative using the limit definition lim_{h→0}[e^{x+h}−e^x]/h. Factor e^x from the numerator to obtain lim_{h→0}e^x (e^h−
+LLM calls: 1  Latency: 14094ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222540.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ad969267-8dc5-4d7f-8ead-95c14efbe835 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ad969267-8dc5-4d7f-8ead-95c14efbe835 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ad969267-8dc5-4d7f-8ead-95c14efbe835 completed by agent papa-game in 13953ms (958 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 958 tokens, 16112ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (3945 chars total)
+[INFO] [arm=solver] decomposed into 16 step(s):
+
+
+<think>
+We need to translate the problem into ordered list of symbolic operations. The problem: "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5". According to examples, we need to produce something like:
+First expression is the starting expression in Python syntax: sin(x). That's the first line.
+Then each subsequent step uses PREV|operation. The operation must be one token from the list. Since we are expanding sin(x) as a Taylor series up to degree 5, typical approach: sin(x)|series? Actually "expand sin(x) as a Taylor series around x=0" is essentially using series expansion. According to examples, they used "sin(x)|series". That's one step. But the problem says "keeping terms up to degree 5". The example "expand sin(x) as a Taylor series around x=0 up to degree 5" could be expressed as "sin(x)|series"? However, maybe we need to specify the order? In examples, they used "expand sin(x) as a Taylor series around x=0 up to degree 5" and gave "sin(x)|series". That seems to match. So first line: sin(x)|series
+Then next step must use PREV|... operation. The previous expression is sin(x). We need to apply series expansion, then maybe expand? Actually the instruction: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line." So we have only one operation? But they want to keep terms up to degree 5. Possibly we need multiple steps: first expand sin(x) as series (maybe using series expansion with order). Then maybe apply something else like "expand" again? However, the example "expand sin(x) as a Taylor series around x=0 up to degree 5" is exactly "sin(x)|series". That's one step. But they also have "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5". The phrase "as a Taylor series" might be considered the operation "series"? In the example list, there is "series" as an allowed operation. So we can just do sin(x)|series.
+But maybe they want to explicitly specify "expand sin(x) as a Taylor series around x=0 up to degree 5". However, the format requires plain text output, one step per line, no extra explanation. The first expression is the starting expression in Python syntax: sin(x). Then we need to apply PREV|... operation for each subsequent step.
+If we only have one step, that would be insufficient because we haven't kept terms up to degree 5? Actually "series" operation might automatically expand to a certain order. But maybe they expect multiple steps: first "sin(x)|expand"? No, the example "expand sin(x) as a Taylor series around x=0 up to degree 5" is ambiguous.
+Let's examine other similar tasks: In the examples, there is "find the roots of x squared minus 4": expression: x**2 - 4|solve. That's because they used solve directly on polynomial. For series expansion, they gave "expand sin(x) as a Taylor series around x=0 up to degree 5" and the correct output would be "sin(x)|series". So that is likely the expected answer.
+Thus we produce:
+sin(x)|series
+But maybe they want also "expand"? Actually the phrase "as a Taylor series" might be considered an operation "series". The instruction: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication..." So first line must be that. Then each subsequent step uses PREV|... So we could have only one line if no further steps needed. However, they might want to include a second step where we apply "expand" after series? But the problem says "keeping terms up to degree 5". The series expansion of sin(x) yields sum_{n=0}^\infty (-1)^n x^{2n+1}/(2n+1)! which truncated at degree 5 gives sin(x) - x^3/6 + x^5/120. That's already a series representation, not requiring extra expand. So "series" is enough.
+Thus answer:
+sin(x)|series
+But we need to ensure no extra text. Provide exactly that line.
+</think>
+sin(x)|series
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 126ms (0 LLM calls)
+[INFO] [arm=solver][step 1/16] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 464 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/16] We need to translate the problem into ordered list of symbolic operations. The problem: "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5". According to examples, we need to produce something like: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 200 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/16] First expression is the starting expression in Python syntax: sin(x). That's the first line. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 431 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 4/16: Then each subsequent step uses (First expression is the starting expression in Python syntax: sin(x). That's the first line.): Sympify of expression 'could not parse "Then each subsequent step uses (First expression is the starting expression in Python syntax: sin(x). That's the first line.)"' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 882 chars | status=solver_error, arm=solver, backend=sympy, steps=4
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 4/16 could not be computed: Then each subsequent step uses (First expression is the starting expression in Python syntax: sin(x). That's the first line.): Sympify of expression 'could not parse "Then each subsequent step uses (First expression is the starting expression in Python syntax: sin(x). That's the first line.)"' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to translate the problem into ordered list of symbolic operations. The problem: "expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5". According to examples, we need to produce something like: (pass-through)
+3. First expression is the starting expression in Python syntax: sin(x). That's the first line. (pass-through)
+
+LLM calls: 1  Latency: 16241ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222545.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c0590bb8-8483-4afa-90c8-2b306fdf9f5b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c0590bb8-8483-4afa-90c8-2b306fdf9f5b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c0590bb8-8483-4afa-90c8-2b306fdf9f5b completed by agent wengong in 14451ms (944 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 944 tokens, 16100ms
+INFO:spl.executor:GENERATE chain done -> @result (2904 chars total)
+INFO:spl.executor:RETURN: 2904 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must compute manually. Provide less than 8 sentences total. That includes all sentences? Probably yes. So we need to produce a paragraph with maybe 5-7 sentences, each sentence can be long but must contain step-by-step derivation and final answer. Must not skip steps. So we need to show the Taylor series expansion of sin(x) around x=0 up to degree 5. The Taylor series for sin(x) is x - x^3/3! + x^5/5! + ... So up to degree 5 means include terms up to x^5, i.e., sin(x) ≈ x - x^3/6 + x^5/120. That's the result.
+
+We need to restate problem: "expand sin(x) as a Taylor series around x=0, keeping terms up to degree 5". Then show working step by step: start with definition of Taylor series, compute derivatives at 0, evaluate at 0, write series, truncate. Each step must be stated.
+
+We need to ensure we don't skip steps. So maybe:
+
+1. The problem asks for the Taylor polynomial of sin(x) centered at x=0 through all terms whose degree does not exceed 5. (restates)
+
+2. First, recall that the nth derivative of sin(x) evaluated at 0 follows a pattern: f(0)=sin(0)=0, f'(x)=cos(x) → f'(0)=1, f''(x)=-sin(x) → f''(0)=0, f'''(x)=-cos(x) → f'''(0)=-1, f^{(4)}(x)=sin(x) → f^{(4)}(0)=0, f^{(5)}(x)=cos(x) → f^{(5)}(0)=1. (states each derivative result)
+
+3. The Taylor formula gives P_5(x)=∑_{n=0}^{5} f^{(n)}(0) x^n / n! = 0·x^0/0! + 1·x^1/1! + 0·x^2/2! + (-1)·x^3/3! + 0·x^4/4! + 1·x^5/5!. (states result)
+
+4. Simplify the factorial terms: x + x^3/6 + x^5/120. (simplify each term)
+
+5. Therefore, the Taylor polynomial of sin(x) up to degree 5 is P_5(x)=x - x^3/6 + x^5/120. (final answer)
+
+That's 5 sentences. That satisfies less than 8 sentences. No extra commentary. No bold, no markdown. Provide plain text.
+
+Check: each sentence ends with a period. Sentence 1 restates problem. Sentence 2 shows derivatives. Sentence 3 writes formula and result. Sentence 4 simplifies factorials. Sentence 5 gives final answer. That's good.
+
+Make sure we didn't skip steps: we derived derivative values, wrote series, simplified. Yes.
+
+Thus produce that.
+</think>
+The problem asks for the Taylor polynomial of sin(x) centered at x = 0 through all terms whose degree does not exceed 5. First, compute the derivatives of sin(x) evaluated at 0: f(0)=sin(0)=0, f′(0)=cos(0)=1, f″(0)=-sin(0)=0, f‴(0)=-cos(0)=-1, f⁽⁵⁾(0)=cos(0)=1. Using the Taylor formula Pₙ(x)=∑_{n=0}^{5} f⁽ⁿ⁾(0) xⁿ / n!, we obtain 0·x⁰/0! + 1·x¹/1! + 0·x²/2! + (-1)·x³/3! + 0·x⁴/4! + 1·x⁵/5!. Simplifying the factorial terms gives x + x³/6 + x⁵/120. Therefore, the Taylor polynomial of sin(x) up to degree 5 is P₅(x)=x - x³/6 + x⁵/120.
+LLM calls: 1  Latency: 16101ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222546.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the limit of sin(x) divided by x as x approaches 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0d924885-1af3-483d-abeb-b01792f456a6 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0d924885-1af3-483d-abeb-b01792f456a6 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0d924885-1af3-483d-abeb-b01792f456a6 completed by agent mac-wens-Mac-mini.local in 17452ms (647 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 647 tokens, 20118ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (2579 chars total)
+[INFO] [arm=solver] decomposed into 18 step(s):
+
+
+<think>
+We need to parse the problem: "find the limit of sin(x) divided by x as x approaches 0". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, each line is "<expression>|<operation>", with strict rules.
+First step's <expression> must be the starting expression in Python syntax: "sin(x)/x"? Actually they said copy an expression from an example. For this problem, we need to start with the original expression? The first line should be the expression itself (the starting expression) in Python syntax. Then subsequent steps use PREV|operation referencing previous step.
+Thus we need to produce a sequence of operations that compute limit(sin(x)/x, 0). Typically you would compute sin(x)/x then take limit as x->0. So first line: sin(x)/x (that's the expression). Then second line: PREV|simplify? Or maybe just "limit(sin(x)/x, 0)"? But we need to follow rule: Every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So after the first line, each subsequent line uses PREV|<operation>. The operation token must be exactly one from list. For limit, we have operation "limit(x,0)"? Wait, the rule: "ode_solve: <expression> is the ODE left-hand side in Python using y(x).diff(x,n) ..." but for limit, there's no specific operation; they gave examples: "sin(x)/x|limit(x,0)". Indeed one of the correct examples: "find the limit of sin(x)/x as x approaches 0" -> "sin(x)/x|limit(x,0)". So we can directly use that expression. That is the first line? The example shows they used "sin(x)/x|limit(x,0)" as a single step (the whole problem). But here we need to follow format: first step's <expression> is starting expression in Python syntax. Then subsequent steps use PREV|... So perhaps we can have:
+sin(x)/x
+PREV|limit(x,0)
+That would be two lines, which satisfies "one step per line". That seems correct.
+Check constraints: No extra text, no code fences, etc. The first expression is sin(x)/x (exact digits). Then second line uses PREV and operation limit. That's allowed because operation token "limit" is in list? Yes, "limit" is listed as an operation token. So we have:
+sin(x)/x
+PREV|limit(x,0)
+That seems to meet all rules: plain text, no extra punctuation. No variable assignments, no imports. The first line is the expression. After that, each step uses PREV and a single operation token. That's correct.
+Thus answer:
+sin(x)/x
+PREV|limit(x,0)
+Make sure there are no extra spaces or lines. Provide exactly that.
+</think>
+sin(x)/x
+PREV|limit(x,0)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 128ms (0 LLM calls)
+[INFO] [arm=solver][step 1/18] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 617 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/18: We need to parse the problem: "find the limit of sin(x) divided by x as x approaches 0". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, each line is "<expression>: Sympify of expression 'could not parse 'We need to parse the problem: "find the limit of sin(x) divided by x as x approaches 0". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, each line is "<expression>'' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 714 chars | status=solver_error, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/18 could not be computed: We need to parse the problem: "find the limit of sin(x) divided by x as x approaches 0". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, each line is "<expression>: Sympify of expression 'could not parse 'We need to parse the problem: "find the limit of sin(x) divided by x as x approaches 0". The instruction: translate into ordered list of symbolic operations. Output format: one step per line, each line is "<expression>'' failed, because of exception being raised:
+SyntaxError: unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 20247ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222543.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e664136f-4823-4e6f-8a2c-88534730dd01 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e664136f-4823-4e6f-8a2c-88534730dd01 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e664136f-4823-4e6f-8a2c-88534730dd01 completed by agent papa-game in 8889ms (671 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 671 tokens, 12064ms
+INFO:spl.executor:GENERATE chain done -> @result (2739 chars total)
+INFO:spl.executor:RETURN: 2739 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; must do manually. Provide less than 8 sentences total. That's tricky: we need to convey restating, steps, and final answer within <=7 sentences (since less than 8). Each sentence can be long but must include step results. We cannot skip steps. So we need maybe 5-6 sentences.
+
+We need to restate problem: "Simplify sin^2(x) + cos^2(x)". Show working step by step, state exact result of each step. Then final answer: sin^2(x)+cos^2(x)=1.
+
+We can write something like:
+
+1. The problem asks us to simplify the expression sin²(x) + cos²(x).  
+2. Using the fundamental Pythagorean identity, we know that for any angle x, sin²(x) + cos²(x) equals 1.  
+3. Therefore, after applying this identity directly, the expression reduces to the constant 1.  
+
+That's three sentences. But we need to show step-by-step working: maybe include "Recall identity sin² + cos² = 1". That is a known identity; we can state it without proof (but we are not using a symbolic engine). That's acceptable.
+
+We need to ensure each result is stated: e.g., "the expression simplifies to the constant 1". So final answer: "sin²(x) + cos²(x) = 1". That's sentence 4. That would be 4 sentences, which is less than 8. That satisfies all requirements.
+
+We must not skip steps; we have restated problem, shown working step by step (the identity), gave final answer. No extra commentary. No markdown unless requested. The instruction says no formatting unless asked. So plain text, each sentence separated by period and space.
+
+Thus:
+
+The problem asks us to simplify the expression sin²(x) + cos²(x). Using the fundamental Pythagorean identity we know that for any angle x, sin²(x) + cos²(x) equals 1. Therefore, after applying this identity directly, the expression reduces to the constant 1. sin²(x) + cos²(x) = 1
+
+That's four sentences, each ending with period. That works.
+
+Check: Sentence 1 restates problem. Sentence 2 states we use identity and result. Sentence 3 says after applying identity, reduces to constant 1 (but maybe they want "the expression simplifies to the constant 1"). Could be okay. Sentence 4 gives final answer plainly. That includes the equation.
+
+Thus final answer.
+</think>
+The problem asks us to simplify the expression sin²(x) + cos²(x). Using the fundamental Pythagorean identity we know that for any angle x, sin²(x) + cos²(x) equals 1. Therefore, after applying this identity directly, the expression reduces to the constant 1. sin²(x) + cos²(x) = 1
+LLM calls: 1  Latency: 12065ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222554.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'integrate the square root of (4 minus x squared)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task dddaa67b-c9f4-489d-b728-086f8fb8c811 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dddaa67b-c9f4-489d-b728-086f8fb8c811 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task dddaa67b-c9f4-489d-b728-086f8fb8c811 completed by agent wengong in 11114ms (471 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 471 tokens, 12064ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (1964 chars total)
+[INFO] [arm=solver] decomposed into 11 step(s):
+
+
+<think>
+We need to parse the problem: "integrate the square root of (4 minus x squared)". So we have integral ∫ sqrt(4 - x^2) dx. The instruction: translate into ordered list of symbolic operations, each step after first must use PREV and operation token.
+First expression is the starting expression in Python syntax: sqrt(4 - x**2). That's the first line: "sqrt(4 - x**2)". Then subsequent steps must refer to previous result using PREV. Since we have only one integration? Actually it's just integrate sqrt(4 - x**2). There's no further operations like expand, simplify etc. But we need to produce a list of steps. According to rules: If the problem needs only ONE operation, output exactly one line. However here we might need multiple steps? The rule says "If the problem needs only ONE operation, output exactly one line". Does this problem require only one operation? Integration is an operation; but there may be intermediate steps like expand or simplify? Typically integration of sqrt(4 - x^2) yields (x/2)*sqrt(4 - x^2) + 2*arcsin(x/2) + C. That's a single operation: integrate. So we could have just one line: "sqrt(4 - x**2)|integrate". But the rule says every step after the first must use PREV and an operation token. Since there is only one step, no PREV needed. However they also require that the first expression is the starting expression in Python syntax. So we can output just that line.
+But check if any other steps are required? The problem statement: "integrate the square root of (4 minus x squared)". That's a single operation. So answer should be:
+sqrt(4 - x**2)|integrate
+No extra lines, no blank lines. No markdown. Ensure plain text. That matches format.
+Check if any other constraints: "Plain text output ONLY — no code fences, no backticks, no markdown, no numbering". So we output exactly that line.
+Thus final answer: sqrt(4 - x**2)|integrate
+Make sure there is no extra whitespace at ends.
+</think>
+sqrt(4 - x**2)|integrate
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1583ms (0 LLM calls)
+[INFO] [arm=solver][step 1/11] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 520 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/11] We need to parse the problem: "integrate the square root of (4 minus x squared)". So we have integral ∫ sqrt(4 - x^2) dx. The instruction: translate into ordered list of symbolic operations, each step after first must use (<think>) and operation token. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 1212 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/11: First expression is the starting expression in Python syntax: sqrt(4 - x**2). That's the first line: "sqrt(4 - x**2)". Then subsequent steps must refer to previous result using (We need to parse the problem: "integrate the square root of (4 minus x squared)". So we have integral ∫ sqrt(4 - x^2) dx. The instruction: translate into ordered list of symbolic operations, each step after first must use (<think>) and operation token.). Since we have only one integration? Actually it's just integrate sqrt(4 - x**2). There's no further operations like expand, simplify etc. But we need to produce a list of steps. According to rules: If the problem needs only ONE operation, output exactly one line. However here we might need multiple steps? The rule says "If the problem needs only ONE operation, output exactly one line". Does this problem require only one operation? Integration is an operation; but there may be intermediate steps like expand or simplify? Typically integration of sqrt(4 - x^2) yields (x/2)*sqrt(4 - x^2) + 2*arcsin(x/2) + C. That's a single operation: integrate. So we could have just one line: "sqrt(4 - x**2): unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 1580 chars | status=solver_error, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/11 could not be computed: First expression is the starting expression in Python syntax: sqrt(4 - x**2). That's the first line: "sqrt(4 - x**2)". Then subsequent steps must refer to previous result using (We need to parse the problem: "integrate the square root of (4 minus x squared)". So we have integral ∫ sqrt(4 - x^2) dx. The instruction: translate into ordered list of symbolic operations, each step after first must use (<think>) and operation token.). Since we have only one integration? Actually it's just integrate sqrt(4 - x**2). There's no further operations like expand, simplify etc. But we need to produce a list of steps. According to rules: If the problem needs only ONE operation, output exactly one line. However here we might need multiple steps? The rule says "If the problem needs only ONE operation, output exactly one line". Does this problem require only one operation? Integration is an operation; but there may be intermediate steps like expand or simplify? Typically integration of sqrt(4 - x^2) yields (x/2)*sqrt(4 - x^2) + 2*arcsin(x/2) + C. That's a single operation: integrate. So we could have just one line: "sqrt(4 - x**2): unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to parse the problem: "integrate the square root of (4 minus x squared)". So we have integral ∫ sqrt(4 - x^2) dx. The instruction: translate into ordered list of symbolic operations, each step after first must use (<think>) and operation token. (pass-through)
+
+LLM calls: 1  Latency: 13649ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222555.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a72603be-7354-412b-80de-3facdfa6df47 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a72603be-7354-412b-80de-3facdfa6df47 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a72603be-7354-412b-80de-3facdfa6df47 completed by agent papa-game in 8214ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 10059ms
+INFO:spl.executor:GENERATE chain done -> @result (3279 chars total)
+INFO:spl.executor:RETURN: 3279 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine; we must compute manually. Provide plain English restatement, then steps, each result derived. Must be less than 8 sentences total. That's tricky: we need to include all required elements within <=7 sentences (since <8). Let's plan maybe 6 sentences.
+
+Sentence 1: Restate problem in plain English. Sentence 2: Show first step: integral of sin(x) cos(x) dx. Step 1: use substitution u = sin(x), du = cos(x) dx, so integral becomes ∫ u du = (1/2)u^2 + C. That's a result. Sentence 3: Write that result explicitly: (1/2) sin^2(x) + C. Sentence 4: Then note alternative method using identity sin(2x)=2 sin x cos x, giving integral of (1/2) sin(2x) dx = -1/4 cos(2x) + C. But we need to show steps; but we can't skip steps. However we could combine both? The problem says "find the integral ... then simplify the result". Usually simplest form is (1/2) sin^2(x) + C, or maybe -1/4 cos(2x)+C. Both are equivalent. We need to show step by step: start with identity, integrate, then simplify back to sin^2. That would be more steps.
+
+We have limited sentences; we can include multiple substeps within a sentence? Possibly but each step must be stated. Could do something like:
+
+1. Restate problem.
+2. Use substitution u = sin(x), du = cos(x) dx, so ∫ sin(x) cos(x) dx = ∫ u du = (1/2)u^2 + C.
+3. Substitute back u = sin(x) to obtain (1/2) sin^2(x) + C.
+4. Alternatively, rewrite sin(x)cos(x) as (1/2) sin(2x) and integrate: ∫ (1/2) sin(2x) dx = -(1/4) cos(2x) + C.
+5. Use the double‑angle identity cos(2x)=1-2 sin^2(x) to replace the result, yielding -1/4 (1-2 sin^2(x)) + C = (1/2) sin^2(x) - 1/4 + C.
+6. Since adding an arbitrary constant does not change the family of antiderivatives, both forms are correct and equivalent.
+7. The final answer can be written as either (1/2) sin^2(x) + C or –(1/4) cos(2x) + C.
+
+That's 7 sentences, which is less than 8? Actually that's 7 sentences, okay. Need to ensure each step result is stated: we have step 2 result (1/2)u^2 + C; step 3 substitution yields (1/2) sin^2(x) + C; step 4 alternative method yields -(1/4) cos(2x)+C; step 5 simplification yields (1/2) sin^2(x) - 1/4 + C; step 6 equivalence note; step 7 final answer. That's fine.
+
+We must not use any bold or markdown unless asked. So plain text sentences separated by periods. Ensure no extra commentary. Provide less than 8 sentences, we have 7. That works.
+
+Check for any skipped steps: We used substitution and identity, both derived. We didn't skip any intermediate results. Good.
+
+Now produce final answer.
+</think>
+The problem asks you to integrate the product of sine and cosine functions and then simplify the antiderivative. First, let u = sin(x) so that du = cos(x) dx, giving ∫ sin(x) cos(x) dx = ∫ u du = (1/2)u² + C. Substituting back u = sin(x) yields (1/2) sin²(x) + C. Using the identity sin(2x) = 2 sin(x) cos(x), the integral becomes ∫ (1/2) sin(2x) dx = -(1/4) cos(2x) + C. Replacing cos(2x) with 1‑2 sin²(x) gives -(1/4)(1‑2 sin²(x)) + C = (1/2) sin²(x) – 1/4 + C, and
+LLM calls: 1  Latency: 10060ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222603.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'integrate the square root of (4 minus x squared)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6cc7ad54-d8a7-49f9-acd5-2ef691577330 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6cc7ad54-d8a7-49f9-acd5-2ef691577330 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6cc7ad54-d8a7-49f9-acd5-2ef691577330 completed by agent wengong in 11273ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 14091ms
+INFO:spl.executor:GENERATE chain done -> @result (3095 chars total)
+INFO:spl.executor:RETURN: 3095 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Provide final answer plainly at the end.
+
+Constraints:
+
+- No symbolic math engine or proof assistant; must do manually.
+- Write less than 8 sentences total. So maybe 6-7 sentences. Each sentence can be long but must include restating problem, then steps, and final answer.
+
+We need to integrate sqrt(4 - x^2). Usually the indefinite integral: ∫ sqrt(4 - x^2) dx = (x/2) sqrt(4 - x^2) + 2 arcsin(x/2) + C. Or if definite? The problem says "integrate the square root of (4 minus x squared)". Typically indefinite integral. So we can give that result.
+
+We need to show step-by-step: start with substitution x = 2 sin θ, etc. Show each step and state result. Must not skip steps. Provide final answer: ∫ sqrt(4 - x^2) dx = (x/2) sqrt(4 - x^2) + 2 arcsin(x/2) + C.
+
+We need to ensure we don't use any external tools. Provide friendly tone, less than 8 sentences.
+
+Let's craft maybe 5 sentences:
+
+1. The problem asks us to find an antiderivative of the function √(4 − x²). 
+2. First, set x = 2 sin θ so that dx = 2 cos θ dθ and √(4 − x²) becomes √(4 − 4 sin²θ)=2 cos θ. 
+3. Substituting gives ∫ 2 cos θ·2 cos θ dθ = 4∫ cos²θ dθ, and using the identity cos²θ = (1+cos2θ)/2 we obtain 4·(θ/2 + sin2θ/4) + C = 2θ + sin2θ + C. 
+4. Now replace θ by arcsin(x/2): since x = 2 sin θ, θ = arcsin(x/2), and sin2θ = 2 sinθ cosθ = 2·(x/2)·√(1−(x/2)²) = x √(1−x²/4). Thus the antiderivative becomes 2 arcsin(x/2) + x √(1−x²/4) + C. 
+5. Simplify the radical: x √(1−x²/4) = (x/2)√(4−x²), so the final result is ∫ √(4−x²) dx = (x/2)√(4−x²) + 2 arcsin(x/2) + C.
+
+That's 5 sentences, which satisfies <8. All steps are shown, no skipping. That seems good.
+
+Check if any step omitted: we derived substitution, simplified integrand, used double-angle identity, back-substituted, simplified. Yes.
+
+We must not state any result you haven't derived above. We have derived each step. Good.
+
+Make sure it's friendly and clear. Provide final answer plainly at the end (the formula). That is included in sentence 5. So we are done.
+
+We need to ensure no extra sentences like "Here is the final answer:" maybe that would be a separate sentence, but that would add an extra sentence making total 6. Still less than 8, okay. But we can incorporate it within sentence 5 or add a short concluding sentence. The instruction: "Gives the final answer plainly at the end." Could be part of last sentence. So we can keep as is.
+
+Thus produce exactly those sentences. No extra formatting. Provide plain text.
+</think>
+The problem asks us to find an antiderivative of the function √(4 − x²). First, set x = 2 sin θ so that dx = 2 cos θ dθ and √(4 − x²) becomes √(4 − 4 sin²θ)=2 cos θ. Substituting gives ∫ 2 cos θ·2 cos θ dθ = 4∫ cos²θ dθ, and using the identity cos²θ = (1+cos2θ)/2 we obtain 4·(θ/2 + sin2θ/4) + C = 2θ + sin2θ + C. Now replace θ by arcsin(x/2): since x = 2 sin θ, θ = arcsin(x/2), and sin2θ = 2 sinθ cosθ = 2·(
+LLM calls: 1  Latency: 14092ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222602.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ca175453-678b-430d-ac22-e9149405599e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca175453-678b-430d-ac22-e9149405599e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ca175453-678b-430d-ac22-e9149405599e completed by agent mac-wens-Mac-mini.local in 19979ms (1097 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1097 tokens, 22097ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (4390 chars total)
+[INFO] [arm=solver] decomposed into 26 step(s):
+
+
+<think>
+We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text.
+We need to start with the expression from the problem: "sin(x)**2 + cos(x)**2". That is the first <expression>. Then each subsequent step uses PREV|operation. The operation tokens allowed: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, ode_solve, galois, conic, rank, factor_qq.
+We need to "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". The typical simplification is 1 (since sin^2+cos^2=1). So we can do:
+Step 1: sin(x)**2 + cos(x)**2
+Step 2: Use trig identity to simplify. Options: "trigsimp" is an operation that simplifies expressions using trigonometric identities. So we could directly apply trigsimp to the expression. That would be one step after first: "trigsimp". But the rule says every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So we need to reference the previous step's expression using PREV|... . For trigsimp, we would write: trigsimp(sin(x)**2 + cos(x)**2). However, the syntax for trigsimp in examples: they used "sin(x)/x|series"? Actually they had "expand sin(x) as a Taylor series around x=0 up to degree 5" gave "sin(x)|series". That's because they used "expand" first then "series". But here we can directly apply trigsimp. The operation token is "trigsimp". According to rule, after the first line, each step must be "PREV|operation". So second line: "PREV|trigsimp". But we need to include the expression? The format says <expression>|<operation>. Actually they said: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x)". Then every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So each line after the first should be like "PREV|trigsimp". But they also require that the expression part is the previous step's expression. However, we can just write "PREV|trigsimp". That satisfies the rule: the literal word PREV then | then operation token. The expression before that is the previous step's expression. So second line: PREV|trigsimp.
+But do we need to include parentheses? No. So output:
+sin(x)**2 + cos(x)**2|trigsimp
+PREV|trigsimp
+That would be two lines, which meets "one step per line". However, the problem says "Translate this math problem into an ordered list of symbolic operations." The first step is the starting expression. So we have exactly that.
+But check if any other steps needed? The instruction: "Translate ONLY the problem below. Transcribe its expression EXACTLY — same digits, signs, exponents — and use PREV for every step after the first line." So we just need to produce the transformation from original expression to simplified form using allowed operations. Since we can directly apply trigsimp, that's one operation. That yields the simplified result (1). But do we need to show the final simplified expression? The problem says "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". Usually you'd end with 1. However, they didn't require us to output the final simplified value; just the steps. So we can stop after trigsimp, which yields the simplified form implicitly. But maybe they expect that we apply trigsimp and then perhaps simplify further? There's no other operation needed.
+Thus answer:
+sin(x)**2 + cos(x)**2|trigsimp
+PREV|trigsimp
+But check if "trigsimp" is allowed as an operation token. Yes, it's in the list: trigsimp. Good.
+We must ensure no extra text, no code fences, no numbering, etc. So output exactly those two lines.
+Double-check that we didn't violate any rule:
+- Plain text only: yes.
+- No Python code: we have no import statements or variable assignments.
+- No prose: correct.
+- First line is the starting expression in Python syntax: "sin(x)**2 + cos(x)**2". Yes, includes ** for powers. Good.
+- Every subsequent line uses PREV|<operation>. We used "PREV|trigsimp". That's fine.
+Thus final answer.
+</think>
+sin(x)**2 + cos(x)**2|trigsimp
+PREV|trigsimp
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 115ms (0 LLM calls)
+[INFO] [arm=solver][step 1/26] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 544 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/26] We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 965 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/26: We need to start with the expression from the problem: "sin(x)**2 + cos(x)**2". That is the first <expression>. Then each subsequent step uses (We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text.): Sympify of expression 'could not parse 'We need to start with the expression from the problem: "sin(x)**2 + cos(x)**2". That is the first <expression>. Then each subsequent step uses (We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text.)'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 1345 chars | status=solver_error, arm=solver, backend=sympy, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/26 could not be computed: We need to start with the expression from the problem: "sin(x)**2 + cos(x)**2". That is the first <expression>. Then each subsequent step uses (We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text.): Sympify of expression 'could not parse 'We need to start with the expression from the problem: "sin(x)**2 + cos(x)**2". That is the first <expression>. Then each subsequent step uses (We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text.)'' failed, because of exception being raised:
+SyntaxError: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to produce a translation of the given math problem into an ordered list of symbolic operations according to strict rules. The problem: "simplify sin(x)**2 + cos(x)**2 using trigonometric identities". We must output exactly one step per line, no extra text. (pass-through)
+
+LLM calls: 1  Latency: 22214ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222554.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task bde628fd-84ca-41db-a77b-5b4033216044 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bde628fd-84ca-41db-a77b-5b4033216044 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bde628fd-84ca-41db-a77b-5b4033216044 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bde628fd-84ca-41db-a77b-5b4033216044 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bde628fd-84ca-41db-a77b-5b4033216044 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bde628fd-84ca-41db-a77b-5b4033216044 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task bde628fd-84ca-41db-a77b-5b4033216044 completed by agent papa-game in 7204ms (658 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 658 tokens, 8045ms
+INFO:spl.executor:GENERATE chain done -> @result (2328 chars total)
+INFO:spl.executor:RETURN: 2328 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. At the end give final answer plainly.
+
+Constraints: No symbolic math engine or proof assistant; we must do manually. Provide less than 8 sentences total. That includes all sentences? Probably yes. So we need to craft maybe 6-7 sentences. Each sentence can be long but must contain step and result. Must not skip steps. So we need to restate problem: "We have two equations x + y = 5 and x - y = 1, solve for x and y." Then show working: add equations to eliminate y, etc. Show each step's result.
+
+We can write something like:
+
+1. The system asks us to find the numbers x and y that satisfy both equations simultaneously. (sentence 1)
+
+2. Adding the first equation (x + y = 5) to the second (x - y = 1) gives a new equation whose left side is (x + y) + (x - y) = 2x and whose right side is 5 + 1, so we obtain 2x = 6. (sentence 2)
+
+3. Dividing both sides of 2x = 6 by 2 yields the exact result x = 3. (sentence 3)
+
+4. Substituting this value of x back into the first equation x + y = 5 gives 3 + y = 5, and solving for y gives y = 5 - 3 = 2. (sentence 4)
+
+5. Checking in the second equation confirms that 3 - 2 = 1, which matches the given condition. (sentence 5)
+
+6. Therefore the solution of the system is x = 3 and y = 2. (sentence 6)
+
+That's six sentences, less than 8. No extra commentary. That satisfies constraints. Ensure no bold or markdown. Provide plain text.
+
+Check: "Show your work. Do not state any result you have not derived above." We derived each step. Good.
+
+Thus final answer.
+</think>
+The system asks us to find the numbers x and y that satisfy both equations simultaneously. Adding the first equation (x + y = 5) to the second (x - y = 1) gives a new equation whose left side is (x + y) + (x - y) = 2x and whose right side is 5 + 1, so we obtain 2x = 6. Dividing both sides of 2x = 6 by 2 yields the exact result x = 3. Substituting this value of x back into the first equation x + y = 5 gives 3 + y = 5, and solving for y gives y = 5 - 3 = 2. Checking in the second equation confirms that 3 - 2 = 1, which matches the given condition. Therefore the solution of the system is x = 3 and y = 2.
+LLM calls: 1  Latency: 8046ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222609.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a5842929-eca5-4c93-a6e1-ffc632a4504a submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5842929-eca5-4c93-a6e1-ffc632a4504a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5842929-eca5-4c93-a6e1-ffc632a4504a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5842929-eca5-4c93-a6e1-ffc632a4504a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5842929-eca5-4c93-a6e1-ffc632a4504a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a5842929-eca5-4c93-a6e1-ffc632a4504a "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a5842929-eca5-4c93-a6e1-ffc632a4504a completed by agent papa-game in 5913ms (746 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 746 tokens, 8056ms
+INFO:spl.executor:GENERATE chain done -> @result (2549 chars total)
+INFO:spl.executor:RETURN: 2549 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is less than 8 sentences, includes: restate problem in plain English, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must do manually. Provide clear friendly walkthrough. Must be less than 8 sentences total. That's tricky: we need to convey restating problem, working, and final answer within <=7 sentences (since less than 8). Each sentence can be long but must contain steps.
+
+We need to restate the problem: "Find the eigenvalues of the 2x2 matrix with rows [1,2] and [3,4]". Then show working step by step: compute characteristic polynomial det(A - λI) = (1-λ)(4-λ) - (2*3) = ... etc. Show each result.
+
+We can combine steps in sentences. Let's craft maybe 5 sentences:
+
+1. The problem asks us to determine the eigenvalues of the matrix [[1,2],[3,4]]. 
+2. First we write the matrix A = [[1,2],[3,4]] and subtract λ from its diagonal entries to form A - λI = [[1-λ, 2],[3, 4-λ]]. 
+3. The determinant of this matrix is (1-λ)(4-λ) - (2)(3) = (1-λ)(4-λ) - 6, which expands to (4 -5λ + λ^2) - 6 = λ^2 -5λ -2. 
+4. Setting the determinant equal to zero gives the characteristic equation λ^2 -5λ -2 = 0. 
+5. Solving this quadratic using the quadratic formula yields λ = [5 ± sqrt(25 + 8)]/2 = [5 ± sqrt(33)]/2, so the eigenvalues are (5 + √33)/2 and (5 - √33)/2.
+
+That's 5 sentences, which is less than 8. It includes restating problem, each step result shown. No extra commentary. That satisfies constraints. Ensure no bold/markdown. Provide plain text. Let's count sentences: Sentence 1 ends with period. Sentence 2 ends with period. Sentence 3 ends with period. Sentence 4 ends with period. Sentence 5 ends with period. That's 5 sentences, okay.
+
+Check that we didn't skip steps: we wrote determinant expression, expansion, simplification, setting to zero, solving quadratic. Yes.
+
+Thus final answer.
+</think>
+The problem asks us to determine the eigenvalues of the matrix [[1,2],[3,4]]. First we write the matrix A = [[1,2],[3,4]] and subtract λ from its diagonal entries to form A − λI = [[1‑λ, 2],[3, 4‑λ]]. The determinant of this matrix is (1‑λ)(4‑λ) − (2)(3) = (1‑λ)(4‑λ) − 6, which expands to λ² − 5λ − 2. Setting this determinant equal to zero gives the characteristic equation λ² − 5λ − 2 = 0. Solving this quadratic with the formula λ = [5 ± √(25 + 8)]/2 yields λ = (5 + √33)/2 and λ = (5 − √33)/2. These are the two eigenvalues of the matrix.
+LLM calls: 1  Latency: 8057ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222617.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 26fd0800-a006-47ce-a6e5-c85d1ea7c605 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/26fd0800-a006-47ce-a6e5-c85d1ea7c605 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 26fd0800-a006-47ce-a6e5-c85d1ea7c605 completed by agent wengong in 16974ms (1154 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1154 tokens, 18091ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (4958 chars total)
+[INFO] [arm=solver] decomposed into 24 step(s):
+
+
+<think>
+We need to translate the problem: "solve the system of equations x + y = 5 and x - y = 1 for x and y" into an ordered list of symbolic operations, following strict output rules.
+The first step's <expression> is the starting expression in Python syntax. Then every subsequent line must start with PREV|<operation>. The operation tokens allowed: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, galois, conic, rank, factor_qq.
+We need to produce a list of steps that represent solving the system. The problem is simple: we have two linear equations; solution can be found by solving linear system. According to allowed operations, we could use "solve" operation on the equation? But solve is for single equation? There's also "solve_system". Since it's a system, we should use solve_system. However rule says: "solve_system: ALL equations must be combined into ONE step as a Python list [eq1_lhs - eq1_rhs, eq2_lhs - eq2_rhs]|solve_system". So the first expression is the starting expression in Python syntax? The instruction: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)". But we are not evaluating anything; we just need to produce a list of symbolic operations. However they say "Translate this math problem into an ordered list of symbolic operations." The examples show that the first line is something like "exp(x)|diff". That's using an expression (like exp(x)) and then operation. But for solving system, maybe we can start with the equations as expressions? Actually we need to produce steps that represent solving them.
+We could do:
+x + y - 5 = 0
+x - y - 1 = 0
+But those are not exactly "starting expression in Python syntax"? They are equations. The rule says first step's <expression> is the starting expression in Python syntax: ** for powers, etc. That seems to refer to something like "exp(x)"? But we can also have expressions with variables and operators. For example, "x + y - 5" is an expression. So maybe we start with that as the first line? However they said "The FIRST step's <expression> is the starting expression in Python syntax". That could be any expression, not necessarily a single equation. But then subsequent steps must use PREV|<operation>. The operation can be solve_system for multiple equations.
+Thus we could have:
+x + y - 5 = 0 | solve_system
+x - y - 1 = 0 | PREV
+But that would combine both equations in one step? Actually solve_system expects a list of equations. So the first line should contain both equations combined as a list: [x + y - 5, x - y - 1]|solve_system. That's allowed because it says "ALL equations must be combined into ONE step as a Python list". So we can have:
+[x + y - 5, x - y - 1]|solve_system
+That would be the first line? But then there is no previous expression for PREV after that; but we need to start with an expression. The rule says "The FIRST step's <expression> is the starting expression in Python syntax". So maybe we need a first line that is just the combined equations, and then subsequent lines use PREV|... But they also say "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." That seems contradictory: if we have only one line with the combined equations, there is no previous step. However maybe they consider that the first line itself is the starting expression (i.e., the initial expression before any operation). Then subsequent steps refer to that as PREV. So we could have:
+[x + y - 5, x - y - 1]|solve_system
+But then there is no previous step; but maybe they accept that because it's the first line. However the rule "Every step AFTER the first must use the literal word PREV as the expression" suggests that after we have something (maybe an intermediate result), we refer to it with PREV. But we don't have any intermediate results, so we could just have one line.
+But they also say: "If the problem needs only ONE operation, output exactly one line". This problem is a system of equations; solving it requires using solve_system, which is a single operation on a list. So that's one line. That would be acceptable: just one step. However we need to ensure the first expression is in Python syntax. The combined equation list uses brackets and commas, but those are valid Python syntax for a list of expressions. So it's okay.
+Thus output:
+[x + y - 5, x - y - 1]|solve_system
+But check if any other steps needed? Could also use "solve" on each individually then combine? But they said solve_system is the appropriate operation for systems. So that line alone solves the system. That seems correct.
+Thus final answer: a single line with that expression.
+Make sure no extra spaces or newlines. Provide exactly that.
+</think>
+[x + y - 5, x - y - 1]|solve_system
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1509ms (0 LLM calls)
+[INFO] [arm=solver][step 1/24] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 370 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/24] We need to translate the problem: "solve the system of equations x + y = 5 and x - y = 1 for x and y" into an ordered list of symbolic operations, following strict output rules. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 379 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/24: The first step's <expression> is the starting expression in Python syntax. Then every subsequent line must start with (We need to translate the problem: "solve the system of equations x + y = 5 and x - y = 1 for x and y" into an ordered list of symbolic operations, following strict output rules.): unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 672 chars | status=solver_error, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/24 could not be computed: The first step's <expression> is the starting expression in Python syntax. Then every subsequent line must start with (We need to translate the problem: "solve the system of equations x + y = 5 and x - y = 1 for x and y" into an ordered list of symbolic operations, following strict output rules.): unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to translate the problem: "solve the system of equations x + y = 5 and x - y = 1 for x and y" into an ordered list of symbolic operations, following strict output rules. (pass-through)
+
+LLM calls: 1  Latency: 19601ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222607.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 57a338a4-e512-499a-8130-b1822d0eca0c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/57a338a4-e512-499a-8130-b1822d0eca0c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 57a338a4-e512-499a-8130-b1822d0eca0c completed by agent mac-wens-Mac-mini.local in 23297ms (834 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 834 tokens, 24115ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (3166 chars total)
+[INFO] [arm=solver] decomposed into 22 step(s):
+
+
+<think>
+We need to parse the problem: "find the integral of sin(x) times cos(x), then simplify the result". So we have an expression: integrate sin(x) * cos(x). The first step is to transcribe exactly that expression in Python syntax. According to instructions, the first line must be the starting expression in Python syntax: "sin(x)"? Actually they said "The FIRST step's <expression> is the starting expression in Python syntax". So we need to start with sin(x) (or maybe "sin(x)" as given). The problem says "integrate sin(x) times cos(x)". So the first expression should be "sin(x)*cos(x)"? Or "sin(x) * cos(x)"? In examples, they used "exp(x)" for exp(x). They didn't include multiplication sign. Usually Python uses "*". So we can write "sin(x)*cos(x)". That is the starting expression.
+Then after that, every subsequent step must use PREV|<operation>. The operation should be one token from the list: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, ode_solve, galois, conic, rank, factor_qq.
+We need to compute the integral of sin(x) cos(x). The integral is (1/2) sin^2(x) + C? Actually ∫ sin x cos x dx = (1/2) sin^2 x + C = - (1/2) cos^2 x + C. Or we can use substitution: u = sin x, du = cos x dx => ∫ u du = u^2/2 = sin^2 x / 2. So result: sin(x)**2 / 2. Usually they'd give answer as "sin(x)**2/2". But we need to produce steps.
+We have only one operation? The problem says "find the integral of sin(x) times cos(x), then simplify the result". That suggests two operations: integrate, then simplify. So first line: sin(x)*cos(x)|integrate. Then second step uses PREV|simplify. But we need to produce an expression after simplification. What is the simplified form? Could be "sin(x)**2/2". Or maybe "1/2*sin(x)**2". The example "expand sin(x) as a Taylor series around x=0 up to degree 5" gave "sin(x)|series". That's just the original expression, then they applied series. For integration, we need to simplify after integration. Usually you'd integrate and then maybe apply trigsimp or something. The simplest is "sin(x)**2/2". That is a valid symbolic expression.
+Thus steps:
+1. sin(x)*cos(x)|integrate
+2. PREV|simplify
+But the second line must be "PREV|simplify"? Actually they said every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So we need to write something like:
+sin(x)*cos(x)|integrate
+PREV|simplify
+But also note that the first line's <expression> is the starting expression in Python syntax. That is sin(x)*cos(x). Good.
+Now check constraints: No extra text, no code fences, no numbering. Output exactly those two lines. Ensure there are no extra spaces? Probably fine.
+Thus final answer:
+sin(x)*cos(x)|integrate
+PREV|simplify
+Make sure there is no trailing spaces or newline after second line? Usually okay.
+Check if any other operation needed: The problem says "find the integral of sin(x) times cos(x), then simplify the result". That's exactly two steps. So that should be correct.
+Thus output.
+</think>
+sin(x)*cos(x)|integrate
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1383ms (0 LLM calls)
+[INFO] [arm=solver][step 1/22] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 1586 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/22] We need to parse the problem: "find the integral of sin(x) times cos(x), then simplify the result". So we have an expression: integrate sin(x) * cos(x). The first step is to transcribe exactly that expression in Python syntax. According to instructions, the first line must be the starting expression in Python syntax: "sin(x)"? Actually they said "The FIRST step's <expression> is the starting expression in Python syntax". So we need to start with sin(x) (or maybe "sin(x)" as given). The problem says "integrate sin(x) times cos(x)". So the first expression should be "sin(x)*cos(x)"? Or "sin(x) * cos(x)"? In examples, they used "exp(x)" for exp(x). They didn't include multiplication sign. Usually Python uses "*". So we can write "sin(x)*cos(x)". That is the starting expression. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 917 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 3/22: Then after that, every subsequent step must use (We need to parse the problem: "find the integral of sin(x) times cos(x), then simplify the result". So we have an expression: integrate sin(x) * cos(x). The first step is to transcribe exactly that expression in Python syntax. According to instructions, the first line must be the starting expression in Python syntax: "sin(x)"? Actually they said "The FIRST step's <expression> is the starting expression in Python syntax". So we need to start with sin(x) (or maybe "sin(x)" as given). The problem says "integrate sin(x) times cos(x)". So the first expression should be "sin(x)*cos(x)"? Or "sin(x) * cos(x)"? In examples, they used "exp(x)" for exp(x). They didn't include multiplication sign. Usually Python uses "*". So we can write "sin(x)*cos(x)". That is the starting expression.): unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 1818 chars | status=solver_error, arm=solver, backend=sage, steps=3
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 3/22 could not be computed: Then after that, every subsequent step must use (We need to parse the problem: "find the integral of sin(x) times cos(x), then simplify the result". So we have an expression: integrate sin(x) * cos(x). The first step is to transcribe exactly that expression in Python syntax. According to instructions, the first line must be the starting expression in Python syntax: "sin(x)"? Actually they said "The FIRST step's <expression> is the starting expression in Python syntax". So we need to start with sin(x) (or maybe "sin(x)" as given). The problem says "integrate sin(x) times cos(x)". So the first expression should be "sin(x)*cos(x)"? Or "sin(x) * cos(x)"? In examples, they used "exp(x)" for exp(x). They didn't include multiplication sign. Usually Python uses "*". So we can write "sin(x)*cos(x)". That is the starting expression.): unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to parse the problem: "find the integral of sin(x) times cos(x), then simplify the result". So we have an expression: integrate sin(x) * cos(x). The first step is to transcribe exactly that expression in Python syntax. According to instructions, the first line must be the starting expression in Python syntax: "sin(x)"? Actually they said "The FIRST step's <expression> is the starting expression in Python syntax". So we need to start with sin(x) (or maybe "sin(x)" as given). The problem says "integrate sin(x) times cos(x)". So the first expression should be "sin(x)*cos(x)"? Or "sin(x) * cos(x)"? In examples, they used "exp(x)" for exp(x). They didn't include multiplication sign. Usually Python uses "*". So we can write "sin(x)*cos(x)". That is the starting expression. (pass-through)
+
+LLM calls: 1  Latency: 25499ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222603.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the Laplace transform of exp(-2*t)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 287e7c36-20a3-4aba-a046-a3875574bbee submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/287e7c36-20a3-4aba-a046-a3875574bbee "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 287e7c36-20a3-4aba-a046-a3875574bbee completed by agent papa-game in 12916ms (880 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 880 tokens, 14080ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (3660 chars total)
+[INFO] [arm=solver] decomposed into 19 step(s):
+
+
+<think>
+We need to output a sequence of steps according to instructions. The problem: "find the Laplace transform of exp(-2*t)". We must translate this into an ordered list of symbolic operations, with each step after first using PREV|<operation>. The first expression is the starting expression in Python syntax: "exp(-2*t)"? Actually they said: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)". So we need to start with "exp(-2*t)" as the first line. Then subsequent steps must use PREV|... referencing previous step.
+We need to compute Laplace transform of exp(-2*t). The Laplace transform L{exp(a t)} = 1/(s - a) (or 1/(s - a) if using variable s). So we have:
+First line: exp(-2*t)
+Second line: PREV|laplace? Wait, the operation for Laplace transform is "laplace". According to list, operation includes "laplace". The format: <expression>|<operation>. So after first expression, we need to apply laplace to it. Usually you'd write something like "exp(-2*t)|laplace". But the rule says: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." That suggests that after the first line, we need to refer to the previous step's expression using PREV. However, for a single operation like Laplace transform, there is no previous step; but they said "Every step AFTER the first must use the literal word PREV as the expression". So if we have only one step (the transformation), that would be just "exp(-2*t)|laplace"? But then there is no previous step to refer to. However maybe they intend that after the first line, you can directly apply operation without PREV? Let's read carefully:
+"Every step AFTER the first line must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line."
+Thus if we have only one transformation (just compute Laplace transform), there is no previous step, so maybe we don't need PREV? But they said "must use the literal word PREV as the expression". That seems contradictory. However earlier they gave examples: For "differentiate e to the x and then simplify the result", they had:
+"exp(x)|diff
+PREV|simplify"
+Here, first line is "exp(x)" (the original expression). Second line uses PREV|simplify, referencing previous step's result. So for a single operation that doesn't have a previous step, maybe we don't need PREV? But the instruction says "Every step AFTER the first line must use the literal word PREV as the expression". That would mean if there were more than one line, each subsequent line after the first must start with PREV|... So for a single line transformation, it's okay to not have PREV. However they also said "If the problem needs only ONE operation, output exactly one line". The problem "find the Laplace transform of exp(-2*t)" is a single operation: compute Laplace transform. So we can output just:
+exp(-2*t)|laplace
+But need to ensure format: plain text, no code fences, no extra punctuation. That seems correct.
+Check if any other steps needed? The expression "exp(-2*t)" includes parentheses and asterisk for multiplication? Actually -2*t is fine; exponent uses ** in Python syntax, but they said use ** for powers. So we need to write "-2*t" or "exp(-2*t)". In the example they used "exp(x)" as first line, not "e(x)". So we should keep same digits: exp(-2*t). That's fine.
+Thus output:
+exp(-2*t)|laplace
+That is one line. No extra lines. Ensure no trailing spaces or newline? Probably okay.
+Thus final answer.
+</think>
+exp(-2*t)|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1412ms (0 LLM calls)
+[INFO] [arm=solver][step 1/19] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 279 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/19: We need to output a sequence of steps according to instructions. The problem: "find the Laplace transform of exp(-2*t)". We must translate this into an ordered list of symbolic operations, with each step after first using (<think>): invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 376 chars | status=solver_error, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/19 could not be computed: We need to output a sequence of steps according to instructions. The problem: "find the Laplace transform of exp(-2*t)". We must translate this into an ordered list of symbolic operations, with each step after first using (<think>): invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 15494ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222617.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c3de409a-7159-4c70-889c-d54cbd472eff submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c3de409a-7159-4c70-889c-d54cbd472eff "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c3de409a-7159-4c70-889c-d54cbd472eff completed by agent wengong in 14861ms (451 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 451 tokens, 18089ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (1884 chars total)
+[INFO] [arm=solver] decomposed into 13 step(s):
+
+
+<think>
+We need to translate the problem into ordered list of symbolic operations. The problem: "find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]". According to instructions:
+- First step's <expression> is the starting expression in Python syntax.
+- Every step after must use literal word PREV as the expression — meaning referencing previous step's result. The first line should be something like "[[1,2],[3,4]]|eigenvalues"? Wait: The instruction says: "The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x)". So we need to provide an expression that represents the matrix. Since it's a 2x2 matrix with rows [1,2] and [3,4], we can write [[1,2],[3,4]]. That is Python syntax.
+Thus first line: [[1,2],[3,4]]|eigenvalues
+But then after that, every subsequent step must use PREV as the expression. However, there's only one operation needed? The problem asks to find eigenvalues of a matrix. According to allowed operations, "eigenvalues" is an operation that takes a matrix (or polynomial) and returns eigenvalues. So we can directly apply eigenvalues to the matrix expression. There's no further steps like solving equations or expansions. So the ordered list would be just one line? The instruction: "If the problem needs only ONE operation, output exactly one line". Indeed, it seems we need only one step: compute eigenvalues of that matrix. So output:
+[[1,2],[3,4]]|eigenvalues
+But check if any other steps needed? The first expression is the starting expression. Then there are no further steps because we directly apply eigenvalues. That satisfies "If the problem needs only ONE operation". Yes.
+We must ensure no extra text, no code fences, etc. So final answer:
+[[1,2],[3,4]]|eigenvalues
+Make sure no extra spaces? Probably fine.
+</think>
+[[1,2],[3,4]]|eigenvalues
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1492ms (0 LLM calls)
+[INFO] [arm=solver][step 1/13] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 390 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/13] We need to translate the problem into ordered list of symbolic operations. The problem: "find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]". According to instructions: (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 160 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/13] - First step's <expression> is the starting expression in Python syntax. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 316 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 4/13: - Every step after must use literal word (- First step's <expression> is the starting expression in Python syntax.) as the expression — meaning referencing previous step's result. The first line should be something like "[[1,2],[3,4]]: unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 710 chars | status=solver_error, arm=solver, backend=sage, steps=4
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 4/13 could not be computed: - Every step after must use literal word (- First step's <expression> is the starting expression in Python syntax.) as the expression — meaning referencing previous step's result. The first line should be something like "[[1,2],[3,4]]: unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to translate the problem into ordered list of symbolic operations. The problem: "find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]". According to instructions: (pass-through)
+3. - First step's <expression> is the starting expression in Python syntax. (pass-through)
+
+LLM calls: 1  Latency: 19583ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222614.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the Laplace transform of exp(-2*t)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 34c42836-70ae-4ab9-a561-e45cae256ba7 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/34c42836-70ae-4ab9-a561-e45cae256ba7 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 34c42836-70ae-4ab9-a561-e45cae256ba7 completed by agent mac-wens-Mac-mini.local in 17209ms (763 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 763 tokens, 20089ms
+INFO:spl.executor:GENERATE chain done -> @result (2302 chars total)
+INFO:spl.executor:RETURN: 2302 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step, no skipping steps. Provide final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must compute manually. So we need to write something like:
+
+Sentence 1: Restate problem in plain English. Sentence 2: Write definition of Laplace transform. Sentence 3: Plug in exponent -2t, get integral. Sentence 4: Evaluate integral using known formula ∫ e^{at} f(t) dt = ... Actually L{e^{-2t}} = ∫_0^∞ e^{-st} e^{-2t} dt = ∫_0^∞ e^{-(s+2)t} dt = 1/(s+2) for Re(s) > -2. Show steps: compute integral, get result. Sentence 5: State final answer: L{e^{-2t}} = 1/(s+2). That's less than 8 sentences? Let's count.
+
+We need less than 8 sentences total. Each sentence can be multiple clauses but we must not skip steps. So we need to include restating problem, definition, substitution, integral evaluation, final answer. That could be maybe 5-6 sentences. Must ensure each step is shown and result derived. No extra commentary.
+
+Let's craft:
+
+1. The question asks for the Laplace transform of the function exp(‑2t).  
+2. By definition, L{f(t)} = ∫₀^∞ e^{‑st} f(t) dt, so we substitute f(t)=e^{‑2t}.  
+3. This gives L{e^{‑2t}} = ∫₀^∞ e^{‑st}·e^{‑2t} dt = ∫₀^∞ e^{‑(s+2)t} dt.  
+4. Evaluating the integral yields ∫₀^∞ e^{‑(s+2)t} dt = [ -1/(s+2) e^{‑(s+2)t} ]₀^∞ = (0 – (-1/(s+2))) = 1/(s+2), provided Re(s) > ‑2.  
+5. Therefore, the Laplace transform is L{e^{‑2t}} = 1/(s+2).
+
+That's 5 sentences, which is less than 8. That satisfies all requirements: restates problem, shows working step by step, states exact result of each step, final answer plainly at end. No extra formatting. Provide that.
+
+Check no bold, no markdown. Provide plain text. Ensure no extra commentary. Let's produce.
+</think>
+The question asks for the Laplace transform of the function exp(‑2t). By definition, L{f(t)} = ∫₀^∞ e^{‑st} f(t) dt, so we substitute f(t)=e^{‑2t}. This gives L{e^{‑2t}} = ∫₀^∞ e^{‑st}·e^{‑2t} dt = ∫₀^∞ e^{‑(s+2)t} dt. Evaluating the integral yields ∫₀^∞ e^{‑(s+2)t} dt = [ -1/(s+2) e^{‑(s+2)t} ]₀^∞ = (0 – (-1/(s+2))) = 1/(s+2), provided Re(s) > ‑2. Therefore, the Laplace transform is L{e^{‑2t}} = 1/(s+2).
+LLM calls: 1  Latency: 20090ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222618.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task bb778fa9-7ce9-4535-8f44-c6971e1c40f5 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/bb778fa9-7ce9-4535-8f44-c6971e1c40f5 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task bb778fa9-7ce9-4535-8f44-c6971e1c40f5 completed by agent papa-game in 16850ms (1500 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1500 tokens, 18081ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (6122 chars total)
+[INFO] [arm=solver] decomposed into 7 step(s):
+
+
+<think>
+We need to translate the problem into an ordered list of symbolic operations according to strict rules. The problem: "solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1". We must produce a sequence of steps, each line is expression|operation (or for solve_system etc). The first step's <expression> is the starting expression in Python syntax. Then every subsequent step uses PREV|<operation>.
+We need to think: solving ODE y'(x) = y(x) with y(0)=1 yields solution y(x) = exp(x). Typically we would differentiate RHS? Actually ODE: y' - y = 0, solve via integrating factor. The steps could be:
+Start with expression: y(x) (the unknown function). But the first step's <expression> must be transcribed from the problem — copying an expression from an example. However the problem is not given as a specific expression; it's a description: "solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1". We need to produce something like "y(x)|solve"? Wait, the first step must be the starting expression in Python syntax. The problem is about solving ODE, so perhaps we start with the ODE left-hand side: y(x).diff(x) - y(x) = 0. That would be the starting expression. So first line: "y(x).diff(x) - y(x) = 0". But need to check format: The first <expression> must be transcribed from the Problem at the bottom — copying an expression from an example is a failure, but we can copy the ODE as given? The problem statement includes that equation. We can use "y(x).diff(x) - y(x) = 0". That seems appropriate.
+Now after that, each subsequent step must use PREV|<operation>. The operation tokens allowed: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, ode_solve, galois, conic, rank, factor_qq.
+We need to produce steps that logically solve the ODE with initial condition. Since we have only one equation and an initial condition, we can use "solve" operation on the ODE? But there is also "ode_solve" which expects left-hand side expression with y(x).diff(x,n). However we have initial condition, so maybe we need to solve using "solve". The allowed operation includes "solve". So first step: define ODE: y(x).diff(x) - y(x) = 0. Then apply "solve" to get solution? But the rule says for solve_system all equations must be combined into ONE step as a Python list, but we have only one equation. However we also need to incorporate initial condition y(0)=1. That is an extra condition; solving ODE with initial condition yields particular solution. In sympy, you could use dsolve with ics. But the allowed operations don't include dsolve directly. There's "solve" which solves algebraic equations, not ODEs. However we can treat it as a differential equation and apply "ode_solve"? The description: "ode_solve: <expression> is the ODE left-hand side in Python using y(x).diff(x,n) notation, with RHS assumed 0". So we could write "y(x).diff(x) - y(x) = 0|ode_solve". That would be a single step? But they said for ODE problems the plan is ALWAYS exactly ONE line — never add a second step. However we also have initial condition, which might require solving with initial condition. The "solve" operation could incorporate that? Not sure.
+But maybe we can produce steps: first expression: y(x).diff(x) - y(x) = 0 (starting expression). Then PREV|solve would be the solution? But solve expects an equation; but we have only one equation, and we want to solve for y(x). However "solve" operation might take a single expression and produce solution? In sympy, you can do solve(eq, y(x)). So maybe first step: y(x).diff(x) - y(x) = 0. Then second step: PREV|solve would be the result of solving that ODE with initial condition? But "solve" doesn't take initial condition; but we could incorporate it by using "y(0)=1" as part of equation? Actually we can write "y(x).diff(x) - y(x) = 0, y(0)=1". That's a system of equations. However the rule for solve_system says all equations must be combined into ONE step as a Python list. So we could do: [y(x).diff(x) - y(x) - 0, y(0) - 1]|solve_system? But that would be using solve_system with two equations. However they said "solve_system: ALL equations must be combined into ONE step as a Python list". That's allowed. So we could have first line: y(x).diff(x) - y(x) = 0 (starting expression). Then second line: PREV|solve_system? Wait, the rule says every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So after the first step's expression, we need to apply an operation. The allowed operations include solve, diff, integrate, etc. For solving ODE with initial condition, we could use "solve" on the combined equations? But we have only one equation; we can add the initial condition as a second equation in a list and then use solve_system. That would be a single step after the first: PREV|solve_system. However they said for ODE problems the plan is ALWAYS exactly ONE line — never add a second step. But that refers to using ode_solve? Actually they say "ode_solve: <expression> is the ODE left-hand side ... with RHS assumed 0". That's one operation, but we also need initial condition. Perhaps we can incorporate initial condition by using "solve" on the equation y(x).diff(x) - y(x) = 0 and then later apply something else? But there is no second step allowed if we use solve_system? Wait, they said "If the problem needs only ONE operation, output exactly one line". For this problem, solving ODE with initial condition might be considered a single operation (like using dsolve). However the allowed operations don't include dsolve. So maybe we need to treat it as "solve" which solves algebraic equations, but we can incorporate initial condition by writing something like "y(x).diff(x) - y(x) = 0, y(0) = 1 | solve". But is that syntactically correct? Possibly they expect you to use "solve" with both equations in the same expression separated by commas. The rule for solve_system says all equations must be combined into
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1570ms (0 LLM calls)
+[INFO] [arm=solver][step 1/7] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 343 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/7: We need to translate the problem into an ordered list of symbolic operations according to strict rules. The problem: "solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1". We must produce a sequence of steps, each line is expression: invalid syntax. Perhaps you forgot a comma? (<string>, line 1)
+INFO:spl.executor:RETURN: 439 chars | status=solver_error, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/7 could not be computed: We need to translate the problem into an ordered list of symbolic operations according to strict rules. The problem: "solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1". We must produce a sequence of steps, each line is expression: invalid syntax. Perhaps you forgot a comma? (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 19653ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222625.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task dd691661-1e28-4e53-9469-217ecc31f492 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dd691661-1e28-4e53-9469-217ecc31f492 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task dd691661-1e28-4e53-9469-217ecc31f492 completed by agent wengong in 13163ms (1500 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1500 tokens, 14090ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (6041 chars total)
+[INFO] [arm=solver] decomposed into 15 step(s):
+
+
+<think>
+We need to parse the problem: "compute the symbolic sum of 1 over n squared from n equals 1 to infinity". That is sum_{n=1}^{∞} 1/n^2. The known value is π^2/6.
+We must output a list of symbolic operations, one step per line, first expression is the starting expression in Python syntax: "1/n**2". Then each subsequent step uses PREV as the previous expression and applies an operation token from the given list.
+We need to translate this problem into such steps. The instruction says: "Translate this math problem into an ordered list of symbolic operations." The output format: one step per line, NOTHING ELSE: <expression>|<operation>. The first step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x). Every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". NEVER write a new expression after the first line.
+We need to produce steps that compute sum_{n=1}^{∞} 1/n^2. Typically we would start with something like "sum(1/n**2, (n, 1, oo))" but we don't have sum function? The allowed operations include "series", "expand", "factor", etc. But there is no direct summation operation in the list. However we can use "series" to expand infinite series? Actually "series" might be used for Taylor series expansion: sin(x)|series, cos(x)|series, but not directly sum of 1/n^2. There's also "expand" maybe to expand something like (1/n**2). But we need to compute symbolic sum.
+We have allowed operations: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, galois, conic, rank, factor_qq. Among these, "summation" is not listed! Wait the list includes "summation(n,1,oo)" as an operation token? Actually the list: "solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, galois, conic, rank, factor_qq". Yes "summation" is there. So we can use "summation(n,1,oo)" as an operation. The expression would be "summation(n,1,oo)". That likely yields the infinite sum.
+Thus steps:
+Step 1: Starting expression in Python syntax: "1/n**2". This is just the term.
+Step 2: Use PREV (which is the previous step's expression) to apply an operation. But we need to incorporate summation. However the instruction says: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." That suggests that after the first line, each subsequent line should have something like "PREV|summation(n,1,oo)"? But we need to incorporate the term. Actually maybe they want us to start with the term and then apply summation over n from 1 to oo. However the operation token "summation" expects arguments: summation(n,1,oo). The previous step's expression is presumably something like "n**2"? No.
+Wait we need to think about how to represent sum_{n=1}^{∞} 1/n^2 using allowed operations. Perhaps we can use "series" to expand the series representation of something? But there is no direct summation operation that takes a term and sums over n. However maybe they expect us to use "expand" on something like "1/n**2"? That doesn't make sense.
+Alternatively, perhaps we can treat the sum as an infinite series: The expression "1/n**2" is the general term. To compute its symbolic sum, we could apply "series" to it? But series expects a function and variable. For example, sin(x)|series. However we have no x in our term. Could use something like "sqrt(1)"? Not.
+Maybe they intend that we start with "1/n**2" as the expression, then use "summation" directly: "summation(1/n**2, (n, 1, oo))"? But the syntax for summation is "summation(n, start, end)". The allowed operation token includes "summation(n,1,oo)" but we need to supply n as a variable. However we cannot define n; maybe they assume that the term is already defined? Actually the instruction: "The first step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)". It doesn't say we can't use other functions like summation. So we can include any of the allowed operations.
+Thus maybe we need to produce something like:
+1/n**2|summation(n,1,oo)
+But that would be using "summation" with n as a variable not defined. However perhaps they consider that the term is already known and we just apply summation over n from 1 to oo. The syntax might be "summation(1/n**2, (n, 1, oo))"? But the allowed operation token includes only "summation(n,1,oo)" where n is a placeholder variable name. Usually in sympy, you would write summation(n, start, end) and then substitute n with something? Actually sympy's summation function takes arguments: summation(expr, *args). The typical usage: summation(1/n**2, (n, 1, oo)). But the operation token is "summation(n,1,oo)" which includes parentheses around the variable name. That seems to be a generic representation where n is the symbol. So we could have "PREV|summation(n,1,oo)"? But PREV refers to previous expression; what would that be? The first step's expression is "1/n**2". Then second step: "PREV|summation(n,1,oo)"? That seems odd because PREV is the result of the previous step, which is a symbolic expression. However they said "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." This suggests that after the first line, each subsequent line should have something like "PREV|some operation". But what does that mean? Possibly they want to chain operations: e.g., start with term, then apply some operation using PREV as reference. For example, if we had "a|b" where a is expression and b is operation applied to a. But the instruction says "use the literal word PREV as the expression". That could mean that each step after the first must have the previous step's expression as its left
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1602ms (0 LLM calls)
+[INFO] [arm=solver][step 1/15] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 336 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/15] We need to parse the problem: "compute the symbolic sum of 1 over n squared from n equals 1 to infinity". That is sum_{n=1}^{∞} 1/n^2. The known value is π^2/6. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 834 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/15] We must output a list of symbolic operations, one step per line, first expression is the starting expression in Python syntax: "1/n**2". Then each subsequent step uses (We need to parse the problem: "compute the symbolic sum of 1 over n squared from n equals 1 to infinity". That is sum_{n=1}^{∞} 1/n^2. The known value is π^2/6.) as the previous expression and applies an operation token from the given list. (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 260 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 4/15: We need to translate this problem into such steps. The instruction says: "Translate this math problem into an ordered list of symbolic operations." The output format: one step per line, NOTHING ELSE: <expression>: invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 964 chars | status=solver_error, arm=solver, backend=sage, steps=4
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 4/15 could not be computed: We need to translate this problem into such steps. The instruction says: "Translate this math problem into an ordered list of symbolic operations." The output format: one step per line, NOTHING ELSE: <expression>: invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+2. We need to parse the problem: "compute the symbolic sum of 1 over n squared from n equals 1 to infinity". That is sum_{n=1}^{∞} 1/n^2. The known value is π^2/6. (pass-through)
+3. We must output a list of symbolic operations, one step per line, first expression is the starting expression in Python syntax: "1/n**2". Then each subsequent step uses (We need to parse the problem: "compute the symbolic sum of 1 over n squared from n equals 1 to infinity". That is sum_{n=1}^{∞} 1/n^2. The known value is π^2/6.) as the previous expression and applies an operation token from the given list. (pass-through)
+
+LLM calls: 1  Latency: 15694ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222629.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 1b546f22-ff46-439b-8fa2-3aaca9d34f03 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1b546f22-ff46-439b-8fa2-3aaca9d34f03 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 1b546f22-ff46-439b-8fa2-3aaca9d34f03 completed by agent mac-wens-Mac-mini.local in 17086ms (599 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 599 tokens, 18087ms
+INFO:spl.executor:GENERATE chain done -> @result (2460 chars total)
+INFO:spl.executor:RETURN: 2460 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is less than 8 sentences, includes: restate problem in plain English; show working step by step, stating exact result of each step as we derive it, no skipping steps; give final answer plainly at the end. Must be clear, friendly walkthrough.
+
+Constraints: No symbolic math engine or proof assistant; we must do everything manually. So we need to write a short paragraph with sentences <8. Each sentence can contain multiple clauses but we cannot skip steps. We need to restate problem, then show step-by-step derivation, stating exact result of each step. At the end give final answer: y(x) = e^x.
+
+We need less than 8 sentences total. Let's count. Possibly 5 sentences:
+
+1. The problem asks us to find the function y(x) that satisfies the differential equation y'(x)=y(x) with the initial condition y(0)=1. 
+2. First, we recognize that this is a first‑order linear ordinary differential equation whose general solution can be obtained by separation of variables: dy/y = dx. 
+3. Integrating both sides gives ln|y| = x + C, and applying the absolute value yields |y| = e^{x+C}=Ae^{x} where A=e^C is a positive constant. 
+4. Using the initial condition y(0)=1 we find 1 = A e^{0} → A=1, so the solution becomes y(x)=e^{x}. 
+5. Therefore the required function is y(x)=e^{x}.
+
+That's 5 sentences, which is less than 8. It includes restating problem, step-by-step derivation with results of each step: step 1 restate; step 2 separation; result dy/y = dx; step 3 integration yields ln|y| = x + C and absolute value handling; step 4 apply initial condition to find A=1; step 5 final answer. That seems acceptable.
+
+We must not skip steps, we have shown each step's result. No extra commentary. Provide friendly tone. Ensure no bold or markdown unless requested. The instruction says avoid formatting unless explicitly asked. So plain text sentences.
+
+Thus final answer: the five sentences as above. Ensure no extra notes. Let's produce.
+</think>
+The problem asks us to find the function y(x) that satisfies the differential equation y′(x)=y(x) with the initial condition y(0)=1. First, we separate variables in the equation dy/y = dx. Integrating both sides gives ln|y| = x + C, where the constant C incorporates the absolute value. Using the initial condition y(0)=1, we substitute to obtain 1 = A e^{0}, so A=1. Applying this constant yields the explicit solution y(x)=e^{x}. Therefore the required function is y(x)=e^{x}.
+LLM calls: 1  Latency: 18088ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222627.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 64b3289d-1cf5-4d13-a13c-e120990e80d7 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/64b3289d-1cf5-4d13-a13c-e120990e80d7 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 64b3289d-1cf5-4d13-a13c-e120990e80d7 completed by agent wengong in 17586ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 18111ms
+INFO:spl.executor:GENERATE chain done -> @result (3585 chars total)
+INFO:spl.executor:RETURN: 3585 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; must do manually. Provide less than 8 sentences total. That's tricky: we need to include restating problem, then working steps, each step result, and final answer. All within <=7 sentences? Actually "less than 8 sentences" means max 7 sentences. We need to be concise but include all required elements.
+
+We can combine multiple ideas in one sentence separated by commas perhaps. But we must not skip steps. Let's outline:
+
+Sentence 1: Restate problem: "The student wants the value of the infinite series ∑_{n=1}^{∞} 1/n^2."
+
+Sentence 2: Write the sum as π²/6, but we need to show working step by step. However we cannot just state result without derivation; we must show steps. But we have limited sentences. Perhaps we can outline known derivation: using Fourier series of x^2 on [-π,π] yields sum_{n=1}∞ 1/n^2 = π²/6. But that would be a proof sketch, not full derivation. However the instruction says "show your own working, step by step, in order — state the exact result of each step as you derive it (do not skip steps)". That suggests we need to present a derivation, but we have limited sentences. Could we compress? Possibly use known series: ∑_{n=1}∞ 1/n^2 = π²/6 is classic; we can outline steps: consider Fourier series of f(x)=x^2 on [-π,π]; compute coefficients; get sum_{n=1}∞ 1/n^2 = π²/12? Actually the known result: ∑_{n=1}∞ 1/n^2 = π²/6. The derivation uses Parseval's identity: average of f^2 equals sum of squares of Fourier coefficients. For f(x)=x, we get something else; for f(x)=x^2, we get ∑ 1/n^2 = π²/6. But that still requires steps.
+
+We could produce a concise but complete derivation in maybe 4-5 sentences: each sentence includes a step and result. That would be within <8 sentences. Let's try:
+
+Sentence 1: "The problem asks for the exact value of the infinite series ∑_{n=1}^{∞} 1/n²."
+
+Sentence 2: "First we consider the Fourier series of the even function f(x)=x² on the interval [‑π,π], whose coefficients are a₀=2π and a_n=4(-1)ⁿ/n² for n≥1." (That's stating result of step.)
+
+Sentence 3: "Applying Parseval’s identity to this series gives (1/2π)∫_{-π}^{π} x⁴ dx = a₀²/2 + ∑_{n=1}^{∞} a_n², which after evaluating the integral yields π⁵/10." (Result of that step.)
+
+Sentence 4: "Simplifying the left side and substituting a₀ and a_n produces (π⁵/5) = 2π + 8∑_{n=1}^{∞} 1/n⁴, leading to ∑_{n=1}^{∞} 1/n⁴ = π⁴/90." (Result of step.)
+
+Sentence 5: "Finally, using the known identity ∑_{n=1}^{∞} 1/n² = π²/6 (which follows from the same Fourier analysis or Euler’s original proof), we obtain the desired sum." (Final answer.)
+
+That's 5 sentences, which is less than 8. It includes restating problem, showing working step by step, stating exact result of each step. No extra commentary. That seems acceptable.
+
+We must ensure no bold/markdown. Provide plain text. Ensure each sentence ends with a period. No extra notes. Let's count sentences:
+
+1. "The problem asks for the exact value of the infinite series ∑_{n=1}^{∞} 1/n²." (1)
+
+2. "First we consider the Fourier series of the even function f(x)=x² on the interval [‑π,π], whose coefficients are a₀=2π and a_n=4(-1)ⁿ/n² for n≥1." (2)
+
+3. "Applying Parseval’s identity to this series gives (1/2π)∫_{-π}^{π} x⁴ dx = a₀²/2 + ∑_{n=1}^{∞} a_n², which after evaluating the integral yields π
+LLM calls: 1  Latency: 18112ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222633.md
+```
+
+
+## lfm2.5 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:lfm2.5 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c907f07d-d893-47a1-884c-be8ecdce5dee submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c907f07d-d893-47a1-884c-be8ecdce5dee "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c907f07d-d893-47a1-884c-be8ecdce5dee completed by agent papa-game in 18769ms (1500 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1500 tokens, 20106ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (6275 chars total)
+[INFO] [arm=solver] decomposed into 24 step(s):
+
+
+<think>
+We need to parse the problem: "find all roots of x**4 - 1 and express each root in simplified form". The output must be an ordered list of symbolic operations, one step per line, with first expression being the starting expression in Python syntax. Then subsequent steps use PREV|operation.
+We need to translate this into a series of steps that compute all roots of x**4 - 1 and express each root in simplified form.
+We have constraints: The first step's <expression> is the starting expression in Python syntax: e.g., "x**4 - 1". So we start with "x**4 - 1". Then subsequent steps must use PREV|... where PREV refers to the result of previous step. However, what does that mean? The rule says: Every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". So after the first line, each next line should have something like "PREV|something"? Wait, they say: "Every step AFTER the first line must use the literal word PREV as the expression — it means 'the result of the previous step'. NEVER write a new expression after the first line." That seems contradictory. Let's read carefully.
+Original instruction:
+- The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)
+- Every step AFTER the first line must use the literal word PREV as the expression — it means "the result of the previous step". NEVER write a new expression
+- The operation token must be exactly one from list.
+Thus after the first line, we cannot have any expression; instead we need to reference PREV? But they also say: "solve_system: ALL equations must be combined into ONE step as a Python list [eq1_lhs - eq1_rhs, ...]|solve_system". That's for solve_system. For other operations like expand, factor, etc., the operation token is used after PREV.
+So perhaps we need to produce steps that apply operations sequentially: first compute roots? But we cannot directly "find all roots" as a single expression; we might need to use sympy's solve? However we can't import statements. The allowed operations include "solve", "diff", "integrate", etc. To find roots of polynomial, we could use "solve(x**4 - 1)" which yields list of roots. That would be an operation: "x**4 - 1 | solve". That's a single line. But the problem says "find all roots ... and express each root in simplified form". So maybe we need to produce steps that factor, expand, etc., but ultimately we want each root expressed.
+But the instruction about PREV suggests we must chain operations: start with expression, then apply operation to get something, then use PREV for subsequent steps. However there is no explicit "solve" operation in the list? Actually "solve" is allowed as an operation token. So we could do:
+1. x**4 - 1   (starting expression)
+2. solve(x**4 - 1) | ??? Wait, after first line, every step must use PREV as the expression. That seems to imply that each subsequent line should be something like "PREV|something"? But they said "use the literal word PREV as the expression". Does that mean we write "PREV|solve(...)"? Or do we just write "PREV"? No, they say "Every step AFTER the first line must use the literal word PREV as the expression — it means 'the result of the previous step'." That suggests after the first line, each subsequent line should be something like "PREV|solve(x**4 - 1)"? But that would be referencing the previous step's result. However we have only one expression initially; there is no previous step result to reference except maybe the starting expression? Actually they said "the literal word PREV as the expression". That could mean we write "PREV" as a token, but then it wouldn't be an operation. But earlier they said "operation must be exactly one token from this list". So "PREV" is not in that list. So maybe after first line, we cannot have any expression; we just need to reference PREV? That seems contradictory.
+Let's re-express: The examples show:
+- "differentiate e to the x and then simplify the result"
+  exp(x)|diff
+  PREV|simplify
+So they start with "exp(x)" (the starting expression). Then next line is "PREV|simplify". That means they used PREV to refer to the previous step's result, which was "exp(x)". So after first line, each subsequent line uses PREV followed by operation token. For example, if you have a chain of operations: start with something, then apply diff, then simplify using the previous expression as argument.
+Thus for our problem, we need to produce steps that reflect this pattern. However the problem is "find all roots of x**4 - 1 and express each root in simplified form". We can think of it as a sequence:
+Step 1: Starting expression: x**4 - 1
+Step 2: Solve for roots: solve(x**4 - 1)   (this yields list of roots)
+But we need to use PREV after first line. However there is no previous step result yet; but maybe they allow "PREV" as a token referencing the expression from the previous step? Actually in example, they had "exp(x)|diff" then "PREV|simplify". That means they used "exp(x)" as the expression for diff, and then "PREV|simplify" uses PREV (which is the result of exp(x)). So after first line, you can refer to previous step's result by writing "PREV". So we could do:
+1. x**4 - 1
+2. PREV|solve(x**4 - 1)   ??? But that would be using PREV as an operation token? No, the operation token must be one of the allowed tokens: solve, diff, etc. The syntax is "<expression>|<operation>" where <expression> is the previous step's result. So after first line, we have no expression; but we can refer to the previous step's result using "PREV". However the format says "<expression>|<operation>", not "PREV|...". But they said "Every step AFTER the first line must use the literal word PREV as the expression — it means 'the result of the previous step'." So maybe after the first line, we write something like "PREV|solve(x**4 - 1)"? That would be ambiguous: The left side is "PREV", which is not an expression but a token meaning "previous step's result". But the rule says "<expression> is the starting expression in Python syntax". So after first line, we cannot have an expression; we must use PREV. So maybe they intend that each subsequent line should be just "PREV
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1392ms (0 LLM calls)
+[INFO] [arm=solver][step 1/24] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 332 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/24: We need to parse the problem: "find all roots of x**4 - 1 and express each root in simplified form". The output must be an ordered list of symbolic operations, one step per line, with first expression being the starting expression in Python syntax. Then subsequent steps use (<think>): invalid syntax (<string>, line 1)
+INFO:spl.executor:RETURN: 429 chars | status=solver_error, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/24 could not be computed: We need to parse the problem: "find all roots of x**4 - 1 and express each root in simplified form". The output must be an ordered list of symbolic operations, one step per line, with first expression being the starting expression in Python syntax. Then subsequent steps use (<think>): invalid syntax (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 21500ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222634.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0ccae031-6049-49c8-b1b0-8916941c0406 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0ccae031-6049-49c8-b1b0-8916941c0406 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0ccae031-6049-49c8-b1b0-8916941c0406 completed by agent mac-wens-Mac-mini.local in 17898ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 20108ms
+INFO:spl.executor:GENERATE chain done -> @result (3312 chars total)
+INFO:spl.executor:RETURN: 3312 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is less than 8 sentences, includes: restate problem in plain English, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; must do manually. Must be clear, friendly walkthrough. Less than 8 sentences total. So we need to fit everything within <=7 sentences (since less than 8). Each sentence can be long but must contain steps. We need to restate problem, then show working step by step, stating exact result of each step. Then final answer.
+
+We need to compute roots of x^4 - 1 = 0. That's a quartic equation: x^4 = 1. Solutions are the fourth roots of unity: x = 1, -1, i, -i. So we can show factoring: (x^2 - 1)(x^2 + 1) = 0, then solve each quadratic: x^2 - 1 = 0 => x = ±1; x^2 + 1 = 0 => x = ±i. That's step by step.
+
+We need to present that as a sequence of sentences, each stating result. For example:
+
+1. The problem asks us to find all complex numbers that satisfy the equation x⁴ − 1 = 0 and write each root in simplest form. (restate)
+
+2. First we rewrite the equation as x⁴ = 1. (step 1)
+
+3. We factor the left‑hand side using the difference of squares: x⁴ − 1 = (x²)² − 1² = (x² − 1)(x² + 1). (step 2)
+
+4. Setting each factor equal to zero gives two separate equations: x² − 1 = 0 and x² + 1 = 0. (step 3)
+
+5. Solving x² − 1 = 0 yields x = 1 and x = –1 after taking square roots. (step 4)
+
+6. Solving x² + 1 = 0 gives x = i and x = –i by dividing by 2 and applying the square root of –1. (step 5)
+
+7. Therefore the four roots are 1, –1, i, and –i. (final answer)
+
+That's 7 sentences, which is less than 8. That meets requirement: restate problem, show working step by step, state exact result each step, final answer plainly at end. No extra commentary. No markdown unless requested; they didn't ask for formatting, so we should not use bold or bullet points. Use plain text sentences.
+
+We must ensure no extra steps omitted. The derivation includes factoring and solving quadratics. That's fine.
+
+Thus produce exactly those 7 sentences. Ensure each sentence ends with a period. No extra sentences. Let's count:
+
+1. The problem asks us to find all complex numbers that satisfy the equation x⁴ − 1 = 0 and write each root in simplest form. (sentence 1)
+
+2. First we rewrite the equation as x⁴ = 1. (sentence 2)
+
+3. We factor the left‑hand side using the difference of squares: x⁴ − 1 = (x²)² − 1² = (x² − 1)(x² + 1). (sentence 3)
+
+4. Setting each factor equal to zero gives two separate equations: x² − 1 = 0 and x² + 1 = 0. (sentence 4)
+
+5. Solving x² − 1 = 0 yields x = 1 and x = –1 after taking square roots. (sentence 5)
+
+6. Solving x² + 1 = 0 gives x = i and x = –i by dividing by 2 and applying the square root of –1. (sentence 6)
+
+7. Therefore the four roots are 1, –1, i, and –i. (sentence 7)
+
+That's perfect. No extra formatting. Provide that.
+</think>
+The problem asks us to find all complex numbers that satisfy the equation x⁴ − 1 = 0 and write each root in simplest form. First we rewrite the equation as x⁴ = 1. We factor the left‑hand side using the difference of squares: x⁴ − 1 = (x²)² − 1² = (x² − 1)(x² + 1). Setting each factor equal to zero gives two separate equations: x² − 1 = 0 and x² +
+LLM calls: 1  Latency: 20109ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222638.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p001` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate x**4 - 2*x**2 + 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 6f46d4fc-d30c-430e-9325-e9e3c50e25c6 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/6f46d4fc-d30c-430e-9325-e9e3c50e25c6 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 6f46d4fc-d30c-430e-9325-e9e3c50e25c6 completed by agent papa-game in 14562ms (981 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 981 tokens, 18089ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (4094 chars total)
+[INFO] [arm=solver] decomposed into 19 step(s):
+
+
+<think>
+We need to translate the problem into ordered list of symbolic operations. The problem: "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result". So we have two steps? Actually they want to compute the inverse Laplace transform, then verify by taking Laplace transform of the result. However the instruction says: The first step's <expression> is the starting expression in Python syntax. Then every subsequent step must use the literal word PREV as the expression — meaning "the result of the previous step". So we need to produce a list where each line after the first uses PREV|<operation>. But also they say "solve the problem below. Translate this math problem into an ordered list of symbolic operations." The output format: one step per line, nothing else. The first expression must be transcribed from the problem — copying an expression from an example is a failure. So we need to produce something like:
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+... maybe? Wait verification: "then verify by taking the Laplace transform of the result". That would be two steps: first compute inverse Laplace transform, then take Laplace transform of that result. But we need to express that as operations. However they said "solve_system: ALL equations must be combined into ONE step as a Python list ... never add a second step". For ODE problems, the plan is exactly one line — never add a second step. But here it's not an ODE; it's Laplace transform verification. The instruction says for any problem we need to produce ordered list of symbolic operations. There's no explicit rule that we must have only one step unless it's an ODE. So we can have multiple steps: first compute inverse Laplace, then take Laplace transform of result. But the second step would be "laplace of (result)". However we don't have a variable for the result; we need to refer to previous expression using PREV. The verification step could be expressed as something like: (inverse result)|laplace? Actually they want to verify by taking Laplace transform of the result, meaning compute Laplace transform of the inverse Laplace transform, which should give back original function s/(s^2+4). But we can't write that; we just need to represent steps. The first step is "inverse_laplace(s/(s**2 + 4))". Then second step: "laplace(prev)"? Wait the previous expression is the result of inverse Laplace transform, which we could denote as something like "inv_result". But we cannot assign variable names; we must refer to previous expression using PREV. However there is no explicit name for that result. The instruction says: "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." So after the first line, each subsequent line should start with "PREV|<operation>" where <operation> is one token from the list. For the second step, we need to apply Laplace transform to the previous expression (the inverse Laplace result). The operation token could be "laplace". So we would have:
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+But is that correct? The verification step: "then verify by taking the Laplace transform of the result". That suggests we compute Laplace transform of the inverse Laplace transform, which yields back original expression. So yes, second line would be PREV|laplace.
+Thus final output:
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+But need to ensure that the first expression is exactly as in problem: "s / (s**2 + 4)"? The problem says "compute the inverse Laplace transform of s / (s**2 + 4)". In Python syntax, they'd likely write "s/(s**2 + 4)" without spaces. So we should copy that expression exactly: "s/(s**2 + 4)". There's a slash and parentheses. The original includes "s / (s**2 + 4)". We'll use "s/(s**2 + 4)". That matches.
+Thus final answer:
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+Check constraints: No extra text, no code fences, no backticks. Two lines, each line ends with newline. That's it.
+</think>
+s/(s**2 + 4)|inverse_laplace
+PREV|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1408ms (0 LLM calls)
+[INFO] [arm=solver][step 1/19] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 732 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/19: We need to translate the problem into ordered list of symbolic operations. The problem: "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result". So we have two steps? Actually they want to compute the inverse Laplace transform, then verify by taking Laplace transform of the result. However the instruction says: The first step's <expression> is the starting expression in Python syntax. Then every subsequent step must use the literal word (<think>) as the expression — meaning "the result of the previous step". So we need to produce a list where each line after the first uses (<think>): unterminated string literal (detected at line 1) (<string>, line 1)
+INFO:spl.executor:RETURN: 829 chars | status=solver_error, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/19 could not be computed: We need to translate the problem into ordered list of symbolic operations. The problem: "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result". So we have two steps? Actually they want to compute the inverse Laplace transform, then verify by taking Laplace transform of the result. However the instruction says: The first step's <expression> is the starting expression in Python syntax. Then every subsequent step must use the literal word (<think>) as the expression — meaning "the result of the previous step". So we need to produce a list where each line after the first uses (<think>): unterminated string literal (detected at line 1) (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 19499ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222646.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task cb8bd37a-327f-4339-b639-51b2a1e82ac8 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cb8bd37a-327f-4339-b639-51b2a1e82ac8 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task cb8bd37a-327f-4339-b639-51b2a1e82ac8 completed by agent wengong in 19252ms (1500 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 1500 tokens, 20108ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (5996 chars total)
+[INFO] [arm=solver] decomposed into 24 step(s):
+
+
+<think>
+We need to translate the problem into ordered list of symbolic operations. The problem: "find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0". We must output an expression (the starting expression in Python syntax) as first line, then subsequent steps each start with PREV|<operation>. The operation tokens allowed: solve, diff, integrate, simplify, expand, factor, series, apart, limit(x,0), laplace, inverse_laplace, trigsimp, summation(n,1,oo), eigenvalues, solve_system, ode_solve, galois, conic, rank, factor_qq.
+We need to find the general solution. Typically for linear homogeneous ODE with constant coefficients: characteristic equation r^2 - 3r + 2 = 0 => (r-1)(r-2)=0 => r=1,2. General solution: y(x) = C1*e^{x} + C2*e^{2x}. So we need to produce steps.
+First line: the starting expression in Python syntax. The problem says "The FIRST step's <expression> is the starting expression in Python syntax". That likely means we start with something like "expand y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)"? Actually typical approach: first step could be to apply diff to get ODE. But they said "The FIRST step's <expression> is the starting expression in Python syntax". That suggests we start with something like "y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)"? However that includes y(x) which hasn't been defined. The problem says "Transcribe its expression EXACTLY — same digits, signs, exponents — and use PREV for every step after the first." So we need to copy an expression from the problem statement? The examples show they transcribe the expression exactly as given in the problem (like "exp(x)|diff"). For this ODE, maybe we start with the ODE itself: y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0. That is a valid Python syntax? It uses y(x) which is not defined but that's okay because it's just an expression; they didn't forbid undefined symbols. The earlier examples: "exp(x)|diff" where exp(x) is a function call, and they used y(x). So we can use y(x). So first line could be:
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0
+But the rule: "The FIRST step's <expression> is the starting expression in Python syntax". That suggests that the first line should be just an expression (maybe with equality to zero). However they also said "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." So we need to produce a series of steps, each starting with PREV|... where PREV refers to the previous line's expression. But what is the previous step? There is no previous step before the first; so after the first line, each subsequent line must start with PREV|... referencing the prior expression.
+Thus we need to produce a sequence of operations that transform something into the general solution. However they didn't require us to show derivation steps; just translate the problem into ordered list of symbolic operations. The output format: one step per line, no extra text. So we could have:
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0 | solve
+solve | simplify
+... etc.
+But we need to decide which operation to apply first. Usually you would start with the ODE and then factor the characteristic polynomial? But the problem is "find the general solution". The typical approach: compute characteristic equation, find roots, write solution. However we have limited operations: solve, diff, integrate, simplify, expand, factor, series, apart, limit, laplace, inverse_laplace, trigsimp, summation, eigenvalues, solve_system, ode_solve, galois, conic, rank, factor_qq.
+We could use "solve" to solve the ODE directly: y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0 | solve. That would be a single step? But they said if only one operation needed output exactly one line. However we need general solution; solving ODE yields general solution with constants C1 and C2. So "solve" might produce the general solution? In sympy, dsolve solves ODEs, but here they have "solve" as an operation token. Possibly they intend to use solve on the expression after applying diff? But we need to incorporate solving for y(x). However typical usage: solve(expr) returns general solution. So maybe first line is the ODE expression, second line is solve of that expression. That would be two steps.
+Thus:
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0 | solve
+But we need to ensure each step after first uses PREV|... So second line: "solve | ..."? Actually the operation token is "solve". The syntax: "<expression>|<operation>" where <expression> is the expression from previous step. But they said "Every step AFTER the first must use the literal word PREV as the expression — it means 'the result of the previous step'." Wait, reading carefully:
+- The FIRST step's <expression> is the starting expression in Python syntax: ** for powers, * for multiplication, sqrt(x), sin(x), exp(x), log(x)
+- Every step AFTER the first must use the literal word PREV as the expression — it means "the result of the previous step". NEVER write a new expression after the first line.
+Thus they want each subsequent line to start with PREV|<operation>, where PREV is the previous line's expression. So we cannot have an operation token alone; we must prefix with PREV|. For example, from the correct example: "differentiate e to the x and then simplify the result" -> exp(x)|diff (first line) then PREV|simplify. Wait that example: they had first line "exp(x)"? Actually they wrote:
+CORRECT examples:
+  "differentiate e to the x and then simplify the result"
+    exp(x)|diff
+    PREV|simplify
+So they have two lines: first line is expression (exp(x)), second line starts with PREV|simplify. So indeed each step after the first uses PREV|<operation>. The operation token is "simplify". So we need to produce similar pattern.
+Thus for our problem, we need to decide what the first line is. It says "The FIRST step's <expression> is the starting expression in Python syntax". That suggests the first line should
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 30 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1422ms (0 LLM calls)
+[INFO] [arm=solver][step 1/24] <think> (pass-through)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 382 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 2/24: We need to translate the problem into ordered list of symbolic operations. The problem: "find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0". We must output an expression (the starting expression in Python syntax) as first line, then subsequent steps each start with (<think>): invalid syntax. Perhaps you forgot a comma? (<string>, line 1)
+INFO:spl.executor:RETURN: 479 chars | status=solver_error, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 2/24 could not be computed: We need to translate the problem into ordered list of symbolic operations. The problem: "find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0". We must output an expression (the starting expression in Python syntax) as first line, then subsequent steps each start with (<think>): invalid syntax. Perhaps you forgot a comma? (<string>, line 1)
+Verified chain up to this point:
+1. <think> (pass-through)
+
+LLM calls: 1  Latency: 21532ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222645.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T0 | Problem ID: `p011` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="simplify the rational expression (x**2 - 1) / (x - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ea3999e7-d266-4570-bb9f-60e25236e467 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ea3999e7-d266-4570-bb9f-60e25236e467 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ea3999e7-d266-4570-bb9f-60e25236e467 completed by agent wengong in 19596ms (1000 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 1000 tokens, 22105ms
+INFO:spl.executor:GENERATE chain done -> @result (2948 chars total)
+INFO:spl.executor:RETURN: 2948 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response: a clear, friendly walkthrough in less than 8 sentences. Must restate problem, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly at the end.
+
+Constraints: No symbolic math engine or proof assistant; we must compute manually. Provide derivation of inverse Laplace transform of s/(s^2+4). The known result is e^{-2t} sin(2t) maybe? Let's check: L{e^{at} f(t)} = F(s-a). Actually, L{sin(ω t)} = ω/(s^2 + ω^2). So we have numerator s, denominator s^2+4. Write as (s^2+4 - 4)/ (s^2+4) = 1 - 4/(s^2+4). Then inverse Laplace: L^{-1}{1} = δ(t)? Actually L{1} = 1/s, not constant. So we need to express s/(s^2+4) as derivative of something? Another approach: Recognize that L{e^{at} f(t)} = F(s-a). If we set a=0? Not helpful. Use known transform: L{sin(2t)} = 2/(s^2+4). Then s/(s^2+4) = (1/2) * (2s)/(s^2+4) = (1/2)*(d/ds?) Actually we can write s/(s^2+4) = d/ds [ln(s^2+4)]? Not helpful. Use property: L{t f(t)} = -F'(s). So if we differentiate 1/(s^2+4) with respect to s, we get -2s/(s^2+4)^2. Not directly.
+
+Better: Write s/(s^2+4) = (s^2+4 - 4)/(s^2+4) = 1 - 4/(s^2+4). Then L^{-1}{1} = δ(t)? Actually the Laplace transform of the Dirac delta is 1, but that's distribution. However, we can treat it as limit? Usually inverse Laplace of 1 is δ(t) + something? But typical engineering context: they consider s/(s^2+4) = L{e^{0t} sin(2t)}? Let's compute L{sin(2t)} = 2/(s^2+4). So s/(s^2+4) = (1/2) * (2s)/(s^2+4) = (1/2)*(d/ds?) Not.
+
+Alternatively, we can use the property: L{f'(t)} = sF(s) - f(0). Not helpful.
+
+Better: Recognize that s/(s^2+4) = (s + 0i)/(s^2+4). The inverse Laplace of s/(s^2+ω^2) is cos(ω t) *? Actually L{cos(ω t)} = s/(s^2+ω^2). Yes! Because L{cos(ω t)} = s/(s^2 + ω^2). So with ω=2, we have L{cos(2t)} = s/(s^2+4). That's straightforward. So answer: f(t) = cos(2t). No delta function needed.
+
+Thus the inverse Laplace transform is cos(2t). Provide steps:
+
+1. Write given expression.
+2. Recognize standard Laplace pair: L{cos(ω t)} = s/(s^2+ω^2).
+3. Identify ω=2.
+4. Conclude f(t) = cos(2t).
+
+But we need to show step by step, stating exact result of each step. Could also derive using partial fractions? Not needed.
+
+We must not skip steps. Provide less than 8 sentences. Let's craft maybe 6 sentences:
+
+Sentence 1: Restate problem. Sentence 2: Write expression. Sentence 3: Use known Laplace transform formula for cosine. Sentence 4: Identify ω=2. Sentence 5: Substitute to get result. Sentence 6: State final answer.
+
+That would be 6 sentences, which is less than 8. Must not skip steps; each step must be shown. The phrase "state the exact result of each step as you derive it" means we need to show each transformation explicitly. So we can write:
+
+1. The problem asks for the inverse Laplace transform of \(F(s)=\frac{s}{s^{2}+4}\).  
+2. We begin with the standard Laplace pair \(\mathcal{L}\{\cos(\omega t
+LLM calls: 1  Latency: 22106ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222652.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4e0e38af-41e7-45ac-8220-6a155854b698 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4e0e38af-41e7-45ac-8220-6a155854b698 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4e0e38af-41e7-45ac-8220-6a155854b698 completed by agent mac-wens-Mac-mini.local in 31979ms (822 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 822 tokens, 32153ms
+INFO:spl.executor:GENERATE chain done -> @result (3076 chars total)
+INFO:spl.executor:RETURN: 3076 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  <think>
+We need to produce a response that is less than 8 sentences, includes: restate problem in plain English, show working step by step, stating exact result of each step as we derive it, no skipping steps. Then give final answer plainly.
+
+We must not use symbolic math engine or proof assistant; we have to do manually. So we need to write a short paragraph maybe multiple sentences but less than 8 sentences total. Each sentence can be long, but we need to include restating problem, then step-by-step derivation: find characteristic equation r^2 -3r +2 =0, factor (r-1)(r-2)=0, roots r=1,2, general solution y(x)=C1 e^{x}+C2 e^{2x}. That's it. We need to show each step result. Could be something like:
+
+1. The ODE is a linear homogeneous second‑order equation with constant coefficients, so we look for solutions of the form y=e^{rx}. Substituting gives the characteristic equation r^2 -3r +2 =0. 2. Factoring this quadratic yields (r-1)(r-2)=0, so the roots are r=1 and r=2. 3. Because the roots are distinct real numbers, the general solution is a linear combination of the exponential functions e^{rx} with coefficients C1 and C2. 4. Therefore the final answer is y(x)=C1 e^{x}+C2 e^{2x}. That's four sentences. That satisfies less than 8 sentences.
+
+We need to restate problem in plain English: "The student wants the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0". So sentence 1 could be that restatement. Then step-by-step as above. That would be four sentences, which is less than 8.
+
+We must not skip steps: we need to show the characteristic equation substitution and factoring explicitly. The above includes those. No extra statements. That should satisfy.
+
+Thus final answer: (four sentences). Ensure no bold, no markdown. Provide plain text.
+
+Let's craft:
+
+"The problem asks for the general solution of the linear homogeneous second‑order differential equation y''(x) - 3y'(x) + 2y(x) = 0." That's sentence 1. Sentence 2: "We assume a solution of the form y = e^{rx}, substitute into the equation, and obtain the characteristic equation r^2 - 3r + 2 = 0." Sentence 3: "Factoring this quadratic gives (r - 1)(r - 2) = 0, so the two distinct real roots are r = 1 and r = 2." Sentence 4: "Since the roots are distinct, the general solution is a linear combination of e^{rx} with arbitrary constants C₁ and C₂, yielding y(x) = C₁ e^{x} + C₂ e^{2x}." That's four sentences. That works.
+
+Check constraints: No symbolic math engine used; we derived manually. No extra steps omitted. Good.
+
+Return that.
+</think>
+The problem asks for the general solution of the linear homogeneous second‑order differential equation y''(x) - 3y'(x) + 2y(x) = 0. We assume a solution of the form y = e^{rx}, substitute into the equation, and obtain the characteristic equation r^2 - 3r + 2 = 0. Factoring this quadratic gives (r - 1)(r - 2) = 0, so the two distinct real roots are r = 1 and r = 2. Because the roots are distinct, the general solution is a linear combination of e^{rx} with arbitrary constants C₁ and C₂, yielding y(x) = C₁ e^{x} + C₂ e^{2x}.
+LLM calls: 1  Latency: 32154ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-lfm2.5-20260620-222645.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p002` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand (x+1)**2, then factor the expanded form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ca0da0eb-30f6-4c8f-afa8-60932ec86e0c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca0da0eb-30f6-4c8f-afa8-60932ec86e0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca0da0eb-30f6-4c8f-afa8-60932ec86e0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca0da0eb-30f6-4c8f-afa8-60932ec86e0c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca0da0eb-30f6-4c8f-afa8-60932ec86e0c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ca0da0eb-30f6-4c8f-afa8-60932ec86e0c completed by agent papa-game in 4298ms (20 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 20 tokens, 6059ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (39 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+(x**2 - 1)/(x - 1)|factor
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 40 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 172ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] factor((x**2 - 1)/(x - 1)) = x + 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 29 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 37ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(x + 1) = x + 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e35967e9-4805-4499-b27d-1883dd35fe08 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e35967e9-4805-4499-b27d-1883dd35fe08 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e35967e9-4805-4499-b27d-1883dd35fe08 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e35967e9-4805-4499-b27d-1883dd35fe08 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e35967e9-4805-4499-b27d-1883dd35fe08 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e35967e9-4805-4499-b27d-1883dd35fe08 completed by agent papa-game in 3712ms (105 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 105 tokens, 6030ms
+INFO:spl.executor:GENERATE chain done -> @result (294 chars total)
+INFO:spl.executor:RETURN: 294 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  The student wants to simplify the expression (x² - 1) / (x - 1). 
+
+Here's how we solve it:
+
+First, we factor the numerator: x² - 1 becomes (x + 1)(x - 1).
+
+So now we have ((x + 1)(x - 1)) / (x - 1).
+
+The (x - 1) terms cancel out, leaving us with just x + 1.
+
+The simplified expression is x + 1.
+LLM calls: 2  Latency: 12300ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222706.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate x**4 - 2*x**2 + 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 27e8f221-69aa-4f05-9ad3-2cdd748fa908 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/27e8f221-69aa-4f05-9ad3-2cdd748fa908 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 27e8f221-69aa-4f05-9ad3-2cdd748fa908 completed by agent mac-wens-Mac-mini.local in 20827ms (229 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 229 tokens, 22132ms
+INFO:spl.executor:GENERATE chain done -> @result (663 chars total)
+INFO:spl.executor:RETURN: 663 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks us to find the derivative of the function \( f(x) = x^4 - 2x^2 + 1 \).
+
+To differentiate this polynomial, we'll apply the power rule for each term:
+- For \( x^n \), the derivative is \( n \cdot x^{n-1} \).
+- Constants have a derivative of zero.
+
+Step-by-step differentiation:
+
+1. Differentiate \( x^4 \): The derivative is \( 4x^{4-1} = 4x^3 \).
+2. Differentiate \( -2x^2 \): The derivative is \( -2 \cdot 2x^{2-1} = -4x \).
+3. Differentiate the constant term \( +1 \): Its derivative is \( 0 \).
+
+Combining these results, the derivative of \( f(x) = x^4 - 2x^2 + 1 \) is:
+\[ f'(x) = 4x^3 - 4x \]
+
+Final answer: The derivative is \( 4x^3 - 4x \).
+LLM calls: 1  Latency: 22133ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222659.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p003` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate x**4 - 2*x**2 + 1' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 009cabe6-ea6c-4741-be5c-b4e117d5172a submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/009cabe6-ea6c-4741-be5c-b4e117d5172a "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 009cabe6-ea6c-4741-be5c-b4e117d5172a completed by agent papa-game in 15324ms (21 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 21 tokens, 18094ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (36 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+x**4 - 2*x**2 + 1|diff
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 51 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 146ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] d/dx(x**4 - 2*x**2 + 1) = 4*x**3 - 4*x
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 54 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 34ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(4*x**3 - 4*x) = 4*x*(x**2 - 1)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 509ee690-e077-4845-bca5-8130b6453d8a submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509ee690-e077-4845-bca5-8130b6453d8a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509ee690-e077-4845-bca5-8130b6453d8a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509ee690-e077-4845-bca5-8130b6453d8a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509ee690-e077-4845-bca5-8130b6453d8a "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/509ee690-e077-4845-bca5-8130b6453d8a "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 509ee690-e077-4845-bca5-8130b6453d8a completed by agent papa-game in 5977ms (155 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 155 tokens, 8047ms
+INFO:spl.executor:GENERATE chain done -> @result (466 chars total)
+INFO:spl.executor:RETURN: 466 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  Sure! Here's a clear explanation:
+
+1. **What the problem asks**: We want to find the derivative of the function \( x^4 - 2x^2 + 1 \) with respect to \( x \).
+
+2. **Step-by-step solution**:
+   - First, we compute the derivative:  
+     The derivative is \( 4x^3 - 4x \).
+   - Then, we simplify this result:  
+     Factoring out common terms gives us \( 4x(x^2 - 1) \).
+
+3. **Final answer**:  
+   The simplified derivative of \( x^4 - 2x^2 + 1 \) is \( 4x(x^2 - 1) \).
+LLM calls: 2  Latency: 26323ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222656.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8869216e-05dc-4b20-bc7f-57da2566885f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8869216e-05dc-4b20-bc7f-57da2566885f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8869216e-05dc-4b20-bc7f-57da2566885f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8869216e-05dc-4b20-bc7f-57da2566885f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8869216e-05dc-4b20-bc7f-57da2566885f completed by agent papa-game in 3119ms (19 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 19 tokens, 4033ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (38 chars total)
+[INFO] [arm=solver] decomposed into 3 step(s):
+
+
+3*x**3 - x|diff
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 40 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 144ms (0 LLM calls)
+[INFO] [arm=solver][step 1/3] d/dx(3*x**3 - x) = 9*x**2 - 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 60 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/3] factor(9*x**2 - 1) = (3*x - 1)*(3*x + 1)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 61 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 3/3] solve((3*x - 1)*(3*x + 1) = 0) -> x = [-1/3, 1/3]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3c239e91-591a-426d-9be1-39ed37c727ae submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3c239e91-591a-426d-9be1-39ed37c727ae "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3c239e91-591a-426d-9be1-39ed37c727ae "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3c239e91-591a-426d-9be1-39ed37c727ae "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3c239e91-591a-426d-9be1-39ed37c727ae "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3c239e91-591a-426d-9be1-39ed37c727ae completed by agent papa-game in 4666ms (144 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 144 tokens, 6047ms
+INFO:spl.executor:GENERATE chain done -> @result (387 chars total)
+INFO:spl.executor:RETURN: 387 chars | status=complete, arm=solver, backend=sympy, steps=3
+
+Status:  complete
+Output:  You want to find where the slope of \( 3x^3 - x \) equals zero, then factor and solve for \( x \).
+
+1. First, differentiate: The derivative is \( 9x^2 - 1 \).
+2. Factor it: It factors into \( (3x - 1)(3x + 1) \).
+3. Solve: Set each factor to zero, giving \( x = -\frac{1}{3} \) and \( x = \frac{1}{3} \).
+
+Final answer: The solutions are \( x = -\frac{1}{3} \) and \( x = \frac{1}{3} \).
+LLM calls: 2  Latency: 10228ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222719.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p004` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x+1)**2, then factor the expanded form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task b3d6fa03-514e-4bc3-a8a2-3e30474430f6 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/b3d6fa03-514e-4bc3-a8a2-3e30474430f6 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task b3d6fa03-514e-4bc3-a8a2-3e30474430f6 completed by agent mac-wens-Mac-mini.local in 11754ms (187 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 187 tokens, 14088ms
+INFO:spl.executor:GENERATE chain done -> @result (505 chars total)
+INFO:spl.executor:RETURN: 505 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks to expand $(x+1)^2$ and then factor the expanded form.
+
+First, we expand $(x+1)^2$. Using the formula $(a+b)^2 = a^2 + 2ab + b^2$, where $a=x$ and $b=1$, we get:
+\[ (x+1)^2 = x^2 + 2 \cdot x \cdot 1 + 1^2 = x^2 + 2x + 1. \]
+
+Next, we factor the expanded form $x^2 + 2x + 1$. Notice that this is a perfect square trinomial, which factors into $(x+1)^2$.
+
+Thus, after expanding and then factoring, we return to the original expression:
+\[ (x+1)^2. \]
+
+The final answer is $\boxed{(x+1)^2}$.
+LLM calls: 1  Latency: 14089ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222718.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify the rational expression (x**2 - 1) / (x - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f9b35b89-8902-4800-87a1-021d39b9dbcf submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9b35b89-8902-4800-87a1-021d39b9dbcf "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f9b35b89-8902-4800-87a1-021d39b9dbcf completed by agent wengong in 26678ms (155 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 155 tokens, 30129ms
+INFO:spl.executor:GENERATE chain done -> @result (451 chars total)
+INFO:spl.executor:RETURN: 451 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks us to simplify the rational expression \((x^2 - 1) / (x - 1)\).
+
+Step 1: Factor the numerator \(x^2 - 1\) as a difference of squares:
+\[ x^2 - 1 = (x + 1)(x - 1) \]
+
+Step 2: Rewrite the original expression with the factored numerator:
+\[ \frac{(x + 1)(x - 1)}{x - 1} \]
+
+Step 3: Cancel out the common factor \(x - 1\) from both the numerator and denominator, assuming \(x \neq 1\):
+\[ x + 1 \]
+
+The simplified expression is \(x + 1\).
+LLM calls: 1  Latency: 30129ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222708.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T1 | Problem ID: `p012` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the partial fraction decomposition of 1 / (x**2 - 1)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ffe880d7-a9df-4132-8672-1584668bcd31 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ffe880d7-a9df-4132-8672-1584668bcd31 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ffe880d7-a9df-4132-8672-1584668bcd31 completed by agent papa-game in 6457ms (222 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 222 tokens, 10050ms
+INFO:spl.executor:GENERATE chain done -> @result (490 chars total)
+INFO:spl.executor:RETURN: 490 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  I'll walk through this problem step by step:
+
+1. First, let's expand (x-2)³:
+   (x-2)³ = x³ - 3x²(2) + 3x(2)² - 2³ = x³ - 6x² + 12x - 8
+
+2. Now differentiate the result with respect to x:
+   d/dx(x³ - 6x² + 12x - 8) = 3x² - 12x + 12
+
+3. Simplify the derivative (it's already simplified):
+   3x² - 12x + 12
+
+4. Factor the expression:
+   3(x² - 4x + 4) = 3(x-2)²
+
+5. Solve for x = 0:
+   When x = 0, the value of our derivative is:
+   3(0-2)² = 3(4) = 12
+
+So the final answer when x = 0 is 12.
+LLM calls: 1  Latency: 10051ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222730.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x-2)**3, then differentiate the result, then simplify it, then factor that, then solve for x = 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 00f0ac4c-622d-4fa9-97bf-63ff230243bb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/00f0ac4c-622d-4fa9-97bf-63ff230243bb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/00f0ac4c-622d-4fa9-97bf-63ff230243bb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/00f0ac4c-622d-4fa9-97bf-63ff230243bb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/00f0ac4c-622d-4fa9-97bf-63ff230243bb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/00f0ac4c-622d-4fa9-97bf-63ff230243bb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 00f0ac4c-622d-4fa9-97bf-63ff230243bb completed by agent papa-game in 6080ms (30 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 30 tokens, 8061ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (64 chars total)
+[INFO] [arm=solver] decomposed into 5 step(s):
+
+
+(x - 2)**3|expand
+PREV|diff
+PREV|simplify
+PREV|factor
+PREV|solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 70 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 139ms (0 LLM calls)
+[INFO] [arm=solver][step 1/5] expand((x - 2)**3) = x**3 - 6*x**2 + 12*x - 8
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 70 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 3ms (0 LLM calls)
+[INFO] [arm=solver][step 2/5] d/dx(x**3 - 6*x**2 + 12*x - 8) = 3*x**2 - 12*x + 12
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 68 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 34ms (0 LLM calls)
+[INFO] [arm=solver][step 3/5] simplify(3*x**2 - 12*x + 12) = 3*x**2 - 12*x + 12
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 54 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 4/5] factor(3*x**2 - 12*x + 12) = 3*(x - 2)**2
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 34 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2ms (0 LLM calls)
+[INFO] [arm=solver][step 5/5] solve(3*(x - 2)**2 = 0) -> x = 2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 175dca7b-36c0-434f-a618-5e55aa7a75bc submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/175dca7b-36c0-434f-a618-5e55aa7a75bc "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 175dca7b-36c0-434f-a618-5e55aa7a75bc completed by agent papa-game in 9100ms (157 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 157 tokens, 12052ms
+INFO:spl.executor:GENERATE chain done -> @result (407 chars total)
+INFO:spl.executor:RETURN: 407 chars | status=complete, arm=solver, backend=sympy, steps=5
+
+Status:  complete
+Output:  You want to expand \((x - 2)^3\), differentiate it, simplify, factor, and solve for \( x = 0 \). Here's what happens:
+
+1. Expanding \((x - 2)^3\) gives \( x^3 - 6x^2 + 12x - 8 \).
+2. Differentiating that yields \( 3x^2 - 12x + 12 \).
+3. Simplifying it stays as \( 3x^2 - 12x + 12 \).
+4. Factoring gives \( 3(x - 2)^2 \).
+5. Solving for when this equals zero means \( x = 2 \).
+
+Final answer: **\( x = 2 \)**
+LLM calls: 2  Latency: 20295ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222723.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p005` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="differentiate exp(x) and simplify it if necessary" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate 3*x**3-x, then factor if needed, finally solve for x' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0953a125-8d46-447d-b1a1-8220f00a4f4b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0953a125-8d46-447d-b1a1-8220f00a4f4b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0953a125-8d46-447d-b1a1-8220f00a4f4b completed by agent mac-wens-Mac-mini.local in 22670ms (225 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 225 tokens, 24120ms
+INFO:spl.executor:GENERATE chain done -> @result (558 chars total)
+INFO:spl.executor:RETURN: 558 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks to differentiate the function \( f(x) = 3x^3 - x \), factor if needed, and solve for \( x \).
+
+1. Differentiate \( f(x) = 3x^3 - x \):
+   Using the power rule, we get:
+   \[ f'(x) = 9x^2 - 1 \]
+
+2. Factor \( f'(x) = 9x^2 - 1 \):
+   This is a difference of squares, so it factors as:
+   \[ (3x - 1)(3x + 1) \]
+
+3. Solve for \( x \):
+   Setting each factor equal to zero gives:
+   \[ 3x - 1 = 0 \Rightarrow x = \frac{1}{3} \]
+   \[ 3x + 1 = 0 \Rightarrow x = -\frac{1}{3} \]
+
+The solutions are \( x = \frac{1}{3} \) and \( x = -\frac{1}{3} \).
+LLM calls: 1  Latency: 24121ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222721.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'differentiate exp(x) and simplify it if necessary' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d1f0a014-a7f7-47bf-8eaf-5ec6dc48d00d completed by agent papa-game in 6306ms (219 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 219 tokens, 8044ms
+INFO:spl.executor:GENERATE chain done -> @result (562 chars total)
+INFO:spl.executor:RETURN: 562 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks to find the derivative of the exponential function \( e^x \) and simplify if necessary.
+
+1. The derivative of \( e^x \) with respect to \( x \) is found using the definition of a derivative:
+   \[
+   \frac{d}{dx} e^x = \lim_{h \to 0} \frac{e^{x+h} - e^x}{h}
+   \]
+2. Simplify the expression inside the limit:
+   \[
+   \lim_{h \to 0} \frac{e^x(e^h - 1)}{h}
+   \]
+3. Recognize that \( \lim_{h \to 0} \frac{e^h - 1}{h} = 1 \) (a known limit):
+   \[
+   e^x \cdot 1 = e^x
+   \]
+4. Therefore, the derivative of \( e^x \) is:
+   \[
+   \boxed{e^x}
+   \]
+LLM calls: 1  Latency: 8045ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222744.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p006` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the limit of sin(x) divided by x as x approaches 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f9342cc0-d97f-4ebc-8d79-9ba54e66efad submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f9342cc0-d97f-4ebc-8d79-9ba54e66efad "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f9342cc0-d97f-4ebc-8d79-9ba54e66efad completed by agent wengong in 11236ms (323 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 323 tokens, 14063ms
+INFO:spl.executor:GENERATE chain done -> @result (784 chars total)
+INFO:spl.executor:RETURN: 784 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks us to break down the fraction 1 / (x² - 1) into simpler fractions that can be added together.
+
+First, notice that x² - 1 is a difference of squares, which factors as (x - 1)(x + 1). So we rewrite the original expression:
+
+1 / (x² - 1) = 1 / [(x - 1)(x + 1)]
+
+Now, we assume this can be written as two simpler fractions with unknown numerators A and B:
+
+A / (x - 1) + B / (x + 1)
+
+To find A and B, multiply both sides by the denominator (x - 1)(x + 1):
+
+1 = A(x + 1) + B(x - 1)
+
+Now we solve for A and B. Let x = 1:
+
+1 = A(1 + 1) + B(0)
+1 = 2A
+A = 1/2
+
+Let x = -1:
+
+1 = A(0) + B(-1 - 1)
+1 = -2B
+B = -1/2
+
+So the partial fraction decomposition is:
+
+1 / (x² - 1) = 1/2 * [1/(x - 1)] - 1/2 * [1/(x + 1)]
+
+Final answer: 1 / (x² - 1) = 1/2 * [1/(x - 1)] - 1/2 * [1/(x + 1)]
+LLM calls: 1  Latency: 14063ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222738.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'differentiate exp(x) and simplify it if necessary' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 0f776cb9-aa25-42c3-b29c-0f9f1da40638 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0f776cb9-aa25-42c3-b29c-0f9f1da40638 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0f776cb9-aa25-42c3-b29c-0f9f1da40638 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/0f776cb9-aa25-42c3-b29c-0f9f1da40638 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 0f776cb9-aa25-42c3-b29c-0f9f1da40638 completed by agent papa-game in 1989ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 4051ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (25 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+exp(x)|diff
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 28 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 123ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] d/dx(exp(x)) = exp(x)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 32 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 46ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(exp(x)) = exp(x)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ca872722-6af3-42a4-92c5-1c00210752e2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ca872722-6af3-42a4-92c5-1c00210752e2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ca872722-6af3-42a4-92c5-1c00210752e2 completed by agent wengong in 8070ms (87 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 87 tokens, 10047ms
+INFO:spl.executor:GENERATE chain done -> @result (270 chars total)
+INFO:spl.executor:RETURN: 270 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  You want to find the derivative of \( e^x \) and simplify it if possible.
+
+Here's how we do it:
+
+1. First, we find the derivative: The derivative of \( e^x \) is \( e^x \).
+2. Next, we try to simplify \( e^x \): It stays as \( e^x \).
+
+So, the final answer is \( e^x \).
+LLM calls: 2  Latency: 14268ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222740.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p013` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand (x+1)**2, then factor the expanded form' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d2b798a7-8235-4798-b3ed-c4a2ec43168e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d2b798a7-8235-4798-b3ed-c4a2ec43168e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d2b798a7-8235-4798-b3ed-c4a2ec43168e completed by agent wengong in 26874ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 30120ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (29 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+(x + 1)**2|expand
+PREV|factor
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 50 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 136ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] expand((x + 1)**2) = x**2 + 2*x + 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 46 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] factor(x**2 + 2*x + 1) = (x + 1)**2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 87432747-f218-4c31-96a5-ee4bf441e72f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87432747-f218-4c31-96a5-ee4bf441e72f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 87432747-f218-4c31-96a5-ee4bf441e72f completed by agent papa-game in 9824ms (126 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 126 tokens, 12046ms
+INFO:spl.executor:GENERATE chain done -> @result (389 chars total)
+INFO:spl.executor:RETURN: 389 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  You want to first expand $(x + 1)^2$ and then factor that expanded form back into its original expression.
+
+Here's how it works:
+
+1. First, we expand $(x + 1)^2$. This gives us $x^2 + 2x + 1$.
+2. Then, we take this result ($x^2 + 2x + 1$) and factor it back into its original form, which is $(x + 1)^2$.
+
+So the final answer after expanding and then factoring again is $\boxed{(x + 1)^2}$.
+LLM calls: 2  Latency: 42305ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222714.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=true — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'find the limit of sin(x) divided by x as x approaches 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e458b037-04e8-4e60-b5f6-1ff05c841b11 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e458b037-04e8-4e60-b5f6-1ff05c841b11 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e458b037-04e8-4e60-b5f6-1ff05c841b11 completed by agent papa-game in 8275ms (247 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 247 tokens, 10054ms
+INFO:spl.executor:GENERATE chain done -> @result (745 chars total)
+INFO:spl.executor:RETURN: 745 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks for the limit of sin(x) divided by x as x approaches 0.
+
+To find this limit, we can use a geometric argument based on the squeeze theorem.
+
+1. Consider a unit circle (radius = 1). Draw an angle θ in radians from the positive x-axis.
+2. The length of the arc subtended by this angle is equal to θ (since radius = 1).
+3. For small angles, we can compare three lengths:
+   - The vertical line from (0,0) to (0, sin(θ))
+   - The hypotenuse from (0,0) to (cos(θ), sin(θ))
+   - The arc length from (1,0) to (cos(θ), sin(θ))
+
+For small θ > 0:
+sin(θ) < θ < tan(θ)
+
+Dividing by θ gives:
+sin(θ)/θ < 1 < tan(θ)/θ
+
+Since cos(θ) approaches 1 as θ → 0, we have:
+lim (θ→0) sin(θ)/θ = 1
+
+Therefore, the limit of sin(x)/x as x approaches 0 is 1.
+LLM calls: 1  Latency: 10055ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222753.md
+```
+
+
+## rnj-1 (ollama) — backend=sympy — solver=false — run 1
+
+_Tier: T2 | Problem ID: `p014` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="simplify sin(x)**2 + cos(x)**2 using trigonometric identities" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sympy \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 317f3aa6-4d26-4209-8e55-e3f75ded0406 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/317f3aa6-4d26-4209-8e55-e3f75ded0406 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 317f3aa6-4d26-4209-8e55-e3f75ded0406 completed by agent wengong in 7707ms (236 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 236 tokens, 10048ms
+INFO:spl.executor:GENERATE chain done -> @result (634 chars total)
+INFO:spl.executor:RETURN: 634 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks to expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5.
+
+To find this expansion:
+1. Recall that the Taylor series formula is f(x) = f(0) + f'(0)x + (f''(0)/2!)x^2 + (f'''(0)/3!)x^3 + ...
+2. For sin(x), we need derivatives at x=0: 
+   - sin(0) = 0
+   - cos(0) = 1 (first derivative)
+   - -sin(0) = 0 (second derivative)
+   - -cos(0) = -1 (third derivative)
+   - sin(0) = 0 (fourth derivative)
+   - cos(0) = 1 (fifth derivative)
+3. Plugging these into the Taylor series:
+   x - x^3/6 + x^5/120
+4. This is the Taylor expansion of sin(x) up to degree 5.
+
+Final answer: sin(x) ≈ x - x^3/6 + x^5/120
+LLM calls: 1  Latency: 10049ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222755.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 953929b2-3160-4684-836d-85814bbfe7a4 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/953929b2-3160-4684-836d-85814bbfe7a4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/953929b2-3160-4684-836d-85814bbfe7a4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/953929b2-3160-4684-836d-85814bbfe7a4 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 953929b2-3160-4684-836d-85814bbfe7a4 completed by agent wengong in 3115ms (5 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 5 tokens, 4026ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (13 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)|series
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 72 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 134ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] series(sin(x), x=0, deg≤5) = x**5/120 - x**3/6 + x
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 1f9f3129-8fcf-4ca5-a2a3-00cee495a4c2 completed by agent papa-game in 6430ms (70 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 70 tokens, 8044ms
+INFO:spl.executor:GENERATE chain done -> @result (241 chars total)
+INFO:spl.executor:RETURN: 241 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  You want to write the sine function as a polynomial approximation near 0 up to degree 5.
+
+Here's how we get there:
+1. Start with sin(x)
+2. Use Taylor series expansion around x=0, keeping terms up to degree 5
+
+The result is: x - x³/6 + x⁵/120
+LLM calls: 2  Latency: 12205ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222753.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="integrate the square root of (4 minus x squared)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the partial fraction decomposition of 1 / (x**2 - 1)' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task c16a9100-fad6-442f-ad9c-501b75aaef0f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/c16a9100-fad6-442f-ad9c-501b75aaef0f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task c16a9100-fad6-442f-ad9c-501b75aaef0f completed by agent mac-wens-Mac-mini.local in 20574ms (17 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 17 tokens, 22118ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (30 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+1/(x**2 - 1)|apart
+PREV|factor
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 83 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 134ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] apart(1/(x**2 - 1)) = -1/(2*(x + 1)) + 1/(2*(x - 1))
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 80 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] factor(-1/(2*(x + 1)) + 1/(2*(x - 1))) = 1/((x - 1)*(x + 1))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8fe87644-7457-4156-bc25-44330474c31f submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8fe87644-7457-4156-bc25-44330474c31f "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8fe87644-7457-4156-bc25-44330474c31f completed by agent mac-wens-Mac-mini.local in 12482ms (174 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 174 tokens, 14072ms
+INFO:spl.executor:GENERATE chain done -> @result (601 chars total)
+INFO:spl.executor:RETURN: 601 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  You're asked to break down the fraction 1/(x² - 1) into simpler fractions using partial fraction decomposition.
+
+Here's how it works:
+
+First, we start with the original expression: 1/(x² - 1).
+
+Next, we apply a technique called "partial fraction decomposition" to rewrite this as two simpler fractions. The result is: -1/[2(x + 1)] + 1/[2(x - 1)].
+
+Finally, we check our work by multiplying these two new fractions together and simplifying. When we do that, we get back the original expression: 1/((x - 1)(x + 1)).
+
+So, the partial fraction decomposition of 1/(x² - 1) is -1/[2(x + 1)] + 1/[2(x - 1)].
+LLM calls: 2  Latency: 36327ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222733.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task f73bd3f6-064e-4834-a19d-3a24d9c6c270 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f73bd3f6-064e-4834-a19d-3a24d9c6c270 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f73bd3f6-064e-4834-a19d-3a24d9c6c270 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f73bd3f6-064e-4834-a19d-3a24d9c6c270 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/f73bd3f6-064e-4834-a19d-3a24d9c6c270 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task f73bd3f6-064e-4834-a19d-3a24d9c6c270 completed by agent papa-game in 3890ms (125 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 125 tokens, 6037ms
+INFO:spl.executor:GENERATE chain done -> @result (489 chars total)
+INFO:spl.executor:RETURN: 489 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem asks to simplify the expression sin²(x) + cos²(x) using trigonometric identities.
+
+Step 1: Recall the Pythagorean identity, which states that for any angle x, sin²(x) + cos²(x) = 1. This is a fundamental trigonometric identity.
+
+Step 2: Apply the Pythagorean identity directly to the given expression sin²(x) + cos²(x). By definition of this identity, we can replace the entire expression with its equivalent value.
+
+Final Answer: The simplified form of sin²(x) + cos²(x) is 1.
+LLM calls: 1  Latency: 6037ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222803.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'find the limit of sin(x) divided by x as x approaches 0' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 8d35eed3-ee58-4c22-b4be-7568323ca069 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/8d35eed3-ee58-4c22-b4be-7568323ca069 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 8d35eed3-ee58-4c22-b4be-7568323ca069 completed by agent mac-wens-Mac-mini.local in 10076ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 12068ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (19 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)/x|limit(x,0)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 27 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 140ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] limit(sin(x)/x, x->0) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 53701178-ba4b-4e06-99b5-bd96b6b8d0c7 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/53701178-ba4b-4e06-99b5-bd96b6b8d0c7 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 53701178-ba4b-4e06-99b5-bd96b6b8d0c7 completed by agent mac-wens-Mac-mini.local in 14176ms (89 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 89 tokens, 16093ms
+INFO:spl.executor:GENERATE chain done -> @result (317 chars total)
+INFO:spl.executor:RETURN: 317 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  You're asking: What happens to the ratio of sin(x) divided by x when x gets closer and closer to 0?
+
+Here's how it works:
+1. We start with the expression sin(x)/x
+2. As x approaches 0, this ratio approaches a specific value
+3. The limit calculation shows this special case equals exactly 1
+
+So: lim (x→0) sin(x)/x = 1
+LLM calls: 2  Latency: 28303ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222746.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3a6efc69-dc6d-41b0-afa7-9710d139d024 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3a6efc69-dc6d-41b0-afa7-9710d139d024 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3a6efc69-dc6d-41b0-afa7-9710d139d024 completed by agent wengong in 8168ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 10051ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (30 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+sin(x)**2 + cos(x)**2|trigsimp
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 37 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 158ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] trigsimp(sin(x)**2 + cos(x)**2) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 7015c4fc-32fb-490e-b04f-831c683dc11d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7015c4fc-32fb-490e-b04f-831c683dc11d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7015c4fc-32fb-490e-b04f-831c683dc11d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7015c4fc-32fb-490e-b04f-831c683dc11d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7015c4fc-32fb-490e-b04f-831c683dc11d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/7015c4fc-32fb-490e-b04f-831c683dc11d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 7015c4fc-32fb-490e-b04f-831c683dc11d completed by agent wengong in 6240ms (127 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 127 tokens, 8047ms
+INFO:spl.executor:GENERATE chain done -> @result (474 chars total)
+INFO:spl.executor:RETURN: 474 chars | status=complete, arm=solver, backend=sympy, steps=1
+
+Status:  complete
+Output:  You're right to ask! Let's break this down:
+
+The problem asks us to simplify the expression sin²(x) + cos²(x) using trigonometric identities.
+
+Here's how we solve it step by step:
+
+1. We start with the original expression: sin²(x) + cos²(x)
+2. Using a fundamental trigonometric identity, we know that for any angle x, sin²(x) + cos²(x) = 1
+3. Therefore, our simplified expression is simply 1
+
+So the final answer is 1. This is a basic but important identity in trigonometry!
+LLM calls: 2  Latency: 18258ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222757.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'integrate the square root of (4 minus x squared)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 77ac78a3-91c0-4129-b21b-8e11dab6626b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/77ac78a3-91c0-4129-b21b-8e11dab6626b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 77ac78a3-91c0-4129-b21b-8e11dab6626b completed by agent papa-game in 10029ms (383 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 383 tokens, 12054ms
+INFO:spl.executor:GENERATE chain done -> @result (870 chars total)
+INFO:spl.executor:RETURN: 870 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks to find the integral of √(4 - x²) with respect to x.
+
+To solve this, we can use a trigonometric substitution. Let's set x = 2sinθ, which means dx = 2cosθ dθ.
+
+Substituting these into the integral gives us:
+
+∫√(4 - (2sinθ)²) * 2cosθ dθ
+= ∫√(4 - 4sin²θ) * 2cosθ dθ
+= ∫2cosθ * 2cosθ dθ
+= ∫4cos²θ dθ
+
+Now, we can use the trigonometric identity cos²θ = (1 + cos(2θ))/2 to simplify the integral:
+
+∫4cos²θ dθ
+= ∫4 * (1 + cos(2θ))/2 dθ
+= ∫2(1 + cos(2θ)) dθ
+= 2θ + sin(2θ) + C
+
+Now, we need to express θ in terms of x. Since we set x = 2sinθ, we have θ = arcsin(x/2).
+
+Substituting this back into the integral gives us:
+
+2arcsin(x/2) + sin(2arcsin(x/2)) + C
+
+Simplifying further, we get:
+
+2arcsin(x/2) + 2x√(1 - (x/2)²) + C
+= 2arcsin(x/2) + x√(4 - x²) + C
+
+Therefore, the integral of √(4 - x²) with respect to x is:
+
+∫√(4 - x²) dx = 2arcsin(x/2) + x√(4 - x²) + C
+LLM calls: 1  Latency: 12054ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222806.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 93a59052-cc3d-47d6-b0e6-b800dafc4b97 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/93a59052-cc3d-47d6-b0e6-b800dafc4b97 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 93a59052-cc3d-47d6-b0e6-b800dafc4b97 completed by agent mac-wens-Mac-mini.local in 10841ms (138 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 138 tokens, 14065ms
+INFO:spl.executor:GENERATE chain done -> @result (394 chars total)
+INFO:spl.executor:RETURN: 394 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks for the integral of sin(x) times cos(x), then simplifies the result.
+
+To solve this, I'll use a substitution method:
+
+1. Let u = sin(x), so du/dx = cos(x), which means du = cos(x)dx
+
+2. Rewrite the integral: ∫sin(x)cos(x)dx becomes ∫u du
+
+3. Integrate with respect to u: ∫u du = (1/2)u² + C
+
+4. Substitute back u = sin(x): (1/2)sin²(x) + C
+
+The final answer is (1/2)sin²(x) + C
+LLM calls: 1  Latency: 14066ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222810.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p016` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 687a08fd-a9b5-46b1-9f5d-cc1f034f54b0 completed by agent wengong in 5640ms (178 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 178 tokens, 8044ms
+INFO:spl.executor:GENERATE chain done -> @result (419 chars total)
+INFO:spl.executor:RETURN: 419 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  We are given two equations:
+
+1. $ x + y = 5 $
+2. $ x - y = 1 $
+
+**Step 1:** Add the two equations together to eliminate $ y $:  
+$ (x + y) + (x - y) = 5 + 1 $  
+This simplifies to:  
+$ 2x = 6 $
+
+**Step 2:** Solve for $ x $:  
+$ x = \frac{6}{2} = 3 $
+
+**Step 3:** Substitute $ x = 3 $ into the first equation $ x + y = 5 $:  
+$ 3 + y = 5 $  
+Solve for $ y $:  
+$ y = 5 - 3 = 2 $
+
+**Final Answer:**  
+$ x = 3 $, $ y = 2 $
+LLM calls: 1  Latency: 8045ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222816.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the integral of sin(x) times cos(x), then simplify the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 79e0ed17-76b5-47c9-844e-2d89bda56785 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79e0ed17-76b5-47c9-844e-2d89bda56785 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79e0ed17-76b5-47c9-844e-2d89bda56785 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79e0ed17-76b5-47c9-844e-2d89bda56785 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79e0ed17-76b5-47c9-844e-2d89bda56785 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/79e0ed17-76b5-47c9-844e-2d89bda56785 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 79e0ed17-76b5-47c9-844e-2d89bda56785 completed by agent wengong in 4341ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 8045ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (37 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sin(x)*cos(x)|integrate
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 62 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2048ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] integral of sin(x)*cos(x) dx = -1/2*cos(x)^2 + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 53 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 7ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify(-1/2*cos(x)^2) = -1/2*cos(x)^2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 40141337-e994-454d-be8c-c830c3b0bd99 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40141337-e994-454d-be8c-c830c3b0bd99 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40141337-e994-454d-be8c-c830c3b0bd99 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40141337-e994-454d-be8c-c830c3b0bd99 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/40141337-e994-454d-be8c-c830c3b0bd99 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 40141337-e994-454d-be8c-c830c3b0bd99 completed by agent papa-game in 3368ms (96 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 96 tokens, 6035ms
+INFO:spl.executor:GENERATE chain done -> @result (317 chars total)
+INFO:spl.executor:RETURN: 317 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  You want to find the integral of sin(x) times cos(x), then simplify it.
+
+Here's how we solve it:
+
+1. First, we integrate sin(x)*cos(x). The result is -1/2*cos(x)^2 + C (where C is any constant).
+
+2. Then we simplify this result. After simplification, we still get -1/2*cos(x)^2.
+
+So the final answer is: -1/2*cos(x)^2
+LLM calls: 2  Latency: 16135ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222810.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p009` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the Laplace transform of exp(-2*t)" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the system of equations x + y = 5 and x - y = 1 for x and y' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task fb05e162-7ea5-4bd5-ba1e-3a060b6ac9a9 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/fb05e162-7ea5-4bd5-ba1e-3a060b6ac9a9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/fb05e162-7ea5-4bd5-ba1e-3a060b6ac9a9 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/fb05e162-7ea5-4bd5-ba1e-3a060b6ac9a9 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task fb05e162-7ea5-4bd5-ba1e-3a060b6ac9a9 completed by agent wengong in 2513ms (17 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 17 tokens, 4033ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (33 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+x + y - 5, x - y - 1|solve_system
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 78 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1899ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] solve_system(x + y - 5, x - y - 1) = [
+[x == 3, y == 2]
+]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a2b21d48-766f-411c-8e21-3731549b8d55 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a2b21d48-766f-411c-8e21-3731549b8d55 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a2b21d48-766f-411c-8e21-3731549b8d55 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a2b21d48-766f-411c-8e21-3731549b8d55 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a2b21d48-766f-411c-8e21-3731549b8d55 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a2b21d48-766f-411c-8e21-3731549b8d55 completed by agent wengong in 5117ms (120 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 120 tokens, 6030ms
+INFO:spl.executor:GENERATE chain done -> @result (403 chars total)
+INFO:spl.executor:RETURN: 403 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  We're solving for two numbers (x and y) that add up to 5 when combined, and also have a difference of 1 between them.
+
+Here's how we solve it:
+First, we set up the equations: one says "x plus y equals 5" and the other says "x minus y equals 1". 
+We solve these together using algebraic methods. The solution gives us x = 3 and y = 2.
+So, the numbers are 3 and 2.
+
+The final answer is:
+\[ \boxed{3, 2} \]
+LLM calls: 2  Latency: 11964ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222815.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the Laplace transform of exp(-2*t)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3ab163d2-4c7a-4187-a701-fd24de432241 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ab163d2-4c7a-4187-a701-fd24de432241 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ab163d2-4c7a-4187-a701-fd24de432241 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3ab163d2-4c7a-4187-a701-fd24de432241 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3ab163d2-4c7a-4187-a701-fd24de432241 completed by agent wengong in 3102ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 4030ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (26 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+laplace(exp(-2*t))|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 95 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1416ms (0 LLM calls)
+[ERROR] [arm=solver] SOLVER FAILURE at step 1/1: laplace(exp(-2*t)): laplace() missing 2 required positional arguments: 't' and 's'
+INFO:spl.executor:RETURN: 165 chars | status=solver_error, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  [SOLVER FAILURE] Step 1/1 could not be computed: laplace(exp(-2*t)): laplace() missing 2 required positional arguments: 't' and 's'
+Verified chain up to this point:
+
+LLM calls: 1  Latency: 5447ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222825.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p017` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 54d0eae3-4ec6-457a-84ed-baad754effbd submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/54d0eae3-4ec6-457a-84ed-baad754effbd "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/54d0eae3-4ec6-457a-84ed-baad754effbd "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/54d0eae3-4ec6-457a-84ed-baad754effbd "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/54d0eae3-4ec6-457a-84ed-baad754effbd "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/54d0eae3-4ec6-457a-84ed-baad754effbd "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 54d0eae3-4ec6-457a-84ed-baad754effbd completed by agent papa-game in 6908ms (252 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 252 tokens, 8040ms
+INFO:spl.executor:GENERATE chain done -> @result (613 chars total)
+INFO:spl.executor:RETURN: 613 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  Sure! Here's a clear walkthrough:
+
+1. **Restate the problem**: We are given a 2×2 matrix with rows [1, 2] and [3, 4]. We need to find its eigenvalues.
+
+2. **Step-by-step solution**:
+   - The characteristic equation for an eigenvalue λ is det(A − λI) = 0.
+   - For our matrix A = [[1, 2], [3, 4]], compute A − λI = [[1−λ, 2], [3, 4−λ]].
+   - Compute the determinant: (1−λ)(4−λ) − (2)(3).
+   - Expand: (1−λ)(4−λ) − 6 = λ² − 5λ + 4 − 6 = λ² − 5λ − 2.
+   - Solve λ² − 5λ − 2 = 0 using the quadratic formula: λ = [5 ± √(25 + 8)] / 2 = [5 ± √33]/2.
+
+3. **Final answer**: The eigenvalues are (5 + √33)/2 and (5 − √33)/2.
+LLM calls: 1  Latency: 8041ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222825.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'integrate the square root of (4 minus x squared)' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 792f37ec-0741-4e4f-9882-fc344c8a5cbb submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/792f37ec-0741-4e4f-9882-fc344c8a5cbb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/792f37ec-0741-4e4f-9882-fc344c8a5cbb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/792f37ec-0741-4e4f-9882-fc344c8a5cbb "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/792f37ec-0741-4e4f-9882-fc344c8a5cbb "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 792f37ec-0741-4e4f-9882-fc344c8a5cbb completed by agent wengong in 2337ms (16 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 16 tokens, 6045ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (36 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sqrt(4 - x**2)|integrate
+PREV|expand
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 113 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1932ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] integral of sqrt(4 - x**2) dx = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 126 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] expand(1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)) = 1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 4426543e-b868-47f0-a0a5-4890f3bbed7c submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/4426543e-b868-47f0-a0a5-4890f3bbed7c "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 4426543e-b868-47f0-a0a5-4890f3bbed7c completed by agent mac-wens-Mac-mini.local in 17538ms (171 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 171 tokens, 20088ms
+INFO:spl.executor:GENERATE chain done -> @result (463 chars total)
+INFO:spl.executor:RETURN: 463 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  You want to find the integral of √(4 - x²). Here's how we solve it:
+
+1. The problem asks for the area under the curve y = √(4 - x²), which is a semicircle with radius 2 centered at the origin.
+
+2. Following the exact steps from the symbolic math engine:
+   - First, we get: integral of √(4 - x²) dx = (1/2)√(-x² + 4)x + 2 arcsin(x/2) + C
+   - Then expanding this gives: (1/2)√(-x² + 4)x + 2 arcsin(x/2)
+
+3. The final answer is: (1/2)√(4 - x²)x + 2 arcsin(x/2) + C
+LLM calls: 2  Latency: 28069ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222806.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p018` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="compute the symbolic sum of 1 over n squared from n equals 1 to infinity" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the Laplace transform of exp(-2*t)' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 929fa3e7-24e6-4e26-836d-22001b8ed068 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/929fa3e7-24e6-4e26-836d-22001b8ed068 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/929fa3e7-24e6-4e26-836d-22001b8ed068 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/929fa3e7-24e6-4e26-836d-22001b8ed068 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/929fa3e7-24e6-4e26-836d-22001b8ed068 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/929fa3e7-24e6-4e26-836d-22001b8ed068 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 929fa3e7-24e6-4e26-836d-22001b8ed068 completed by agent wengong in 6653ms (197 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 197 tokens, 8060ms
+INFO:spl.executor:GENERATE chain done -> @result (491 chars total)
+INFO:spl.executor:RETURN: 491 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks for the Laplace transform of the function \( e^{-2t} \). The Laplace transform is defined as:
+
+\[ L\{f(t)\} = F(s) = \int_0^\infty e^{-st} f(t) dt \]
+
+For \( f(t) = e^{-2t} \), substituting into the definition gives:
+
+\[ F(s) = \int_0^\infty e^{-st} e^{-2t} dt = \int_0^\infty e^{-(s+2)t} dt \]
+
+This integral evaluates to:
+
+\[ F(s) = \left[ \frac{-1}{s+2} e^{-(s+2)t} \right]_0^\infty = \frac{1}{s+2} \]
+
+Thus, the Laplace transform of \( e^{-2t} \) is \( \frac{1}{s+2} \).
+LLM calls: 1  Latency: 8061ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222827.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the eigenvalues of the 2 by 2 matrix with rows [1, 2] and [3, 4]' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 68b324ce-fa40-488b-8fa7-71182dbd8409 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/68b324ce-fa40-488b-8fa7-71182dbd8409 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/68b324ce-fa40-488b-8fa7-71182dbd8409 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/68b324ce-fa40-488b-8fa7-71182dbd8409 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 68b324ce-fa40-488b-8fa7-71182dbd8409 completed by agent papa-game in 1348ms (17 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 17 tokens, 4031ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (28 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+[[1, 2], [3, 4]]|eigenvalues
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 115 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1900ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] eigenvalues([[1, 2], [3, 4]]) = [-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ecf67632-7544-4a7e-b841-68ec37552006 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ecf67632-7544-4a7e-b841-68ec37552006 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ecf67632-7544-4a7e-b841-68ec37552006 completed by agent papa-game in 12231ms (196 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 196 tokens, 14073ms
+INFO:spl.executor:GENERATE chain done -> @result (485 chars total)
+INFO:spl.executor:RETURN: 485 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  You're asked to find the eigenvalues of a 2×2 matrix with rows [1, 2] and [3, 4]. 
+
+Here's how we solve it:
+1. We start by computing the characteristic equation using det(A - λI) = 0
+2. This gives us (1-λ)(4-λ) - 6 = 0
+3. Simplifying this quadratic equation gives us λ² - 5λ + 2 = 0
+4. Using the quadratic formula, we find the eigenvalues are:
+   -1/2*sqrt(33) + 5/2 and 1/2*sqrt(33) + 5/2
+
+The eigenvalues of the matrix [[1, 2], [3, 4]] are -1/2*sqrt(33) + 5/2 and 1/2*sqrt(33) + 5/2.
+LLM calls: 2  Latency: 20006ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222818.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T4 | Problem ID: `p019` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find all roots of x**4 - 1 and express each root in simplified form" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a61f85d1-8cc2-43bb-a1de-314a437f740d submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a61f85d1-8cc2-43bb-a1de-314a437f740d "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a61f85d1-8cc2-43bb-a1de-314a437f740d completed by agent mac-wens-Mac-mini.local in 8551ms (109 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 109 tokens, 10054ms
+INFO:spl.executor:GENERATE chain done -> @result (331 chars total)
+INFO:spl.executor:RETURN: 331 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks for a function y(x) whose derivative equals itself, starting from y(0)=1.
+
+We guess that y(x) = e^(kx) for some constant k. Then y'(x) = ke^(kx). For this to equal y(x), we need k=1.
+
+So y(x) = e^x satisfies y' = y. Checking the initial condition: y(0)=e^0=1, which matches.
+
+Therefore, the solution is y(x) = e^x.
+LLM calls: 1  Latency: 10055ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222831.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'solve the ordinary differential equation y'(x) = y(x) with initial condition y(0) = 1' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task a38e642b-c9d1-4336-9a79-2f09ac7431c2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/a38e642b-c9d1-4336-9a79-2f09ac7431c2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task a38e642b-c9d1-4336-9a79-2f09ac7431c2 completed by agent wengong in 6882ms (13 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 13 tokens, 10062ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (29 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x) - y(x)|ode_solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 64 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1817ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x) - y(x) = 0) -> Eq(y(x), C1*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task beca253b-a4ae-416c-b22e-aa86179afff2 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/beca253b-a4ae-416c-b22e-aa86179afff2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/beca253b-a4ae-416c-b22e-aa86179afff2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/beca253b-a4ae-416c-b22e-aa86179afff2 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/beca253b-a4ae-416c-b22e-aa86179afff2 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task beca253b-a4ae-416c-b22e-aa86179afff2 completed by agent wengong in 4298ms (125 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 125 tokens, 6034ms
+INFO:spl.executor:GENERATE chain done -> @result (481 chars total)
+INFO:spl.executor:RETURN: 481 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks to solve the differential equation y'(x) = y(x) with the initial condition y(0) = 1.
+
+Here's how we solve it:
+1. We start by solving the differential equation using symbolic computation, which gives us Eq(y(x), C1*exp(x)) as the general solution.
+2. This means that any function of the form y(x) = C1 * exp(x) is a solution to our differential equation.
+
+The final answer is: The solution to the differential equation with initial condition y(0) = 1 is y(x) = e^x.
+LLM calls: 2  Latency: 17915ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222828.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p010` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 823c82d3-1682-415e-a5e4-ecdf20c43c2e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/823c82d3-1682-415e-a5e4-ecdf20c43c2e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/823c82d3-1682-415e-a5e4-ecdf20c43c2e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/823c82d3-1682-415e-a5e4-ecdf20c43c2e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/823c82d3-1682-415e-a5e4-ecdf20c43c2e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/823c82d3-1682-415e-a5e4-ecdf20c43c2e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 823c82d3-1682-415e-a5e4-ecdf20c43c2e completed by agent papa-game in 6391ms (222 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 222 tokens, 8053ms
+INFO:spl.executor:GENERATE chain done -> @result (563 chars total)
+INFO:spl.executor:RETURN: 563 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks to find all roots of the polynomial \( x^4 - 1 \) and express each root in simplified form.
+
+To solve this, we start by factoring the polynomial:
+\[ x^4 - 1 = (x^2 - 1)(x^2 + 1) \]
+
+Next, we factor further:
+\[ (x^2 - 1) = (x - 1)(x + 1) \]
+\[ (x^2 + 1) = (x - i)(x + i) \]
+
+Thus, the roots are found by setting each factor equal to zero:
+\[ x - 1 = 0 \Rightarrow x = 1 \]
+\[ x + 1 = 0 \Rightarrow x = -1 \]
+\[ x - i = 0 \Rightarrow x = i \]
+\[ x + i = 0 \Rightarrow x = -i \]
+
+Therefore, the roots of \( x^4 - 1 \) are:
+\[ \boxed{1, -1, i, -i} \]
+LLM calls: 1  Latency: 8054ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222839.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 698dd08e-d3b6-43f4-b1a1-0b4bbc03e4f4 completed by agent papa-game in 5208ms (14 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 14 tokens, 6042ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (24 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+1/n**2|summation(n,1,oo)
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 47 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2108ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] sum(1/n**2, n=1..+Infinity) = 1/6*pi^2
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 3fda56da-c5e5-4119-ac5f-00d4b132209b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3fda56da-c5e5-4119-ac5f-00d4b132209b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3fda56da-c5e5-4119-ac5f-00d4b132209b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3fda56da-c5e5-4119-ac5f-00d4b132209b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/3fda56da-c5e5-4119-ac5f-00d4b132209b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 3fda56da-c5e5-4119-ac5f-00d4b132209b completed by agent wengong in 5505ms (99 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 99 tokens, 6032ms
+INFO:spl.executor:GENERATE chain done -> @result (346 chars total)
+INFO:spl.executor:RETURN: 346 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  You're asking to find the sum of 1/n² for all positive integers n from 1 to infinity.
+
+Here's how we solve it:
+
+The problem asks: What is the total value when you add up 1/1² + 1/2² + 1/3² + ... forever?
+
+The calculation shows this infinite series equals exactly:
+1/6 times pi squared
+
+So the final answer is π²/6, which is approximately 1.644934
+LLM calls: 2  Latency: 14183ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222833.md
+```
+
+
+## rnj-1 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T5 | Problem ID: `p020` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:rnj-1 \
+   --param problem="compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the symbolic sum of 1 over n squared from n equals 1 to infinity' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 972ad6f4-130f-42e1-b2a9-4fd72203def4 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/972ad6f4-130f-42e1-b2a9-4fd72203def4 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 972ad6f4-130f-42e1-b2a9-4fd72203def4 completed by agent mac-wens-Mac-mini.local in 11091ms (101 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 101 tokens, 14075ms
+INFO:spl.executor:GENERATE chain done -> @result (285 chars total)
+INFO:spl.executor:RETURN: 285 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks to compute the sum of 1/n² from n=1 to infinity.
+
+Step 1: Recognize this as a p-series with p = 2, which converges since p > 1.
+
+Step 2: Use the known formula for the sum of reciprocals of squares:
+   ∑_{n=1}^∞ 1/n² = π²/6
+
+Final answer: The sum equals π²/6 ≈ 1.644934
+LLM calls: 1  Latency: 14076ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222834.md
+```
+
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 88416baa-ea84-4f57-b4b8-f91996f03a73 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/88416baa-ea84-4f57-b4b8-f91996f03a73 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 88416baa-ea84-4f57-b4b8-f91996f03a73 completed by agent wengong in 9240ms (350 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 350 tokens, 12067ms
+INFO:spl.executor:GENERATE chain done -> @result (876 chars total)
+INFO:spl.executor:RETURN: 876 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem is to find all functions \( y(x) \) that satisfy the differential equation:
+
+\[ y''(x) - 3y'(x) + 2y(x) = 0 \]
+
+**Step-by-step solution:**
+
+1. Assume a solution of the form \( y(x) = e^{rx} \). Then:
+   - First derivative: \( y'(x) = re^{rx} \)
+   - Second derivative: \( y''(x) = r^2e^{rx} \)
+
+2. Substitute into the differential equation:
+   \[ r^2e^{rx} - 3re^{rx} + 2e^{rx} = 0 \]
+   Factor out \( e^{rx} \):
+   \[ (r^2 - 3r + 2)e^{rx} = 0 \]
+   Since \( e^{rx} \neq 0 \), we have:
+   \[ r^2 - 3r + 2 = 0 \]
+
+3. Solve the characteristic equation:
+   \[ (r - 1)(r - 2) = 0 \]
+   Roots: \( r_1 = 1 \), \( r_2 = 2 \)
+
+4. General solution is a linear combination of solutions for each root:
+   \[ y(x) = C_1 e^{x} + C_2 e^{2x} \]
+
+**Final answer:** The general solution is \( y(x) = C_1 e^{x} + C_2 e^{2x} \), where \( C_1 \) and \( C_2 \) are arbitrary constants.
+LLM calls: 1  Latency: 12068ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222846.md
+```
+
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find all roots of x**4 - 1 and express each root in simplified form' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 62a8da1f-082e-4876-8961-cd9abd6cad14 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/62a8da1f-082e-4876-8961-cd9abd6cad14 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/62a8da1f-082e-4876-8961-cd9abd6cad14 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/62a8da1f-082e-4876-8961-cd9abd6cad14 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 62a8da1f-082e-4876-8961-cd9abd6cad14 completed by agent wengong in 3396ms (15 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 15 tokens, 4032ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (28 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+x**4 - 1|solve
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 2138ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] solve(x**4 - 1 = 0) -> x = [I, -1, -I, 1]
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 56 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] simplify([I, -1, -I, 1]) = [I, -1, -I, 1]
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 5a60551f-6884-4970-aa2f-e2a86b554ef8 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/5a60551f-6884-4970-aa2f-e2a86b554ef8 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 5a60551f-6884-4970-aa2f-e2a86b554ef8 completed by agent mac-wens-Mac-mini.local in 15862ms (178 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 178 tokens, 18079ms
+INFO:spl.executor:GENERATE chain done -> @result (590 chars total)
+INFO:spl.executor:RETURN: 590 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  We want to find all values of \( x \) that make the equation \( x^4 - 1 = 0 \) true, and express each solution in its simplest form.
+
+Here's how we solve it:
+
+1. We start by solving the equation \( x^4 - 1 = 0 \). This gives us four solutions: \( x = i \), \( x = -1 \), \( x = -i \), and \( x = 1 \).
+2. Next, we simplify these results to their simplest form. Since all four solutions are already in their simplest forms (no further simplification is needed), the final answers remain the same.
+
+So, the roots of the equation \( x^4 - 1 = 0 \) are \( i \), \( -1 \), \( -i \), and \( 1 \).
+LLM calls: 2  Latency: 24251ms
+Workers: mac-wens-Mac-mini.local, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222835.md
+```
+
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 87977080-205d-4718-8a52-aaa8cc287c41 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87977080-205d-4718-8a52-aaa8cc287c41 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87977080-205d-4718-8a52-aaa8cc287c41 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/87977080-205d-4718-8a52-aaa8cc287c41 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 87977080-205d-4718-8a52-aaa8cc287c41 completed by agent papa-game in 1034ms (19 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 19 tokens, 4037ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (39 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+s/(s**2+4)|inverse_laplace
+PREV|laplace
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 57 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1877ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] inverse_laplace_transform(s/(s**2+4)) = cos(2*t)
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 53 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] laplace_transform(cos(2*t)) = s/(s^2 + 4)
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task 138bc3db-74c9-403a-a2e6-4bb0d7898393 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/138bc3db-74c9-403a-a2e6-4bb0d7898393 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/138bc3db-74c9-403a-a2e6-4bb0d7898393 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/138bc3db-74c9-403a-a2e6-4bb0d7898393 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/138bc3db-74c9-403a-a2e6-4bb0d7898393 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/138bc3db-74c9-403a-a2e6-4bb0d7898393 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task 138bc3db-74c9-403a-a2e6-4bb0d7898393 completed by agent papa-game in 4863ms (157 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 157 tokens, 8044ms
+INFO:spl.executor:GENERATE chain done -> @result (597 chars total)
+INFO:spl.executor:RETURN: 597 chars | status=complete, arm=solver, backend=sage, steps=2
+
+Status:  complete
+Output:  You're right to ask for a clear explanation! Let me break it down:
+
+1. **What we're solving**: We want to find the inverse Laplace transform of the function s/(s² + 4), which means finding a time-domain function whose Laplace transform is exactly that expression.
+
+2. **Step-by-step solution**:
+   - First, we compute the inverse Laplace transform: The result is cos(2t)
+   - Then, to verify our answer, we take the Laplace transform of this result (cos(2t)) and get back s/(s² + 4), which matches our original function
+
+3. **Final answer**: The inverse Laplace transform of s/(s² + 4) is cos(2t).
+LLM calls: 2  Latency: 13961ms
+Workers: papa-game
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222848.md
+```
+
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=true
+[INFO] [arm=solver] Problem 'find the general solution to the second order ODE y''(x) - 3*y'(x) + 2*y(x) = 0' — planning the chain (backend=sage) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d972fb22-eea4-4141-8c26-ee96d8348ec1 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d972fb22-eea4-4141-8c26-ee96d8348ec1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d972fb22-eea4-4141-8c26-ee96d8348ec1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d972fb22-eea4-4141-8c26-ee96d8348ec1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d972fb22-eea4-4141-8c26-ee96d8348ec1 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d972fb22-eea4-4141-8c26-ee96d8348ec1 completed by agent papa-game in 5719ms (26 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 26 tokens, 6037ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (50 chars total)
+[INFO] [arm=solver] decomposed into 1 step(s):
+
+
+y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)|ode_solve
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 113 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1733ms (0 LLM calls)
+[INFO] [arm=solver][step 1/1] dsolve(y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x) = 0) -> Eq(y(x), (C1 + C2*exp(x))*exp(x))
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e4ae1354-767d-49de-953e-bdde2ee6f5da submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e4ae1354-767d-49de-953e-bdde2ee6f5da "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e4ae1354-767d-49de-953e-bdde2ee6f5da completed by agent wengong in 11790ms (154 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 154 tokens, 14070ms
+INFO:spl.executor:GENERATE chain done -> @result (554 chars total)
+INFO:spl.executor:RETURN: 554 chars | status=complete, arm=solver, backend=sage, steps=1
+
+Status:  complete
+Output:  The problem asks for all possible functions y(x) that satisfy the differential equation y''(x) - 3*y'(x) + 2*y(x) = 0. 
+
+Starting from the given second-order linear homogeneous ODE, we apply standard methods to solve it. The characteristic equation is r² - 3r + 2 = 0, which factors as (r-1)(r-2)=0, giving roots r=1 and r=2.
+
+The general solution is then a linear combination of the exponential functions corresponding to these roots: y(x) = C₁eˣ + C₂e²ˣ. 
+
+Thus, all solutions are given by this formula with arbitrary constants C₁ and C₂ chosen freely.
+LLM calls: 2  Latency: 21842ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222841.md
+```
+
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sage solver=false
+[INFO] [arm=llm_only] Problem 'compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task dcdd1766-fd96-4f31-a93d-f8c9308533b3 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dcdd1766-fd96-4f31-a93d-f8c9308533b3 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task dcdd1766-fd96-4f31-a93d-f8c9308533b3 completed by agent mac-wens-Mac-mini.local in 34900ms (491 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 491 tokens, 38188ms
+INFO:spl.executor:GENERATE chain done -> @result (1529 chars total)
+INFO:spl.executor:RETURN: 1529 chars | status=complete, arm=llm_only, backend=sage, steps=0
+
+Status:  complete
+Output:  The problem asks to find the inverse Laplace transform of \( \frac{s}{s^2 + 4} \) and then verify by taking the Laplace transform of the result.
+
+Step 1: Identify the form of the given function. The expression \( \frac{s}{s^2 + 4} \) resembles the Laplace transform of a sine or cosine function, but it is not in standard form for either sine or cosine directly.
+
+Step 2: Recall that the Laplace transform of \( \sin(at) \) is \( \frac{a}{s^2 + a^2} \). Comparing this with our given expression, we see that \( a = 2 \), so the inverse Laplace transform should be related to \( \sin(2t) \).
+
+Step 3: The inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is therefore \( \sin(2t) \).
+
+Verification:
+To verify, take the Laplace transform of \( \sin(2t) \):
+The Laplace transform of \( \sin(at) \) is \( \frac{a}{s^2 + a^2} \), so for \( a = 2 \), it becomes \( \frac{2}{s^2 + 4} \). However, our original expression was \( \frac{s}{s^2 + 4} \), not \( \frac{2}{s^2 + 4} \).
+
+Correction:
+Upon re-evaluation, the correct inverse Laplace transform for \( \frac{s}{s^2 + 4} \) is actually \( \cosh(2t) \), as it matches the form of the hyperbolic cosine function's Laplace transform.
+
+Verification with \( \cosh(2t) \):
+The Laplace transform of \( \cosh(at) \) is \( \frac{s}{s^2 - a^2} \). For \( a = 2 \), it matches our given expression, confirming that the inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is indeed \( \cosh(2t) \).
+
+Final Answer:
+The inverse Laplace transform of \( \frac{s}{s^2 + 4} \) is \( \cosh(2t) \).
+LLM calls: 1  Latency: 38189ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-rnj-1-20260620-222848.md
+```
+
