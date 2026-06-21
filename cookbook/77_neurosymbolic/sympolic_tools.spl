@@ -58,8 +58,26 @@ def solve_step_with_sympy(expression: str, operation: str) -> str:
 
     try:
         x, y, z, n, t, s = symbols('x y z n t s')
-        expr = sympify(expression.strip())
         op = operation.strip().lower()
+        if not op:
+            return f"{expression.strip()}|{expression.strip()} (pass-through)"
+        src = expression.strip()
+        _UNICODE_MAP = {'√': 'sqrt', '∛': 'cbrt', '∞': 'oo', 'π': 'pi',
+                        '²': '**2', '³': '**3', '⁴': '**4', '×': '*', '÷': '/'}
+        for sym, rep in _UNICODE_MAP.items():
+            src = src.replace(sym, rep)
+
+        # Auto-detect ODE expressions (y(x).diff(...) notation) regardless of op
+        import re as _re
+        if _re.search(r'\w+\(x\)\.diff\s*\(', src):
+            op = 'ode_solve'
+        # Normalise "lhs = rhs" → "(lhs) - (rhs)" so sympify can parse equations
+        if '=' in src and '==' not in src and not _re.search(r'[<>!]=', src):
+            _lhs, _, _rhs = src.partition('=')
+            src = f"({_lhs.strip()}) - ({_rhs.strip()})"
+
+        if op not in ('ode_solve', 'dsolve', 'ode'):
+            expr = sympify(src)
 
         if op in ('solve', 'roots', 'zeros'):
             result = solve(expr, x)
@@ -122,12 +140,34 @@ def solve_step_with_sympy(expression: str, operation: str) -> str:
             result = Matrix(m).eigenvals()
             return f"{result}|eigenvalues({expression}) = {result}"
         elif op in ('solve_system', 'system'):
-            # expression is expected as a Python list of equations, e.g.
-            # "[x + y - 5, x - y - 1]"
+            # expression: Python list "[x+y-5, x-y-1]" OR equations "x+y=5, x-y=1"
             from sympy import solve as sym_solve
-            eqs = sympify(expression.strip())
+            import re as _re2
+            # Normalise "lhs = rhs" → "lhs - (rhs)" so sympify can parse it
+            def _eq_to_expr(s):
+                if '=' in s and '==' not in s:
+                    lhs, rhs = s.split('=', 1)
+                    return f"({lhs.strip()}) - ({rhs.strip()})"
+                return s
+            norm = src
+            if not norm.strip().startswith('['):
+                parts = [_eq_to_expr(p) for p in norm.split(',')]
+                norm = '[' + ', '.join(parts) + ']'
+            else:
+                norm = _re2.sub(r'([^=!<>])=([^=])', lambda m: m.group(1) + '-(' + m.group(2), norm)
+            eqs = sympify(norm)
             result = sym_solve(eqs, [x, y, z])
             return f"{result}|solve_system({expression}) = {result}"
+        elif op in ('ode_solve', 'dsolve', 'ode'):
+            # expression uses y(x).diff(x, n) Python/SymPy method syntax
+            from sympy import Function, dsolve, Eq, Derivative
+            yf = Function('y')
+            local_ns = {'x': x, 'y': yf, 'Derivative': Derivative}
+            ode_expr = eval(src, {"__builtins__": {}}, local_ns)
+            result = dsolve(Eq(ode_expr, 0), yf(x))
+            # Return RHS as bare result so it chains cleanly into subsequent steps
+            bare = result.rhs if hasattr(result, 'rhs') else result
+            return f"{bare}|dsolve({expression} = 0) -> {result}"
         else:
             return f"solver_error|unknown operation '{op}' — not in SymPy kernel"
     except Exception as e:
@@ -159,6 +199,22 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
         L = dict(x=x, y=y, z=z, n=n, t=t, s=s)
         op = operation.strip().lower()
         src = expression.strip()
+        if not op:
+            return f"{src}|{src} (pass-through)"
+
+        # Normalize Unicode math symbols to Python/Sage-compatible names
+        _UNICODE_MAP = {'√': 'sqrt', '∛': 'cbrt', '∞': 'oo', 'π': 'pi',
+                        '²': '**2', '³': '**3', '⁴': '**4', '×': '*', '÷': '/'}
+        for sym, rep in _UNICODE_MAP.items():
+            src = src.replace(sym, rep)
+
+        # Auto-detect ODE expressions (y(x).diff(...) notation) regardless of op
+        if _re.search(r'\w+\(x\)\.diff\s*\(', src):
+            op = 'ode_solve'
+        # Normalise "lhs = rhs" → "(lhs) - (rhs)" before sage_eval
+        if '=' in src and '==' not in src and not _re.search(r'[<>!]=', src):
+            _lhs, _, _rhs = src.partition('=')
+            src = f"({_lhs.strip()}) - ({_rhs.strip()})"
 
         # ── Sage-only operations (PARI under the umbrella) ──
         if op in ('galois', 'galois_group'):
@@ -184,7 +240,8 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             result = poly.factor()
             return f"{result}|factor({expression} over QQ) = {result}"
 
-        expr = sage_eval(src, locals=L)
+        if op not in ('ode_solve', 'dsolve', 'ode'):
+            expr = sage_eval(src, locals=L)
 
         # ── Shared operations (parity with the SymPy kernel) ──
         if op in ('solve', 'roots', 'zeros'):
@@ -197,7 +254,12 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             result = integrate(expr, x)
             return f"{result}|integral of {expression} dx = {result} + C"
         elif op == 'simplify':
-            result = expr.simplify_full()
+            if isinstance(expr, list):
+                result = [e.simplify_full() if hasattr(e, 'simplify_full') else e for e in expr]
+            elif hasattr(expr, 'simplify_full'):
+                result = expr.simplify_full()
+            else:
+                result = expr
             return f"{result}|simplify({expression}) = {result}"
         elif op == 'expand':
             result = expand(expr)
@@ -206,7 +268,10 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             result = factor(expr)
             return f"{result}|factor({expression}) = {result}"
         elif op in ('series', 'taylor', 'maclaurin'):
-            result = expr.taylor(x, 0, 5)
+            if hasattr(expr, 'taylor'):
+                result = expr.taylor(x, 0, 5)
+            else:
+                result = expr
             return f"{result}|series({expression}, x=0, deg≤5) = {result}"
         elif op in ('apart', 'partial_fractions', 'partial_fraction'):
             result = expr.partial_fraction(x)
@@ -226,7 +291,10 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             result = inverse_laplace(expr, s, t)
             return f"{result}|inverse_laplace_transform({expression}) = {result}"
         elif op in ('trigsimp', 'trig_simplify'):
-            result = expr.simplify_trig()
+            if hasattr(expr, 'simplify_trig'):
+                result = expr.simplify_trig()
+            else:
+                result = expr
             return f"{result}|trigsimp({expression}) = {result}"
         elif op.startswith('summation') or op.startswith('sum('):
             m = _re.match(r'(?:summation|sum)\((\w+),\s*(.+),\s*(.+)\)', op)
@@ -243,13 +311,33 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             result = matrix(SR, sage_eval(src)).eigenvalues()
             return f"{result}|eigenvalues({expression}) = {result}"
         elif op in ('solve_system', 'system'):
-            # expression is a Python list of expressions assumed '= 0',
-            # e.g. "[x + y - 5, x - y - 1]"
-            raw = sage_eval(src, locals=L)
+            # expression: Python list "[x+y-5, x-y-1]" OR equations "x+y=5, x-y=1"
+            def _eq_to_expr_sage(s):
+                if '=' in s and '==' not in s:
+                    lhs, rhs = s.split('=', 1)
+                    return f"({lhs.strip()}) - ({rhs.strip()})"
+                return s
+            norm = src
+            if not norm.strip().startswith('['):
+                parts = [_eq_to_expr_sage(p) for p in norm.split(',')]
+                norm = '[' + ', '.join(parts) + ']'
+            raw = sage_eval(norm, locals=L)
             names = sorted({str(v) for e in raw for v in e.variables()})
             unknowns = [L[name] for name in names if name in L]
             result = solve([e == 0 for e in raw], unknowns)
             return f"{result}|solve_system({expression}) = {result}"
+        elif op in ('ode_solve', 'dsolve', 'ode'):
+            # Use SymPy for ODE solving — y(x).diff(x, n) is SymPy/Python method
+            # syntax; Sage's newer versions reject unnamed function-call substitution.
+            from sympy import (symbols as sy_sym, Function as sy_func,
+                               dsolve as sy_dsolve, Eq as sy_Eq)
+            sx = sy_sym('x')
+            syf = sy_func('y')
+            local_ns = {'x': sx, 'y': syf}
+            ode_expr = eval(src, {"__builtins__": {}}, local_ns)
+            result = sy_dsolve(sy_Eq(ode_expr, 0), syf(sx))
+            bare = result.rhs if hasattr(result, 'rhs') else result
+            return f"{bare}|dsolve({expression} = 0) -> {result}"
         else:
             return f"solver_error|unknown operation '{op}' — not in Sage kernel"
     except Exception as e:
@@ -257,6 +345,16 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
 $$;
 
 -- ── Step bookkeeping (deterministic, 0-token) ─────────────────
+
+CREATE TOOL_API substitute_prev(raw_expression TEXT, running_expression TEXT)
+RETURNS TEXT AS PYTHON $$
+def substitute_prev(raw_expression: str, running_expression: str) -> str:
+    """Replace the token PREV (case-insensitive, whole-word) with running_expression.
+    Handles compound expressions like 'PREV - y - 1' → '(<running>) - y - 1'."""
+    import re
+    result = re.sub(r'\bPREV\b', f'({running_expression})', raw_expression, flags=re.IGNORECASE)
+    return result
+$$;
 
 CREATE TOOL_API step_count(steps_text TEXT)
 RETURNS TEXT AS PYTHON $$
@@ -354,7 +452,11 @@ STRICT OUTPUT RULES (violating any of these causes the pipeline to fail):
     solve, diff, integrate, simplify, expand, factor,
     series, apart, limit(x,0), laplace, inverse_laplace,
     trigsimp, summation(n,1,oo), eigenvalues, solve_system,
-    galois, conic, rank, factor_qq
+    ode_solve, galois, conic, rank, factor_qq
+- ode_solve: <expression> is the ODE left-hand side in Python using y(x).diff(x,n)
+    notation, with the right-hand side assumed 0:
+    "y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)"  (not  y'', y', prime notation)
+    For initial conditions add them on a SECOND line: "y(x).diff(x,2) - y(x)|ode_solve"
 - galois:    <expression> is a polynomial in x over the rationals
 - factor_qq: <expression> is a polynomial in x to factor over the rationals
 - conic:     <expression> is a homogeneous quadratic in x, y, z moved to
@@ -410,6 +512,12 @@ CORRECT examples:
     s/(s**2 + 4)|inverse_laplace
     PREV|laplace
 
+  "solve the ODE y''(x) - 3*y'(x) + 2*y(x) = 0"
+    y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)|ode_solve
+
+  "solve y'(x) = y(x) with y(0) = 1"
+    y(x).diff(x) - y(x)|ode_solve
+
   "find the Galois group of x to the fifth minus x minus 1"
     x**5 - x - 1|galois
 
@@ -434,6 +542,8 @@ INCORRECT examples (DO NOT produce output like this):
                                 first must be PREV|<operation>
   exp(x)|diff                ← NO (when the problem says something else):
                                 this copies an example instead of the Problem
+  y''(x) - 3*y'(x)|ode_solve ← NO: prime notation is forbidden; use y(x).diff(x,n)
+  √(4 - x**2)|integrate      ← NO: Unicode symbols are forbidden; use sqrt(4 - x**2)
 
 Now translate ONLY the problem below. Transcribe its expression EXACTLY —
 same digits, signs, exponents — and use PREV for every step after the first.

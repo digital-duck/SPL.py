@@ -35,12 +35,14 @@ DO
   CALL split_part(@step, "|", "1") INTO @raw_expression;
   CALL split_part(@step, "|", "2") INTO @operation;
 
-  -- Resolve PREV deterministically (lower-case both sides: EVALUATE
-  -- lower-cases the literal but not the value).
+  -- Resolve PREV deterministically. Exact "PREV" → running expression;
+  -- compound "PREV - y - 1" → substitute_prev replaces the token in-place.
   CALL lower(@raw_expression) INTO @raw_expression_lc;
   EVALUATE @raw_expression_lc
     WHEN = "prev" THEN
       @expression := @running_expression
+    WHEN contains("prev") THEN
+      CALL substitute_prev(@raw_expression, @running_expression) INTO @expression
     ELSE
       @expression := @raw_expression
   END

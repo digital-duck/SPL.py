@@ -120,7 +120,7 @@ time from ~60 min (sequential) to ~20 min with 3 workers.
 **On the Mac Mini (requester / orchestrator):**
 ```bash
 conda activate spl123
-export MOMAGRID_HUB_URL=http://<hub-ip>:9000   # persist in ~/.zshrc
+export MOMAGRID_HUB_URL=http://192.168.0.170:9000/   # persist in ~/.zshrc
 ```
 The Mac Mini orchestrates all workflow logic — SPL executor, IPython kernel
 (SymPy / Sage / Lean), SQLite writes. It never runs model inference.
@@ -163,9 +163,15 @@ open-source models (`m002`–`m010`), which is the actual subject of measurement
 ### Commands
 
 ```bash
+conda activate spl123
+export MOMAGRID_HUB_URL=http://192.168.0.170:9000/
+
 # Smoke test — 1 model, 1 problem, dry run
 python cookbook/77_neurosymbolic/run_experiment_momagrid.py \
-    -m m002 -p p003 --dry-run
+    -m m002 -p p003 -s true -r 1 --workers 3 --dry-run
+
+python cookbook/77_neurosymbolic/run_experiment_momagrid.py \
+    -m m002 -s true -r 1 --workers 3 
 
 # Verify 360-cell plan (9 models × 20 problems × 2 arms)
 python cookbook/77_neurosymbolic/run_experiment_momagrid.py --dry-run

@@ -94,7 +94,7 @@ class MomagridAdapter(LLMAdapter):
             or os.environ.get("MOMAGRID_HUB_URL")
             or _hub_url_from_igrid_config()
             or "http://localhost:9000"
-        )
+        ).rstrip("/")
         self.default_model = default_model
         self.timeout = timeout
         self.poll_interval = poll_interval
