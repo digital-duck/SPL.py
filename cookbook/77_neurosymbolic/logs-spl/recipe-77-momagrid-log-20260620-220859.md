@@ -14783,3 +14783,282 @@ _Tier: T3 | Problem ID: `p007` | Host: `mac-wens-Mac-mini.local`_
 ```
 
 ```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task d399401b-fb99-496a-baf2-53168c95f75b submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/d399401b-fb99-496a-baf2-53168c95f75b "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task d399401b-fb99-496a-baf2-53168c95f75b completed by agent wengong in 26833ms (11 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 11 tokens, 28127ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (30 chars total)
+[INFO] [arm=solver] decomposed into 2 step(s):
+
+
+sin(x)|series  
+PREV|expand
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 72 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 155ms (0 LLM calls)
+[INFO] [arm=solver][step 1/2] series(sin(x), x=0, deg≤5) = x**5/120 - x**3/6 + x
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 75 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 1ms (0 LLM calls)
+[INFO] [arm=solver][step 2/2] expand(x**5/120 - x**3/6 + x) = x**5/120 - x**3/6 + x
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task cf7a69e7-74a8-4795-b3f2-0cd1165c9274 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/cf7a69e7-74a8-4795-b3f2-0cd1165c9274 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task cf7a69e7-74a8-4795-b3f2-0cd1165c9274 completed by agent wengong in 16878ms (178 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 178 tokens, 20113ms
+INFO:spl.executor:GENERATE chain done -> @result (612 chars total)
+INFO:spl.executor:RETURN: 612 chars | status=complete, arm=solver, backend=sympy, steps=2
+
+Status:  complete
+Output:  The problem is asking you to express \(\sin(x)\) as a Taylor series expansion around \(x = 0\), including terms up to the fifth degree. The first step involves calculating this series, which results in \(x^5/120 - x^3/6 + x\). This expression represents the approximation of \(\sin(x)\) using only terms up to \(x^5\). In the second step, we simply expand or rewrite this expression, confirming that it is already simplified as \(x^5/120 - x^3/6 + x\). The final answer for the Taylor series expansion of \(\sin(x)\) around \(x = 0\) up to degree 5 is:
+
+\[ \sin(x) \approx x - \frac{x^3}{6} + \frac{x^5}{120}. \]
+LLM calls: 2  Latency: 48397ms
+Workers: wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222043.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=true
+[INFO] [arm=solver] Problem 'simplify sin(x)**2 + cos(x)**2 using trigonometric identities' — planning the chain (backend=sympy) ...
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task e3564ceb-7cef-4084-8537-b9458a7885d3 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/e3564ceb-7cef-4084-8537-b9458a7885d3 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task e3564ceb-7cef-4084-8537-b9458a7885d3 completed by agent papa-game in 24451ms (27 tokens)
+INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 27 tokens, 26161ms
+INFO:spl.executor:GENERATE chain done -> @steps_text (65 chars total)
+[INFO] [arm=solver] decomposed into 3 step(s):
+
+
+sin(x)**2 + cos(x)**2|simplify  
+PREV|trigsimp  
+PREV|simplify
+
+
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 37 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 190ms (0 LLM calls)
+[INFO] [arm=solver][step 1/3] simplify(sin(x)**2 + cos(x)**2) = 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 17 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 2/3] trigsimp(1) = 1
+INFO:spl.composer:CALL solve_chain_step(['step', 'running_expression', 'backend']) INTO @step_summary
+INFO:spl.executor:RETURN: 17 chars | none
+INFO:spl.composer:CALL solve_chain_step completed: status=complete in 0ms (0 LLM calls)
+[INFO] [arm=solver][step 3/3] simplify(1) = 1
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task ae188373-b497-4c38-8125-55caebde4ca4 submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/ae188373-b497-4c38-8125-55caebde4ca4 "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task ae188373-b497-4c38-8125-55caebde4ca4 completed by agent wengong in 17382ms (225 tokens)
+INFO:spl.executor:GENERATE segment 1 (explain_chain) -> 225 tokens, 18079ms
+INFO:spl.executor:GENERATE chain done -> @result (908 chars total)
+INFO:spl.executor:RETURN: 908 chars | status=complete, arm=solver, backend=sympy, steps=3
+
+Status:  complete
+Output:  The question asks us to simplify the expression \(\sin(x)^2 + \cos(x)^2\) using trigonometric identities, which is a common task in mathematics involving simplifying expressions with sine and cosine functions. We'll walk through the steps that have already been computed:
+
+1. The initial expression \(\sin(x)^2 + \cos(x)^2\) is simplified directly to 1 by applying the Pythagorean identity, which states that for any angle \(x\), this sum is always equal to 1.
+
+2. Next, we apply `trigsimp(1)`, which checks if there are further trigonometric simplifications possible for a constant like 1. Since 1 cannot be simplified further using trigonometry, the result remains 1.
+
+3. Lastly, we perform `simplify(1)` to ensure that any remaining algebraic simplification is done, but since 1 is already in its simplest form, it stays as 1.
+
+The final answer to the expression \(\sin(x)^2 + \cos(x)^2\) is simply \(1\).
+LLM calls: 2  Latency: 44432ms
+Workers: papa-game, wengong
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222057.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=false — run 1
+
+_Tier: T3 | Problem ID: `p008` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="find the integral of sin(x) times cos(x), then simplify the result" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=false
+```
+
+```output
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/77_neurosymbolic/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 0 workflow(s) from cookbook/77_neurosymbolic/sympolic_tools.spl
+Registry: ['neurosymbolic_solver', 'solve_chain_step']
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+IPython kernel: enabled (name=python3, scope=session, timeout=60.0s)
+INFO:spl.executor:IPython kernel registered: CALL run_python(@code) INTO @result
+Running workflow: neurosymbolic_solver(['problem', 'hostname', 'backend', 'enable_solver', 'model'])
+[INFO] [neurosymbolic_solver] host=mac-wens-Mac-mini.local backend=sympy solver=false
+[INFO] [arm=llm_only] Problem 'expand sin(x) as a Taylor series around x = 0, keeping terms up to degree 5' — solving with NO verifier
+INFO:httpx:HTTP Request: POST http://192.168.0.170:9000/tasks "HTTP/1.1 202 Accepted"
+INFO:spl.adapters.momagrid:Task dacb3c51-3f9c-40b6-b366-ba318fdc332e submitted to Momagrid hub
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET http://192.168.0.170:9000/tasks/dacb3c51-3f9c-40b6-b366-ba318fdc332e "HTTP/1.1 200 OK"
+INFO:spl.adapters.momagrid:Task dacb3c51-3f9c-40b6-b366-ba318fdc332e completed by agent mac-wens-Mac-mini.local in 51353ms (565 tokens)
+INFO:spl.executor:GENERATE segment 1 (solve_directly) -> 565 tokens, 52235ms
+INFO:spl.executor:GENERATE chain done -> @result (1173 chars total)
+INFO:spl.executor:RETURN: 1173 chars | status=complete, arm=llm_only, backend=sympy, steps=0
+
+Status:  complete
+Output:  The problem is asking us to expand the sine function, \(\sin(x)\), into a Taylor series around \(x = 0\) and include terms up to degree 5.
+
+1. **Taylor Series Formula**: The Taylor series for a function \(f(x)\) around \(x = 0\) (Maclaurin series) is given by:
+   \[
+   f(x) = f(0) + f'(0)x + \frac{f''(0)}{2!}x^2 + \frac{f'''(0)}{3!}x^3 + \frac{f^{(4)}(0)}{4!}x^4 + \frac{f^{(5)}(0)}{5!}x^5 + \cdots
+   \]
+
+2. **Calculate Derivatives**:
+   - \(f(x) = \sin(x)\)
+   - \(f'(x) = \cos(x)\)
+   - \(f''(x) = -\sin(x)\)
+   - \(f'''(x) = -\cos(x)\)
+   - \(f^{(4)}(x) = \sin(x)\)
+   - \(f^{(5)}(x) = \cos(x)\)
+
+3. **Evaluate at \(x = 0\)**:
+   - \(f(0) = \sin(0) = 0\)
+   - \(f'(0) = \cos(0) = 1\)
+   - \(f''(0) = -\sin(0) = 0\)
+   - \(f'''(0) = -\cos(0) = -1\)
+   - \(f^{(4)}(0) = \sin(0) = 0\)
+   - \(f^{(5)}(0) = \cos(0) = 1\)
+
+4. **Substitute into Taylor Series**:
+   \[
+   \sin(x) = 0 + 1 \cdot x + \frac{0}{2!}x^2 + \frac{-1}{3!}x^3 + \frac{0}{4!}x^4 + \frac{1}{5!}x^5
+   \]
+
+5. **Simplify**:
+   \[
+   \sin(x) = x - \frac{x^3}{6} + \frac{x^5}{120}
+   \]
+
+The Taylor series expansion of \(\sin(x)\) around \(x = 0\) up to degree 5 is:
+\[
+x - \frac{x^3}{6} + \frac{x^5}{120}
+\]
+LLM calls: 1  Latency: 52236ms
+Workers: mac-wens-Mac-mini.local
+Log:     /Users/mac-wen/.spl/logs/symbolic_math-momagrid-phi4-20260620-222053.md
+```
+
+
+## phi4 (ollama) — backend=sage — solver=true — run 1
+
+_Tier: T3 | Problem ID: `p015` | Host: `mac-wens-Mac-mini.local`_
+
+```bash
+(spl123) $ spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:phi4 \
+   --param problem="solve the system of equations x + y = 5 and x - y = 1 for x and y" \
+   --param hostname="mac-wens-Mac-mini.local" \
+   --param backend=sage \
+   --param enable_solver=true
+```
+
+```output
