@@ -104,7 +104,9 @@ From the SPL workflow's perspective, nothing changes. Swap `--adapter ollama` to
 
 The hardware is already there. An office with developer MacBooks sitting idle overnight already owns a distributed inference cluster — it just is not wired up yet. A school or university with a laptop fleet has the same opportunity: free, private inference for educational AI workflows, with zero dependency on commercial API availability or per-student budget allocation.
 
-## Case study: NeuroSymbolic Math Verification (one SPL pill, three pains killed)
+## Case study: NeuroSymbolic Math Verification
+
+### One SPL pill, three pains killed
 
 To demonstrate how it all works together, we use a specific [math workflow](https://github.com/digital-duck/SPL.py/blob/main/cookbook/77_neurosymbolic/symbolic_math.spl) that touches all three points: the same `.spl` file runs on Ollama, Claude, or Momagrid (pain 1 gone); a SymPy/SageMath kernel verifies every math step the LLM produces (pain 2 gone); the grid runs on idle consumer GPUs with zero data egress (pain 3 gone).
 
