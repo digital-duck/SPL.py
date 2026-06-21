@@ -44,6 +44,8 @@ The `.spl` file is the logical specification. The adapter and model are runtime 
 
 If you have built LLM workflows and hit provider lock-in, unverifiable outputs, or API costs that scale faster than your workload, read on. We try to prescribe **One SPL pill** that **kills three pains.**
 
+![SPL Agentic Workflow](SPL-workflow.png)
+
 ### Pain-point #1: Framework lock-in
 
 Your LangChain script calls `openai.chat.completions.create()`. You want to try Claude? Rewrite the glue code. Run locally with Ollama? Rewrite again. Switch to a distributed grid? Start over.
@@ -212,6 +214,3 @@ No API key required to start. Ollama runs free, local models. SPL ships 14 adapt
 
 **Scope.** Computational math: algebra, calculus, ODEs, linear algebra, systems. The Lean 4 integration handles formal proof checking for known results in mathlib. This is not novel theorem proving and not whole-textbook formalization — it is making "an LLM said so" auditable for the claims that matter.
 
----
-
-*[SPL.py](https://github.com/digital-duck/SPL.py) · [Momagrid](https://github.com/digital-duck/momagrid) · Apache 2.0 · Recipes, benchmarks, and raw data in the repo.*
