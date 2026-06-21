@@ -29,10 +29,11 @@ class GeminiCLIAdapter(LLMAdapter):
         self,
         cli_path: str = "gemini",
         default_model: str = DEFAULT_MODEL,
+        model: str = "",
         timeout: int = 300,
     ):
         self.cli_path = cli_path
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
 
     async def generate(

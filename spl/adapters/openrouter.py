@@ -29,6 +29,7 @@ class OpenRouterAdapter(LLMAdapter):
         api_key: str | None = None,
         base_url: str = OPENROUTER_URL,
         default_model: str = "qwen/qwen3-8b",
+        model: str = "",
         timeout: int = 180,
     ):
         if httpx is None:
@@ -42,10 +43,10 @@ class OpenRouterAdapter(LLMAdapter):
                 "OpenRouter API key required. Pass api_key= or set OPENROUTER_API_KEY."
             )
         self.base_url = base_url
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
         self._client = httpx.AsyncClient(timeout=timeout)
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

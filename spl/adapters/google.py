@@ -30,6 +30,7 @@ class GoogleAdapter(LLMAdapter):
         self,
         api_key: str | None = None,
         default_model: str = "gemini-2.5-flash",
+        model: str = "",
         timeout: int = 180,
     ):
         if genai is None:
@@ -42,9 +43,9 @@ class GoogleAdapter(LLMAdapter):
             raise ValueError(
                 "Google API key required. Pass api_key= or set GOOGLE_API_KEY."
             )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self._client = genai.Client(api_key=self.api_key)
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

@@ -23,6 +23,7 @@ class OllamaAdapter(LLMAdapter):
         self,
         base_url: str | None = None,
         default_model: str = "llama3.2",
+        model: str = "",
         timeout: int = 120,
     ):
         if httpx is None:
@@ -35,10 +36,10 @@ class OllamaAdapter(LLMAdapter):
             or os.environ.get("OLLAMA_BASE_URL")
             or "http://localhost:11434"
         )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
         self._client = httpx.AsyncClient(timeout=timeout)
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

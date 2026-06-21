@@ -128,10 +128,33 @@ import re
 import socket
 import sqlite3
 import subprocess
+import sys
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
+# Resolve spl3 even when the calling shell's PATH lacks the conda env's bin.
+def _find_spl3() -> str:
+    import shutil
+    # 1. Already on PATH (conda env activated)
+    found = shutil.which("spl3")
+    if found:
+        return found
+    # 2. Active conda env via CONDA_PREFIX
+    prefix = os.environ.get("CONDA_PREFIX", "")
+    if prefix:
+        c = Path(prefix) / "bin" / "spl3"
+        if c.exists():
+            return str(c)
+    # 3. Same bin dir as the running Python
+    c = Path(sys.executable).parent / "spl3"
+    if c.exists():
+        return str(c)
+    # 4. Known spl123 env path (fallback)
+    return "/opt/anaconda3/envs/spl123/bin/spl3"
+
+_SPL3_BIN = _find_spl3()
 
 import click
 
@@ -739,7 +762,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
         cell = (f"[{pid}/{mid}] backend={cell_backend}"
                 f" solver={solver_mode} run={run_no}")
 
-        cmd = ["spl3", "run", script, "--kernel",
+        cmd = [_SPL3_BIN, "run", script, "--kernel",
                "--llm", adapter,
                "--param", f"problem={problem}",
                "--param", f"hostname={hostname}"]

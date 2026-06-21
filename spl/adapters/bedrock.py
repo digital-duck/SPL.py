@@ -105,6 +105,7 @@ class BedrockAdapter(LLMAdapter):
         aws_session_token: str | None = None,
         profile_name: str | None = None,
         default_model: str = "anthropic.claude-sonnet-4-20250514-v1:0",
+        model: str = "",
         timeout: int = 180,
     ):
         if boto3 is None:
@@ -115,7 +116,7 @@ class BedrockAdapter(LLMAdapter):
         self.region_name = (
             region_name or os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
         )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
 
         session = boto3.Session(
@@ -138,7 +139,7 @@ class BedrockAdapter(LLMAdapter):
                 connect_timeout=30,
             ),
         )
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

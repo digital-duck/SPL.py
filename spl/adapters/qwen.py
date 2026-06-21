@@ -31,6 +31,7 @@ class QwenAdapter(LLMAdapter):
         api_key: str | None = None,
         base_url: str = DASHSCOPE_URL,
         default_model: str = "qwen-plus",
+        model: str = "",
         timeout: int = 180,
     ):
         if httpx is None:
@@ -44,10 +45,10 @@ class QwenAdapter(LLMAdapter):
                 "DashScope API key required. Pass api_key= or set DASHSCOPE_API_KEY."
             )
         self.base_url = base_url
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
         self._client = httpx.AsyncClient(timeout=timeout)
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

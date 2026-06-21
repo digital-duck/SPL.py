@@ -28,6 +28,7 @@ class AnthropicAdapter(LLMAdapter):
         self,
         api_key: str | None = None,
         default_model: str = "claude-sonnet-4-20250514",
+        model: str = "",
         max_tokens: int = 4096,
         timeout: int = 180,
     ):
@@ -41,13 +42,13 @@ class AnthropicAdapter(LLMAdapter):
             raise ValueError(
                 "Anthropic API key required. Pass api_key= or set ANTHROPIC_API_KEY."
             )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.default_max_tokens = max_tokens
         self._client = anthropic.AsyncAnthropic(
             api_key=self.api_key,
             timeout=timeout,
         )
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

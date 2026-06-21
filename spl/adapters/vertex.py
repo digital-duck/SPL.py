@@ -41,6 +41,7 @@ class VertexAdapter(LLMAdapter):
         project: str | None = None,
         location: str | None = None,
         default_model: str = "gemini-2.5-flash",
+        model: str = "",
         timeout: int = 180,
     ):
         if genai is None:
@@ -56,14 +57,14 @@ class VertexAdapter(LLMAdapter):
         self.location = location or os.environ.get(
             "GOOGLE_CLOUD_LOCATION", "us-central1"
         )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self.timeout = timeout
         self._client = genai.Client(
             vertexai=True,
             project=self.project,
             location=self.location,
         )
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

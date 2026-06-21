@@ -28,6 +28,7 @@ class OpenAIAdapter(LLMAdapter):
         self,
         api_key: str | None = None,
         default_model: str = "gpt-4o",
+        model: str = "",
         timeout: int = 180,
     ):
         if openai is None:
@@ -40,12 +41,12 @@ class OpenAIAdapter(LLMAdapter):
             raise ValueError(
                 "OpenAI API key required. Pass api_key= or set OPENAI_API_KEY."
             )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self._client = openai.AsyncOpenAI(
             api_key=self.api_key,
             timeout=timeout,
         )
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

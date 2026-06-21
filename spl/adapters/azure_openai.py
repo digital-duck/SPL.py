@@ -46,6 +46,7 @@ class AzureOpenAIAdapter(LLMAdapter):
         api_key: str | None = None,
         api_version: str | None = None,
         default_model: str = "gpt-4o",
+        model: str = "",
         timeout: int = 180,
     ):
         if openai is None:
@@ -68,14 +69,14 @@ class AzureOpenAIAdapter(LLMAdapter):
         self.api_version = api_version or os.environ.get(
             "AZURE_OPENAI_API_VERSION", _DEFAULT_API_VERSION
         )
-        self.default_model = default_model
+        self.default_model = model or default_model
         self._client = _AsyncAzureOpenAI(  # type: ignore[misc]
             azure_endpoint=self.endpoint,
             api_key=self.api_key,
             api_version=self.api_version,
             timeout=timeout,
         )
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model)
 
     async def generate(
         self,

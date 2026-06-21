@@ -81,6 +81,9 @@ def solve_step_with_sympy(expression: str, operation: str) -> str:
 
         if op in ('solve', 'roots', 'zeros'):
             result = solve(expr, x)
+            # Unpack single-element lists so chained steps receive a bare expression
+            if isinstance(result, list) and len(result) == 1:
+                result = result[0]
             return f"{result}|solve({expression} = 0) -> x = {result}"
         elif op in ('diff', 'differentiate', 'derivative', 'gradient'):
             result = diff(expr, x)
@@ -159,6 +162,10 @@ def solve_step_with_sympy(expression: str, operation: str) -> str:
             result = sym_solve(eqs, [x, y, z])
             return f"{result}|solve_system({expression}) = {result}"
         elif op in ('ode_solve', 'dsolve', 'ode'):
+            # If the expression contains no derivative notation it's already a
+            # solved result (e.g. a spurious PREV|ode_solve after a real solve step).
+            if not _re.search(r'\w+\(x\)\.diff\s*\(', src):
+                return f"{src}|{src} (already solved — pass-through)"
             # expression uses y(x).diff(x, n) Python/SymPy method syntax
             from sympy import Function, dsolve, Eq, Derivative
             yf = Function('y')
@@ -246,6 +253,9 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
         # ── Shared operations (parity with the SymPy kernel) ──
         if op in ('solve', 'roots', 'zeros'):
             result = [r.rhs() for r in solve(expr == 0, x)]
+            # Unpack single-element lists so chained steps receive a bare expression
+            if isinstance(result, list) and len(result) == 1:
+                result = result[0]
             return f"{result}|solve({expression} = 0) -> x = {result}"
         elif op in ('diff', 'differentiate', 'derivative', 'gradient'):
             result = diff(expr, x)
@@ -324,9 +334,19 @@ def solve_step_with_sage(expression: str, operation: str) -> str:
             raw = sage_eval(norm, locals=L)
             names = sorted({str(v) for e in raw for v in e.variables()})
             unknowns = [L[name] for name in names if name in L]
-            result = solve([e == 0 for e in raw], unknowns)
+            if len(raw) == 1 and len(unknowns) > 1:
+                # Single equation, multiple unknowns: solve for first unknown as scalar
+                # so PREV can chain into the next step without a free-variable list.
+                sols = [r.rhs() for r in solve(raw[0] == 0, unknowns[0])]
+                result = sols[0] if len(sols) == 1 else sols
+            else:
+                result = solve([e == 0 for e in raw], unknowns)
             return f"{result}|solve_system({expression}) = {result}"
         elif op in ('ode_solve', 'dsolve', 'ode'):
+            # If the expression contains no derivative notation it's already a
+            # solved result (e.g. a spurious PREV|ode_solve after a real solve step).
+            if not _re.search(r'\w+\(x\)\.diff\s*\(', src):
+                return f"{src}|{src} (already solved — pass-through)"
             # Use SymPy for ODE solving — y(x).diff(x, n) is SymPy/Python method
             # syntax; Sage's newer versions reject unnamed function-call substitution.
             from sympy import (symbols as sy_sym, Function as sy_func,
@@ -453,10 +473,13 @@ STRICT OUTPUT RULES (violating any of these causes the pipeline to fail):
     series, apart, limit(x,0), laplace, inverse_laplace,
     trigsimp, summation(n,1,oo), eigenvalues, solve_system,
     ode_solve, galois, conic, rank, factor_qq
+- solve_system: ALL equations must be combined into ONE step as a Python list
+    [eq1_lhs - eq1_rhs, eq2_lhs - eq2_rhs, ...]|solve_system
+    NEVER use PREV with solve_system — put every equation in the same list
 - ode_solve: <expression> is the ODE left-hand side in Python using y(x).diff(x,n)
     notation, with the right-hand side assumed 0:
     "y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)"  (not  y'', y', prime notation)
-    For initial conditions add them on a SECOND line: "y(x).diff(x,2) - y(x)|ode_solve"
+    For ODE problems the plan is ALWAYS exactly ONE line — never add a second step
 - galois:    <expression> is a polynomial in x over the rationals
 - factor_qq: <expression> is a polynomial in x to factor over the rationals
 - conic:     <expression> is a homogeneous quadratic in x, y, z moved to
@@ -537,6 +560,10 @@ INCORRECT examples (DO NOT produce output like this):
   x = sp.symbols('x')      ← NO: Python variable assignments are forbidden
   from sympy import diff    ← NO: Python import statements are forbidden
   Step 1: exp(x)|diff       ← NO: labels and numbering are forbidden
+  x + y - 5|solve_system
+  PREV - y - 1|solve_system ← NO: solve_system takes ALL equations at once in a list
+  y(x).diff(x,2) - 3*y(x).diff(x) + 2*y(x)|ode_solve
+  PREV|ode_solve            ← NO: ode_solve is always exactly one step
   1. exp(x)|diff             ← NO: numbered lists are forbidden
   x**2 - 4|solve             ← NO (as a later line): every line after the
                                 first must be PREV|<operation>

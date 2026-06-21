@@ -77,7 +77,8 @@ class MomagridAdapter(LLMAdapter):
     def __init__(
         self,
         hub_url: str | None = None,
-        default_model: str = "gemma3",
+        default_model: str = "",
+        model: str = "",
         timeout: int = 300,
         poll_interval: float = 2.0,
         min_tier: str = "BRONZE",
@@ -95,14 +96,14 @@ class MomagridAdapter(LLMAdapter):
             or _hub_url_from_igrid_config()
             or "http://localhost:9000"
         ).rstrip("/")
-        self.default_model = default_model
+        self.default_model = model or default_model or os.environ.get("MOMAGRID_DEFAULT_MODEL", "")
         self.timeout = timeout
         self.poll_interval = poll_interval
         self.min_tier = min_tier
         self.min_vram_gb = min_vram_gb
         self.api_key = api_key or os.environ.get("MOMAGRID_API_KEY", "")
         self._client = httpx.AsyncClient(timeout=timeout + 30)
-        self._token_counter = TokenCounter(default_model)
+        self._token_counter = TokenCounter(self.default_model or "llama3")
 
     def _headers(self) -> dict[str, str]:
         """Build request headers, including API key if set."""
