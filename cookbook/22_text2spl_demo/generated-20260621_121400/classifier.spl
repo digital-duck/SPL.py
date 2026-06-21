@@ -1,0 +1,21 @@
+CREATE TOOL_API classify_intent(text TEXT) RETURNS TEXT AS PYTHON $$
+import re
+def classify_intent(text: str) -> str:
+    text = text.lower()
+    if "weather" in text or "forecast" in text:
+        return "weather"
+    elif "book flight" in text or "flight booking" in text:
+        return "flights"
+    elif "order pizza" in text or "pizza delivery" in text:
+        return "food"
+    else:
+        return "unknown"
+$$;
+
+WORKFLOW classify_user_intent
+  INPUT @query TEXT
+  OUTPUT @intent TEXT
+DO
+  GENERATE classify_intent(@query) INTO @intent;
+  RETURN @intent WITH status = "complete";
+END;

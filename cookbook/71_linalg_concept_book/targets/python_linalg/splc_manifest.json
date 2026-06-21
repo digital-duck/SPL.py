@@ -1,14 +1,14 @@
 {
   "splc_version": "0.1.0",
-  "generated_at": "2026-06-08T04:04:11.197540+00:00",
+  "generated_at": "2026-06-21T18:08:54.593425+00:00",
   "source": {
-    "spl_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/71_linalg_concept_book/build_concept_book.spl",
-    "spl_sha256": "2c6396f2e5845250"
+    "spl_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/71_linalg_concept_book/build_concept_book.spl",
+    "spl_sha256": "fcedb0a0ae06466f"
   },
   "target": {
     "lang": "python/linalg",
     "label": "Python \u2014 linalg concept-book (.ipynb via linalg_graph)",
-    "output_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/71_linalg_concept_book/targets/python_linalg/build_concept_book_python_linalg.ipynb"
+    "output_file": "/home/papagame/projects/digital-duck/SPL.py/cookbook/71_linalg_concept_book/targets/python_linalg/build_concept_book_python_linalg.ipynb"
   },
   "compilation": {
     "adapter": "claude_cli",

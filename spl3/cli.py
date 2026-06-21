@@ -828,10 +828,12 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     # the LLM). load_definitions_from_file walks IMPORTs the same way
     # load_workflows_from_file does, with the importing file's own
     # declarations registered last so they win on name collisions.
-    _imported_tool_apis, _imported_functions = load_definitions_from_file(path)
+    _imported_tool_apis, _imported_functions, _imported_procedures = load_definitions_from_file(path)
 
     for _stmt in _imported_functions:
         executor.functions.register(_stmt)
+    for _stmt in _imported_procedures:
+        executor.functions.register_procedure(_stmt)
 
     # Load promoted TOOL_API libraries from registry (~/.spl/tool_apis/)
     try:

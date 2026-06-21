@@ -1,9 +1,11 @@
-1. Define API Endpoints & Data Models: Specify core endpoints (e.g., GET /todos, POST /todos, GET /todos/{id}, DELETE /todos/{id}) and corresponding JSON data models for todos (id, title, description, completed).
+1.  Define API Endpoints & Data Models: Specify endpoints (e.g., `/todos`, `/todos/{id}`) and corresponding JSON data models for todo items (title, description, completed status).
 
-2. Implement Core CRUD Operations: Develop backend logic to handle creating (POST), reading (GET), updating (PUT/PATCH), and deleting (DELETE) todo items based on the defined endpoints and data models.
+2.  Set Up Development Environment & Framework: Choose a framework (e.g., Flask, Django REST Framework, Express.js) and establish the initial project structure with version control setup.
 
-3. Establish Basic Authentication & Authorization: Integrate a simple authentication mechanism (e.g., API key, basic auth) for protecting API access and ensure only authorized users can perform operations.
+3.  Implement CRUD Operations – Initial Version: Develop basic Create (POST `/todos`), Read (GET `/todos` or `/todos/{id}`), and Update (PUT/PATCH `/todos/{id}`) endpoints for todo items, handling minimal validation.
 
-4. Implement Error Handling & Response Codes:  Implement robust error handling with standardized HTTP response codes (e.g., 200 OK, 400 Bad Request, 404 Not Found, 500 Internal Server Error) and informative error messages in JSON format.
+4.  Implement Database Integration: Connect the API to a database (e.g., PostgreSQL, MongoDB) and implement data persistence logic for CRUD operations.
 
-5. Create a Minimal API Testing Suite: Develop unit tests to verify the functionality of each CRUD operation independently and integration tests to ensure endpoints communicate correctly.
+5.  Add Basic Error Handling & Logging: Implement error handling mechanisms (e.g., HTTP status codes, custom error responses) and basic logging of requests and exceptions.
+
+6.  Implement Testing – Unit Tests: Write unit tests covering core API functionality (e.g., data model validation, database interactions).

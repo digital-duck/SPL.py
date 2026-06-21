@@ -233,7 +233,7 @@ def apply_overrides(cmd_args: list[str], adapter: str, model: str) -> list[str]:
     _param_re = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*=')
     if Path(result[0]).name in ("spl3", "spl-go", "spl-ts"):
         expanded: list[str] = []
-        known_flags = {"--adapter", "--model", "--tools", "--hub", "--log-prompts",
+        known_flags = {"--adapter", "--model", "--llm", "--tools", "--hub", "--log-prompts",
                        "--claude-allowed-tools", "--spl-bin", "-a", "-m", "-p"}
         i = 0
         while i < len(result):
@@ -262,7 +262,11 @@ def apply_overrides(cmd_args: list[str], adapter: str, model: str) -> list[str]:
                 i += 1
         result = expanded
 
-    if adapter:
+    # Only inject --adapter / --model for subcommands that accept them (run, execute).
+    # Commands like validate, splc compile don't support these flags.
+    _has_run_subcmd = any(tok in ("run", "execute") for tok in result)
+
+    if adapter and _has_run_subcmd and "--llm" not in result:
         if "--adapter" in result:
             result[result.index("--adapter") + 1] = adapter
         else:
@@ -273,7 +277,7 @@ def apply_overrides(cmd_args: list[str], adapter: str, model: str) -> list[str]:
                     break
 
     is_spl_cmd = Path(result[0]).name in ("spl3", "spl-go", "spl-ts")
-    if model and is_spl_cmd:
+    if model and is_spl_cmd and _has_run_subcmd and "--llm" not in result:
         found = False
         for i in range(len(result)):
             if result[i] == "--model":

@@ -1,1 +1,3 @@
-**Summary:** This document tests map-reduce summarization with the sentence "The quick brown fox jumps over the lazy dog," considering the second input (0) as irrelevant.
+**Improved Summary:**
+
+This document presents the classic pangram “The quick brown fox jumps over the lazy dog.” as a simple test case for evaluating map-reduce summarization techniques. The inclusion of the numerical value "0" is likely intended as an identifier or placeholder within the system. 

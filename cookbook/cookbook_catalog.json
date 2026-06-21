@@ -14,8 +14,8 @@
         "spl3",
         "run",
         "./cookbook/01_hello_world/hello.spl",
-        "--adapter",
-        "ollama"
+        "--llm",
+        "ollama:gemma3"
       ],
       "dir": "01_hello_world",
       "log": "hello",
@@ -89,8 +89,8 @@
         "spl3",
         "run",
         "./cookbook/05_self_refine/self_refine.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "task=Write a haiku about coding"
       ],
       "dir": "05_self_refine",
@@ -172,8 +172,8 @@
         "spl3",
         "run",
         "./cookbook/09_chain_of_thought/chain.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "topic=distributed AI inference"
       ],
       "dir": "09_chain_of_thought",
@@ -207,8 +207,8 @@
         "spl3",
         "run",
         "./cookbook/11_debate_arena/debate.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "topic=AI should be open-sourced"
       ],
       "dir": "11_debate_arena",
@@ -336,8 +336,8 @@
         "spl3",
         "run",
         "./cookbook/18_guardrails/guardrails.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "user_input=Explain how encryption works"
       ],
       "dir": "18_guardrails",
@@ -956,7 +956,7 @@
         "--image",
         "cookbook/51_image_caption/sample/photo.jpg",
         "--model",
-        "gemma4:12b"
+        "gemma4"
       ],
       "dir": "51_image_caption",
       "log": "image_caption",
@@ -965,7 +965,7 @@
       "category": "multimodal",
       "tier": 1,
       "requires": [
-        "ollama:gemma4:12b"
+        "ollama:gemma4"
       ]
     },
     {
@@ -1296,7 +1296,8 @@
       "args": [
         "spl3",
         "run",
-        "cookbook/67_symbolic_math/symbolic_math.spl"
+        "cookbook/67_symbolic_math/hello_symbolic_math.spl",
+        "--kernel"
       ],
       "dir": "67_symbolic_math",
       "log": "symbolic_math",
@@ -1386,7 +1387,8 @@
         "compile",
         "cookbook/71_linalg_concept_book/build_concept_book.spl",
         "--lang",
-        "python/linalg"
+        "python/linalg",
+        "--overwrite"
       ],
       "dir": "71_linalg_concept_book",
       "log": "linalg_concept_book",

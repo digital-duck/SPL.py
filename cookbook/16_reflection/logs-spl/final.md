@@ -1,53 +1,58 @@
-Okay, here’s a refined and expanded version of the URL Shortener System Design, incorporating the feedback from Input 2 and aiming for a robust, scalable, and user-friendly solution. I’ll focus on addressing the identified strengths and incorporating the suggested refinements.
+Okay, here’s a consolidated and improved version of the URL shortening system design document, incorporating feedback from Inputs 1 & 2, with an emphasis on robustness, scalability, and security. This is Version 2.0.
 
-**URL Shortener System Design – Version 2.0 (Revised)**
+**URL Shortener System Design – Version 2.0**
 
-**1. Overview & Goals:**
+**I. Overview**
 
-This document outlines the design for a URL shortening service, prioritizing scalability, reliability, security, and a user-friendly experience. The system will take long URLs from users and generate shortened URLs that redirect to the original URLs. Comprehensive analytics tracking will be enabled with a focus on providing actionable insights. Versioning (API v1 & v2) is also considered.  The core principle remains: a highly available, scalable system capable of handling significant URL shortening and redirection traffic.
+This document outlines the design of a URL shortening system allowing users to create concise links from longer URLs. The primary goal is a reliable, scalable, secure, and easily maintainable service. This version builds upon previous iterations with significantly enhanced collision handling, database TTL management, and security considerations.
 
-**2. Core Requirements:**
+**II. Overall Architecture**
 
-* **Shortening:** Convert long URLs into shorter versions.
-* **Redirection:** Direct users to the original URL upon accessing a short URL.
-* **Scalability:** Handle high volumes of shortening and redirection requests – designed for potential horizontal scaling.
-* **Reliability:** Maintain high uptime with minimal downtime, incorporating redundancy and failover mechanisms.
-* **Analytics (Mandatory):** Track click-through rates, user location, time of day/week, device type, custom event tracking (e.g., referral source). Data will be aggregated and stored for reporting.
-* **User Interface / API:** Provide endpoints for submitting URLs and retrieving shortened URLs (API v1 & v2). Consider roles: public (short URL generation), admin (analytics access, short code management).
+We’ll employ a three-tier architecture:
 
-**3. Architecture Diagram:**
+* **Client Tier (Web/Mobile Apps):**  React frontend for user interaction, including URL input, shortened link display, and potential integration with authentication services (OAuth 2.0).
+* **Application Tier (Backend Server):** Python/Flask backend handling core logic: URL shortening, redirection, analytics, and API management.
+* **Data Tier (Database):** PostgreSQL database for persistent storage of short codes and long URLs.
 
-```
-+-----------------+           +---------------------+          +--------------------+
-|    User/Client   |---------->|     API Gateway      |----------->|     Shortening     |
-+-----------------+           +---------------------+          |       Service        |
-                                   ^  |                     |          +--------------------+
-                                   |  | Short URL Generation |              |
-                                   |  +---------------------+             |
-                                   |   | Database (Redis)   |             |
-                                   |   +---------------------+             |
-                                   |     | Message Queue (Kafka/RabbitMQ)|
-                                   |     +---------------------+          |
-                                   |                                      |
-                                   +---> Redirection Service          |
-                                       (Uses DB for Lookup)            |
-```
+**III. Key Components & Functionality**
 
-**4. Component Breakdown:**
+1. **URL Submission Endpoint (/shorten):**
+   * **Input:** Long URL from user input.
+   * **Validation:** Strict validation using a robust URL library (e.g., `validators` in Python) along with size limits to prevent abuse. Input sanitization is crucial to mitigate potential XSS attacks.
+   * **Unique ID Generation – Collision Handling (CRITICAL):**  A multi-layered approach:
+      * **Base62 Encoding:** Generate a Base62 string (0-9, a-z, A-Z). This remains the primary strategy.
+      * **Collision Detection & Retry:** Implement a retry loop with exponential backoff (adjustable parameters) if collisions occur. Track collision frequency and set configurable maximum retry counts. Logging detailed information about each attempt is essential for analysis.
+      * **UUID Fallback (Reserved):**  Only invoked if collision frequency exceeds a predefined threshold (e.g., 5% of attempted short codes). UUIDs are used as a last resort due to longer URL lengths, and this will be carefully documented with its implications.
+   * **Database Insertion:** Store the short code and long URL in the `urls` table:
 
-* **User/Client:** The application or browser initiating the shortening request.
-* **API Gateway (AWS API Gateway / Nginx):** Entry point, handles routing, authentication (JWT), rate limiting, request transformation, and API versioning (v1 & v2).  Supports canary deployments for testing new versions.
-* **Shortening Service (Node.js with Express + TypeScript):**
-    * **Input Handling:** Receives long URLs from the API Gateway.
-    * **Short Code Generation:** Generates a unique short code using UUIDv4.
-    * **Database Interaction (Redis Cluster):** Stores the mapping between the short code and the original URL. Uses Redis Cluster for high availability and scalability. TTL management implemented (e.g., 6 months for shortened URLs).
-    * **Asynchronous Processing (Kafka/RabbitMQ):** Offloads analytics data collection to a message queue for asynchronous processing, preventing bottlenecks in the primary service.
-* **Database (Redis Cluster):** Key-value store for fast lookup of short codes to URLs. Provides redundancy through sharding.
-* **Redirection Service:** Handles incoming requests to the short URLs. It looks up the corresponding long URL in Redis Cluster and returns a 301 or 302 redirect response.
+     ```sql
+     CREATE TABLE urls (
+         id SERIAL PRIMARY KEY,
+         short_code VARCHAR(50) UNIQUE NOT NULL,
+         long_url TEXT NOT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         click_count INTEGER DEFAULT 0,  -- Track clicks
+         expires_at TIMESTAMP NULL        -- TTL expiration
+     );
+     ```
 
-**5. Short Code Generation – Detailed Algorithm:**
+2. **Redirection Endpoint (/short/{short_code}):**
+   * **Input:** Short code from the URL.
+   * **Database Lookup:** Query the `urls` table using the provided `short_code`.
+   * **Redirection:** Respond with a 301 (Permanent Redirect) or 302 (Temporary Redirect) status code, directing to the long URL.
 
-* **Algorithm:** UUIDv4 generation is used with verification of uniqueness against a background process (potentially using Redis) to minimize collisions, although this is highly unlikely.
-* **Base62 Encoding:** The generated UUIDv4 (e.g., `a1b2c3d4-e5f6-7890-1234-567890abcdef`) is then encoded into Base62. This significantly reduces the URL length and improves readability.
-    * **Mapping:** A, B, C, D, E, F = 0-5; g, h, i, j, k, l = 6-10; m, n, o, p, q, r, s, t, u, v, w, x, y, z = 11-25; 0-9 = 26-35
-    * **Example:** `a1b2c3
+3. **Analytics Endpoint (/stats/{short_code} – Optional):**
+   * **Input:** Short code from the URL.
+   * **Functionality:** Increments `click_count` in the database for the given short code.  Record timestamps of each click (for trend analysis). Consider optional integration with IP geolocation services for geographic tracking (with clear user consent and privacy considerations).
+
+4. **Database TTL & Expiration Management**
+    * Configuration: A configurable option to set a Time-To-Live (TTL) on shortened URLs, with default values (e.g., 30 days).  User customization will be allowed with safeguards (minimum/maximum TTLs and validation).
+   * Logic: Implement logic to automatically expire short URLs based on the configured TTL or when they reach a certain number of clicks. Use scheduled tasks (e.g., Celery) for efficient expiration execution.
+
+**IV. Technical Considerations & Design Choices – Expanded**
+
+* **Scalability:**
+    * **Database Sharding:** Based on traffic volume, shard the `urls` table by short code ranges to distribute load. Monitor shard utilization and adjust sharding strategy as needed.
+    * **Caching (Redis/Memcached):** Cache frequently accessed shortened URLs and their associated long URLs in a high-performance cache. Implement appropriate TTLs for cached entries.  Utilize a caching layer closer to the application tier.
+    * **Load Balancing:** Use a load balancer (e.g., Nginx, HAProxy) to distribute traffic across multiple application servers.
+    * **Message Queue (Kafka/RabbitMQ):** Decouple the frontend

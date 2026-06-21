@@ -1,1 +1,1 @@
-This document is a test case for map-reduce summarization, using the sentence "The quick brown fox jumps over the lazy dog." as its content. The second input (0) appears to be irrelevant and likely just a placeholder or marker.
+This document provides a simple sentence ("The quick brown fox jumps over the lazy dog.") and indicates this is a test case for map-reduce summarization techniques, with a numerical value of "0" included (likely as an identifier or placeholder).

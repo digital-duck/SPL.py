@@ -15,13 +15,16 @@ def load_file(path: str) -> str:
         return fh.read()
 $$;
 
-CREATE TOOL_API write_file(path TEXT, content TEXT)
+CREATE TOOL_API write_file(path TEXT, content TEXT, mode TEXT DEFAULT 'w')
 RETURNS TEXT AS PYTHON $$
 import os
 
-def write_file(path: str, content: str) -> str:
+def write_file(path: str, content: str, mode: str = "w") -> str:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
+    m = mode.strip().lower()
+    if m not in ("w", "a"):
+        m = "w"
+    with open(path, m, encoding="utf-8") as fh:
         fh.write(content)
     return f"written: {path}"
 $$;

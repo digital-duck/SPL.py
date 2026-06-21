@@ -1,91 +1,59 @@
-```spl3
-CREATE FUNCTION detect_lang(code TEXT)
-RETURN TEXT
-AS $$
-You are a polyglot programmer. Identify the programming language of the provided code.
-Reply with only the language name — nothing else.
+Okay, I understand the provided workflow definition for a code review process named `code_review`. Here’s a breakdown of what it does and how it addresses the input:
 
-Code:
-{code}
-$$;
+**Workflow Overview:**
 
-WORKFLOW code_review
-    INPUT:
-        @code     TEXT,
-        @log_dir  TEXT DEFAULT 'cookbook/15_code_review/logs'
-    OUTPUT: @review TEXT
-DO
-    -- 1. Handle file path vs raw code
-    CALL read_file(@code) INTO @file_content
-    EVALUATE @file_content
-        WHEN != '' THEN
-            LOGGING f'Reading code from file: {@code}'
-            @code_to_review := @file_content
-        ELSE
-            LOGGING 'Reviewing raw code input'
-            @code_to_review := @code
-    END
+The `code_review` workflow aims to provide a comprehensive security audit, performance analysis, style check, and bug detection on any given code snippet. It leverages an LLM (likely via an "adapter" like Ollama) for various tasks and generates detailed logs in Markdown files within a specified directory (`cookbook/15_code_review/logs`).
 
-    -- 2. Auto-detect language (deterministic-style LLM call: bounded output)
-    GENERATE detect_lang(@code_to_review) INTO @language
-    @language := trim(@language)
-    LOGGING f'Detected language: {@language}' LEVEL INFO
+**Detailed Breakdown of the Workflow Steps:**
 
-    -- Pass 1: Security audit
-    GENERATE security_audit(@code_to_review, @language) INTO @security_findings
-    LOGGING f'Security findings:\n{@security_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
+1. **Input Handling:**
+   - Takes code as input (`@code`) and a log directory path (`@log_dir`).
+   - Attempts to read the code from a file if it exists, otherwise uses the raw input.
 
-    -- Pass 2: Performance analysis
-    GENERATE performance_review(@code_to_review, @language) INTO @perf_findings
-    LOGGING f'Performance findings:\n{@perf_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/performance.md', @perf_findings) INTO NONE
+2. **Language Detection:**
+   - Calls the `detect_lang` function (a custom function) to automatically identify the programming language of the provided code. This is crucial for tailoring subsequent checks and analysis. The LLM provides just language name output.
 
-    -- Pass 3: Code style and best practices
-    GENERATE style_review(@code_to_review, @language) INTO @style_findings
-    LOGGING f'Style findings:\n{@style_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/style.md', @style_findings) INTO NONE
+3. **Security Audit:**
+   - Performs a security audit on the code using the detected language. The findings are saved to `security.md` in the log directory.
 
-    -- Pass 4: Bug detection
-    GENERATE bug_detection(@code_to_review, @language) INTO @bug_findings
-    LOGGING f'Bug findings:\n{@bug_findings}' LEVEL DEBUG
-    CALL write_file(f'{@log_dir}/bugs.md', @bug_findings) INTO NONE
+4. **Performance Review:**
+    - Performs a performance review of the code, focusing on efficiency and potential bottlenecks.  The findings are saved to `performance.md`.
 
-    -- Severity scoring for each category
-    GENERATE severity_score(@security_findings) INTO @sec_score
-    GENERATE severity_score(@perf_findings) INTO @perf_score
-    GENERATE severity_score(@bug_findings) INTO @bug_score
-    LOGGING f'Scores | sec={@sec_score} perf={@perf_score} bug={@bug_score}' LEVEL INFO
+5. **Code Style & Best Practices:**
+   - Analyzes the code's style, adherence to best practices, and identifies areas for improvement. The results are written to `style.md`.
 
-    -- Synthesize all findings into a structured review
-    GENERATE synthesize_review(
-        @security_findings, @sec_score,
-        @perf_findings, @perf_score,
-        @style_findings,
-        @bug_findings, @bug_score
-    ) INTO @review
-    CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
+6. **Bug Detection:**
+   - Detects potential bugs or vulnerabilities in the code using an LLM-based bug detection function.  The findings are saved to `bugs.md`.
 
-    -- Determine overall verdict
-    EVALUATE @sec_score
-        WHEN > 8 THEN
-            LOGGING f'Critical security issues | score={@sec_score}' LEVEL WARN
-            RETURN @review WITH status = 'critical_issues', verdict = 'block'
-        WHEN > 5 THEN
-            RETURN @review WITH status = 'needs_fixes', verdict = 'request_changes'
-        ELSE
-            RETURN @review WITH status = 'approved', verdict = 'approve'
-    END
+7. **Severity Scoring:**
+    - Assigns a severity score to each type of finding (security, performance, bug) based on its importance.
 
-EXCEPTION
-    WHEN ContextLengthExceeded THEN
-        -- Code too large — review in chunks
-        GENERATE summarize_code(@code_to_review) INTO @summary
-        GENERATE quick_review(@summary, @language) INTO @review
-        CALL write_file(f'{@log_dir}/review.md', @review) INTO NONE
-        RETURN @review WITH status = 'partial_large_file'
-    WHEN BudgetExceeded THEN
-        CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
-        RETURN @security_findings WITH status = 'security_only'
-END
-```
+8. **Synthesis & Review Generation:**
+   - Combines all the findings from the previous steps into a final synthesized review document (`review.md`). This is where a human reviewer would likely consume the consolidated information.
+
+9. **Verdict Determination:**
+   - Based on the severity scores, the workflow determines an overall verdict for the code: "critical_issues", "needs_fixes", or "approved". 
+
+10. **Handling Large Code (ContextLengthExceeded):**
+    - If the input code is too long to process in one go, it uses a summarization function (`summarize_code`) to condense it and then performs a quick review using the LLM.
+
+11. **Budget Exceeded:**
+     - If running out of budget, just outputs security findings.
+
+
+
+**How it Handles the Input (Input 2: [trim(...)])**
+
+The workflow will likely treat `[trim(...)]` as raw code input. The `read_file()` function will attempt to read this string as a file, but since it's just a string, the LLM will process the string directly. The language detection function will then identify the language based on the content of  `[trim(...)]`.
+
+**Key Features and Considerations:**
+
+* **LLM-Powered:** Heavily relies on an LLM (like Gemma3 via Ollama) for many tasks—language detection, security analysis, performance review, style checks, bug detection, and synthesis.
+* **Modular Design:** Uses a series of custom functions (`detect_lang`, `security_audit`, etc.) to break down the complex code review process into manageable steps.
+* **Logging:** Generates detailed logs in Markdown files for traceability and debugging.
+* **Severity-Based Verdict:**  Provides an overall verdict based on the severity of identified issues, aiding in prioritization.
+
+**To help me further assist you with this workflow definition, could you tell me:**
+
+*   What is the purpose of the code snippet that will be processed by this workflow? (e.g., a function, a class, a script)
+*   Do you have sample code available to test this workflow?

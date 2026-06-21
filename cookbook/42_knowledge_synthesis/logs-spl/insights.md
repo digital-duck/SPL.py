@@ -1,5 +1,5 @@
-Here are 3 core insights extracted from the text:
+Here are three core insights extracted from the text:
 
 *   Sparse attention mechanisms significantly decrease the memory requirements of transformers.
-*   These advancements maintain high model performance even when processing extended contexts.
-*   The use of sparse attention represents a recent and impactful development in transformer architecture.
+*   This reduction in memory does not compromise the performance of models when handling extended contexts.
+*   Recent advancements have focused on optimizing transformer architecture through sparse attention.

@@ -18,7 +18,7 @@ DO
     -- 1. Handle file path vs raw code
     CALL read_file(@code) INTO @file_content
     EVALUATE @file_content
-        WHEN != '' THEN
+        WHEN != "" THEN
             LOGGING f'Reading code from file: {@code}'
             @code_to_review := @file_content
         ELSE
@@ -88,7 +88,4 @@ EXCEPTION
         CALL write_file(f'{@log_dir}/security.md', @security_findings) INTO NONE
         RETURN @security_findings WITH status = 'security_only'
 END
-
-Input 2:
-[trim(...)]
 ```

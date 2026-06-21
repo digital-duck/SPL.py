@@ -1,41 +1,4 @@
-CREATE FUNCTION draft(task TEXT)
-RETURN TEXT
-AS $$
-You are an expert writer. Complete the following task thoroughly and well.
-
-Task: {task}
-
-Write a high-quality response now.
-$$;
-
-CREATE FUNCTION critique(current TEXT)
-RETURN TEXT
-AS $$
-You are a strict critic reviewing written content.
-
-If the content fully meets the bar with no meaningful improvements needed,
-reply with exactly this token and nothing else: [APPROVED]
-
-Otherwise, provide specific, actionable feedback on how to improve it.
-Do NOT output [APPROVED] unless the content truly needs no further work.
-
-Content to review:
-{current}
-$$;
-
-CREATE FUNCTION refine(current TEXT, feedback TEXT)
-RETURN TEXT
-AS $$
-You are an expert writer. Improve the following draft based on the feedback.
-
-Draft:
-{current}
-
-Feedback:
-{feedback}
-
-Write the improved version now.
-$$;
+FROM langgraph.components.base AS Base
 
 WORKFLOW self_refine
   INPUT:
@@ -52,7 +15,7 @@ DO
   LOGGING f'Self-refine started | max_iterations={@max_iterations} for task:\n {@task} ...' LEVEL INFO
 
   -- Initial draft
-  GENERATE draft(@task) WITH OUTPUT BUDGET @output_budget TOKENS
+  GENERATE draft(TEXT(@task)) WITH OUTPUT BUDGET @output_budget TOKENS
     USING MODEL @writer_model INTO @current
   LOGGING 'Initial draft ready' LEVEL INFO
   CALL write_file(f'{@log_dir}/draft_0.md', @current) INTO NONE
@@ -65,8 +28,10 @@ DO
     CALL write_file(f'{@log_dir}/feedback_{@iteration}.md', @feedback) INTO NONE
 
     EVALUATE @feedback
-      WHEN @feedback == '[APPROVED]' THEN
+      WHEN contains('[APPROVED]') THEN
         LOGGING f'Approved at iteration {@iteration}' LEVEL INFO
+        GENERATE refine(@current, @feedback) WITH OUTPUT BUDGET @output_budget TOKENS
+          USING MODEL @writer_model INTO @current
         CALL write_file(f'{@log_dir}/final.md', @current) INTO NONE
         RETURN @current WITH status = 'complete', iterations = @iteration
       ELSE
@@ -80,6 +45,8 @@ DO
 
   -- If loop exhausted, commit best effort
   LOGGING f'Max iterations reached | iterations={@iteration}' LEVEL WARN
+  GENERATE draft(TEXT(@task)) WITH OUTPUT BUDGET @output_budget TOKENS
+    USING MODEL @writer_model INTO @current
   CALL write_file(f'{@log_dir}/final.md', @current) INTO NONE
   RETURN @current WITH status = 'max_iterations', iterations = @iteration
 
@@ -91,5 +58,10 @@ EXCEPTION
     RETURN @current WITH status = 'budget_limit'
 END
 
-__main__
-  CALL self_refine()
+WORKFLOW __main__
+  INPUT: None
+  OUTPUT: @result TEXT
+DO
+  @result := self_refine(task='What are the benefits of meditation?', output_budget=2000, max_iterations=3, writer_model='gemma3', critic_model='llama3.2', log_dir='cookbook/05_self_refine/logs-spl')
+  LOGGING f'__main__ completed | result={@result}' LEVEL INFO
+END

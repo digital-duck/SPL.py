@@ -91,22 +91,22 @@ def load_workflows_from_file(
 def load_definitions_from_file(
     path: Path,
     _loading: set[Path] | None = None,
-) -> tuple[list, list]:
-    """Recursively collect CREATE TOOL_API and CREATE FUNCTION definitions
-    reachable from ``path``, following IMPORT statements.
+) -> tuple[list, list, list]:
+    """Recursively collect CREATE TOOL_API, CREATE FUNCTION, and PROCEDURE
+    definitions reachable from ``path``, following IMPORT statements.
 
     Mirrors load_workflows_from_file's IMPORT-resolution and circular-import
-    handling, but for ToolAPINode / CreateFunctionStatement nodes — the two
-    declaration kinds that previously were loaded ONLY from the directly-run
-    top-level file (see Executor._load_tool_apis), so importing a shared
-    'tools.spl' silently registered nothing and CALLs fell back to the LLM.
+    handling, but for ToolAPINode / CreateFunctionStatement / ProcedureStatement
+    nodes — the declaration kinds that previously were loaded ONLY from the
+    directly-run top-level file (see Executor._load_tool_apis), so importing a
+    shared 'tools.spl' silently registered nothing and CALLs fell back to the LLM.
 
-    Returns (tool_apis, functions) in registration order: definitions from
-    imported files come first, the importing file's own come last — so a
+    Returns (tool_apis, functions, procedures) in registration order: definitions
+    from imported files come first, the importing file's own come last — so a
     file's own declarations override same-named ones pulled in via IMPORT
     (registries are simple last-write-wins dicts).
     """
-    from spl.ast_nodes import CreateFunctionStatement
+    from spl.ast_nodes import CreateFunctionStatement, ProcedureStatement
     from spl.lexer import Lexer
     from spl3.ast_nodes import ImportStatement, ToolAPINode
     from spl3.parser import SPL3Parser
@@ -117,7 +117,7 @@ def load_definitions_from_file(
         _loading = set()
     if path in _loading:
         _log.warning("Circular IMPORT detected — skipping %s", path)
-        return [], []
+        return [], [], []
     _loading.add(path)
 
     source = path.read_text(encoding="utf-8")
@@ -126,8 +126,10 @@ def load_definitions_from_file(
 
     tool_apis: list = []
     functions: list = []
+    procedures: list = []
     own_tool_apis: list = []
     own_functions: list = []
+    own_procedures: list = []
 
     for stmt in program.statements:
         if isinstance(stmt, ImportStatement):
@@ -137,11 +139,12 @@ def load_definitions_from_file(
             if not import_path.exists():
                 _log.error("IMPORT: file not found: %s (from %s)", import_path, path)
                 continue
-            imported_tool_apis, imported_functions = load_definitions_from_file(
-                import_path, _loading=_loading
+            imported_tool_apis, imported_functions, imported_procedures = (
+                load_definitions_from_file(import_path, _loading=_loading)
             )
             tool_apis.extend(imported_tool_apis)
             functions.extend(imported_functions)
+            procedures.extend(imported_procedures)
 
         elif isinstance(stmt, ToolAPINode):
             own_tool_apis.append(stmt)
@@ -149,11 +152,15 @@ def load_definitions_from_file(
         elif isinstance(stmt, CreateFunctionStatement):
             own_functions.append(stmt)
 
+        elif isinstance(stmt, ProcedureStatement):
+            own_procedures.append(stmt)
+
     tool_apis.extend(own_tool_apis)
     functions.extend(own_functions)
+    procedures.extend(own_procedures)
 
     _loading.discard(path)
-    return tool_apis, functions
+    return tool_apis, functions, procedures
 
 
 def _extract_workflow_source(source: str, name: str) -> str:

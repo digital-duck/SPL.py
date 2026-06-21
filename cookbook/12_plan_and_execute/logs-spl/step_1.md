@@ -1,3 +1,3 @@
-This step culminates in a documented API blueprint outlining all core interactions for managing todo items, including create, read, update, and delete operations. It defines the expected JSON data format (schema) for todos, ensuring consistent data exchange between clients and the server.  
+This step defines the structure of our API by specifying the URLs for accessing todo items (e.g., `/todos`) and the JSON format used to represent each item’s data (title, description, completed status). The resulting document will clearly outline these endpoints and their associated data models for developers to utilize.
 
-**Filenames Created:** `api_design.md`, `todo_data_model.json`
+**Filenames:** `api_design.md`

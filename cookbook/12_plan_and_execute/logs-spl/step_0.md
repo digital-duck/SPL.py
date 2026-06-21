@@ -1,3 +1,3 @@
-This step establishes the foundational structure for our API by defining a clear set of endpoints for managing todo items and their associated data models. It results in a documented blueprint outlining how clients will interact with the service, ensuring consistency and clarity moving forward.  
+This step establishes the blueprint for our API by defining the URLs (endpoints) and the data structure (JSON schema) used to represent todo items.  It ensures consistency and clarity in how clients will interact with the backend service. The final output is a document outlining these design choices.
 
-**Filenames Created:** `api_design.md` (describes endpoint definitions) & `todo_data_model.json` (specifies JSON schema for todos).
+**Filenames:** `api_design.md`

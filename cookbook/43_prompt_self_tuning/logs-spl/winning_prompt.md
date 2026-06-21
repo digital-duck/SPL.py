@@ -1,1 +1,1 @@
-Summarize this technical document, focusing on explaining the core algorithm and its key components in a way that is accessible to someone with a basic understanding of computer science but no prior knowledge of quantum physics.
+Summarize this technical document, focusing on the core concepts and algorithmic steps while explaining any key mathematical or physical principles involved in layman's terms.  If the document is highly specialized, provide a summary suitable for an engineer with a strong foundation in [relevant field - e.g., physics, computer science].
