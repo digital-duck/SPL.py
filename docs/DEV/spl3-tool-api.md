@@ -169,7 +169,8 @@ CREATE TOOL_API <name>(<param> <TYPE>, ...) RETURNS <TYPE>
 $$;
 ```
 
-- `AS PYTHON` declares the runtime tag. Future runtimes: `AS GO`, `AS TS`.
+- `AS PYTHON` declares the runtime tag. Future runtimes: `AS MCP`
+  (see [spl3-mcp-integration.md](spl3-mcp-integration.md)), `AS GO`, `AS TS`.
 - `<python_body>` is the full Python implementation, including imports.
 - The function named `<name>` in the body is the entry point.
 - Every parameter is passed as `str`; return value must also be `str`.
@@ -894,3 +895,12 @@ results = asyncio.run(
 a ~2,000-line hand-written recursive-descent parser and async tree-walking
 executor, using Python `asyncio` for concurrent branch dispatch and
 `httpx`/subprocess for LLM I/O.
+
+---
+
+## Appendix B — Related design docs
+
+| Doc | Relationship |
+|---|---|
+| [spl3-mcp-integration.md](spl3-mcp-integration.md) | Extends `CREATE TOOL_API` with `AS MCP` runtime — MCP tools are deterministic and fit the same CALL dispatch chain. Also covers `IMPORT MCP` (bulk tool discovery) and `spl3 serve --mcp` (expose SPL workflows as MCP tools) |
+| [spl3-workflow-registry.md](spl3-workflow-registry.md) | Composable workflow radicals registered at `~/.spl/workflows/`, callable via `CALL` alongside TOOL_API functions and MCP tools |

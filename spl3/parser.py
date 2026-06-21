@@ -26,7 +26,7 @@ from spl.ast_nodes import (
 )
 
 from spl3.ast_nodes import (
-    NoneLiteral, SetLiteral, ImportStatement,
+    NoneLiteral, SetLiteral, ImportStatement, ImportMCPStatement,
     CallParallelBranch, CallParallelStatement,
     UnaryOp, CompoundCondition, ToolAPINode,
     SolveStatement, AssertStatement,
@@ -77,11 +77,70 @@ class SPL3Parser(SPL2Parser):
     # IMPORT statement                                                     #
     # ------------------------------------------------------------------ #
 
-    def _parse_import_statement(self) -> ImportStatement:
-        """Parse IMPORT 'file.spl'"""
+    def _parse_import_statement(self) -> ImportStatement | ImportMCPStatement:
+        """Parse IMPORT 'file.spl' or IMPORT MCP "name" FROM "command" [ONLY/EXCEPT] [AS prefix]"""
         self._advance()  # consume 'import' identifier
+
+        tok = self._current()
+        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "mcp":
+            return self._parse_import_mcp()
+
         path = self._expect(TokenType.STRING).value
         return ImportStatement(path=path)
+
+    def _parse_import_mcp(self) -> ImportMCPStatement:
+        """Parse IMPORT MCP "name" FROM "command" [ONLY t1, t2] [EXCEPT t3] [AS prefix]"""
+        self._advance()  # consume 'mcp'
+
+        server_name = self._expect(TokenType.STRING).value
+
+        # FROM "command"
+        self._expect(TokenType.FROM)
+        command = self._expect(TokenType.STRING).value
+
+        only: list[str] = []
+        except_: list[str] = []
+        prefix = ""
+
+        # Optional clauses: ONLY, EXCEPT, AS (in any order, each at most once)
+        while True:
+            tok = self._current()
+
+            # AS is a keyword token (TokenType.AS)
+            if tok.type == TokenType.AS and not prefix:
+                self._advance()
+                prefix = self._expect(TokenType.IDENTIFIER).value
+                continue
+
+            # ONLY and EXCEPT are plain identifiers
+            if tok.type != TokenType.IDENTIFIER:
+                break
+            kw = tok.value.lower()
+
+            if kw == "only" and not only:
+                self._advance()
+                only = self._parse_identifier_list()
+            elif kw == "except" and not except_:
+                self._advance()
+                except_ = self._parse_identifier_list()
+            else:
+                break
+
+        return ImportMCPStatement(
+            server_name=server_name,
+            command=command,
+            only=only,
+            except_=except_,
+            prefix=prefix,
+        )
+
+    def _parse_identifier_list(self) -> list[str]:
+        """Parse a comma-separated list of identifiers (for ONLY/EXCEPT clauses)."""
+        names = [self._expect(TokenType.IDENTIFIER).value]
+        while self._check(TokenType.COMMA):
+            self._advance()
+            names.append(self._expect(TokenType.IDENTIFIER).value)
+        return names
 
     # ------------------------------------------------------------------ #
     # CREATE TOOL_API statement                                            #

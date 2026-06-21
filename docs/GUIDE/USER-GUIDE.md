@@ -22,6 +22,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
    - [4.1 Basic options](#41-basic-options)
    - [4.2 IPython kernel (`--kernel`)](#42-ipython-kernel---kernel)
    - [4.3 Durable execution (`--persistence`)](#43-durable-execution---persistence)
+   - [4.4 MCP tool integration](#44-mcp-tool-integration)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
@@ -473,6 +474,263 @@ spl3 workflow resume workflow.spl --workflow-id my-run-001 --adapter ollama
   any suspended `wait_for_event` wakes up immediately.
 
 Full design document: `docs/DEV/spl3-state-management-dbos.md`.
+
+---
+
+### 4.4 MCP Tool Integration
+
+SPL 3.0 can connect to [MCP (Model Context Protocol)](https://modelcontextprotocol.io)
+servers and expose their tools as `CALL` targets — no Python glue code required.  MCP
+tools go through the same dispatch chain as Python `TOOL_API` tools: deterministic,
+named, callable via `CALL`.
+
+**Prerequisites:**
+
+```bash
+pip install 'spl-llm[mcp]'        # or: pip install mcp
+```
+
+The `mcp` package is an **optional dependency**.  If it is not installed, `AS MCP` and
+`IMPORT MCP` statements raise a clear error at load time; all other SPL features
+continue to work.
+
+#### Two integration hooks
+
+| Hook | Syntax | When to use |
+|------|--------|-------------|
+| **Hook 1** — Single tool binding | `CREATE TOOL_API name(...) AS MCP $$ config $$` | Bind one specific MCP tool to a named SPL function |
+| **Hook 2** — Bulk tool discovery | `IMPORT MCP "server" FROM "command" [ONLY ...] [EXCEPT ...] [AS prefix]` | Import all (or filtered) tools from an MCP server at once |
+
+Both hooks start the MCP server subprocess on first use and keep it alive for the
+duration of the `spl3 run` session.  Server processes are shut down automatically
+when the workflow completes or errors.
+
+#### Hook 1: `CREATE TOOL_API ... AS MCP`
+
+Binds one MCP server tool to a named SPL function.  The `$$ body $$` is a
+key-value config block (not Python code):
+
+```spl
+CREATE TOOL_API read_file(path TEXT) RETURNS TEXT AS MCP $$
+server: "filesystem"
+command: "npx @modelcontextprotocol/server-filesystem /tmp"
+tool: "read_file"
+$$;
+
+WORKFLOW example
+  INPUT @path TEXT
+  OUTPUT @content TEXT
+DO
+  CALL read_file(@path) INTO @content
+  RETURN @content WITH status = "complete"
+END
+```
+
+**Config keys:**
+
+| Key | Required | Description |
+|-----|:---:|-------------|
+| `server` | yes | Logical name for the MCP server (used for connection pooling) |
+| `command` | yes | Shell command to start the MCP server subprocess |
+| `tool` | no | MCP tool name to bind (defaults to the `TOOL_API` name) |
+
+**Shorthand format** — when the server name is unique and matches the tool name:
+
+```spl
+CREATE TOOL_API query(sql TEXT) RETURNS TEXT AS MCP $$
+sqlite: "uvx mcp-server-sqlite --db-path data.db"
+$$;
+```
+
+This sets `server` to `"sqlite"` and `command` to the value.
+
+#### Hook 2: `IMPORT MCP`
+
+Discovers all tools on an MCP server and registers them as `CALL` targets in
+one statement:
+
+```spl
+IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+```
+
+This starts the MCP server, calls `list_tools()`, and registers every tool as a
+callable function.  Equivalent to writing one `CREATE TOOL_API ... AS MCP` per
+tool, but automatic.
+
+**Filtering clauses:**
+
+| Clause | Effect |
+|--------|--------|
+| `ONLY tool1, tool2` | Import only the listed tools; ignore the rest |
+| `EXCEPT tool3, tool4` | Import all tools except the listed ones |
+| `AS prefix` | Prefix every imported tool name with `prefix_` |
+
+Clauses can be combined:
+
+```spl
+-- Import only read_file and list_directory, prefixed as fs_
+IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+  ONLY read_file, list_directory AS fs
+
+-- Import everything except destructive operations
+IMPORT MCP "github" FROM "npx @modelcontextprotocol/server-github"
+  EXCEPT delete_branch, delete_repo
+```
+
+After the import, tools are callable:
+
+```spl
+WORKFLOW browse_files
+  INPUT @dir TEXT
+  OUTPUT @listing TEXT
+DO
+  CALL fs_list_directory(@dir) INTO @listing
+  RETURN @listing WITH status = "complete"
+END
+```
+
+#### Connection pooling
+
+If two `IMPORT MCP` or `CREATE TOOL_API AS MCP` declarations reference the same
+`server` name, they share a single MCP server subprocess.  The pool is managed by
+`MCPServerPool` in `spl3/mcp_bridge.py`.
+
+#### Load order
+
+The executor loads tool definitions in this order (later entries win on name
+collision):
+
+1. Library tools from `~/.spl/tool_apis/` (promoted shared libraries)
+2. `IMPORT MCP` statements (bulk discovery)
+3. Inline `CREATE TOOL_API` blocks — both `AS PYTHON` and `AS MCP`
+
+This means an inline `CREATE TOOL_API` can override a bulk-imported MCP tool if
+they share the same name.
+
+#### Complete example: filesystem + SQLite workflow
+
+```spl
+-- Hook 2: import filesystem tools with prefix
+IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+  ONLY read_file, write_file AS fs
+
+-- Hook 1: bind a specific SQLite query tool
+CREATE TOOL_API query_db(sql TEXT) RETURNS TEXT AS MCP $$
+server: "sqlite"
+command: "uvx mcp-server-sqlite --db-path /tmp/data.db"
+tool: "query"
+$$;
+
+WORKFLOW data_report
+  INPUT @table_name TEXT
+  OUTPUT @report TEXT
+DO
+  -- Deterministic: query the database (MCP tool)
+  CALL query_db(f"SELECT * FROM {@table_name} LIMIT 10") INTO @rows
+
+  -- Probabilistic: LLM summarizes the data
+  GENERATE summarize_data(@rows) INTO @summary
+
+  -- Deterministic: write the report to a file (MCP tool)
+  CALL fs_write_file("/tmp/report.txt", @summary) INTO @write_result
+
+  @report := @summary
+  RETURN @report WITH status = "complete"
+END
+```
+
+Run it:
+
+```bash
+spl3 run data_report.spl --adapter ollama -m gemma3 -p table_name=users
+```
+
+The `.spl` file is the logical specification — no Python glue code, no
+provider-specific SDK imports.  Swap `--adapter ollama` to `--adapter momagrid`
+and the `GENERATE` steps distribute across the grid while `CALL` steps (both
+Python and MCP tools) stay local.
+
+#### Verifying the implementation
+
+**1. Parser tests** — confirm `IMPORT MCP` and `AS MCP` parse correctly:
+
+```bash
+pytest tests/test_mcp_bridge.py -v
+```
+
+Expected: 14 tests pass, covering `IMPORT MCP` with all clause combinations
+(`ONLY`, `EXCEPT`, `AS`, combined), `CREATE TOOL_API ... AS MCP`, config
+parsing, and MCP SDK availability.
+
+**2. Existing tests** — confirm zero regressions:
+
+```bash
+pytest tests/test_tool_api.py tests/test_parser.py tests/test_executor.py -v
+```
+
+Expected: all tests pass (10 + 32 + 42 = 84 tests).
+
+**3. Parse a sample workflow** — validate syntax without running:
+
+```bash
+spl3 validate <(cat <<'EOF'
+IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+  ONLY read_file AS fs
+
+CREATE TOOL_API query_db(sql TEXT) RETURNS TEXT AS MCP $$
+sqlite: "uvx mcp-server-sqlite --db-path /tmp/test.db"
+$$;
+
+WORKFLOW test_mcp
+  OUTPUT @result TEXT
+DO
+  @result := "parsed ok"
+  RETURN @result WITH status = "complete"
+END
+EOF
+)
+```
+
+Expected: `OK` (no parse errors).
+
+**4. End-to-end with a real MCP server** — requires an MCP server installed:
+
+```bash
+# Install the filesystem MCP server
+npm install -g @modelcontextprotocol/server-filesystem
+
+# Create a test file
+echo "hello from MCP" > /tmp/mcp_test.txt
+
+# Run a workflow that reads the file via MCP
+spl3 run <(cat <<'EOF'
+IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+  ONLY read_file
+
+WORKFLOW read_test
+  OUTPUT @content TEXT
+DO
+  CALL read_file("/tmp/mcp_test.txt") INTO @content
+  RETURN @content WITH status = "complete"
+END
+EOF
+) --adapter ollama -m gemma3
+```
+
+Expected: workflow completes, `@content` contains `"hello from MCP"`.
+
+#### Implementation files
+
+| File | Role |
+|------|------|
+| `spl3/ast_nodes.py` | `ImportMCPStatement` dataclass; `ToolAPINode.runtime` accepts `"MCP"` |
+| `spl3/parser.py` | `_parse_import_mcp()` — parses `IMPORT MCP` with `FROM`, `ONLY`, `EXCEPT`, `AS` |
+| `spl3/mcp_bridge.py` | `MCPServerPool` (lifecycle), `parse_mcp_config()`, `make_mcp_tool_callable()` |
+| `spl3/executor.py` | `_load_mcp_tool()`, `_load_mcp_imports()`, `_load_mcp_tool_apis()`, pool shutdown |
+| `tests/test_mcp_bridge.py` | 14 tests: parser, config, availability |
+| `pyproject.toml` | `[project.optional-dependencies] mcp = ["mcp>=1.0"]` |
+
+Design document: `docs/DEV/spl3-mcp-integration.md`.
 
 ---
 
@@ -1964,6 +2222,15 @@ spl3 run <file.spl> [--adapter] [--model] [-p key=val] [--log-prompts DIR]
               [--kernel-timeout FLOAT]                 # default: 60.0 s
               [--persistence sqlite|postgres|dbos]     # durable execution (§4.3)
               [--workflow-id ID]                       # run ID; auto-UUID when omitted
+
+# SPL language constructs for tool integration (§4.4)
+# CREATE TOOL_API name(params) RETURNS type AS PYTHON $$ python_code $$;
+# CREATE TOOL_API name(params) RETURNS type AS MCP $$ server/command/tool config $$;
+# IMPORT MCP "server_name" FROM "command"
+#              [ONLY tool1, tool2]                   # import only listed tools
+#              [EXCEPT tool3]                        # exclude listed tools
+#              [AS prefix]                           # prefix imported names with prefix_
+# Requires: pip install 'spl-llm[mcp]'
 
 spl3 workflow list [--backend sqlite|postgres|dbos] [--status running|complete|error]
 spl3 workflow status --workflow-id ID [--backend sqlite|postgres|dbos]

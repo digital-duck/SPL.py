@@ -3,10 +3,11 @@
 New nodes:
   SetLiteral            — {a, b, c}  unordered unique collection literal
   ImportStatement       — IMPORT 'file.spl'  multi-file workflow loading
+  ImportMCPStatement    — IMPORT MCP "name" FROM "command" [ONLY ...] [EXCEPT ...]
   CallParallelStatement — CALL PARALLEL ... END  concurrent dispatch
   UnaryOp               — NOT <expr>  boolean negation
   CompoundCondition     — <cond> AND/OR <cond>  compound boolean condition
-  ToolAPINode           — CREATE TOOL_API ... AS PYTHON $$ ... $$  deterministic tool
+  ToolAPINode           — CREATE TOOL_API ... AS <RUNTIME> $$ ... $$  deterministic tool
   SolveStatement        — SOLVE @var [TYPE] := python_expr  deterministic value query via kernel
   AssertStatement       — ASSERT python_expr OTHERWISE <body>  deterministic branch via kernel
 """
@@ -103,6 +104,26 @@ class ImportStatement:
 
 
 @dataclass
+class ImportMCPStatement:
+    """IMPORT MCP "name" FROM "command" [ONLY tool1, tool2] [EXCEPT tool3] [AS prefix]
+
+    Connects to an MCP server, discovers its tools, and registers them
+    as CALL targets in the executor's FunctionRegistry.
+
+    Example:
+        IMPORT MCP "filesystem" FROM "npx @modelcontextprotocol/server-filesystem /tmp"
+        IMPORT MCP "sqlite" FROM "uvx mcp-server-sqlite --db-path data.db" ONLY query, list_tables
+        IMPORT MCP "github" FROM "npx @modelcontextprotocol/server-github" EXCEPT delete_branch
+        IMPORT MCP "filesystem" FROM "..." AS fs
+    """
+    server_name: str
+    command: str
+    only: list[str] = field(default_factory=list)
+    except_: list[str] = field(default_factory=list)
+    prefix: str = ""
+
+
+@dataclass
 class CallParallelBranch:
     """Single branch inside a CALL PARALLEL block.
 
@@ -152,8 +173,9 @@ class ToolAPINode:
     name        : tool name; must match the Python function defined in the body
     parameters  : list of Parameter nodes (same as CREATE FUNCTION)
     return_type : declared return type (TEXT, NUMBER, etc.)
-    runtime     : runtime tag — currently always 'PYTHON'; future: 'GO', 'TS'
-    python_body : the raw Python source text between $$ ... $$
+    runtime     : runtime tag — 'PYTHON' or 'MCP'; future: 'GO', 'TS'
+    python_body : runtime-specific content between $$ ... $$ (Python source
+                  for AS PYTHON, config for AS MCP)
 
     Example
     -------

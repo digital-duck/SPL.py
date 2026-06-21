@@ -39,7 +39,7 @@ from spl.executor import Executor as SPL2Executor
 from spl.ast_nodes import Condition, NamedArg
 from spl3.ast_nodes import (
     NoneLiteral, SetLiteral, CallParallelStatement, UnaryOp, CompoundCondition,
-    ToolAPINode, SolveStatement, AssertStatement,
+    ToolAPINode, SolveStatement, AssertStatement, ImportMCPStatement,
 )
 from spl3.types import coerce_to_int, coerce_to_float
 
@@ -89,6 +89,9 @@ class SPL3Executor(SPL2Executor):
             self._kernel = IPythonKernel(scope=kernel_scope, timeout=kernel_timeout,
                                          kernel_name=kernel_name)
             self._register_run_python()
+
+        # MCP server pool — lazily created on first AS MCP or IMPORT MCP
+        self._mcp_pool: "MCPServerPool | None" = None
 
         # Persistence backend for durable execution (sqlite, postgres, dbos)
         self._persistence = persistence
@@ -527,6 +530,10 @@ class SPL3Executor(SPL2Executor):
             if not isinstance(stmt, ToolAPINode):
                 continue
 
+            if stmt.runtime == "MCP":
+                # MCP tools are loaded async in execute_program via _load_mcp_tool_apis
+                continue
+
             if stmt.runtime != "PYTHON":
                 _log.warning(
                     "CREATE TOOL_API '%s': runtime '%s' is not supported yet — skipped",
@@ -566,12 +573,81 @@ class SPL3Executor(SPL2Executor):
                 stmt.name, fn, "kernel" if kernel else "exec",
             )
 
+    def _ensure_mcp_pool(self):
+        if self._mcp_pool is None:
+            from spl3.mcp_bridge import MCPServerPool
+            self._mcp_pool = MCPServerPool()
+        return self._mcp_pool
+
+    async def _load_mcp_tool(self, stmt: ToolAPINode) -> None:
+        """Load a single CREATE TOOL_API ... AS MCP tool."""
+        from spl3.mcp_bridge import parse_mcp_config, make_mcp_tool_callable
+
+        config = parse_mcp_config(stmt.python_body)
+        server_name = config.get("server", "")
+        command = config.get("command", "")
+        tool_name = config.get("tool", stmt.name)
+
+        if not server_name or not command:
+            raise RuntimeError(
+                f"CREATE TOOL_API '{stmt.name}' AS MCP: "
+                f"body must specify server and command"
+            )
+
+        pool = self._ensure_mcp_pool()
+        handle = await pool.get_or_start(server_name, command)
+
+        if tool_name not in handle.tool_names:
+            raise RuntimeError(
+                f"CREATE TOOL_API '{stmt.name}' AS MCP: "
+                f"tool '{tool_name}' not found on server '{server_name}'. "
+                f"Available: {', '.join(handle.tool_names)}"
+            )
+
+        fn = make_mcp_tool_callable(pool, server_name, tool_name)
+        self.register_tool(stmt.name, fn)
+        _log.debug("Registered MCP TOOL_API '%s' -> %s/%s", stmt.name, server_name, tool_name)
+
+    async def _load_mcp_tool_apis(self, program) -> None:
+        """Load all CREATE TOOL_API ... AS MCP blocks from the program."""
+        for stmt in program.statements:
+            if not isinstance(stmt, ToolAPINode):
+                continue
+            if stmt.runtime == "MCP":
+                await self._load_mcp_tool(stmt)
+
+    async def _load_mcp_imports(self, program) -> None:
+        """Load all IMPORT MCP statements from the program."""
+        from spl3.mcp_bridge import make_mcp_tool_callable
+
+        for stmt in program.statements:
+            if not isinstance(stmt, ImportMCPStatement):
+                continue
+
+            pool = self._ensure_mcp_pool()
+            handle = await pool.get_or_start(stmt.server_name, stmt.command)
+
+            for tool_name in handle.tool_names:
+                if stmt.only and tool_name not in stmt.only:
+                    continue
+                if stmt.except_ and tool_name in stmt.except_:
+                    continue
+
+                reg_name = f"{stmt.prefix}_{tool_name}" if stmt.prefix else tool_name
+                fn = make_mcp_tool_callable(pool, stmt.server_name, tool_name)
+                self.register_tool(reg_name, fn)
+                _log.debug(
+                    "Registered MCP import '%s' -> %s/%s",
+                    reg_name, stmt.server_name, tool_name,
+                )
+
     async def execute_program(self, analysis, params=None):
         """Execute program, loading TOOL_API definitions before any workflow runs.
 
         Load order (later entries win on name collision):
           1. Library tools from ~/.spl/tool_apis/ (promoted shared libraries)
-          2. Inline TOOL_API blocks from the current .spl file
+          2. MCP imports (IMPORT MCP statements)
+          3. Inline TOOL_API blocks from the current .spl file (AS PYTHON or AS MCP)
         """
         # 1. Load promoted TOOL_API libraries from registry (~/.spl/tool_apis/)
         try:
@@ -582,9 +658,18 @@ class SPL3Executor(SPL2Executor):
         except Exception as exc:
             _log.warning("TOOL_API registry load failed (non-fatal): %s", exc)
 
-        # 2. Inline TOOL_API blocks in the current program (override library tools)
+        # 2. MCP imports (IMPORT MCP statements)
+        await self._load_mcp_imports(analysis.ast)
+
+        # 3. Inline TOOL_API blocks: AS PYTHON (sync) + AS MCP (async)
         self._load_tool_apis(analysis.ast)
-        return await super().execute_program(analysis, params=params)
+        await self._load_mcp_tool_apis(analysis.ast)
+
+        try:
+            return await super().execute_program(analysis, params=params)
+        finally:
+            if self._mcp_pool is not None:
+                await self._mcp_pool.shutdown()
 
     # ------------------------------------------------------------------ #
     # Workflow execution — typed INPUT param coercion                     #

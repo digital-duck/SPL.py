@@ -63,6 +63,9 @@ kernel = [
     "ipykernel>=6.0",
     "jupyter_client>=8.0",
 ]
+mcp = [
+    "mcp>=1.0",
+]
 sage = [
     # SageMath as pip wheels (passagemath fork — resolves wheels-only, no source build).
     # After install, register the 'sagemath' Jupyter kernel spec:

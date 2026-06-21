@@ -1,4 +1,4 @@
-# Neurosymbolic SPL: Verifiable Math Workflows, Distributed Across Consumer GPUs
+# SPL: Verifiable Math Workflows, Distributed Across Consumer GPUs
 
 *Repo: https://github.com/digital-duck/SPL.py — this document lives at
 `cookbook/77_neurosymbolic/`, next to the workflow it describes. Lineage:
@@ -80,9 +80,9 @@ every `GENERATE` call through a hub to a pool of agents, each running Ollama
 on a consumer GPU. The deterministic side — every `SOLVE` and `ASSERT` call —
 runs on the requester and never crosses the network.
 
-This is not accidental. The invariant is **DODA**: Deterministic Operations
-stay on the Dispatcher, Agents handle the probabilistic LLM work. The
-separation is load-bearing:
+This is not accidental. The invariant is **DODA**: **Design Once, Deploy
+Anywhere.** The same `.spl` file runs locally, on a LAN grid, or against
+a cloud API — zero code changes. The separation is load-bearing:
 
 - Verification is bit-perfect because it never leaves the requester's
   process. No serialization, no round-trips, no state shared with agents.

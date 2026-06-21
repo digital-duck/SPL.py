@@ -27,6 +27,45 @@ _log = logging.getLogger("spl.cli")
 _SPL_LOG_DIR = Path.home() / ".spl" / "logs"
 
 
+# ------------------------------------------------------------------ #
+# Shared --llm / --adapter / --model option decorator                 #
+# ------------------------------------------------------------------ #
+
+def _parse_llm_spec(spec: str) -> tuple[str, str | None]:
+    """Parse 'ADAPTER:MODEL' → (adapter, model). MODEL may contain '/'."""
+    a, sep, m = spec.partition(":")
+    return (a.strip(), m.strip() if sep else None)
+
+
+def llm_options(default_adapter: str = "ollama"):
+    """Decorator adding --llm / --adapter / --model to a Click command.
+
+    --llm ADAPTER:MODEL takes precedence over --adapter/--model.
+    The decorated function receives resolved ``adapter`` and ``model`` args
+    (no ``llm_spec``).
+    """
+    import functools
+
+    def decorator(fn):
+        # Apply click options (reverse order — Click stacks bottom-up)
+        fn = click.option("--model", "-m", default=None, metavar="MODEL",
+                          help="Model override.")(fn)
+        fn = click.option("--adapter", default=default_adapter, show_default=True,
+                          metavar="NAME", help="LLM adapter.")(fn)
+        fn = click.option("--llm", "llm_spec", default=None, metavar="ADAPTER:MODEL",
+                          help="LLM spec as ADAPTER:MODEL (e.g. ollama:gemma3). "
+                               "Wins over --adapter/--model.")(fn)
+
+        @functools.wraps(fn)
+        def wrapper(*args, llm_spec=None, adapter=default_adapter, model=None, **kwargs):
+            if llm_spec:
+                adapter, model = _parse_llm_spec(llm_spec)
+            return fn(*args, adapter=adapter, model=model, **kwargs)
+
+        return wrapper
+    return decorator
+
+
 def _make_out_stem(alias: str, input_stem: str) -> str:
     """Return a timestamped stem: <alias>-<input_stem>-<YYYYMMDD_HHMMSS>."""
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -598,11 +637,7 @@ def cmd_configure_import(file, dest, keys, dry_run):
 
 @main.command()
 @click.argument("spl_file")
-@click.option("--adapter", default="ollama", show_default=True)
-@click.option("--model", default=None, show_default=True)
-@click.option("--llm", "llm_spec", default=None, metavar="ADAPTER:MODEL",
-              help="LLM spec as ADAPTER:MODEL (e.g. ollama:gemma3, claude_cli:claude-opus-4-6). "
-                   "Wins over --adapter/--model.")
+@llm_options()
 @click.option("--param", "-p", multiple=True, help="key=value workflow INPUT params")
 @click.option(
     "--log-prompts", default=None, metavar="DIR",
@@ -636,15 +671,12 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Workflow run ID for persistence. Auto-generated UUID if omitted. "
                    "Pass the same ID to resume a crashed run from its last checkpoint.")
 @click.pass_context
-def run(ctx, spl_file, adapter, model, llm_spec, param, log_prompts, tools_module, allowed_tools,
+def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
         kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
     from spl3._loader import load_workflows_from_file
-
-    if llm_spec:
-        adapter, model = _resolve_llm((llm_spec,), adapter, model)[0]
 
     # Parse params: key=value pairs
     params = {}
@@ -987,8 +1019,7 @@ def workflow_send_event(workflow_id, key, value, backend):
 @workflow.command("resume")
 @click.argument("spl_file")
 @click.option("--workflow-id", required=True, help="Run ID to resume from its last checkpoint.")
-@click.option("--adapter", default="ollama", help="LLM adapter.")
-@click.option("--model", "-m", default=None, help="LLM model.")
+@llm_options()
 @click.option("--backend", default="sqlite", type=click.Choice(["sqlite", "postgres", "dbos"]),
               help="Persistence backend.")
 @click.pass_context
@@ -1128,8 +1159,7 @@ def peers_add(ctx, peer_url):
 
 @main.command("test")
 @click.argument("spl_file_or_dir")
-@click.option("--adapter", default="ollama", show_default=True)
-@click.option("--model", default=None, show_default=True)
+@llm_options()
 @click.option("--verbose", "-v", is_flag=True)
 @click.pass_context
 def cmd_test(ctx, spl_file_or_dir, adapter, model, verbose):
@@ -1312,16 +1342,14 @@ def code_rag_query(query_text, storage_dir, top_k):
 
 @cmd_code_rag.command("describe-all")
 @click.argument("cookbook_dir", default="cookbook")
-@click.option("--adapter", default="ollama", show_default=True,
-              help="LLM adapter used to generate each spec.")
-@click.option("--model", default=None, metavar="MODEL")
+@llm_options()
 @click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
               help="Write all spec files to DIR instead of alongside each .spl file.")
 @click.option("--catalog", default=None,
               help="Restrict to active recipes listed in cookbook_catalog.json.")
 @click.option("--skip-existing", is_flag=True, default=True, show_default=True,
               help="Skip recipes that already have a -spec.md file.")
-def code_rag_describe_all(cookbook_dir, adapter, model, spec_dir, catalog, skip_existing):
+def code_rag_describe_all(cookbook_dir, adapter, model, spec_dir, catalog, skip_existing):  # adapter/model from @llm_options
     """Batch-generate describe specs for all canonical cookbook recipes.
 
     Runs 'spl3 describe' on each .spl file and writes a *-spec.md alongside it
@@ -1430,10 +1458,7 @@ def code_rag_stats(storage_dir):
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language description, a file path, or a -spec.md file "
                    "(Section 0 is extracted automatically).")
-@click.option("--adapter", default=None, metavar="NAME",
-              help="Compiler adapter (default: ollama).")
-@click.option("--model", "-m", default=None, metavar="MODEL",
-              help="Compiler model.")
+@llm_options()
 @click.option("--mode", type=click.Choice(["auto", "prompt", "workflow"]),
               default="auto", show_default=True,
               help="Generation mode.")
@@ -1951,10 +1976,7 @@ def _extract_mmd_sections(text: str, llm, model) -> str:
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language workflow description or file path.")
-@click.option("--adapter", default="ollama", show_default=True, metavar="NAME",
-              help="LLM adapter to use.")
-@click.option("--model", "-m", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options()
 @click.option("--style", default="flowchart", show_default=True,
               type=click.Choice(["flowchart", "graph", "sequence"]),
               help="Mermaid diagram style.")
@@ -2199,9 +2221,7 @@ def _resolve_output_path(
 
 @main.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
 @click.argument("image_path")
-@click.option("--adapter", default="openrouter", show_default=True,
-              help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
-@click.option("--model", default=None, help="Model name override.")
+@llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
               help="Output .mmd file path (or directory).")
 @click.option("--out-dir", default=None, metavar="DIR",
@@ -2238,9 +2258,7 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
 
 @main.command("img2text", short_help="Extract text and pseudo-code from an image.")
 @click.argument("image_path")
-@click.option("--adapter", default="openrouter", show_default=True,
-              help="Multimodal adapter (openrouter, claude_cli, anthropic, google, openai).")
-@click.option("--model", default=None, help="Model name override.")
+@llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
               help="Output .txt file path (or directory).")
 @click.option("--out-dir", default=None, metavar="DIR",
@@ -2604,10 +2622,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
               help="Write generated SPL to FILE (overrides --out-dir).")
 @click.option("--out-dir", default=None, metavar="DIR",
               help="Output directory; file named mmd2spl-<stem>-<datetime>.spl.")
-@click.option("--adapter", default=None, metavar="NAME",
-              help="LLM adapter to use for generation (e.g. claude_cli, ollama).")
-@click.option("--model", "-m", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options()
 @click.option("--validate/--no-validate", default=True, show_default=True,
               help="Validate generated SPL syntax.")
 @click.option("--template", default="workflow", show_default=True,
@@ -3066,10 +3081,7 @@ def _extract_spec_intro(text: str, llm=None, model=None) -> str:
                    "Mutually exclusive with --description / positional arg.")
 @click.option("--target", "-t", "lang", default="python/pocketflow", show_default=True,
               help="Target language/framework (e.g. go, ts, python/langgraph).")
-@click.option("--adapter", default="ollama", show_default=True,
-              help="LLM adapter to use for generation.")
-@click.option("--model", "-m", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options()
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write generated code to FILE (single-file mode).")
 @click.option("--out-dir", default=None, metavar="DIR",
@@ -3503,10 +3515,7 @@ Write the specification now.
 
 @main.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
 @click.argument("spl_path")
-@click.option("--adapter", default="ollama", show_default=True,
-              help="LLM adapter to use for generation.")
-@click.option("--model", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options()
 @click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
               help="Directory to write the spec file (default: same dir as input).")
 @click.option("--prompt", "prompt_debug", is_flag=True, default=False,
@@ -3597,10 +3606,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
                   "Auto-detected from file extension when omitted: "
                   ".mmd/.json→ged  .md/.spl→llm  .py/.js/.ts→git-diff  .png/.jpg→vision"
               ))
-@click.option("--adapter", default="ollama", show_default=True,
-              help="LLM adapter for all analysis (semantic, vision, synthesis, fallback).")
-@click.option("--model", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options()
 @click.option("--adapter-embed", default=None, metavar="NAME",
               help="Adapter for embedding modes (vector, bert-score). Defaults to --adapter.")
 @click.option("--model-embed", default=None, metavar="MODEL",
@@ -4300,7 +4306,7 @@ def cmd_experiment_run(recipes, spl_paths, spl_root, adapters, models, pipeline,
                 elif step == "S4":
                     s3 = _resolve_input("S4")
                     ow = "--overwrite" if overwrite else ""
-                    cmd = (f"spl3 splc compile {s3} --lang python/pocketflow --llm "
+                    cmd = (f"spl3 splc compile {s3} --lang python/pocketflow --use-llm "
                            f"{llm_flags} --out-dir {dir_path} {ow}").strip()
                 elif step == "S5":
                     s4d = paths.get("S4", _exp_dir(base, "S4", slug))
@@ -4532,10 +4538,7 @@ def cmd_experiment_report(base_dir, steps, output_format, output):
               type=click.Choice(["python/pocketflow", "python/langgraph", "python/crewai",
                                  "python/autogen", "python/liquid", "go", "ts", "python"]),
               help="Target runtime to compile to.")
-@click.option("--adapter", default="claude_cli", show_default=True,
-              help="LLM adapter for describe / text2mmd / mmd2spl / compile steps.")
-@click.option("--model", default=None, metavar="MODEL",
-              help="Model override for the adapter.")
+@llm_options(default_adapter="claude_cli")
 @click.option("--judge-adapter", default="claude_cli", show_default=True,
               help="Adapter for the final fidelity compare step.")
 @click.option("--judge-model", default="claude-opus-4-6", show_default=True,
@@ -4682,7 +4685,7 @@ def cmd_migrate(source, target, adapter, model, judge_adapter, judge_model,
     target_dir = work / "target"
     target_dir.mkdir(exist_ok=True)
     click.echo(f"\n[ Step 4/4 ] splc compile → {target}")
-    llm_compile = "--llm" if target not in ("python/pocketflow", "python/langgraph", "go", "ts") else ""
+    llm_compile = "--use-llm" if target not in ("python/pocketflow", "python/langgraph", "go", "ts") else ""
     cmd4 = (
         f"spl3 splc compile {spl_file} --lang {target} {llm_compile} "
         f"{llm_flags} --out-dir {target_dir} {rag_flag} --overwrite"

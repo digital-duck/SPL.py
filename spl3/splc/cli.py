@@ -179,11 +179,17 @@ def splc():
     ),
 )
 @click.option(
+    "--llm", "llm_spec",
+    default=None,
+    metavar="ADAPTER:MODEL",
+    help="LLM spec as ADAPTER:MODEL (e.g. claude_cli:claude-sonnet-4-6). Wins over --adapter/--model.",
+)
+@click.option(
     "--adapter",
     default="claude_cli",
     show_default=True,
     metavar="NAME",
-    help="LLM adapter to use for --llm compilation (default: claude_cli).",
+    help="LLM adapter to use for --use-llm compilation (default: claude_cli).",
 )
 @click.option(
     "--model",
@@ -240,7 +246,8 @@ def splc():
     help="Skip generating readme.md alongside the implementation.",
 )
 @click.option(
-    "--llm",
+    "--use-llm",
+    "use_llm",
     is_flag=True,
     default=False,
     help=(
@@ -274,6 +281,7 @@ def cmd_compile(
     spl_path:   Path,
     lang:       str,
     out_dir:    Path | None,
+    llm_spec:   str | None,
     adapter:    str,
     model:      str | None,
     use_rag:    bool,
@@ -282,17 +290,23 @@ def cmd_compile(
     overwrite:  bool,
     dry_run:    bool,
     no_readme:  bool,
-    llm:        bool,
+    use_llm:    bool,
     verbose:    bool,
     prompt_debug: bool,
     kernel_name: str | None,
 ) -> None:
     """splc — SPL Compiler: translate a .spl logical view into a physical implementation."""
 
+    if llm_spec:
+        a, sep, m = llm_spec.partition(":")
+        adapter = a.strip()
+        if sep:
+            model = m.strip()
+
     lang_meta = SUPPORTED_LANGS[lang]
 
-    # Deterministic transpiler is the default for supported langs; --llm opts into LLM.
-    use_deterministic = lang in DETERMINISTIC_LANGS and not llm
+    # Deterministic transpiler is the default for supported langs; --use-llm opts into LLM.
+    use_deterministic = lang in DETERMINISTIC_LANGS and not use_llm
 
     # ── Resolve output directory ──────────────────────────────────────────────
     if out_dir is None:
@@ -1103,6 +1117,12 @@ def _lang_label_from_path(path: Path) -> str:
     ),
 )
 @click.option(
+    "--llm", "llm_spec",
+    default=None,
+    metavar="ADAPTER:MODEL",
+    help="LLM spec as ADAPTER:MODEL (e.g. ollama:gemma3). Wins over --adapter/--model.",
+)
+@click.option(
     "--adapter",
     default="ollama",
     show_default=True,
@@ -1140,7 +1160,7 @@ def _lang_label_from_path(path: Path) -> str:
     default=False,
     help="Display the LLM prompt and exit.",
 )
-def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, prompt_debug: bool) -> None:
+def cmd_describe(impl_path: Path, lang_label: str | None, llm_spec: str | None, adapter: str, model: str | None, spec_dir: Path | None, output_path: Path | None, include_docs: bool, prompt_debug: bool) -> None:
     """Describe any source file or folder as a structured spec / summary.
 
     \b
@@ -1163,6 +1183,12 @@ def cmd_describe(impl_path: Path, lang_label: str | None, adapter: str, model: s
       spl3 splc describe paper.pdf --out-dir spec/
     """
     import asyncio
+
+    if llm_spec:
+        a, sep, m = llm_spec.partition(":")
+        adapter = a.strip()
+        if sep:
+            model = m.strip()
 
     if impl_path.is_dir():
         impl_files = sorted(
