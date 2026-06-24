@@ -10,6 +10,7 @@ set -e
 MODELS=(
     "gemma3"
     "gemma4:e2b"
+    "gemma4"
     "qwen2.5"
     "deepseek-v2:16b"
     "phi3"
