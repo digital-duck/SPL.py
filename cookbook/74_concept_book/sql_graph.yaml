@@ -34,8 +34,8 @@ concepts:
     defines: the structural definition of a relation — the ordered list of (attribute, domain)
       pairs; the contract every stored tuple must satisfy; CREATE TABLE IS the schema in SQL
     verifier: python
-    lab: python (define a schema as a dict {col: type}; validate a tuple against it;
-      verify type mismatches are caught)
+    lab: "python (define a schema as a dict {col: type}; validate a tuple against it;
+      verify type mismatches are caught)"
     play: 'define schema {"name": str, "age": int, "email": str}; try inserting ("Alice", "thirty",
       "a@b.com") and verify the type check fails'
     tier: 1
@@ -215,8 +215,8 @@ concepts:
       the optimizer's job is to find the lowest-cost plan among the (n-1)! join orderings
       for n tables
     verifier: python
-    lab: python (implement a cost-model estimator: estimate rows after selection using
-      selectivity; estimate join cost as nested-loop vs. hash-join; choose the cheaper plan)
+    lab: "python (implement a cost-model estimator: estimate rows after selection using
+      selectivity; estimate join cost as nested-loop vs. hash-join; choose the cheaper plan)"
     play: for a 3-table join, enumerate all 6 join orderings; assign random row counts and
       join selectivities; verify the cost model picks the ordering with the smallest
       intermediate result

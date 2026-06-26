@@ -200,9 +200,9 @@ concepts:
     composed_of:
     - comparison
     - divide_and_conquer
-    defines: any comparison-based sort requires Ω(n log n) comparisons in the worst case —
+    defines: "any comparison-based sort requires Ω(n log n) comparisons in the worst case —
       proved by the decision-tree argument: a sort of n elements must distinguish n! orderings;
-      a binary decision tree of depth d has ≤ 2^d leaves; depth ≥ log₂(n!) ∈ Ω(n log n)
+      a binary decision tree of depth d has ≤ 2^d leaves; depth ≥ log₂(n!) ∈ Ω(n log n)"
     verifier: sympy
     lab: sympy (compute log2(factorial(n)) for n=10..20; verify it matches n*log2(n)*0.43..;
       confirm Stirling approx log(n!) ≈ n log n − n)

@@ -91,8 +91,8 @@ concepts:
       growth and sexual diversity
     verifier: python
     lab: python (simulate chromosome duplication; verify daughter cells each receive a full copy)
-    play: count the chromosomes: human somatic = 46, gametes = 23; verify 23 + 23 = 46 at
-      fertilization — the simplest ledger in genetics
+    play: "count the chromosomes: human somatic = 46, gametes = 23; verify 23 + 23 = 46 at
+      fertilization — the simplest ledger in genetics"
     tier: 2
   natural_selection:
     composed_of:
