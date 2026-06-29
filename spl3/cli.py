@@ -670,9 +670,12 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--workflow-id", default=None, metavar="ID",
               help="Workflow run ID for persistence. Auto-generated UUID if omitted. "
                    "Pass the same ID to resume a crashed run from its last checkpoint.")
+@click.option("--llm-max-output-tokens", "llm_max_output_tokens", default=None, type=int, metavar="N",
+              help="Default max output tokens per GENERATE call (overrides built-in default of 1000).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
-        kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id):
+        kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
+        llm_max_output_tokens):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -717,14 +720,16 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
                               tools_module, allowed_tools,
                               kernel=kernel, kernel_scope=kernel_scope,
                               kernel_timeout=kernel_timeout, kernel_name=kernel_name,
-                              persistence=persistence_backend, workflow_id=workflow_id))
+                              persistence=persistence_backend, workflow_id=workflow_id,
+                              llm_max_output_tokens=llm_max_output_tokens))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
                         tools_module=None, allowed_tools=None,
                         kernel=False, kernel_scope="session", kernel_timeout=60.0,
                         kernel_name="python3",
-                        persistence=None, workflow_id=None):
+                        persistence=None, workflow_id=None,
+                        llm_max_output_tokens=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -780,6 +785,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                         kernel=kernel, kernel_scope=kernel_scope,
                         kernel_timeout=kernel_timeout, kernel_name=kernel_name,
                         persistence=persistence, workflow_id=workflow_id)
+    if llm_max_output_tokens is not None:
+        executor.default_max_tokens = llm_max_output_tokens
     executor.composer = WorkflowComposer(registry, executor)
     if kernel:
         click.echo(f"IPython kernel: enabled (name={kernel_name}, scope={kernel_scope}, "

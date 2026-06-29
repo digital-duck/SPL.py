@@ -420,7 +420,7 @@ def cmd_execute_alias(ctx: click.Context, **kwargs) -> None:
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--timeout", default=None, type=int, metavar="SECONDS",
               help="Per-call timeout in seconds (default: 600 with --claude-allowed-tools, 300 otherwise).")
-@click.option("--max-tokens", "max_tokens", default=None, type=int, metavar="N",
+@click.option("--llm-max-output-tokens", "max_tokens", default=None, type=int, metavar="N",
               help="Default max tokens per GENERATE call (overrides built-in default of 1000).")
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
 def cmd_execute(file: str, adapter: str | None, model: str | None,
