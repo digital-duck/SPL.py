@@ -129,6 +129,35 @@ def get_style_guide(style: str) -> str:
     return sp.style_instruction(style)  # type: ignore[attr-defined]
 
 
+# ── Language ──────────────────────────────────────────────────────────────────
+
+_LANGUAGE_NAMES: dict[str, str] = {
+    "en": "English",
+    "zh": "Chinese (中文)",
+    "fr": "French (Français)",
+    "es": "Spanish (Español)",
+    "de": "German (Deutsch)",
+    "ja": "Japanese (日本語)",
+    "ko": "Korean (한국어)",
+    "pt": "Portuguese (Português)",
+    "ru": "Russian (Русский)",
+    "it": "Italian (Italiano)",
+    "ar": "Arabic (العربية)",
+    "hi": "Hindi (हिन्दी)",
+}
+
+
+@spl_tool
+def language_name(code: str) -> str:
+    """Map an ISO 639-1 code to an explicit language name (e.g. 'zh' -> 'Chinese (中文)').
+
+    Spelling out the language name, rather than relying on the model to expand
+    the bare code, makes the language instruction unambiguous for weaker/local
+    models. Falls back to the code itself if unrecognised.
+    """
+    return _LANGUAGE_NAMES.get(code.strip().lower(), code)
+
+
 # ── File utilities ───────────────────────────────────────────────────────────
 
 @spl_tool

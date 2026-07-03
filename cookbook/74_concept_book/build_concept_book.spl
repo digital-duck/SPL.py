@@ -45,14 +45,17 @@ Surrounding context: {context}
 
 Begin the section with a level-2 Markdown heading: ## {label}
 
-Follow the structure and length specified in the STYLE GUIDE above exactly.
-Use LaTeX for all mathematics and notation.
-Write the narrative in language: {language}  (ISO 639-1 code, e.g. "en", "zh", "fr", "es").
-Mathematical notation and LaTeX remain in their standard form regardless of language.
+Follow the structure and length specified in the STYLE GUIDE above. The
+STRUCTURE labels there (e.g. "Picture this", "Worked example") describe what
+each part should contain — they are English labels for your reference only,
+not text to copy verbatim. Write every word of the output, including any
+structural headers, entirely in {language}.
+Use LaTeX for all mathematics and notation; mathematical notation and LaTeX
+remain in their standard form regardless of language.
 Output only the section text. No preamble, no metadata.
 $$;
 
-CREATE FUNCTION refine_section(section TEXT, feedback TEXT, style_guide TEXT)
+CREATE FUNCTION refine_section(section TEXT, feedback TEXT, style_guide TEXT, language TEXT)
 RETURN TEXT
 AS $$
 You are an expert author. Revise the section below based on the feedback
@@ -60,6 +63,10 @@ provided. Keep all correct content; fix only what is flagged. Maintain the
 style described below throughout the revision.
 
 {style_guide}
+
+The STRUCTURE labels in the STYLE GUIDE above are English labels for
+reference only, not text to copy verbatim. Write every word of the revision,
+including any structural headers, entirely in {language}.
 
 SECTION:
 {section}
@@ -70,7 +77,7 @@ FEEDBACK:
 Output the revised section only. No preamble. No commentary.
 $$;
 
-CREATE FUNCTION write_payoff(target TEXT, applications TEXT, style_guide TEXT)
+CREATE FUNCTION write_payoff(target TEXT, applications TEXT, style_guide TEXT, language TEXT)
 RETURN TEXT
 AS $$
 You are an expert author writing the capstone of a concept-book.
@@ -87,8 +94,11 @@ Write a "Payoff" section that:
 
 Begin with: ## Payoff
 
-Follow the length and structure in the STYLE GUIDE above.
-Use LaTeX for mathematics and notation. Output only the section. No preamble.
+Follow the length and structure in the STYLE GUIDE above; any English
+structure labels there describe the content only, not text to copy verbatim.
+Use LaTeX for mathematics and notation. Write every word of the output,
+including any structural headers, entirely in {language}.
+Output only the section. No preamble.
 $$;
 
 -- ── Main workflow ────────────────────────────────────────────────────────────
@@ -129,6 +139,7 @@ DO
     --    reducible to primitives, stopping the workflow before any LLM calls.
     CALL setup_domain(@domain_yaml, @target, @payoff_weight) INTO @_
     CALL get_style_guide(@style) INTO @style_guide
+    CALL language_name(@language) INTO @language_label
     CALL order_length(@domain_yaml) INTO @order_len
     CALL order_bullets(@domain_yaml) INTO @_order_bullets
 
@@ -153,14 +164,14 @@ DO
             WHEN = "miss" THEN
                 LOGGING f"cache MISS for {@concept} — generating with the LLM" LEVEL INFO
 
-                GENERATE write_section(@concept, @_label, @concept, @style_guide, @language) INTO @section
+                GENERATE write_section(@concept, @_label, @concept, @style_guide, @language_label) INTO @section
 
                 -- Primitive budget check
                 CALL count_new_primitives(@section, @domain_yaml) INTO @_prim_count
                 CALL needs_primitive_refinement(@_prim_count, @primitive_budget) INTO @_refine
                 EVALUATE @_refine
                     WHEN = "yes" THEN
-                        GENERATE refine_section(@section, "introduce at most one new primitive per section", @style_guide) INTO @section
+                        GENERATE refine_section(@section, "introduce at most one new primitive per section", @style_guide, @language_label) INTO @section
                     ELSE
                         LOGGING "Primitive budget OK" LEVEL INFO
                 END
@@ -169,7 +180,7 @@ DO
                 CALL verify_section(@section, @domain_yaml) INTO @check
                 EVALUATE @check
                     WHEN contains("fail") THEN
-                        GENERATE refine_section(@section, @check, @style_guide) INTO @section
+                        GENERATE refine_section(@section, @check, @style_guide, @language_label) INTO @section
                     ELSE
                         LOGGING "Content verified" LEVEL INFO
                 END
@@ -198,7 +209,7 @@ DO
     CALL apps_list(@domain_yaml) INTO @apps
     CALL now_float() INTO @t_payoff_start
 
-    GENERATE write_payoff(@target, @apps, @style_guide) INTO @capstone
+    GENERATE write_payoff(@target, @apps, @style_guide, @language_label) INTO @capstone
 
     CALL elapsed_secs(@t_payoff_start) INTO @payoff_elapsed
     LOGGING f"[timing] payoff: {@payoff_elapsed}s" LEVEL INFO
