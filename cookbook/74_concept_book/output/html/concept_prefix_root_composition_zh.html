@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prefix Root Composition | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="prefix-root-composition">Prefix Root Composition</h2>
+<p><strong>定义</strong> 设 $f(x)$ 和 $g(x)$ 是两个可交合的实值函数。函数复合 $f \circ g$ 定义为 $(f \circ g)(x) = f(g(x))$。当我们考虑“根式前缀复合”（Prefix Root Composition）时，我们关注的是对整个复合函数进行开方（或取 $n$ 次方根）的操作。形式上，如果定义了一个操作 $\mathcal{R}_n(\cdot)$ 为取 $n$ 次方根，那么一个带有根式的复合函数可以记为：</p>
+$$h(x) = \sqrt[n]{(f \circ g)(x)} = \left((f \circ g)(x)\right)^{1/n} = (f(g(x)))^{1/n}$$
+<p>其中 $n$ 是一个正整数。理解这个结构的关键在于，根号操作 $\mathcal{R}_n(\cdot)$ 必须应用于复合函数 $f(g(x))$ 的整个输出值。在进行此类分析时，我们通常要求 $f(g(x)) \ge 0$，以确保实数域内定义的有效性。</p>
+<p><strong>例题</strong> 考虑以下两个函数：$f(u) = u + 2$ 和 $g(x) = x^2 - 1$。我们想计算 $\sqrt{f(g(x))}$。首先进行复合，得到 $(f \circ g)(x) = f(g(x)) = (x^2 - 1) + 2 = x^2 + 1$. 然后取平方根：</p>
+$$h(x) = \sqrt{(x^2 + 1)} = (x^2 + 1)^{1/2}$$
+<p>我们可以使用链式法则求导。令 $y = x^2+1$，则 $\frac{dy}{dx} = 2x$。由于 $h(x) = y^{1/2}$，根据复合函数求导法则：</p>
+$$\frac{dh}{dx} = \frac{d}{dx}(y^{1/2}) = \frac{1}{2\sqrt{y}} \cdot \frac{dy}{dx} = \frac{1}{2\sqrt{x^2+1}} \cdot 2x = \frac{x}{\sqrt{x^2+1}}$$
+<p>此例展示了根式前缀复合的运算步骤和</p>
+  </main>
+</div>
+</body>
+</html>

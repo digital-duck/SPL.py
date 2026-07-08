@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>In- | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="in">In-</h2>
+<p><strong>定义 (Definition)</strong></p>
+<p>在集合论中，包含关系（Inclusion Relation）是描述一个元素是否属于一个给定集合的核心概念。对于两个集合 $A$ 和 $B$，我们用 $A \subset B$ 来表示 $A$ 是 $B$ 的子集（Subset），这意味着 $A$ 中的每一个元素都也是 $B$ 中的元素。形式上，包含关系 $\subset$ 定义为：$\forall x, (x \in A \implies x \in B)$。当且仅当 $A \subseteq B$，即 $A$ 是 $B$ 的子集时，$A$ 满足包含于 $B$ 的条件。需要注意的是，一个集合总是自身的一个子集（即 $A \subseteq A$）。如果要求严格的子集关系（Proper Subset），则必须满足 $A \subset B$ 且 $A \neq B$。理解包含关系是构建更复杂的数学结构（如幂集、直积空间）的基础。</p>
+<p><strong>工作示例 (Worked example)</strong></p>
+<p>考虑实数集 $\mathbb{R}$ 中的两个集合：区间 $A = [0, 1]$ 和区间 $B = [-1, 2]$。我们希望判断 $A$ 是否包含于 $B$。根据定义，我们需要检查对于任意元素 $x \in A$，是否必然有 $x \in B$。 取 $x \in A$；这意味着 $0 \le x \le 1$. 由于 $B = [-1, 2]$，其元素满足 $-1 \le y \le 2$. 如果 $x \in [0, 1]$，则 $x$ 自动满足 $-1 \le x \le 2$（因为 $0 > -1$ 且 $1 < 2$）。因此，我们得出结论：$[0, 1] \subseteq [-1, 2]$。 反之，如果考虑集合 $C = [2, 3]$ 和 $B = [-1, 2]$。取元素 $x=2.5$；$x \in C$，但 $x \notin B$。因此，$C$ 不包含于 $B$ ($\text{i.e.}, C \not\subseteq B$)。</p>
+<p><strong>关键定理 (Key Theorem)</strong></p>
+<p>子集传递性定理（Transitivity of Subset Relation）：设 $A, B,$ 和 $C$ 是三个集合，如果满足 $A \subseteq B$ 且 $B \subseteq C$，那么必然有 $A \subseteq C$。 证明草图：假设 $x \in A$。根据前提一 ($A \subseteq B$)，我们知道 $x \in B$。再根据前提二 ($B \subseteq C$)，既然 $x \in B$，则必然有 $x \in C$。因此，$x \in C$。由于任意选择的元素都满足此条件，故 $A \subseteq C$ 成立。该定理证明了包含关系 $\subset$ 是一个传递关系（Transitive Relation）。</p>
+<p><strong>代码练习 (Lab cell)</strong></p>
+<p>使用 SymPy 库进行集合操作的初步演示。尽管 SymPy 主要用于符号计算和代数结构，但我们可以模拟其逻辑来验证元素是否满足包含条件。我们定义一个函数来检查</p>
+  </main>
+</div>
+</body>
+</html>

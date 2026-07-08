@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construct | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="构造-construct">构造 (Construct)</h2>
+<p>在高等数学和抽象代数理论中，“构造”是一个核心概念，它指建立一个新的、具有特定属性的数学对象（如函数、集合或结构），而不是简单地观察已有的对象。从形式化的角度来看，一个构造过程要求我们提供一套明确的、可执行的步骤，确保所构建的对象是确定的且满足预设的公理或定义域约束。例如，当我们在 $\mathbb{R}$ 空间中构造一条曲线时，我们必须通过参数方程或显式函数形式给出其精确描述。这种构造性思维要求数学家不仅要证明“存在”，更要展示“如何构建”。在分析学中，常见的构造方法包括极限过程、级数求和以及使用拓扑空间的嵌入映射等。理解构造的精髓在于掌握从抽象定义到具体实例的可逆映射机制。</p>
+<p><strong>工作例题：构造一个满足特定收敛条件的函数序列</strong></p>
+<p>假设我们希望构建一个在区间 $[0, 1]$ 上连续且逐点收敛到 $f(x) = 0$ 的函数序列 $\{g_n(x)\}_{n=1}^\infty$，但这个序列不能通过简单地乘以 $\frac{1}{n}$ 来实现，而是需要构造一个更复杂的、具有特定“平滑度”的函数形式。我们考虑使用以下参数化形式进行构造：</p>
+$$ g_n(x) = x \sin(\pi n x) e^{-nx} $$
+<p>我们需要证明这组函数序列是有效的构造，并且其极限为零。通过选取适当的权重因子 $e^{-nx}$ 和振荡项 $\sin(\pi n x)$ 的组合，我们确保了该序列在所有点都具有快速收敛性，这是构建分析学例题的关键步骤。</p>
+<p><strong>核心定理：连续函数的推广构造原则</strong></p>
+<p>若在一个紧致集 $K$ 上定义了一个函数族 $\{f_n\}_{n=1}^\infty$，并且这个函数族满足一致收敛的条件（即 $\lim_{n\to \infty} \sup_{x \in K} |f_n(x) - f(x)| = 0$），那么我们可以根据连续函数的推广构造原则，断言其极限函数 $f(x)$ 也一定是在 $K$ 上连续的。这一定理提供了一个从序列到限制函数的有效“继承”机制，是构建复杂分析结构的基础工具。证明的关键步骤在于利用 $\epsilon$-$N$ 语言来严格控制最大偏差项（supremum norm）。</p>
+<p><strong>实验代码单元 (SymPy)</strong></p>
+<p>在计算机代数系统中，我们可以使用 $SymPy$ 来验证构造的函数序列的极限行为和近似值。以下代码展示了计算给定</p>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prefix | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="前缀-prefix">前缀 (Prefix)</h2>
+<p><strong>定义与概念阐述</strong> 在科学和工程领域，前缀（Prefix）指用于表示标准单位制中常规量纲的乘法缩放因子。这些缩放因子并非独立的物理量，而是通过特定的约定俗成的方式，将基本单位（Base Unit）提升到更高的数量级或降低到更低的数量级，从而使科学表达式更加简洁和直观。从数学角度看，一个前缀 $P$ 可以被定义为一个实数乘积 $\alpha$，使得任何物理量 $A$ 的标准表示为 $N \cdot U$，其中 $N$ 是数值，$U$ 是基本单位（例如米 $\text{m}$）。当引入前缀时，新的单位 $U_P$ 变为 $P \cdot U$，对应的物理量则可以写为 $A = N' \cdot (P \cdot U) = (N \cdot P) \cdot U$。这里的核心在于，前缀 $\alpha$ 本质上代表了一个幂次形式的比例系数，通常与国际单位制（SI）的标准指数系统相关联。例如，千 ($\text{k}$) 代表 $10^3$，微 ($\mu$) 代表 $10^{-6}$。理解前缀的关键是掌握其作为纯粹乘法倍率的作用，而非引入新的物理维度。</p>
+<p><strong>工作示例：电容的计算</strong> 假设我们正在分析一个电容器的充电问题。基本单位电容（Capacitance, $C$）的标准单位是法拉 ($\text{F}$)，即 $\text{Coulomb/Volt}$ ($\text{C}/\text{V}$)。然而，在实际电路中，由于数值过小，我们习惯使用微法拉 ($\mu\text{F}$) 或纳法拉 ($\text{nF}$) 作为前缀单位。如果一个电容器的电容值为 $2.5 \times 10^{-6} \text{ F}$，那么它就可以用前缀表示为 $2.5 \, \mu\text{F}$。这里，前缀 $\mu$ 代表了缩放因子 $10^{-6}$。在进行任何计算时，我们必须将单位统一到基本 SI 单位制：</p>
+$$C = 2.5 \times 10^{-6} \text{ F} = 2.5 \times 10^{-6} \cdot (1 \frac{\text{Coulomb}}{\text{Volt}}) \text{。}$$
+<p>当计算电容 $C$ 所储存的电荷量 $Q$ 时，我们使用公式 $Q = C V$。代入前缀表示的数值，必须先转换为基本单位：</p>
+  </main>
+</div>
+</body>
+</html>

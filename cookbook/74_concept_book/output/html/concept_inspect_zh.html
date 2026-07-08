@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspect | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="inspect">Inspect</h2>
+<p>在高级编程和软件工程领域，程序往往需要了解自身结构的能力。这种能力被称为“内省”（Introspection）或“反射”（Reflection）。Python语言提供的<code>inspect</code>模块就是实现这一核心功能的标准工具集。本质上，内省允许我们运行时检查一个对象（如函数、类或方法）的元数据（metadata），例如其签名、源代码、参数数量和所属模块等，而无需事先知道这些信息。这对于构建高级框架、调试器或ORM（对象关系映射）层至关重要。</p>
+<p><strong>工作示例：函数签名的分析</strong> 假设我们定义了一个简单的函数 $f(a, b=1)$。通过传统的调用方式，程序只能执行其功能；但若使用<code>inspect</code>模块，我们可以获取到关于该函数的结构化信息。例如，我们可以查询出它接受的参数列表、默认参数的值以及这些参数的数据类型约束（如果使用了类型提示）。这使得我们能够在不修改函数主体代码的情况下，对其接口进行全面分析。</p>
+<p><strong>关键原理：元数据与运行时环境</strong> 内省的能力来源于Python解释器在加载和执行对象时会附加丰富的元数据层。这个机制的核心原理是：程序对自身结构信息的访问权限并非基于编译期的静态类型检查，而是依赖于运行时的动态属性查询。这可以被概括为一个关键原则——“运行时可访问性”。虽然我们无法用传统的微积分定理来描述它，但其概念等同于一个系统必须能够维护和暴露其内部状态（</p>
+  </main>
+</div>
+</body>
+</html>

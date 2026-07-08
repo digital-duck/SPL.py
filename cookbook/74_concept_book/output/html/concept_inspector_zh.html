@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspector | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="inspector">Inspector</h2>
+<p><strong>精确定义 (Definition)</strong></p>
+<p>在符号计算和数学分析的背景下，“检查器”（Inspector）指的是一种系统化的工具或方法论，用于对给定表达式、函数性质或算法推导结果进行结构化验证。它不仅限于简单的数值比较，更着重于检查表达式是否满足特定的代数恒等式、微分方程解的存在性，或者是否存在计算上的不一致性（inconsistency）。从形式逻辑的角度看，检查器旨在将一个复杂的数学命题 $\mathcal{P}$ 拆分解成一系列可验证的子属性 $\{A_1, A_2, \dots, A_n\}$。如果所有 $A_i$ 皆成立，则可以推断出 $\mathcal{P}$ 的真值性。其核心功能是提供一种形式化、自动化的证明草图（Proof Sketch），从而增强用户对结果的置信度，尤其是在处理高阶导数或多变量优化问题时。</p>
+<p><strong>工作示例 (Worked Example)</strong></p>
+<p>假设我们要求检查函数 $f(x) = e^{2x}$ 的二阶导数是否满足一定的代数关系。传统的计算方法需要手动求两次导数，容易出错。使用检查器原理时，我们首先定义待验证的属性：设 $y' = f'(x)$，则我们需要检验 $\frac{d}{dx}(y') \stackrel{?}{=} 2(f'(x))^2$ 是否为恒</p>
+  </main>
+</div>
+</body>
+</html>

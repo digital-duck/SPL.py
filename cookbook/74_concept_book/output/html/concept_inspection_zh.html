@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspection | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="检查法-inspection">检查法 (Inspection)</h2>
+<p><strong>定义 (Definition)</strong> 在数学和科学计算领域，检查法（Inspection）是指利用人类的直觉、经验知识以及对函数或数列行为模式的初步观察，来快速建立一个关于未知量级数或解的近似模型的过程。它并非严格意义上的计算方法，而是一种预分析工具。当面对复杂的方程 $f(x) = 0$ 或需要估计某个积分 $\int_a^b g(x)\,dx$ 的值时，检查法指导学生首先观察边界条件、对称性或已知点的趋势，从而确定一个合理的初始猜测区间 $[L, U]$，或提出一个近似形式的解析解。虽然它不提供严格的收敛证明，但它是设计和选择后续迭代方法（如二分法、牛顿法等）的关键第一步。</p>
+<p><strong>例证 (Worked Example)</strong> 假设我们要求估计函数 $f(x) = e^{-x} \sin(\pi x)$ 在区间 $[0, 1]$ 上的定积分，即 $I = \int_0^1 e^{-x} \sin(\pi x)\,dx$。直接计算该积分较为复杂。通过检查法，我们首先观察到：</p>
+<li>当 $x=0$ 时，$f(0) = e^0 \sin(0) = 0$.</li>
+<li>当 $x=1$ 时，$f(1) = e^{-1} \sin(\pi) = 0$.</li>
+<li>在 $[0, 1]$ 区间内，函数值恒为非负。</li>
+<p>由于函数在两端点都趋近于零，且 $\sin(\pi x)$ 的周期性存在，我们初步估计该积分 $I$ 的值应该是一个较小的正数。我们可以利用矩形和近似法（如梯形公式）进行第一次粗略估算：</p>
+$$ I \approx T_2 = \frac{1}{2} [f(0) + f(1)] + \frac{\Delta x}{2} [f(0) + 2f(\frac{1}{2}) + f(1)] $$
+<p>由于 $f(0)=f(1)=0$ 且 $\Delta x = 0.5$，我们得到：</p>
+$$ I \approx 0.5 \cdot (e^{-0.5} \sin(\pi/2)) = 0.5 e^{-0.5} \approx 0.303 $$
+<p>这个初步的估计值 $0.303$ 为后续采用更高精度的数值积分方法（如辛普森法则）提供了可靠的初始猜测范围。</p>
+<p><strong>关键定理与原理 (Key Principle)</strong> 检查法本身并非一个严格的数学定理，它</p>
+  </main>
+</div>
+</body>
+</html>

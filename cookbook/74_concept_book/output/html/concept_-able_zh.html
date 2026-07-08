@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>-Able | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="可微性-differentiability">可微性 (Differentiability)</h2>
+<p><strong>定义 (Definition)</strong> 一个实值函数 $f(x)$ 在点 $x_0$ 处是可微的，意味着函数在该点的切线斜率存在且有限。从严格的数学角度来看，我们要求极限 $\lim_{h \to 0} \frac{f(x_0+h) - f(x_0)}{h}$ 必须存在。如果这个极限存在，我们称其值为 $f'(x_0)$，即导数。因此，可微性是衡量函数局部平滑性的核心概念。当一个函数在某个区间上处处可微时，我们可以保证该函数在该区间内具有连续性（这是重要的结论之一）。</p>
+<p><strong>例题分析 (Worked Example)</strong> 考虑函数 $f(x) = x^2$ 在点 $x_0=3$ 处的可微性。根据定义，我们计算导数极限：</p>
+$$f'(3) = \lim_{h \to 0} \frac{f(3+h) - f(3)}{h}$$
+<p>首先代入函数值：</p>
+$$f(3+h) = (3+h)^2 = 9 + 6h + h^2$$
+$$f(3) = 9$$
+<p>将这些代入极限表达式：</p>
+$$f'(3) = \lim_{h \to 0} \frac{(9 + 6h + h^2) - 9}{h}$$
+$$f'(3) = \lim_{h \to 0} \frac{6h + h^2}{h}$$
+<p>分子分母同除以 $h$ (因为 $h \neq 0$)：</p>
+$$f'(3) = \lim_{h \to 0} (6 + h) = 6$$
+<p>因此，函数 $f(x)=x^2$ 在 $x=3$ 处的导数为 $6$，证明了该函数在这一点是可微的。</p>
+<p><strong>关键定理 (Key Theorem)</strong> <strong>费马定理（Fermat's Theorem）的一个推论：</strong> 如果一个函数 $f(x)$ 在点 $x_0$ 处可微，那么它在该点必然是连续的。反之则不一定成立，例如分段定义的绝对值函数 $|x|$ 在 $x=0$ 处虽然连续，但不可导（因为左导数和右导数不相等）。理解这一单向性关系对于分析函数的几何性质至关重要。</p>
+<p><strong>实验单元 (Lab Cell)</strong> 使用 SymPy 库计算一个更复杂的函数在指定点处的可微性。我们考察 $g(x) = \sin(x) + x^3$ 在 $\pi/2$ 处的导数。</p>
+  </main>
+</div>
+</body>
+</html>

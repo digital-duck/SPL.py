@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suffix Derivation | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="后缀推导-suffix-derivation">后缀推导 (Suffix Derivation)</h2>
+<p><strong>定义 (Definition)</strong> 在形式语言理论中，后缀推导描述了从一个初始字符串（或序列）开始，通过系统地附加一系列预定的“后缀”来生成更长合法字符串的过程。假设我们有一个字母表 $\Sigma$ 和一组固定的后缀集合 $S = \{s_1, s_2, \dots, s_k\}$。给定起始字符串 $w_0 \in \Sigma^*$，一个由有限个后缀序列构成的推导过程可以表示为：</p>
+$$ w_i = w_{i-1} \cdot s_j $$
+<p>其中 $s_j \in S$，$w_i$ 是第 $i$ 步的字符串。如果该推导过程经过了 $N$ 步，最终得到的字符串记为 $w_N$，其形式可写为：</p>
+$$ w_N = w_0 s_{j_1} s_{j_2} \cdots s_{j_N} $$
+<p>这种推导机制的核心在于，它将语言生成过程分解为一个基础核心 $w_0$ 和一个从有限集合 $S$ 中重复选择的后缀路径。</p>
+<p><strong>工作示例 (Worked Example)</strong> 考虑一个编码系统，其字母表为 $\Sigma = \{A, B\}$。我们设定初始字符串 $w_0 = A$. 设可用的后缀集合为 $S = \{B, BA\}$. 我们希望计算所有长度不超过 3 的合法推导路径。</p>
+<li><strong>第 0 步:</strong> 当前字符串 $w_0 = A$.</li>
+<li><strong>第 1 步 (第一次推导):</strong></li>
+<p>   *   选择 $s_1 = B$: $w_1 = A \cdot B = AB$.    *   选择 $s_2 = BA$: $w_1' = A \cdot BA = ABA$.</p>
+<li><strong>第 2 步 (第二次推导，以 $AB$ 为基础):</strong></li>
+<p>   *   从 $AB$ 选择 $B$: $w_2 = AB \cdot B = ABB$.    *   从 $AB$ 选择 $BA$: $w_2' = AB \cdot BA = ABBA$.</p>
+<li><strong>第 3 步 (第三次推导，以 $ABB$ 为基础):</strong></li>
+<p>   *   从 $ABB$ 选择 $B$: $w_3 = ABB \</p>
+  </main>
+</div>
+</body>
+</html>

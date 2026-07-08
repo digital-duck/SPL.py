@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="构造-construction">构造（Construction）</h2>
+<p>在高级数学分析中，“构造”是一个核心概念，它指代通过已知的基本元素、操作或过程系统地建立一个更复杂但结构明确的数学对象。无论是构建数列的极限、定义群论中的子结构，还是确定函数空间的完备性，其本质都是从已知组件出发进行精确的、逻辑上的延伸。对于初学者而言，理解构造的关键在于掌握从“直觉”到“形式化定义”的转变过程。一个完整的数学构造需要具备严密的公理基础和清晰的操作步骤，确保所构建的对象在整个数学体系内是唯一且一致存在的。例如，我们不能凭空假设一个对象存在，而必须通过一系列可验证的步骤（如极限过程 $\epsilon$-$N$ 语言）来证明其合理性和存在性。本节将重点讨论函数构造中的泰勒级数逼近作为一种典型的构造方法。</p>
+<p><strong>工作示例：利用泰勒展开式构造函数近似值</strong> 假设我们希望分析一个在某点 $a$ 附近难以直接计算的函数 $f(x)$ 的行为，但已知其足够光滑（即存在足够的导数）。我们可以通过构建其关于 $a$ 的 $N$ 次泰勒多项式 $P_N(x)$ 来近似 $f(x)$。</p>
+$$P_N(x) = \sum_{k=0}^{N} \frac{f^{(k)}(a)}{k!}(x-a)^k$$
+<p>这个多项式 $P_N(x)$ 就是对函数 $f(x)$ 的一个“构造”。我们知道，随着阶数 $N$ 趋于无穷大，如果该级数收敛（即存在泰勒余项），则有：</p>
+$$\lim_{N \to \infty} P_N(x) = f(x)$$
+<p>这个极限过程本身就是一种强大的数学构造手段，它将一个复杂的连续函数逼近为一个可计算的、形式明确的多项式。</p>
+<p><strong>关键定理：一致收敛性与构造（Uniform Convergence and Construction）</strong> 当一个由数列 $\{f_N(x)\}$ 构成的函数序列在区间 $[a, b]$ 上具有一致极限时，我们称其极限函数 $f(x) = \lim_{N \to \infty} f_N(x)$ 是收敛的。根据强大的定理，如果 $f_N(x)$ 的构造过程满足一定的单调性或连续性条件（例如，所有 $f_N(x)$ </p>
+  </main>
+</div>
+</body>
+</html>

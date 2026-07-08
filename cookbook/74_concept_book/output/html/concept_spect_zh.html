@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spect | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="spect">Spect</h2>
+<p><strong>定义 (Definition)</strong></p>
+<p>在信号处理和傅里叶分析中，谱（Spectrum），通常记作 $S(\omega)$ 或 $|X(j\omega)|^2$，是描述一个时域信号的频率组成特性的数学工具。给定一个有限时间范围内的信号 $x(t)$，其频谱通过对该信号进行傅里叶变换 $\mathcal{F}$ 获得。形式上，我们定义连续时间信号 $x(t)$ 的频谱为：</p>
+$$X(\omega) = \mathcal{F}\{x(t)\} = \int_{-\infty}^{\infty} x(t) e^{-j\omega t} dt$$
+<p>其中 $\omega$ 是角频率（$\omega = 2\pi f$），$j$ 是虚数单位。如果信号 $x(t)$ 的能量在有限时间内分布，其频谱 $|X(\omega)|^2$ 代表了该信号在不同频率 $\omega$ 上携带的功率密度。因此，谱分析的核心思想是将时域的复杂行为（如震荡、衰减）分解为一系列纯粹的正弦波分量的叠加。这使得我们能够用频域的方法来研究原本难以处理的时域问题。</p>
+<p><strong>工作示例 (Worked Example)</strong></p>
+<p>假设我们考虑一个简单的正弦信号 $x(t) = A \cos(\omega_0 t)$，其中 $A$ 是振幅，$\omega_0$ 是角频率。我们需要求其频谱 $X(\omega)$。根据傅里叶变换的性质，已知 $\mathcal{F}\{\cos(\omega_0 t)\} = \frac{1}{2} [\delta(\omega - \omega_0) + \delta(\omega + \omega_0)]$。因此，该信号的频谱是两个在 $\pm \omega_0$ 处的狄拉克 $\delta$ 函数（Dirac Delta Functions）组成的。这表明，一个纯粹频率为 $\omega_0$ 的正弦波，其能量高度集中在频率 $\omega_0$ 和 $-\omega_0$ 处，而在其他所有频率上的能量几乎为零。这种例子直观地展示了谱分析的本质：信号的全部信息被编码在了其特定频率分量上。</p>
+<p><strong>关键定理与推导草图 (Key Theorem and Proof Sketch)</strong></p>
+<p>傅里叶变换域和时域之间的关系是理解频谱的关键。其中一个重要的性质是关于“卷积定理”（Convolution Theorem）。该</p>
+  </main>
+</div>
+</body>
+</html>

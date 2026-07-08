@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Port | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="端口-port">端口 (Port)</h2>
+<p><strong>定义 (Definition)</strong></p>
+<p>在电路理论和信号处理领域，端口（Port）是一个核心的概念，它提供了一种标准化的方法来描述一个复杂的系统、组件或电网络与外部世界进行交互的接口。从物理角度看，一个端口通常由一组特定的连接点组成，每个连接点对应于一个独立的信号通道。数学上，我们可以将一个包含 $N$ 个输入和 $M$ 个输出的线性时间不变（LTI）系统 $\mathcal{S}$ 定义为一个具有 $P = N+M$ 个端口的黑箱模型。</p>
+<p>系统的行为通常通过其传递函数或输入-输出关系来表征。如果我们将所有输入的电压向量定义为 $\mathbf{V}_{in}(t) \in \mathbb{R}^N$，所有输出电压向量定义为 $\mathbf{V}_{out}(t) \in \mathbb{R}^M$，那么系统之间的关系可以简洁地写成：</p>
+$$
+\mathbf{V}_{out}(s) = \mathbf{Z}(s) \cdot \mathbf{V}_{in}(s)
+$$
+<p>其中，$s$ 是拉普拉斯域变量，$\mathbf{Z}(s)$ 是系统的端口矩阵（Portadmittance Matrix），它描述了系统从输入到输出的复杂传递关系。理解端口的概念至关重要，因为它允许我们将复杂的物理系统分解为可分析的、标准化的模块化组件。</p>
+<p><strong>工作示例 (Worked Example)</strong></p>
+<p>考虑一个简单的滤波器网络。假设我们设计了一个二阶低通滤波器 $F$。我们将其视为一个具有单个输入端口（Port 1）和单个输出端口（Port 2）的系统。输入信号电压为 $V_{in}(s)$，输出信号电压为 $V_{out}(s)$。</p>
+<p>根据定义，这个系统的传递函数 $H(s)$ 就是其端口矩阵 $\mathbf{Z}(s)$ 的唯一元素：</p>
+$$
+\mathbf{Z}(s) = [H(s)]
+$$
+<p>如果该滤波器的传输函数已知为 $H(s) = \frac{1}{s^2 + 0.5s + 1}$，那么当我们在工频（$s=j\omega$）下进行分析时，输入端口的激励 $\mathbf{V}_{in}(j\omega)$ 将决定输出端口的响应 $\mathbf{V}_{out}(j\omega)$：</p>
+$$
+V_{out}(j\omega) = H(j\omega) \cdot V_{in}(j\omega)
+$$
+<p>通过这种方式，我们无需分析滤波器内部复杂的电感和电容网络，仅通过端口矩阵就能确定其在特定工作点上的行为。</p>
+<p><strong>关键定理：散射参数 (Key Theorem: Scattering Parameters)</strong></p>
+<p>对于那些具有对称性的、无源（Passive）的、多端口网络，使用散射参数（Scattering Parameters, $\mathbf{S}$）进行描述是极其高效和简洁的。散射参数定义了在所有端口上激励电压与该端口上的反射电压之间的关系。</p>
+<p>假设一个 $N$ 端口网络，我们定义输入激励向量为 $\mathbf{V}_p = [V_1, V_2, \dots, V_N]^T$，输出反射电压向量为 $\mathbf{V}_s = [V_{s1}, V_{s2}, \dots, V_{sN}]^T$。则关系矩阵 $\mathbf{S}$ 满足：</p>
+$$
+\mathbf{V}_s = \mathbf{S} \cdot \mathbf{V}_p
+$$
+<p>在某些理想情况下，例如当网络被完全匹配（即所有端口的输入激励为零）时，</p>
+  </main>
+</div>
+</body>
+</html>

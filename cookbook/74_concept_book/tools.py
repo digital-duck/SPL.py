@@ -226,8 +226,14 @@ def concept_label(concept: str) -> str:
 
 
 @spl_tool
-def write_concept_html(concept: str, section: str, domain_yaml: str, output_dir: str) -> str:
-    """Write a standalone HTML page for one concept to output_dir/concept_{concept}.html."""
+def write_concept_html(concept: str, section: str, domain_yaml: str, output_dir: str, language: str = "en") -> str:
+    """Write a standalone HTML page for one concept to output_dir/concept_{concept}[_{language}].html.
+
+    The filename is suffixed with the language code for every language except English
+    (`en` stays unsuffixed for backward compatibility with existing links/bookmarks),
+    so re-running the same domain in a different language does not overwrite the
+    other language's pages.
+    """
     if not output_dir:
         return ""
     domain_id = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
@@ -240,15 +246,17 @@ def write_concept_html(concept: str, section: str, domain_yaml: str, output_dir:
         section, count=1, flags=re.MULTILINE,
     )
     back_url = f'../../#/domain/{domain_id}'
+    lang_attr = f' lang="{language}"' if language and language != 'en' else ' lang="en"'
     html = _render(
         _CONCEPT_PAGE_TEMPLATE,
-        lang_attr=' lang="en"',
+        lang_attr=lang_attr,
         concept_title=_esc(label),
         domain_title=domain_title,
         back_url=back_url,
         body=_md_to_html(section),
     )
-    out = Path(output_dir) / f"concept_{concept}.html"
+    suffix = f"_{language}" if language and language != "en" else ""
+    out = Path(output_dir) / f"concept_{concept}{suffix}.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(html, encoding="utf-8")
     return str(out)
@@ -256,7 +264,11 @@ def write_concept_html(concept: str, section: str, domain_yaml: str, output_dir:
 
 @spl_tool
 def build_book_index(domain_yaml: str, target: str, language: str, output_dir: str, payoff: str) -> str:
-    """Build book_{target}.html — a TOC index linking to individual concept pages."""
+    """Build book_{target}[_{language}].html — a TOC index linking to individual concept pages.
+
+    Filename and links carry the same language-suffix convention as
+    write_concept_html: unsuffixed for English, `_{language}` otherwise.
+    """
     if not output_dir:
         return ""
     cache = _domain(domain_yaml)
@@ -264,12 +276,13 @@ def build_book_index(domain_yaml: str, target: str, language: str, output_dir: s
     domain = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
     domain_title = _esc(domain.replace('_', ' ').title())
     lang_attr = f' lang="{language}"' if language and language != 'en' else ' lang="en"'
+    suffix = f"_{language}" if language and language != "en" else ""
 
     toc_items = []
     for concept in order:
         label = _esc(concept.replace('_', ' ').title())
         cls = ' class="toc-target"' if concept == target else ''
-        toc_items.append(f'<li{cls}><a href="concept_{concept}.html">{label}</a></li>')
+        toc_items.append(f'<li{cls}><a href="concept_{concept}{suffix}.html">{label}</a></li>')
     toc_html = '<ol>\n' + '\n'.join(toc_items) + '\n</ol>'
 
     domain_id = re.sub(r'(_graph)?\.(ya?ml|json|py)$', '', domain_yaml)
@@ -283,7 +296,7 @@ def build_book_index(domain_yaml: str, target: str, language: str, output_dir: s
         toc=toc_html,
         payoff=_md_to_html(payoff),
     )
-    out = Path(output_dir) / f"book_{target}.html"
+    out = Path(output_dir) / f"book_{target}{suffix}.html"
     out.write_text(html, encoding="utf-8")
     return str(out)
 

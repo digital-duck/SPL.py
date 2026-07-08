@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Struct | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="struct">Struct</h2>
+<p><strong>定义 (Definition)</strong> 结构体（Structure，简称 $\text{struct}$）是一种复合数据类型，允许用户将不同性质、但逻辑上相关联的数据项组织成一个单一的、有意义的单元。从理论计算的角度看，$\text{struct}$ 的本质是实现一种有限域上的有序元组集合，其优势在于提供了一种语义化的封装机制，而非仅仅是记忆元素的简单堆叠。假设我们定义了一个包含姓名（字符串）、年龄（整数）和学号（浮点数）的结构体 $\Sigma$。$\Sigma$ 允许我们将 $\{ \text{name}, \text{age}, \text{student\_id} \}$ 这个三元组视为一个整体实体，例如“学生记录”。在内存层面，$\text{struct}$ 的实现通常涉及到连续分配一块固定大小的存储空间，并利用位偏移（bit offset）机制确保各成员变量能高效地被访问。这种封装性使得数据模型的清晰度和代码的可读性得到极大的提升，是面向对象编程范式基础中的重要组成部分。</p>
+<p><strong>工作示例 (Worked Example)</strong> 假设我们正在模拟一个物理系统，需要记录粒子 $\text{P}$ 的状态。该状态必须包含其质量 $m$（实数）、初始速度 $\vec{v}_0 = \langle v_{0x}, v_{0y} \rangle$（二维向量）以及时间 $t_0$（实数）。我们可以定义一个名为 $\text{ParticleState}$ 的结构体：</p>
+$$\text{ParticleState} = \{ m: \mathbb{R}^+, \vec{v}_0: \mathbb{R}^2, t_0: \mathbb{R} \}$$
+<p>如果使用标准变量组合，我们需要三个独立的存储单元。而通过 $\text{struct}$ 定义后，我们得到一个单一的实例 $S_{p}$:</p>
+$$S_{p} = \langle 1.67 \text{ kg}, \langle 5.0, -2.0 \rangle \text{ m/s}, 0.0 \text{ s} \rangle$$
+<p>访问其特定成员，如初始速度的 $x$ 分量 $\vec{v}_{0x}$，变得直观且类型安全的：$\text{S}_p.\text{v}_0[0]$。这种组织方式极大地增强了代码对物理模型域语义的映射效率。</p>
+<p><strong>关键原则与推理 (Key Principle and Proof Sketch)</strong> 结构体的有效性源于其封装性和数据一致性约束。从计算机科学角度看，使用 $\text{struct}$ 来定义一个复合类型 $T$ 相当于在原始类型集合上构造了一个新的代数结构 $(S, \oplus)$, 其中 $S$ 是所有合法状态的集合，$\oplus$ 是合并/初始化操作。关键在于，当我们对结构体进行赋值或传递时，通常发生的是值拷贝（Value Copy），而非引用传递（Reference Passing）。这意味着修改一个 $\text{struct}$ 的副本不会影响原始数据，从而保证了局部变量状态的独立性。这种内存管理行为是确保程序状态机正确运行的基础。</p>
+<p><strong>代码实现与验证 (Lab Cell)</strong> 我们使用 Python 的 <code>typing</code> 模块来模拟结构体的定义和访问：</p>
+  </main>
+</div>
+</body>
+</html>

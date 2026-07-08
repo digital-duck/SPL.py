@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morphological Decoding Principle | English Morphology</title>
+<script>
+MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fafaf8;color:#1a1a1a;line-height:1.7}
+h2{font-size:1.45rem;color:#1e3a5f;margin-bottom:12px}
+h3{font-size:1.1rem;color:#2e4a7f;margin:20px 0 8px}
+h4{font-size:1rem;color:#3a5a8f;margin:16px 0 6px}
+p{margin-bottom:16px;font-size:1rem}
+li{margin-bottom:6px;margin-left:24px;font-size:1rem}
+pre{background:#f4f4f0;border:1px solid #d8d8d0;border-radius:6px;
+    padding:16px 20px;overflow-x:auto;margin:16px 0}
+code{font-family:Menlo,Consolas,monospace;font-size:.87em}
+p code{background:#f0f0ea;padding:1px 4px;border-radius:3px}
+.back{display:inline-block;font-family:system-ui,sans-serif;font-size:.85rem;
+      color:#2563eb;text-decoration:none;margin-bottom:24px}
+.back:hover{text-decoration:underline}
+.page{max-width:780px;margin:0 auto;padding:40px 32px}
+header{margin-bottom:32px}
+section{margin-bottom:48px;border-top:1px solid #e0e0d8;padding-top:36px}
+section:first-of-type{border-top:none;padding-top:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a href="../../#/domain/english_morphology" class="back">← English Morphology</a>
+  </header>
+  <main>
+    <h2 id="形态解码原理-morphological-decoding-principle">形态解码原理 (Morphological Decoding Principle)</h2>
+<p>形态解码原理是信息理论和信号处理领域中的一个核心概念，它指出对观测到的数据流进行最佳解码时，底层的结构性约束（即“形态”）必须被纳入模型考量。简单来说，我们不能将任何观测序列 $Y$ 视为完全独立的随机过程；相反，如果该观测源于一个具有特定物理或生物学结构的系统，那么这个固有结构就会极大地限制和指导可能的解码路径。从数学角度看，它要求我们在最大似然估计（MLE）框架下引入额外的正则化项或约束条件，确保解码出的潜在变量 $\hat{X}$ 必须符合既知的形态约束 $C$。如果忽略这些内在的形态信息，所得的解码结果往往在物理上或逻辑上是不可行的。</p>
+<p><strong>工作示例：基于关节限制的路径重建 (Path Reconstruction with Joint Constraints)</strong> 假设我们正在从传感器数据流中重建一个机械臂（Robot Arm）的运动轨迹 $X(t)$。原始观测信号 $Y(t)$ 是各个关节的角度变化，但这些角度必须服从物理学定律和机械结构本身的限制（即形态约束）。如果直接使用标准的时间序列模型进行解码，可能会预测出某个关节在某一瞬间发生了不可能超过其</p>
+  </main>
+</div>
+</body>
+</html>

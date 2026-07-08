@@ -140,6 +140,10 @@ DO
     CALL setup_domain(@domain_yaml, @target, @payoff_weight) INTO @_
     CALL get_style_guide(@style) INTO @style_guide
     CALL language_name(@language) INTO @language_label
+    -- Cache key must vary with @language: without this, the same concept
+    -- generated in two languages collides on one cache slot and the later
+    -- write silently overwrites the earlier language's cached content.
+    CALL json_set("{}", "language", @language) INTO @_params_json
     CALL order_length(@domain_yaml) INTO @order_len
     CALL order_bullets(@domain_yaml) INTO @_order_bullets
 
@@ -157,8 +161,10 @@ DO
 
         LOGGING f"Section {@_i}: {@concept}" LEVEL INFO
 
-        -- Content cache lookup (Layer 2): a hit costs zero LLM calls
-        CALL cache_get(@concept) INTO @section
+        -- Content cache lookup (Layer 2): a hit costs zero LLM calls.
+        -- params_json carries @language so the same concept in a different
+        -- language is a distinct cache entry, not an overwrite.
+        CALL cache_get(@concept, params_json=@_params_json) INTO @section
         CALL concept_label(@concept) INTO @_label
         EVALUATE @section
             WHEN = "miss" THEN
@@ -185,7 +191,7 @@ DO
                         LOGGING "Content verified" LEVEL INFO
                 END
 
-                CALL cache_put(@concept, @section) INTO @cache_key
+                CALL cache_put(@concept, @section, params_json=@_params_json) INTO @cache_key
                 LOGGING f"Stored verified section — cache key {@cache_key}" LEVEL INFO
             ELSE
                 LOGGING f"cache HIT for {@concept} — reusing verified section (0 LLM calls)" LEVEL INFO
@@ -197,7 +203,7 @@ DO
         @textbook := @textbook + "\n\n---\n\n" + @section
         EVALUATE @output_dir
             WHEN != "" THEN
-                CALL write_concept_html(@concept, @section, @domain_yaml, @output_dir) INTO @_
+                CALL write_concept_html(@concept, @section, @domain_yaml, @output_dir, @language) INTO @_
             ELSE
                 LOGGING "Concept HTML skipped" LEVEL INFO
         END
