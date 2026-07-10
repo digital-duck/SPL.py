@@ -15,7 +15,7 @@ from spl.ir import ast_to_json, plans_to_json
 import json
 
 
-EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "..", "examples")
+EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "examples")
 
 
 def _full_pipeline(source, params=None, cache_enabled=False):

@@ -7,7 +7,7 @@ from click.testing import CliRunner
 from spl.cli import cli, _parse_params
 
 
-EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "..", "examples")
+EXAMPLES_DIR = os.path.join(os.path.dirname(__file__), "examples")
 
 
 @pytest.fixture
