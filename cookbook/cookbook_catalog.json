@@ -863,6 +863,27 @@
       "category": "application"
     },
     {
+      "id": "46",
+      "name": "MCP Integration",
+      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation \u2014 DODA across deployment modes via a single EVALUATE branch",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/46_mcp/mcp.spl",
+        "--adapter",
+        "ollama",
+        "--param",
+        "question=what is 7 factorial"
+      ],
+      "dir": "46_mcp",
+      "log": "mcp",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "cloud_infrastructure",
+      "tier": 1,
+      "excluded_adapters": []
+    },
+    {
       "id": "47",
       "name": "arXiv Morning Brief",
       "description": "Download arXiv PDFs \u2192 chunk \u2192 summarize each \u2192 reduce \u2192 assemble Markdown brief \u2014 WHILE loop, list tools, WITH OUTPUT BUDGET",
@@ -1153,7 +1174,7 @@
       "log": "voice_dialogue",
       "is_active": false,
       "approval_status": "disabled",
-      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) — same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ — args point at recipe 52's sample as a stand-in.)",
+      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) \u2014 same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ \u2014 args point at recipe 52's sample as a stand-in.)",
       "category": "multimodal",
       "tier": 4,
       "requires": [
@@ -1452,7 +1473,7 @@
     {
       "id": "74",
       "name": "Concept-Book Generator",
-      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml — compiled once, runs against any domain shaped the same way.",
+      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml \u2014 compiled once, runs against any domain shaped the same way.",
       "args": [
         "spl3",
         "validate",
@@ -1473,7 +1494,7 @@
     {
       "id": "75",
       "name": "SageMath Solver",
-      "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
+      "description": "Second rung of the verifier ladder: LLM parses NL problem \u2192 Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) \u2192 LLM explains. Requires --kernel-name sagemath.",
       "args": [
         "spl3",
         "run",
@@ -1497,7 +1518,7 @@
     {
       "id": "76",
       "name": "Lean Proof Verifier",
-      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
       "args": [
         "spl3",
         "run",
