@@ -1,0 +1,834 @@
+{
+  "_comment": "PocketFlow migration cookbook catalog — 42 recipes migrated from https://github.com/The-Pocket/PocketFlow/tree/main/cookbook",
+  "_schema": {
+    "id": "zero-padded recipe number (e.g. '001')",
+    "name": "human-readable recipe name",
+    "description": "one-line description of what the recipe demonstrates",
+    "args": "default spl3 run invocation as a list (adapter/model overridden by --adapter/--model flags at runtime)",
+    "dir": "recipe directory name relative to cookbook-pocketflow/",
+    "log": "log file prefix (timestamp appended at runtime)",
+    "is_active": "false = not yet validated; set to true after passing spl3 validate + spot-check run",
+    "approval_status": "new | approved | wip | disabled",
+    "category": "basics | agentic | multi-agent | reasoning | retrieval | application | safety | multimodal | cloud_infrastructure",
+    "tier": "1=beginner 2=intermediate 3=advanced (optional)",
+    "excluded_adapters": "list of adapters that cannot run this recipe (optional)",
+    "requires": "system-level requirements such as API keys or local services (optional)",
+    "notes": "migration notes or known issues (optional)"
+  },
+  "recipes": [
+    {
+      "id": "001",
+      "name": "Chat",
+      "description": "Basic multi-turn conversational loop with sliding-window message history",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/001_chat/chat.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "001_chat",
+      "log": "chat",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "002",
+      "name": "Structured Output",
+      "description": "Extract structured JSON data (e.g., resume skills) from unstructured text using schema-guided generation",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/002_structured_output/structured_output.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "resume_path=cookbook-pocketflow/002_structured_output/sample_resume.txt"
+      ],
+      "dir": "002_structured_output",
+      "log": "structured_output",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "003",
+      "name": "Workflow",
+      "description": "Sequential multi-step article writer: outline → section-by-section generation → assemble",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/003_workflow/workflow.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "topic=artificial intelligence"
+      ],
+      "dir": "003_workflow",
+      "log": "workflow",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "004",
+      "name": "Agent",
+      "description": "ReAct loop: LLM decides action → execute search tool → accumulate → answer",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/004_agent/agent.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=What is the capital of France?"
+      ],
+      "dir": "004_agent",
+      "log": "agent",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 1
+    },
+    {
+      "id": "005",
+      "name": "RAG",
+      "description": "Two-phase retrieval-augmented generation: offline chunk+embed+index, online retrieve+generate",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/005_rag/rag.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "005_rag",
+      "log": "rag",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "retrieval",
+      "tier": 1
+    },
+    {
+      "id": "006",
+      "name": "Map Reduce",
+      "description": "Parallel map over resumes with LLM scoring, reduce to ranked summary",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/006_map_reduce/map_reduce.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "006_map_reduce",
+      "log": "map_reduce",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "008",
+      "name": "Chat Guardrail",
+      "description": "Safety classifier layer that filters off-topic or harmful user messages before processing",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/008_chat_guardrail/chat_guardrail.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "user_messages=How do I book a flight?"
+      ],
+      "dir": "008_chat_guardrail",
+      "log": "chat_guardrail",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "safety",
+      "tier": 1
+    },
+    {
+      "id": "010",
+      "name": "Multi Agent",
+      "description": "Two-agent Taboo game: clue-giver avoids forbidden words while guesser identifies the target",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/010_multi_agent/multi_agent.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "target_word=elephant",
+        "--param",
+        "forbidden_words=animal,big,gray,trunk"
+      ],
+      "dir": "010_multi_agent",
+      "log": "multi_agent",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multi-agent",
+      "tier": 2
+    },
+    {
+      "id": "011",
+      "name": "Supervisor",
+      "description": "Supervisor routes research sub-tasks to a search agent and verifies the answer",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/011_supervisor/supervisor.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=What year did the Berlin Wall fall?"
+      ],
+      "dir": "011_supervisor",
+      "log": "supervisor",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multi-agent",
+      "tier": 2
+    },
+    {
+      "id": "012",
+      "name": "Batch Node",
+      "description": "Process large CSV files in chunks: LLM-score each row, write results incrementally",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/012_batch_node/batch_node.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "012_batch_node",
+      "log": "batch_node",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "013",
+      "name": "Batch Flow",
+      "description": "Apply a multi-step transformation workflow to a batch of input items",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/013_batch_flow/batch_flow.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "013_batch_flow",
+      "log": "batch_flow",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "014",
+      "name": "Thinking",
+      "description": "Multi-step chain-of-thought with YAML-validated reasoning; each step retried until structurally sound",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/014_thinking/thinking.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "problem=Solve: if 2x+3=11, what is x?"
+      ],
+      "dir": "014_thinking",
+      "log": "thinking",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2
+    },
+    {
+      "id": "015",
+      "name": "Chat Memory",
+      "description": "Multi-turn chat with bounded sliding-window memory to preserve context across turns",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/015_chat_memory/chat_memory.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "015_chat_memory",
+      "log": "chat_memory",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "016",
+      "name": "MCP",
+      "description": "Discover and invoke tools via Model Context Protocol (MCP) with local-mode fallback",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/016_mcp/mcp.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=what is 7 factorial",
+        "--param",
+        "mcp_mode=false"
+      ],
+      "dir": "016_mcp",
+      "log": "mcp",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "cloud_infrastructure",
+      "tier": 2
+    },
+    {
+      "id": "017",
+      "name": "Judge",
+      "description": "Generator-judge loop: draft → critique → iterate until judge returns PASS verdict",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/017_judge/judge.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "task=write a haiku about autumn"
+      ],
+      "dir": "017_judge",
+      "log": "judge",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2
+    },
+    {
+      "id": "018",
+      "name": "Debate",
+      "description": "Structured two-agent debate: parallel pro/con generation, then synthesis into a verdict",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/018_debate/debate.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "claim=AI will replace most jobs in 10 years"
+      ],
+      "dir": "018_debate",
+      "log": "debate",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multi-agent",
+      "tier": 2
+    },
+    {
+      "id": "019",
+      "name": "Agentic RAG",
+      "description": "Agent decides whether to retrieve new context or answer from existing memory, iterating until confident",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/019_agentic_rag/agentic_rag.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=What is SPL?"
+      ],
+      "dir": "019_agentic_rag",
+      "log": "agentic_rag",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "retrieval",
+      "tier": 2
+    },
+    {
+      "id": "020",
+      "name": "Heartbeat",
+      "description": "Email heartbeat monitor: poll IMAP inbox on schedule, summarize and alert on new messages",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/020_heartbeat/heartbeat.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "020_heartbeat",
+      "log": "heartbeat",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2
+    },
+    {
+      "id": "021",
+      "name": "Self Healing",
+      "description": "Self-healing Mermaid generator: validate output, diagnose errors, regenerate until diagram is valid",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/021_self_healing/self_healing.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "description=a login workflow with two-factor auth"
+      ],
+      "dir": "021_self_healing",
+      "log": "self_healing",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2
+    },
+    {
+      "id": "030",
+      "name": "Lead Generation",
+      "description": "Outbound sales pipeline: enrich lead list, draft personalized outreach emails, write to CSV",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/030_lead_generation/lead_generation.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "030_lead_generation",
+      "log": "lead_generation",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "031",
+      "name": "Invoice",
+      "description": "Extract structured line items and totals from invoice PDFs using vision-capable LLM",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/031_invoice/invoice.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "031_invoice",
+      "log": "invoice",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "032",
+      "name": "Deep Research",
+      "description": "Iterative research: plan 3 queries, parallel search+extract, synthesize, loop until sufficient depth",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/032_deep_research/deep_research.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "topic=quantum computing applications"
+      ],
+      "dir": "032_deep_research",
+      "log": "deep_research",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 3
+    },
+    {
+      "id": "033",
+      "name": "Text2SQL",
+      "description": "Schema-aware natural language to SQL: inspect schema, generate query, validate, execute",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/033_text2sql/text2sql.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=How many users signed up last month?"
+      ],
+      "dir": "033_text2sql",
+      "log": "text2sql",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "034",
+      "name": "Communication",
+      "description": "Multi-channel communication coordinator: route user messages to email, SMS, or chat handlers",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/034_communication/communication.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "034_communication",
+      "log": "communication",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "040",
+      "name": "Coding Agent",
+      "description": "Autonomous coding agent: read spec, implement, run tests, fix failures, iterate",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/040_coding_agent/coding_agent.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "040_coding_agent",
+      "log": "coding_agent",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 3
+    },
+    {
+      "id": "041",
+      "name": "Agent Skills",
+      "description": "Plugin-based agent that dynamically discovers and applies skill modules from a skills directory",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/041_agent_skills/agent_skills.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "task=summarize a document"
+      ],
+      "dir": "041_agent_skills",
+      "log": "agent_skills",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2
+    },
+    {
+      "id": "042",
+      "name": "Nodejs Upgrade Agent",
+      "description": "Automated Node.js dependency upgrade agent: detect outdated packages, migrate, validate tests",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_agent.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "042_nodejs_upgrade_agent",
+      "log": "nodejs_upgrade_agent",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 3
+    },
+    {
+      "id": "050",
+      "name": "A2A",
+      "description": "Agent-to-Agent (A2A) JSON-RPC protocol: expose a ReAct agent as a callable service endpoint",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/050_a2a/a2a.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "request_json={\"id\":\"1\",\"method\":\"run\",\"params\":{\"question\":\"What is 2+2?\"}}"
+      ],
+      "dir": "050_a2a",
+      "log": "a2a",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multi-agent",
+      "tier": 3
+    },
+    {
+      "id": "051",
+      "name": "Async Basic",
+      "description": "Async parallel steps with inter-step communication: recipe lookup and price check run concurrently",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/051_async_basic/async_basic.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "ingredients=eggs,butter,flour"
+      ],
+      "dir": "051_async_basic",
+      "log": "async_basic",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "052",
+      "name": "Batch",
+      "description": "Distributed batch translation with per-item tracking and output file assembly",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/052_batch/batch.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "content=Hello world",
+        "--param",
+        "target_language=Spanish"
+      ],
+      "dir": "052_batch",
+      "log": "batch",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "053",
+      "name": "CLI HITL",
+      "description": "CLI human-in-the-loop: pause workflow execution at checkpoints awaiting human approval or input",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/053_cli_hitl/cli_hitl.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "053_cli_hitl",
+      "log": "cli_hitl",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "054",
+      "name": "Code Generator",
+      "description": "Competitive code generation: produce N solutions in parallel, judge for correctness, select best",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/054_code_generator/code_generator.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "problem=Write a function to reverse a string"
+      ],
+      "dir": "054_code_generator",
+      "log": "code_generator",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "055",
+      "name": "Flow",
+      "description": "Composable flow builder: execute a sequence of named steps from a declarative command list",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/055_flow/flow.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "055_flow",
+      "log": "flow",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "056",
+      "name": "Majority Vote",
+      "description": "Ensemble reasoning: three parallel LLM answers, tally votes, return consensus or plurality winner",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/056_majority_vote/majority_vote.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "question=What is the square root of 144?"
+      ],
+      "dir": "056_majority_vote",
+      "log": "majority_vote",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2
+    },
+    {
+      "id": "057",
+      "name": "TAO",
+      "description": "Think-Act-Observe loop: structured tool-augmented reasoning with explicit thought/action/observation steps",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/057_tao/tao.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "query=What is the weather in Paris?"
+      ],
+      "dir": "057_tao",
+      "log": "tao",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2
+    },
+    {
+      "id": "058",
+      "name": "Tool Crawler",
+      "description": "Crawl a web page to discover and catalog available tools for agent use",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/058_tool_crawler/tool_crawler.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "url=https://example.com"
+      ],
+      "dir": "058_tool_crawler",
+      "log": "tool_crawler",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "059",
+      "name": "Tool Database",
+      "description": "Persistent tool registry: store, retrieve, and search tool definitions in a SQLite database",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/059_tool_database/tool_database.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "title=search_web",
+        "--param",
+        "description=Search the web for information"
+      ],
+      "dir": "059_tool_database",
+      "log": "tool_database",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    },
+    {
+      "id": "060",
+      "name": "Tool Embeddings",
+      "description": "Semantic similarity search using vector embeddings for tool or document retrieval",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/060_tool_embeddings/tool_embeddings.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "text=find documents about machine learning"
+      ],
+      "dir": "060_tool_embeddings",
+      "log": "tool_embeddings",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "retrieval",
+      "tier": 2
+    },
+    {
+      "id": "061",
+      "name": "Tool PDF Vision",
+      "description": "Extract structured data from PDFs using page-by-page vision model analysis",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/061_tool_pdf_vision/tool_pdf_vision.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "061_tool_pdf_vision",
+      "log": "tool_pdf_vision",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "multimodal",
+      "tier": 2
+    },
+    {
+      "id": "062",
+      "name": "Tool Search",
+      "description": "Web search tool with result ranking, snippet extraction, and relevance filtering",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/062_tool_search/tool_search.spl",
+        "--llm",
+        "ollama:gemma3",
+        "--param",
+        "query=latest AI research papers"
+      ],
+      "dir": "062_tool_search",
+      "log": "tool_search",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "retrieval",
+      "tier": 1
+    },
+    {
+      "id": "063",
+      "name": "Tracing",
+      "description": "Workflow execution tracing and observability: log node-level timing, inputs, and outputs",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/063_tracing/tracing.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "063_tracing",
+      "log": "tracing",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "basics",
+      "tier": 1
+    },
+    {
+      "id": "064",
+      "name": "Visualization",
+      "description": "Generate interactive charts and dashboards from order data using LLM-guided chart selection",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-pocketflow/064_visualization/visualization.spl",
+        "--llm",
+        "ollama:gemma3"
+      ],
+      "dir": "064_visualization",
+      "log": "visualization",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "application",
+      "tier": 2
+    }
+  ]
+}
