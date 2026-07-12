@@ -1,3 +1,5 @@
+IMPORT 'cookbook-pocketflow/042_nodejs_upgrade_agent/tools.spl';
+
 -- ── Node.js Upgrade Agent ────────────────────────────────────────────────────
 -- Pattern: deterministic pre-analysis → LLM file transforms →
 --          npm self-healing loop (install → build → test) → report

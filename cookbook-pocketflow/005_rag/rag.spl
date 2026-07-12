@@ -1,3 +1,5 @@
+IMPORT 'cookbook-pocketflow/005_rag/tools.spl';
+
 CREATE FUNCTION generate_answer(query, retrieved_document)
 RETURNS TEXT AS $$
 You are a helpful assistant. Use the retrieved document as context to answer the user""s query.

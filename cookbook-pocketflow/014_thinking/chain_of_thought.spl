@@ -1,3 +1,5 @@
+IMPORT 'cookbook-pocketflow/014_thinking/tools.spl';
+
 CREATE FUNCTION ChainOfThoughtStep(problem TEXT, thoughts_text TEXT, last_plan TEXT, thought_number INT)
 RETURNS TEXT AS $$
 You are performing step-by-step chain of thought reasoning.

@@ -1,4 +1,6 @@
-CREATE FUNCTION decide_action(question TEXT, context TEXT) 
+IMPORT 'cookbook-pocketflow/004_agent/tools.spl';
+
+CREATE FUNCTION decide_action(question TEXT, context TEXT)
 RETURNS TEXT AS $$
 You are a research agent. Given the question and accumulated search context, decide the next action.
 
