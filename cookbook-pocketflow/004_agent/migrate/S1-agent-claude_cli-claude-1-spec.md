@@ -72,7 +72,7 @@ Answers a user-supplied research question by iteratively deciding to search the 
 spl3 text2spl --description "<paste Section 0 here>" --mode workflow
 
 # Step 2 — compile to any target
-spl3 splc compile research_agent.spl --lang python/pocketflow
-spl3 splc compile research_agent.spl --lang python/langgraph
-spl3 splc compile research_agent.spl --lang go
+spl3 splc compile research_web_search_agent.spl --lang python/pocketflow
+spl3 splc compile research_web_search_agent.spl --lang python/langgraph
+spl3 splc compile research_web_search_agent.spl --lang go
 ```

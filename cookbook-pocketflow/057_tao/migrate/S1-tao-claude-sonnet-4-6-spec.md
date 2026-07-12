@@ -84,7 +84,7 @@ returned by the think LLM call in YAML format. Shared state tracks query, though
 observations, and the final answer across steps." --mode workflow
 
 # Step 2 — compile to any target
-spl3 splc compile tao_agent.spl --lang python/pocketflow
-spl3 splc compile tao_agent.spl --lang python/langgraph
-spl3 splc compile tao_agent.spl --lang go
+spl3 splc compile tao_web_search_agent.spl --lang python/pocketflow
+spl3 splc compile tao_web_search_agent.spl --lang python/langgraph
+spl3 splc compile tao_web_search_agent.spl --lang go
 ```

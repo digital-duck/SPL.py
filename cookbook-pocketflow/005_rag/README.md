@@ -1,22 +1,40 @@
 # 005 — RAG  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-rag](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-rag)
-**Difficulty:** ☆☆☆ Dummy
-**SPL pattern:** Linear retrieve-augment-generate — `CALL` pipeline + `GENERATE`
+**Difficulty:** ☆☆☆
+**Category:** retrieval
 
-## What it demonstrates
+## What it does
 
-A classic two-phase RAG pipeline expressed as a single linear SPL workflow:
-offline indexing (chunk → embed → FAISS index) followed by online query
-(embed query → retrieve → generate answer).  Shows how tool-heavy pipelines
-with no branching map cleanly to a straight `CALL` chain with one `GENERATE`
-at the end.
+Implements a classic two-phase retrieval-augmented generation pipeline: an offline indexing phase (chunk → embed → FAISS index) followed by an online query phase (embed query → retrieve nearest chunk → generate answer). The entire pipeline is expressed as a single linear SPL workflow — a straight `CALL` chain with one `GENERATE` at the end — demonstrating how tool-heavy pipelines with no branching map cleanly to SPL's DODA model.
 
-Key SPL constructs:
-- `CALL chunk_documents / embed_documents / create_faiss_index` — index build
-- `CALL embed_query / retrieve_document` — query phase
-- `GENERATE generate_answer(query, context)` — augmented generation
-- `EVALUATE @output_path WHEN contains(".")` — optional file write
+## Real-world use cases
+
+- **Enterprise knowledge bases**: Index internal documentation, policies, and runbooks so employees can ask natural-language questions and receive grounded answers
+- **Legal document review**: Index case files and contracts, then retrieve and summarize relevant passages in response to attorney queries
+- **Customer support automation**: Index product documentation and FAQs, retrieve the most relevant content, and generate a grounded support response
+- **Research assistants**: Index academic papers and technical reports, then generate synthesis answers over retrieved context
+
+## Key SPL constructs
+
+- `CALL chunk_documents(@documents)` — splits documents into indexable text chunks
+- `CALL embed_documents(@texts)` — generates vector embeddings for each chunk
+- `CALL create_faiss_index(@embeddings)` — builds an in-memory FAISS similarity index
+- `CALL embed_query(@query)` — embeds the query for vector search
+- `CALL retrieve_document(@index, @query_embedding, @texts)` — top-1 retrieval
+- `GENERATE generate_answer(@query, @retrieved_document)` — augmented generation grounded in retrieved context
+- `EVALUATE @output_path WHEN contains(".")` — optional file write if output path is specified
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@documents` | LIST | _(required)_ | List of document file paths to index |
+| `@query` | TEXT | _(required)_ | Natural-language question to answer |
+| `@output_path` | TEXT | `""` | Optional path to write the answer; skipped if blank |
+
+**Output:** `@generated_answer TEXT` — LLM-generated answer grounded in the retrieved document chunk
 
 ## Run
 
@@ -25,16 +43,21 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/005_rag/rag.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6 \
     --param 'documents=["doc1.txt","doc2.txt"]' \
     --param "query=What does the document say about X?"
 ```
 
-> Requires: `chunk_documents`, `embed_documents`, `create_faiss_index`,
-> `embed_query`, `retrieve_document`, `write_file` tools.
+## Extend it
+
+- Replace FAISS with a persistent vector store tool to support a pre-built offline index
+- Add `CALL PARALLEL` to retrieve top-k chunks and generate multiple candidate answers, then synthesize
+- Wrap the query phase in a `WHILE` loop with an agentic sufficiency check (see `019_agentic_rag`) to handle multi-hop questions
+- Swap `--llm` to compare answer quality across models on the same retrieved context
 
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-rag-claude_cli-sonnet-1-spec.md)**.
 
 ```
 migrate/

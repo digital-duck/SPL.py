@@ -1,8 +1,38 @@
-# 016 — Mcp  *(migrated from PocketFlow)*
+# 016 — MCP (Model Context Protocol)  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-mcp](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-mcp)
 **Difficulty:** ★☆☆
-**Migrated by:** migrate_pocketflow.py — adapter=claude_cli model=claude-sonnet-4-6
+**Category:** tool-use
+
+## What it does
+
+Demonstrates dynamic tool discovery and invocation via the Model Context Protocol: the workflow first discovers available tools from an MCP server (or falls back to built-in math tools when no server is configured), then asks the LLM to select and call the right tool for a given question, and finally invokes the chosen tool — either via the MCP server or locally. This cleanly separates tool catalog management from tool selection and execution.
+
+## Real-world use cases
+
+- **Dynamic toolsets**: Connect an LLM to an evolving MCP server whose tool list changes over time without changing the .spl file — DODA in action across tool registries
+- **Multi-environment deployment**: Run the same workflow against a local math library in development and a production MCP server with broader capabilities, swapping `--param mcp_mode=true`
+- **Enterprise tool gateways**: Have the LLM select from company-managed MCP tools (database queries, document search, calendar actions) without hardcoding tool signatures in the workflow
+- **Tool capability testing**: Validate that an LLM correctly selects among discovered tools for a range of question types
+
+## Key SPL constructs
+
+- `CREATE TOOL_API discover_tools(mcp_mode, mcp_server_url)` — returns JSON list of available tool specs
+- `CREATE TOOL_API call_mcp_tool(tool_name, tool_args, mcp_server_url)` — invokes a tool via MCP HTTP endpoint
+- `CREATE TOOL_API call_local_tool(tool_name, tool_args)` — invokes a built-in fallback math tool
+- `GENERATE select_tool(@question, @tools_json)` — LLM reads tool catalog and selects the right tool + args
+- `EVALUATE @use_mcp WHEN contains("true")` — routes to MCP invocation vs. local invocation
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@question` | TEXT | _(required)_ | The math or factual question to answer |
+| `@mcp_mode` | TEXT | `"false"` | `"true"` to use an MCP server, `"false"` for built-in tools |
+| `@mcp_server_url` | TEXT | `""` | URL of the MCP server (required when mcp_mode is true) |
+
+**Output:** `@answer TEXT` — the tool's computed result
 
 ## Run
 
@@ -11,11 +41,19 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/016_mcp/mcp.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6
 ```
 
+## Extend it
+
+- Point `--param mcp_server_url=http://localhost:3000` at a real MCP server to unlock dynamic tool registration
+- Add a WHILE retry loop if the LLM selects a tool that returns an error, re-discovering tools on each retry
+- Use `CALL PARALLEL` to invoke multiple tools simultaneously and synthesize results for multi-step queries
+- Extend `discover_tools` to query multiple MCP servers and merge their tool catalogs for a federated toolbox
+
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-mcp-claude-sonnet-4-6-spec.md)**.
 
 ```
 migrate/
@@ -26,5 +64,3 @@ migrate/
 
 tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
 Recipes whose utils.py only wraps call_llm need no tools.spl.
-
-> TODO: enrich this README — describe SPL pattern, key constructs, tool dependencies.

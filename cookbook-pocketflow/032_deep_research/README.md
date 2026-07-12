@@ -1,25 +1,40 @@
 # 032 — Deep Research  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-deep-research](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-deep-research)
-**Difficulty:** ★★☆ Intermediate
-**SPL pattern:** Recursive map-reduce with parallel search — `CALL PARALLEL` + `WHILE` + plan→research→synthesize
+**Difficulty:** ★★☆
+**Category:** research
 
-## What it demonstrates
+## What it does
 
-A multi-iteration research pipeline: a planner generates 3 search queries,
-a parallel search+extract phase runs all 3 concurrently, a synthesizer decides
-whether to continue researching or finalize the report.  Demonstrates the most
-complex pattern in this seed set: nested `CALL PARALLEL`, `WHILE` with
-`EVALUATE`-driven early exit, and multi-function orchestration.
+Runs a recursive multi-iteration research pipeline: a planner generates three search queries per cycle, `CALL PARALLEL` dispatches all three searches and fact extractions concurrently, a synthesizer decides whether to finalize or continue researching, and accumulated notes carry forward as context into the next planning cycle. A forced fallback terminates the loop gracefully at the iteration cap with a concise report rather than truncating mid-cycle.
 
-Key SPL constructs:
-- `GENERATE planner(@topic, @feedback)` — query planning with feedback loop
-- `CALL PARALLEL search_web(…) INTO @result1, … END` — 3 concurrent searches
-- `CALL PARALLEL extract_facts(…) INTO @note1, … END` — 3 concurrent extractions
-- `GENERATE accumulate_notes(…)` — merge accumulated research notes
-- `GENERATE synthesizer(…)` — decide finalize vs. continue
-- `EVALUATE @decision WHEN contains("DECISION: finalize")` — exit condition
-- Forced termination at `loop_count = 2` with concise report fallback
+## Real-world use cases
+
+- **Literature surveys**: Generate a structured research report on a technical topic by iteratively querying, extracting, and synthesizing until the model self-assesses as sufficiently informed
+- **Due diligence research**: Investigate a company, person, or market by running parallel web lookups and accumulating evidence before producing a report
+- **Competitive analysis**: Research multiple competitors simultaneously per cycle, building a comprehensive landscape view that grows with each iteration
+- **Policy research**: Gather facts, precedents, and stakeholder positions from parallel sources and synthesize them into a structured policy brief
+
+## Key SPL constructs
+
+- `GENERATE planner(@topic, @feedback)` — query planning with accumulated feedback from prior cycles
+- `CALL PARALLEL search_web(@query1) INTO @result1, search_web(@query2) INTO @result2, search_web(@query3) INTO @result3 END` — three concurrent web searches
+- `CALL PARALLEL extract_facts(@result1) INTO @note1, ... END` — three concurrent fact extractions
+- `GENERATE accumulate_notes(@notes, @note1, @note2, @note3)` — merge pass over retrieved notes
+- `GENERATE synthesizer(@topic, @notes, @loop_count)` — decides "DECISION: finalize" or returns feedback for the next planning cycle
+- `EVALUATE @decision WHEN contains("DECISION: finalize")` — early exit on sufficient evidence
+- `CALL write_file(@out, @report, "w")` — writes the final report to disk
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@topic` | TEXT | _(required)_ | The research topic or question |
+| `@out` | TEXT | `"report.txt"` | Path to write the final research report |
+| `@max_iterations` | INTEGER | 2 | Maximum number of research cycles before forced finalization |
+
+**Output:** `@report TEXT` — the synthesized research report
 
 ## Run
 
@@ -28,16 +43,21 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/032_deep_research/deep_research.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6 \
     --param "topic=Recent advances in quantum error correction" \
     --param "out=report.txt"
 ```
 
-> Requires: `search_web`, `write_file` tools (all `extract_*` / `accumulate_*`
-> functions are `GENERATE` calls handled by the LLM directly).
+## Extend it
+
+- Increase `--param max_iterations=5` for thorough research on complex topics where 2 cycles leave gaps
+- Use `--adapter momagrid` to dispatch each `CALL PARALLEL` branch to a separate Momagrid worker node for true distributed research
+- Add a citation-tracking `CALL append_to_file(@citations_file, @source_url)` inside each search branch for a source-grounded report
+- Chain with `021_self_healing` to validate the final report against a structural schema before writing
 
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-research-claude_cli-sonnet-1-spec.md)**.
 
 ```
 migrate/

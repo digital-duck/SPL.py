@@ -86,7 +86,7 @@ Termination conditions (both inside `DecideAction.post`):
 spl3 text2spl --description "Autonomously implement skeleton functions in a Python codebase by iteratively using file inspection, code patching, and test execution tools until a given test suite fully passes." --mode workflow
 
 # Step 2 — compile to any target
-spl3 splc compile coding_agent.spl --lang python/pocketflow
-spl3 splc compile coding_agent.spl --lang python/langgraph
-spl3 splc compile coding_agent.spl --lang go
+spl3 splc compile coding_web_search_agent.spl --lang python/pocketflow
+spl3 splc compile coding_web_search_agent.spl --lang python/langgraph
+spl3 splc compile coding_web_search_agent.spl --lang go
 ```

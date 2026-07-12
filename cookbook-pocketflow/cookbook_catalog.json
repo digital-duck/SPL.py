@@ -61,7 +61,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/003_workflow/workflow.spl",
+        "cookbook-pocketflow/003_workflow/article_writer.spl",
         "--llm",
         "ollama:gemma3",
         "--param",
@@ -81,7 +81,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/004_agent/agent.spl",
+        "cookbook-pocketflow/004_agent/web_search_agent.spl",
         "--llm",
         "ollama:gemma3",
         "--param",
@@ -157,7 +157,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/010_multi_agent/multi_agent.spl",
+        "cookbook-pocketflow/010_multi_agent/multi_web_search_agent.spl",
         "--llm",
         "ollama:gemma3",
         "--param",
@@ -217,7 +217,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/013_batch_flow/batch_flow.spl",
+        "cookbook-pocketflow/013_batch_flow/batch_text_transformer.spl",
         "--llm",
         "ollama:gemma3"
       ],
@@ -235,7 +235,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/014_thinking/thinking.spl",
+        "cookbook-pocketflow/014_thinking/chain_of_thought.spl",
         "--llm",
         "ollama:gemma3",
         "--param",
@@ -487,7 +487,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/040_coding_agent/coding_agent.spl",
+        "cookbook-pocketflow/040_coding_agent/coding_web_search_agent.spl",
         "--llm",
         "ollama:gemma3"
       ],
@@ -525,7 +525,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_agent.spl",
+        "cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_web_search_agent.spl",
         "--llm",
         "ollama:gemma3"
       ],
@@ -583,7 +583,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/052_batch/batch.spl",
+        "cookbook-pocketflow/052_batch/batch_translator.spl",
         "--llm",
         "ollama:gemma3",
         "--param",
@@ -643,7 +643,7 @@
       "args": [
         "spl3",
         "run",
-        "cookbook-pocketflow/055_flow/flow.spl",
+        "cookbook-pocketflow/055_flow/text_transformer.spl",
         "--llm",
         "ollama:gemma3"
       ],

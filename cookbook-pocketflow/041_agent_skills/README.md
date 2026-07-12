@@ -1,8 +1,40 @@
-# 041 — Agent Skills  *(migrated from PocketFlow)*
+# 041 — Agent Skills (Skill Dispatcher)  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-agent-skills](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-agent-skills)
 **Difficulty:** ★★★
-**Migrated by:** migrate_pocketflow.py — adapter=claude_cli model=claude-sonnet-4-6
+**Category:** agent
+
+## What it does
+
+A skill-routing agent that dynamically selects the most appropriate prompt template from a directory of Markdown skill files before answering a task. The workflow scans the skills directory, extracts keywords from each skill file, asks the LLM whether any skill matches the task (with a NO_MATCH fallback to a default skill), selects the single best-matching skill file, and then applies the skill template as the final generation prompt. This separates capability discovery from capability execution.
+
+## Real-world use cases
+
+- **Multi-persona assistants**: Maintain a library of role-specific prompt templates (analyst, lawyer, doctor, teacher) and route incoming tasks to the right persona automatically
+- **Enterprise knowledge bases**: Build a skills directory from internal SOPs, policy documents, or brand guidelines, then dispatch tasks to the right template without hardcoding routing rules
+- **Dynamic agent customization**: Allow teams to add new capabilities by dropping a Markdown skill file into a directory — no code changes required
+- **Domain-specific chatbots**: Route customer questions to specialist prompt templates (billing, technical support, returns) based on keyword and semantic matching
+
+## Key SPL constructs
+
+- `CREATE TOOL_API scan_skills_dir(skills_dir)` — globs all `*.md` files in the skills directory
+- `CREATE TOOL_API read_skill_files(file_list)` — reads all skill files and returns their contents with filename headers
+- `CREATE FUNCTION extract_keywords(skill_files_content)` — produces a `filename: keyword1, keyword2, ...` keyword map per skill file
+- `CREATE FUNCTION match_task_to_skills(task, keywords_map)` — returns "MATCH" or "NO_MATCH"
+- `CREATE FUNCTION select_best_skill(task, skill_files_content)` — returns the filename of the best-matching skill
+- `EVALUATE @match_result WHEN contains("NO_MATCH")` — routes to default skill vs. LLM skill selection
+- `CALL replace(@skill_template, "{task}", @task)` — injects the user task into the skill template before generation
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@task` | TEXT | _(required)_ | The task or question to route and answer |
+| `@skills_dir` | TEXT | `"./skills"` | Directory containing Markdown skill files |
+| `@default_skill` | TEXT | `"default.md"` | Fallback skill file when no skill matches the task |
+
+**Output:** `@response TEXT` — the LLM's response generated using the selected skill template
 
 ## Run
 
@@ -11,11 +43,19 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/041_agent_skills/agent_skills.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6
 ```
 
+## Extend it
+
+- Replace keyword matching with embedding-based semantic search over skill files for higher-quality routing on diverse tasks
+- Add a `WHILE` retry loop that tries the second-best skill if the first generates an unsatisfactory response (judged by `017_judge`)
+- Use the skill dispatcher as a routing layer in front of `032_deep_research`, `033_text2sql`, or `040_coding_agent` — each as a skill file
+- Add a skill registration step that auto-generates a skill Markdown file from a natural language capability description using `spl3 text2spl`
+
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-agent_skills-claude-sonnet-4-6-spec.md)**.
 
 ```
 migrate/
@@ -26,5 +66,3 @@ migrate/
 
 tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
 Recipes whose utils.py only wraps call_llm need no tools.spl.
-
-> TODO: enrich this README — describe SPL pattern, key constructs, tool dependencies.

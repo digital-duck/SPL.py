@@ -84,7 +84,7 @@ There is no WHILE loop and no EVALUATE branch. The only non-linear transition is
 spl3 text2spl --description "Execute a user's math question end-to-end by discovering available tools at runtime via a CALL to an MCP server, using a GENERATE step with a decide_tool CREATE FUNCTION to select the right tool and extract its parameters as YAML, then a CALL to execute the chosen tool and RETURN the answer with status=done. Raise an EXCEPTION when the LLM output cannot be parsed as valid YAML." --mode workflow
 
 # Step 2 — compile to any target
-spl3 splc compile mcp_agent.spl --lang python/pocketflow
-spl3 splc compile mcp_agent.spl --lang python/langgraph
-spl3 splc compile mcp_agent.spl --lang go
+spl3 splc compile mcp_web_search_agent.spl --lang python/pocketflow
+spl3 splc compile mcp_web_search_agent.spl --lang python/langgraph
+spl3 splc compile mcp_web_search_agent.spl --lang go
 ```

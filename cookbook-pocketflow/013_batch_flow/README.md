@@ -2,7 +2,40 @@
 
 **Source:** [pocketflow-batch-flow](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-batch-flow)
 **Difficulty:** ★☆☆
-**Migrated by:** migrate_pocketflow.py — adapter=claude_cli model=claude-sonnet-4-6
+**Category:** basics
+
+## What it does
+
+Applies a multi-step image transformation workflow to an entire batch of images, iterating over every combination of image and filter via nested WHILE loops. For each (image, filter) pair, a deterministic `apply_image_filter` tool performs the transformation (grayscale, blur, or sepia) and writes the output to a designated directory. This demonstrates how SPL's WHILE-based batch iteration cleanly replaces Python's explicit for-loop comprehensions.
+
+## Real-world use cases
+
+- **Digital asset management**: Apply consistent brand filters to batches of marketing images or product photos across an e-commerce catalog
+- **Medical imaging preprocessing**: Normalize and transform scan images (contrast adjustment, denoising) before feeding them into downstream ML models
+- **Content moderation pipelines**: Apply grayscale or blur transformations to potentially sensitive images before human review
+- **Photography workflow automation**: Process event or real estate photos through multiple stylistic filters to generate variants for client selection
+
+## Key SPL constructs
+
+- `CREATE TOOL_API apply_image_filter(image_path, filter_name, output_dir)` — applies grayscale, blur, or sepia; writes output file; returns `"ok: /path/to/output"`
+- `WHILE @i < @max_images DO` — outer loop over image list
+- `WHILE @j < @max_filters DO` — inner loop over filter list
+- `CALL list_get(@images, @i, ",")` — comma-delimited list indexing
+- `CALL make_dir(@output_dir)` — ensures output directory exists before writes
+- Log accumulation into `@log` across the nested loops
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@images` | TEXT | `"img1.jpg,img2.jpg,img3.jpg"` | Comma-delimited list of image paths |
+| `@filters` | TEXT | `"grayscale,blur,sepia"` | Comma-delimited list of filter names to apply |
+| `@max_images` | INTEGER | 3 | Upper bound on number of images |
+| `@max_filters` | INTEGER | 3 | Upper bound on number of filters |
+| `@output_dir` | TEXT | `"output/"` | Directory to write transformed images |
+
+**Output:** `@log TEXT` — newline-delimited log of each `(image, filter) → output_path` result
 
 ## Run
 
@@ -10,21 +43,27 @@
 conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
-spl3 run cookbook-pocketflow/013_batch_flow/batch_flow.spl \
-    --tools cookbook/tools/ \
+spl3 run cookbook-pocketflow/013_batch_flow/batch_text_transformer.spl \
     --llm claude_cli:claude-sonnet-4-6
 ```
 
+## Extend it
+
+- Add a `GENERATE caption_image(@output_path)` step after each filter to produce alt text for each transformed image
+- Replace the inner filter loop with `CALL PARALLEL` to apply all filters to a single image simultaneously
+- Wire `--adapter momagrid` to distribute each outer-loop iteration across Momagrid worker nodes
+- Add `EXCEPTION WHEN` handling for corrupt or unreadable input images so the batch continues past failures
+
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-batch_flow-claude-sonnet-4-6-spec.md)**.
 
 ```
 migrate/
 ├── S1-batch_flow-claude-sonnet-4-6-spec.md   # splc describe output
 ├── S2-batch_flow-claude-sonnet-4-6.mmd       # text2mmd Mermaid diagram
-└── S3-batch_flow-claude-sonnet-4-6.spl       # raw mmd2spl output (= batch_flow.spl)
+└── S3-batch_flow-claude-sonnet-4-6.spl       # raw mmd2spl output (= batch_text_transformer.spl)
 ```
 
 tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
 Recipes whose utils.py only wraps call_llm need no tools.spl.
-
-> TODO: enrich this README — describe SPL pattern, key constructs, tool dependencies.

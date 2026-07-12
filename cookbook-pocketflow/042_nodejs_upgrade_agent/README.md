@@ -41,7 +41,7 @@ Phase 4 — Report
 conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
-spl3 run cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_agent.spl \
+spl3 run cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_web_search_agent.spl \
     --adapter claude_cli --model claude-sonnet-4-6 \
     --param project_dir=/path/to/your/node/project \
     --param target_node=20 \

@@ -1,8 +1,39 @@
-# 008 — chat guardrail  *(migrated from PocketFlow)*
+# 008 — Chat Guardrail  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-chat-guardrail](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-chat-guardrail)
 **Difficulty:** ☆☆☆
-**Migrated by:** phase1_migrate.sh — adapter=claude_cli model=claude-sonnet-4-6
+**Category:** safety
+
+## What it does
+
+Adds a two-tier safety classifier layer to a multi-turn chat loop: a fast deterministic keyword filter runs first, and only messages that pass it are forwarded to an LLM topic classifier before reaching the actual response generator. Off-topic or harmful messages receive a polite rejection instead of a substantive answer. This pattern decouples safety policy from response logic, making both independently testable and swappable.
+
+## Real-world use cases
+
+- **Vertical chatbots**: Enforce domain scope in specialized assistants (travel, legal, medical) so users cannot redirect the bot into unrelated or harmful territory
+- **Enterprise copilots**: Block queries that violate corporate information security policies before they reach a model with access to sensitive data
+- **Children's platforms**: Implement age-appropriate content filtering at the input layer before any LLM processing occurs
+- **Regulated industries**: Maintain an audit log of blocked messages for compliance reporting while still providing a helpful redirect response
+
+## Key SPL constructs
+
+- `CREATE TOOL_API heuristic_travel_check(message)` — fast keyword-based pre-filter (travel domain); zero LLM cost
+- `CREATE FUNCTION validate_travel_topic(message)` — LLM classifier, single-token output ("travel" / "not_travel")
+- `CREATE FUNCTION reject_off_topic(message)` — generates a polite redirection response
+- `CREATE FUNCTION generate_travel_advice(message)` — the actual domain response generator
+- `WHILE @i < @max_turns DO` — processes each message in the input list sequentially
+- Nested `EVALUATE` blocks — heuristic gate → LLM gate → response dispatch
+- `CALL list_get(@user_messages, @i, "\n")` — iterates over newline-delimited message list
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@user_messages` | TEXT | _(required)_ | Newline-delimited list of user messages to process |
+| `@max_turns` | INTEGER | 10 | Maximum number of messages to process |
+
+**Output:** `@conversation_log TEXT` — full transcript with User/Assistant turns, including rejected messages
 
 ## Run
 
@@ -11,11 +42,19 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/008_chat_guardrail/chat_guardrail.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6
 ```
 
+## Extend it
+
+- Replace the heuristic keyword list with a `CREATE TOOL_API` that calls a dedicated toxicity/topic classifier API for higher accuracy
+- Add a third tier: an LLM-based intent classifier that catches prompt injection attempts before the domain check
+- Log rejected messages to a file via `CALL write_file(@log_file, @entry, "a")` for compliance audit trails
+- Parameterize the domain topic so the same workflow serves as a general-purpose scoped-assistant guardrail
+
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-chat_guardrail-claude-sonnet-4-6-spec.md)**.
 
 ```
 migrate/
@@ -26,5 +65,3 @@ migrate/
 
 tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
 Phase-1 recipes only wrap call_llm in utils.py, so no tools.spl needed.
-
-> TODO: enrich this README — describe SPL pattern, key constructs, tool dependencies.

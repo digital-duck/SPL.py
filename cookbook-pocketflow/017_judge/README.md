@@ -1,22 +1,37 @@
-# 017 — Judge (LLM-as-Judge)  *(migrated from PocketFlow)*
+# 017 — Judge (Evaluator-Optimizer)  *(migrated from PocketFlow)*
 
 **Source:** [pocketflow-judge](https://github.com/The-Pocket/PocketFlow/tree/main/cookbook/pocketflow-judge)
-**Difficulty:** ★☆☆ Beginner
-**SPL pattern:** Evaluator-optimizer loop — `WHILE` + early `RETURN` on pass
+**Difficulty:** ★☆☆
+**Category:** quality-control
 
-## What it demonstrates
+## What it does
 
-An iterative content-refinement loop where one LLM generates a draft and a
-second LLM judges it.  The workflow exits early (`RETURN … WITH status="pass"`)
-on the first passing verdict, or exhausts a budget of 3 attempts.  Shows the
-canonical **evaluator-optimizer** shape: generate → judge → branch → refine.
+Implements the evaluator-optimizer loop: an LLM generates a draft, a second LLM judge scores it against rubric criteria and returns a structured VERDICT, and the workflow retries with the judge's feedback until the draft passes or the retry cap is reached. Early return via `RETURN WITH status="pass"` exits the loop immediately on acceptance — no wasted iterations.
 
-Key SPL constructs:
-- `GENERATE generate_draft(@task, @feedback)` — initial and refined drafts
-- `GENERATE evaluate_draft(@task, @draft)` — LLM judge with VERDICT output
-- `EVALUATE @judgment WHEN contains("VERDICT: PASS")` — early exit on success
+## Real-world use cases
+
+- **Marketing copy review**: Automatically iterate on product descriptions, taglines, or ad copy until they meet a quality bar defined by rubric criteria
+- **Technical documentation generation**: Generate and judge API documentation for clarity, completeness, and accuracy until a quality threshold is reached
+- **Creative writing assistance**: Iteratively refine poems, story openings, or pitch paragraphs against defined aesthetic criteria without manual review at each step
+- **LLM benchmark generation**: Produce questions or problem statements that pass a difficulty and unambiguity judge before being added to an eval dataset
+
+## Key SPL constructs
+
+- `GENERATE generate_draft(@task, @feedback)` — initial generation and subsequent retries incorporating judge feedback
+- `GENERATE evaluate_draft(@task, @draft)` — judge returning a structured `VERDICT: PASS` or `VERDICT: FAIL` with critique
+- `EVALUATE @judgment WHEN contains("VERDICT: PASS")` — exits loop via `RETURN WITH status="pass"` immediately on acceptance
 - `WHILE @attempts < 3` — bounded retry budget
-- `RETURN … WITH status="pass"` / `status="max_attempts"` — named outcomes
+- `RETURN WITH status="pass"` / `status="max_attempts"` — named outcome signaling for caller workflows
+
+## Workflow I/O
+
+**Inputs:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `@task` | TEXT | _(required)_ | The generation task description or topic |
+| `@max_retries` | INTEGER | 3 | Maximum number of generate-judge cycles |
+
+**Output:** `@final_description TEXT` — the first draft that passed the judge, or the best attempt after max retries
 
 ## Run
 
@@ -25,12 +40,20 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/017_judge/judge.spl \
-    --tools cookbook/tools/ \
     --llm claude_cli:claude-sonnet-4-6 \
     --param "task=Write a one-sentence summary of the French Revolution"
 ```
 
+## Extend it
+
+- Use a stronger model (e.g., `claude-opus-4-6`) as the judge and a faster model for generation to optimize cost-per-pass
+- Parameterize the rubric criteria so the same workflow applies to technical, creative, or regulatory text with a `--param rubric_file=` override
+- Accumulate all judge feedback across retries with `CALL list_append` and use the full history as context for each new generation
+- Chain multiple judge workflows in sequence, each checking a different quality dimension (accuracy, tone, length)
+
 ## Migrate artifacts
+
+For a detailed functional description, see the **[Functional Spec](migrate/S1-judge-claude_cli-sonnet-1-spec.md)**.
 
 ```
 migrate/
