@@ -41,7 +41,7 @@ Converts natural language questions to SQLite queries with automatic self-repair
 conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
-spl3 run cookbook-pocketflow/033_text2sql/text2sql.spl \
+spl3 run cookbook-pocketflow/033_text2sql/text2text2sql.spl \
     --llm claude_cli:claude-sonnet-4-6
 ```
 
@@ -60,7 +60,7 @@ For a detailed functional description, see the **[Functional Spec](migrate/S1-te
 migrate/
 ├── S1-text2sql-claude-sonnet-4-6-spec.md   # splc describe output
 ├── S2-text2sql-claude-sonnet-4-6.mmd       # text2mmd Mermaid diagram
-└── S3-text2sql-claude-sonnet-4-6.spl       # raw mmd2spl output (= text2sql.spl)
+└── S3-text2sql-claude-sonnet-4-6.spl       # raw mmd2spl output (= text2text2sql.spl)
 ```
 
 tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
