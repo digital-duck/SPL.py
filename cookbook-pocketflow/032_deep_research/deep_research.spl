@@ -95,7 +95,8 @@ Be comprehensive yet concise.
 $$;
 
 WORKFLOW deep_research
-  INPUT @topic TEXT, @out TEXT := "report.txt"
+  INPUT @topic TEXT := "Recent advances in quantum error correction"
+  INPUT @out TEXT := "cookbook-pocketflow/032_deep_research/output/report.txt"
   OUTPUT @report TEXT
 DO
   @loop_count := 0;

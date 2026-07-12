@@ -30,7 +30,7 @@ Question: {question}
 $$;
 
 WORKFLOW majority_vote
-  INPUT @question TEXT
+  INPUT @question TEXT := "What is 15% of 240?"
   OUTPUT @answer TEXT
 DO
   CALL PARALLEL

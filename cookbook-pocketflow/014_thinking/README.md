@@ -42,8 +42,7 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/014_thinking/chain_of_thought.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "problem=How many r's are in the word strawberry?"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it

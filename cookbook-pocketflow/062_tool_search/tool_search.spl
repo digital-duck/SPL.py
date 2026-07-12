@@ -41,7 +41,7 @@ Search results:
 $$;
 
 WORKFLOW serpapi_briefer
-  INPUT @query TEXT
+  INPUT @query TEXT := "latest breakthroughs in large language models 2025"
   OUTPUT @briefing TEXT
 DO
   CALL call_serpapi(@query) INTO @raw_results;

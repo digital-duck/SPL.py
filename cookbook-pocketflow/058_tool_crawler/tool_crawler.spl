@@ -137,7 +137,7 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW web_crawler_analyzer
-  INPUT @url TEXT
+  INPUT @url TEXT := "https://docs.python.org/3/library/os.html"
   INPUT @batch_size TEXT := "5"
   INPUT @max_pages INTEGER := 20
   INPUT @max_batches INTEGER := 50

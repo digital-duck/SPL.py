@@ -51,7 +51,9 @@ $$;
 -- The WHILE loop models "Continue Conversation?" — exits when messages are exhausted
 -- or @max_turns is reached. Early exit uses the @i := @max_turns force-exit pattern.
 WORKFLOW travel_chat_guardrail
-  INPUT @user_messages TEXT
+  INPUT @user_messages TEXT := "What are the best beaches to visit in Thailand?
+How do I book a hotel in Paris for two weeks?
+What is the weather like in Tokyo in spring?"
   INPUT @max_turns INTEGER := 10
   OUTPUT @conversation_log TEXT
 DO

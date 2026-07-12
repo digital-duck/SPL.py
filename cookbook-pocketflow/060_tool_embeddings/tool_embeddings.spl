@@ -29,7 +29,7 @@ def extract_embedding(response_json: str) -> str:
 $$;
 
 WORKFLOW text_to_embedding
-  INPUT @text TEXT
+  INPUT @text TEXT := "Machine learning is a branch of artificial intelligence that enables computers to learn from data without being explicitly programmed."
   INPUT @api_key TEXT := ""
   OUTPUT @result TEXT
 DO

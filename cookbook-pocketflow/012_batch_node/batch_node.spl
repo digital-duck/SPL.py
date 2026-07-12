@@ -76,7 +76,7 @@ def format_results(total: str, count: str) -> str:
 $$;
 
 WORKFLOW csv_batch_stats
-  INPUT @csv_path TEXT := "data.csv"
+  INPUT @csv_path TEXT := "cookbook-pocketflow/012_batch_node/data/sales.csv"
   INPUT @chunk_size TEXT := "100"
   INPUT @column TEXT := "sales"
   INPUT @max_iterations INTEGER := 10000

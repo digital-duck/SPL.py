@@ -19,7 +19,9 @@ Output exactly these required fields and nothing else:
 $$;
 
 WORKFLOW ChainOfThought
-  INPUT @problem TEXT, @max_iterations INT := 5, @trace_file TEXT := "chain_of_thought_trace.md"
+  INPUT @problem TEXT := "How many r's are in the word strawberry?"
+  INPUT @max_iterations INT := 5
+  INPUT @trace_file TEXT := "chain_of_thought_trace.md"
   OUTPUT @solution TEXT
 DO
   @thoughts := "[]";

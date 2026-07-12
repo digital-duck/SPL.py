@@ -40,8 +40,7 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/017_judge/judge.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "task=Write a one-sentence summary of the French Revolution"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it

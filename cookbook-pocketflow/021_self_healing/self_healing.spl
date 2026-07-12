@@ -61,7 +61,7 @@ Do not include markdown code fences or any explanation.
 $$;
 
 WORKFLOW mermaid_from_description
-  INPUT @description TEXT
+  INPUT @description TEXT := "A flowchart showing user login: start → enter credentials → validate → if valid go to dashboard else show error → end"
   INPUT @max_retries INTEGER := 3
   OUTPUT @output TEXT
 DO

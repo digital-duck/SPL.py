@@ -65,7 +65,7 @@ Output the complete, publication-ready article.
 $$;
 
 WORKFLOW article_writer
-  INPUT @topic TEXT
+  INPUT @topic TEXT := "The future of renewable energy"
   INPUT @max_sections INTEGER := 8
   OUTPUT @article TEXT
 DO

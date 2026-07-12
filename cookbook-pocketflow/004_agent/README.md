@@ -41,8 +41,7 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/004_agent/web_search_agent.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "question=What is the capital of France?"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it

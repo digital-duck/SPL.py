@@ -103,8 +103,8 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW lead_generation
-  INPUT @lead_list_path TEXT := "leads.csv"
-  INPUT @output_path TEXT := "output/scored_leads.jsonl"
+  INPUT @lead_list_path TEXT := "cookbook-pocketflow/030_lead_generation/data/leads.csv"
+  INPUT @output_path TEXT := "cookbook-pocketflow/030_lead_generation/output/scored_leads.jsonl"
   INPUT @max_leads INTEGER := 100
   OUTPUT @final_output TEXT
 DO

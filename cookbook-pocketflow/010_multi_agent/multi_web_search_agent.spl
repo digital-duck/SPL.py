@@ -33,8 +33,8 @@ Respond with exactly one word — your best guess for the secret target word.
 $$;
 
 WORKFLOW taboo_game
-  INPUT @target_word TEXT
-  INPUT @forbidden_words TEXT
+  INPUT @target_word TEXT := "ocean"
+  INPUT @forbidden_words TEXT := "sea,water,wave,fish,blue"
   INPUT @max_turns INTEGER := 5
   OUTPUT @result TEXT
 DO

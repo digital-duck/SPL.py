@@ -59,7 +59,7 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW research_agent_supervisor
-  INPUT @question TEXT
+  INPUT @question TEXT := "What are the key differences between transformer and mamba architectures for LLMs?"
   INPUT @max_search_iterations INTEGER := 5
   INPUT @max_retries INTEGER := 3
   OUTPUT @verified_answer TEXT

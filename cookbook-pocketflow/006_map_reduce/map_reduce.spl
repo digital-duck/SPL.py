@@ -165,8 +165,8 @@ DO
 END;
 
 WORKFLOW resume_screener
-  INPUT @resume_dir TEXT := "./resumes"
-  INPUT @criteria TEXT := "relevant work experience, technical skills, educational background, communication clarity"
+  INPUT @resume_dir TEXT := "cookbook-pocketflow/006_map_reduce/data"
+  INPUT @criteria TEXT := "We are hiring a senior software engineer. Evaluate candidates on Python skills, leadership experience, and communication ability."
   INPUT @threshold TEXT := "7"
   INPUT @max_iterations INTEGER := 20
   OUTPUT @report TEXT

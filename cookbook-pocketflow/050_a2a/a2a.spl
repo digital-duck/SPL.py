@@ -73,7 +73,7 @@ $$;
 -- === WORKFLOW: ReAct agent exposed via A2A JSON-RPC service layer ===
 
 WORKFLOW react_a2a_agent
-  INPUT @request_json TEXT
+  INPUT @request_json TEXT := "{\"jsonrpc\":\"2.0\",\"method\":\"tasks/send\",\"id\":\"1\",\"params\":{\"question\":\"What is the capital of France?\"}}"
   INPUT @max_iterations INTEGER := 5
   OUTPUT @response_json TEXT
 DO

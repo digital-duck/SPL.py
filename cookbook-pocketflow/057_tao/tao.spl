@@ -91,7 +91,7 @@ Provide a clear, accurate, and well-structured answer that fully addresses the q
 $$;
 
 WORKFLOW react_agent
-  INPUT @query TEXT
+  INPUT @query TEXT := "What is the current population of Tokyo and how has it changed over the last decade?"
   INPUT @tools_available TEXT := "search_web, run_python, calculate"
   INPUT @max_iterations INTEGER := 10
   OUTPUT @final_answer TEXT

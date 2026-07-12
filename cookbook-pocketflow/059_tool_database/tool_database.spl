@@ -58,8 +58,8 @@ def retrieve_all_tasks(db_path: str) -> str:
 $$;
 
 WORKFLOW task_manager
-  INPUT @title TEXT
-  INPUT @description TEXT
+  INPUT @title TEXT := "web_search"
+  INPUT @description TEXT := "Search the web for current information on a given query"
   INPUT @db_path TEXT := "tasks.db"
   OUTPUT @task_list TEXT
 DO
