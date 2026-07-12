@@ -1,4 +1,4 @@
-IMPORT 'cookbook-pocketflow/005_rag/tools.spl';
+IMPORT 'tools.spl';
 
 CREATE FUNCTION generate_answer(query, retrieved_document)
 RETURNS TEXT AS $$
