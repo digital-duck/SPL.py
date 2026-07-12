@@ -44,8 +44,11 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/002_structured_output/structured_output.spl \
-    --llm claude_cli:claude-sonnet-4-6
+    --llm ollama:gemma4
 ```
+
+### ToDO
+- try different models and evaluate the match accuracy
 
 ## Extend it
 
@@ -60,10 +63,7 @@ For a detailed functional description, see the **[Functional Spec](migrate/S1-st
 
 ```
 migrate/
-├── S1-structured_output-claude-sonnet-4-6-spec.md   # splc describe output
+├── S1-structured_output-claude-sonnet-4-6-spec.md   # functional specification (deep-dive)
 ├── S2-structured_output-claude-sonnet-4-6.mmd       # text2mmd Mermaid diagram
 └── S3-structured_output-claude-sonnet-4-6.spl       # raw mmd2spl output (= structured_output.spl)
 ```
-
-tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
-Phase-1 recipes only wrap call_llm in utils.py, so no tools.spl needed.

@@ -58,10 +58,7 @@ For a detailed functional description, see the **[Functional Spec](migrate/S1-ch
 
 ```
 migrate/
-├── S1-chat-claude-sonnet-4-6-spec.md   # splc describe output
+├── S1-chat-claude-sonnet-4-6-spec.md   # functional specification (deep-dive)
 ├── S2-chat-claude-sonnet-4-6.mmd       # text2mmd Mermaid diagram
 └── S3-chat-claude-sonnet-4-6.spl       # raw mmd2spl output (= chat.spl)
 ```
-
-tools.spl (if present) — CREATE TOOL_API helpers ported from utils.py.
-Phase-1 recipes only wrap call_llm in utils.py, so no tools.spl needed.

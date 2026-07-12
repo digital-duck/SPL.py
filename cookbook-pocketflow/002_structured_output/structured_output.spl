@@ -100,8 +100,8 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW resume_parser
-  INPUT @resume_path TEXT
-  INPUT @skill_list_path TEXT
+  INPUT @resume_path TEXT := "cookbook-pocketflow/002_structured_output/data/resume.txt"
+  INPUT @skill_list_path TEXT := "cookbook-pocketflow/002_structured_output/data/skills.txt"
   INPUT @max_yaml_retries INTEGER := 3
   OUTPUT @output_record TEXT
 DO

@@ -50,6 +50,7 @@ DO
         CALL append_turn(@history, "user", @user_input) INTO @history;
         CALL trim_turns(@history, @last_n) INTO @trimmed;
         GENERATE chat_reply(@trimmed) INTO @reply;
+        LOGGING f'Assistant: {@reply}';
         CALL append_turn(@history, "assistant", @reply) INTO @history;
         @i := @i + 1;
     END;
