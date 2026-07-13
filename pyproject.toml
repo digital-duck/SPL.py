@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spl-llm"
-version = "3.2.0"
+version = "3.3.0"
 description = "SPL — A Declarative Language for Agentic LLM Workflow Orchestration"
 readme = {file = "README.md", content-type = "text/markdown"}
 license = "Apache-2.0"
