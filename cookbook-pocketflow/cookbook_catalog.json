@@ -25,12 +25,12 @@
         "run",
         "cookbook-pocketflow/001_chat/chat.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "001_chat",
       "log": "chat",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "basics",
       "tier": 1
     },
@@ -43,14 +43,14 @@
         "run",
         "cookbook-pocketflow/002_structured_output/structured_output.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "resume_path=cookbook-pocketflow/002_structured_output/sample_resume.txt"
       ],
       "dir": "002_structured_output",
       "log": "structured_output",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "basics",
       "tier": 1
     },
@@ -63,14 +63,14 @@
         "run",
         "cookbook-pocketflow/003_workflow/article_writer.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "topic=artificial intelligence"
       ],
       "dir": "003_workflow",
       "log": "workflow",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "basics",
       "tier": 1
     },
@@ -83,14 +83,14 @@
         "run",
         "cookbook-pocketflow/004_agent/web_search_agent.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=What is the capital of France?"
       ],
       "dir": "004_agent",
       "log": "agent",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "agentic",
       "tier": 1
     },
@@ -103,12 +103,12 @@
         "run",
         "cookbook-pocketflow/005_rag/rag.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "005_rag",
       "log": "rag",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "retrieval",
       "tier": 1
     },
@@ -121,12 +121,12 @@
         "run",
         "cookbook-pocketflow/006_map_reduce/map_reduce.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "006_map_reduce",
       "log": "map_reduce",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "basics",
       "tier": 1
     },
@@ -139,14 +139,14 @@
         "run",
         "cookbook-pocketflow/008_chat_guardrail/chat_guardrail.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "user_messages=How do I book a flight?"
       ],
       "dir": "008_chat_guardrail",
       "log": "chat_guardrail",
       "is_active": false,
-      "approval_status": "new",
+      "approval_status": "approved",
       "category": "safety",
       "tier": 1
     },
@@ -159,7 +159,7 @@
         "run",
         "cookbook-pocketflow/010_multi_agent/multi_web_search_agent.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "target_word=elephant",
         "--param",
@@ -181,7 +181,7 @@
         "run",
         "cookbook-pocketflow/011_supervisor/supervisor.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=What year did the Berlin Wall fall?"
       ],
@@ -201,7 +201,7 @@
         "run",
         "cookbook-pocketflow/012_batch_node/batch_node.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "012_batch_node",
       "log": "batch_node",
@@ -219,7 +219,7 @@
         "run",
         "cookbook-pocketflow/013_batch_flow/batch_text_transformer.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "013_batch_flow",
       "log": "batch_flow",
@@ -237,7 +237,7 @@
         "run",
         "cookbook-pocketflow/014_thinking/chain_of_thought.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "problem=Solve: if 2x+3=11, what is x?"
       ],
@@ -257,7 +257,7 @@
         "run",
         "cookbook-pocketflow/015_chat_memory/chat_memory.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "015_chat_memory",
       "log": "chat_memory",
@@ -275,7 +275,7 @@
         "run",
         "cookbook-pocketflow/016_mcp/mcp.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=what is 7 factorial",
         "--param",
@@ -297,7 +297,7 @@
         "run",
         "cookbook-pocketflow/017_judge/judge.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "task=write a haiku about autumn"
       ],
@@ -317,7 +317,7 @@
         "run",
         "cookbook-pocketflow/018_debate/debate.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "claim=AI will replace most jobs in 10 years"
       ],
@@ -337,7 +337,7 @@
         "run",
         "cookbook-pocketflow/019_agentic_rag/agentic_rag.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=What is SPL?"
       ],
@@ -357,7 +357,7 @@
         "run",
         "cookbook-pocketflow/020_heartbeat/heartbeat.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "020_heartbeat",
       "log": "heartbeat",
@@ -375,7 +375,7 @@
         "run",
         "cookbook-pocketflow/021_self_healing/self_healing.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "description=a login workflow with two-factor auth"
       ],
@@ -395,7 +395,7 @@
         "run",
         "cookbook-pocketflow/030_lead_generation/lead_generation.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "030_lead_generation",
       "log": "lead_generation",
@@ -413,7 +413,7 @@
         "run",
         "cookbook-pocketflow/031_invoice/invoice.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "031_invoice",
       "log": "invoice",
@@ -431,7 +431,7 @@
         "run",
         "cookbook-pocketflow/032_deep_research/deep_research.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "topic=quantum computing applications"
       ],
@@ -451,7 +451,7 @@
         "run",
         "cookbook-pocketflow/033_text2sql/text2sql.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=How many users signed up last month?"
       ],
@@ -471,7 +471,7 @@
         "run",
         "cookbook-pocketflow/034_communication/communication.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "034_communication",
       "log": "communication",
@@ -489,7 +489,7 @@
         "run",
         "cookbook-pocketflow/040_coding_agent/coding_web_search_agent.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "040_coding_agent",
       "log": "coding_agent",
@@ -507,7 +507,7 @@
         "run",
         "cookbook-pocketflow/041_agent_skills/agent_skills.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "task=summarize a document"
       ],
@@ -527,7 +527,7 @@
         "run",
         "cookbook-pocketflow/042_nodejs_upgrade_agent/nodejs_upgrade_web_search_agent.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "042_nodejs_upgrade_agent",
       "log": "nodejs_upgrade_agent",
@@ -545,7 +545,7 @@
         "run",
         "cookbook-pocketflow/050_a2a/a2a.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "request_json={\"id\":\"1\",\"method\":\"run\",\"params\":{\"question\":\"What is 2+2?\"}}"
       ],
@@ -565,7 +565,7 @@
         "run",
         "cookbook-pocketflow/051_async_basic/async_basic.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "ingredients=eggs,butter,flour"
       ],
@@ -585,7 +585,7 @@
         "run",
         "cookbook-pocketflow/052_batch/batch_translator.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "content=Hello world",
         "--param",
@@ -607,7 +607,7 @@
         "run",
         "cookbook-pocketflow/053_cli_hitl/cli_hitl.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "053_cli_hitl",
       "log": "cli_hitl",
@@ -625,7 +625,7 @@
         "run",
         "cookbook-pocketflow/054_code_generator/code_generator.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "problem=Write a function to reverse a string"
       ],
@@ -645,7 +645,7 @@
         "run",
         "cookbook-pocketflow/055_flow/text_transformer.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "055_flow",
       "log": "flow",
@@ -663,7 +663,7 @@
         "run",
         "cookbook-pocketflow/056_majority_vote/majority_vote.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "question=What is the square root of 144?"
       ],
@@ -683,7 +683,7 @@
         "run",
         "cookbook-pocketflow/057_tao/tao.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "query=What is the weather in Paris?"
       ],
@@ -703,7 +703,7 @@
         "run",
         "cookbook-pocketflow/058_tool_crawler/tool_crawler.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "url=https://example.com"
       ],
@@ -723,7 +723,7 @@
         "run",
         "cookbook-pocketflow/059_tool_database/tool_database.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "title=search_web",
         "--param",
@@ -745,7 +745,7 @@
         "run",
         "cookbook-pocketflow/060_tool_embeddings/tool_embeddings.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "text=find documents about machine learning"
       ],
@@ -765,7 +765,7 @@
         "run",
         "cookbook-pocketflow/061_tool_pdf_vision/tool_pdf_vision.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "061_tool_pdf_vision",
       "log": "tool_pdf_vision",
@@ -783,7 +783,7 @@
         "run",
         "cookbook-pocketflow/062_tool_search/tool_search.spl",
         "--llm",
-        "ollama:gemma3",
+        "ollama:gemma4",
         "--param",
         "query=latest AI research papers"
       ],
@@ -803,7 +803,7 @@
         "run",
         "cookbook-pocketflow/063_tracing/tracing.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "063_tracing",
       "log": "tracing",
@@ -821,7 +821,7 @@
         "run",
         "cookbook-pocketflow/064_visualization/visualization.spl",
         "--llm",
-        "ollama:gemma3"
+        "ollama:gemma4"
       ],
       "dir": "064_visualization",
       "log": "visualization",

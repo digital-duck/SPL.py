@@ -1,10 +1,11 @@
-CREATE TOOL_API list_resume_files(directory TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API list_resume_files(directory TEXT) 
+RETURNS TEXT AS PYTHON $$
 import os
 def list_resume_files(directory: str) -> str:
     try:
         if not os.path.isdir(directory):
             return f"error: directory not found: {directory}"
-        exts = {''.txt'', ''.pdf'', ''.docx'', ''.md'', ''.rtf''}
+        exts = {".txt", ".pdf", ".docx", ".md", ".rtf"}
         files = sorted(
             os.path.join(directory, f)
             for f in os.listdir(directory)
@@ -15,20 +16,34 @@ def list_resume_files(directory: str) -> str:
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API aggregate_scores(all_evaluations TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API aggregate_scores(all_evaluations TEXT)
+RETURNS TEXT AS PYTHON $$
 import re
+
+def _parse_records(text):
+    records = []
+    cur_path, cur_eval = None, []
+    for line in text.split("\n"):
+        if "|||" in line:
+            if cur_path is not None:
+                records.append((cur_path, "\n".join(cur_eval)))
+            p, e = line.split("|||", 1)
+            cur_path, cur_eval = p.strip(), [e]
+        elif cur_path is not None:
+            cur_eval.append(line)
+    if cur_path is not None:
+        records.append((cur_path, "\n".join(cur_eval)))
+    return records
+
 def aggregate_scores(all_evaluations: str) -> str:
     try:
         scores = []
-        for line in all_evaluations.strip().split("\n"):
-            if "|||" not in line:
-                continue
-            _, evaluation = line.split("|||", 1)
+        for _, evaluation in _parse_records(all_evaluations):
             if not evaluation.strip():
                 continue
-            m = re.search(r''score[:\s]+(\d+(?:\.\d+)?)'', evaluation, re.IGNORECASE)
+            m = re.search(r"score[:\s]+(\d+(?:\.\d+)?)", evaluation, re.IGNORECASE)
             if not m:
-                m = re.search(r''(\d+(?:\.\d+)?)\s*/\s*10'', evaluation)
+                m = re.search(r"(\d+(?:\.\d+)?)\s*/\s*10", evaluation)
             if m:
                 scores.append(float(m.group(1)))
         if not scores:
@@ -39,21 +54,34 @@ def aggregate_scores(all_evaluations: str) -> str:
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API rank_candidates(all_evaluations TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API rank_candidates(all_evaluations TEXT)
+RETURNS TEXT AS PYTHON $$
 import re, os
+
+def _parse_records(text):
+    records = []
+    cur_path, cur_eval = None, []
+    for line in text.split("\n"):
+        if "|||" in line:
+            if cur_path is not None:
+                records.append((cur_path, "\n".join(cur_eval)))
+            p, e = line.split("|||", 1)
+            cur_path, cur_eval = p.strip(), [e]
+        elif cur_path is not None:
+            cur_eval.append(line)
+    if cur_path is not None:
+        records.append((cur_path, "\n".join(cur_eval)))
+    return records
+
 def rank_candidates(all_evaluations: str) -> str:
     try:
         entries = []
-        for line in all_evaluations.strip().split("\n"):
-            if "|||" not in line:
+        for path, evaluation in _parse_records(all_evaluations):
+            if not evaluation.strip():
                 continue
-            path, evaluation = line.split("|||", 1)
-            path, evaluation = path.strip(), evaluation.strip()
-            if not evaluation:
-                continue
-            m = re.search(r''score[:\s]+(\d+(?:\.\d+)?)'', evaluation, re.IGNORECASE)
+            m = re.search(r"score[:\s]+(\d+(?:\.\d+)?)", evaluation, re.IGNORECASE)
             if not m:
-                m = re.search(r''(\d+(?:\.\d+)?)\s*/\s*10'', evaluation)
+                m = re.search(r"(\d+(?:\.\d+)?)\s*/\s*10", evaluation)
             score = float(m.group(1)) if m else 0.0
             entries.append((score, os.path.basename(path), evaluation))
         entries.sort(key=lambda x: x[0], reverse=True)
@@ -65,7 +93,8 @@ def rank_candidates(all_evaluations: str) -> str:
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API filter_candidates(ranked_candidates TEXT, threshold TEXT, filter_type TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API filter_candidates(ranked_candidates TEXT, threshold TEXT, filter_type TEXT) 
+RETURNS TEXT AS PYTHON $$
 import re
 def filter_candidates(ranked_candidates: str, threshold: str, filter_type: str) -> str:
     try:
@@ -74,7 +103,7 @@ def filter_candidates(ranked_candidates: str, threshold: str, filter_type: str) 
         for line in ranked_candidates.strip().split("\n"):
             if not line.strip():
                 continue
-            m = re.search(r''score=(\d+(?:\.\d+)?)'', line)
+            m = re.search(r"score=(\d+(?:\.\d+)?)", line)
             if not m:
                 continue
             score = float(m.group(1))
@@ -88,7 +117,8 @@ def filter_candidates(ranked_candidates: str, threshold: str, filter_type: str) 
         return f"error: {e}"
 $$;
 
-CREATE TOOL_API merge_evaluation_lists(qualified TEXT, rejected TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API merge_evaluation_lists(qualified TEXT, rejected TEXT) 
+RETURNS TEXT AS PYTHON $$
 def merge_evaluation_lists(qualified: str, rejected: str) -> str:
     try:
         q_lines = [l for l in qualified.strip().split("\n") if l.strip()]
@@ -165,10 +195,11 @@ DO
 END;
 
 WORKFLOW resume_screener
-  INPUT @resume_dir TEXT := "./resumes"
+  INPUT @resume_dir TEXT := "./cookbook-pocketflow/006_map_reduce/data"
   INPUT @criteria TEXT := "relevant work experience, technical skills, educational background, communication clarity"
   INPUT @threshold TEXT := "7"
-  INPUT @max_iterations INTEGER := 20
+  INPUT @max_iterations INTEGER := 10
+  INPUT @out_dir TEXT := "cookbook-pocketflow/006_map_reduce/output"
   OUTPUT @report TEXT
 DO
   -- read directory and list all resume files (newline-delimited paths)
@@ -207,6 +238,10 @@ DO
   -- merge partitions into unified list and generate executive summary report
   CALL merge_evaluation_lists(@qualified_list, @rejected_list) INTO @merged_list;
   GENERATE generate_summary_report(@ranked_candidates, @merged_list, @scores_summary) INTO @report;
+
+  CALL make_dir(@out_dir) INTO @_;
+  CALL path_join(@out_dir, "screening_report.md") INTO @report_path;
+  CALL write_file(@report_path, @report) INTO @_;
 
   RETURN @report WITH status = "complete";
 END;

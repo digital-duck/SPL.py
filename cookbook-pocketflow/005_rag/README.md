@@ -44,8 +44,8 @@ cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/005_rag/rag.spl \
     --llm claude_cli:claude-sonnet-4-6 \
-    --param 'documents=["doc1.txt","doc2.txt"]' \
-    --param "query=What does the document say about X?"
+    --param 'documents=["migrate/S1-rag-claude_cli-sonnet-1-spec.md"]' \
+    --param "query=What is FAISS for?"
 ```
 
 ## Extend it

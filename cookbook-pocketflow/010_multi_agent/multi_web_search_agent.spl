@@ -1,5 +1,6 @@
 -- Deterministic: normalize and exact-match guess vs target
-CREATE TOOL_API is_correct_guess(guess TEXT, target TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API is_correct_guess(guess TEXT, target TEXT) 
+RETURNS TEXT AS PYTHON $$
 def is_correct_guess(guess: str, target: str) -> str:
     try:
         return "correct" if guess.strip().lower() == target.strip().lower() else "wrong"

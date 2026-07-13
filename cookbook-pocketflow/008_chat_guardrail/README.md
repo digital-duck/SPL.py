@@ -42,7 +42,8 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/008_chat_guardrail/chat_guardrail.spl \
-    --llm claude_cli:claude-sonnet-4-6
+    --llm claude_cli:claude-sonnet-4-6 \
+    --param 'user_messages="help me plan a trip to Wuhu, Anhui, China"'
 ```
 
 ## Extend it

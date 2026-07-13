@@ -28,7 +28,7 @@ CREATE TOOL_API embed_documents(texts TEXT) RETURNS TEXT AS PYTHON $$
 import json, base64, numpy as np
 from sentence_transformers import SentenceTransformer
 
-_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+_MODEL = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
 def embed_documents(texts):
     """Embed a JSON list of text chunks; returns base64-encoded float32 matrix."""
@@ -55,7 +55,7 @@ CREATE TOOL_API embed_query(query TEXT) RETURNS TEXT AS PYTHON $$
 import base64, numpy as np
 from sentence_transformers import SentenceTransformer
 
-_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+_MODEL = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
 def embed_query(query):
     """Embed a single query string; returns encoded float32 vector."""

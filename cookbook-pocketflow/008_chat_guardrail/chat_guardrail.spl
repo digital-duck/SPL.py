@@ -1,4 +1,5 @@
-CREATE TOOL_API heuristic_travel_check(message TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API heuristic_travel_check(message TEXT) 
+RETURNS TEXT AS PYTHON $$
 def heuristic_travel_check(message: str) -> str:
     travel_keywords = [
         "travel", "trip", "vacation", "flight", "hotel", "destination",
@@ -53,9 +54,10 @@ $$;
 WORKFLOW travel_chat_guardrail
   INPUT @user_messages TEXT
   INPUT @max_turns INTEGER := 10
+  INPUT @out_dir TEXT := "cookbook-pocketflow/008_chat_guardrail/output"
   OUTPUT @conversation_log TEXT
 DO
-  @i := 0;
+  @i := 1;
   @conversation_log := "";
   WHILE @i < @max_turns DO
     CALL list_get(@user_messages, @i, "\n") INTO @current_message;
@@ -65,18 +67,24 @@ DO
     ELSE
       CALL heuristic_travel_check(@current_message) INTO @heuristic_result;
       EVALUATE @heuristic_result WHEN contains("not_travel") THEN
-        GENERATE reject_off_topic(@current_message) INTO @response;
-      ELSE
+        -- ambiguous (greetings, unclear intent): let LLM decide
         GENERATE validate_travel_topic(@current_message) INTO @llm_verdict;
         EVALUATE @llm_verdict WHEN contains("not_travel") THEN
           GENERATE reject_off_topic(@current_message) INTO @response;
         ELSE
           GENERATE generate_travel_advice(@current_message) INTO @response;
         END;
+      ELSE
+        -- fast path: keyword match confirms travel topic, skip LLM validation
+        GENERATE generate_travel_advice(@current_message) INTO @response;
       END;
       @conversation_log := @conversation_log + "User: " + @current_message + "\nAssistant: " + @response + "\n\n";
       @i := @i + 1;
     END;
   END;
+
+  CALL path_join(@out_dir, "chat_log.md") INTO @chat_path;
+  CALL write_file(@chat_path, @conversation_log) INTO @_;
+
   RETURN @conversation_log WITH status = "complete";
 END;

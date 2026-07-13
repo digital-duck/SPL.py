@@ -1,4 +1,5 @@
-CREATE TOOL_API discover_mcp_tools(mcp_server_url TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API discover_mcp_tools(mcp_server_url TEXT) 
+RETURNS TEXT AS PYTHON $$
 import json, urllib.request
 
 def discover_mcp_tools(mcp_server_url: str) -> str:
@@ -20,7 +21,8 @@ def discover_mcp_tools(mcp_server_url: str) -> str:
         return "error: " + str(e)
 $$;
 
-CREATE TOOL_API invoke_mcp_tool(tool_name TEXT, params_json TEXT, mcp_server_url TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API invoke_mcp_tool(tool_name TEXT, params_json TEXT, mcp_server_url TEXT) 
+RETURNS TEXT AS PYTHON $$
 import json, urllib.request
 
 def invoke_mcp_tool(tool_name: str, params_json: str, mcp_server_url: str) -> str:
@@ -43,7 +45,8 @@ def invoke_mcp_tool(tool_name: str, params_json: str, mcp_server_url: str) -> st
         return "error: " + str(e)
 $$;
 
-CREATE TOOL_API invoke_local_tool(tool_name TEXT, params_json TEXT) RETURNS TEXT AS PYTHON $$
+CREATE TOOL_API invoke_local_tool(tool_name TEXT, params_json TEXT) 
+RETURNS TEXT AS PYTHON $$
 import json, math
 
 def invoke_local_tool(tool_name: str, params_json: str) -> str:
