@@ -1,5 +1,27 @@
 # Recipe 74 — Generic Domain Concept-Book (`graph_lib` + `@domain_yaml`)
 
+## For the TMLR reviewer: the challenge
+
+> **Can PDL do this?**
+>
+> This recipe is a single `.spl` workflow (`build_concept_book.spl`) backed by a declarative domain
+> graph (`{domain}_graph.yaml`). It generates a complete, pedagogically ordered textbook for any
+> knowledge domain — linear algebra, calculus, music theory, Chinese characters, molecular biology,
+> classical mechanics, or any domain the user specifies in a YAML file — with zero changes to the
+> workflow itself.
+>
+> In production at [concept-book](https://github.com/digital-duck/concept-book) across 15+ domain
+> YAMLs. The same workflow runs in English, Chinese, French, or any language by changing one
+> `--param language=zh` flag.
+>
+> PDL (Vaziri et al., 2024) is a YAML-based prompt language with Jinja2 templating. It has no
+> concept of graph traversal, dependency ordering, symbolic verification, or runtime-resolved
+> domain dispatch. There is no meaningful side-by-side comparison to perform — the systems address
+> different levels of abstraction. We invite the reviewer to demonstrate an equivalent PDL workflow
+> if one exists.
+
+---
+
 **Pattern:** ONE `.spl` workflow + ONE shared algorithm library (`graph_lib.py`)
 + declarative per-domain data (`{domain}_graph.yaml`) + a **runtime-resolved**
 `splc` target (`python/domain_textbook`) that decides *which* domain to teach

@@ -1516,6 +1516,50 @@
       "excluded_adapters": []
     },
     {
+      "id": "79",
+      "name": "Code Generation + Pytest Verification",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/79_code_pytest/code_pytest.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "79_code_pytest",
+      "log": "code_pytest",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pytest"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "78",
+      "name": "Constraint Optimization",
+      "description": "Demonstrates SPL's deterministic-probabilistic boundary: LLM reads a natural-language LP problem and generates PuLP solver code (probabilistic), PuLP/CBC finds the optimal solution with a proof of optimality (deterministic), ASSERT gates on solver status (formal verification), LLM interprets the result (probabilistic). Repair loop retries up to max_tries on Error/Infeasible. Default problem: bakery production planning (known optimum: bread=3, croissants=3, profit=$60). Requires: pip install pulp.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/78_constraint_opt/constraint_opt.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "78_constraint_opt",
+      "log": "constraint_opt",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pulp"
+      ],
+      "excluded_adapters": []
+    },
+    {
       "id": "76",
       "name": "Lean Proof Verifier",
       "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
