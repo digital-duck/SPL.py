@@ -207,40 +207,61 @@ class SPL3Executor(SPL2Executor):
         _log.info("SOLVE @%s := %s -> %r", stmt.target_variable, code, result.strip())
 
     async def _exec_assert(self, stmt: AssertStatement, state) -> None:
-        """Execute ASSERT python_template [OTHERWISE ...] via the IPython kernel.
+        """Execute ASSERT python_template [OTHERWISE ...].
 
-        Substitutes @@varname@@ markers, wraps in bool(...) and sends to
-        the kernel.  If the result is falsy, executes otherwise_body; if
-        otherwise_body is empty, raises a ToolFailed (assertion failure).
+        Two execution paths:
+        - Kernel present: send to IPython kernel (symbolic / SOLVE context).
+        - No kernel: eval in a namespace of registered tools + builtins.
+          Safe for TOOL_API predicates (e.g. ASSERT is_optimal(@solution)).
+
+        If the result is falsy, executes otherwise_body; if otherwise_body is
+        empty, raises ToolFailed (assertion failure).
         """
-        if self._kernel is None:
-            from spl.executor import ToolFailed
-            raise ToolFailed(
-                "ASSERT requires --kernel flag; run with 'spl3 run --kernel ...'"
-            )
-        code = self._resolve_python_template(stmt.python_template, state)
-        kernel_code = (
-            f"_spl_assert_result = bool({code})\n"
-            f"print(_spl_assert_result)"
-        )
         from spl.executor import ToolFailed
-        from spl3.kernel import KernelExecutionError
-        try:
-            result = self._kernel.execute(kernel_code)
-        except KernelExecutionError as e:
-            raise ToolFailed(f"ASSERT kernel error: {e}") from e
-        except TimeoutError as e:
-            raise ToolFailed(f"ASSERT timeout: {e}") from e
 
-        passed = result.strip() == "True"
-        _log.info("ASSERT %s -> %s", code, passed)
+        code = self._resolve_python_template(stmt.python_template, state)
+
+        if self._kernel is None:
+            # Kernel-free path: eval with tools namespace.
+            # Covers TOOL_API predicates without requiring --kernel.
+            # Use repr()-quoted substitution so state values become proper
+            # Python string literals (not bare JSON/dict literals).
+            import re as _re
+            code = _re.sub(
+                r'@@(\w+)@@',
+                lambda m: repr(state.get_var(m.group(1))),
+                stmt.python_template,
+            )
+            ns: dict = {}
+            ns.update(self.functions._builtins)
+            ns.update(self.functions._tools)
+            try:
+                passed = bool(eval(code, ns))  # noqa: S307
+            except Exception as e:
+                raise ToolFailed(f"ASSERT eval error: {e}") from e
+            _log.info("ASSERT (tools-eval) %s -> %s", code, passed)
+        else:
+            # Kernel path: symbolic / math expressions in IPython context.
+            kernel_code = (
+                f"_spl_assert_result = bool({code})\n"
+                f"print(_spl_assert_result)"
+            )
+            from spl3.kernel import KernelExecutionError
+            try:
+                result = self._kernel.execute(kernel_code)
+            except KernelExecutionError as e:
+                raise ToolFailed(f"ASSERT kernel error: {e}") from e
+            except TimeoutError as e:
+                raise ToolFailed(f"ASSERT timeout: {e}") from e
+            passed = result.strip() == "True"
+            _log.info("ASSERT %s -> %s", code, passed)
 
         if not passed:
             if stmt.otherwise_body:
                 await self._execute_body(stmt.otherwise_body, state)
             else:
                 raise ToolFailed(
-                    f"ASSERT failed: {code!r} returned {result.strip()!r}"
+                    f"ASSERT failed: {code!r} returned False"
                 )
 
     # ------------------------------------------------------------------ #

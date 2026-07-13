@@ -1035,24 +1035,23 @@ class Executor:
                            eval_value[:20], cond.operator, values, matched)
 
             elif isinstance(cond, ComparisonCondition):
+                right_raw = self._eval_expression(cond.right, state)
                 # Boolean shorthand: WHEN = TRUE / WHEN = FALSE
-                right_str = self._eval_expression(cond.right, state).lower()
-                if right_str in ("true", "false") and cond.operator == "=":
-                    matched = (eval_value.lower() == right_str)
-                    _log.debug("EVALUATE bool %s = %s -> %s", eval_value, right_str, matched)
+                if right_raw.lower() in ("true", "false") and cond.operator == "=":
+                    matched = (eval_value.lower() == right_raw.lower())
+                    _log.debug("EVALUATE bool %s = %s -> %s", eval_value, right_raw, matched)
                 else:
-                    # Deterministic numeric comparison
+                    # Deterministic numeric comparison, falling back to case-sensitive string eq
                     try:
                         left_val = float(eval_value)
-                        right_val = float(right_str)
+                        right_val = float(right_raw)
                         matched = self._compare(left_val, cond.operator, right_val)
                     except (ValueError, TypeError):
-                        # String equality fallback
-                        matched = (eval_value == right_str) if cond.operator == "=" else \
-                                  (eval_value != right_str) if cond.operator == "!=" else False
+                        # String equality fallback — case-sensitive (preserves "Optimal" etc.)
+                        matched = (eval_value == right_raw) if cond.operator == "=" else \
+                                  (eval_value != right_raw) if cond.operator == "!=" else False
                 _log.debug("EVALUATE %s %s %s -> %s",
-                           eval_value[:20], cond.operator,
-                           self._eval_expression(cond.right, state), matched)
+                           eval_value[:20], cond.operator, right_raw, matched)
 
             if matched:
                 await self._execute_body(when_clause.statements, state)

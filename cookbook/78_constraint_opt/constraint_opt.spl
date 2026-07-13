@@ -26,6 +26,34 @@
 --       --param problem="A factory produces chairs and tables ..."
 -- ============================================================
 
+-- ── Utility: timestamp + file I/O ───────────────────────────
+
+CREATE TOOL_API now_ts()
+RETURNS TEXT AS PYTHON $$
+def now_ts() -> str:
+    """Return current local time as a filesystem-safe string: YYYY-MM-DD_HH-MM-SS."""
+    import datetime
+    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+$$;
+
+CREATE TOOL_API elapsed_secs(start_ts TEXT)
+RETURNS TEXT AS PYTHON $$
+def elapsed_secs(start_ts: str) -> str:
+    """Seconds elapsed since start_ts (monotonic float string from time.monotonic())."""
+    import time
+    try:
+        return f"{time.monotonic() - float(start_ts):.1f}"
+    except Exception:
+        return "?"
+$$;
+
+CREATE TOOL_API monotonic_now()
+RETURNS TEXT AS PYTHON $$
+def monotonic_now() -> str:
+    import time
+    return str(time.monotonic())
+$$;
+
 -- ── Deterministic regime: PuLP solver tools ──────────────────
 
 CREATE TOOL_API run_pulp(code TEXT)
@@ -38,7 +66,11 @@ def run_pulp(code: str) -> str:
     On any error returns {"status": "Error", "error": "<msg>"}.
     """
     import json
+    import re
     import pulp
+    # Strip markdown fences the LLM occasionally emits despite instructions
+    code = re.sub(r'^```(?:python)?\s*\n?', '', code.strip(), flags=re.IGNORECASE)
+    code = re.sub(r'\n?```\s*$', '', code)
     namespace = {"pulp": pulp}
     try:
         exec(code, namespace)
@@ -188,9 +220,16 @@ WORKFLOW constraint_opt
   -- that a human can verify by hand but which requires LP to prove optimal.
   INPUT @problem TEXT := "A bakery produces artisan bread and croissants. Each loaf of bread requires 3 hours of labor and 2 kg of flour, earning $12 profit. Each batch of croissants requires 1 hour of labor and 3 kg of flour, earning $8 profit. The bakery has 12 hours of labor and 15 kg of flour available each day. Both products must have non-negative quantities. Maximize daily profit."
   INPUT @max_tries INTEGER := 3
+  INPUT @out_dir TEXT := "./cookbook/78_constraint_opt/output"
   OUTPUT @report TEXT
 DO
+  -- 0. Timing + run-id
+  CALL monotonic_now() INTO @t_start;
+  CALL now_ts() INTO @ts_safe;
+  LOGGING f"[constraint_opt] start  run_id={@ts_safe}  max_tries={@max_tries}" LEVEL INFO
+
   -- ── Stage 1: LLM formulates LP; PuLP solves; repair loop on failure ──
+  LOGGING "[constraint_opt] Stage 1 — LLM formulation + solver" LEVEL INFO
   @tries     := 0;
   @status    := "init";
   @lp_code   := "";
@@ -203,6 +242,7 @@ DO
 
       WHEN = "init" THEN
         -- First attempt: LLM formulates from scratch
+        LOGGING "[constraint_opt] attempt 1 — LLM formulating LP code" LEVEL INFO
         GENERATE formulate_lp(@problem) INTO @lp_code;
         CALL run_pulp(@lp_code) INTO @solution;
         CALL get_status(@solution) INTO @status;
@@ -212,6 +252,7 @@ DO
       ELSE
         -- Subsequent attempts: LLM repairs with error/status feedback
         CALL get_error(@solution) INTO @error_info;
+        LOGGING f"[constraint_opt] repair {@tries} — feeding error to LLM: {@error_info}" LEVEL INFO
         GENERATE repair_lp(@problem, @lp_code, @error_info) INTO @lp_code;
         CALL run_pulp(@lp_code) INTO @solution;
         CALL get_status(@solution) INTO @status;
@@ -224,17 +265,28 @@ DO
   -- ASSERT is the formal boundary: execution only continues when
   -- PuLP confirms Optimal. A non-Optimal status raises AssertionError
   -- and is caught below — the solver's verdict is authoritative.
+  LOGGING f"[constraint_opt] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
   ASSERT is_optimal(@solution);
+  LOGGING "[constraint_opt] ASSERT passed — solver confirmed Optimal" LEVEL INFO
 
   -- ── Stage 3: LLM interprets the verified result ───────────────
+  LOGGING "[constraint_opt] Stage 3 — LLM interpreting verified solution" LEVEL INFO
   GENERATE interpret_solution(@problem, @solution) INTO @narrative;
 
   CALL format_report(@problem, @lp_code, @solution, @narrative) INTO @report;
 
+  -- Write report to output file
+  CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
+  CALL elapsed_secs(@t_start) INTO @elapsed;
+  LOGGING f"[constraint_opt] done — report → {@out_path}  ({@elapsed}s, attempts={@tries})" LEVEL INFO
+
   RETURN @report WITH status = "complete";
 
 EXCEPTION
-  WHEN AssertionError THEN
+  WHEN ToolFailed THEN
     @report := "Solver did not reach Optimal status after " + @tries + " attempts. Last status: " + @status;
+    CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
+    CALL elapsed_secs(@t_start) INTO @elapsed;
+    LOGGING f"[constraint_opt] infeasible — report → {@out_path}  ({@elapsed}s)" LEVEL INFO
     RETURN @report WITH status = "infeasible";
 END;

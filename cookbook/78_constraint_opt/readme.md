@@ -26,6 +26,7 @@ This boundary is **inexpressible in LangChain, PDL, or AutoGen** without externa
 PuLP is not part of the SPL core install. Add it once to your environment:
 
 ```bash
+conda activate spl123
 pip install pulp        # installs PuLP + the bundled CBC solver binary
 ```
 
