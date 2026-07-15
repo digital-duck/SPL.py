@@ -1,3 +1,1 @@
-**Improved Summary:**
-
-This document presents the classic pangram “The quick brown fox jumps over the lazy dog.” as a simple test case for evaluating map-reduce summarization techniques. The inclusion of the numerical value "0" is likely intended as an identifier or placeholder within the system. 
+Please provide me with the "Input 1" (the list concatenated) and "Input 2" (the bullet points). I need those inputs to perform the task of reducing summaries.  Once you give me the data, I'll do my best to fulfill your request.

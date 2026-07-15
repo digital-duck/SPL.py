@@ -1,0 +1,4 @@
+# Requirements for Recipe 80: OpenCV 5
+opencv-python>=5.0.0.93
+numpy>=1.26
+Pillow>=10.0    # only needed to regenerate the sample/ test images

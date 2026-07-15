@@ -1,14 +1,14 @@
 {
-  "_comment": "SPL.go Cookbook Catalog \u2014 mirrors cookbook_catalog.json but uses 'spl-go' binary. Recipes requiring --tools (Python) or claude_cli adapter are disabled until spl-go gains those features.",
+  "_comment": "SPL.go Cookbook Catalog — mirrors cookbook_catalog.json (Python) but uses the 'spl-go' binary. Synced 2026-07-14, re-synced 2026-07-15 after adding SOLVE/ASSERT/CREATE TOOL_API lexer+parser support and WORKFLOW INPUT/OUTPUT ':=' default-value + repeated-keyword-per-line parsing. 13 of 15 previously parse-blocked recipes now validate OK; remaining classified by real 'spl-go validate' runs, not guesswork. IMPORTANT: parsing OK != running OK — SOLVE/ASSERT/CREATE TOOL_API execution (the persistent-subprocess kernel bridge) is not yet wired into the executor, so CALL to a TOOL_API function or a SOLVE statement will not yet dispatch correctly at runtime. Recipes marked 'new' here are parse-validated only.",
   "_schema": {
-    "is_active": "bool   \u2014 included in default batch run (python run_all.py --catalog-file cookbook/cookbook_catalog_go.json)",
-    "approval_status": "string \u2014 new | approved | wip | disabled | rejected"
+    "is_active": "bool   — included in default batch run (python run_all.py --catalog-file cookbook/cookbook_catalog_go.json)",
+    "approval_status": "string — new | approved | wip | disabled | rejected"
   },
   "recipes": [
     {
       "id": "01",
       "name": "Hello World",
-      "description": "Minimal SPL program \u2014 verify spl-go + adapter + model work",
+      "description": "Minimal SPL program — verify spl-go + adapter + model work",
       "args": [
         "spl-go",
         "run",
@@ -25,7 +25,7 @@
     {
       "id": "02",
       "name": "Ollama Proxy",
-      "description": "General-purpose LLM query \u2014 proxy any Ollama model",
+      "description": "General-purpose LLM query — proxy any Ollama model",
       "args": [
         "spl-go",
         "run",
@@ -43,7 +43,7 @@
     {
       "id": "03",
       "name": "Multilingual Greeting",
-      "description": "Greet in any language \u2014 parametric context demo",
+      "description": "Greet in any language — parametric context demo",
       "args": [
         "spl-go",
         "run",
@@ -62,7 +62,7 @@
     {
       "id": "04",
       "name": "Model Showdown",
-      "description": "Same prompt to multiple models \u2014 compare output and latency via parallel CTEs",
+      "description": "Same prompt to multiple models — compare output and latency via parallel CTEs",
       "args": [
         "spl-go",
         "run",
@@ -81,7 +81,7 @@
     {
       "id": "05",
       "name": "Self-Refine",
-      "description": "Iterative improvement: draft \u2192 critique \u2192 refine loop",
+      "description": "Iterative improvement: draft → critique → refine loop",
       "args": [
         "spl-go",
         "run",
@@ -99,7 +99,7 @@
     {
       "id": "06",
       "name": "ReAct Agent",
-      "description": "Requires claude_cli adapter + --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires claude_cli adapter + --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -141,7 +141,7 @@
     {
       "id": "08",
       "name": "RAG Query",
-      "description": "Retrieval-augmented generation \u2014 requires: spl-go doc-rag add <doc> + ChromaDB + Ollama",
+      "description": "Retrieval-augmented generation — requires: spl-go doc-rag add <doc> + ChromaDB + Ollama",
       "args": [
         "spl-go",
         "run",
@@ -159,7 +159,7 @@
     {
       "id": "09",
       "name": "Chain of Thought",
-      "description": "Multi-step reasoning: Research \u2192 Analyze \u2192 Summarize",
+      "description": "Multi-step reasoning: Research → Analyze → Summarize",
       "args": [
         "spl-go",
         "run",
@@ -230,7 +230,7 @@
     {
       "id": "13",
       "name": "Map-Reduce Summarizer",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -251,7 +251,7 @@
     {
       "id": "14",
       "name": "Multi-Agent Collaboration",
-      "description": "Researcher \u2192 Analyst \u2192 Writer collaboration via PROCEDURE",
+      "description": "Researcher → Analyst → Writer collaboration via PROCEDURE",
       "args": [
         "spl-go",
         "run",
@@ -287,7 +287,7 @@
     {
       "id": "16",
       "name": "Reflection Agent",
-      "description": "Meta-cognitive loop: solve \u2192 reflect \u2192 correct until confident",
+      "description": "Meta-cognitive loop: solve → reflect → correct until confident",
       "args": [
         "spl-go",
         "run",
@@ -396,7 +396,7 @@
     {
       "id": "22",
       "name": "Text2SPL Demo",
-      "description": "Natural language \u2192 SPL compiler demo via spl-go text2spl",
+      "description": "Natural language → SPL compiler demo via spl-go text2spl",
       "args": [
         "bash",
         "./cookbook/22_text2spl_demo/text2spl_demo.sh",
@@ -412,7 +412,7 @@
     {
       "id": "23",
       "name": "Structured Output",
-      "description": "CREATE FUNCTION with JSON schema \u2014 extract typed data from free text",
+      "description": "CREATE FUNCTION with JSON schema — extract typed data from free text",
       "args": [
         "spl-go",
         "run",
@@ -430,7 +430,7 @@
     {
       "id": "24",
       "name": "Few-Shot Prompting",
-      "description": "Gold-standard examples embedded in SELECT context \u2014 in-context learning",
+      "description": "Gold-standard examples embedded in SELECT context — in-context learning",
       "args": [
         "spl-go",
         "run",
@@ -449,7 +449,7 @@
     {
       "id": "25",
       "name": "Nested Procedures",
-      "description": "PROCEDURE calling PROCEDURE \u2014 deep composability without external orchestration",
+      "description": "PROCEDURE calling PROCEDURE — deep composability without external orchestration",
       "args": [
         "spl-go",
         "run",
@@ -468,7 +468,7 @@
     {
       "id": "26",
       "name": "Prompt A/B Test",
-      "description": "CTEs + EVALUATE scoring \u2014 compare two prompt variants, pick winner automatically",
+      "description": "CTEs + EVALUATE scoring — compare two prompt variants, pick winner automatically",
       "args": [
         "spl-go",
         "run",
@@ -488,7 +488,7 @@
     {
       "id": "27",
       "name": "Data Extraction",
-      "description": "Pull structured fields from messy text \u2014 names, dates, amounts, references",
+      "description": "Pull structured fields from messy text — names, dates, amounts, references",
       "args": [
         "spl-go",
         "run",
@@ -507,7 +507,7 @@
     {
       "id": "28",
       "name": "Customer Support Triage",
-      "description": "Classify \u2192 route \u2192 draft response in one workflow",
+      "description": "Classify → route → draft response in one workflow",
       "args": [
         "spl-go",
         "run",
@@ -582,7 +582,7 @@
     {
       "id": "32",
       "name": "Socratic Tutor",
-      "description": "Ask guiding questions rather than giving answers \u2014 persona-constrained generation",
+      "description": "Ask guiding questions rather than giving answers — persona-constrained generation",
       "args": [
         "spl-go",
         "run",
@@ -620,7 +620,7 @@
     {
       "id": "34",
       "name": "Progressive Summarizer",
-      "description": "Layered summary: sentence \u2192 paragraph \u2192 page with fidelity verification",
+      "description": "Layered summary: sentence → paragraph → page with fidelity verification",
       "args": [
         "spl-go",
         "run",
@@ -639,7 +639,7 @@
     {
       "id": "35",
       "name": "Hypothesis Tester",
-      "description": "Generate hypothesis \u2192 design test \u2192 evaluate evidence \u2192 conclude",
+      "description": "Generate hypothesis → design test → evaluate evidence → conclude",
       "args": [
         "spl-go",
         "run",
@@ -658,7 +658,7 @@
     {
       "id": "36",
       "name": "Tool-Use / Function-Call",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -680,7 +680,7 @@
     {
       "id": "37",
       "name": "Headline News Aggregator",
-      "description": "Requires claude_cli adapter \u2014 not yet supported in spl-go",
+      "description": "Requires claude_cli adapter — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -700,7 +700,7 @@
     {
       "id": "38",
       "name": "Bedrock Quickstart",
-      "description": "Fan out to three AWS Bedrock model families \u2014 adapter smoke test for enterprise environments",
+      "description": "Fan out to three AWS Bedrock model families — adapter smoke test for enterprise environments",
       "args": [
         "spl-go",
         "run",
@@ -718,7 +718,7 @@
     {
       "id": "39",
       "name": "Vertex AI Quickstart",
-      "description": "Fan out to three Gemini tiers on GCP Vertex AI \u2014 adapter smoke test for GCP environments",
+      "description": "Fan out to three Gemini tiers on GCP Vertex AI — adapter smoke test for GCP environments",
       "args": [
         "spl-go",
         "run",
@@ -736,7 +736,7 @@
     {
       "id": "40",
       "name": "Azure OpenAI Quickstart",
-      "description": "Fan out to three Azure OpenAI deployments \u2014 adapter smoke test for Azure environments",
+      "description": "Fan out to three Azure OpenAI deployments — adapter smoke test for Azure environments",
       "args": [
         "spl-go",
         "run",
@@ -754,7 +754,7 @@
     {
       "id": "41",
       "name": "Human Steering",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -774,7 +774,7 @@
     {
       "id": "42",
       "name": "Knowledge Synthesis",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -794,7 +794,7 @@
     {
       "id": "43",
       "name": "Prompt Self-Tuning",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -815,7 +815,7 @@
     {
       "id": "44",
       "name": "Adaptive Failover",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -837,7 +837,7 @@
     {
       "id": "45",
       "name": "Vision to Action",
-      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE \u2014 deterministic EVALUATE decision tree",
+      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE — deterministic EVALUATE decision tree",
       "args": [
         "spl-go",
         "run",
@@ -855,7 +855,7 @@
     {
       "id": "47",
       "name": "arXiv Morning Brief",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -875,7 +875,7 @@
     {
       "id": "48",
       "name": "Credit Risk Assessment",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -896,7 +896,7 @@
     {
       "id": "49",
       "name": "Regulatory News Audit",
-      "description": "Requires --tools (Python) \u2014 not yet supported in spl-go",
+      "description": "Requires --tools (Python) — not yet supported in spl-go",
       "args": [
         "spl-go",
         "run",
@@ -916,7 +916,7 @@
     {
       "id": "05_v3",
       "name": "Self-Refine",
-      "description": "CALL sub-workflow dispatch \u2014 iterative draft/critique/refine loop (TEXT \u2192 TEXT)",
+      "description": "CALL sub-workflow dispatch — iterative draft/critique/refine loop (TEXT → TEXT)",
       "args": [
         "spl-go",
         "run",
@@ -934,7 +934,7 @@
     {
       "id": "50",
       "name": "Code Pipeline",
-      "description": "CALL sub-workflow chain \u2014 NDD closure: generate \u2192 review \u2192 improve \u2192 test \u2192 document \u2192 spec_judge (TEXT \u2192 TEXT)",
+      "description": "CALL sub-workflow chain — NDD closure: generate → review → improve → test → document → spec_judge (TEXT → TEXT)",
       "args": [
         "spl-go",
         "run",
@@ -953,7 +953,7 @@
     {
       "id": "51",
       "name": "Image Caption",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -972,7 +972,7 @@
     {
       "id": "52",
       "name": "Audio Summary",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -991,7 +991,7 @@
     {
       "id": "53",
       "name": "Video Summary",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1010,7 +1010,7 @@
     {
       "id": "54",
       "name": "Text to Image",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1028,7 +1028,7 @@
     {
       "id": "55",
       "name": "Text to Speech",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1046,7 +1046,7 @@
     {
       "id": "56",
       "name": "Text to Video",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1064,7 +1064,7 @@
     {
       "id": "57",
       "name": "Image Format Conversion",
-      "description": "Requires Python run.py + Pillow codec \u2014 not portable to spl-go",
+      "description": "Requires Python run.py + Pillow codec — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1083,7 +1083,7 @@
     {
       "id": "58",
       "name": "Image Restyle",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1102,7 +1102,7 @@
     {
       "id": "59",
       "name": "Audio Format Conversion",
-      "description": "Requires Python run.py + pydub codec \u2014 not portable to spl-go",
+      "description": "Requires Python run.py + pydub codec — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1121,7 +1121,7 @@
     {
       "id": "60",
       "name": "Voice Dialogue",
-      "description": "Requires Python run.py physical runner \u2014 not portable to spl-go",
+      "description": "Requires Python run.py physical runner — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1139,7 +1139,7 @@
     {
       "id": "61",
       "name": "Video to Audio",
-      "description": "Requires Python run.py + ffmpeg codec \u2014 not portable to spl-go",
+      "description": "Requires Python run.py + ffmpeg codec — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1157,7 +1157,7 @@
     {
       "id": "62",
       "name": "Video to Image",
-      "description": "Requires Python run.py + ffmpeg codec \u2014 not portable to spl-go",
+      "description": "Requires Python run.py + ffmpeg codec — not portable to spl-go",
       "args": [
         "spl-go",
         "run",
@@ -1175,7 +1175,7 @@
     {
       "id": "63",
       "name": "Parallel Code Review",
-      "description": "CALL PARALLEL \u2014 style, security, test reviews run concurrently; merged into one report (TEXT \u2192 TEXT)",
+      "description": "CALL PARALLEL — style, security, test reviews run concurrently; merged into one report (TEXT → TEXT)",
       "args": [
         "spl-go",
         "run",
@@ -1194,7 +1194,7 @@
     {
       "id": "64",
       "name": "Parallel News Digest",
-      "description": "CALL PARALLEL \u2014 three news topics summarised concurrently; merged into a morning briefing (TEXT \u2192 TEXT)",
+      "description": "CALL PARALLEL — three news topics summarised concurrently; merged into a morning briefing (TEXT → TEXT)",
       "args": [
         "spl-go",
         "run",
@@ -1207,6 +1207,360 @@
       "is_active": true,
       "approval_status": "new",
       "category": "agentic"
+    },
+    {
+      "id": "46",
+      "name": "MCP Integration",
+      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation — DODA across deployment modes via a single EVALUATE branch",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/46_mcp/mcp.spl",
+        "--adapter",
+        "ollama",
+        "--param",
+        "question=what is 7 factorial"
+      ],
+      "dir": "46_mcp",
+      "log": "mcp",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "cloud_infrastructure",
+      "tier": 1,
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "65",
+      "name": "LLM-powered SPL Compiler (vibe-splc)",
+      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler — run both and cross-compare to surface gaps",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/65_llm_splc/llm_splc.spl",
+        "--tools",
+        "cookbook/65_llm_splc/tools.py",
+        "--param",
+        "spl_file=cookbook/05_self_refine/self_refine.spl",
+        "--param",
+        "target=langgraph"
+      ],
+      "dir": "65_llm_splc",
+      "log": "llm_splc",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "claude_cli"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "66",
+      "name": "Mixed-Regime Stock Analysis",
+      "description": "Demonstrates CREATE TOOL_API: deterministic Python tools (fetch_ohlcv, compute_metrics) + LLM analysis (interpret_metrics, synthesize_report) in one self-contained .spl file",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/66_stock_analysis/stock_analysis.spl"
+      ],
+      "dir": "66_stock_analysis",
+      "log": "stock_analysis",
+      "is_active": false,
+      "approval_status": "disabled",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [],
+      "excluded_adapters": [],
+      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/66_stock_analysis/stock_analysis.spl: Parse error at 112:17: Expected 52, got 13 (\"IN\")"
+    },
+    {
+      "id": "67",
+      "name": "Symbolic Math Solver",
+      "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem → SymPy solves exactly → LLM explains result. Shows LLM handling only what it is uniquely suited for.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/67_symbolic_math/hello_symbolic_math.spl",
+        "--kernel"
+      ],
+      "dir": "67_symbolic_math",
+      "log": "symbolic_math",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "68",
+      "name": "Answer-First Problem Generator",
+      "description": "SymPy generates exact answers first; LLM writes word problems and worked solutions around them. Hallucination on math is structurally impossible.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/68_problem_generator/problem_generator.spl"
+      ],
+      "dir": "68_problem_generator",
+      "log": "problem_generator",
+      "is_active": false,
+      "approval_status": "disabled",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/68_problem_generator/problem_generator.spl: Parse error at 201:12: Expected 52, got 13 (\"IN\")"
+    },
+    {
+      "id": "69",
+      "name": "Jupyter Notebook Generator",
+      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps — the kernel does exact eigendecomposition and symbolic A·v=λ·v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/69_notebook_gen/notebook_gen.spl",
+        "--kernel",
+        "--adapter",
+        "ollama"
+      ],
+      "dir": "69_notebook_gen",
+      "log": "notebook_gen",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: parses OK (validated 2026-07-14); end-to-end execution against IMPORTs/tool calls not yet verified."
+    },
+    {
+      "id": "70",
+      "name": "Linear Algebra Core Concepts (Content-Cache Experiment)",
+      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) — verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
+        "--adapter",
+        "ollama",
+        "--model",
+        "gemma3"
+      ],
+      "dir": "70_linalg_core_concepts",
+      "log": "linalg_core_concepts",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "agentic",
+      "tier": 2,
+      "requires": [
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "71",
+      "name": "Linear Algebra Concept-Book Generator",
+      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline — compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view → physical notebook artifact)",
+      "args": [
+        "spl3",
+        "splc",
+        "compile",
+        "cookbook/71_linalg_concept_book/build_concept_book.spl",
+        "--lang",
+        "python/linalg",
+        "--overwrite"
+      ],
+      "dir": "71_linalg_concept_book",
+      "log": "linalg_concept_book",
+      "is_active": false,
+      "approval_status": "disabled",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "disabled_reason": "spl-go has no splc/compile subcommand (multi-target compilation is Python-only)"
+    },
+    {
+      "id": "72",
+      "name": "Verify arXiv References",
+      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV — automates the spot-check a careful reviewer does by hand",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/72_verify_arxiv_references/verify_arxiv_references.spl",
+        "--adapter",
+        "ollama",
+        "--model",
+        "phi3",
+        "in_refs=Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948.",
+        "out_dir=cookbook/72_verify_arxiv_references/output"
+      ],
+      "dir": "72_verify_arxiv_references",
+      "log": "verify_arxiv_references",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "retrieval",
+      "tier": 2,
+      "requires": [
+        "httpx"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "73",
+      "name": "Intro Geometry Concept-Book Generator",
+      "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Both build_concept_book and answer_on_demand notebooks validated end-to-end.",
+      "args": [
+        "spl-go",
+        "validate",
+        "cookbook/73_intro_geometry/build_concept_book.spl"
+      ],
+      "dir": "73_intro_geometry",
+      "log": "intro_geometry",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "74",
+      "name": "Concept-Book Generator",
+      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml — compiled once, runs against any domain shaped the same way.",
+      "args": [
+        "spl-go",
+        "validate",
+        "cookbook/74_concept_book/build_concept_book.spl"
+      ],
+      "dir": "74_concept_book",
+      "log": "concept_book",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "compilation",
+      "tier": 2,
+      "requires": [
+        "networkx",
+        "sympy"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: parses OK (validated 2026-07-14); end-to-end execution against IMPORTs/tool calls not yet verified."
+    },
+    {
+      "id": "75",
+      "name": "SageMath Solver",
+      "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/75_sage_math/basic_sagemath.spl",
+        "--adapter",
+        "ollama",
+        "--model",
+        "gemma3",
+        "--kernel-name",
+        "sagemath"
+      ],
+      "dir": "75_sage_math",
+      "log": "sage_math",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "sagemath"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "76",
+      "name": "Lean Proof Verifier",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/76_lean_proof/lean_proof.spl",
+        "--kernel",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "76_lean_proof",
+      "log": "lean_proof",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "lean4"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "78",
+      "name": "Constraint Optimization",
+      "description": "Demonstrates SPL's deterministic-probabilistic boundary: LLM reads a natural-language LP problem and generates PuLP solver code (probabilistic), PuLP/CBC finds the optimal solution with a proof of optimality (deterministic), ASSERT gates on solver status (formal verification), LLM interprets the result (probabilistic). Repair loop retries up to max_tries on Error/Infeasible. Default problem: bakery production planning (known optimum: bread=3, croissants=3, profit=$60). Requires: pip install pulp.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/78_constraint_opt/constraint_opt.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "78_constraint_opt",
+      "log": "constraint_opt",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pulp"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge). spl-go: EXECUTION-VALIDATED 2026-07-15 end-to-end with ollama/gemma4 and ollama/llama3.2 (real LLM calls, no --kernel needed) — CALL to inline CREATE TOOL_API (run_pulp), the LLM repair loop feeding real Python tracebacks back to the model, and the kernel-free ASSERT gate (is_optimal) all confirmed working correctly. Did not reach Optimal status in these two runs (model format-compliance limits, matching the paper's own finding), but the SPL mechanism itself — parse, dispatch, repair, gate, graceful failure report — is fully functional."
+    },
+    {
+      "id": "79",
+      "name": "Code Generation + Pytest Verification",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/79_code_pytest/code_pytest.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "79_code_pytest",
+      "log": "code_pytest",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pytest"
+      ],
+      "excluded_adapters": [],
+      "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
     }
   ]
 }

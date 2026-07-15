@@ -1,1 +1,5 @@
-This document provides a simple sentence ("The quick brown fox jumps over the lazy dog.") and indicates this is a test case for map-reduce summarization techniques, with a numerical value of "0" included (likely as an identifier or placeholder).
+Okay, here's a summary combining both inputs:
+
+**"The quick brown fox jumps over the lazy dog. 0"** 
+
+This simply presents both pieces of information together.  Is there anything specific you'd like me to *do* with them besides summarizing?
