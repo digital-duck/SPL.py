@@ -4,8 +4,8 @@
 --
 -- This is a deterministic codec operation — no LLM involved.
 -- Common use case: extract audio for transcription, summarisation, or archiving.
--- The output AUDIO can be piped directly into recipe 51 (audio_summary)
--- or recipe 55 (voice_dialogue) via CALL in an orchestrator workflow.
+-- The output AUDIO can be piped directly into recipe 52 (audio_summary)
+-- or recipe 60 (voice_dialogue) via CALL in an orchestrator workflow.
 --
 -- SPL INPUT type:  VIDEO (source file path)
 -- SPL OUTPUT type: AUDIO (extracted audio file path)

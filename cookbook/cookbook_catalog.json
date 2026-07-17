@@ -766,8 +766,6 @@
         "./cookbook/41_human_steering/human_steering.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/41_human_steering/tools.py",
         "topic=The future of agentic AI"
       ],
       "dir": "41_human_steering",
@@ -791,8 +789,6 @@
         "./cookbook/42_knowledge_synthesis/knowledge_synthesis.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/42_knowledge_synthesis/tools.py",
         "raw_text=Recent advances in sparse attention mechanisms dramatically reduce transformer memory footprint while preserving model quality on long-context tasks."
       ],
       "dir": "42_knowledge_synthesis",
@@ -811,8 +807,6 @@
         "./cookbook/43_prompt_self_tuning/prompt_self_tuning.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/43_prompt_self_tuning/tools.py",
         "baseline_prompt=Summarize this technical document.",
         "failed_case=The document describes a complex quantum algorithm."
       ],
@@ -832,8 +826,6 @@
         "./cookbook/44_adaptive_failover/adaptive_failover.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/44_adaptive_failover/tools.py",
         "query=Explain quantum entanglement for a technical audience.",
         "primary_model=phi4",
         "fallback_model=gemma3"
@@ -891,8 +883,6 @@
         "spl3",
         "run",
         "./cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl",
-        "--tools",
-        "./cookbook/47_arxiv_morning_brief/tools.py",
         "--adapter",
         "ollama",
         "urls=cookbook/47_arxiv_morning_brief/arxiv-papers.txt"
@@ -913,8 +903,6 @@
         "./cookbook/48_credit_risk/assess_credit_risk.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/48_credit_risk/tools.py",
         "applicant_data=Applicant: Jane Doe | Income: $72,000 | Debt: $18,000 | Employment: 5 years | Prior defaults: none",
         "credit_score=680"
       ],
@@ -934,8 +922,6 @@
         "./cookbook/49_regulatory_news_audit/audit_news.spl",
         "--adapter",
         "ollama",
-        "--tools",
-        "./cookbook/49_regulatory_news_audit/tools.py",
         "news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt"
       ],
       "dir": "49_regulatory_news_audit",
@@ -1195,8 +1181,8 @@
       ],
       "dir": "61_video_to_audio",
       "log": "video_to_audio",
-      "is_active": false,
-      "approval_status": "wip",
+      "is_active": true,
+      "approval_status": "approved",
       "category": "media",
       "tier": 1,
       "requires": [
@@ -1274,8 +1260,6 @@
         "spl3",
         "run",
         "cookbook/65_llm_splc/llm_splc.spl",
-        "--tools",
-        "cookbook/65_llm_splc/tools.py",
         "--param",
         "spl_file=cookbook/05_self_refine/self_refine.spl",
         "--param",
@@ -1603,8 +1587,186 @@
         "opencv-python"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "77",
+      "name": "Neurosymbolic Verifier Ladder",
+      "description": "Capstone of the verifier ladder: ONE declarative workflow puts all three deterministic rungs (SymPy from recipe 67, SageMath from recipe 75, Lean 4 + mathlib from recipe 76) behind the same problem text via a single --param backend= flip. LLM decomposes/formalizes/narrates (probabilistic); the chosen kernel computes exact instances (SymPy/Sage) or kernel-checks statements against mathlib (Lean), returning a badge (machine_proved/statement_checked/unfaithful/unverified). enable_solver=false runs the unaided-LLM baseline for direct A/B comparison. Backed by a cross-model experiment harness (run_experiment.py) with round-trip verification across ~1,200 cells.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/77_neurosymbolic/symbolic_math.spl",
+        "--kernel",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "77_neurosymbolic",
+      "log": "neurosymbolic",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "sympy",
+        "sagemath",
+        "lean4"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "81",
+      "name": "Graph Reasoning",
+      "description": "Extends the verifier ladder into discrete/combinatorial math: LLM reads a natural-language graph problem and writes networkx code (probabilistic), networkx computes the exact shortest-path/bipartite/cycle answer (deterministic), ASSERT gates on tool success, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the networkx ground truth. Repair loop retries up to max_tries on Error. Default problem: 6-warehouse shortest-path network (known optimum: A-C-B-D-E-F, distance=13). Requires: networkx (already installed).",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/81_graph_reasoning/graph_reasoning.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "81_graph_reasoning",
+      "log": "graph_reasoning",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "networkx"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "82",
+      "name": "Logic Puzzle Solver",
+      "description": "Adds a CSP verifier class distinct from 78's LP/numeric optimization: LLM reads a natural-language zebra-style logic puzzle and writes python-constraint code (probabilistic), the CSP solver enumerates all solutions (deterministic), ASSERT gates on a Unique solution being found, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the solver's unique solution. Repair loop retries up to max_tries on Error/Ambiguous/NoSolution. Default problem: 3-house zebra-lite puzzle (known unique answer: the Dane drinks Coffee). Requires: pip install python-constraint.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "82_logic_puzzle_solver",
+      "log": "logic_puzzle_solver",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "python-constraint"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "83",
+      "name": "Unit / Dimensional Check",
+      "description": "Demonstrates a categorical (not numeric-fuzzy) verifier for physics/engineering word problems: LLM writes pint unit-aware code (probabilistic), pint executes the calculation with units attached and raises DimensionalityError on any unit mismatch (deterministic), ASSERT gates on dimensional consistency, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches pint's computed magnitude (0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: kinematics (car accelerating from rest; known answer: 108 km/h). Requires: pip install pint.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/83_unit_dimensional_check/unit_dimensional_check.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "83_unit_dimensional_check",
+      "log": "unit_dimensional_check",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pint"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "84",
+      "name": "SQL Verifier",
+      "description": "Text-to-SQL with a row-level verifier: LLM writes a SQL SELECT from a natural-language question (probabilistic), stdlib sqlite3 executes it against a seeded in-memory database (deterministic), ASSERT gates on clean execution, a deterministic classify_roundtrip() function row-diffs the LLM's result against an independently-authored ground-truth SQL query over the same seeded data, LLM interprets the verified rows. Repair loop retries up to max_tries on SQL error. Default question: average Engineering salary (known ground truth: $97,333.33). Requires: stdlib sqlite3 only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/84_sql_verifier/sql_verifier.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "84_sql_verifier",
+      "log": "sql_verifier",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "sqlite3"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "85",
+      "name": "Property-Based Code Verification",
+      "description": "Upgrades recipe 79's example-based pytest verification one rung further: LLM generates an implementation AND independent Hypothesis properties from the same spec (probabilistic), pytest+Hypothesis execute the properties against hundreds of auto-generated inputs in a subprocess (deterministic), ASSERT gates on all properties passing (a genuine falsifying example is never repaired away, only broken test-harness code is), LLM interprets the verified result, a deterministic classify_roundtrip() check confirms the LLM's narration agrees with the actual pass/fail verdict. Default spec: merge two sorted lists. Requires: pip install hypothesis pytest.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/85_property_based_code_verify/property_based_code_verify.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "85_property_based_code_verify",
+      "log": "property_based_code_verify",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "hypothesis",
+        "pytest"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "86",
+      "name": "Financial Calculation Verifier",
+      "description": "Demonstrates exact closed-form arithmetic verification for compound-interest/loan-amortization word problems: LLM writes stdlib decimal code implementing the correct formula (probabilistic), Decimal arithmetic computes the exact figure with no floating-point drift (deterministic), ASSERT gates on clean execution, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated dollar figure matches the Decimal-computed ground truth (1 cent / 0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: 5-year loan amortization (known answer: $193.33/month). Requires: stdlib decimal only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/86_financial_calc_verifier/financial_calc_verifier.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "86_financial_calc_verifier",
+      "log": "financial_calc_verifier",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "decimal"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "87",
+      "name": "Route Optimization",
+      "description": "A second, harder optimization class beyond recipe 78's linear program: LLM writes Google OR-Tools vehicle-routing code from a natural-language logistics problem (probabilistic), OR-Tools' combinatorial routing solver searches the NP-hard space and returns a feasible route with its total distance (deterministic), ASSERT gates on a feasible route being found, LLM interprets the route and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated total distance matches the solver's computed ground truth. Repair loop retries up to max_tries on Error. Default problem: 1 depot + 5 customer TSP (known optimum: 101 miles). Requires: pip install ortools.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/87_route_optimization/route_optimization.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "87_route_optimization",
+      "log": "route_optimization",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "ortools"
+      ],
+      "excluded_adapters": []
     }
-
- 
   ]
 }

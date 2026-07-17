@@ -1,4 +1,4 @@
-# Recipe 58: Audio Format Conversion
+# Recipe 59: Audio Format Conversion
 
 **Category:** media / codec  
 **SPL version:** 3.0  
@@ -15,8 +15,8 @@ No LLM is involved — this is a deterministic operation.
 
 As a self-contained SPL `WORKFLOW`, it is callable via `CALL audio_convert(...)` from
 any orchestrator — for example, normalising audio to WAV before transcription
-(recipe 51 `audio_summary`) or converting TTS output to a different format
-after recipe 53 (`text_to_speech`).
+(recipe 52 `audio_summary`) or converting TTS output to a different format
+after recipe 55 (`text_to_speech`).
 
 **Supported formats:**
 
@@ -56,7 +56,7 @@ ffmpeg -version              # verify
 ### Get a sample audio file
 
 ```bash
-# Option A — reuse clip from recipe 51 (if already present)
+# Option A — reuse clip from recipe 52 (if already present)
 cp cookbook/52_audio_summary/sample/clip.mp3 \
    cookbook/59_audio_convert/sample/clip.mp3
 

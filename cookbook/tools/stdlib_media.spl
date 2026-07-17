@@ -8,29 +8,31 @@
 
 CREATE TOOL_API convert_audio(audio_path TEXT, target_format TEXT, bitrate TEXT, sample_rate TEXT, output_dir TEXT)
 RETURNS TEXT AS PYTHON $$
-import datetime, pathlib, subprocess
+import pathlib, sys
 
-_AUDIO_FORMATS = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "opus"}
+# Delegate to the canonical implementation in cookbook/tools/audio_tools.py
+# instead of reimplementing the ffmpeg logic inline (was previously duplicated
+# here, in cookbook/59_audio_convert/run.py, and in audio_tools.py itself).
+def _find_repo_root(start: pathlib.Path) -> pathlib.Path:
+    for p in [start, *start.parents]:
+        if (p / "cookbook" / "tools" / "audio_tools.py").exists():
+            return p
+    raise RuntimeError("Could not locate repo root (cookbook/tools/audio_tools.py not found)")
+
+_repo_root = _find_repo_root(pathlib.Path.cwd())
+if str(_repo_root) not in sys.path:
+    sys.path.insert(0, str(_repo_root))
+
+from cookbook.tools.audio_tools import convert_audio as _convert_audio_impl
 
 def convert_audio(audio_path: str, target_format: str, bitrate: str = "192k", sample_rate: str = "44100", output_dir: str = ".") -> str:
-    fmt = target_format.strip().lower().lstrip(".")
-    if fmt not in _AUDIO_FORMATS:
-        raise ValueError(f"UnsupportedFormat: '{fmt}'")
-    src = pathlib.Path(audio_path.strip())
-    out_dir = pathlib.Path(output_dir.strip())
-    out_dir.mkdir(parents=True, exist_ok=True)
-    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    dst = out_dir / f"{src.stem}_{ts}.{fmt}"
-    br = bitrate.strip() or "192k"
-    sr = sample_rate.strip() or "44100"
-    args = ["ffmpeg", "-y", "-i", str(src), "-ar", sr]
-    if fmt not in ("wav", "flac"):
-        args += ["-b:a", br]
-    args.append(str(dst))
-    r = subprocess.run(args, capture_output=True, text=True, check=False)
-    if r.returncode != 0:
-        raise RuntimeError(f"CodecError: {r.stderr}")
-    return str(dst.resolve())
+    return _convert_audio_impl(
+        audio_path=audio_path,
+        target_format=target_format,
+        bitrate=bitrate,
+        sample_rate=sample_rate,
+        output_dir=output_dir,
+    )
 $$;
 
 CREATE TOOL_API trim_audio(audio_path TEXT, start_sec TEXT, end_sec TEXT, output_dir TEXT)

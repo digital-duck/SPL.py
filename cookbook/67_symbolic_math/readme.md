@@ -148,7 +148,7 @@ GENERATE explain_chain()             → probabilistic: plain-English walkthroug
 
 `solve_one_step` is a `WORKFLOW` `CALL`ed from another `WORKFLOW` — the same
 "`CALL <workflow>` step-by-step" composition `self_refine.spl` uses for
-`critique_workflow` (see `cookbook/05_v3_self_refine/self_refine.spl`).
+`critique_workflow` (see `cookbook/05_self_refine/self_refine.spl`).
 
 ## Run
 

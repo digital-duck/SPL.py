@@ -13,9 +13,9 @@
 Extracts the audio track from a video file and saves it as a standalone audio file.
 
 Common use cases:
-- Extract speech from a recorded meeting (`.mp4`) for transcription via recipe 51 (`audio_summary`)
+- Extract speech from a recorded meeting (`.mp4`) for transcription via recipe 52 (`audio_summary`)
 - Archive audio from video content as FLAC (lossless)
-- Prepare audio for recipe 53 (`text_to_speech`) comparison or recipe 55 (`voice_dialogue`)
+- Prepare audio for recipe 55 (`text_to_speech`) comparison or recipe 60 (`voice_dialogue`)
 
 No LLM is involved — ffmpeg handles the demux and codec transcode in a single pass.
 
@@ -109,7 +109,7 @@ CALL video_to_audio(@video, 'wav', '192k', 44100, @output_dir) INTO @audio
 CALL audio_summary(@audio, 'summary', 'concise paragraph', @model, 2048) INTO @summary
 ```
 
-This is also useful when `video_summary` (recipe 60) is not yet available for
+This is also useful when `video_summary` (recipe 53) is not yet available for
 a given model or runtime — audio extraction + audio summary is a reliable fallback.
 
 ---
