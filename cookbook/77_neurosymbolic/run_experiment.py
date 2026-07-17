@@ -85,7 +85,9 @@ def init_db(db_path: str) -> sqlite3.Connection:
             output         TEXT,
             notes          TEXT    DEFAULT '',
             imported_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(source_file, mid, pid, solver, run)
+            runtime        TEXT    NOT NULL DEFAULT 'python',
+            roundtrip      TEXT,
+            UNIQUE(source_file, mid, pid, solver, run, runtime)
         )
     """)
     conn.execute("""
@@ -107,6 +109,8 @@ def init_db(db_path: str) -> sqlite3.Connection:
         "ALTER TABLE results ADD COLUMN backend TEXT",
         "ALTER TABLE results ADD COLUMN run_id TEXT",
         "ALTER TABLE results ADD COLUMN hostname TEXT",
+        "ALTER TABLE results ADD COLUMN runtime TEXT NOT NULL DEFAULT 'python'",
+        "ALTER TABLE results ADD COLUMN roundtrip TEXT",
     ]:
         try:
             conn.execute(stmt)
@@ -123,6 +127,7 @@ def write_cell_to_db(
     solver: str, run: int,
     metrics: dict,
     hostname: str = "",
+    runtime: str = "python",
 ) -> None:
     run_id  = f"{mid}-{pid}-{'T' if solver == 'true' else 'F'}-{run}"
     status  = metrics["status"]
@@ -133,18 +138,19 @@ def write_cell_to_db(
     preview = metrics["output_preview"]
     output  = metrics.get("output") or ""
     decomp  = json.dumps(metrics["decomposition"]) if metrics.get("decomposition") else None
+    roundtrip = metrics.get("roundtrip")
     try:
         conn.execute(
             """
             INSERT OR REPLACE INTO results
                 (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
                  solver, run, pass, status, output_preview, output,
-                 llm_calls, latency_ms, steps, spl_log, decomposition)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                 llm_calls, latency_ms, steps, spl_log, decomposition, runtime, roundtrip)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (run_id, hostname, source_file, mid, label, pid, tier, backend, problem,
              solver, run, passed, status, preview, output,
-             llm, lat, steps, metrics["spl_log"], decomp),
+             llm, lat, steps, metrics["spl_log"], decomp, runtime, roundtrip),
         )
         conn.execute(
             "UPDATE imports SET rows_inserted = rows_inserted + 1 WHERE source_file = ?",
@@ -282,14 +288,27 @@ DISABLED_PROBLEMS: set[str] = {
 BACKENDS = ("sympy", "sage", "lean")
 SCRIPT_DEFAULT = "cookbook/77_neurosymbolic/symbolic_math.spl"
 LOG_DIR_DEFAULT = "cookbook/77_neurosymbolic/logs-spl"
+LOG_DIR_GO_DEFAULT = "cookbook/77_neurosymbolic/logs-spl-go"
 
 
 def stream_run(cmd: list, log_file) -> tuple:
     """Run cmd, streaming stdout+stderr to console and log_file.
 
     Returns (returncode, metrics) where metrics is a dict with keys:
-      status, llm_calls, latency_ms, steps
-    parsed from spl3's standard output lines.
+      status, llm_calls, latency_ms, steps, roundtrip
+    parsed from either runtime's standard output lines.
+
+    --runtime go parity (verified 2026-07-17 against a real `spl-go run`
+    capture, m003/p001): spl-go's execCommit (internal/executor/executor.go)
+    now emits its own "RETURN: N chars | k=v, ..." line matching spl3's
+    format byte-for-byte in shape (same "| status=..., roundtrip=..." regex
+    targets both runtimes), and cmd/run.go's printWorkflowResult emits
+    "LLM Calls: N | Tokens: ..." / "Latency: Xms | Cost: $Y" as two separate
+    lines (capital C, different wording from spl3's single-line "LLM calls:
+    N  Latency: Xms") -- handled by a second regex pair below. The
+    "[arm=solver] decomposed into N steps" / "[step N/M]" lines come from
+    the *workflow's own* LOGGING statements in symbolic_math.spl and were
+    already confirmed to transfer as-is.
 
     spl3 emits three status-bearing lines per run, in this order:
       1. INFO:spl.executor:RETURN: N chars | status=X, arm=Y, backend=B, steps=Z
@@ -310,7 +329,7 @@ def stream_run(cmd: list, log_file) -> tuple:
         "status": "unknown", "llm_calls": "?",
         "latency_ms": "?", "steps": "?", "spl_log": "?",
         "output_preview": "?", "output": "",
-        "decomposition": None,
+        "decomposition": None, "roundtrip": None,
     }
     # Track where the current status value came from so lower-priority
     # sources cannot overwrite a better one.
@@ -339,10 +358,16 @@ def stream_run(cmd: list, log_file) -> tuple:
             log_file.write(line)
             s = line.strip()
 
-            # End of output block — triggered by the next labeled section
+            # End of output block — triggered by the next labeled section.
+            # spl3 uses "Output:  <text>" (single line, "Status:"/"LLM
+            # calls:"/"Log:" follow); spl-go uses "Committed Output:" on its
+            # own line with the text starting on the next line, closed by a
+            # blank-then-"Commit Options:" or the "====" separator.
             if in_output and (
-                s.startswith("LLM calls:") or s.startswith("Log:")
-                or s.startswith("Status:") or s.startswith("Output:")
+                s.startswith("LLM calls:") or s.startswith("LLM Calls:")
+                or s.startswith("Log:") or s.startswith("Status:")
+                or s.startswith("Output:") or s.startswith("Commit Options:")
+                or s.startswith("====")
             ):
                 full = "\n".join(output_lines).strip()
                 metrics["output"]         = full
@@ -373,8 +398,14 @@ def stream_run(cmd: list, log_file) -> tuple:
                     metrics["status"] = "narration_error"
                     status_priority = 3
 
+            elif s == "Committed Output:":
+                # spl-go's printWorkflowResult: label on its own line, text
+                # starts on the next line (see cmd/run.go's printWorkflowResult).
+                output_lines = []
+                in_output = True
+
             elif in_output:
-                # Continuation line of the Output: block
+                # Continuation line of the Output: / Committed Output: block
                 output_lines.append(line.rstrip("\n"))
 
             elif s.startswith("LLM calls:"):
@@ -383,19 +414,42 @@ def stream_run(cmd: list, log_file) -> tuple:
                     metrics["llm_calls"] = m.group(1)
                     metrics["latency_ms"] = m.group(2)
 
+            elif s.startswith("LLM Calls:"):
+                # spl-go's printWorkflowResult prints this on its own line
+                # (capital C, "|" separator, no combined Latency figure) --
+                # distinct wording/format from spl3's "LLM calls: N  Latency: Xms".
+                m = re.search(r"LLM Calls:\s*(\d+)", s)
+                if m:
+                    metrics["llm_calls"] = m.group(1)
+
+            elif s.startswith("Latency:") and "Cost:" in s:
+                # spl-go's companion line: "Latency: Xms | Cost: $Y"
+                m = re.search(r"Latency:\s*(\d+)ms", s)
+                if m:
+                    metrics["latency_ms"] = m.group(1)
+
             elif s.startswith("Log:"):
                 metrics["spl_log"] = s.split(":", 1)[1].strip()
 
-            elif "| status=" in s:
+            elif "RETURN:" in s:
                 # Priority 2 — RETURN line written at RETURN-WITH execution time.
-                # Format: INFO:spl.executor:RETURN: N chars | status=X, arm=Y, ...
-                m_st    = re.search(r"\|\s*status=(\w+)", s)
+                # Format: [INFO:spl.executor:]RETURN: N chars | status=X, arm=Y, ...
+                # Key order is NOT guaranteed adjacent to "|": spl3 preserves
+                # the WITH clause's declared order (status usually first),
+                # but spl-go's parser loses declaration order (Options is a
+                # Go map) and instead emits keys alphabetically sorted -- so
+                # status can appear anywhere in the list. Do not anchor the
+                # regex to "| status=".
+                m_st    = re.search(r"\bstatus=(\w+)", s)
                 m_steps = re.search(r"\bsteps=(\d+)", s)
+                m_rt    = re.search(r"\broundtrip=(\w+)", s)
                 if m_st and status_priority < 2:
                     metrics["status"] = m_st.group(1)
                     status_priority = 2
                 if m_steps:
                     metrics["steps"] = m_steps.group(1)
+                if m_rt:
+                    metrics["roundtrip"] = m_rt.group(1)
 
             # Decomposition lines — only present for the solver arm on the
             # chain backends (sympy/sage)
@@ -466,20 +520,32 @@ def stream_run(cmd: list, log_file) -> tuple:
               help="Repetitions per (model × problem × solver) cell.")
 @click.option("--script",  default=SCRIPT_DEFAULT, show_default=True,
               help="SPL script to execute.")
-@click.option("--log-dir", default=LOG_DIR_DEFAULT, show_default=True,
-              help="Directory for the markdown log output.")
+@click.option("--log-dir", default=None,
+              help=f"Directory for the markdown log output. Defaults to "
+                   f"'{LOG_DIR_DEFAULT}' (python) or '{LOG_DIR_GO_DEFAULT}' (go) "
+                   f"based on --runtime.")
 @click.option("--db",      default=DB_PATH_DEFAULT, show_default=True,
               help="SQLite database path for persisting results.")
+@click.option("--runtime", default="python", show_default=True,
+              type=click.Choice(["python", "go"]),
+              help="Which SPL implementation executes the run: 'python' "
+                   "invokes spl3, 'go' invokes spl-go (same --llm/--param "
+                   "flags on both). Recorded in the results DB's runtime "
+                   "column so python/go rows for the same cell coexist "
+                   "rather than overwrite.")
 @click.option("--list",    "show_list", is_flag=True,
               help="Print all available model and problem IDs, then exit.")
 @click.option("--dry-run", is_flag=True,
               help="Show the commands that would run without executing them.")
 def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
-         db, show_list, dry_run):
+         db, runtime, show_list, dry_run):
     """Run the Recipe-77 neurosymbolic experiment across up to 5 axes:
     problems (Axis 1), models (Axis 2), solver on/off (Axis 3),
     repetitions (Axis 4), and the backend override (Axis 5).
     """
+    if log_dir is None:
+        log_dir = LOG_DIR_GO_DEFAULT if runtime == "go" else LOG_DIR_DEFAULT
+
     if show_list:
         click.echo("\nModel IDs  (use with -m):")
         for mid, (label, adapter, _) in MODELS.items():
@@ -527,20 +593,23 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
     click.echo(f"Total cells  : {total}")
 
     if dry_run:
-        click.echo("\n--- DRY RUN ---")
+        click.echo(f"\n--- DRY RUN (runtime={runtime}) ---")
         for mid, (label, adapter, _) in sel_models.items():
             for pid, (tier, pbackend, problem) in sel_problems.items():
                 cell_backend = backend or pbackend
                 for solver_mode in solver_modes:
                     for run_no in range(1, runs + 1):
+                        binary = "spl-go" if runtime == "go" else "spl3"
                         extra = (f" --param backend={cell_backend}"
                                  f" --param enable_solver={solver_mode}"
+                                 f" --param pid={pid}"
                                  if use_solver_param else "")
+                        preview = (f"{binary} run {script} --kernel --llm {adapter}"
+                                   f" --param problem=\"{problem[:55]}...\"{extra}")
                         click.echo(
                             f"  [{mid}] [{tier}/{pid}] backend={cell_backend}"
                             f" run={run_no} solver={solver_mode}\n"
-                            f"    spl3 run {script} --kernel --llm {adapter}"
-                            f" --param problem=\"{problem[:55]}...\"{extra}"
+                            f"    {preview}"
                         )
         return
 
@@ -586,24 +655,31 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                         # --kernel: the lean arm keeps its REPL state in the
                         # persistent kernel session; harmless for the chain
                         # backends, so it is passed uniformly.
-                        cmd = ["spl3", "run", script, "--kernel",
+                        # spl-go accepts the same --llm/--param flags as spl3
+                        # (spl-go gained --llm ADAPTER[:MODEL] on 2026-07-17
+                        # specifically for this parity), so runtime selection
+                        # is just the binary name -- everything else is identical.
+                        binary = "spl-go" if runtime == "go" else "spl3"
+                        cmd = [binary, "run", script, "--kernel",
                                "--llm", adapter,
                                "--param", f"problem={problem}",
                                "--param", f"hostname={hostname}"]
                         if use_solver_param:
                             cmd += ["--param", f"backend={cell_backend}",
-                                    "--param", f"enable_solver={solver_mode}"]
+                                    "--param", f"enable_solver={solver_mode}",
+                                    "--param", f"pid={pid}"]
 
                         extra_md = (f" \\\n   --param backend={cell_backend}"
                                     f" \\\n   --param enable_solver={solver_mode}"
+                                    f" \\\n   --param pid={pid}"
                                     if use_solver_param else "")
                         log.write(
                             f"\n## {label} ({provider})"
                             f" — backend={cell_backend}"
-                            f" — solver={solver_mode} — run {run_no}\n\n"
+                            f" — solver={solver_mode} — run {run_no} — runtime={runtime}\n\n"
                             f"_Tier: {tier} | Problem ID: `{pid}` | Host: `{hostname}`_\n\n"
                             f"```bash\n"
-                            f"(spl123) $ spl3 run {script} --kernel --llm {adapter} \\\n"
+                            f"$ {binary} run {script} --kernel --llm {adapter} \\\n"
                             f'   --param problem="{problem}" \\\n'
                             f'   --param hostname="{hostname}"{extra_md}\n'
                             f"```\n\n```output\n"
@@ -620,6 +696,7 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                             pid, mid, label, tier, cell_backend, problem,
                             solver_mode, run_no, metrics,
                             hostname=hostname,
+                            runtime=runtime,
                         )
 
                         completed += 1

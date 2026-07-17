@@ -394,6 +394,41 @@ def extract_step(steps_text: str, index: str) -> str:
     return lines[i] if 0 <= i < len(lines) else ""
 $$;
 
+CREATE TOOL_API round_trip_check(pid TEXT, running_expression TEXT, output_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def round_trip_check(pid: str, running_expression: str, output_text: str) -> str:
+    """Live round-trip / back-substitution verification of the solver arm's
+    final result, called once the chain of solve_chain_step calls has
+    produced @running_expression (and, since p015's check needs it as a
+    fallback -- see below -- after explain_chain has produced @result).
+    Substitutes the result back into the original problem's defining
+    relation (the same 20 per-pid checks used by the post-hoc
+    verify_roundtrip.py script, imported from roundtrip_checks.py so the
+    two paths can never silently diverge) rather than comparing against a
+    precomputed answer form -- this sidesteps ambiguities like free
+    constants in indefinite integrals/ODE solutions or root/eigenvalue
+    ordering.
+
+    output_text is the workflow's natural-language narration (@result):
+    unused by every check except p015, whose solve_system(...) result can
+    render as a multi-line SymPy repr that split_part(@step_summary, "|", ...)
+    and LOGGING can garble -- output_text gives check_p015 the same
+    narration-text fallback verify_roundtrip.py's post-hoc classify() uses.
+
+    Returns one of: ROUNDTRIP_PASS, ROUNDTRIP_FAIL, UNPARSEABLE, NO_CHECK
+    (pid not in the registered 20 T0-T5 problems, e.g. the Lean/T6 arms
+    this check does not apply to) -- the same verdict vocabulary
+    verify_roundtrip.py's classify() uses, so a live verdict and a
+    post-hoc re-check of the same row are directly comparable."""
+    import sys, os
+    for _cand in (os.path.join(os.getcwd(), "cookbook", "77_neurosymbolic"), os.getcwd()):
+        if _cand not in sys.path:
+            sys.path.insert(0, _cand)
+    from roundtrip_checks import classify_from_value
+    verdict, _detail = classify_from_value(pid, running_expression, output_text)
+    return verdict
+$$;
+
 -- ── Lean helpers (deterministic, 0-token) ─────────────────────
 
 CREATE TOOL_API strip_fences(text TEXT)

@@ -1,5 +1,5 @@
 {
-  "_comment": "SPL.go Cookbook Catalog — mirrors cookbook_catalog.json (Python) but uses the 'spl-go' binary. Synced 2026-07-14, re-synced 2026-07-15 after adding SOLVE/ASSERT/CREATE TOOL_API lexer+parser support and WORKFLOW INPUT/OUTPUT ':=' default-value + repeated-keyword-per-line parsing. 13 of 15 previously parse-blocked recipes now validate OK; remaining classified by real 'spl-go validate' runs, not guesswork. IMPORTANT: parsing OK != running OK — SOLVE/ASSERT/CREATE TOOL_API execution (the persistent-subprocess kernel bridge) is not yet wired into the executor, so CALL to a TOOL_API function or a SOLVE statement will not yet dispatch correctly at runtime. Recipes marked 'new' here are parse-validated only.",
+  "_comment": "SPL.go Cookbook Catalog — mirrors cookbook_catalog.json (Python) but uses the 'spl-go' binary. Synced 2026-07-14, re-synced 2026-07-15 after adding SOLVE/ASSERT/CREATE TOOL_API lexer+parser support and WORKFLOW INPUT/OUTPUT ':=' default-value + repeated-keyword-per-line parsing; SOLVE/ASSERT/CREATE TOOL_API kernel dispatch (both subprocess-REPL and real Jupyter/ZMQ backends) confirmed wired and cross-validated against spl3 as of 2026-07-15. Re-synced 2026-07-17: added recipe 80 (new in main since last sync); fixed recipe 04 (missing model_1/model_2, wrong model_3) and recipes 01/05/09/11/18/75 (simplified back to '--llm ADAPTER:MODEL' passthrough, matching main almost verbatim, now that spl-go accepts --llm directly instead of requiring separate --adapter/--model); recipe 77 (neurosymbolic) is not in this catalog at all — it has its own driver, cookbook/77_neurosymbolic/run_experiment.py --runtime go, exercised directly, not via run_all.py. Same day, two real spl-go runtime bugs were found and fixed while validating recipe 77 end-to-end: EVALUATE...WHEN IN (...) always evaluated false, and ExecuteProgram ran every top-level WORKFLOW in a file instead of just the entry one (see internal/executor/executor.go and cmd/run.go) — both could affect other recipes in this catalog that use WHEN IN or define a helper workflow, so a fresh 'approved' status here should not be read as re-verified against those fixes until actually re-run. Recipes marked 'new' or carrying a stale 'wip'/'not yet supported' note may already work (--tools external Python file loading, e.g., IS implemented in spl-go's internal/tools/loader.go) — verify each with a live run rather than trusting the annotation, especially anything not re-run since 2026-07-15.",
   "_schema": {
     "is_active": "bool   — included in default batch run (python run_all.py --catalog-file cookbook/cookbook_catalog_go.json)",
     "approval_status": "string — new | approved | wip | disabled | rejected"
@@ -13,8 +13,8 @@
         "spl-go",
         "run",
         "./cookbook/01_hello_world/hello.spl",
-        "--adapter",
-        "ollama"
+        "--llm",
+        "ollama:gemma3"
       ],
       "dir": "01_hello_world",
       "log": "hello",
@@ -70,7 +70,9 @@
         "--adapter",
         "ollama",
         "prompt=Write a poem about Spring season",
-        "model_3=llama3.2"
+        "model_1=gemma3",
+        "model_2=gemma3",
+        "model_3=gemma3"
       ],
       "dir": "04_model_showdown",
       "log": "showdown",
@@ -86,8 +88,8 @@
         "spl-go",
         "run",
         "./cookbook/05_self_refine/self_refine.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "task=Write a haiku about coding"
       ],
       "dir": "05_self_refine",
@@ -164,8 +166,8 @@
         "spl-go",
         "run",
         "./cookbook/09_chain_of_thought/chain.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "topic=distributed AI inference"
       ],
       "dir": "09_chain_of_thought",
@@ -199,8 +201,8 @@
         "spl-go",
         "run",
         "./cookbook/11_debate_arena/debate.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "topic=AI should be open-sourced"
       ],
       "dir": "11_debate_arena",
@@ -329,8 +331,8 @@
         "spl-go",
         "run",
         "./cookbook/18_guardrails/guardrails.spl",
-        "--adapter",
-        "ollama",
+        "--llm",
+        "ollama:gemma3",
         "user_input=Explain how encryption works"
       ],
       "dir": "18_guardrails",
@@ -1473,10 +1475,8 @@
         "spl-go",
         "run",
         "cookbook/75_sage_math/basic_sagemath.spl",
-        "--adapter",
-        "ollama",
-        "--model",
-        "gemma3",
+        "--llm",
+        "ollama:gemma3",
         "--kernel-name",
         "sagemath"
       ],
@@ -1561,6 +1561,29 @@
       ],
       "excluded_adapters": [],
       "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
+    },
+    {
+      "id": "80",
+      "name": "OpenCV Scene Triage",
+      "description": "OpenCV measures pixels deterministically and cheaply, SPL's LLM step reasons over the resulting structured report.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/80_opencv_5/opencv5_scene_triage.spl",
+        "--llm",
+        "ollama:gemma4"
+      ],
+      "dir": "80_opencv_5",
+      "log": "opencv_5",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "opencv-python"
+      ],
+      "excluded_adapters": [],
+      "notes": "New in main catalog since the last spl-go sync (2026-07-15) -- added 2026-07-17, not yet run against spl-go."
     }
   ]
 }

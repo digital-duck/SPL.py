@@ -29,7 +29,7 @@ Exposure: {exposure_json}
 Edge density: {edges_json}
 
 Write one 3-4 sentence inspection note a human reviewer could read in five
-seconds: what's likely in the frame, whether image quality is good enough to
+seconds: what''s likely in the frame, whether image quality is good enough to
 trust the detections, and anything that stands out.
 $$;
 

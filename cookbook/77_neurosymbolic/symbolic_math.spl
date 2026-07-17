@@ -68,6 +68,7 @@ WORKFLOW neurosymbolic_solver
   INPUT @max_tries INT := 3
   INPUT @log_dir TEXT := "cookbook/77_neurosymbolic/logs-spl"
   INPUT @hostname TEXT := ""
+  INPUT @pid TEXT := ""
   OUTPUT @result TEXT
 DO
   CALL lower(@enable_solver) INTO @solver_mode;
@@ -294,15 +295,27 @@ DO
             GENERATE explain_chain(@problem, @trace) INTO @result;
             CALL trim(@result) INTO @result;
 
+            -- ── Native round-trip verification (Pattern 2, §Appendix I):
+            -- substitute @running_expression back into the problem's own
+            -- defining relation, deterministically, in-line -- no post-hoc
+            -- re-check needed. Only meaningful for the 20 T0-T5 problems
+            -- this recipe's checks cover; round_trip_check reports
+            -- NO_CHECK for anything else (e.g. an unrecognised @pid). Runs
+            -- after explain_chain (not right after the WHILE loop) so
+            -- @result is available as p015's narration-text fallback,
+            -- matching verify_roundtrip.py's post-hoc classify() ──
+            CALL round_trip_check(@pid, @running_expression, @result) INTO @roundtrip;
+            LOGGING f"[arm=solver] round-trip verification ({@pid}): {@roundtrip}" LEVEL INFO
+
             -- ── Fail-fast checkpoint 3: the narration came back empty ──
             EVALUATE @result
               WHEN = "" THEN
                 LOGGING f"[arm=solver] NARRATION FAILURE — explain_chain returned empty content" LEVEL ERROR
                 RETURN f"[NARRATION FAILURE] The chain verified correctly but the explanation step returned nothing.\nVerified chain:\n{@trace}"
-                  WITH status = "narration_error", arm = "solver", backend = @backend_lc, steps = @n_steps
+                  WITH status = "narration_error", arm = "solver", backend = @backend_lc, steps = @n_steps, roundtrip = @roundtrip
             END
 
-            RETURN @result WITH status = "complete", arm = "solver", backend = @backend_lc, steps = @n_steps
+            RETURN @result WITH status = "complete", arm = "solver", backend = @backend_lc, steps = @n_steps, roundtrip = @roundtrip
           END
       END
   END

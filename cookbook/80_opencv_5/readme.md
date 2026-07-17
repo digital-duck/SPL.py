@@ -41,6 +41,8 @@ Sources: [opencv.org/opencv-5](https://opencv.org/opencv-5/), [Phoronix](https:/
 ## Getting started
 
 ```bash
+conda activate spl123
+
 # 1. Install OpenCV 5 (and Pillow, only needed to regenerate sample images)
 pip install -r cookbook/80_opencv_5/requirements.txt
 
@@ -91,7 +93,7 @@ Compares a background reference frame against a current frame, reports what chan
 
 ```bash
 spl3 run cookbook/80_opencv_5/opencv5_scene_triage.spl \
-    --adapter ollama --model gemma4 \
+    --llm ollama:gemma4 \
     --param background=cookbook/80_opencv_5/sample/background.jpg \
     --param current=cookbook/80_opencv_5/sample/current.jpg
 ```
@@ -121,7 +123,7 @@ Verified output on the committed sample images:
 
 ```bash
 spl3 run cookbook/80_opencv_5/opencv5_parallel_inspect.spl \
-    --adapter ollama --model gemma4 \
+    --llm ollama:gemma4 \
     --param image=cookbook/80_opencv_5/sample/current.jpg
 ```
 

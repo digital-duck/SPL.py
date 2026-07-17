@@ -1,3 +1,3 @@
 {"changed_pixel_ratio": 0.0429, "num_regions": 1, "largest_region_bbox": [250, 30, 81, 81], "motion_detected": true}
 
-Motion was detected due to a change covering approximately 4.3% of the total frame area. The motion is highly localized, contained within a single small region rather than affecting the entire scene. This suggests a minor, specific event that warrants observation; it is not a large-scale disturbance but should be monitored for context.
+Motion was detected, but it is highly localized to a single region covering approximately 4.3% of the frame. This suggests a specific, minor event rather than general camera shake or major scene disruption. The monitor should review this particular bounding box to confirm if the activity is routine pedestrian movement or requires further attention.

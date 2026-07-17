@@ -1516,24 +1516,25 @@
       "excluded_adapters": []
     },
     {
-      "id": "79",
-      "name": "Code Generation + Pytest Verification",
-      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
+      "id": "76",
+      "name": "Lean Proof Verifier",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
       "args": [
         "spl3",
         "run",
-        "cookbook/79_code_pytest/code_pytest.spl",
+        "cookbook/76_lean_proof/lean_proof.spl",
+        "--kernel",
         "--llm",
         "claude_cli"
       ],
-      "dir": "79_code_pytest",
-      "log": "code_pytest",
+      "dir": "76_lean_proof",
+      "log": "lean_proof",
       "is_active": true,
       "approval_status": "approved",
       "category": "reasoning",
       "tier": 2,
       "requires": [
-        "pytest"
+        "lean4"
       ],
       "excluded_adapters": []
     },
@@ -1559,28 +1560,51 @@
       ],
       "excluded_adapters": []
     },
-    {
-      "id": "76",
-      "name": "Lean Proof Verifier",
-      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+     {
+      "id": "79",
+      "name": "Code Generation + Pytest Verification",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
       "args": [
         "spl3",
         "run",
-        "cookbook/76_lean_proof/lean_proof.spl",
-        "--kernel",
+        "cookbook/79_code_pytest/code_pytest.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "76_lean_proof",
-      "log": "lean_proof",
+      "dir": "79_code_pytest",
+      "log": "code_pytest",
       "is_active": true,
       "approval_status": "approved",
       "category": "reasoning",
       "tier": 2,
       "requires": [
-        "lean4"
+        "pytest"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "80",
+      "name": "OpenCV Scene Triage",
+      "description": "OpenCV measures pixels deterministically and cheaply, SPL's LLM step reasons over the resulting structured report.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/80_opencv_5/opencv5_scene_triage.spl",
+        "--llm",
+        "ollama:gemma4"
+      ],
+      "dir": "80_opencv_5",
+      "log": "opencv_5",
+      "is_active": true,
+      "approval_status": "approved",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "opencv-python"
       ],
       "excluded_adapters": []
     }
+
+ 
   ]
 }
