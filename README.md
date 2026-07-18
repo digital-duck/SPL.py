@@ -96,12 +96,26 @@ spl3 mmd2spl   <file.mmd>   [--adapter NAME] [-m MODEL] [-o FILE]   # → SPL wo
 # Introspection
 spl3 show --adapter                        # list all adapters
 spl3 show --adapter <name> --model         # list models for an adapter
-spl3 show --tool                           # list all 64 stdlib tools by category
+spl3 show --tool                           # list all 68 stdlib tools by category
 spl3 show --tool <name>                    # show tool detail (usage, args, deps)
 
 # Code intelligence
 spl3 code-rag  seed <dir> --catalog <catalog.json>
 spl3 code-rag  query "judge-retry loop"
+
+# Neurosymbolic verifier ladder — SOLVE/ASSERT against a persistent kernel
+spl3 run <file.spl> --kernel --kernel-name sagemath   # SymPy/SageMath/Lean backends
+
+# Deterministic tool libraries (CREATE TOOL_API)
+spl3 tool-api promote <file.spl> --name <lib_name>
+spl3 tool-api list
+
+# Compile a .spl logical view to a physical target (Go, TS, LangGraph, notebook, ...)
+spl3 splc compile <file.spl> --target <name>
+
+spl3 judge <file> --criteria <name>                    # LLM-as-judge against a rubric
+spl3 vibe "description"                                # one-shot NL → code + README
+spl3 workflow list                                      # durable workflow runs (persistence)
 
 spl3 --hub http://localhost:8080 run <file.spl>       # Hub-backed registry
 spl3 --hub http://localhost:8080 register <dir/>       # register workflows on Hub
@@ -125,6 +139,7 @@ Additional adapters available in the Python (`spl3`) runtime:
 | `anthropic` | Claude (Anthropic API) | `ANTHROPIC_API_KEY` |
 | `openai` | GPT / o-series | `OPENAI_API_KEY` |
 | `google` | Gemini | `GOOGLE_API_KEY` |
+| `gemini_cli` | Gemini CLI | Wraps the `gemini` CLI; subscription/free-tier billing, no per-call cost |
 | `deepseek` | DeepSeek | `DEEPSEEK_API_KEY` |
 | `qwen` | Qwen (Alibaba) | `DASHSCOPE_API_KEY` |
 | `bedrock` | AWS Bedrock | boto3 + AWS credentials |
@@ -137,7 +152,7 @@ Additional adapters available in the Python (`spl3`) runtime:
 ## Codebase Layout
 
 ```
-spl/              SPL 2.0 runtime (lexer, parser, executor, 14 adapters)
+spl/              SPL 2.0 runtime (lexer, parser, executor, 15 adapters)
   lexer.py          tokenization
   parser.py         recursive-descent parser → AST
   ast_nodes.py      30+ dataclass node types
@@ -147,42 +162,51 @@ spl/              SPL 2.0 runtime (lexer, parser, executor, 14 adapters)
   explain.py        ASCII plan rendering
   ir.py             JSON AST serialization
   text2spl.py       natural language → SPL compiler
+  config.py         ~/.spl/config.yaml load/save (adapter, storage_dir, text2spl defaults)
   adapters/         LLM backend plugins
-  stdlib.py         64 built-in tools (web_search, http_get, run_python, file I/O, string, JSON, …)
+  stdlib.py         68 built-in tools (web_search, http_get, run_python, file I/O, string, JSON, …)
   storage/          SQLite memory + vector store (RAG)
 
 spl3/             SPL 3.0 extension layer (inherits from spl/)
   executor.py       SPL3Executor(SPL2Executor) — CALL dispatch, type coercion
-  parser.py         SPL3Parser(SPL2Parser) — IMPORT, SET, NONE, CALL PARALLEL
+  parser.py         SPL3Parser(SPL2Parser) — IMPORT, SET, NONE, CALL PARALLEL, SOLVE/ASSERT
   composer.py       workflow-to-workflow CALL execution
   registry.py       LocalRegistry + FederatedRegistry
   hub_registry.py   REST-backed Hub registry
   event.py          WorkflowInvocationEvent (UUID, lifecycle, Hub serialization)
   status.py         COMMIT status → exception type mapping
+  kernel.py         persistent IPython kernel (--kernel); SymPy/SageMath/Lean via --kernel-name
+  lean_bridge.py    Lean 4 + mathlib proof elaboration/kernel-checking
+  tool_api_registry.py CREATE TOOL_API — deterministic Python tool libraries (~/.spl/tool_apis/)
+  judge/            LLM-as-judge: rubric scoring, aggregation, reporting
+  persistence/      durable workflow state — SQLite / Postgres / DBOS backends
+  cache/            content-addressed generation cache (Layer 2)
+  rag/              recipe/code retrieval (Chroma-backed)
   codecs/           image / audio / video codec layer
-  splc/             transpilers: Go, TypeScript, LangGraph
+  splc/             transpilers: Go, TypeScript, LangGraph, PocketFlow, python/<domain> (concept-book / textbook)
   text2spl/         SPL 3.0 text2spl (extends spl/text2spl.py)
   adapters/         SPL 3.0 adapters: multimodal, Liquid, Snap
 
-cookbook/         65 recipes (SPL 2.0: 00–49, SPL 3.0: 50–64)
-tests/            unified test suite (300+ tests)
+cookbook/         74 recipes (SPL 2.0: 01–49, SPL 3.0 multimodal: 50–64, neurosymbolic verifier ladder: 65–87)
+tests/            unified test suite (900+ tests)
 ```
 
 ## Cookbook
 
-Working examples are provided as 65 recipes spanning beginner to advanced:
+Working examples are provided as 74 recipes spanning beginner to advanced:
 
 | Range | Theme |
 |---|---|
-| `00–09` | Basics: hello world, proxy, multilingual, model showdown, self-refine, ReAct |
+| `01–09` | Basics: hello world, proxy, multilingual, model showdown, self-refine, ReAct |
 | `10–19` | Patterns: batch test, debate, plan-execute, map-reduce, multi-agent, reflection, tree-of-thought |
 | `20–29` | Applied: text2SPL, structured output, few-shot, nested procs, A/B test, data extraction |
 | `30–39` | Applications: code gen, sentiment, Socratic tutor, interview sim, hypothesis tester, tool use |
 | `40–49` | Advanced: human steering, knowledge synthesis, prompt tuning, adaptive failover, vision, finance |
 | `50–64` | SPL 3.0: code pipeline, multimodal (image/audio/video), parallel code review, voice dialogue |
+| `65–87` | Neurosymbolic verifier ladder: `CREATE TOOL_API`, `SOLVE`/`ASSERT` against SymPy/SageMath/Lean 4, concept-book compiler, CSP/LP/SQL/unit/property-based verifiers |
 
 ```bash
-python cookbook/run_all.py --list           # all 65 recipes
+python cookbook/run_all.py --list           # all 74 recipes
 python cookbook/run_all.py --catalog        # full table with tier + category
 python cookbook/run_all.py --check          # verify env vars + Ollama models
 ```
@@ -225,6 +249,7 @@ Future major versions (`spl4/`, `spl5/`, ...) will be prototyped in SPL30 and ad
 | **2.0** | Multi-step `WORKFLOW`; `PROCEDURE`; `EVALUATE` (semantic branching); `WHILE`; 14 LLM adapters; text2SPL compiler; Momagrid adapter |
 | **3.0** | Workflow-to-workflow `CALL`; `CALL PARALLEL`; `IMPORT`; Hub registry; Hub-to-Hub peering; multimodal codecs (image / audio / video); `splc` transpiler (Go, TypeScript, LangGraph) |
 | **3.1** | Visual Workflow Programming (`text2mmd`, `mmd2spl`); stdlib agentic tools (`web_search`, `http_get`, `run_python`); `spl3 show --tool` introspection; inline type annotations in assignments (`@var TYPE := expr`) |
+| **3.2 – 3.3** | Neurosymbolic verifier ladder: `SOLVE`/`ASSERT` constructs; persistent kernel bridges (SymPy → SageMath → Lean 4 + mathlib) via `--kernel`/`--kernel-name`; `CREATE TOOL_API` deterministic Python tool libraries; `splc` `python/<domain>` transpiler (concept-book / textbook generator); LLM-as-judge (`spl3 judge`); durable `workflow` persistence (SQLite/Postgres/DBOS); content-addressed generation cache |
 
 ## License
 

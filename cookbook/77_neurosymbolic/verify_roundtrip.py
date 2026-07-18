@@ -47,10 +47,11 @@ import sqlite3
 import csv
 import sys
 from collections import defaultdict
+from pathlib import Path
 
 from roundtrip_checks import PIDS, classify
 
-DB_PATH = "experiment_results.db"
+DB_PATH = Path(__file__).resolve().parent / "experiment_results.db"
 
 
 def main():

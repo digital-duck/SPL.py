@@ -56,6 +56,7 @@ class VectorStore:
         embedding_dim: int = DEFAULT_EMBED_DIM,
         embedding_fn=None,
     ):
+        storage_dir = os.path.expanduser(storage_dir)
         os.makedirs(storage_dir, exist_ok=True)
         self.storage_dir     = storage_dir
         self._index_path     = os.path.join(storage_dir, "vectors.faiss")

@@ -162,6 +162,7 @@ def _load_datasets(datasets: tuple[str, ...]) -> dict[str, str]:
 
 def _ensure_workspace(storage_dir: str = ".spl") -> bool:
     """Create workspace directory and memory DB if they don't exist."""
+    storage_dir = os.path.expanduser(storage_dir)
     if os.path.exists(storage_dir):
         return False
     os.makedirs(storage_dir, exist_ok=True)

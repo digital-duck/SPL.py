@@ -18,6 +18,7 @@ class MemoryStore:
     """Persistent memory and prompt-cache store for SPL 2.0."""
 
     def __init__(self, db_path: str = ".spl/memory.db"):
+        db_path = os.path.expanduser(db_path)
         self.db_path = db_path
         os.makedirs(os.path.dirname(db_path) or ".", exist_ok=True)
         self._conn = sqlite3.connect(db_path)
