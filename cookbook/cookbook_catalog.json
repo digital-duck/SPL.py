@@ -1544,10 +1544,10 @@
       ],
       "excluded_adapters": []
     },
-     {
+    {
       "id": "79",
       "name": "Code Generation + Pytest Verification",
-      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 \u2014 Software Development.",
       "args": [
         "spl3",
         "run",
@@ -1765,6 +1765,116 @@
       "tier": 2,
       "requires": [
         "ortools"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "90",
+      "name": "Physics Conservation Check",
+      "description": "Opens the computational-science domain: a categorical + numeric verifier for 1-D collision problems. LLM writes NumPy code reporting final-state velocities (probabilistic); run_conservation_check() independently recomputes total momentum and kinetic energy before/after from the reported values (deterministic, never trusts the code's own self-report); ASSERT gates on momentum (and, for elastic collisions, energy) being conserved within 1% tolerance. Repair loop retries up to max_tries on a conservation-law violation. LLM interprets the verified velocity and restates a Final answer line, cross-checked by classify_roundtrip() (0.5% tolerance). Default problem: elastic collision, equal masses (known answer: ball 1 stops at 0 m/s). Requires: numpy only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/90_compsci_physics/physics_conservation.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "90_compsci_physics",
+      "log": "physics_conservation",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "numpy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "91",
+      "name": "Chemical Equation Balancing",
+      "description": "Second computational-science recipe: a categorical mass-balance verifier for chemical equations, with no chemistry library dependency. LLM proposes a strict-format balanced equation with explicit integer coefficients (probabilistic); run_balance_check() parses every formula (recursive-descent parser, supports parentheses e.g. Ca(OH)2) and sums atoms x coefficient per element on each side (deterministic); ASSERT gates on exact mass balance for every element. Repair loop retries up to max_tries on a mismatched element. LLM interprets the verified equation and restates a Final answer coefficient line, cross-checked by classify_roundtrip(). Default problem: combustion of methane (known answer: 1 CH4 + 2 O2 -> 1 CO2 + 2 H2O). Requires: stdlib re only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/91_compsci_chemistry/chemistry_balance.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "91_compsci_chemistry",
+      "log": "chemistry_balance",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "re"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "92",
+      "name": "Crystal Structure Check",
+      "description": "Third computational-science recipe: stacks two independent oracles (categorical symmetry + numeric density round-trip) in one ASSERT. LLM writes Python code reporting a crystal system, lattice parameters, Z, molar mass, and computed density (probabilistic); run_materials_check() independently verifies the claimed crystal system's own symmetry constraints (cubic: a=b=c, angles=90; hexagonal: a=b, gamma=120; etc.) and recomputes cell volume (general triclinic formula) and theoretical density from scratch via Avogadro's number (deterministic); ASSERT gates on both symmetry holding and density matching within 1%. Repair loop retries up to max_tries. LLM interprets the verified density and restates a Final answer line, cross-checked by classify_roundtrip(). Default problem: NaCl rock-salt structure (known answer: ~2.1636 g/cm^3). Requires: stdlib math only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/92_compsci_materials/materials_crystal.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "92_compsci_materials",
+      "log": "materials_crystal",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "numpy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "93",
+      "name": "Automated Planning (PDDL / STRIPS)",
+      "description": "Opens the automated-planning domain: GENERATE plan -> CALL validator -> ASSERT valid -> WHILE repair, the two-phase pattern applied to STRIPS-style planning (LLM+P / DUPLEX generalized into a head-to-head baseline). LLM proposes a grounded JSON action plan over a fixed logistics-lite domain (truck, packages, locations; drive/load/unload actions) (probabilistic); run_plan_check() replays the plan action-by-action against the domain's STRIPS precondition/effect semantics, a minimal VAL-style validator (deterministic); ASSERT gates on every action's precondition holding AND the goal being reached. Repair loop retries up to max_tries, fed the exact failing step and reason. LLM interprets the validated plan and restates a Final answer step-count line, cross-checked by classify_roundtrip(). Default problem: deliver 2 packages to a common destination (known minimal plan: 6 steps). Requires: stdlib json only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/93_auto_planning/auto_planning.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "93_auto_planning",
+      "log": "auto_planning",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "json"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "94",
+      "name": "Text-to-SQL with Data-Quality Gates",
+      "description": "Opens the data-engineering domain, extending recipe 84's row-diff verifier with Great-Expectations-style data-quality gates. LLM writes SQL from a natural-language question (probabilistic); run_quality_gated_sql() checks referential integrity (every orders.customer_id exists in customers.id), requires a non-empty result, and computes the same statistic two structurally independent SQL formulations (AVG(x) vs SUM(x)/COUNT(x)) asserting they agree within 1e-6 (deterministic, independent of the LLM's query); ASSERT gates on clean execution AND all quality gates passing. Repair loop retries up to max_tries on any gate failure. classify_roundtrip() row-diffs (order-insensitive, float-tolerant) the LLM's result against an independently-authored ground-truth query; LLM interprets the verified, quality-gated answer. Default question: average Enterprise-segment order amount (known ground truth: $6,000.00). Requires: stdlib sqlite3 only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/94_data_eng_text2spl/text2sql_quality.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "94_data_eng_text2spl",
+      "log": "text2sql_quality",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "sqlite3"
       ],
       "excluded_adapters": []
     }
