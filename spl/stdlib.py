@@ -118,14 +118,9 @@ def rtrim(value: str) -> str:
 
 
 @spl_tool
-def length(value: str) -> int:
-    """LENGTH(value) — number of characters."""
-    return len(str(value))
-
-
-@spl_tool
-def len_val(value: Any) -> int:
-    """LEN(value) — polymorphic length: string chars, JSON array items, or JSON object keys."""
+def length(value: Any) -> int:
+    """LENGTH(value) — polymorphic length, like Python's len(): JSON array items,
+    JSON object keys, or string characters (whichever the value parses as)."""
     s = str(value).strip()
     # Try parsing as JSON first (array or object)
     if (s.startswith('[') and s.endswith(']')) or (s.startswith('{') and s.endswith('}')):
@@ -378,11 +373,13 @@ def line_count(value: str) -> int:
 @spl_tool
 def json_get(json_str: str, key: str) -> str:
     """JSON_GET(json, key) — extract a top-level key from a JSON object string.
-    Supports dot notation: 'a.b' extracts json['a']['b'].
+    Supports dot notation: 'a.b' extracts json['a']['b']. Strips markdown
+    ```json code fences before parsing, so raw LLM output works directly.
     Returns '' if key not found or input is not valid JSON.
     """
     try:
-        obj = json.loads(str(json_str))
+        clean = str(json_str).replace("```json", "").replace("```", "").strip()
+        obj = json.loads(clean)
         for part in str(key).split("."):
             if isinstance(obj, dict):
                 obj = obj.get(part, "")
@@ -478,9 +475,17 @@ def sha256_hash(value: str) -> str:
 
 @spl_tool
 def list_get(value: str, index: str, delimiter: str = ",") -> str:
-    """LIST_GET(value, index, delimiter) — 1-based element from delimited list."""
-    parts = str(value).split(str(delimiter))
+    """LIST_GET(value, index, delimiter) — 1-based element from a JSON array
+    or, if value isn't valid JSON, a delimited list."""
+    s = str(value).strip()
     idx = int(index) - 1
+    if s.startswith('[') and s.endswith(']'):
+        try:
+            parts = json.loads(s)
+            return str(parts[idx]) if 0 <= idx < len(parts) else ""
+        except (json.JSONDecodeError, TypeError):
+            pass
+    parts = s.split(str(delimiter))
     return parts[idx].strip() if 0 <= idx < len(parts) else ""
 
 
@@ -502,6 +507,23 @@ def list_contains(value: str, item: str, delimiter: str = ",") -> str:
     """LIST_CONTAINS(value, item, delimiter) — 'true' if item is in delimited list."""
     parts = [p.strip() for p in str(value).split(str(delimiter))]
     return "true" if str(item).strip() in parts else "false"
+
+
+@spl_tool
+def list_append(value: str, item: str, delimiter: str = ",") -> str:
+    """LIST_APPEND(value, item, delimiter) — append item to a delimited list,
+    returning the new list string."""
+    value = str(value).strip()
+    if not value:
+        return str(item).strip()
+    return value + str(delimiter) + str(item).strip()
+
+
+@spl_tool
+def list_count(value: str, item: str, delimiter: str = ",") -> int:
+    """LIST_COUNT(value, item, delimiter) — count occurrences of item in a delimited list."""
+    parts = [p.strip() for p in str(value).split(str(delimiter)) if p.strip()]
+    return parts.count(str(item).strip())
 
 
 @spl_tool
@@ -628,16 +650,6 @@ def web_search(query: str) -> str:
         return "\n\n".join(lines)
     except Exception as e:
         return f"Search error: {e}"
-
-
-@spl_tool(name="search_web")
-def search_web(query: str) -> str:
-    """SEARCH_WEB(query) — alias for web_search.
-
-    Usage in SPL:
-        CALL search_web(@query) INTO @results;
-    """
-    return web_search(query)
 
 
 @spl_tool(name="http_get")
@@ -822,3 +834,392 @@ def cache_promote(
         return ",".join(new_badges)
     except Exception as e:
         return f"cache_promote error: {e}"
+
+
+# ── Logging ────────────────────────────────────────────────────────────────
+
+@spl_tool
+def log_init(workflow_name: str) -> str:
+    """LOG_INIT(workflow_name) — create a timestamped log file under
+    ~/.spl/logs/ and return its path."""
+    log_dir = pathlib.Path.home() / ".spl" / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_file = log_dir / f"{workflow_name}-{ts}.log"
+
+    with log_file.open("w", encoding="utf-8") as fh:
+        fh.write(f"# SPL Log: {workflow_name}\n")
+        fh.write(f"# Started: {datetime.datetime.now().isoformat()}\n\n")
+
+    return str(log_file)
+
+
+@spl_tool
+def log(message: str, severity: str, log_file: str) -> str:
+    """LOG(message, severity, log_file) — log to both console (stdout/stderr)
+    and the log file created by log_init."""
+    import sys
+
+    ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    severity = severity.upper()
+
+    line = f"[{severity}] {message}"
+    if severity in ("WARN", "ERROR"):
+        print(line, file=sys.stderr)
+    else:
+        print(line)
+
+    path = pathlib.Path(log_file)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write(f"[{ts}] [{severity}] {message}\n")
+
+    return log_file
+
+
+# ── Timing ────────────────────────────────────────────────────────────────
+
+@spl_tool
+def time_now() -> str:
+    """TIME_NOW() — current local time as a filesystem-safe string:
+    YYYY-MM-DD_HH-MM-SS."""
+    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+
+@spl_tool
+def time_elapsed(start_ts: str) -> str:
+    """TIME_ELAPSED(start_ts) — seconds elapsed since start_ts (a monotonic
+    float string from time_monotonic())."""
+    import time as _time
+    try:
+        return f"{_time.monotonic() - float(start_ts):.1f}"
+    except Exception:
+        return "?"
+
+
+@spl_tool
+def time_monotonic() -> str:
+    """TIME_MONOTONIC() — current value of a monotonic clock, as a string.
+    Pair with time_elapsed() to measure elapsed wall-clock time."""
+    import time as _time
+    return str(_time.monotonic())
+
+
+# ── SOLVER result JSON ───────────────────────────────────────────────────
+
+@spl_tool
+def result_status(result_json: str) -> str:
+    """RESULT_STATUS(result_json) — extract the 'status' field from a SOLVER
+    result JSON dict, or 'Error' if missing/unparseable."""
+    try:
+        return json.loads(result_json).get("status", "Error")
+    except Exception:
+        return "Error"
+
+
+@spl_tool
+def result_error(result_json: str) -> str:
+    """RESULT_ERROR(result_json) — extract the 'error' field from a SOLVER
+    result JSON dict (falls back to 'status', then 'unknown error')."""
+    try:
+        d = json.loads(result_json)
+        return d.get("error", d.get("status", "unknown error"))
+    except Exception:
+        return result_json
+
+
+@spl_tool
+def result_ok(result_json: str) -> bool:
+    """RESULT_OK(result_json) — ASSERT gate: True only when result_json's
+    'status' field is exactly "OK"."""
+    try:
+        return json.loads(result_json).get("status") == "OK"
+    except Exception:
+        return False
+
+
+# ── Finance / compliance ─────────────────────────────────────────────────
+
+@spl_tool
+def fin_risk_rating(report_text: str) -> str:
+    """FIN_RISK_RATING(report_text) — parse an LLM risk assessment and
+    return 'high', 'medium', or 'low'."""
+    t = report_text.lower()
+    if "high risk" in t or "critical" in t or "red flag" in t:
+        return "high"
+    if "medium risk" in t or "moderate" in t or "review needed" in t:
+        return "medium"
+    return "low"
+
+
+@spl_tool
+def alert(alert_payload: str) -> str:
+    """ALERT(alert_payload) — mock alert dispatcher; replace body with a
+    real Slack/email webhook in prod."""
+    print(f"ALERT:\n{alert_payload[:200]}")
+    return "alert_sent"
+
+
+# ── Audio (requires ffmpeg on PATH) ──────────────────────────────────────
+
+@spl_tool
+def audio_convert(audio_path: str, target_format: str, bitrate: str = "192k",
+                   sample_rate: str = "44100", output_dir: str = ".") -> str:
+    """AUDIO_CONVERT(audio_path, target_format [, bitrate, sample_rate, output_dir])
+    — convert an audio file to a different format via ffmpeg.
+    Requires: ffmpeg on PATH."""
+    import subprocess
+
+    _SUPPORTED = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "opus"}
+    fmt = str(target_format).strip().lower().lstrip(".")
+    if fmt not in _SUPPORTED:
+        raise ValueError(f"UnsupportedFormat: '{fmt}'. Supported: {sorted(_SUPPORTED)}")
+
+    src = pathlib.Path(str(audio_path).strip())
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_{ts}.{fmt}"
+
+    br = str(bitrate).strip() or "192k"
+    sr = str(sample_rate).strip() or "44100"
+    args = ["ffmpeg", "-y", "-i", str(src), "-ar", sr]
+    if fmt not in ("wav", "flac"):
+        args += ["-b:a", br]
+    args.append(str(dst))
+    r = subprocess.run(args, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise RuntimeError(f"CodecError: {r.stderr}")
+    return str(dst.resolve())
+
+
+@spl_tool
+def audio_trim(audio_path: str, start_sec: str, end_sec: str, output_dir: str = ".") -> str:
+    """AUDIO_TRIM(audio_path, start_sec, end_sec [, output_dir]) — cut a
+    segment out of an audio file via ffmpeg. Requires: ffmpeg on PATH."""
+    import subprocess
+
+    src = pathlib.Path(str(audio_path).strip())
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_trim_{ts}{src.suffix}"
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src), "-ss", str(start_sec).strip(),
+         "-to", str(end_sec).strip(), "-c", "copy", str(dst)],
+        capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        raise RuntimeError(f"CodecError: {r.stderr}")
+    return str(dst.resolve())
+
+
+@spl_tool
+def audio_duration(audio_path: str) -> str:
+    """AUDIO_DURATION(audio_path) — duration in seconds via ffprobe.
+    Requires: ffmpeg (ffprobe) on PATH."""
+    import subprocess
+
+    r = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format",
+         str(audio_path).strip()],
+        capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        return "0"
+    return str(json.loads(r.stdout).get("format", {}).get("duration", "0"))
+
+
+# ── Image (requires Pillow) ──────────────────────────────────────────────
+
+_IMAGE_FORMATS = {"jpeg", "jpg", "png", "webp", "bmp", "gif", "tiff"}
+
+
+@spl_tool
+def image_convert(image_path: str, target_format: str, quality: str = "85",
+                   output_dir: str = ".") -> str:
+    """IMAGE_CONVERT(image_path, target_format [, quality, output_dir]) —
+    convert an image to a different format. Requires: pip install Pillow."""
+    try:
+        from PIL import Image
+    except ImportError:
+        raise RuntimeError("Pillow required: pip install Pillow")
+    fmt = str(target_format).strip().lower().lstrip(".")
+    if fmt not in _IMAGE_FORMATS:
+        raise ValueError(f"UnsupportedFormat: '{fmt}'")
+    src = pathlib.Path(str(image_path).strip())
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    pil_fmt = "JPEG" if fmt == "jpg" else fmt.upper()
+    suffix = ".jpg" if fmt == "jpg" else f".{fmt}"
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_{ts}{suffix}"
+    q = int(str(quality).strip() or "85")
+    img = Image.open(src)
+    if pil_fmt == "JPEG" and img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+    kw = {"quality": q} if pil_fmt in ("JPEG", "WEBP") else {}
+    img.save(dst, format=pil_fmt, **kw)
+    return str(dst.resolve())
+
+
+@spl_tool
+def image_resize(image_path: str, width: str, height: str = "0", output_dir: str = ".") -> str:
+    """IMAGE_RESIZE(image_path, width [, height, output_dir]) — resize an
+    image; height=0 preserves aspect ratio. Requires: pip install Pillow."""
+    try:
+        from PIL import Image
+    except ImportError:
+        raise RuntimeError("Pillow required: pip install Pillow")
+    src = pathlib.Path(str(image_path).strip())
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    w = int(str(width).strip())
+    h = int(str(height).strip() or "0")
+    img = Image.open(src)
+    if h == 0:
+        h = int(img.height * w / img.width)
+    img_resized = img.resize((w, h))
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_resized_{ts}{src.suffix}"
+    img_resized.save(dst)
+    return str(dst.resolve())
+
+
+@spl_tool
+def image_info(image_path: str) -> str:
+    """IMAGE_INFO(image_path) — return width/height/mode/format as JSON.
+    Requires: pip install Pillow."""
+    try:
+        from PIL import Image
+    except ImportError:
+        raise RuntimeError("Pillow required: pip install Pillow")
+    src = pathlib.Path(str(image_path).strip())
+    img = Image.open(src)
+    return json.dumps({
+        "width": img.width, "height": img.height,
+        "mode": img.mode,
+        "format": img.format or src.suffix.lstrip(".").upper(),
+        "file": str(src.resolve()),
+    })
+
+
+# ── Video (requires ffmpeg on PATH) ──────────────────────────────────────
+
+@spl_tool
+def video_extract_audio(video_path: str, target_format: str = "mp3", bitrate: str = "192k",
+                         sample_rate: str = "44100", output_dir: str = ".") -> str:
+    """VIDEO_EXTRACT_AUDIO(video_path [, target_format, bitrate, sample_rate, output_dir])
+    — pull the audio track out of a video file. Requires: ffmpeg on PATH."""
+    import subprocess
+
+    fmt = str(target_format).strip().lower().lstrip(".")
+    src = pathlib.Path(str(video_path).strip())
+    probe = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", str(src)],
+        capture_output=True, text=True, check=False,
+    )
+    if probe.returncode == 0:
+        streams = json.loads(probe.stdout).get("streams", [])
+        if not any(s.get("codec_type") == "audio" for s in streams):
+            raise RuntimeError("NoAudioTrack: video has no audio stream")
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_audio_{ts}.{fmt}"
+    args = ["ffmpeg", "-y", "-i", str(src), "-vn", "-ar", str(sample_rate).strip() or "44100"]
+    if fmt not in ("wav", "flac"):
+        args += ["-b:a", str(bitrate).strip() or "192k"]
+    args.append(str(dst))
+    r = subprocess.run(args, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise RuntimeError(f"CodecError: {r.stderr}")
+    return str(dst.resolve())
+
+
+@spl_tool
+def video_extract_frame(video_path: str, mode: str = "middle", timestamp: str = "0",
+                         output_dir: str = ".", image_format: str = "jpg") -> str:
+    """VIDEO_EXTRACT_FRAME(video_path [, mode, timestamp, output_dir, image_format])
+    — grab a single frame; mode is 'first'|'middle'|'last'|'timestamp'.
+    Requires: ffmpeg on PATH."""
+    import subprocess
+
+    fmt = str(image_format).strip().lower().lstrip(".") or "jpg"
+    src = pathlib.Path(str(video_path).strip())
+    probe = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(src)],
+        capture_output=True, text=True, check=False,
+    )
+    duration = 0.0
+    if probe.returncode == 0:
+        duration = float(json.loads(probe.stdout).get("format", {}).get("duration", 0) or 0)
+    m = str(mode).strip().lower()
+    if m == "first":
+        t = 0.0
+    elif m == "last":
+        t = max(0.0, duration - 0.1)
+    elif m == "timestamp":
+        t = float(str(timestamp).strip() or "0")
+    else:
+        t = duration / 2.0
+    out_dir = pathlib.Path(str(output_dir).strip())
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dst = out_dir / f"{src.stem}_frame_{ts}.{fmt}"
+    r = subprocess.run(
+        ["ffmpeg", "-y", "-ss", str(t), "-i", str(src), "-frames:v", "1", "-q:v", "2", str(dst)],
+        capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        raise RuntimeError(f"CodecError: {r.stderr}")
+    return str(dst.resolve())
+
+
+@spl_tool
+def video_duration(video_path: str) -> str:
+    """VIDEO_DURATION(video_path) — duration in seconds via ffprobe.
+    Requires: ffmpeg (ffprobe) on PATH."""
+    import subprocess
+
+    r = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(video_path).strip()],
+        capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        return "0"
+    return str(json.loads(r.stdout).get("format", {}).get("duration", "0"))
+
+
+@spl_tool
+def video_info(video_path: str) -> str:
+    """VIDEO_INFO(video_path) — width/height/codec/fps/duration/audio info as
+    JSON via ffprobe. Requires: ffmpeg (ffprobe) on PATH."""
+    import subprocess
+
+    r = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams",
+         "-show_format", str(video_path).strip()],
+        capture_output=True, text=True, check=False,
+    )
+    if r.returncode != 0:
+        return json.dumps({"error": "ffprobe failed"})
+    probe = json.loads(r.stdout)
+    fmt = probe.get("format", {})
+    vs = next((s for s in probe.get("streams", []) if s.get("codec_type") == "video"), {})
+    as_ = next((s for s in probe.get("streams", []) if s.get("codec_type") == "audio"), {})
+    fps_raw = vs.get("r_frame_rate", "0/1")
+    try:
+        n, d = fps_raw.split("/")
+        fps = round(int(n) / int(d), 3)
+    except Exception:
+        fps = 0.0
+    return json.dumps({
+        "duration": float(fmt.get("duration", 0) or 0),
+        "size_bytes": int(fmt.get("size", 0) or 0),
+        "width": vs.get("width", 0), "height": vs.get("height", 0),
+        "video_codec": vs.get("codec_name", ""), "fps": fps,
+        "audio_codec": as_.get("codec_name", ""),
+        "audio_channels": as_.get("channels", 0),
+        "file": str(pathlib.Path(str(video_path).strip()).resolve()),
+    })

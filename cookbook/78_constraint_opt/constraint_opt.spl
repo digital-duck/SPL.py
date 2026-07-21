@@ -26,34 +26,6 @@
 --       --param problem="A factory produces chairs and tables ..."
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    """Return current local time as a filesystem-safe string: YYYY-MM-DD_HH-MM-SS."""
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    """Seconds elapsed since start_ts (monotonic float string from time.monotonic())."""
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
 -- ── Deterministic regime: PuLP solver tools ──────────────────
 
 CREATE TOOL_API run_pulp(code TEXT)
@@ -81,27 +53,6 @@ def run_pulp(code: str) -> str:
         return json.dumps(result, default=str)
     except Exception as e:
         return json.dumps({"status": "Error", "error": str(e)})
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
 $$;
 
 CREATE TOOL_API is_optimal(result_json TEXT)
@@ -224,8 +175,8 @@ WORKFLOW constraint_opt
   OUTPUT @report TEXT
 DO
   -- 0. Timing + run-id
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   LOGGING f"[constraint_opt] start  run_id={@ts_safe}  max_tries={@max_tries}" LEVEL INFO
 
   -- ── Stage 1: LLM formulates LP; PuLP solves; repair loop on failure ──
@@ -245,17 +196,17 @@ DO
         LOGGING "[constraint_opt] attempt 1 — LLM formulating LP code" LEVEL INFO
         GENERATE formulate_lp(@problem) INTO @lp_code;
         CALL run_pulp(@lp_code) INTO @solution;
-        CALL get_status(@solution) INTO @status;
+        CALL result_status(@solution) INTO @status;
         @tries := @tries + 1;
         LOGGING f"[constraint_opt] attempt {@tries}: status={@status}" LEVEL INFO
 
       ELSE
         -- Subsequent attempts: LLM repairs with error/status feedback
-        CALL get_error(@solution) INTO @error_info;
+        CALL result_error(@solution) INTO @error_info;
         LOGGING f"[constraint_opt] repair {@tries} — feeding error to LLM: {@error_info}" LEVEL INFO
         GENERATE repair_lp(@problem, @lp_code, @error_info) INTO @lp_code;
         CALL run_pulp(@lp_code) INTO @solution;
-        CALL get_status(@solution) INTO @status;
+        CALL result_status(@solution) INTO @status;
         @tries := @tries + 1;
         LOGGING f"[constraint_opt] repair {@tries}: status={@status}" LEVEL INFO
     END;
@@ -277,7 +228,7 @@ DO
 
   -- Write report to output file
   CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
-  CALL elapsed_secs(@t_start) INTO @elapsed;
+  CALL time_elapsed(@t_start) INTO @elapsed;
   LOGGING f"[constraint_opt] done — report → {@out_path}  ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
   RETURN @report WITH status = "complete";
@@ -286,7 +237,7 @@ EXCEPTION
   WHEN ToolFailed THEN
     @report := "Solver did not reach Optimal status after " + @tries + " attempts. Last status: " + @status;
     CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
-    CALL elapsed_secs(@t_start) INTO @elapsed;
+    CALL time_elapsed(@t_start) INTO @elapsed;
     LOGGING f"[constraint_opt] infeasible — report → {@out_path}  ({@elapsed}s)" LEVEL INFO
     RETURN @report WITH status = "infeasible";
 END;

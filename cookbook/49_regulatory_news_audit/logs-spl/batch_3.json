@@ -2,9 +2,9 @@
 {
   "risk_level": "low",
   "flags": [
-    "AML - Increased Non-Performing Loans (NPLs) could indicate potential money laundering activity related to distressed agriculture financing.",
-    "Sanctions - The drought's impact on repayment capacity warrants investigation for potential circumvention of sanctions through illicit funds or opaque transactions, particularly if the agricultural sector has connections to sanctioned countries."
+    "AML - Potential for increased illicit activity related to distressed loans and potential loan fraud.",
+    "Sanctions - Risk of unknowingly processing transactions involving sanctioned individuals or entities if the microfinance network lacks robust sanctions screening procedures, particularly given the agricultural sector's vulnerability."
   ],
-  "summary": "The reported increase in NPLs raises concerns about potential vulnerabilities within the microfinance network related to AML and sanctions compliance due to economic hardship affecting borrowers."
+  "summary": "The reported rise in non-performing loans presents a low risk of immediate regulatory violation but warrants monitoring for potential AML and sanctions risks associated with distressed lending."
 }
 ```

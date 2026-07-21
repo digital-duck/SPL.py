@@ -23,7 +23,7 @@ WORKFLOW audio_convert
     OUTPUT: @converted AUDIO
 DO
     LOGGING f'[audio_convert] {@audio} → {@target_format} (bitrate={@bitrate} sample_rate={@sample_rate})' LEVEL INFO
-    CALL convert_audio(@audio, @target_format, @bitrate, @sample_rate, @output_dir) INTO @converted
+    CALL audio_convert(@audio, @target_format, @bitrate, @sample_rate, @output_dir) INTO @converted
     LOGGING f'[audio_convert] done → {@converted}' LEVEL INFO
     RETURN @converted
 

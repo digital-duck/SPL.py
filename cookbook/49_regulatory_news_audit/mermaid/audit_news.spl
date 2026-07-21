@@ -34,7 +34,7 @@ DO
   LOGGING f'Starting compliance feed from "{@news_batch_path}" ...' LEVEL INFO
 
   CALL read_news_feed(@news_batch_path) INTO @news_batch
-  CALL get_list_length(@news_batch) INTO @batch_size
+  CALL length(@news_batch) INTO @batch_size
   LOGGING f'News batch loaded with {@batch_size} items.' LEVEL INFO
 
   EVALUATE @batch_size
@@ -46,7 +46,7 @@ DO
   @batch_id := 0
   WHILE @batch_id < @batch_size DO
     LOGGING f'Processing batch {@batch_id}...' LEVEL INFO
-    CALL get_item(@news_batch, @batch_id) INTO @news
+    CALL list_get(@news_batch, @batch_id + 1) INTO @news
     LOGGING f'News item:\n{@news}' LEVEL DEBUG
 
     -- Audit the news item (LLM call)
@@ -56,12 +56,12 @@ DO
     CALL write_file(f'{@log_dir}/batch_{@batch_id}.json', @audit_result) INTO NONE
 
     -- Extract risk level deterministically
-    CALL extract_json_field(@audit_result, 'risk_level') INTO @current_risk
+    CALL json_get(@audit_result, 'risk_level') INTO @current_risk
 
     EVALUATE @current_risk
     WHEN 'high' THEN
       LOGGING f'CRITICAL ALERT in batch {@batch_id}!' LEVEL ERROR
-      CALL send_alert(@audit_result) INTO NONE
+      CALL alert(@audit_result) INTO NONE
     ELSE
       LOGGING f'Batch {@batch_id} clear ({@current_risk})' LEVEL INFO
     END

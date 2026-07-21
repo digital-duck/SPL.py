@@ -2,7 +2,7 @@
 -- Imported by audit_news.spl via IMPORT 'tools'
 --
 -- Stdlib tools used by this recipe (no TOOL_API needed):
---   get_list_length, get_item, write_file, send_alert, extract_json_field
+--   length, spl_list_get_item, write_file, alert, json_get
 --
 -- Only read_news_feed is non-stdlib and defined here.
 

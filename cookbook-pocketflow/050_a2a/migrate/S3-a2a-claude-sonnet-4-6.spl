@@ -87,7 +87,7 @@ DO
     GENERATE reason(@question, @context) INTO @reasoning;
     EVALUATE @reasoning WHEN contains("NEED_MORE_INFO") THEN
       CALL extract_search_query(@reasoning) INTO @query;
-      CALL search_web(@query) INTO @raw_results;
+      CALL web_search(@query) INTO @raw_results;
       CALL parse_search_results(@raw_results) INTO @observation;
       @context := @context + "\n[Search: " + @query + "]\n" + @observation;
       @i := @i + 1;

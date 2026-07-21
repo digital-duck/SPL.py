@@ -30,32 +30,6 @@
 --       --param spec="Write a Python function merge_sorted(a, b) that merges two sorted lists into one sorted list."
 -- ============================================================
 
--- ── Utility: timestamp + timing ─────────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic layer: pytest execution tools ──────────────
 
 CREATE TOOL_API run_pytest(code TEXT, tests TEXT)
@@ -279,8 +253,8 @@ WORKFLOW code_pytest
   OUTPUT @report TEXT
 DO
   -- 0. Timing + run-id
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   LOGGING f"[code_pytest] start  run_id={@ts_safe}  max_tries={@max_tries}" LEVEL INFO
 
   -- ── Stage 1: LLM generates code AND tests independently from spec ──
@@ -331,7 +305,7 @@ DO
 
   -- Write report to output file
   CALL write_file(f"{@out_dir}/code_pytest_{@ts_safe}.md", @report) INTO @out_path;
-  CALL elapsed_secs(@t_start) INTO @elapsed;
+  CALL time_elapsed(@t_start) INTO @elapsed;
   LOGGING f"[code_pytest] done — report → {@out_path}  ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
   RETURN @report WITH status = "complete";
@@ -341,7 +315,7 @@ EXCEPTION
     CALL get_pytest_output(@pytest_result) INTO @failure_output;
     @report := "Code did not pass all tests after " + @tries + " attempts.\n\n" + @failure_output;
     CALL write_file(f"{@out_dir}/code_pytest_{@ts_safe}.md", @report) INTO @out_path;
-    CALL elapsed_secs(@t_start) INTO @elapsed;
+    CALL time_elapsed(@t_start) INTO @elapsed;
     LOGGING f"[code_pytest] tests_failed — report → {@out_path}  ({@elapsed}s)" LEVEL INFO
     RETURN @report WITH status = "tests_failed";
 END;

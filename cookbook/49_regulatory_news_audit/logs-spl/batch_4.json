@@ -4,9 +4,9 @@
   "flags": [
     "Sanctions",
     "AML",
-    "Market Manipulation (potential indirect link through illicit funds)",
-    "AI Ethics (lack of oversight in automated routing systems)"
+    "Market Manipulation (potential indirect impact)",
+    "AI Ethics (consideration of algorithmic oversight in payment routing)"
   ],
-  "summary": "The bank's sanctions violations, involving cross-border payments, represent a significant regulatory risk due to potential breaches of international sanctions regulations and AML controls."
+  "summary": "The bank's sanctions violations related to cross-border payments represent a significant regulatory risk due to potential breaches of international regulations and heightened scrutiny from regulators."
 }
 ```

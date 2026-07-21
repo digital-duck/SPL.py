@@ -26,7 +26,7 @@
 --      (ref_index, arxiv_id, reason, ref_text) — covers entries
 --      with no arXiv id and entries where lookup/download failed,
 --   8. Writes all log messages to both console and a timestamped
---      log file under ~/.spl/logs/ via the spl_log TOOL_API.
+--      log file under ~/.spl/logs/ via the log TOOL_API.
 --
 -- Reuses the download/cache shape of cookbook/47_arxiv_morning_brief
 -- (download_arxiv_pdf -> download_pdf_to: rate-limited GET, write
@@ -35,7 +35,7 @@
 -- reference entries with a lookup-then-download step."
 --
 -- Note: most TOOL_API bodies are defined INLINE here. The logging
--- tools (init_spl_log, spl_log) live in stdlib_log and must be
+-- tools (log_init, log) live in stdlib_log and must be
 -- promoted first:  spl3 tool-api promote cookbook/tools/stdlib_log.spl
 --
 -- Why this matters: a reviewer (Opus 4.8) fact-checked one of our
@@ -52,7 +52,7 @@
 -- ============================================================
 
 -- ── TOOL_API: deterministic helpers ───────────────────────────
--- init_spl_log / spl_log come from stdlib_log (promoted to ~/.spl/tool_apis/)
+-- log_init / log come from stdlib_log (promoted to ~/.spl/tool_apis/)
 
 CREATE TOOL_API parse_references(raw TEXT)
 RETURNS TEXT AS PYTHON $$
@@ -325,16 +325,16 @@ WORKFLOW verify_arxiv_references
         @out_dir TEXT DEFAULT 'cookbook/72_verify_arxiv_references/output'
     OUTPUT: @summary_csv TEXT
 DO
-    CALL init_spl_log('verify_arxiv_references') INTO @log_file
-    CALL spl_log('Verify arXiv References — starting', 'INFO', @log_file) INTO @log_file
+    CALL log_init('verify_arxiv_references') INTO @log_file
+    CALL log('Verify arXiv References — starting', 'INFO', @log_file) INTO @log_file
 
     CALL parse_references(@in_refs) INTO @refs
     CALL list_count(@refs) INTO @n
-    CALL spl_log(f'References parsed: {@n}', 'INFO', @log_file) INTO @log_file
+    CALL log(f'References parsed: {@n}', 'INFO', @log_file) INTO @log_file
 
     @csv_path := f'{@out_dir}/summary.csv'
     CALL init_summary_csv(@csv_path) INTO @csv_path
-    CALL spl_log(f'Summary CSV: {@csv_path}', 'INFO', @log_file) INTO @log_file
+    CALL log(f'Summary CSV: {@csv_path}', 'INFO', @log_file) INTO @log_file
 
     @skipped_csv_path := f'{@out_dir}/summary-skipped.csv'
 
@@ -350,7 +350,7 @@ DO
         DO
             EVALUATE @arxiv_id
                 WHEN != "" THEN
-                    CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — looking up ground-truth record', 'INFO', @log_file) INTO @log_file
+                    CALL log(f'[{@i}] arXiv:{@arxiv_id} — looking up ground-truth record', 'INFO', @log_file) INTO @log_file
 
                     -- Step A: ground truth from arXiv (not from the citing paper)
                     CALL lookup_arxiv(@arxiv_id) INTO @meta_json
@@ -361,7 +361,7 @@ DO
 
                     -- Step B: download the PDF (cached, rate-limited)
                     CALL download_pdf_to(@pdf_url, @out_dir, @arxiv_id) INTO @pdf_path
-                    CALL spl_log(f'[{@i}] downloaded -> {@pdf_path}', 'DEBUG', @log_file) INTO @log_file
+                    CALL log(f'[{@i}] downloaded -> {@pdf_path}', 'DEBUG', @log_file) INTO @log_file
 
                     -- Step C: <5-sentence digest of the verified abstract
                     GENERATE digest_writer(@title, @abstract)
@@ -371,19 +371,19 @@ DO
                     -- Step D: record the verified row
                     CALL append_csv_row(@csv_path, @arxiv_id, @title, @summary_desc, @authors) INTO @csv_path
                     @verified := @verified + 1
-                    CALL spl_log(f'[{@i}] verified: "{@title}" ({@authors})', 'INFO', @log_file) INTO @log_file
+                    CALL log(f'[{@i}] verified: "{@title}" ({@authors})', 'INFO', @log_file) INTO @log_file
                 ELSE
-                    CALL spl_log(f'[{@i}] no arXiv id in reference — likely a book/journal source, skipping', 'DEBUG', @log_file) INTO @log_file
+                    CALL log(f'[{@i}] no arXiv id in reference — likely a book/journal source, skipping', 'DEBUG', @log_file) INTO @log_file
                     CALL append_skipped_row(@skipped_csv_path, @i, '', 'no_arxiv_id', @ref_text) INTO @skipped_csv_path
                     @skipped := @skipped + 1
             END
         EXCEPTION
             WHEN ToolError THEN
-                CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — lookup/download failed, skipping', 'WARN', @log_file) INTO @log_file
+                CALL log(f'[{@i}] arXiv:{@arxiv_id} — lookup/download failed, skipping', 'WARN', @log_file) INTO @log_file
                 CALL append_skipped_row(@skipped_csv_path, @i, @arxiv_id, 'lookup_or_download_failed', @ref_text) INTO @skipped_csv_path
                 @skipped := @skipped + 1
             WHEN OTHERS THEN
-                CALL spl_log(f'[{@i}] arXiv:{@arxiv_id} — unexpected error, skipping', 'WARN', @log_file) INTO @log_file
+                CALL log(f'[{@i}] arXiv:{@arxiv_id} — unexpected error, skipping', 'WARN', @log_file) INTO @log_file
                 CALL append_skipped_row(@skipped_csv_path, @i, @arxiv_id, 'unexpected_error', @ref_text) INTO @skipped_csv_path
                 @skipped := @skipped + 1
         END
@@ -392,7 +392,7 @@ DO
     END
 
     -- ── Summary ──────────────────────────────────────────────
-    CALL spl_log(f'Done — {@verified} verified / {@skipped} skipped of {@n} references. Summary: {@csv_path} | Skipped: {@skipped_csv_path}', 'INFO', @log_file) INTO @log_file
+    CALL log(f'Done — {@verified} verified / {@skipped} skipped of {@n} references. Summary: {@csv_path} | Skipped: {@skipped_csv_path}', 'INFO', @log_file) INTO @log_file
 
     RETURN @csv_path WITH
         status           = 'complete',
@@ -404,6 +404,6 @@ DO
 
 EXCEPTION
     WHEN OTHERS THEN
-        CALL spl_log('Reference verification failed', 'WARN', @log_file) INTO @log_file
+        CALL log('Reference verification failed', 'WARN', @log_file) INTO @log_file
         RETURN "" WITH status = 'error'
 END

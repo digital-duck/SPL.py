@@ -2,7 +2,7 @@
 -- Imported by arxiv_morning_brief.spl and summarize_paper.spl via IMPORT 'tools'
 --
 -- Stdlib tools used by this recipe (no TOOL_API needed):
---   get_item, list_append
+--   spl_list_get_item, list_append
 --
 -- list_count is NOT stdlib — defined here.
 

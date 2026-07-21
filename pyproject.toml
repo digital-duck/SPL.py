@@ -66,6 +66,12 @@ kernel = [
 mcp = [
     "mcp>=1.0",
 ]
+media = [
+    # image_convert/image_resize/image_info stdlib tools.
+    # audio_*/video_* stdlib tools additionally require the ffmpeg system
+    # binary (not pip-installable) — see docs/GUIDE/USER-GUIDE.md.
+    "Pillow>=10.0",
+]
 sage = [
     # SageMath as pip wheels (passagemath fork — resolves wheels-only, no source build).
     # After install, register the 'sagemath' Jupyter kernel spec:

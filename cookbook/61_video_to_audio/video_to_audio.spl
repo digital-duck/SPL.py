@@ -24,7 +24,7 @@ WORKFLOW video_to_audio
     OUTPUT: @audio AUDIO
 DO
     LOGGING f'[video_to_audio] {@video} → {@target_format} (bitrate={@bitrate})' LEVEL INFO
-    CALL extract_audio(@video, @target_format, @bitrate, @sample_rate, @output_dir) INTO @audio
+    CALL video_extract_audio(@video, @target_format, @bitrate, @sample_rate, @output_dir) INTO @audio
     LOGGING f'[video_to_audio] done → {@audio}' LEVEL INFO
     RETURN @audio
 

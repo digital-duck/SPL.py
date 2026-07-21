@@ -1,5 +1,5 @@
 -- Tools for Recipe 004: Web Search Agent
--- search_web is provided by stdlib
+-- web_search is provided by stdlib
 
 CREATE TOOL_API parse_yaml(text TEXT) RETURNS TEXT AS PYTHON $$
 import re, json, yaml

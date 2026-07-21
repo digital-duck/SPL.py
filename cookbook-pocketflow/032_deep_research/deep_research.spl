@@ -115,9 +115,9 @@ DO
       GENERATE extract_query(@queries, 3) INTO @query3;
 
       CALL PARALLEL
-        search_web(@query1) INTO @result1,
-        search_web(@query2) INTO @result2,
-        search_web(@query3) INTO @result3
+        web_search(@query1) INTO @result1,
+        web_search(@query2) INTO @result2,
+        web_search(@query3) INTO @result3
       END;
 
       CALL PARALLEL

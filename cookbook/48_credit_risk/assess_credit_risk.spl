@@ -49,7 +49,7 @@ DO
   CALL write_file(f'{@log_dir}/risk_report.md', @risk_report) INTO NONE
 
   -- Step 3: Deterministic extraction (zero LLM cost)
-  CALL extract_risk_rating(@risk_report) INTO @risk_rating
+  CALL fin_risk_rating(@risk_report) INTO @risk_rating
   LOGGING f'Extracted risk rating: {@risk_rating}' LEVEL DEBUG
   CALL write_file(f'{@log_dir}/risk_rating.md', @risk_rating) INTO NONE
 

@@ -4,9 +4,8 @@
   "flags": [
     "sanctions",
     "aml",
-    "ai ethics",
-    "market manipulation"
+    "ai ethics"
   ],
-  "summary": "The new AI credit scoring guidelines introduce potential AML risks due to algorithmic bias and require banks to ensure fair outcomes, aligning with broader ethical concerns around AI usage in financial services."
+  "summary": "The use of AI in credit scoring presents risks related to potential biases impacting sanctions compliance and AML controls, alongside broader ethical concerns regarding algorithmic transparency."
 }
 ```

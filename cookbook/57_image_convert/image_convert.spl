@@ -22,7 +22,7 @@ WORKFLOW image_convert
     OUTPUT: @converted IMAGE
 DO
     LOGGING f'[image_convert] {@image} → {@target_format} (quality={@quality})' LEVEL INFO
-    CALL convert_image(@image, @target_format, @quality, @output_dir) INTO @converted
+    CALL image_convert(@image, @target_format, @quality, @output_dir) INTO @converted
     LOGGING f'[image_convert] done → {@converted}' LEVEL INFO
     RETURN @converted
 

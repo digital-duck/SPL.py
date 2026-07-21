@@ -23,6 +23,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
    - [4.2 IPython kernel (`--kernel`)](#42-ipython-kernel---kernel)
    - [4.3 Durable execution (`--persistence`)](#43-durable-execution---persistence)
    - [4.4 MCP tool integration](#44-mcp-tool-integration)
+- [4.5 Standard library & adding your own tools](#45-standard-library--adding-your-own-tools)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
@@ -731,6 +732,51 @@ Expected: workflow completes, `@content` contains `"hello from MCP"`.
 | `pyproject.toml` | `[project.optional-dependencies] mcp = ["mcp>=1.0"]` |
 
 Design document: `docs/DEV/spl3-mcp-integration.md`.
+
+### 4.5 Standard library & adding your own tools
+
+SPL has two distinct layers of reusable `CALL`-able tools. Knowing which one
+you're extending matters for naming.
+
+**Real stdlib** (`spl/stdlib.py`) — ~88 `@spl_tool`-decorated Python
+functions (`write_file`, `read_file`, `list_get`, `json_get`, `length`,
+`web_search`, media/finance/logging/timing helpers, ...). Built into the
+`spl-llm` package, auto-loaded into every executor at init
+(`get_global_tools()`), no setup required. Some functions need extra
+dependencies (`Pillow` for `image_*`, `ffmpeg` on `PATH` for `audio_*`/
+`video_*`, `pip install ddgs` for `web_search`) — installed as documented in
+each function's docstring / `pyproject.toml` optional extras, not required
+for the rest of stdlib to work.
+
+**TOOL_API libraries** (`~/.spl/tool_apis/`) — `.spl` files with
+`CREATE TOOL_API` blocks that you write yourself and share via
+`spl3 tool-api promote <file.spl> --name <lib>`. These are per-machine and
+**not** git-tracked; anyone running your recipe needs to promote the library
+once before the `.spl` file's `CALL`s resolve. Load order is stdlib first,
+then `~/.spl/tool_apis/` libraries, then inline `CREATE TOOL_API` blocks in
+the current file — **later entries win on name collision**, so a promoted
+library can silently shadow a stdlib function of the same name (this has
+happened: a promoted `write_file` once overrode stdlib's 3-parameter version
+and broke append-mode recipes — see `docs/DEV/ISSUES/run_all_test-2026-06-21.md`,
+Fix 2).
+
+**Naming rule: prefix your own TOOL_API helpers.** Because of last-write-wins
+load order, an unprefixed name you pick for a personal/recipe-local
+`CREATE TOOL_API` tool can collide with a current *or future* stdlib
+function and silently shadow it. Use a short, distinguishing prefix (your
+project or recipe name, e.g. `myproj_send_report`, `arxiv_parse_urls`) for
+anything you promote into `~/.spl/tool_apis/` or leave inline in a shared
+recipe. Unprefixed names are reserved for real stdlib.
+
+**Think your helper belongs in stdlib?** If it's generic (not tied to one
+recipe's domain) and something other recipes would plausibly duplicate,
+open a PR adding it to `spl/stdlib.py` as a real `@spl_tool` function rather
+than keeping it as a promoted TOOL_API library — that's the only way it
+becomes auto-loaded with no setup step for every user. See
+`docs/DEV/ISSUES/stdlib_naming.md` for the naming convention used when the
+last batch of helpers (logging, timing, SOLVER-result, finance, media) was
+promoted this way, and the process followed (catalog candidates → check for
+duplication against existing stdlib → resolve naming → single PR).
 
 ---
 

@@ -80,7 +80,7 @@ DO
 
     -- ── Per-paper loop ───────────────────────────────────────────────────────
     WHILE @i < @n DO
-        CALL get_item(@urls, @i) INTO @url
+        CALL list_get(@urls, @i + 1) INTO @url
         LOGGING f'Paper {@i}/{@n}: {@url}' LEVEL INFO
 
         DO
@@ -97,7 +97,7 @@ DO
             @summaries := []
             @j := 0
             WHILE @j < @m DO
-                CALL get_item(@chunks, @j) INTO @chunk
+                CALL list_get(@chunks, @j + 1) INTO @chunk
                 GENERATE chunk_summarizer(@chunk, @chunk_tokens)
                     WITH OUTPUT BUDGET @chunk_tokens TOKENS
                     INTO @chunk_summary

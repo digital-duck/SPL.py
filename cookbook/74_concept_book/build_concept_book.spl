@@ -197,7 +197,7 @@ DO
                 LOGGING f"cache HIT for {@concept} — reusing verified section (0 LLM calls)" LEVEL INFO
         END
 
-        CALL elapsed_secs(@t_section_start) INTO @section_elapsed
+        CALL time_elapsed(@t_section_start) INTO @section_elapsed
         LOGGING f"[timing] {@concept}: {@section_elapsed}s" LEVEL INFO
 
         @textbook := @textbook + "\n\n---\n\n" + @section
@@ -217,12 +217,12 @@ DO
 
     GENERATE write_payoff(@target, @apps, @style_guide, @language_label) INTO @capstone
 
-    CALL elapsed_secs(@t_payoff_start) INTO @payoff_elapsed
+    CALL time_elapsed(@t_payoff_start) INTO @payoff_elapsed
     LOGGING f"[timing] payoff: {@payoff_elapsed}s" LEVEL INFO
 
     @textbook := @textbook + "\n\n---\n\n" + @capstone
 
-    CALL elapsed_secs(@t_workflow_start) INTO @total_elapsed
+    CALL time_elapsed(@t_workflow_start) INTO @total_elapsed
     LOGGING f"[timing] workflow total: {@total_elapsed}s for {@order_len} sections + payoff" LEVEL INFO
 
     LOGGING f"Concept-book complete — domain: {@domain_yaml}  style: {@style}" LEVEL INFO

@@ -41,32 +41,6 @@
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic regime: STRIPS domain + mini-VAL plan validator ──
 
 CREATE TOOL_API domain_description()
@@ -175,40 +149,6 @@ def run_plan_check(problem_json: str, plan_json: str) -> str:
         return json.dumps({"status": "Error", "step": 0, "error": f"malformed action, missing field {e}"})
     except Exception as e:
         return json.dumps({"status": "Error", "step": 0, "error": str(e)})
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
-$$;
-
-CREATE TOOL_API is_ok(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def is_ok(result_json: str) -> bool:
-    """ASSERT gate: True only when every action's preconditions held
-    throughout the plan AND the final state satisfies the goal (a
-    VAL-style plan-valid verdict)."""
-    import json
-    try:
-        return json.loads(result_json).get("status") == "OK"
-    except Exception:
-        return False
 $$;
 
 CREATE TOOL_API classify_roundtrip(narrative TEXT, result_json TEXT)
@@ -363,8 +303,8 @@ WORKFLOW auto_planning
   INPUT @out_dir TEXT := "./cookbook/93_auto_planning/output"
   OUTPUT @report TEXT
 DO
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   CALL lower(@enable_solver) INTO @solver_mode;
   CALL domain_description() INTO @domain;
   LOGGING f"[auto_planning] start run_id={@ts_safe} solver={@solver_mode}" LEVEL INFO
@@ -403,16 +343,16 @@ DO
               DO
                 GENERATE formulate_plan(@domain, @problem_text) INTO @plan;
                 CALL run_plan_check(@problem_json, @plan) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] attempt {@tries}: status={@status}" LEVEL INFO
               END
             ELSE
               DO
-                CALL get_error(@solution) INTO @error_info;
+                CALL result_error(@solution) INTO @error_info;
                 GENERATE repair_plan(@domain, @problem_text, @plan, @error_info) INTO @plan;
                 CALL run_plan_check(@problem_json, @plan) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] repair {@tries}: status={@status}" LEVEL INFO
               END
@@ -420,7 +360,7 @@ DO
         END
 
         LOGGING f"[auto_planning] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
-        ASSERT is_ok(@solution);
+        ASSERT result_ok(@solution);
         LOGGING "[auto_planning] ASSERT passed — plan is VAL-valid" LEVEL INFO
 
         GENERATE interpret_plan_result(@problem_text, @solution) INTO @narrative;
@@ -429,7 +369,7 @@ DO
 
         CALL format_report(@problem_text, @plan, @solution, @narrative, @roundtrip) INTO @report;
         CALL write_file(f"{@out_dir}/plan_{@ts_safe}.md", @report) INTO @out_path;
-        CALL elapsed_secs(@t_start) INTO @elapsed;
+        CALL time_elapsed(@t_start) INTO @elapsed;
         LOGGING f"[auto_planning] done — report -> {@out_path} ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
         RETURN @report WITH status = "complete", arm = "solver", roundtrip = @roundtrip

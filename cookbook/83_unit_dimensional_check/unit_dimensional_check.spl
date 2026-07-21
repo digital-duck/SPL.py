@@ -34,32 +34,6 @@
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic regime: pint unit-aware solver tool ────────
 
 CREATE TOOL_API run_pint(code TEXT)
@@ -94,39 +68,6 @@ def run_pint(code: str) -> str:
         return json.dumps({"status": "Error", "error": f"DimensionalityError: {e}"})
     except Exception as e:
         return json.dumps({"status": "Error", "error": str(e)})
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
-$$;
-
-CREATE TOOL_API is_ok(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def is_ok(result_json: str) -> bool:
-    """ASSERT gate: True only when pint computed the answer with
-    dimensionally consistent units (no DimensionalityError, no exception)."""
-    import json
-    try:
-        return json.loads(result_json).get("status") == "OK"
-    except Exception:
-        return False
 $$;
 
 CREATE TOOL_API classify_roundtrip(narrative TEXT, result_json TEXT)
@@ -293,8 +234,8 @@ WORKFLOW unit_dimensional_check
   INPUT @out_dir TEXT := "./cookbook/83_unit_dimensional_check/output"
   OUTPUT @report TEXT
 DO
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   CALL lower(@enable_solver) INTO @solver_mode;
   LOGGING f"[unit_dimensional_check] start run_id={@ts_safe} solver={@solver_mode}" LEVEL INFO
 
@@ -332,16 +273,16 @@ DO
               DO
                 GENERATE formulate_pint_code(@problem) INTO @code;
                 CALL run_pint(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] attempt {@tries}: status={@status}" LEVEL INFO
               END
             ELSE
               DO
-                CALL get_error(@solution) INTO @error_info;
+                CALL result_error(@solution) INTO @error_info;
                 GENERATE repair_pint_code(@problem, @code, @error_info) INTO @code;
                 CALL run_pint(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] repair {@tries}: status={@status}" LEVEL INFO
               END
@@ -349,7 +290,7 @@ DO
         END
 
         LOGGING f"[unit_dimensional_check] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
-        ASSERT is_ok(@solution);
+        ASSERT result_ok(@solution);
         LOGGING "[unit_dimensional_check] ASSERT passed — pint confirmed dimensionally consistent" LEVEL INFO
 
         GENERATE interpret_pint_result(@problem, @solution) INTO @narrative;
@@ -358,7 +299,7 @@ DO
 
         CALL format_report(@problem, @code, @solution, @narrative, @roundtrip) INTO @report;
         CALL write_file(f"{@out_dir}/unit_check_{@ts_safe}.md", @report) INTO @out_path;
-        CALL elapsed_secs(@t_start) INTO @elapsed;
+        CALL time_elapsed(@t_start) INTO @elapsed;
         LOGGING f"[unit_dimensional_check] done — report -> {@out_path} ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
         RETURN @report WITH status = "complete", arm = "solver", roundtrip = @roundtrip

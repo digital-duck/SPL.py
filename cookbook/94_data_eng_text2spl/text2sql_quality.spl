@@ -43,32 +43,6 @@
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic regime: seeded SQLite database + quality gates ──
 
 CREATE TOOL_API schema_description()
@@ -208,40 +182,6 @@ def run_quality_gated_sql(sql: str, ground_truth_sql: str, stat_sql_a: str, stat
         }, default=str)
     finally:
         conn.close()
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
-$$;
-
-CREATE TOOL_API is_ok(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def is_ok(result_json: str) -> bool:
-    """ASSERT gate: True only when the LLM's SQL executed cleanly,
-    returned at least one row, AND both data-quality invariants
-    (referential integrity, two-independent-ways agreement) held."""
-    import json
-    try:
-        return json.loads(result_json).get("status") == "OK"
-    except Exception:
-        return False
 $$;
 
 CREATE TOOL_API classify_roundtrip(result_json TEXT)
@@ -387,8 +327,8 @@ WORKFLOW text2sql_quality
   INPUT @out_dir TEXT := "./cookbook/94_data_eng_text2spl/output"
   OUTPUT @report TEXT
 DO
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   CALL lower(@enable_solver) INTO @solver_mode;
   CALL schema_description() INTO @schema;
   LOGGING f"[text2sql_quality] start run_id={@ts_safe} solver={@solver_mode}" LEVEL INFO
@@ -427,16 +367,16 @@ DO
               DO
                 GENERATE formulate_sql(@schema, @question) INTO @sql;
                 CALL run_quality_gated_sql(@sql, @ground_truth_sql, @stat_sql_a, @stat_sql_b) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] attempt {@tries}: status={@status}" LEVEL INFO
               END
             ELSE
               DO
-                CALL get_error(@solution) INTO @error_info;
+                CALL result_error(@solution) INTO @error_info;
                 GENERATE repair_sql(@schema, @question, @sql, @error_info) INTO @sql;
                 CALL run_quality_gated_sql(@sql, @ground_truth_sql, @stat_sql_a, @stat_sql_b) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] repair {@tries}: status={@status}" LEVEL INFO
               END
@@ -444,7 +384,7 @@ DO
         END
 
         LOGGING f"[text2sql_quality] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
-        ASSERT is_ok(@solution);
+        ASSERT result_ok(@solution);
         LOGGING "[text2sql_quality] ASSERT passed — quality gates + clean execution confirmed" LEVEL INFO
 
         CALL classify_roundtrip(@solution) INTO @roundtrip;
@@ -454,7 +394,7 @@ DO
 
         CALL format_report(@question, @sql, @solution, @narrative, @roundtrip) INTO @report;
         CALL write_file(f"{@out_dir}/text2sql_{@ts_safe}.md", @report) INTO @out_path;
-        CALL elapsed_secs(@t_start) INTO @elapsed;
+        CALL time_elapsed(@t_start) INTO @elapsed;
         LOGGING f"[text2sql_quality] done — report -> {@out_path} ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
         RETURN @report WITH status = "complete", arm = "solver", roundtrip = @roundtrip

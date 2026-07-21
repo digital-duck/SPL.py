@@ -53,7 +53,7 @@ DO
 
     EVALUATE @decision WHEN contains('action: search') THEN
       CALL extract_field(@decision, 'search_query') INTO @search_query;
-      CALL search_web(@search_query) INTO @search_results;
+      CALL web_search(@search_query) INTO @search_results;
       @context := @context + '\nSEARCH: ' + @search_query + '\nRESULTS: ' + @search_results;
     ELSE
       GENERATE answer_question(@question, @context) INTO @answer;

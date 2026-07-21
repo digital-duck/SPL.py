@@ -46,32 +46,6 @@
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic regime: symmetry + density verifier ────────
 
 CREATE TOOL_API run_materials_check(code TEXT)
@@ -184,40 +158,6 @@ def run_materials_check(code: str) -> str:
         return json.dumps(out, default=str)
     except Exception as e:
         return json.dumps({"status": "Error", "error": str(e)})
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
-$$;
-
-CREATE TOOL_API is_ok(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def is_ok(result_json: str) -> bool:
-    """ASSERT gate: True only when the claimed crystal system's own
-    symmetry constraints hold AND the reported density matches the
-    independently computed value within 1% relative tolerance."""
-    import json
-    try:
-        return json.loads(result_json).get("status") == "OK"
-    except Exception:
-        return False
 $$;
 
 CREATE TOOL_API classify_roundtrip(narrative TEXT, result_json TEXT)
@@ -355,7 +295,7 @@ result for a general audience.
 Problem: {problem}
 
 Verified result (JSON, independently confirmed: the claimed crystal
-system's symmetry constraints hold, and the density was independently
+system''s symmetry constraints hold, and the density was independently
 recomputed from the raw lattice parameters — trust it completely, do
 not re-derive it):
 {solution_json}
@@ -399,8 +339,8 @@ WORKFLOW materials_crystal
   INPUT @out_dir TEXT := "./cookbook/92_compsci_materials/output"
   OUTPUT @report TEXT
 DO
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   CALL lower(@enable_solver) INTO @solver_mode;
   LOGGING f"[materials_crystal] start run_id={@ts_safe} solver={@solver_mode}" LEVEL INFO
 
@@ -438,16 +378,16 @@ DO
               DO
                 GENERATE formulate_materials_code(@problem) INTO @code;
                 CALL run_materials_check(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] attempt {@tries}: status={@status}" LEVEL INFO
               END
             ELSE
               DO
-                CALL get_error(@solution) INTO @error_info;
+                CALL result_error(@solution) INTO @error_info;
                 GENERATE repair_materials_code(@problem, @code, @error_info) INTO @code;
                 CALL run_materials_check(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] repair {@tries}: status={@status}" LEVEL INFO
               END
@@ -455,7 +395,7 @@ DO
         END
 
         LOGGING f"[materials_crystal] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
-        ASSERT is_ok(@solution);
+        ASSERT result_ok(@solution);
         LOGGING "[materials_crystal] ASSERT passed — symmetry + density confirmed" LEVEL INFO
 
         GENERATE interpret_materials_result(@problem, @solution) INTO @narrative;
@@ -464,7 +404,7 @@ DO
 
         CALL format_report(@problem, @code, @solution, @narrative, @roundtrip) INTO @report;
         CALL write_file(f"{@out_dir}/materials_{@ts_safe}.md", @report) INTO @out_path;
-        CALL elapsed_secs(@t_start) INTO @elapsed;
+        CALL time_elapsed(@t_start) INTO @elapsed;
         LOGGING f"[materials_crystal] done — report -> {@out_path} ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
         RETURN @report WITH status = "complete", arm = "solver", roundtrip = @roundtrip

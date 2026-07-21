@@ -77,7 +77,7 @@ DO
       GENERATE decide_search_or_answer(@question, @search_history) INTO @inner_decision;
       EVALUATE @inner_decision WHEN contains("search") THEN
         GENERATE extract_search_query(@question, @search_history) INTO @query;
-        CALL search_web(@query) INTO @search_results;
+        CALL web_search(@query) INTO @search_results;
         GENERATE reason_over_results(@question, @search_history, @search_results) INTO @reasoning;
         @search_history := @search_history + "\n" + @reasoning;
         @inner_i := @inner_i + 1;

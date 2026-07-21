@@ -116,7 +116,7 @@ DO
   @ready_emails := "";
 
   WHILE @i < @max_leads DO
-    CALL get_item(@leads, @i) INTO @lead;
+    CALL list_get(@leads, @i + 1) INTO @lead;
     CALL isblank(@lead) INTO @is_empty;
 
     EVALUATE @is_empty
@@ -124,7 +124,7 @@ DO
         @i := @max_leads;
       ELSE
         CALL extract_company_name(@lead) INTO @company_name;
-        CALL search_web(@company_name) INTO @company_info;
+        CALL web_search(@company_name) INTO @company_info;
         GENERATE enrich_lead_context(@lead, @company_info) INTO @enrichment;
 
         GENERATE score_lead_fit(@lead, @enrichment) INTO @score_text;

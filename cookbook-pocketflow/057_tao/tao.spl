@@ -7,7 +7,7 @@ def dispatch_tool(action_json: str) -> str:
         tool = spec.get("tool", "").lower().strip()
         args = spec.get("args", {})
 
-        if tool == "search_web":
+        if tool == "web_search":
             query = args.get("query", "")
             url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(query)
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
@@ -55,12 +55,12 @@ Reason carefully about what you still need to know, then choose the best next ac
 Respond with JSON only — no extra text:
 {{
   "thought": "<your step-by-step reasoning>",
-  "tool": "<one of: search_web | run_python | calculate | none>",
+  "tool": "<one of: web_search | run_python | calculate | none>",
   "args": {{<tool-specific key-value arguments>}}
 }}
 
 Argument formats by tool:
-  search_web  → {{"query": "<search terms>"}}
+  web_search  → {{"query": "<search terms>"}}
   run_python  → {{"code": "<python code to run>"}}
   calculate   → {{"expression": "<math expression>"}}
   none        → {{"answer": "<your complete answer, if ready>"}}
@@ -92,7 +92,7 @@ $$;
 
 WORKFLOW react_agent
   INPUT @query TEXT
-  INPUT @tools_available TEXT := "search_web, run_python, calculate"
+  INPUT @tools_available TEXT := "web_search, run_python, calculate"
   INPUT @max_iterations INTEGER := 10
   OUTPUT @final_answer TEXT
 DO

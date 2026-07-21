@@ -59,10 +59,10 @@ DO
     --   'sample'    → extract @max_frames evenly spaced frames at @fps
     EVALUATE @mode
         WHEN = 'timestamp' THEN
-            CALL extract_frame(@video, @timestamp, @output_dir) INTO @frame
+            CALL video_extract_frame(@video, @timestamp, @output_dir) INTO @frame
             LOGGING f'[video_to_image] frame extracted at {@timestamp}' LEVEL INFO
         ELSE
-            CALL extract_frame(@video, @mode, @output_dir) INTO @frame
+            CALL video_extract_frame(@video, @mode, @output_dir) INTO @frame
             LOGGING f'[video_to_image] frame extracted (mode={@mode})' LEVEL INFO
     END
 

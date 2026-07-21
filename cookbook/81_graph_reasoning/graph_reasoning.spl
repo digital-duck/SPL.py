@@ -31,32 +31,6 @@
 --       --param problem="..." --param enable_solver=false
 -- ============================================================
 
--- ── Utility: timestamp + file I/O ───────────────────────────
-
-CREATE TOOL_API now_ts()
-RETURNS TEXT AS PYTHON $$
-def now_ts() -> str:
-    import datetime
-    return datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-$$;
-
-CREATE TOOL_API monotonic_now()
-RETURNS TEXT AS PYTHON $$
-def monotonic_now() -> str:
-    import time
-    return str(time.monotonic())
-$$;
-
-CREATE TOOL_API elapsed_secs(start_ts TEXT)
-RETURNS TEXT AS PYTHON $$
-def elapsed_secs(start_ts: str) -> str:
-    import time
-    try:
-        return f"{time.monotonic() - float(start_ts):.1f}"
-    except Exception:
-        return "?"
-$$;
-
 -- ── Deterministic regime: networkx solver tool ───────────────
 
 CREATE TOOL_API run_networkx(code TEXT)
@@ -85,38 +59,6 @@ def run_networkx(code: str) -> str:
         return json.dumps(result, default=str)
     except Exception as e:
         return json.dumps({"status": "Error", "error": str(e)})
-$$;
-
-CREATE TOOL_API get_status(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_status(result_json: str) -> str:
-    import json
-    try:
-        return json.loads(result_json).get("status", "Error")
-    except Exception:
-        return "Error"
-$$;
-
-CREATE TOOL_API get_error(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def get_error(result_json: str) -> str:
-    import json
-    try:
-        d = json.loads(result_json)
-        return d.get("error", d.get("status", "unknown error"))
-    except Exception:
-        return result_json
-$$;
-
-CREATE TOOL_API is_ok(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def is_ok(result_json: str) -> bool:
-    """ASSERT gate: True only when networkx computed a result without error."""
-    import json
-    try:
-        return json.loads(result_json).get("status") == "OK"
-    except Exception:
-        return False
 $$;
 
 CREATE TOOL_API classify_roundtrip(narrative TEXT, result_json TEXT)
@@ -280,8 +222,8 @@ WORKFLOW graph_reasoning
   INPUT @out_dir TEXT := "./cookbook/81_graph_reasoning/output"
   OUTPUT @report TEXT
 DO
-  CALL monotonic_now() INTO @t_start;
-  CALL now_ts() INTO @ts_safe;
+  CALL time_monotonic() INTO @t_start;
+  CALL time_now() INTO @ts_safe;
   CALL lower(@enable_solver) INTO @solver_mode;
   LOGGING f"[graph_reasoning] start run_id={@ts_safe} solver={@solver_mode}" LEVEL INFO
 
@@ -319,16 +261,16 @@ DO
               DO
                 GENERATE formulate_graph_code(@problem) INTO @code;
                 CALL run_networkx(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] attempt {@tries}: status={@status}" LEVEL INFO
               END
             ELSE
               DO
-                CALL get_error(@solution) INTO @error_info;
+                CALL result_error(@solution) INTO @error_info;
                 GENERATE repair_graph_code(@problem, @code, @error_info) INTO @code;
                 CALL run_networkx(@code) INTO @solution;
-                CALL get_status(@solution) INTO @status;
+                CALL result_status(@solution) INTO @status;
                 @tries := @tries + 1;
                 LOGGING f"[arm=solver] repair {@tries}: status={@status}" LEVEL INFO
               END
@@ -336,7 +278,7 @@ DO
         END
 
         LOGGING f"[graph_reasoning] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
-        ASSERT is_ok(@solution);
+        ASSERT result_ok(@solution);
         LOGGING "[graph_reasoning] ASSERT passed — networkx confirmed OK" LEVEL INFO
 
         GENERATE interpret_graph_result(@problem, @solution) INTO @narrative;
@@ -345,7 +287,7 @@ DO
 
         CALL format_report(@problem, @code, @solution, @narrative, @roundtrip) INTO @report;
         CALL write_file(f"{@out_dir}/graph_reasoning_{@ts_safe}.md", @report) INTO @out_path;
-        CALL elapsed_secs(@t_start) INTO @elapsed;
+        CALL time_elapsed(@t_start) INTO @elapsed;
         LOGGING f"[graph_reasoning] done — report -> {@out_path} ({@elapsed}s, attempts={@tries})" LEVEL INFO
 
         RETURN @report WITH status = "complete", arm = "solver", roundtrip = @roundtrip

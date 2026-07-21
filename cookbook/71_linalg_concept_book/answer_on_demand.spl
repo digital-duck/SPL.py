@@ -150,7 +150,7 @@ DO
                 LOGGING f"Section {@concept} verified" LEVEL INFO
         END
 
-        CALL elapsed_secs(@t_section_start) INTO @section_elapsed
+        CALL time_elapsed(@t_section_start) INTO @section_elapsed
         LOGGING f"[timing] {@concept}: {@section_elapsed}s" LEVEL INFO
 
         @lesson := @lesson + "\n\n---\n\n" + @section
@@ -163,12 +163,12 @@ DO
 
     GENERATE write_section(@target, @_target_label, @target, @style_guide, @language) INTO @capstone
 
-    CALL elapsed_secs(@t_capstone_start) INTO @capstone_elapsed
+    CALL time_elapsed(@t_capstone_start) INTO @capstone_elapsed
     LOGGING f"[timing] capstone ({@target}): {@capstone_elapsed}s" LEVEL INFO
 
     @lesson := @lesson + "\n\n---\n\n" + @capstone
 
-    CALL elapsed_secs(@t_workflow_start) INTO @total_elapsed
+    CALL time_elapsed(@t_workflow_start) INTO @total_elapsed
     LOGGING f"[timing] workflow total: {@total_elapsed}s for {@order_len} concepts + capstone" LEVEL INFO
 
     LOGGING f"Lesson complete — level: {@lvl}  target: {@target}" LEVEL INFO

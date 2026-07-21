@@ -204,7 +204,7 @@ DO
   @files_changed := 0;
 
   WHILE @idx < @file_count DO
-    CALL get_item(@all_files, @idx) INTO @file_path;
+    CALL list_get(@all_files, @idx + 1) INTO @file_path;
     CALL upgrade_file(@file_path, @upgrade_plan) INTO @file_result;
 
     EVALUATE @file_result WHEN = "updated" THEN

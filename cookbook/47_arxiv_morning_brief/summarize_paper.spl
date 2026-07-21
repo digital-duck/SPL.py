@@ -16,7 +16,7 @@ DO
     @i := 0
     CALL list_count(@chunks) INTO @n
     WHILE @i < @n DO
-        CALL get_item(@chunks, @i) INTO @chunk
+        CALL list_get(@chunks, @i + 1) INTO @chunk
         GENERATE chunk_summarizer(@chunk) WITH OUTPUT BUDGET @max_tokens TOKENS INTO @summary
         CALL list_append(@summaries, @summary) INTO @summaries
         @i := @i + 1
