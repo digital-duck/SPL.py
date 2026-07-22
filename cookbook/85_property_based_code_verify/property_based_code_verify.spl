@@ -212,7 +212,7 @@ Rules:
   operation, invariance under a transformation) — NOT fixed-example
   assertions like `assert f(2,3) == 5`
 - Use st.integers(), st.lists(...), st.text(), etc. to generate inputs
-  matching the spec's parameter types
+  matching the spec''s parameter types
 
 Example shape (for a different spec, illustrating format only):
 ```
@@ -256,7 +256,7 @@ properties against hundreds of generated inputs; trust it completely):
 Provide a concise interpretation (under 100 words):
 1. State whether all properties passed or a falsifying example was found
 2. If failed, mention the falsifying input from the output if visible
-3. One sentence on what this means for the implementation's correctness
+3. One sentence on what this means for the implementation''s correctness
 $$;
 
 CREATE FUNCTION solve_directly(spec TEXT)

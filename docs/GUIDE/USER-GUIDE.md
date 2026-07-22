@@ -24,6 +24,7 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
    - [4.3 Durable execution (`--persistence`)](#43-durable-execution---persistence)
    - [4.4 MCP tool integration](#44-mcp-tool-integration)
 - [4.5 Standard library & adding your own tools](#45-standard-library--adding-your-own-tools)
+- [4.6 Language building blocks: FUNCTION vs PROCEDURE vs WORKFLOW vs TOOL_API](#46-language-building-blocks-function-vs-procedure-vs-workflow-vs-tool_api)
 5. [spl3 describe](#5-spl3-describe)
 6. [spl3 text2spl](#6-spl3-text2spl)
 7. [spl3 text2mmd](#7-spl3-text2mmd)
@@ -777,6 +778,150 @@ becomes auto-loaded with no setup step for every user. See
 last batch of helpers (logging, timing, SOLVER-result, finance, media) was
 promoted this way, and the process followed (catalog candidates → check for
 duplication against existing stdlib → resolve naming → single PR).
+
+### 4.6 Language building blocks: FUNCTION vs PROCEDURE vs WORKFLOW vs TOOL_API
+
+SPL has four top-level `CREATE`/definition constructs. They look similar but
+are dispatched through different registries with different capabilities —
+picking the wrong one is a common source of confusion (e.g. "why can't I
+`CALL PARALLEL` this thing I wrote?").
+
+| | `CREATE FUNCTION` | `PROCEDURE` | `WORKFLOW` | `CREATE TOOL_API` |
+|---|---|---|---|---|
+| **What it is** | A named LLM prompt template | A synchronous in-script subroutine | A composable, top-level orchestration unit | A deterministic Python (or MCP-bound) tool |
+| **Body** | Prompt text with `{param}` interpolation — no statements | Arbitrary SPL statements (`GENERATE`, `CALL`, `EVALUATE`, `WHILE`, ...) | Arbitrary SPL statements, plus its own `EXCEPTION` block | Python code (`AS PYTHON $$ ... $$`) or an MCP server binding (`AS MCP`) |
+| **Invoked via** | `GENERATE name(...) INTO @var` | `CALL name(...) INTO @var` | `CALL name(...) INTO @var`, or as the file's entry point | `CALL name(...) INTO @var` |
+| **Costs an LLM call?** | Yes — that's its only purpose | Only if its body contains `GENERATE` | Only if its body contains `GENERATE` | Never — deterministic |
+| **Registered in** | `FunctionRegistry` (SPL 2.0-era, in-process) | `FunctionRegistry` (same as `FUNCTION`) | `WorkflowComposer` registry (`spl3/registry.py`) | Executor's per-run tool table (`spl3/tool_api_registry.py`) |
+| **`CALL PARALLEL` target?** | No | **No** | **Yes** — the only eligible target | No |
+| **Independent `spl3 run <file>.spl` entry point?** | No | No | **Yes** | No |
+| **`spl3 register`-able into the Hub?** | No | No | **Yes** | No (promote into `~/.spl/tool_apis/` instead — §4.5) |
+| **`INPUT`/`OUTPUT` contract?** | Just its parameter list | Just its parameter list + return type | Full `INPUT: ... OUTPUT: ...` block, validated | Just its parameter list + return type |
+
+**Rule of thumb:**
+- Writing a reusable prompt? → `CREATE FUNCTION`, called with `GENERATE`.
+- Need a few lines of SPL logic (maybe including a `GENERATE`) factored out,
+  called synchronously from one script, never needs to run standalone or in
+  parallel? → `PROCEDURE`. See recipe 14 (`researcher`/`analyst`/`writer`)
+  and recipe 25 (a `WORKFLOW` orchestrating three `PROCEDURE`s).
+- Need something that can be `spl3 run` on its own, fanned out via
+  `CALL PARALLEL`, or shared via the Hub? → `WORKFLOW`, even if it's a
+  two-line wrapper around one `GENERATE`. See recipe 79's `gen_code`/
+  `gen_tests` sub-workflows, or recipe 64's `summarise_single`.
+- Need deterministic, zero-LLM-cost code (math, file I/O, an API call)? →
+  `CREATE TOOL_API`, `AS PYTHON` for local code or `AS MCP` to bind an
+  existing MCP server tool (§4.4).
+
+#### `CREATE FUNCTION` — a named prompt template
+
+```spl
+CREATE FUNCTION write_code(spec TEXT)
+RETURNS TEXT AS $$
+You are a Python expert. Write a Python module that satisfies this specification:
+
+{spec}
+
+Rules:
+- Output ONLY raw Python code — no markdown fences, no commentary, no docstrings
+- No import statements for third-party libraries; use only Python stdlib
+$$;
+
+GENERATE write_code(@spec) INTO @code;
+```
+
+The `$$ ... $$` body is plain prompt text, not SPL statements — `{spec}`
+interpolates the parameter by name. There's no control flow inside a
+`FUNCTION`; it's purely "fill in this template and send it to the LLM." Every
+`GENERATE` call in SPL targets a `CREATE FUNCTION` this way. Reference:
+recipe 79 (`write_code`, `write_tests`, `repair_code`, `explain_solution` —
+four independent prompt templates driving one workflow), recipe 05
+(`self_refine.spl`, draft/critique/refine as three functions).
+
+#### `PROCEDURE` — a synchronous subroutine
+
+```spl
+PROCEDURE researcher(topic TEXT) RETURN TEXT
+DO
+    GENERATE research_facts(topic) INTO @facts
+    GENERATE identify_key_themes(@facts) INTO @themes
+    @result := @facts || '\n\nKey Themes:\n' || @themes
+    RETURN @result
+END
+
+CALL researcher(@topic) INTO @research
+```
+
+Unlike `FUNCTION`, a `PROCEDURE` body is full SPL — it can `GENERATE`,
+`CALL` other procedures/tools, branch with `EVALUATE`, loop with `WHILE`,
+and has its own `EXCEPTION` handlers. It's invoked with `CALL`, not
+`GENERATE`, and only runs in-process as part of whatever `WORKFLOW` calls
+it — it has no independent entry point and cannot be a `CALL PARALLEL`
+target (§4.6 table). Reference: recipe 14 (`researcher` → `analyst` →
+`writer`, three procedures called in sequence by one `WORKFLOW`), recipe 25
+(`layered_explainer` `WORKFLOW` calling `explain_layer`, `make_example`, and
+`calibrate_complexity` — the last one branches internally with `EVALUATE`
+before returning), recipe 06 (`search_population`, a single procedure mixing
+a Python tool call with LLM reasoning).
+
+#### `WORKFLOW` — the composable orchestration unit
+
+```spl
+WORKFLOW code_pytest
+  INPUT @spec TEXT
+  INPUT @max_tries INTEGER := 3
+  OUTPUT @report TEXT
+DO
+  CALL PARALLEL
+    gen_code(@spec)  INTO @code,
+    gen_tests(@spec) INTO @tests
+  END
+  ...
+  RETURN @report WITH status = "complete"
+EXCEPTION
+  WHEN ToolFailed THEN
+    RETURN @report WITH status = "tests_failed"
+END
+```
+
+`WORKFLOW` is the only construct with a validated `INPUT:`/`OUTPUT:`
+contract, and the only thing `spl3 run <file>.spl` can execute directly. Two
+things follow from that: it's the only valid `CALL PARALLEL` branch target
+(a bare `FUNCTION`/`PROCEDURE` can't be — see recipe 79's `gen_code`/
+`gen_tests`, added specifically so `write_code`/`write_tests` could run
+concurrently), and it's the unit `spl3 register` publishes to the Hub for
+cross-file reuse. A file can define several `WORKFLOW`s — one is the file's
+main entry point, others exist purely to be `CALL`ed or `CALL PARALLEL`ed by
+it (recipe 64's `summarise_single`, called three times concurrently by
+`parallel_news_digest`; recipe 63's `style_review`/`security_audit`/
+`test_generator`, three separate `IMPORT`ed workflow files fanned out by
+`parallel_code_review`).
+
+#### `CREATE TOOL_API` — deterministic, zero-LLM-cost code
+
+```spl
+CREATE TOOL_API run_pytest(code TEXT, tests TEXT)
+RETURNS TEXT AS PYTHON $$
+def run_pytest(code: str, tests: str) -> str:
+    import subprocess
+    ...
+    return json.dumps({"passed": passed, "failed": failed, "returncode": proc.returncode})
+$$;
+
+CALL run_pytest(@code, @tests) INTO @pytest_result
+```
+
+The `AS PYTHON $$ ... $$` body must define a top-level Python function whose
+name exactly matches the `TOOL_API` name (`spl3/executor.py` enforces this at
+load time). It runs with no LLM involved — pure Python, in-process. This is
+also where `ASSERT` gates live: recipe 79's `all_tests_passed()` and recipe
+78's `is_optimal()` are `TOOL_API` functions returning `bool`, used as
+`ASSERT all_tests_passed(@pytest_result);` — a formal, code-checked gate a
+prompt-only construct could never provide. `AS MCP` is the second `TOOL_API`
+form, binding an existing MCP server tool instead of writing Python — see
+§4.4 for the full syntax and recipe 46 (`mcp.spl`). Real stdlib functions
+(§4.5, `write_file`, `list_get`, `json_get`, ...) are the built-in
+equivalent of `TOOL_API` — same zero-LLM-cost contract, but shipped with the
+package instead of defined per-recipe.
 
 ---
 

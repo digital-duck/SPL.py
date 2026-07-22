@@ -244,6 +244,28 @@ In 3-5 sentences: explain the algorithm, highlight any edge cases handled,
 and confirm what the pytest result proves. Write plain English, no code blocks.
 $$;
 
+-- ── Sub-workflows: wrap each GENERATE so CALL PARALLEL can fan them out ──
+-- write_code and write_tests are both derived from @spec only (independent
+-- of each other), so there's no data dependency forcing them to run in
+-- sequence — dispatch both concurrently instead of paying for two
+-- sequential LLM round-trips.
+
+WORKFLOW gen_code
+  INPUT @spec TEXT
+  OUTPUT @code TEXT
+DO
+  GENERATE write_code(@spec) INTO @code;
+  RETURN @code
+END
+
+WORKFLOW gen_tests
+  INPUT @spec TEXT
+  OUTPUT @tests TEXT
+DO
+  GENERATE write_tests(@spec) INTO @tests;
+  RETURN @tests
+END
+
 -- ── WORKFLOW ─────────────────────────────────────────────────
 
 WORKFLOW code_pytest
@@ -258,13 +280,15 @@ DO
   LOGGING f"[code_pytest] start  run_id={@ts_safe}  max_tries={@max_tries}" LEVEL INFO
 
   -- ── Stage 1: LLM generates code AND tests independently from spec ──
-  -- Both are derived from the spec, not from each other.
+  -- Both are derived from the spec, not from each other, so they run
+  -- concurrently via CALL PARALLEL instead of two sequential round-trips.
   -- This independence is what makes the ASSERT gate meaningful.
-  LOGGING "[code_pytest] Stage 1 — LLM generating code and tests from spec" LEVEL INFO
-  GENERATE write_code(@spec) INTO @code;
-  LOGGING "[code_pytest] code generated" LEVEL INFO
-  GENERATE write_tests(@spec) INTO @tests;
-  LOGGING "[code_pytest] tests generated (independent of code)" LEVEL INFO
+  LOGGING "[code_pytest] Stage 1 — LLM generating code and tests from spec (parallel)" LEVEL INFO
+  CALL PARALLEL
+    gen_code(@spec)  INTO @code,
+    gen_tests(@spec) INTO @tests
+  END
+  LOGGING "[code_pytest] code and tests generated (independent of each other)" LEVEL INFO
 
   -- ── Stage 2: pytest executes; WHILE repairs on failure ─────────────
   LOGGING "[code_pytest] Stage 2 — pytest execution + repair loop" LEVEL INFO

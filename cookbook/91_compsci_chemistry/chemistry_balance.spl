@@ -257,7 +257,7 @@ Previous proposal:
 Error:
 {error_info}
 
-Fix the coefficients so every element's atom count matches exactly on
+Fix the coefficients so every element''s atom count matches exactly on
 both sides. Output ONLY the corrected equation in the same format:
 <coeff> <Formula1> + <coeff> <Formula2> -> <coeff> <Formula3> + ...
 No markdown fences, no commentary.
@@ -270,7 +270,7 @@ a general audience.
 
 Reaction: {problem}
 
-Verified result (JSON, independently checked so every element's atom
+Verified result (JSON, independently checked so every element''s atom
 count matches exactly between reactants and products — trust it
 completely, do not re-derive it):
 {solution_json}
