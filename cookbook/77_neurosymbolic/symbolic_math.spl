@@ -69,6 +69,7 @@ WORKFLOW neurosymbolic_solver
   INPUT @log_dir TEXT := "cookbook/77_neurosymbolic/logs-spl"
   INPUT @hostname TEXT := ""
   INPUT @pid TEXT := ""
+  INPUT @thinking_note TEXT := ""
   OUTPUT @result TEXT
 DO
   CALL lower(@enable_solver) INTO @solver_mode;
@@ -94,7 +95,7 @@ DO
         CALL write_file(f"{@log_dir}/chain_trace.md",
           "(solver disabled for this run — no verified chain; the LLM solved it unaided)\n") INTO NONE;
 
-        GENERATE solve_directly(@problem) INTO @result;
+        GENERATE solve_directly(@problem, @thinking_note) INTO @result;
         CALL trim(@result) INTO @result;
 
         EVALUATE @result
@@ -247,7 +248,7 @@ DO
             -- the chain engine (SymPy or Sage) is @backend ──
             LOGGING f"[arm=solver] Problem '{@problem}' — planning the chain (backend={@backend_lc}) ..." LEVEL INFO
 
-            GENERATE decompose_problem(@problem) WITH OUTPUT BUDGET 1500 TOKENS INTO @steps_text;
+            GENERATE decompose_problem(@problem, @thinking_note) WITH OUTPUT BUDGET 2500 TOKENS INTO @steps_text;
             CALL strip_fences(@steps_text) INTO @steps_text;
             CALL step_count(@steps_text) INTO @n_steps;
 
@@ -292,7 +293,7 @@ DO
 
             CALL write_file(f"{@log_dir}/chain_trace.md", @trace) INTO NONE;
 
-            GENERATE explain_chain(@problem, @trace) INTO @result;
+            GENERATE explain_chain(@problem, @trace, @thinking_note) INTO @result;
             CALL trim(@result) INTO @result;
 
             -- ── Native round-trip verification (Pattern 2, §Appendix I):

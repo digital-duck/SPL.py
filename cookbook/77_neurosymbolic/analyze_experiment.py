@@ -418,11 +418,22 @@ def fig_heatmap_solver(cells: dict, models: list[tuple], tiers: list[str],
 
     arr = np.array(matrix)
     fig, ax = plt.subplots(figsize=(5.5, 5))
-    sns.heatmap(arr, annot=True, fmt=".0f", cmap="YlGnBu",
+    # annot=False + manual ax.text(): seaborn 0.12.2's built-in annotator
+    # desyncs against matplotlib>=3.8's QuadMesh.get_array() flattening
+    # change and silently drops most cell labels. Draw them ourselves.
+    sns.heatmap(arr, annot=False, cmap="YlGnBu",
                 xticklabels=tiers, yticklabels=labels,
                 vmin=0, vmax=100, linewidths=0.5,
-                annot_kws={"fontsize": 9},
                 cbar_kws={"label": "Pass rate (%)", "shrink": 0.8}, ax=ax)
+    cmap = plt.get_cmap("YlGnBu")
+    for i in range(arr.shape[0]):
+        for j in range(arr.shape[1]):
+            v = arr[i, j]
+            r, g, b, _ = cmap(v / 100.0)
+            luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            text_color = "black" if luminance > 0.408 else "white"
+            ax.text(j + 0.5, i + 0.5, f"{v:.0f}", ha="center", va="center",
+                    fontsize=9, color=text_color)
     ax.set_title("Solver Arm Pass Rate: Model × Tier (%)", fontsize=11, pad=10)
     ax.set_xlabel("")
     ax.set_ylabel("")

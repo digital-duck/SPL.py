@@ -190,18 +190,32 @@ MODELS = {
     "m008": ("llama3.2",    "ollama:llama3.2",     "ollama"),
     "m009": ("lfm2.5",      "ollama:lfm2.5",       "ollama"),
     "m010": ("rnj-1",       "ollama:rnj-1",        "ollama"),   # Essential AI 8B STEM model
+    "m011": ("qwen3",       "ollama:qwen3",        "ollama"),   # thinking model — see THINKING_MODELS
+    "m012": ("deepseek-r1", "ollama:deepseek-r1",  "ollama"),   # thinking model — see THINKING_MODELS
 }
 
-# ── Thinking-mode models (reference, not used in experiments) ─────────────────
+# ── Thinking-mode handling ─────────────────────────────────────────────────────
 # Detected 2026-06-14 via scripts/detect_thinking_mode.py (probe: "what is 10!?").
 # These models run extended chain-of-thought by default and exhaust the token
 # budget before emitting structured output — incompatible with the expr|op
-# contract required by the solver arm.  Do not add to MODELS without first
-# disabling thinking mode (e.g. qwen3 /no_think flag, deepseek-r1 system prompt).
+# contract required by the solver arm, UNLESS thinking is suppressed.
+#
+# m011/m012 (qwen3, deepseek-r1) are included in MODELS above with thinking
+# suppressed via THINKING_NOTE, injected as a prompt-template parameter
+# (symbolic_math.spl's @thinking_note -> sympolic_tools.spl's decompose_problem/
+# solve_directly/explain_chain). Uniform mechanism across both models rather than
+# model-specific tricks (qwen3's /no_think token, Ollama's native "think" API
+# field) — decided 2026-07-25 for consistency and because the OpenAI-compatible
+# endpoint dd_llm's ollama adapter uses may not honor the native field anyway.
+# @thinking_note defaults to "" for every other model, so their prompts —
+# and therefore results — are byte-for-byte unchanged from prior runs.
+THINKING_MODELS = {"qwen3", "deepseek-r1"}
+THINKING_NOTE = "Disable thinking mode. Answer directly, with no <think> reasoning trace.\n\n"
+
+# Other known thinking models, not currently in MODELS (reference only —
+# would need the same @thinking_note treatment before inclusion).
 # id → (label, adapter, provider, indicator)
-MODELS_THINK = {
-    "t001": ("qwen3",        "ollama:qwen3",        "ollama", "Ollama thinking field"),
-    "t002": ("deepseek-r1",  "ollama:deepseek-r1",  "ollama", "Ollama thinking field"),
+MODELS_THINK_REFERENCE = {
     "t003": ("deepseek-r1:8b","ollama:deepseek-r1:8b","ollama","Ollama thinking field"),
     "t004": ("lfm2.5",       "ollama:lfm2.5",       "ollama", "found <think> tag"),
     "t005": ("qwen3.5:0.8b", "ollama:qwen3.5:0.8b", "ollama", "Ollama thinking field"),
@@ -604,6 +618,8 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                                  f" --param enable_solver={solver_mode}"
                                  f" --param pid={pid}"
                                  if use_solver_param else "")
+                        if label in THINKING_MODELS:
+                            extra += " --param thinking_note=<THINKING_NOTE>"
                         preview = (f"{binary} run {script} --kernel --llm {adapter}"
                                    f" --param problem=\"{problem[:55]}...\"{extra}")
                         click.echo(
@@ -668,11 +684,15 @@ def main(model_ids, problem_ids, solver_modes, backend, runs, script, log_dir,
                             cmd += ["--param", f"backend={cell_backend}",
                                     "--param", f"enable_solver={solver_mode}",
                                     "--param", f"pid={pid}"]
+                        if label in THINKING_MODELS:
+                            cmd += ["--param", f"thinking_note={THINKING_NOTE}"]
 
                         extra_md = (f" \\\n   --param backend={cell_backend}"
                                     f" \\\n   --param enable_solver={solver_mode}"
                                     f" \\\n   --param pid={pid}"
                                     if use_solver_param else "")
+                        if label in THINKING_MODELS:
+                            extra_md += " \\\n   --param thinking_note=<THINKING_NOTE>"
                         log.write(
                             f"\n## {label} ({provider})"
                             f" — backend={cell_backend}"

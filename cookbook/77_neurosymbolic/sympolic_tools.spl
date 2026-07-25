@@ -487,12 +487,15 @@ $$;
 
 -- ── Probabilistic regime: LLM prompt templates ───────────────
 
-CREATE FUNCTION decompose_problem(problem TEXT)
+CREATE FUNCTION decompose_problem(problem TEXT, thinking_note TEXT)
 RETURNS TEXT AS $$
-Translate this math problem into an ordered list of symbolic operations.
+{thinking_note}Translate this math problem into an ordered list of symbolic operations.
 
 Output format — one step per line, NOTHING ELSE:
   <expression>|<operation>
+
+The correct answer is always a short list of lines (rarely more than 5) — keep your
+entire response under 1000 tokens. A long response means you have gone wrong.
 
 STRICT OUTPUT RULES (violating any of these causes the pipeline to fail):
 - Plain text output ONLY — no code fences, no backticks, no markdown, no numbering
@@ -613,9 +616,9 @@ same digits, signs, exponents — and use PREV for every step after the first.
 Problem: {problem}
 $$;
 
-CREATE FUNCTION explain_chain(problem TEXT, trace TEXT)
+CREATE FUNCTION explain_chain(problem TEXT, trace TEXT, thinking_note TEXT)
 RETURNS TEXT AS $$
-A student asked: "{problem}"
+{thinking_note}A student asked: "{problem}"
 
 The symbolic math engine computed this chain of EXACT steps, in order:
 {trace}
@@ -627,9 +630,9 @@ Write a clear, friendly explanation in less than 6 sentences that:
 Do not re-derive any step — trust the computed chain above as exact.
 $$;
 
-CREATE FUNCTION solve_directly(problem TEXT)
+CREATE FUNCTION solve_directly(problem TEXT, thinking_note TEXT)
 RETURNS TEXT AS $$
-A student asked: "{problem}"
+{thinking_note}A student asked: "{problem}"
 
 There is NO symbolic math engine or proof assistant backing you up this
 time — every computation and every proof step must be done correctly by
