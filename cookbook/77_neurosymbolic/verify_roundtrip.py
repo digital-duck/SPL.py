@@ -64,7 +64,8 @@ def main():
     q = ",".join("?" * len(PIDS))
     sql = f"""SELECT id, mid, label, pid, tier, backend, status, pass, decomposition, output, runtime
               FROM results
-              WHERE pid IN ({q}) AND backend IN ('sympy','sage') AND solver = 'true'"""
+              WHERE pid IN ({q}) AND backend IN ('sympy','sage') AND solver = 'true'
+                AND has_thinking IS NOT 'Y'"""
     params = list(PIDS)
     if runtime_filter:
         sql += " AND runtime = ?"

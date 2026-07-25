@@ -50,6 +50,39 @@ def load_rows(conn: sqlite3.Connection, source: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def load_rows_pooled(conn: sqlite3.Connection, sources: list[str], *,
+                      backend: str | None = None,
+                      exclude_thinking: bool = True) -> list[dict]:
+    """
+    Load and concatenate rows from multiple source_files, for building a
+    pooled r=N dataset the way the paper's tables do it (e.g. repeated run +
+    a backend top-up + a model-specific re-run, all feeding the same
+    (mid, pid, solver) cells that aggregate() groups by).
+
+    exclude_thinking=True (default) drops rows tagged has_thinking='Y' ---
+    superseded thinking-enabled cells for a model that was later re-run with
+    thinking suppressed (see has_thinking column, added 2026-07-25). Rows
+    with has_thinking NULL (the default for every row not explicitly tagged)
+    are always included.
+
+    backend, if given ('sympy' or 'sage'), restricts to that backend's rows
+    --- use this to build the SymPy-only vs. Sage-only pools reported
+    separately in the paper (main text vs. Appendix K), since a single
+    session can contain both backends' problems.
+    """
+    q = ",".join("?" * len(sources))
+    sql = f"SELECT * FROM results WHERE source_file IN ({q})"
+    params: list = list(sources)
+    if backend:
+        sql += " AND backend = ?"
+        params.append(backend)
+    if exclude_thinking:
+        sql += " AND has_thinking IS NOT 'Y'"
+    sql += " ORDER BY mid, pid, solver, run"
+    rows = conn.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
 # ── Aggregation (handles -r 1 / -r 3 / -r 5) ─────────────────────────────────
 
 def aggregate(rows: list[dict]) -> dict:
@@ -397,7 +430,7 @@ def _check_plot_deps():
 
 
 def fig_heatmap_solver(cells: dict, models: list[tuple], tiers: list[str],
-                       out_dir: Path) -> Path:
+                       out_dir: Path, *, name: str = "recipe77-heatmap-latex") -> Path:
     """Solver arm pass-rate heatmap: models (rows) × tiers (columns)."""
     plt, sns, np = _check_plot_deps()
     from collections import defaultdict
@@ -442,25 +475,33 @@ def fig_heatmap_solver(cells: dict, models: list[tuple], tiers: list[str],
 
     fig.tight_layout()
     for ext in ("pdf", "png"):
-        p = out_dir / f"recipe77-heatmap-latex.{ext}"
+        p = out_dir / f"{name}.{ext}"
         fig.savefig(p, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"  [fig] heatmap → {out_dir}/recipe77-heatmap-latex.{{pdf,png}}")
-    return out_dir / "recipe77-heatmap-latex.pdf"
+    print(f"  [fig] heatmap → {out_dir}/{name}.{{pdf,png}}")
+    return out_dir / f"{name}.pdf"
 
 
-def fig_bootstrap_ci(conn: sqlite3.Connection, source: str,
-                     models: list[tuple], out_dir: Path) -> Path:
+def fig_bootstrap_ci(conn: sqlite3.Connection, sources: list[str],
+                     models: list[tuple], out_dir: Path, *,
+                     backend: str | None = None,
+                     exclude_thinking: bool = True) -> Path:
     """Bootstrap 95% CI bar chart for solver arm pass rates."""
     plt, sns, np = _check_plot_deps()
 
     rng = np.random.default_rng(42)
     labels_out, means, ci_lo, ci_hi = [], [], [], []
 
+    q = ",".join("?" * len(sources))
     for mid, label in models:
-        rows = conn.execute(
-            "SELECT pass FROM results WHERE source_file=? AND solver='true' AND mid=?",
-            (source, mid)).fetchall()
+        sql = f"SELECT pass FROM results WHERE source_file IN ({q}) AND solver='true' AND mid=?"
+        params: list = list(sources) + [mid]
+        if backend:
+            sql += " AND backend = ?"
+            params.append(backend)
+        if exclude_thinking:
+            sql += " AND has_thinking IS NOT 'Y'"
+        rows = conn.execute(sql, params).fetchall()
         passes = np.array([r[0] for r in rows])
         n = len(passes)
         obs = 100 * passes.mean()
@@ -533,16 +574,19 @@ def fig_pass_comparison(cells: dict, models: list[tuple], out_dir: Path) -> Path
     return out_dir / "recipe77-pass-comparison.pdf"
 
 
-def generate_figures(conn: sqlite3.Connection, source: str, rows: list[dict],
-                     out_dir: Path) -> str:
+def generate_figures(conn: sqlite3.Connection, sources: list[str], rows: list[dict],
+                     out_dir: Path, *, backend: str | None = None,
+                     exclude_thinking: bool = True,
+                     heatmap_name: str = "recipe77-heatmap-latex") -> str:
     """Generate all figures and return summary markdown."""
     out_dir.mkdir(parents=True, exist_ok=True)
     cells  = aggregate(rows)
     models = _sorted_models(cells)
     tiers  = _tiers_present(cells)
 
-    fig_heatmap_solver(cells, models, tiers, out_dir)
-    fig_bootstrap_ci(conn, source, models, out_dir)
+    fig_heatmap_solver(cells, models, tiers, out_dir, name=heatmap_name)
+    fig_bootstrap_ci(conn, sources, models, out_dir, backend=backend,
+                      exclude_thinking=exclude_thinking)
     fig_pass_comparison(cells, models, out_dir)
     return ""
 
@@ -556,6 +600,19 @@ def main() -> None:
                         help="Path to SQLite database (default: %(default)s)")
     parser.add_argument("--source", default=None,
                         help="Experiment source_file ID to analyze (default: latest)")
+    parser.add_argument("--sources", default=None,
+                        help="Comma-separated source_file IDs to pool (e.g. repeated run + "
+                             "a backend top-up + a model-specific re-run). Overrides --source. "
+                             "Rows tagged has_thinking='Y' are excluded from the pool by default "
+                             "(--include-thinking-tagged to keep them).")
+    parser.add_argument("--backend-filter", default=None, choices=["sympy", "sage", "lean"],
+                        help="Restrict pooled rows to one backend (for building the SymPy-only "
+                             "vs. Sage-only figure/CI pools reported separately in the paper).")
+    parser.add_argument("--include-thinking-tagged", action="store_true",
+                        help="Include has_thinking='Y' rows (superseded thinking-enabled cells) "
+                             "in the pool instead of excluding them.")
+    parser.add_argument("--heatmap-name", default="recipe77-heatmap-latex",
+                        help="Output filename stem for the heatmap figure (default: %(default)s)")
     parser.add_argument("--out", default=None,
                         help="Output .md path (default: stdout)")
     parser.add_argument("--list-sources", action="store_true",
@@ -581,14 +638,27 @@ def main() -> None:
                   f"{s['rows_inserted'] or '?':>6}  {s['imported_at']}")
         return
 
-    source = args.source or sources[0]["source_file"]
-    rows   = load_rows(conn, source)
+    exclude_thinking = not args.include_thinking_tagged
+
+    if args.sources:
+        source_list = [s.strip() for s in args.sources.split(",") if s.strip()]
+        rows = load_rows_pooled(conn, source_list, backend=args.backend_filter,
+                                 exclude_thinking=exclude_thinking)
+        source = "+".join(source_list)
+    else:
+        source_list = [args.source or sources[0]["source_file"]]
+        source = source_list[0]
+        rows = load_rows_pooled(conn, source_list, backend=args.backend_filter,
+                                 exclude_thinking=exclude_thinking)
     if not rows:
-        sys.exit(f"No rows found for source: {source}")
+        sys.exit(f"No rows found for source(s): {source}")
 
     if args.figures:
         fig_dir = Path(args.figures)
-        acc_md = generate_figures(conn, source, rows, fig_dir)
+        acc_md = generate_figures(conn, source_list, rows, fig_dir,
+                                   backend=args.backend_filter,
+                                   exclude_thinking=exclude_thinking,
+                                   heatmap_name=args.heatmap_name)
         print(f"\n{acc_md}")
 
     md = build_markdown(source, rows)

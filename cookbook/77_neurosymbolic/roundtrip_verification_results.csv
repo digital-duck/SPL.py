@@ -3189,3 +3189,1323 @@ id,mid,model,pid,tier,backend,runtime,pattern1_status,pattern1_pass,roundtrip_ve
 7095,m009,lfm2.5,p020,T5,sage,go,complete,1,ROUNDTRIP_FAIL,False,1/(s^2 + 4)
 7096,m009,lfm2.5,p020,T5,sage,go,plan_error,0,NOT_EXECUTED,,
 7097,m009,lfm2.5,p020,T5,sage,go,plan_error,0,NOT_EXECUTED,,
+7150,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7151,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7152,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7156,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7157,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7158,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7162,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7163,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7164,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7168,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7169,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7170,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7174,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7175,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7176,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7180,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7181,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7182,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7186,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7187,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7188,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7192,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7193,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7194,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7198,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7199,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7200,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7204,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7205,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7206,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7210,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7211,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7212,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7216,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7217,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7218,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7222,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7223,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7224,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7228,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7229,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7230,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7234,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7235,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7236,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7240,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7241,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7242,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7246,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7247,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7248,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7270,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24*x
+7271,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24*x
+7272,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24*x
+7276,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7277,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7278,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7282,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7283,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7284,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7288,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7289,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7290,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7294,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7295,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7296,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7300,m002,gemma3,p012,T1,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('-1/(2*(x + 1)) + 1/(2*(x - 1)) (pass-through)')
+7301,m002,gemma3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7302,m002,gemma3,p012,T1,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('-1/(2*(x + 1)) + 1/(2*(x - 1)) (pass-through)')
+7306,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7307,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7308,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7312,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7313,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7314,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7318,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7319,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7320,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7324,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7325,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7326,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7330,m002,gemma3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7331,m002,gemma3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7332,m002,gemma3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7336,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7337,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7338,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7342,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7343,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7344,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7348,m002,gemma3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7349,m002,gemma3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7350,m002,gemma3,p016,T3,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2] (pass-through)')"
+7354,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+7355,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+7356,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+7360,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+7361,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+7362,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+7366,m002,gemma3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7367,m002,gemma3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7368,m002,gemma3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7372,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+7373,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+7374,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+7378,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+7379,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+7380,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+7384,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7385,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7386,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7390,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7391,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7392,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7396,m003,gemma4:e2b,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,(x**3 - x - 1)/x
+7397,m003,gemma4:e2b,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7398,m003,gemma4:e2b,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7402,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7403,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7404,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7408,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7409,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7410,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7414,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7415,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7416,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7420,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7421,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7422,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7426,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7427,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7428,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7432,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7433,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7434,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7438,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7439,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7440,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7444,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7445,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7446,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7450,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+7451,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+7452,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+7456,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7457,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7458,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7462,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7463,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7464,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7468,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7469,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7470,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7474,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7475,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7476,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7480,m003,gemma4:e2b,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7481,m003,gemma4:e2b,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7482,m003,gemma4:e2b,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7486,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7487,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7488,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7492,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7493,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7494,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7498,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7499,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7500,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7504,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7505,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7506,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7510,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7511,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7512,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7516,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7517,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7518,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7522,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7523,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7524,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7528,m004,qwen2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7529,m004,qwen2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7530,m004,qwen2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7534,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7535,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7536,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7540,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+7541,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+7542,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+7546,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7547,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7548,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7552,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7553,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7554,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7558,m004,qwen2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7559,m004,qwen2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7560,m004,qwen2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7564,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7565,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7566,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7570,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7571,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7572,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7576,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7577,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7578,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7582,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7583,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7584,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7588,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7589,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7590,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_FAIL,False,x = []
+7594,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7595,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7596,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7600,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7601,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7602,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7606,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7607,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7608,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7612,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7613,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7614,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+7618,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7619,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7620,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7624,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7625,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7626,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7630,m005,deepseek-v2:16b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+7631,m005,deepseek-v2:16b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7632,m005,deepseek-v2:16b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7636,m005,deepseek-v2:16b,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7637,m005,deepseek-v2:16b,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7638,m005,deepseek-v2:16b,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7642,m005,deepseek-v2:16b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**2 + 2*x + 1
+7643,m005,deepseek-v2:16b,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7644,m005,deepseek-v2:16b,p002,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x + 1
+7648,m005,deepseek-v2:16b,p003,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,(3*x - 1)*(3*x + 1)
+7649,m005,deepseek-v2:16b,p003,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,(3*x - 1)*(3*x + 1)
+7650,m005,deepseek-v2:16b,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7654,m005,deepseek-v2:16b,p004,T1,sympy,python,complete,1,UNPARSEABLE,,"SyntaxError: invalid syntax (<string>, line 1) (rhs='0, which was obtained in a previous step (not explicitly stated here). (pass-through)')"
+7655,m005,deepseek-v2:16b,p004,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,3*x**2 - 12*x + 12
+7656,m005,deepseek-v2:16b,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7660,m005,deepseek-v2:16b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7661,m005,deepseek-v2:16b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7662,m005,deepseek-v2:16b,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,exp(x)
+7666,m005,deepseek-v2:16b,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7667,m005,deepseek-v2:16b,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7668,m005,deepseek-v2:16b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7672,m005,deepseek-v2:16b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7673,m005,deepseek-v2:16b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7674,m005,deepseek-v2:16b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7678,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7679,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7680,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7684,m005,deepseek-v2:16b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7685,m005,deepseek-v2:16b,p014,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('sin(x)**2 + cos(x)**2 (pass-through)')
+7686,m005,deepseek-v2:16b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7690,m005,deepseek-v2:16b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7691,m005,deepseek-v2:16b,p007,T3,sage,python,complete,1,UNPARSEABLE,,TypeError: unsupported operand type(s) for *: 'Add' and 'function' (rhs='1/2*(sqrt(-x^2 + 4)*x + 4*arcsin(1/2*x))*integrate + C')
+7692,m005,deepseek-v2:16b,p007,T3,sage,python,complete,1,UNPARSEABLE,,TypeError: unsupported operand type(s) for *: 'Add' and 'function' (rhs='1/2*(sqrt(-x^2 + 4)*x + 4*arcsin(1/2*x))*integrate + C')
+7696,m005,deepseek-v2:16b,p008,T3,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('No steps provided in question (pass-through)')
+7697,m005,deepseek-v2:16b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7698,m005,deepseek-v2:16b,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7702,m005,deepseek-v2:16b,p015,T3,sage,python,complete,1,UNPARSEABLE,,"ValueError: cannot locate x,y in decomposition or output: 'y + 1' (rhs='y + 1')"
+7703,m005,deepseek-v2:16b,p015,T3,sage,python,complete,1,UNPARSEABLE,,"ValueError: cannot locate x,y in decomposition or output: '1/6*x^3 + 1/2*x^2*y' (rhs='1/6*x^3 + 1/2*x^2*y')"
+7704,m005,deepseek-v2:16b,p015,T3,sage,python,complete,1,UNPARSEABLE,,"ValueError: cannot locate x,y in decomposition or output: 'Eq(y(x), C1*exp(x))' (rhs='Eq(y(x), C1*exp(x))')"
+7708,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7709,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7710,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7714,m005,deepseek-v2:16b,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7715,m005,deepseek-v2:16b,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7716,m005,deepseek-v2:16b,p009,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('laplace (pass-through)')
+7720,m005,deepseek-v2:16b,p017,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,"Eq(y(x), C1)"
+7721,m005,deepseek-v2:16b,p017,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,"Eq(y(x), C1)"
+7722,m005,deepseek-v2:16b,p017,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,"Eq(y(x), C1)"
+7726,m005,deepseek-v2:16b,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7727,m005,deepseek-v2:16b,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7728,m005,deepseek-v2:16b,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7732,m005,deepseek-v2:16b,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7733,m005,deepseek-v2:16b,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7734,m005,deepseek-v2:16b,p019,T4,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('""diff(x**4 - 1)"" (pass-through)')"
+7738,m005,deepseek-v2:16b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7739,m005,deepseek-v2:16b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7740,m005,deepseek-v2:16b,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('No steps provided in problem description (pass-through)')
+7744,m005,deepseek-v2:16b,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7745,m005,deepseek-v2:16b,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7746,m005,deepseek-v2:16b,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,-1/(s^2 + 4)
+7750,m006,phi3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+7751,m006,phi3,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7752,m006,phi3,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7756,m006,phi3,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7757,m006,phi3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+7758,m006,phi3,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7762,m006,phi3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7763,m006,phi3,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7764,m006,phi3,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7768,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7769,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7770,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7774,m006,phi3,p004,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x = []
+7775,m006,phi3,p004,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x - 2
+7776,m006,phi3,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7780,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7781,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7782,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+7786,m006,phi3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7787,m006,phi3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7788,m006,phi3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7792,m006,phi3,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7793,m006,phi3,p006,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('1 (pass-through)')
+7794,m006,phi3,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7798,m006,phi3,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7799,m006,phi3,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7800,m006,phi3,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7804,m006,phi3,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7805,m006,phi3,p014,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,sin(x)
+7806,m006,phi3,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+7810,m006,phi3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7811,m006,phi3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7812,m006,phi3,p007,T3,sage,python,complete,1,UNPARSEABLE,,"TokenError: ('EOF in multi-line statement', (2, 0)) (rhs='4 m/s². Represent everything in terms of natural logarithm base e.) as your starting point if needed after expanding.) as your starting point.) as your starting point if needed after finding a potential singularity. (pass-through)')"
+7816,m006,phi3,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7817,m006,phi3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7818,m006,phi3,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7822,m006,phi3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7823,m006,phi3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7824,m006,phi3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7828,m006,phi3,p016,T3,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2] (pass-through)')"
+7829,m006,phi3,p016,T3,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2] (pass-through)')"
+7830,m006,phi3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7834,m006,phi3,p009,T4,sage,python,complete,1,UNPARSEABLE,,TypeError: unsupported operand type(s) for -: 'list' and 'Pow' (rhs='x = []')
+7835,m006,phi3,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7836,m006,phi3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7840,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7841,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7842,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7846,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7847,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7848,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7852,m006,phi3,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7853,m006,phi3,p019,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,x = []
+7854,m006,phi3,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7858,m006,phi3,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7859,m006,phi3,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7860,m006,phi3,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7864,m006,phi3,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7865,m006,phi3,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/(s^2 + 4)
+7866,m006,phi3,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+7870,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+7871,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+7872,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+7876,m007,phi4,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7877,m007,phi4,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7878,m007,phi4,p011,T0,sympy,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('(Note: The task only requires one step of operation based on the problem statement. However, additional steps are provided to illustrate a sequence of operations that could be applied in practice.) (pass-through)')"
+7882,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7883,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7884,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+7888,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7889,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7890,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+7894,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7895,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7896,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+7900,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-x**4 - x**2 - 1
+7901,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+7902,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1
+7906,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7907,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7908,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+7912,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7913,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7914,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7918,m007,phi4,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7919,m007,phi4,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+7920,m007,phi4,p013,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('x**5/120 - x**3/6 + x (pass-through)')
+7924,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7925,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7926,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+7930,m007,phi4,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+7931,m007,phi4,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7932,m007,phi4,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+7936,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7937,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7938,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+7942,m007,phi4,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7943,m007,phi4,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+7944,m007,phi4,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+7948,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7949,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7950,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+7954,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7955,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7956,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+7960,m007,phi4,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7961,m007,phi4,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7962,m007,phi4,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+7966,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7967,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7968,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+7972,m007,phi4,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+7973,m007,phi4,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+7974,m007,phi4,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+7978,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7979,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7980,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+7984,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7985,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7986,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+7990,m008,llama3.2,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7991,m008,llama3.2,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+7992,m008,llama3.2,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7996,m008,llama3.2,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+7997,m008,llama3.2,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x - 1 - 1/x
+7998,m008,llama3.2,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+8002,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8003,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8004,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8008,m008,llama3.2,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8009,m008,llama3.2,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+8010,m008,llama3.2,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8014,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8015,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8016,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8020,m008,llama3.2,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8021,m008,llama3.2,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+8022,m008,llama3.2,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8026,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8027,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8028,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8032,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8033,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8034,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8038,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x**5/24 - 5*x**3/6 + 5*x
+8039,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8040,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8044,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8045,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8046,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8050,m008,llama3.2,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+8051,m008,llama3.2,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8052,m008,llama3.2,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+8056,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8057,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8058,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8062,m008,llama3.2,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8063,m008,llama3.2,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+8064,m008,llama3.2,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8068,m008,llama3.2,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8069,m008,llama3.2,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+8070,m008,llama3.2,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8074,m008,llama3.2,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+8075,m008,llama3.2,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+8076,m008,llama3.2,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+8080,m008,llama3.2,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8081,m008,llama3.2,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8082,m008,llama3.2,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+8086,m008,llama3.2,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8087,m008,llama3.2,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+8088,m008,llama3.2,p018,T4,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('1/summation(n,1,oo) (pass-through)')"
+8092,m008,llama3.2,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+8093,m008,llama3.2,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8094,m008,llama3.2,p019,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,x^4 - 1
+8098,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8099,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8100,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8104,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8105,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8106,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/(s + 2)
+8110,m009,lfm2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8111,m009,lfm2.5,p001,T0,sympy,python,plan_error,0,NOT_EXECUTED,,
+8112,m009,lfm2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8116,m009,lfm2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+8117,m009,lfm2.5,p011,T0,sympy,python,plan_error,0,NOT_EXECUTED,,
+8118,m009,lfm2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+8122,m009,lfm2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8123,m009,lfm2.5,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8124,m009,lfm2.5,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8128,m009,lfm2.5,p003,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8129,m009,lfm2.5,p003,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8130,m009,lfm2.5,p003,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8134,m009,lfm2.5,p004,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8135,m009,lfm2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8136,m009,lfm2.5,p004,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8140,m009,lfm2.5,p012,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+8141,m009,lfm2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+8142,m009,lfm2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+8146,m009,lfm2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8147,m009,lfm2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8148,m009,lfm2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8152,m009,lfm2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8153,m009,lfm2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8154,m009,lfm2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8158,m009,lfm2.5,p013,T2,sympy,python,plan_error,0,NOT_EXECUTED,,
+8159,m009,lfm2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8160,m009,lfm2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,sin(x)
+8164,m009,lfm2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8165,m009,lfm2.5,p014,T2,sympy,python,plan_error,0,NOT_EXECUTED,,
+8166,m009,lfm2.5,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+8170,m009,lfm2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+8171,m009,lfm2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+8172,m009,lfm2.5,p007,T3,sage,python,narration_error,0,NOT_EXECUTED,,
+8176,m009,lfm2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8177,m009,lfm2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8178,m009,lfm2.5,p008,T3,sage,python,plan_error,0,NOT_EXECUTED,,
+8182,m009,lfm2.5,p015,T3,sage,python,plan_error,0,NOT_EXECUTED,,
+8183,m009,lfm2.5,p015,T3,sage,python,complete,1,UNPARSEABLE,,"ValueError: cannot locate x,y in decomposition or output: '[' (rhs='[')"
+8184,m009,lfm2.5,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8188,m009,lfm2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+8189,m009,lfm2.5,p016,T3,sage,python,plan_error,0,NOT_EXECUTED,,
+8190,m009,lfm2.5,p016,T3,sage,python,plan_error,0,NOT_EXECUTED,,
+8194,m009,lfm2.5,p009,T4,sage,python,narration_error,0,NOT_EXECUTED,,
+8195,m009,lfm2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+8196,m009,lfm2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+8200,m009,lfm2.5,p017,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+8201,m009,lfm2.5,p017,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+8202,m009,lfm2.5,p017,T4,sage,python,complete,1,UNPARSEABLE,,"SyntaxError: invalid syntax (<string>, line 1) (rhs='0 (pass-through)')"
+8206,m009,lfm2.5,p018,T4,sage,python,narration_error,0,NOT_EXECUTED,,
+8207,m009,lfm2.5,p018,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+8208,m009,lfm2.5,p018,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('1/n**2 (pass-through)')
+8212,m009,lfm2.5,p019,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+8213,m009,lfm2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+8214,m009,lfm2.5,p019,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+8218,m009,lfm2.5,p010,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+8219,m009,lfm2.5,p010,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+8220,m009,lfm2.5,p010,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+8224,m009,lfm2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8225,m009,lfm2.5,p020,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+8226,m009,lfm2.5,p020,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+8230,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8231,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+8232,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8236,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x**2 - 1
+8237,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x**2 - 1
+8238,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+8242,m010,rnj-1,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8243,m010,rnj-1,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8244,m010,rnj-1,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+8248,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+8249,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+8250,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+8254,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8255,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8256,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+8260,m010,rnj-1,p012,T1,sympy,python,complete,1,UNPARSEABLE,,"TypeError: unsupported operand type(s) for -: 'list' and 'Pow' (rhs='[(-1, y, z), (1, y, z)]')"
+8261,m010,rnj-1,p012,T1,sympy,python,complete,1,UNPARSEABLE,,TypeError: unsupported operand type(s) for -: 'dict' and 'Pow' (rhs='{x: 0}')
+8262,m010,rnj-1,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+8266,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8267,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8268,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+8272,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8273,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8274,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8278,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8279,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8280,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+8284,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8285,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8286,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+8290,m010,rnj-1,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+8291,m010,rnj-1,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+8292,m010,rnj-1,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8296,m010,rnj-1,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8297,m010,rnj-1,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8298,m010,rnj-1,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+8302,m010,rnj-1,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+8303,m010,rnj-1,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+8304,m010,rnj-1,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8308,m010,rnj-1,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+8309,m010,rnj-1,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+8310,m010,rnj-1,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+8314,m010,rnj-1,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8315,m010,rnj-1,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8316,m010,rnj-1,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8320,m010,rnj-1,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+8321,m010,rnj-1,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+8322,m010,rnj-1,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+8326,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+8327,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+8328,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+8332,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+8333,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+8334,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+8338,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8339,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8340,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8344,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8345,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1
+8346,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8350,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+8351,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+8352,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+8356,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8357,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8358,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+8362,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8363,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8364,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+8997,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8998,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+8999,m001,sonnet-4-6,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9003,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9004,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9005,m001,sonnet-4-6,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9009,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9010,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9011,m001,sonnet-4-6,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9015,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9016,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9017,m001,sonnet-4-6,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9021,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9022,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9023,m001,sonnet-4-6,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9027,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9028,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9029,m001,sonnet-4-6,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9033,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9034,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9035,m001,sonnet-4-6,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9039,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9040,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9041,m001,sonnet-4-6,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9045,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9046,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9047,m001,sonnet-4-6,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9051,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9052,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9053,m001,sonnet-4-6,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9057,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24*x
+9058,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24
+9059,m002,gemma3,p001,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,24*x
+9063,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9064,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9065,m002,gemma3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9069,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9070,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9071,m002,gemma3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9075,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9076,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9077,m002,gemma3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9081,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9082,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9083,m002,gemma3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9087,m002,gemma3,p012,T1,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('-1/(2*(x + 1)) + 1/(2*(x - 1)) (pass-through)')
+9088,m002,gemma3,p012,T1,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('-1/(2*(x + 1)) + 1/(2*(x - 1)) (pass-through)')
+9089,m002,gemma3,p012,T1,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('-1/(2*(x + 1)) + 1/(2*(x - 1)) (pass-through)')
+9093,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9094,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9095,m002,gemma3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9099,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9100,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9101,m002,gemma3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9105,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9106,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9107,m002,gemma3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9111,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9112,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9113,m002,gemma3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9117,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9118,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9119,m003,gemma4:e2b,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9123,m003,gemma4:e2b,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9124,m003,gemma4:e2b,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9125,m003,gemma4:e2b,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9129,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9130,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9131,m003,gemma4:e2b,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9135,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9136,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9137,m003,gemma4:e2b,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9141,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9142,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9143,m003,gemma4:e2b,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9147,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9148,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9149,m003,gemma4:e2b,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9153,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9154,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9155,m003,gemma4:e2b,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9159,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9160,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9161,m003,gemma4:e2b,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9165,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9166,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9167,m003,gemma4:e2b,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9171,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9172,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9173,m003,gemma4:e2b,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9177,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9178,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9179,m004,qwen2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9183,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9184,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9185,m004,qwen2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9189,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9190,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9191,m004,qwen2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9195,m004,qwen2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9196,m004,qwen2.5,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9197,m004,qwen2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9201,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9202,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9203,m004,qwen2.5,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9207,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+9208,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+9209,m004,qwen2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-1 + x**(-2)
+9213,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9214,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9215,m004,qwen2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9219,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9220,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9221,m004,qwen2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9225,m004,qwen2.5,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9226,m004,qwen2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9227,m004,qwen2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9231,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9232,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9233,m004,qwen2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9237,m005,deepseek-v2:16b,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9238,m005,deepseek-v2:16b,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9239,m005,deepseek-v2:16b,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9243,m005,deepseek-v2:16b,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9244,m005,deepseek-v2:16b,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,1
+9245,m005,deepseek-v2:16b,p011,T0,sympy,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('""diff((), x)"" (pass-through)')"
+9249,m005,deepseek-v2:16b,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9250,m005,deepseek-v2:16b,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9251,m005,deepseek-v2:16b,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9255,m005,deepseek-v2:16b,p003,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,18*x
+9256,m005,deepseek-v2:16b,p003,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x*(3*x**2 - 1)
+9257,m005,deepseek-v2:16b,p003,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x**2*(3*x**2 - 2)/4
+9261,m005,deepseek-v2:16b,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9262,m005,deepseek-v2:16b,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9263,m005,deepseek-v2:16b,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9267,m005,deepseek-v2:16b,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9268,m005,deepseek-v2:16b,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,-2*x/(x**2 - 1)**2
+9269,m005,deepseek-v2:16b,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9273,m005,deepseek-v2:16b,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9274,m005,deepseek-v2:16b,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9275,m005,deepseek-v2:16b,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9279,m005,deepseek-v2:16b,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9280,m005,deepseek-v2:16b,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9281,m005,deepseek-v2:16b,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9285,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9286,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9287,m005,deepseek-v2:16b,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9291,m005,deepseek-v2:16b,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9292,m005,deepseek-v2:16b,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9293,m005,deepseek-v2:16b,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9297,m006,phi3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9298,m006,phi3,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9299,m006,phi3,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9303,m006,phi3,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9304,m006,phi3,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9305,m006,phi3,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9309,m006,phi3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9310,m006,phi3,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9311,m006,phi3,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9315,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9316,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9317,m006,phi3,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9321,m006,phi3,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9322,m006,phi3,p004,T1,sympy,python,complete,1,UNPARSEABLE,,"AttributeError: 'Tuple' object has no attribute 'as_coeff_Mul' (rhs='[(2, y, z)]')"
+9323,m006,phi3,p004,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9327,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9328,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9329,m006,phi3,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9333,m006,phi3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9334,m006,phi3,p005,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9335,m006,phi3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9339,m006,phi3,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9340,m006,phi3,p006,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9341,m006,phi3,p006,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('1 (pass-through)')
+9345,m006,phi3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9346,m006,phi3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9347,m006,phi3,p013,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9351,m006,phi3,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9352,m006,phi3,p014,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,sin(x)
+9353,m006,phi3,p014,T2,sympy,python,solver_error,0,NOT_EXECUTED,,
+9357,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9358,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9359,m007,phi4,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9363,m007,phi4,p011,T0,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x = -1
+9364,m007,phi4,p011,T0,sympy,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('(Note: The steps are a logical sequence of operations to simplify the expression, starting with an initial simplification and followed by factorization and other potential simplifications.) (pass-through)')"
+9365,m007,phi4,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9369,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9370,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9371,m007,phi4,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9375,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9376,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9377,m007,phi4,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9381,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9382,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9383,m007,phi4,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9387,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,1/(x**2 - 1)
+9388,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9389,m007,phi4,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,1/(x**2 - 1)
+9393,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9394,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9395,m007,phi4,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9399,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9400,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9401,m007,phi4,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9405,m007,phi4,p013,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('x**5/120 - x**3/6 + x (pass-through)')
+9406,m007,phi4,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9407,m007,phi4,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9411,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9412,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9413,m007,phi4,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9417,m008,llama3.2,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9418,m008,llama3.2,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9419,m008,llama3.2,p001,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9423,m008,llama3.2,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9424,m008,llama3.2,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9425,m008,llama3.2,p011,T0,sympy,python,solver_error,0,NOT_EXECUTED,,
+9429,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9430,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9431,m008,llama3.2,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9435,m008,llama3.2,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9436,m008,llama3.2,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9437,m008,llama3.2,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9441,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9442,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9443,m008,llama3.2,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9447,m008,llama3.2,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9448,m008,llama3.2,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9449,m008,llama3.2,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9453,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9454,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9455,m008,llama3.2,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9459,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9460,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9461,m008,llama3.2,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9465,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9466,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9467,m008,llama3.2,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9471,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,sin(x)**2
+9472,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9473,m008,llama3.2,p014,T2,sympy,python,complete,1,ROUNDTRIP_FAIL,False,x/2 - sin(2*x)/4
+9477,m009,lfm2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9478,m009,lfm2.5,p001,T0,sympy,python,narration_error,0,NOT_EXECUTED,,
+9479,m009,lfm2.5,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+9483,m009,lfm2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9484,m009,lfm2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9485,m009,lfm2.5,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9489,m009,lfm2.5,p002,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9490,m009,lfm2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9491,m009,lfm2.5,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9495,m009,lfm2.5,p003,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+9496,m009,lfm2.5,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9497,m009,lfm2.5,p003,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9501,m009,lfm2.5,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9502,m009,lfm2.5,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9503,m009,lfm2.5,p004,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+9507,m009,lfm2.5,p012,T1,sympy,python,plan_error,0,NOT_EXECUTED,,
+9508,m009,lfm2.5,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+9509,m009,lfm2.5,p012,T1,sympy,python,unknown,0,NOT_EXECUTED,,
+9513,m009,lfm2.5,p005,T2,sympy,python,unknown,0,NOT_EXECUTED,,
+9514,m009,lfm2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9515,m009,lfm2.5,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9519,m009,lfm2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9520,m009,lfm2.5,p006,T2,sympy,python,plan_error,0,NOT_EXECUTED,,
+9521,m009,lfm2.5,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9525,m009,lfm2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9526,m009,lfm2.5,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x - x**3/6 + x**5/120 + O(x**6)
+9527,m009,lfm2.5,p013,T2,sympy,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('series sin(x) (pass-through)')
+9531,m009,lfm2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9532,m009,lfm2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9533,m009,lfm2.5,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9537,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9538,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9539,m010,rnj-1,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x*(x**2 - 1)
+9543,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9544,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9545,m010,rnj-1,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+9549,m010,rnj-1,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9550,m010,rnj-1,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9551,m010,rnj-1,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+9555,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9556,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9557,m010,rnj-1,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+9561,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9562,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9563,m010,rnj-1,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+9567,m010,rnj-1,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,1/(x**2 - 1)
+9568,m010,rnj-1,p012,T1,sympy,python,complete,1,ROUNDTRIP_FAIL,False,1 - x**2
+9569,m010,rnj-1,p012,T1,sympy,python,solver_error,0,NOT_EXECUTED,,
+9573,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9574,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9575,m010,rnj-1,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+9579,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9580,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9581,m010,rnj-1,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9585,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9586,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9587,m010,rnj-1,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+9591,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9592,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9593,m010,rnj-1,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+9657,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9658,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9659,m001,sonnet-4-6,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9663,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9664,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9665,m001,sonnet-4-6,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9669,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9670,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9671,m001,sonnet-4-6,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9675,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9676,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9677,m001,sonnet-4-6,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9681,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9682,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9683,m001,sonnet-4-6,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9687,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9688,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9689,m001,sonnet-4-6,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9693,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9694,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9695,m001,sonnet-4-6,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9699,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9700,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9701,m001,sonnet-4-6,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9705,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9706,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9707,m001,sonnet-4-6,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9711,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9712,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9713,m001,sonnet-4-6,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9717,m002,gemma3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+9718,m002,gemma3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9719,m002,gemma3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9723,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9724,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9725,m002,gemma3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9729,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9730,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9731,m002,gemma3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9735,m002,gemma3,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9736,m002,gemma3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9737,m002,gemma3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9741,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+9742,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+9743,m002,gemma3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+9747,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+9748,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+9749,m002,gemma3,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1*exp(x) (already solved — pass-through)')
+9753,m002,gemma3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9754,m002,gemma3,p018,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('1/6*pi^2 (pass-through)')
+9755,m002,gemma3,p018,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('1/6*pi^2 (pass-through)')
+9759,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9760,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9761,m002,gemma3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+9765,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+9766,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+9767,m002,gemma3,p010,T5,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('(C1 + C2*exp(x))*exp(x) (already solved — pass-through)')
+9771,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9772,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9773,m002,gemma3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9777,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+9778,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+9779,m003,gemma4:e2b,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+9783,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9784,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9785,m003,gemma4:e2b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9789,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9790,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9791,m003,gemma4:e2b,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9795,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9796,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9797,m003,gemma4:e2b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9801,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9802,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9803,m003,gemma4:e2b,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9807,m003,gemma4:e2b,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9808,m003,gemma4:e2b,p017,T4,sage,python,complete,1,UNPARSEABLE,,no final line/rhs extractable ('C1 (already solved — pass-through)')
+9809,m003,gemma4:e2b,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9813,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9814,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9815,m003,gemma4:e2b,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+9819,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9820,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9821,m003,gemma4:e2b,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9825,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9826,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9827,m003,gemma4:e2b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9831,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9832,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9833,m003,gemma4:e2b,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9837,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9838,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9839,m004,qwen2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+9843,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9844,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9845,m004,qwen2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9849,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9850,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9851,m004,qwen2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+9855,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9856,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9857,m004,qwen2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9861,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9862,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9863,m004,qwen2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+9867,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9868,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9869,m004,qwen2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+9873,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9874,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9875,m004,qwen2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9879,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9880,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9881,m004,qwen2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+9885,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9886,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9887,m004,qwen2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9891,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9892,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9893,m004,qwen2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+9897,m005,deepseek-v2:16b,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9898,m005,deepseek-v2:16b,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9899,m005,deepseek-v2:16b,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9903,m005,deepseek-v2:16b,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9904,m005,deepseek-v2:16b,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9905,m005,deepseek-v2:16b,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9909,m005,deepseek-v2:16b,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9910,m005,deepseek-v2:16b,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9911,m005,deepseek-v2:16b,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9915,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9916,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9917,m005,deepseek-v2:16b,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+9921,m005,deepseek-v2:16b,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9922,m005,deepseek-v2:16b,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9923,m005,deepseek-v2:16b,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9927,m005,deepseek-v2:16b,p017,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,"Eq(y(x), C1)"
+9928,m005,deepseek-v2:16b,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9929,m005,deepseek-v2:16b,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9933,m005,deepseek-v2:16b,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9934,m005,deepseek-v2:16b,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9935,m005,deepseek-v2:16b,p018,T4,sage,python,complete,1,UNPARSEABLE,,"SyntaxError: invalid syntax (<string>, line 1) (rhs='1 to infinity then simplify the result (pass-through)')"
+9939,m005,deepseek-v2:16b,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9940,m005,deepseek-v2:16b,p019,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+9941,m005,deepseek-v2:16b,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9945,m005,deepseek-v2:16b,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+9946,m005,deepseek-v2:16b,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+9947,m005,deepseek-v2:16b,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+9951,m005,deepseek-v2:16b,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+9952,m005,deepseek-v2:16b,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+9953,m005,deepseek-v2:16b,p020,T5,sage,python,complete,1,UNPARSEABLE,,"TypeError: can't multiply sequence by non-int of type 'Mul' (rhs='ilt(compute*four*inverse*laplace*of*over*plus*s^2*squared*the*transform, s, t)')"
+9957,m006,phi3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9958,m006,phi3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9959,m006,phi3,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9963,m006,phi3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9964,m006,phi3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9965,m006,phi3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+9969,m006,phi3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9970,m006,phi3,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9971,m006,phi3,p015,T3,sage,python,unknown,0,NOT_EXECUTED,,
+9975,m006,phi3,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9976,m006,phi3,p016,T3,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2] (pass-through)')"
+9977,m006,phi3,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+9981,m006,phi3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,e^(-2*t)
+9982,m006,phi3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/((s + 2)*s)
+9983,m006,phi3,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,e^(-2*t)
+9987,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9988,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9989,m006,phi3,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9993,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9994,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9995,m006,phi3,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+9999,m006,phi3,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10000,m006,phi3,p019,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10001,m006,phi3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [-I, I, -1, 1]"
+10005,m006,phi3,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10006,m006,phi3,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10007,m006,phi3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10011,m006,phi3,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10012,m006,phi3,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10013,m006,phi3,p020,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10017,m007,phi4,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10018,m007,phi4,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+10019,m007,phi4,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+10023,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10024,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10025,m007,phi4,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10029,m007,phi4,p015,T3,sage,python,complete,1,ROUNDTRIP_FAIL,False,[
+10030,m007,phi4,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10031,m007,phi4,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10035,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10036,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10037,m007,phi4,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10041,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10042,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10043,m007,phi4,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10047,m007,phi4,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10048,m007,phi4,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10049,m007,phi4,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10053,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10054,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10055,m007,phi4,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10059,m007,phi4,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-I, I, -1, 1]"
+10060,m007,phi4,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+10061,m007,phi4,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+10065,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10066,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10067,m007,phi4,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10071,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10072,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10073,m007,phi4,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10077,m008,llama3.2,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+10078,m008,llama3.2,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+10079,m008,llama3.2,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x)
+10083,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10084,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_FAIL,False,-cos(x)
+10085,m008,llama3.2,p008,T3,sage,python,complete,1,ROUNDTRIP_FAIL,False,-cos(x)
+10089,m008,llama3.2,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10090,m008,llama3.2,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10091,m008,llama3.2,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10095,m008,llama3.2,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10096,m008,llama3.2,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10097,m008,llama3.2,p016,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10101,m008,llama3.2,p009,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10102,m008,llama3.2,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10103,m008,llama3.2,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10107,m008,llama3.2,p017,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10108,m008,llama3.2,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10109,m008,llama3.2,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10113,m008,llama3.2,p018,T4,sage,python,complete,1,UNPARSEABLE,,"TokenError: ('EOF in multi-line statement', (2, 0)) (rhs='1,oo) (pass-through)')"
+10114,m008,llama3.2,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10115,m008,llama3.2,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10119,m008,llama3.2,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10120,m008,llama3.2,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10121,m008,llama3.2,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10125,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10126,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10127,m008,llama3.2,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10131,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/(s^2 + 4)
+10132,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/(s^2 + 4)
+10133,m008,llama3.2,p020,T5,sage,python,complete,1,ROUNDTRIP_FAIL,False,1/(s + 2)
+10137,m009,lfm2.5,p007,T3,sage,python,narration_error,0,NOT_EXECUTED,,
+10138,m009,lfm2.5,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10139,m009,lfm2.5,p007,T3,sage,python,narration_error,0,NOT_EXECUTED,,
+10143,m009,lfm2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10144,m009,lfm2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10145,m009,lfm2.5,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10149,m009,lfm2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10150,m009,lfm2.5,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10151,m009,lfm2.5,p015,T3,sage,python,plan_error,0,NOT_EXECUTED,,
+10155,m009,lfm2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10156,m009,lfm2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10157,m009,lfm2.5,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10161,m009,lfm2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10162,m009,lfm2.5,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10163,m009,lfm2.5,p009,T4,sage,python,narration_error,0,NOT_EXECUTED,,
+10167,m009,lfm2.5,p017,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+10168,m009,lfm2.5,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10169,m009,lfm2.5,p017,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+10173,m009,lfm2.5,p018,T4,sage,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('summation(1/n**2, (n, 1, oo)) (pass-through)')"
+10174,m009,lfm2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10175,m009,lfm2.5,p018,T4,sage,python,solver_error,0,NOT_EXECUTED,,
+10179,m009,lfm2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10180,m009,lfm2.5,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"[I, -1, -I, 1]"
+10181,m009,lfm2.5,p019,T4,sage,python,plan_error,0,NOT_EXECUTED,,
+10185,m009,lfm2.5,p010,T5,sage,python,solver_error,0,NOT_EXECUTED,,
+10186,m009,lfm2.5,p010,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+10187,m009,lfm2.5,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10191,m009,lfm2.5,p020,T5,sage,python,plan_error,0,NOT_EXECUTED,,
+10192,m009,lfm2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10193,m009,lfm2.5,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10197,m010,rnj-1,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10198,m010,rnj-1,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10199,m010,rnj-1,p007,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10203,m010,rnj-1,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10204,m010,rnj-1,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10205,m010,rnj-1,p008,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10209,m010,rnj-1,p015,T3,sage,python,complete,1,UNPARSEABLE,,"ValueError: cannot locate x,y in decomposition or output: '[' (rhs='[')"
+10210,m010,rnj-1,p015,T3,sage,python,solver_error,0,NOT_EXECUTED,,
+10211,m010,rnj-1,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10215,m010,rnj-1,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10216,m010,rnj-1,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10217,m010,rnj-1,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10221,m010,rnj-1,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,-2/s
+10222,m010,rnj-1,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10223,m010,rnj-1,p009,T4,sage,python,complete,1,ROUNDTRIP_FAIL,False,e^(-2*t)
+10227,m010,rnj-1,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10228,m010,rnj-1,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10229,m010,rnj-1,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10233,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10234,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10235,m010,rnj-1,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10239,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10240,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10241,m010,rnj-1,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [-I, I, -1, 1]"
+10245,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10246,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10247,m010,rnj-1,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10251,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10252,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10253,m010,rnj-1,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10317,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10318,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10319,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10320,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10321,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10322,m011,qwen3,p001,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,4*x**3 - 4*x
+10329,m011,qwen3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+10330,m011,qwen3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+10331,m011,qwen3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+10332,m011,qwen3,p011,T0,sympy,python,complete,1,UNPARSEABLE,,"no final line/rhs extractable ('To simplify the expression $\\frac{x^2 - 1}{x - 1}$, we recognize that both the numerator and denominator are polynomials. The numerator, $x^2 - 1$, is a difference of squares and (pass-through)')"
+10333,m011,qwen3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+10334,m011,qwen3,p011,T0,sympy,python,complete,1,ROUNDTRIP_PASS,True,x + 1
+10341,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10342,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10343,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10344,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10345,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10346,m011,qwen3,p002,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,(x + 1)**2
+10353,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10354,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10355,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10356,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10357,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10358,m011,qwen3,p003,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,"x = [-1/3, 1/3]"
+10365,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10366,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10367,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10368,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10369,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10370,m011,qwen3,p004,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,x = 2
+10377,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10378,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10379,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10380,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10381,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10382,m011,qwen3,p012,T1,sympy,python,complete,1,ROUNDTRIP_PASS,True,-1/(2*(x + 1)) + 1/(2*(x - 1))
+10389,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10390,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10391,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10392,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10393,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10394,m011,qwen3,p005,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,exp(x)
+10401,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10402,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10403,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10404,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10405,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10406,m011,qwen3,p006,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10413,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10414,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10415,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10416,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10417,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10418,m011,qwen3,p013,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,x**5/120 - x**3/6 + x
+10425,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10426,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10427,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10428,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10429,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10430,m011,qwen3,p014,T2,sympy,python,complete,1,ROUNDTRIP_PASS,True,1
+10437,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10438,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10439,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10440,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10441,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10442,m011,qwen3,p007,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,1/2*sqrt(-x^2 + 4)*x + 2*arcsin(1/2*x) + C
+10449,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10450,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10451,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10452,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10453,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10454,m011,qwen3,p008,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,-1/2*cos(x)^2
+10461,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10462,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10463,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10464,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10465,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10466,m011,qwen3,p015,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,[
+10473,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10474,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10475,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10476,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10477,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10478,m011,qwen3,p016,T3,sage,python,complete,1,ROUNDTRIP_PASS,True,"[-1/2*sqrt(33) + 5/2, 1/2*sqrt(33) + 5/2]"
+10485,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10486,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10487,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10488,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10489,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10490,m011,qwen3,p009,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/(s + 2)
+10497,m011,qwen3,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10498,m011,qwen3,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10499,m011,qwen3,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10500,m011,qwen3,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10501,m011,qwen3,p017,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), C1*exp(x))"
+10502,m011,qwen3,p017,T4,sage,python,narration_error,0,NOT_EXECUTED,,
+10509,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10510,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10511,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10512,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10513,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10514,m011,qwen3,p018,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,1/6*pi^2
+10521,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10522,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10523,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10524,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10525,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10526,m011,qwen3,p019,T4,sage,python,complete,1,ROUNDTRIP_PASS,True,"x = [I, -1, -I, 1]"
+10533,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10534,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10535,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10536,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10537,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10538,m011,qwen3,p010,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,"Eq(y(x), (C1 + C2*exp(x))*exp(x))"
+10545,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10546,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10547,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10548,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10549,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
+10550,m011,qwen3,p020,T5,sage,python,complete,1,ROUNDTRIP_PASS,True,s/(s^2 + 4)
