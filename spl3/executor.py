@@ -341,19 +341,33 @@ class SPL3Executor(SPL2Executor):
         if isinstance(stmt.condition, (CompoundCondition, UnaryOp)):
             iteration = 0
             max_iter  = stmt.max_iterations or self.DEFAULT_MAX_ITERATIONS
-            while iteration < max_iter:
-                if state.committed:
-                    return
-                if not self._eval_while_cond(stmt.condition, state):
-                    break
-                await self._execute_body(stmt.body, state)
-                iteration += 1
-            if iteration >= max_iter:
-                from spl.exceptions import MaxIterationsReached
-                raise MaxIterationsReached(
-                    f"WHILE loop exceeded {max_iter} iterations"
+            bumped = False
+            while True:
+                while iteration < max_iter:
+                    if state.committed:
+                        return
+                    if not self._eval_while_cond(stmt.condition, state):
+                        return
+                    await self._execute_body(stmt.body, state)
+                    iteration += 1
+
+                # Self-healing: auto-extend the cap by 50% exactly once and
+                # keep going in place (no restart) before giving up for
+                # real — mirrors spl/executor.py's base _exec_while.
+                if bumped:
+                    from spl.exceptions import MaxIterationsReached
+                    raise MaxIterationsReached(
+                        f"WHILE loop exceeded {max_iter} iterations "
+                        f"(already auto-extended once by 50%; still did not converge)"
+                    )
+                bumped = True
+                new_max_iter = max(max_iter + 1, int(max_iter * 1.5))
+                _log.warning(
+                    "WHILE loop hit %d iterations without converging — auto-extending "
+                    "budget by 50%% to %d and continuing (one-time)",
+                    max_iter, new_max_iter,
                 )
-            return
+                max_iter = new_max_iter
         # SPL 2.0 handles Condition and SemanticCondition
         await super()._exec_while(stmt, state)
 

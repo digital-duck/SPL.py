@@ -1089,80 +1089,99 @@ class Executor:
             return
 
         iteration = 0
-        while iteration < max_iter:
-            if state.committed:
-                return
+        bumped = False
+        while True:
+            while iteration < max_iter:
+                if state.committed:
+                    return
 
-            # Evaluate condition
-            should_continue = False
+                # Evaluate condition
+                should_continue = False
 
-            if isinstance(cond, CompoundCondition):
-                def _eval_single(c):
-                    ls = self._eval_expression(c.left, state)
-                    rs = self._eval_expression(c.right, state)
+                if isinstance(cond, CompoundCondition):
+                    def _eval_single(c):
+                        ls = self._eval_expression(c.left, state)
+                        rs = self._eval_expression(c.right, state)
+                        try:
+                            return self._compare(float(ls), c.operator, float(rs))
+                        except (ValueError, TypeError):
+                            if c.operator == "=":
+                                return ls == rs
+                            if c.operator in ("!=", "<>"):
+                                return ls != rs
+                            return False
+                    result = _eval_single(cond.conditions[0])
+                    for conj, sub in zip(cond.conjunctions, cond.conditions[1:]):
+                        if conj == "AND":
+                            result = result and _eval_single(sub)
+                        else:
+                            result = result or _eval_single(sub)
+                    should_continue = result
+                elif isinstance(cond, Condition):
+                    left_str = self._eval_expression(cond.left, state)
+                    right_str = self._eval_expression(cond.right, state)
                     try:
-                        return self._compare(float(ls), c.operator, float(rs))
+                        left_val = float(left_str)
+                        right_val = float(right_str)
+                        should_continue = self._compare(left_val, cond.operator, right_val)
                     except (ValueError, TypeError):
-                        if c.operator == "=":
-                            return ls == rs
-                        if c.operator in ("!=", "<>"):
-                            return ls != rs
-                        return False
-                result = _eval_single(cond.conditions[0])
-                for conj, sub in zip(cond.conjunctions, cond.conditions[1:]):
-                    if conj == "AND":
-                        result = result and _eval_single(sub)
-                    else:
-                        result = result or _eval_single(sub)
-                should_continue = result
-            elif isinstance(cond, Condition):
-                left_str = self._eval_expression(cond.left, state)
-                right_str = self._eval_expression(cond.right, state)
-                try:
-                    left_val = float(left_str)
-                    right_val = float(right_str)
-                    should_continue = self._compare(left_val, cond.operator, right_val)
-                except (ValueError, TypeError):
-                    # Fall back to string comparison for non-numeric operands
-                    if cond.operator == "=":
-                        should_continue = left_str == right_str
-                    elif cond.operator in ("!=", "<>"):
-                        should_continue = left_str != right_str
-                    else:
-                        should_continue = False
-            elif isinstance(cond, SemanticCondition):
-                # Semantic while condition — provide variable context for informed judgment
-                context_lines = []
-                for var_name, var_val in state.variables.items():
-                    preview = var_val[:500] if len(var_val) > 500 else var_val
-                    context_lines.append(f"  @{var_name} = {preview}")
-                context_str = "\n".join(context_lines) if context_lines else "(no variables)"
-                judge_prompt = (
-                    f"Given the current state:\n{context_str}\n\n"
-                    f"Is the condition '{cond.semantic_value}' still true?\n"
-                    f"Answer with only 'yes' or 'no'."
+                        # Fall back to string comparison for non-numeric operands
+                        if cond.operator == "=":
+                            should_continue = left_str == right_str
+                        elif cond.operator in ("!=", "<>"):
+                            should_continue = left_str != right_str
+                        else:
+                            should_continue = False
+                elif isinstance(cond, SemanticCondition):
+                    # Semantic while condition — provide variable context for informed judgment
+                    context_lines = []
+                    for var_name, var_val in state.variables.items():
+                        preview = var_val[:500] if len(var_val) > 500 else var_val
+                        context_lines.append(f"  @{var_name} = {preview}")
+                    context_str = "\n".join(context_lines) if context_lines else "(no variables)"
+                    judge_prompt = (
+                        f"Given the current state:\n{context_str}\n\n"
+                        f"Is the condition '{cond.semantic_value}' still true?\n"
+                        f"Answer with only 'yes' or 'no'."
+                    )
+                    self._check_budget(state)
+                    judge_result = await self.adapter.generate(
+                        prompt=judge_prompt,
+                        max_tokens=10, temperature=0.0,
+                    )
+                    state.record_llm_call(judge_result)
+                    content = judge_result.content.lower()
+                    should_continue = 'yes' in content or '[echo]' in content
+                else:
+                    # Expression-based condition (truthy check)
+                    val = self._eval_expression(cond, state)
+                    should_continue = bool(val and val != '0' and val.lower() != 'false')
+
+                if not should_continue:
+                    return
+
+                await self._execute_body(stmt.body, state)
+                iteration += 1
+
+            # Hit the cap without the condition going false. Self-healing:
+            # auto-extend the budget by 50% exactly once (not a repeating
+            # backoff) and keep going from where we are — no restart, no
+            # wasted iterations/LLM calls already spent. If it still hasn't
+            # converged at the bumped cap, that's a real non-convergence,
+            # not a too-tight limit, so raise for real.
+            if bumped:
+                raise MaxIterationsReached(
+                    f"WHILE loop exceeded {max_iter} iterations "
+                    f"(already auto-extended once by 50%; still did not converge)"
                 )
-                self._check_budget(state)
-                judge_result = await self.adapter.generate(
-                    prompt=judge_prompt,
-                    max_tokens=10, temperature=0.0,
-                )
-                state.record_llm_call(judge_result)
-                content = judge_result.content.lower()
-                should_continue = 'yes' in content or '[echo]' in content
-            else:
-                # Expression-based condition (truthy check)
-                val = self._eval_expression(cond, state)
-                should_continue = bool(val and val != '0' and val.lower() != 'false')
-
-            if not should_continue:
-                break
-
-            await self._execute_body(stmt.body, state)
-            iteration += 1
-
-        if iteration >= max_iter:
-            raise MaxIterationsReached(f"WHILE loop exceeded {max_iter} iterations")
+            bumped = True
+            new_max_iter = max(max_iter + 1, int(max_iter * 1.5))
+            _log.warning(
+                "WHILE loop hit %d iterations without converging — auto-extending "
+                "budget by 50%% to %d and continuing (one-time)",
+                max_iter, new_max_iter,
+            )
+            max_iter = new_max_iter
 
     async def _exec_commit(self, stmt: CommitStatement, state: WorkflowState):
         """Execute COMMIT expr WITH options"""
