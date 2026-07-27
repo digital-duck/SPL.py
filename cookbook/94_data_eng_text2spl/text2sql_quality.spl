@@ -141,7 +141,7 @@ def run_quality_gated_sql(sql: str, ground_truth_sql: str, stat_sql_a: str, stat
             return json.dumps({"status": "Error", "error": "; ".join(reasons),
                                "referential_ok": referential_ok, "two_way_ok": two_way_ok})
 
-        # Execute the LLM's SQL
+        # Execute the LLM''s SQL
         clean_sql = strip_fences(sql)
         try:
             cur.execute(clean_sql)

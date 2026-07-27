@@ -1877,6 +1877,51 @@
         "sqlite3"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "95",
+      "name": "Music Theory: Chorale Voice-Leading",
+      "description": "The 'unexpected domain' demonstration: an LLM harmonizes a given soprano melody into a four-part chorale (probabilistic); check_voice_leading() deterministically checks parallel fifths/octaves between every voice pair across consecutive beats, voice crossing, adjacent-voice spacing, and large leaps (pure interval arithmetic on MIDI pitch numbers, stdlib json only -- no music21 dependency). Repair loop lets the LLM revise A/T/B only, up to max_tries; ASSERT gates on zero violations. classify_roundtrip() confirms the soprano voice still matches the original input melody note-for-note, catching the LLM 'fixing' a violation by silently altering the given melody instead. Default melody: C5 D5 E5 F5 G5 F5 E5 C5 (8 beats). Verified 2026-07-26: the checker correctly caught real parallel octaves/fifths from a model's naive parallel-motion harmonization. Requires: stdlib json only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/95_music_theory/music_theory.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "95_music_theory",
+      "log": "music_theory",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "json"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "96",
+      "name": "Pharmacovigilance: Drug-Interaction Screening",
+      "description": "SYNTHETIC DEMO ONLY (not a clinical tool). Demonstrates the two-mode split as non-optional: an LLM extracts a structured drug list (name/dose/frequency) from a free-text clinical note (probabilistic); screen_regimen() normalizes names via a synthetic RxNorm-style alias table and checks every pairwise combination against a synthetic DrugBank-style severity table (deterministic). A contraindicated result is a load-bearing safety gate that halts BEFORE narration, unconditionally, drafting a clinical alert instead. A moderate result enters a bounded WHILE repair loop (LLM suggests dropping/substituting one drug, kernel re-screens). ASSERT gates on nothing severe/contraindicated remaining. classify_roundtrip() deterministically recounts drug mentions in the note against the LLM's extraction count, catching silently dropped/invented medications. Default note: sildenafil + nitroglycerin (a well-known contraindicated pair -- life-threatening hypotension). Verified end-to-end 2026-07-26 with ollama:gemma4 on both the contraindicated-halt path and the moderate-repair-loop path. Requires: stdlib json/re only, no new pip dependency.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/96_drug_sim/drug_sim.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "96_drug_sim",
+      "log": "drug_sim",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "json",
+        "re"
+      ],
+      "excluded_adapters": []
     }
   ]
 }
