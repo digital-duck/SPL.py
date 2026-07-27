@@ -82,4 +82,4 @@ CALL format_report(...)                                      -- Markdown report
 
 ## Why a synthetic dataset, not RxNorm/DrugBank
 
-Consulting a domain expert before wiring in a real clinical database is the right order of operations (Wen is doing exactly this with a pharma-industry contact). The seeded dict here proves the *architecture* — extraction, pairwise screening, load-bearing ASSERT, bounded repair — without any licensing, API-key, or regulatory surface area. Swapping in a real oracle is a `CREATE TOOL_API` implementation change only; the `.spl` workflow does not need to change.
+Consulting a domain expert before wiring in a real clinical database is the right order of operations. The seeded dict here proves the *architecture* — extraction, pairwise screening, load-bearing ASSERT, bounded repair — without any licensing, API-key, or regulatory surface area. Swapping in a real oracle is a `CREATE TOOL_API` implementation change only; the `.spl` workflow does not need to change.

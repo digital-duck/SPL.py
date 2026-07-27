@@ -67,6 +67,4 @@ GENERATE annotate(@score, @solution)                      -- LLM narrates the ve
 CALL format_report(...)                                   -- Markdown report
 ```
 
-## Why this recipe, dear to Wen's son
 
-Wen's son is a semi-professional violinist doing a PhD in AI — the ideal reviewer for this recipe, since species counterpoint has real subtlety a naive parallel-fifths checker can miss. The current checker (Rules 1–4 above) is a reasonable first pass but not a complete species-counterpoint engine; if he wants to extend it (e.g. proper resolution of the leading tone, cadence-formula checks, doubled-third avoidance in root-position triads), that logic slots into `check_voice_leading()` without touching the workflow or the repair-loop structure.
