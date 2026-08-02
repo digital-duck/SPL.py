@@ -186,9 +186,7 @@ Respond with JSON only:
     return {"raw": text}
 
 def _rule_based_synthesis(res: ComparisonResult) -> dict:
-    ged = res.results.get("ged")
-    if isinstance(ged, GEDResult):
-        nd = ged.normalized_distance
-        v = "EQUIVALENT" if nd == 0 else "REFACTORED" if nd < 0.1 else "DEGRADED" if nd < 0.35 else "DIVERGED"
-        return {"verdict": v, "key_finding": f"Based on GED norm {nd}"}
-    return {"verdict": "UNKNOWN", "key_finding": "No automated verdict possible"}
+    # Deterministic verdict across all available tiers (GED, structural, AST,
+    # embedding), not GED alone. See spl3.compare.verdict.
+    from spl3.compare.verdict import deterministic_verdict
+    return deterministic_verdict(res)

@@ -33,12 +33,16 @@ def render_report(
     panel_pngs: "tuple[bytes | None, bytes | None] | None" = None,
 ) -> str:
     if output_format == "json":
+        from spl3.compare.verdict import verdict_of
+        _v = verdict_of(res)
         return json.dumps({
             "file1":      res.file1,
             "file2":      res.file2,
             "ext":        res.ext,
             "timestamp":  res.timestamp,
             "modes":      res.modes,
+            "verdict":    _v.get("verdict"),
+            "verdict_basis": _v.get("basis"),
             "results":    {k: _serialize(v) for k, v in res.results.items()},
             "synthesis":  res.synthesis,
         }, indent=2)

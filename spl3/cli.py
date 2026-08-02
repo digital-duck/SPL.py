@@ -3808,6 +3808,64 @@ def cmd_compare(file1, file2, modes, adapter, model, adapter_embed, model_embed,
         click.echo(output_content)
 
 # ------------------------------------------------------------------ #
+# spl3 compare-bom                                                    #
+# ------------------------------------------------------------------ #
+
+@main.command("compare-bom", short_help="BOM/manifest batch compare of two trees, rolled up to one verdict.")
+@click.argument("manifest")
+@click.option("--ref", "ref_dir", default=None, metavar="DIR",
+              help="Reference (gold) root dir for manifest 'file' entries.")
+@click.option("--cand", "cand_dir", default=None, metavar="DIR",
+              help="Candidate root dir for manifest 'file' entries.")
+@click.option("--mode", "modes", multiple=True, metavar="MODE",
+              help="Comparison tier(s), repeatable or comma-separated. Default: git-diff,structural.")
+@llm_options()
+@click.option("--adapter-synthesis", default=None, metavar="NAME",
+              help="Adapter for the per-item synthesis pass (only with --synthesize).")
+@click.option("--synthesize/--no-synthesize", default=False, show_default=True,
+              help="LLM synthesis per item. Default off: deterministic per-item verdicts, no LLM.")
+@click.option("--format", "output_format", default="markdown", show_default=True,
+              type=click.Choice(["markdown", "json"]))
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Write the roll-up report to FILE instead of stdout.")
+def cmd_compare_bom(manifest, ref_dir, cand_dir, modes, adapter, model,
+                    adapter_synthesis, synthesize, output_format, output):
+    """Compare two builds of the same manifest (Bill of Materials), part-by-part.
+
+    The MANIFEST (YAML or JSON) lists items, each with a relative ``file`` (resolved
+    under --ref and --cand) or an explicit ``file1``/``file2`` pair. Every item is
+    compared with the multi-tier engine and the per-item verdicts roll up to one
+    manifest-level verdict (worst-case across items).
+
+    \b
+    Examples:
+      spl3 compare-bom bom.yaml --ref apps/Claude/todo --cand apps/SPL/todo
+      spl3 compare-bom bom.json --ref a/ --cand b/ --mode git-diff,structural,ast-diff
+      spl3 compare-bom bom.yaml --ref a --cand b --synthesize --format json -o report.json
+    """
+    from spl3.compare.manifest import load_manifest, run_manifest, render_manifest
+
+    mpath = Path(manifest)
+    if not mpath.exists():
+        raise click.ClickException(f"Manifest not found: {manifest}")
+    active_modes = [m.strip() for raw in modes for m in raw.split(",") if m.strip()] or \
+        ["git-diff", "structural"]
+    ref = Path(ref_dir) if ref_dir else None
+    cand = Path(cand_dir) if cand_dir else None
+
+    data = load_manifest(mpath)
+    report = asyncio.run(run_manifest(
+        data, ref, cand, active_modes, adapter, model=model,
+        synthesize=synthesize, adapter_synthesis=adapter_synthesis))
+    text = render_manifest(report, output_format)
+    if output:
+        Path(output).write_text(text, encoding="utf-8")
+        click.echo(f"Roll-up report written to: {output}")
+    else:
+        click.echo(text)
+
+
+# ------------------------------------------------------------------ #
 # spl3 judge                                                          #
 # ------------------------------------------------------------------ #
 
