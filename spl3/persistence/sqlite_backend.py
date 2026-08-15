@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS steps (
     result       TEXT NOT NULL,
     state_vars   TEXT NOT NULL,
     completed_at REAL NOT NULL,
+    step_sig     TEXT,
     PRIMARY KEY (workflow_id, step_idx)
 );
 
@@ -64,6 +65,11 @@ class SQLitePersistenceBackend(PersistenceBackend):
         self._poll_interval = poll_interval
         with sqlite3.connect(self._db_path) as conn:
             conn.executescript(_DDL)
+            # Migration for DBs created before step_sig existed.
+            try:
+                conn.execute("ALTER TABLE steps ADD COLUMN step_sig TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
 
     def _conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self._db_path)
@@ -114,13 +120,21 @@ class SQLitePersistenceBackend(PersistenceBackend):
         self,
         workflow_id: str,
         step_idx: int,
+        signature: str | None = None,
     ) -> str | None:
         with self._conn() as conn:
             row = conn.execute(
-                "SELECT result FROM steps WHERE workflow_id = ? AND step_idx = ?",
+                "SELECT result, step_sig FROM steps WHERE workflow_id = ? AND step_idx = ?",
                 (workflow_id, step_idx),
             ).fetchone()
-            return row["result"] if row else None
+            if row is None:
+                return None
+            if signature is not None and row["step_sig"] != signature:
+                # Stale: this step_idx was checkpointed under a different
+                # .spl script / tool version. Force re-execution instead of
+                # silently replaying the old result.
+                return None
+            return row["result"]
 
     async def checkpoint(
         self,
@@ -129,13 +143,14 @@ class SQLitePersistenceBackend(PersistenceBackend):
         step_name: str,
         result: str,
         state_vars: dict[str, str],
+        signature: str | None = None,
     ) -> None:
         now = time.time()
         with self._conn() as conn:
             conn.execute(
-                "INSERT OR REPLACE INTO steps VALUES (?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO steps VALUES (?,?,?,?,?,?,?)",
                 (workflow_id, step_idx, step_name,
-                 result, json.dumps(state_vars), now),
+                 result, json.dumps(state_vars), now, signature),
             )
             conn.execute(
                 "UPDATE workflows SET updated_at = ? WHERE workflow_id = ?",

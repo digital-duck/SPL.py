@@ -48,7 +48,7 @@ spl3 run cookbook/93_auto_planning/auto_planning.spl --llm claude_cli
 
 # Unaided baseline arm
 spl3 run cookbook/93_auto_planning/auto_planning.spl \
-    --llm ollama:gemma3 --param enable_solver=false
+    --llm ollama:gemma4 --param enable_solver=true
 ```
 
 To try a different logistics problem, override both `problem_text` (the prose description shown to the LLM) and `problem_json` (the machine-readable initial state + goal the validator replays against) together — they must describe the same scenario.

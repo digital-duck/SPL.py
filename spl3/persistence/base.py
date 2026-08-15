@@ -52,8 +52,19 @@ class PersistenceBackend(ABC):
         self,
         workflow_id: str,
         step_idx: int,
+        signature: str | None = None,
     ) -> str | None:
-        """Return the cached result of step ``step_idx``, or None if not yet done."""
+        """Return the cached result of step ``step_idx``, or None if not yet done.
+
+        ``signature`` is a content hash of the step's unevaluated arguments
+        plus its prompt template / tool source (see
+        ``spl3.executor._content_signature``). When given and it doesn't
+        match the signature stored at checkpoint time, the cached result is
+        stale (the .spl script or the called tool changed since this
+        workflow_id was last checkpointed) — treat it as a miss (return
+        None) rather than serving the old result, so the step genuinely
+        re-executes.
+        """
 
     @abstractmethod
     async def checkpoint(
@@ -63,6 +74,7 @@ class PersistenceBackend(ABC):
         step_name: str,
         result: str,
         state_vars: dict[str, str],
+        signature: str | None = None,
     ) -> None:
         """Persist the result of a completed step + current @var snapshot."""
 

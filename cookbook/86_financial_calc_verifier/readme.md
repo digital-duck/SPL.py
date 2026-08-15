@@ -35,7 +35,7 @@ spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl --llm c
 
 # Custom problem
 spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl \
-    --llm ollama:gemma3 \
+    --llm ollama:gemma4 \
     --param problem="If you invest \$5,000 at 4% annual interest, compounded quarterly, what is it worth after 10 years?"
 
 # Unaided baseline arm

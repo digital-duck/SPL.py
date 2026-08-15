@@ -48,8 +48,11 @@ CREATE TABLE IF NOT EXISTS steps (
     result       TEXT NOT NULL,
     state_vars   TEXT NOT NULL,
     completed_at DOUBLE PRECISION NOT NULL,
+    step_sig     TEXT,
     PRIMARY KEY (workflow_id, step_idx)
 );
+
+ALTER TABLE steps ADD COLUMN IF NOT EXISTS step_sig TEXT;
 
 CREATE TABLE IF NOT EXISTS events (
     workflow_id TEXT NOT NULL,
@@ -149,14 +152,21 @@ class PostgresPersistenceBackend(PersistenceBackend):
         self,
         workflow_id: str,
         step_idx: int,
+        signature: str | None = None,
     ) -> str | None:
         pool = await self._get_pool()
         async with pool.acquire() as conn:
             row = await conn.fetchrow(
-                "SELECT result FROM steps WHERE workflow_id = $1 AND step_idx = $2",
+                "SELECT result, step_sig FROM steps WHERE workflow_id = $1 AND step_idx = $2",
                 workflow_id, step_idx,
             )
-            return row["result"] if row else None
+            if row is None:
+                return None
+            if signature is not None and row["step_sig"] != signature:
+                # Stale: checkpointed under a different .spl script / tool
+                # version — force re-execution instead of replaying it.
+                return None
+            return row["result"]
 
     async def checkpoint(
         self,
@@ -165,16 +175,17 @@ class PostgresPersistenceBackend(PersistenceBackend):
         step_name: str,
         result: str,
         state_vars: dict[str, str],
+        signature: str | None = None,
     ) -> None:
         pool = await self._get_pool()
         now = time.time()
         async with pool.acquire() as conn:
             await conn.execute(
-                "INSERT INTO steps VALUES ($1,$2,$3,$4,$5,$6)"
+                "INSERT INTO steps VALUES ($1,$2,$3,$4,$5,$6,$7)"
                 " ON CONFLICT (workflow_id, step_idx) DO UPDATE"
-                " SET result=$4, state_vars=$5, completed_at=$6",
+                " SET result=$4, state_vars=$5, completed_at=$6, step_sig=$7",
                 workflow_id, step_idx, step_name,
-                result, json.dumps(state_vars), now,
+                result, json.dumps(state_vars), now, signature,
             )
             await conn.execute(
                 "UPDATE workflows SET updated_at=$1 WHERE workflow_id=$2",

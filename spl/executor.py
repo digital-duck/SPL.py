@@ -1403,9 +1403,39 @@ class Executor:
             return state.get_var(expr.name)
         elif isinstance(expr, FStringLiteral):
             import re
+            from spl.lexer import Lexer
+            from spl.parser import Parser
+            from spl.tokens import TokenType
+
             def _sub(m: re.Match) -> str:
-                return state.get_var(m.group(1))
-            return re.sub(r'\{@(\w+)\}', _sub, expr.template)
+                inner = m.group(1)
+                bare = re.fullmatch(r'@(\w+)', inner)
+                if bare:
+                    # Fast path: bare {@varname}, same as before this fix.
+                    return state.get_var(bare.group(1))
+                # Expression path: {@i + 1}, {@i - 1}, etc. — evaluate the
+                # brace contents as a full expression via the same
+                # lexer/parser/evaluator used everywhere else in SPL,
+                # instead of only supporting a bare variable reference.
+                try:
+                    tokens = Lexer(inner).tokenize()
+                    parser = Parser(tokens)
+                    sub_expr = parser._parse_expression()
+                    # _parse_expression() doesn't require consuming every
+                    # token — e.g. `"a": 1` parses as just the string "a",
+                    # silently dropping the rest. Require EOF so partial
+                    # parses of non-interpolation content (literal
+                    # JSON-like text) fall through to the untouched case
+                    # below instead of being silently truncated.
+                    if not parser._check(TokenType.EOF):
+                        return m.group(0)
+                    return self._eval_expression(sub_expr, state)
+                except Exception:
+                    # Not an interpolation expression (e.g. literal JSON-like
+                    # text) — leave the braces untouched rather than crash.
+                    return m.group(0)
+
+            return re.sub(r'\{([^{}]+)\}', _sub, expr.template)
         elif isinstance(expr, ListLiteral):
             import json
             elements = [self._eval_expression(e, state) for e in expr.elements]

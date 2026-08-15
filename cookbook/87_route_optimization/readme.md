@@ -40,7 +40,7 @@ spl3 run cookbook/87_route_optimization/route_optimization.spl --llm claude_cli
 
 # Custom problem
 spl3 run cookbook/87_route_optimization/route_optimization.spl \
-    --llm ollama:gemma3 \
+    --llm ollama:gemma4 \
     --param problem="A driver starts at the depot (0) and must visit 4 stops. Distance matrix: [[0,10,15,20,25],[10,0,35,25,30],[15,35,0,30,20],[20,25,30,0,15],[25,30,20,15,0]]. Find the shortest round trip."
 
 # Unaided baseline arm

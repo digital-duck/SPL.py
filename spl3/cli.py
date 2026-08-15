@@ -652,6 +652,10 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Python module to load as CALL-able tools (e.g. tools/my_tools.py).")
 @click.option("--claude-allowed-tools", "allowed_tools", default=None, metavar="TOOLS",
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
+@click.option("--llm-timeout", "llm_timeout", default=None, type=int, metavar="SECONDS",
+              help="Per-call timeout passed to the adapter (e.g. claude_cli's subprocess "
+                   "timeout, default 300s / 600s with --claude-allowed-tools). Overrides "
+                   "the adapter's built-in default for adapters that accept a 'timeout' kwarg.")
 @click.option("--kernel", is_flag=True, default=False,
               help="Enable persistent IPython kernel for CALL run_python() steps.")
 @click.option("--kernel-scope", default="session",
@@ -662,11 +666,12 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--kernel-name", default="python3", show_default=True, metavar="NAME",
               help="Jupyter kernel spec to run kernel steps under (e.g. 'sagemath' "
                    "for SageMath). A non-default value implies --kernel.")
-@click.option("--persistence", default=None, metavar="BACKEND",
-              type=click.Choice(["sqlite", "postgres", "dbos"]),
-              help="Enable durable execution: 'sqlite' (local), 'postgres' (production), "
-                   "or 'dbos' (cloud). Checkpoints every GENERATE/CALL step; "
-                   "resume with --workflow-id.")
+@click.option("--persistence", default="sqlite", show_default=True, metavar="BACKEND",
+              type=click.Choice(["sqlite", "postgres", "dbos", "none"]),
+              help="Durable execution: 'sqlite' (local, zero-setup — the default), "
+                   "'postgres' (production), or 'dbos' (cloud). Checkpoints every "
+                   "GENERATE/CALL step; resume a crashed run by passing the same "
+                   "--workflow-id. 'none' disables it (no checkpoint writes at all).")
 @click.option("--workflow-id", default=None, metavar="ID",
               help="Workflow run ID for persistence. Auto-generated UUID if omitted. "
                    "Pass the same ID to resume a crashed run from its last checkpoint.")
@@ -674,7 +679,7 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Default max output tokens per GENERATE call (overrides built-in default of 1000).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
-        kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
+        llm_timeout, kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
         llm_max_output_tokens):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
@@ -705,9 +710,9 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
         except KernelSpecNotFound as exc:
             raise click.ClickException(str(exc))
 
-    # Persistence backend setup
+    # Persistence backend setup — on by default (sqlite); "none" opts out.
     persistence_backend = None
-    if persistence:
+    if persistence and persistence != "none":
         import uuid as _uuid
         from spl3.persistence import get_backend
         if workflow_id is None:
@@ -718,6 +723,7 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
                               tools_module, allowed_tools,
+                              llm_timeout=llm_timeout,
                               kernel=kernel, kernel_scope=kernel_scope,
                               kernel_timeout=kernel_timeout, kernel_name=kernel_name,
                               persistence=persistence_backend, workflow_id=workflow_id,
@@ -725,7 +731,7 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
-                        tools_module=None, allowed_tools=None,
+                        tools_module=None, allowed_tools=None, llm_timeout=None,
                         kernel=False, kernel_scope="session", kernel_timeout=60.0,
                         kernel_name="python3",
                         persistence=None, workflow_id=None,
@@ -760,6 +766,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     adapter_kwargs = {"model": model} if model else {}
     if allowed_tools:
         adapter_kwargs["allowed_tools"] = [t.strip() for t in allowed_tools.split(",")]
+    if llm_timeout is not None:
+        adapter_kwargs["timeout"] = llm_timeout
     _inner_adapter = get_adapter(adapter_name, **adapter_kwargs)
 
     # Resolve the effective model: if the requested model was incompatible,

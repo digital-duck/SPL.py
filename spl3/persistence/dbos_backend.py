@@ -80,12 +80,14 @@ class DBOSPersistenceBackend(PersistenceBackend):
         self,
         workflow_id: str,
         step_idx: int,
+        signature: str | None = None,
     ) -> str | None:
         """DBOS replays steps automatically — SPL should not skip manually.
 
         Return None always; let DBOS's @step replay handle idempotency.
         The caller (SPL executor) must be invoked inside a @DBOS.workflow
-        context for this to take effect.
+        context for this to take effect. ``signature`` is accepted for
+        interface compatibility with the other backends but unused here.
         """
         return None
 
@@ -96,6 +98,7 @@ class DBOSPersistenceBackend(PersistenceBackend):
         step_name: str,
         result: str,
         state_vars: dict[str, str],
+        signature: str | None = None,
     ) -> None:
         """DBOS persists step output automatically after each @DBOS.step.
 

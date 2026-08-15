@@ -49,6 +49,27 @@ _INT_TYPES   = {"INT", "INTEGER"}
 _FLOAT_TYPES = {"FLOAT"}
 
 
+def _content_signature(*parts) -> str:
+    """Hash the given parts into a stable step-cache signature.
+
+    Used to key persistence step-cache entries by *content* (unevaluated
+    argument expressions + prompt/tool source text) rather than by bare
+    position (step_idx) alone. Without this, resuming a workflow_id that was
+    checkpointed under an older version of the .spl script or a called
+    Python tool replays the OLD cached result verbatim — the step_idx lines
+    up, so get_step_result() returns a hit, even though the statement's
+    arguments or the tool's implementation have since changed. A content
+    mismatch here makes that a cache MISS instead, forcing the step to
+    genuinely re-execute (and checkpoint() then overwrites the stale row).
+    """
+    import hashlib
+    h = hashlib.sha256()
+    for p in parts:
+        h.update(repr(p).encode("utf-8", "replace"))
+        h.update(b"\x00")
+    return h.hexdigest()[:32]
+
+
 def _builtin_clean_code(text: str) -> str:
     """Remove common LLM output artifacts from generated code.
 
@@ -394,13 +415,25 @@ class SPL3Executor(SPL2Executor):
         step_idx: int | None = None
         step_name: str | None = None
 
+        step_sig: str | None = None
         if _pers is not None and _wfid is not None:
             step_idx = self._step_counter
             self._step_counter += 1
             first_gc = stmt.generate_clause
             fn_name = getattr(first_gc, "function_name", step_idx) if first_gc else step_idx
             step_name = f"GENERATE:{fn_name}"
-            cached = await _pers.get_step_result(_wfid, step_idx)
+            func_def = self.functions.get(fn_name) if first_gc else None
+            step_sig = _content_signature(
+                fn_name,
+                getattr(first_gc, "arguments", None) if first_gc else None,
+                func_def.body if func_def is not None else None,
+                getattr(first_gc, "output_budget", None) if first_gc else None,
+                getattr(first_gc, "temperature", None) if first_gc else None,
+                getattr(first_gc, "output_format", None) if first_gc else None,
+                getattr(first_gc, "schema", None) if first_gc else None,
+                getattr(first_gc, "model", None) if first_gc else None,
+            )
+            cached = await _pers.get_step_result(_wfid, step_idx, step_sig)
             if cached is not None:
                 _log.info("Skipping step %d (%s) — cached", step_idx, step_name)
                 if stmt.target_variable and stmt.target_variable not in ("NONE", "_"):
@@ -413,7 +446,7 @@ class SPL3Executor(SPL2Executor):
             tgt = stmt.target_variable
             result = state.get_var(tgt) if tgt and tgt not in ("NONE", "_") else ""
             await _pers.checkpoint(_wfid, step_idx, step_name or "", result,
-                                   dict(state.variables))
+                                   dict(state.variables), step_sig)
 
     async def _exec_generate_into_impl(self, stmt, state):
         """Multimodal dispatch implementation (separated for persistence wrapping)."""
@@ -871,11 +904,27 @@ class SPL3Executor(SPL2Executor):
         step_name: str | None = None
 
         # Persistence: exactly-once check
+        step_sig: str | None = None
         if _pers is not None and _wfid is not None:
             step_idx = self._step_counter
             self._step_counter += 1
             step_name = f"CALL:{stmt.procedure_name}"
-            cached = await _pers.get_step_result(_wfid, step_idx)
+            tool_fn = self.functions.get_tool(stmt.procedure_name)
+            tool_src = None
+            if tool_fn is not None:
+                try:
+                    import inspect
+                    tool_src = inspect.getsource(tool_fn)
+                except (OSError, TypeError):
+                    tool_src = None
+            proc_def = self.functions.get_procedure(stmt.procedure_name)
+            step_sig = _content_signature(
+                stmt.procedure_name,
+                getattr(stmt, "arguments", None),
+                tool_src,
+                proc_def.body if proc_def is not None else None,
+            )
+            cached = await _pers.get_step_result(_wfid, step_idx, step_sig)
             if cached is not None:
                 _log.info("Skipping step %d (%s) — cached", step_idx, step_name)
                 tgt = getattr(stmt, "target_variable", None)
@@ -905,7 +954,7 @@ class SPL3Executor(SPL2Executor):
             tgt = getattr(stmt, "target_variable", None)
             result = state.get_var(tgt) if tgt and tgt not in ("NONE", "_") else ""
             await _pers.checkpoint(_wfid, step_idx, step_name or "", result,
-                                   dict(state.variables))
+                                   dict(state.variables), step_sig)
 
     async def _exec_call_inner(self, stmt, state) -> None:
         """Registry-aware CALL dispatch (extracted for self-healing retry support).
