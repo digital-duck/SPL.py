@@ -654,7 +654,7 @@ def cmd_configure_import(file, dest, keys, dry_run):
               help="Comma-separated tools for the claude_cli adapter (e.g. WebSearch,Bash).")
 @click.option("--llm-timeout", "llm_timeout", default=None, type=int, metavar="SECONDS",
               help="Per-call timeout passed to the adapter (e.g. claude_cli's subprocess "
-                   "timeout, default 300s / 600s with --claude-allowed-tools). Overrides "
+                   "timeout, default 600s / 900s with --claude-allowed-tools). Overrides "
                    "the adapter's built-in default for adapters that accept a 'timeout' kwarg.")
 @click.option("--kernel", is_flag=True, default=False,
               help="Enable persistent IPython kernel for CALL run_python() steps.")
