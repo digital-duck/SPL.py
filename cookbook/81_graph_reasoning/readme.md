@@ -35,16 +35,18 @@ python3 -c "import networkx; print(networkx.__version__)"
 
 ```bash
 # Default problem (6-warehouse shortest-path network)
-spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl --llm claude_cli
+spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
+    --llm claude_cli
+
+# Unaided baseline arm
+spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
+    --llm claude_cli --param enable_solver=false
 
 # Custom problem
 spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
     --llm ollama:gemma3 \
     --param problem="Is the graph with edges A-B, B-C, C-D, D-A bipartite?"
 
-# Unaided baseline arm
-spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
-    --llm claude_cli --param enable_solver=false
 ```
 
 ## Default problem

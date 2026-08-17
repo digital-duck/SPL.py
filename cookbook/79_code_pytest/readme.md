@@ -99,4 +99,4 @@ The `GENERATE → test → ASSERT → WHILE repair` loop is a formal implementat
 3. If tests fail, repair code with failure context (refactor)
 4. `ASSERT` certifies the loop converged
 
-In LangChain or PDL, implementing this loop requires: a subprocess runner tool, a loop construct, conditional branching on exit code, a repair prompt, and manual wiring between all of them. In SPL, it is the natural expression of the language.
+In LangChain or PDL (https://github.com/IBM/prompt-declaration-language/tree/main), implementing this loop requires: a subprocess runner tool, a loop construct, conditional branching on exit code, a repair prompt, and manual wiring between all of them. In SPL, it is the natural expression of the language.

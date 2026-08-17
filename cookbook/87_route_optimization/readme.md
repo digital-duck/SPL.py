@@ -36,16 +36,24 @@ OR-Tools ships prebuilt wheels with the CP-SAT/routing solver bundled — no sep
 
 ```bash
 # Default problem (1 depot + 5 customer locations)
-spl3 run cookbook/87_route_optimization/route_optimization.spl --llm claude_cli
-
-# Custom problem
 spl3 run cookbook/87_route_optimization/route_optimization.spl \
-    --llm ollama:gemma4 \
-    --param problem="A driver starts at the depot (0) and must visit 4 stops. Distance matrix: [[0,10,15,20,25],[10,0,35,25,30],[15,35,0,30,20],[20,25,30,0,15],[25,30,20,15,0]]. Find the shortest round trip."
+    --llm claude_cli
 
 # Unaided baseline arm
 spl3 run cookbook/87_route_optimization/route_optimization.spl \
     --llm claude_cli --param enable_solver=false
+
+
+# Custom problem
+spl3 run cookbook/87_route_optimization/route_optimization.spl \
+    --llm claude_cli \
+    --param problem="A driver starts at the depot (0) and must visit 4 stops. Distance matrix: [[0,10,15,20,25],[10,0,35,25,30],[15,35,0,30,20],[20,25,30,0,15],[25,30,20,15,0]]. Find the shortest round trip."
+
+
+# Final answer: 85
+# LLM calls: 2  Latency: 17023ms
+# Log:     /home/gongai/.spl/logs/route_optimization-claude_cli-claude-sonnet-4-6-20260816-163024.md
+
 ```
 
 ## Default problem
@@ -55,6 +63,31 @@ spl3 run cookbook/87_route_optimization/route_optimization.spl \
 **Known optimum** (verifiable by summing matrix entries along the route): **0 → 4 → 3 → 5 → 2 → 1 → 0**, total distance = **101 miles**.
 
 Verified end-to-end (2026-07-17) with `--llm claude_cli`: correct OR-Tools routing code (RoutingIndexManager + RoutingModel + PATH_CHEAPEST_ARC + GUIDED_LOCAL_SEARCH) on the first attempt, `ASSERT is_optimal` passed, computed route and distance (101) exactly matching the independently-verified optimum, round-trip check returned `match`.
+
+```bash
+spl3 run cookbook/87_route_optimization/route_optimization.spl \
+    --llm claude_cli --param enable_solver=true
+
+# Final answer: 101
+# LLM calls: 3  Latency: 23495ms
+# Log:     /home/gongai/.spl/logs/route_optimization-claude_cli-claude-sonnet-4-6-20260816-162040.md
+
+```
+
+### Solved by LLM = Claude-Sonnet-4-6
+
+
+```bash
+spl3 run cookbook/87_route_optimization/route_optimization.spl \
+    --llm claude_cli --param enable_solver=false
+
+# Final answer: 101
+# LLM calls: 1  Latency: 41733ms
+# Log:     /home/gongai/.spl/logs/route_optimization-claude_cli-claude-sonnet-4-6-20260816-162223.md
+
+
+```
+
 
 ## Execution flow
 

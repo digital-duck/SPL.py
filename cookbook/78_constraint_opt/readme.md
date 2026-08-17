@@ -17,7 +17,9 @@ This recipe showcases the most distinctive feature of SPL: the **deterministic-p
 
 **Key property**: The LLM never does arithmetic. Numbers in the output come exclusively from the solver. The ASSERT gate is the formal oracle — it is structurally impossible for a non-Optimal result to reach the interpretation step.
 
-This boundary is **inexpressible in LangChain, PDL, or AutoGen** without external orchestration scaffolding. In SPL it is four tokens: `ASSERT is_optimal(@solution)`.
+This boundary is **inexpressible in PDL (https://github.com/IBM/prompt-declaration-language), LangChain, or AutoGen** without external orchestration scaffolding. In SPL it is four tokens: `ASSERT is_optimal(@solution)`.
+
+
 
 ## Setup
 
@@ -72,11 +74,12 @@ In every case the .spl workflow is identical in structure. The LLM's job is alwa
 
 ```bash
 # Default problem (bakery production planning)
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl --llm claude_cli
+spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+    --llm claude_cli
 
 # Custom problem
 spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
-    --llm ollama:gemma3 \
+    --llm claude_cli \
     --param problem="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tables (4h labor, 3kg wood, \$30 profit). Available: 20h labor, 24kg wood. Maximize profit."
 
 # More repair attempts (default 3)
@@ -87,7 +90,7 @@ spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
 
 ## Default problem
 
-> A bakery produces artisan bread and croissants. Each loaf of bread requires 3 hours of labor and 2 kg of flour, earning $12 profit. Each batch of croissants requires 1 hour of labor and 3 kg of flour, earning $8 profit. The bakery has 12 hours of labor and 15 kg of flour available each day. Maximize daily profit.
+> A bakery produces artisan bread and croissants. Each loaf of bread requires 3 hours of labor and 2 kg of flour, earning \$12 profit. Each batch of croissants requires 1 hour of labor and 3 kg of flour, earning \$8 profit. The bakery has 12 hours of labor and 15 kg of flour available each day. Maximize daily profit.
 
 **Known optimal** (verifiable by hand): bread = 3, croissants = 3, profit = $60.  
 Labor: 3×3 + 3×1 = 12 ✓ · Flour: 3×2 + 3×3 = 15 ✓ · Both constraints binding.
