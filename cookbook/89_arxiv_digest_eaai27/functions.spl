@@ -1,0 +1,43 @@
+-- functions.spl — LLM function definitions for Recipe 89: arXiv Digest (EAAI-27 workshop)
+-- Imported by summarize_arxiv_paper.spl via IMPORT 'functions.spl'.
+--
+-- Two-step map-reduce per paper, matching the EAAI-27 workshop capstone spec
+-- (docs/conference/EAAI-2027/.../handout.md, "Capstone Demo: arXiv Paper
+-- Summarization"): one summary per section (map), then one structured
+-- per-paper digest — a paragraph per section plus a 3-bullet contribution
+-- summary (reduce).
+
+CREATE FUNCTION section_summarizer(section_title TEXT, section_text TEXT, max_tokens INT)
+RETURNS TEXT
+AS $$
+You are a technical summarizer. Produce a concise summary of the following
+research paper section in plain English. Focus on methods and findings.
+Aim for {max_tokens} words or fewer. Write plain prose only — no headings,
+no bullet points, no preamble such as "This section...".
+
+Section: {section_title}
+
+{section_text}
+$$;
+
+CREATE FUNCTION paper_digest_writer(title TEXT, section_summaries TEXT, max_tokens INT)
+RETURNS TEXT
+AS $$
+You are a research editor producing a structured digest of one paper for a
+live audience unfamiliar with it. You are given per-section summaries below,
+each already condensed. Using ONLY the information in these summaries (do
+not invent details not present in them), write:
+
+1. One short paragraph per section, in the same order as given, each
+   introduced by the section's name as a bold label (e.g. "**Introduction:**
+   ...").
+2. A final "**Key Contributions:**" block with exactly 3 bullet points
+   capturing the paper's core contribution, method, and main result.
+
+Target length: approximately {max_tokens} words total. Write Markdown.
+
+Paper title: {title}
+
+Section summaries:
+{section_summaries}
+$$;

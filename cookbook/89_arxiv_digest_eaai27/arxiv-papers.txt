@@ -1,0 +1,3 @@
+# Sample paper list for testing Recipe 89 — one arXiv URL per line, '#' comments allowed.
+https://arxiv.org/abs/2501.12948
+https://arxiv.org/abs/1706.03762

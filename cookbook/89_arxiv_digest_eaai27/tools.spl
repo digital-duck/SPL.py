@@ -1,0 +1,342 @@
+-- tools.spl — TOOL_API definitions for Recipe 89: arXiv Digest (EAAI-27 workshop)
+-- Imported by arxiv_digest.spl and summarize_arxiv_paper.spl via IMPORT 'tools'
+--
+-- Reused as-is from earlier recipes (attributed per function):
+--   download_arxiv_pdf, semantic_chunk_plan, list_count, parse_urls
+--     — cookbook/47_arxiv_morning_brief/tools.spl
+--   extract_arxiv_id, lookup_arxiv, json_field
+--     — cookbook/72_verify_arxiv_references/verify_arxiv_references.spl
+-- New for this recipe: get_chunk_field, append_json_array
+--
+-- Stdlib tools used by this recipe (no TOOL_API needed): list_get, list_append
+
+CREATE TOOL_API download_arxiv_pdf(url TEXT)
+RETURNS TEXT AS PYTHON $$
+def download_arxiv_pdf(url: str) -> str:
+    import json
+    import logging
+    import time
+    from pathlib import Path
+
+    _log = logging.getLogger("arxiv_digest.tools")
+
+    CACHE_DIR = Path.home() / ".cache" / "dd_arxiv_digest"
+    PDF_DIR   = CACHE_DIR / "pdfs"
+    PDF_DIR.mkdir(parents=True, exist_ok=True)
+
+    RATE_LIMIT_SECS = 3.0
+    PDF_TTL_SECS    = 86_400  # 24 hours
+
+    _rate_file = CACHE_DIR / ".last_download"
+
+    def _get_last_download():
+        try:
+            return float(_rate_file.read_text())
+        except Exception:
+            return 0.0
+
+    def _set_last_download(t):
+        try:
+            _rate_file.write_text(str(t))
+        except Exception:
+            pass
+
+    _cache_index_path = CACHE_DIR / "url_cache.json"
+
+    def _cache_get(u):
+        try:
+            idx = json.loads(_cache_index_path.read_text())
+            entry = idx.get(u)
+            if entry:
+                ts, path = entry["ts"], entry["path"]
+                if time.time() - ts < PDF_TTL_SECS and Path(path).exists():
+                    return path
+        except Exception:
+            pass
+        return None
+
+    def _cache_set(u, path):
+        try:
+            try:
+                idx = json.loads(_cache_index_path.read_text())
+            except Exception:
+                idx = {}
+            idx[u] = {"ts": time.time(), "path": path}
+            _cache_index_path.write_text(json.dumps(idx))
+        except Exception:
+            pass
+
+    cached_path = _cache_get(url)
+    if cached_path:
+        _log.debug("Cache hit %s -> %s", url, cached_path)
+        return cached_path
+
+    elapsed = time.time() - _get_last_download()
+    if elapsed < RATE_LIMIT_SECS:
+        time.sleep(RATE_LIMIT_SECS - elapsed)
+
+    import httpx
+    try:
+        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
+    except Exception as e:
+        raise RuntimeError(f"Network error downloading {url}: {e}") from e
+
+    if resp.status_code != 200:
+        raise RuntimeError(f"HTTP {resp.status_code} downloading {url}")
+
+    safe_name = url.rstrip("/").split("/")[-1]
+    if not safe_name.endswith(".pdf"):
+        safe_name += ".pdf"
+    pdf_path = str(PDF_DIR / safe_name)
+    Path(pdf_path).write_bytes(resp.content)
+
+    _set_last_download(time.time())
+    _cache_set(url, pdf_path)
+    _log.info("Downloaded %s -> %s", url, pdf_path)
+    return pdf_path
+$$;
+
+CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT)
+RETURNS TEXT AS PYTHON $$
+def semantic_chunk_plan(pdf_path: str) -> str:
+    import json
+    import re
+    from pathlib import Path
+
+    path = Path(pdf_path)
+    if not path.exists():
+        raise RuntimeError(f"PDF not found: {pdf_path}")
+
+    try:
+        from dd_extract.pdf import PDFExtractor
+        extractor = PDFExtractor(engine="pypdf", max_chars=40_000)
+        text = extractor.from_file(pdf_path)
+    except Exception as e:
+        raise RuntimeError(f"dd-extract failed on {pdf_path}: {e}") from e
+
+    if not text.strip():
+        raise RuntimeError(f"No text extracted from {pdf_path}")
+
+    header_re = re.compile(
+        r'^(?:\d+\.?\s+[A-Z][A-Za-z\s]{2,60}|[A-Z][A-Z\s]{4,60})$',
+        re.MULTILINE,
+    )
+    matches = list(header_re.finditer(text))
+
+    chunks = []
+
+    if len(matches) >= 2:
+        for i, m in enumerate(matches):
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            chunk_text = text[m.start():end].strip()
+            if chunk_text:
+                chunks.append({
+                    "title": m.group().strip(),
+                    "text":  chunk_text,
+                    "page":  i + 1,
+                })
+    else:
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', text) if p.strip()]
+        group_size = 3
+        for idx in range(0, len(paragraphs), group_size):
+            group = paragraphs[idx: idx + group_size]
+            chunks.append({
+                "title": f"Section {idx // group_size + 1}",
+                "text":  "\n\n".join(group),
+                "page":  idx // group_size + 1,
+            })
+
+    if not chunks:
+        chunks = [{"title": "Document", "text": text.strip(), "page": 1}]
+
+    return json.dumps(chunks)
+$$;
+
+CREATE TOOL_API get_chunk_field(chunks_json TEXT, idx TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def get_chunk_field(chunks_json: str, idx: str, field: str) -> str:
+    """Pull one field ('title' or 'text') out of the idx-th (0-based) chunk
+    object produced by semantic_chunk_plan. Returns "" if out of range."""
+    import json
+
+    try:
+        chunks = json.loads(chunks_json)
+        i = int(float(idx))
+        return str(chunks[i].get(field, ""))
+    except (json.JSONDecodeError, TypeError, IndexError, ValueError, AttributeError):
+        return ""
+$$;
+
+CREATE TOOL_API list_count(json_list TEXT)
+RETURNS TEXT AS PYTHON $$
+def list_count(json_list: str) -> str:
+    import json
+
+    try:
+        return str(len(json.loads(json_list)))
+    except (json.JSONDecodeError, TypeError):
+        return "0"
+$$;
+
+CREATE TOOL_API parse_urls(raw TEXT)
+RETURNS TEXT AS PYTHON $$
+def parse_urls(raw: str) -> str:
+    """Normalise the attendee's submitted paper list — accepts a JSON array
+    (what the web front's form POST will send), a comma/whitespace-delimited
+    string, or a file path (for CLI testing) — into a JSON array of URLs."""
+    import json
+    import re
+    from pathlib import Path
+
+    raw = raw.strip()
+
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            urls = [u.strip() for u in parsed if str(u).strip()]
+            return json.dumps(urls)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    if not raw.startswith("http") and not raw.startswith("["):
+        candidate = Path.cwd() / raw
+        if candidate.is_file():
+            lines = candidate.read_text(encoding="utf-8").splitlines()
+            urls = [
+                ln.strip() for ln in lines
+                if ln.strip() and not ln.strip().startswith("#")
+            ]
+            return json.dumps(urls)
+
+    urls = [u.strip() for u in re.split(r"[,\s]+", raw) if u.strip()]
+    return json.dumps(urls)
+$$;
+
+CREATE TOOL_API extract_arxiv_id(ref_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def extract_arxiv_id(ref_text: str) -> str:
+    """Pull an arXiv id ('XXXX.XXXXX') from 'arXiv:...' text or an
+    arxiv.org/abs|pdf URL. Returns "" if the text cites no arXiv id."""
+    import re
+
+    m = re.search(r'arxiv\s*:\s*(\d{4}\.\d{4,5})', ref_text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    m = re.search(r'arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5})', ref_text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    return ""
+$$;
+
+CREATE TOOL_API lookup_arxiv(arxiv_id TEXT)
+RETURNS TEXT AS PYTHON $$
+def lookup_arxiv(arxiv_id: str) -> str:
+    """Query the public arXiv Atom API for the ground-truth record (title,
+    authors, abstract, pdf url) of arxiv_id — the source of truth for the
+    paper's title/authors, not a guess from PDF header text."""
+    import json
+    import re
+    import xml.etree.ElementTree as ET
+
+    import httpx
+
+    api_url = f'http://export.arxiv.org/api/query?id_list={arxiv_id}'
+    try:
+        resp = httpx.get(api_url, timeout=30.0, follow_redirects=True)
+    except Exception as e:
+        raise RuntimeError(f'Network error querying arXiv API for {arxiv_id}: {e}') from e
+    if resp.status_code != 200:
+        raise RuntimeError(f'HTTP {resp.status_code} from arXiv API for {arxiv_id}')
+
+    ns = {'atom': 'http://www.w3.org/2005/Atom'}
+    root = ET.fromstring(resp.text)
+    entry = root.find('atom:entry', ns)
+    if entry is None:
+        raise RuntimeError(f'No arXiv entry found for id {arxiv_id} (withdrawn or mistyped)')
+
+    def _clean(s):
+        return re.sub(r'\s+', ' ', (s or "")).strip()
+
+    title   = _clean(entry.findtext('atom:title', default="", namespaces=ns))
+    summary = _clean(entry.findtext('atom:summary', default="", namespaces=ns))
+    authors = [
+        _clean(a.findtext('atom:name', default="", namespaces=ns))
+        for a in entry.findall('atom:author', ns)
+    ]
+    authors = [a for a in authors if a]
+
+    pdf_url = ""
+    for link in entry.findall('atom:link', ns):
+        if link.get('title') == 'pdf' or link.get('type') == 'application/pdf':
+            pdf_url = link.get('href', "")
+            break
+    if not pdf_url:
+        pdf_url = f'https://arxiv.org/pdf/{arxiv_id}'
+
+    return json.dumps({
+        'arxiv_id': arxiv_id,
+        'title':    title,
+        'authors':  '; '.join(authors),
+        'summary':  summary,
+        'pdf_url':  pdf_url,
+    })
+$$;
+
+CREATE TOOL_API json_field(json_str TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_field(json_str: str, field: str) -> str:
+    import json
+
+    try:
+        obj = json.loads(json_str)
+        return str(obj.get(field, ""))
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        return ""
+$$;
+
+CREATE TOOL_API append_json_array(array_json TEXT, item_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def append_json_array(array_json: str, item_json: str) -> str:
+    """Deterministic accumulator: parse array_json (or start a new array if
+    empty/invalid), append item_json (parsed as one object), return the
+    updated JSON array as text. Keeps per-paper digest assembly explicit and
+    safe rather than relying on SPL's native LIST serialization into a
+    TOOL_API's TEXT parameter."""
+    import json
+
+    try:
+        arr = json.loads(array_json) if array_json.strip() else []
+        if not isinstance(arr, list):
+            arr = []
+    except (json.JSONDecodeError, TypeError):
+        arr = []
+
+    try:
+        arr.append(json.loads(item_json))
+    except (json.JSONDecodeError, TypeError):
+        pass  # skip a malformed item rather than corrupt the whole array
+
+    return json.dumps(arr)
+$$;
+
+CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT)
+RETURNS TEXT AS PYTHON $$
+def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str) -> str:
+    """Package one paper's result as a JSON object string — the shape a
+    FastAPI backend hands straight to the Vue frontend as one card."""
+    import json
+
+    try:
+        n = int(float(section_count))
+    except (TypeError, ValueError):
+        n = 0
+
+    return json.dumps({
+        "arxiv_id":      arxiv_id,
+        "title":         title,
+        "authors":       authors,
+        "url":           url,
+        "section_count": n,
+        "digest":        digest,
+    })
+$$;

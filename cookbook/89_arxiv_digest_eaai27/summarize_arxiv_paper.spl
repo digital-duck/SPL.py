@@ -1,0 +1,72 @@
+-- summarize_arxiv_paper.spl
+-- Sub-workflow: given ONE arXiv paper URL, look up its ground-truth metadata,
+-- download the PDF, chunk it by section, summarize each section (map), then
+-- reduce to one structured per-paper digest. Returns a JSON object string —
+-- one "card" for the frontend.
+--
+-- Called by arxiv_digest.spl once per paper in the attendee's submitted list.
+
+IMPORT 'functions.spl'
+IMPORT 'tools'
+
+WORKFLOW summarize_arxiv_paper
+    INPUT:  @url            TEXT,
+            @section_tokens INT DEFAULT 120,
+            @digest_tokens  INT DEFAULT 400
+    OUTPUT: @paper_digest_json TEXT
+DO
+    -- Step A: ground-truth metadata (title/authors), not a guess from PDF headers
+    CALL extract_arxiv_id(@url) INTO @arxiv_id
+    CALL lookup_arxiv(@arxiv_id) INTO @meta_json
+    CALL json_field(@meta_json, 'title')   INTO @title
+    CALL json_field(@meta_json, 'authors') INTO @authors
+    CALL json_field(@meta_json, 'pdf_url') INTO @pdf_url
+
+    LOGGING f'[{@arxiv_id}] "{@title}" — downloading and chunking'
+
+    -- Step B: download PDF (cached, rate-limited) and split into sections
+    CALL download_arxiv_pdf(@pdf_url) INTO @pdf_path
+    CALL semantic_chunk_plan(@pdf_path) INTO @chunks_json
+    CALL list_count(@chunks_json) INTO @section_count
+
+    LOGGING f'[{@arxiv_id}] {@section_count} sections'
+
+    -- Step C: MAP — summarize each section independently
+    @section_summaries := ''
+    @j := 0
+    WHILE @j < @section_count DO
+        CALL get_chunk_field(@chunks_json, @j, 'title') INTO @sec_title
+        CALL get_chunk_field(@chunks_json, @j, 'text')  INTO @sec_text
+
+        GENERATE section_summarizer(@sec_title, @sec_text, @section_tokens)
+            WITH OUTPUT BUDGET @section_tokens TOKENS
+            INTO @sec_summary
+
+        @section_summaries := @section_summaries + f'### {@sec_title}\n{@sec_summary}\n\n'
+        @j := @j + 1
+    END
+
+    -- Step D: REDUCE — one structured digest for the whole paper
+    GENERATE paper_digest_writer(@title, @section_summaries, @digest_tokens)
+        WITH OUTPUT BUDGET @digest_tokens TOKENS
+        INTO @digest
+
+    -- Step E: package as one JSON object — the frontend's per-paper card
+    CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest)
+        INTO @paper_digest_json
+
+    LOGGING f'[{@arxiv_id}] digest complete'
+    RETURN @paper_digest_json
+
+EXCEPTION
+    WHEN ToolError THEN
+        LOGGING f'[{@url}] download/lookup failed — skipping'
+        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.')
+            INTO @paper_digest_json
+        RETURN @paper_digest_json
+    WHEN OTHERS THEN
+        LOGGING f'[{@url}] unexpected error — skipping'
+        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.')
+            INTO @paper_digest_json
+        RETURN @paper_digest_json
+END

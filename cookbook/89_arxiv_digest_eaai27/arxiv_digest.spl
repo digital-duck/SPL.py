@@ -1,0 +1,89 @@
+-- Recipe Name: arXiv Digest (EAAI-27 workshop capstone)
+-- Given a list of arXiv paper URLs an attendee submits, produce one
+-- structured digest per paper: sections summarized independently (map),
+-- then reduced into a paragraph-per-section + 3-bullet contribution summary
+-- (reduce) — the Map-Reduce pattern the EAAI-27 Model AI Assignment session
+-- walks through live. Returns a JSON array, one object per paper, ready for
+-- a thin frontend to render directly (no backend translation layer needed —
+-- see docs/conference/EAAI-2027/submission/.../handout.md, "Capstone Demo").
+--
+-- Adapted from cookbook/47_arxiv_morning_brief (download/chunk/map/reduce
+-- shape) and cookbook/72_verify_arxiv_references (ground-truth metadata
+-- lookup, per-item error isolation) — see tools.spl for attribution.
+--
+-- Usage (tools.spl's TOOL_API defs load via IMPORT 'tools' — no --tools flag
+-- needed; that flag is for external @spl_tool Python modules, a different
+-- mechanism used by e.g. cookbook/13_map_reduce/tools.py):
+--   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+--       --adapter ollama --model gemma3 \
+--       urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/2501.09732"]'
+--
+--   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+--       urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt"
+--
+-- Workshop-grid dispatch (this is the actual capstone demo path — the hub
+-- IS the SPL execution engine, so the frontend submits urls to the hub's
+-- task API directly; no separate backend service runs `spl3 run` on its
+-- behalf):
+--   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+--       --adapter momagrid --hub https://hub.WORKSHOP_DOMAIN \
+--       urls='["https://arxiv.org/abs/2501.12948"]'
+--
+-- Note on parallelism: today's SPL (3.0) dispatches sub-workflow CALLs
+-- sequentially within one script run (CALL PARALLEL fan-out is flagged for
+-- a future SPL version — see cookbook/47_arxiv_morning_brief/readme.md).
+-- The "several papers' worth of jobs in flight simultaneously" the EAAI-27
+-- capstone demo describes comes from concurrent attendee submissions each
+-- becoming their own script run against the shared hub, not from a single
+-- run's internal loop running in parallel.
+
+IMPORT 'summarize_arxiv_paper.spl'
+IMPORT 'tools'
+
+WORKFLOW arxiv_digest
+    INPUT:
+        @urls           TEXT,
+        @section_tokens INT DEFAULT 120,
+        @digest_tokens  INT DEFAULT 400
+    OUTPUT: @digest_json TEXT
+DO
+    LOGGING 'arXiv Digest — starting'
+
+    -- Normalise the submitted list: JSON array (what the web form POSTs),
+    -- comma/whitespace-delimited text, or a file path (CLI testing).
+    CALL parse_urls(@urls) INTO @urls
+    CALL list_count(@urls) INTO @n
+
+    LOGGING f'Papers to process: {@n}'
+
+    @results_json := '[]'
+    @i := 0
+
+    -- ── Per-paper loop ───────────────────────────────────────────────────
+    WHILE @i < @n DO
+        CALL list_get(@urls, @i + 1) INTO @url
+        LOGGING f'Paper {@i}/{@n}: {@url}'
+
+        DO
+            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens)
+                INTO @paper_digest_json
+            CALL append_json_array(@results_json, @paper_digest_json)
+                INTO @results_json
+        EXCEPTION
+            WHEN ToolError THEN
+                LOGGING f'Skipping {@url}: tool/download error'
+            WHEN OTHERS THEN
+                LOGGING f'Skipping {@url}: unexpected error'
+        END
+
+        @i := @i + 1
+    END
+
+    LOGGING f'All {@n} papers processed'
+    RETURN @results_json WITH status = 'complete', papers = @n
+
+EXCEPTION
+    WHEN OTHERS THEN
+        LOGGING 'arXiv digest failed'
+        RETURN '[]' WITH status = 'error'
+END
