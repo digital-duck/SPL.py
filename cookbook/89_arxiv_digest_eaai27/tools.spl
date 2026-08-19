@@ -6,9 +6,11 @@
 --     — cookbook/47_arxiv_morning_brief/tools.spl
 --   extract_arxiv_id, lookup_arxiv, json_field
 --     — cookbook/72_verify_arxiv_references/verify_arxiv_references.spl
--- New for this recipe: get_chunk_field, append_json_array
+-- New for this recipe: get_chunk_field, append_json_array,
+--   make_run_dir, save_pdf_copy, save_chunks (debug/out_dir logging)
 --
--- Stdlib tools used by this recipe (no TOOL_API needed): list_get, list_append
+-- Stdlib tools used by this recipe (no TOOL_API needed): list_get, list_append,
+--   write_file
 
 CREATE TOOL_API download_arxiv_pdf(url TEXT)
 RETURNS TEXT AS PYTHON $$
@@ -210,6 +212,81 @@ def parse_urls(raw: str) -> str:
 
     urls = [u.strip() for u in re.split(r"[,\s]+", raw) if u.strip()]
     return json.dumps(urls)
+$$;
+
+CREATE TOOL_API make_run_dir(out_dir TEXT)
+RETURNS TEXT AS PYTHON $$
+def make_run_dir(out_dir: str) -> str:
+    """Create '<out_dir>/run-<timestamp>/' and return its path — one shared
+    directory for every paper in a single arxiv_digest run (or a single
+    summarize_arxiv_paper unit-test run). Returns '' unchanged if out_dir is
+    empty, so debug dumping stays opt-in."""
+    import datetime
+    from pathlib import Path
+
+    out_dir = out_dir.strip()
+    if not out_dir:
+        return ""
+
+    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_dir = Path(out_dir) / f"run-{ts}"
+    run_dir.mkdir(parents=True, exist_ok=True)
+    return str(run_dir)
+$$;
+
+CREATE TOOL_API save_pdf_copy(pdf_path TEXT, arxiv_dir TEXT)
+RETURNS TEXT AS PYTHON $$
+def save_pdf_copy(pdf_path: str, arxiv_dir: str) -> str:
+    """Copy the (cached) downloaded PDF into '<arxiv_dir>/pdf/<name>.pdf' so
+    the exact bytes semantic_chunk_plan saw are inspectable per-run, without
+    depending on the shared download cache. Returns the new path, or '' if
+    arxiv_dir is empty."""
+    import shutil
+    from pathlib import Path
+
+    arxiv_dir = arxiv_dir.strip()
+    if not arxiv_dir:
+        return ""
+
+    src = Path(pdf_path)
+    pdf_dir = Path(arxiv_dir) / "pdf"
+    pdf_dir.mkdir(parents=True, exist_ok=True)
+    dest = pdf_dir / src.name
+    shutil.copy2(src, dest)
+    return str(dest)
+$$;
+
+CREATE TOOL_API save_chunks(chunks_json TEXT, arxiv_dir TEXT)
+RETURNS TEXT AS PYTHON $$
+def save_chunks(chunks_json: str, arxiv_dir: str) -> str:
+    """Write each section chunk from semantic_chunk_plan's output into
+    '<arxiv_dir>/chunk/NN_<slug>.md' — one file per section — so the
+    chunking logic (what got split where, and on what text) can be checked
+    directly rather than inferred from the final digest. Returns the chunk
+    directory path, or '' if arxiv_dir is empty."""
+    import json
+    import re
+    from pathlib import Path
+
+    arxiv_dir = arxiv_dir.strip()
+    if not arxiv_dir:
+        return ""
+
+    chunk_dir = Path(arxiv_dir) / "chunk"
+    chunk_dir.mkdir(parents=True, exist_ok=True)
+
+    try:
+        chunks = json.loads(chunks_json)
+    except (json.JSONDecodeError, TypeError):
+        chunks = []
+
+    for i, chunk in enumerate(chunks):
+        title = str(chunk.get("title", "")).strip() or "untitled"
+        slug = re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:40] or "untitled"
+        text = str(chunk.get("text", ""))
+        (chunk_dir / f"{i:02d}_{slug}.md").write_text(f"# {title}\n\n{text}", encoding="utf-8")
+
+    return str(chunk_dir)
 $$;
 
 CREATE TOOL_API extract_arxiv_id(ref_text TEXT)

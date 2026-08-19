@@ -13,21 +13,26 @@
 --
 -- Usage (tools.spl's TOOL_API defs load via IMPORT 'tools' — no --tools flag
 -- needed; that flag is for external @spl_tool Python modules, a different
--- mechanism used by e.g. cookbook/13_map_reduce/tools.py):
+-- mechanism used by e.g. cookbook/13_map_reduce/tools.py). Params go through
+-- spl3's -p/--param KEY=VALUE flag (spl3, unlike the older `spl` CLI, does
+-- NOT accept bare positional key=value args):
 --   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
 --       --adapter ollama --model gemma3 \
---       urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/2501.09732"]'
+--       -p urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/2501.09732"]'
 --
 --   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
---       urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt"
+--       -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt"
 --
--- Workshop-grid dispatch (this is the actual capstone demo path — the hub
--- IS the SPL execution engine, so the frontend submits urls to the hub's
--- task API directly; no separate backend service runs `spl3 run` on its
--- behalf):
+-- Workshop-grid dispatch (the capstone demo path). The hub never runs SPL —
+-- something has to actually drive this .spl workflow (parse, chunk, loop,
+-- map-reduce) and submit each individual GENERATE call to the hub as a
+-- single-prompt task. That's either a person running spl3 by hand (below),
+-- or, for the web form, a thin backend process that shells out to the same
+-- command on the attendee's behalf (see arxiv-digest-eaai27 repo's
+-- api/app.py):
 --   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
 --       --adapter momagrid --hub https://hub.WORKSHOP_DOMAIN \
---       urls='["https://arxiv.org/abs/2501.12948"]'
+--       -p urls='["https://arxiv.org/abs/2501.12948"]'
 --
 -- Note on parallelism: today's SPL (3.0) dispatches sub-workflow CALLs
 -- sequentially within one script run (CALL PARALLEL fan-out is flagged for
@@ -44,7 +49,8 @@ WORKFLOW arxiv_digest
     INPUT:
         @urls           TEXT,
         @section_tokens INT DEFAULT 120,
-        @digest_tokens  INT DEFAULT 400
+        @digest_tokens  INT DEFAULT 400,
+        @out_dir        TEXT DEFAULT ''
     OUTPUT: @digest_json TEXT
 DO
     LOGGING 'arXiv Digest — starting'
@@ -56,6 +62,17 @@ DO
 
     LOGGING f'Papers to process: {@n}'
 
+    -- Resolve RUN_DIR = <out_dir>/run-<timestamp>/ ONCE for the whole batch,
+    -- so every paper's ARXIV_DIR (in summarize_arxiv_paper.spl) lands under
+    -- the same run. Passed down explicitly via @run_dir so each per-paper
+    -- CALL doesn't re-timestamp its own nested run dir (@out_dir stays '').
+    @run_dir := ''
+    EVALUATE @out_dir
+        WHEN != '' THEN
+            CALL make_run_dir(@out_dir) INTO @run_dir
+            LOGGING f'Run dir: {@run_dir}'
+    END
+
     @results_json := '[]'
     @i := 0
 
@@ -65,7 +82,7 @@ DO
         LOGGING f'Paper {@i}/{@n}: {@url}'
 
         DO
-            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens)
+            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, '', @run_dir)
                 INTO @paper_digest_json
             CALL append_json_array(@results_json, @paper_digest_json)
                 INTO @results_json
@@ -80,6 +97,14 @@ DO
     END
 
     LOGGING f'All {@n} papers processed'
+
+    -- Debug dump: the final aggregated array, at the top of RUN_DIR,
+    -- alongside each paper's own ARXIV_DIR from summarize_arxiv_paper.
+    EVALUATE @run_dir
+        WHEN != '' THEN
+            CALL write_file(f'{@run_dir}/results.json', @results_json) INTO NONE
+    END
+
     RETURN @results_json WITH status = 'complete', papers = @n
 
 EXCEPTION

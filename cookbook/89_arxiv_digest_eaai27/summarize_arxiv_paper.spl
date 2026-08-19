@@ -5,6 +5,21 @@
 -- one "card" for the frontend.
 --
 -- Called by arxiv_digest.spl once per paper in the attendee's submitted list.
+--
+-- Debug logging (@out_dir / @run_dir — see readme.md "Debugging" section):
+--   RUN_DIR   = <out_dir>/run-<timestamp>/         one per arxiv_digest batch
+--                                                   (or per standalone unit-test run)
+--   ARXIV_DIR = RUN_DIR/<arxiv-id>/                one per paper
+--     ARXIV_DIR/pdf/<name>.pdf                     the exact PDF chunking ran on
+--     ARXIV_DIR/chunk/NN_<slug>.md                 one file per section chunk
+--     ARXIV_DIR/section_summaries.md               MAP step output
+--     ARXIV_DIR/digest-<arxiv-id>.json             REDUCE step output + final
+--                                                   assembled card (one file —
+--                                                   the card's "digest" field
+--                                                   already carries the text)
+-- When called from arxiv_digest.spl, RUN_DIR is already resolved once for
+-- the whole batch and passed in via @run_dir (so @out_dir here stays '').
+-- Run standalone, @out_dir triggers this workflow to create its own RUN_DIR.
 
 IMPORT 'functions.spl'
 IMPORT 'tools'
@@ -12,9 +27,21 @@ IMPORT 'tools'
 WORKFLOW summarize_arxiv_paper
     INPUT:  @url            TEXT,
             @section_tokens INT DEFAULT 120,
-            @digest_tokens  INT DEFAULT 400
+            @digest_tokens  INT DEFAULT 400,
+            @out_dir        TEXT DEFAULT '',
+            @run_dir        TEXT DEFAULT ''
     OUTPUT: @paper_digest_json TEXT
 DO
+    -- Resolve RUN_DIR: use the caller-supplied one (arxiv_digest.spl already
+    -- made it for the whole batch), or make our own when run standalone.
+    EVALUATE @run_dir
+        WHEN = '' THEN
+            EVALUATE @out_dir
+                WHEN != '' THEN
+                    CALL make_run_dir(@out_dir) INTO @run_dir
+            END
+    END
+
     -- Step A: ground-truth metadata (title/authors), not a guess from PDF headers
     CALL extract_arxiv_id(@url) INTO @arxiv_id
     CALL lookup_arxiv(@arxiv_id) INTO @meta_json
@@ -22,14 +49,38 @@ DO
     CALL json_field(@meta_json, 'authors') INTO @authors
     CALL json_field(@meta_json, 'pdf_url') INTO @pdf_url
 
+    -- ARXIV_DIR = RUN_DIR/<arxiv-id>/ — only meaningful once RUN_DIR is known
+    @arxiv_dir := ''
+    EVALUATE @run_dir
+        WHEN != '' THEN
+            @arxiv_dir := f'{@run_dir}/{@arxiv_id}'
+            LOGGING f'[{@arxiv_id}] debug artifacts -> {@arxiv_dir}'
+    END
+
     LOGGING f'[{@arxiv_id}] "{@title}" — downloading and chunking'
 
     -- Step B: download PDF (cached, rate-limited) and split into sections
     CALL download_arxiv_pdf(@pdf_url) INTO @pdf_path
+
+    -- Debug dump: the exact PDF bytes semantic_chunk_plan is about to read,
+    -- copied out of the shared download cache into ARXIV_DIR/pdf/.
+    EVALUATE @arxiv_dir
+        WHEN != '' THEN
+            CALL save_pdf_copy(@pdf_path, @arxiv_dir) INTO @pdf_debug_path
+    END
+
     CALL semantic_chunk_plan(@pdf_path) INTO @chunks_json
     CALL list_count(@chunks_json) INTO @section_count
 
     LOGGING f'[{@arxiv_id}] {@section_count} sections'
+
+    -- Debug dump: one file per section chunk in ARXIV_DIR/chunk/ — this is
+    -- the critical one for verifying the semantic chunking logic, since it
+    -- shows exactly how the PDF text got split before any summarization.
+    EVALUATE @arxiv_dir
+        WHEN != '' THEN
+            CALL save_chunks(@chunks_json, @arxiv_dir) INTO @chunk_debug_dir
+    END
 
     -- Step C: MAP — summarize each section independently
     @section_summaries := ''
@@ -54,6 +105,15 @@ DO
     -- Step E: package as one JSON object — the frontend's per-paper card
     CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest)
         INTO @paper_digest_json
+
+    -- Debug dump: the map-step summaries, and the final assembled card (its
+    -- own "digest" field already carries the reduce-step digest text, so one
+    -- file covers both rather than duplicating it into a separate .md).
+    EVALUATE @arxiv_dir
+        WHEN != '' THEN
+            CALL write_file(f'{@arxiv_dir}/section_summaries.md', @section_summaries) INTO NONE
+            CALL write_file(f'{@arxiv_dir}/digest-{@arxiv_id}.json', @paper_digest_json) INTO NONE
+    END
 
     LOGGING f'[{@arxiv_id}] digest complete'
     RETURN @paper_digest_json

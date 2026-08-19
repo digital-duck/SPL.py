@@ -37,7 +37,8 @@ New in this recipe: `get_chunk_field` (pulls one field out of a chunked section
 without relying on native LIST↔TOOL_API serialization), `append_json_array` /
 `assemble_paper_digest` (deterministic JSON assembly so the output is a clean
 array of objects a frontend can render directly, rather than a single Markdown
-blob).
+blob), and `make_run_dir` / `save_pdf_copy` / `save_chunks` (the `out_dir`
+debug-logging hierarchy — see "Debugging" below).
 
 ## Files
 
@@ -78,23 +79,99 @@ the `.spl` files themselves — no `--tools` flag needed. (That flag is for a
 different mechanism: external `@spl_tool`-decorated Python modules, as in
 `cookbook/13_map_reduce/tools.py`.)
 
+Params go through spl3's `-p`/`--param KEY=VALUE` flag — spl3 (unlike the
+older `spl` CLI some sibling recipes were written against) does not accept
+bare positional `key=value` args.
+
 ```bash
 # Local run against Ollama
 spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
     --adapter ollama --model gemma3 \
-    urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/1706.03762"]'
+    -p urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/1706.03762"]'
 
 # From a file
 spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
-    urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt"
+    --llm claude_cli:claude-sonnet-5 \
+    -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt" \
+    -p out_dir="cookbook/89_arxiv_digest_eaai27/output/"
 
-# Workshop grid dispatch — the actual capstone demo path. The hub IS the SPL
-# execution engine, so a thin frontend submits `urls` to the hub's task API
-# directly; no separate backend service shells out to `spl3 run` on its behalf.
+# Workshop grid dispatch — the capstone demo path. The hub never runs SPL;
+# a driver process (a person running spl3 by hand, or arxiv-digest-eaai27's
+# thin FastAPI backend on the web form's behalf) does the orchestration and
+# submits each individual GENERATE call to the hub as a single-prompt task.
 spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
     --adapter momagrid --hub https://hub.WORKSHOP_DOMAIN \
-    urls='["https://arxiv.org/abs/2501.12948"]'
+    -p urls='["https://arxiv.org/abs/2501.12948"]'
 ```
+
+### Debugging: dumping intermediate output with `out_dir`
+
+Both `arxiv_digest` and `summarize_arxiv_paper` take an optional `@out_dir TEXT
+DEFAULT ''` input. When set, every stage's output is written to disk under a
+per-run, per-paper directory hierarchy instead of only ever showing up buried
+in the final `digest` string:
+
+```
+RUN_DIR   = <out_dir>/run-<timestamp>/     one per arxiv_digest batch
+                                            (or per standalone unit-test run)
+ARXIV_DIR = RUN_DIR/<arxiv-id>/            one per paper
+```
+
+| Path (relative to ARXIV_DIR unless noted) | Written by | Contents |
+|---|---|---|
+| `pdf/<name>.pdf` | `summarize_arxiv_paper` | the exact PDF `semantic_chunk_plan` read — copied out of the shared download cache so it's inspectable per-run |
+| `chunk/NN_<slug>.md` | `summarize_arxiv_paper` | one file per section chunk — **the critical one for verifying the semantic chunking logic**: shows exactly how the PDF text got split, before any summarization touches it |
+| `section_summaries.md` | `summarize_arxiv_paper` | the MAP step's per-section summaries |
+| `digest-<arxiv-id>.json` | `summarize_arxiv_paper` | the REDUCE step's digest and the final assembled card in one file — the card's `digest` field already carries the REDUCE output, so there's no separate `.md` copy |
+| `RUN_DIR/results.json` | `arxiv_digest` | the final aggregated JSON array for the whole batch |
+
+`RUN_DIR` is resolved **once** per batch in `arxiv_digest.spl` (via the
+`make_run_dir` tool) and threaded down to every `summarize_arxiv_paper` call
+via `@run_dir`, so all papers in one run land under the same timestamped
+folder rather than each getting their own. Run `summarize_arxiv_paper.spl`
+standalone (see below) and it makes its own `RUN_DIR` from `@out_dir`
+directly.
+
+```bash
+spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+    --adapter echo \
+    -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt" \
+    -p out_dir="/tmp/arxiv_digest_debug"
+```
+
+```
+/tmp/arxiv_digest_debug/
+  run-20260819-061809/
+    results.json
+    2501.12948/
+      pdf/2501.12948v2.pdf
+      chunk/00_1_introduction.md
+      chunk/01_5_deepseek.md
+      ...
+      section_summaries.md
+      digest-2501.12948.json
+```
+
+Nothing is written when `out_dir` is left at its default (`''`) — this is
+opt-in and has no effect on normal runs.
+
+### Unit-testing `summarize_arxiv_paper` directly
+
+`summarize_arxiv_paper.spl` is a standalone `WORKFLOW` — run it directly
+against one paper URL to isolate the map-reduce pipeline (download → chunk →
+summarize → reduce) from the outer loop and `parse_urls` normalization in
+`arxiv_digest.spl`:
+
+```bash
+spl3 run cookbook/89_arxiv_digest_eaai27/summarize_arxiv_paper.spl \
+    --adapter ollama --model gemma3 \
+    -p url="https://arxiv.org/abs/1706.03762" \
+    -p out_dir="$HOME/projects/digital-duck/SPL.py/cookbook/89_arxiv_digest_eaai27/output/"
+```
+
+Useful when a paper misbehaves inside the full batch and you want to isolate
+whether the problem is in `parse_urls`/the per-item loop in `arxiv_digest.spl`,
+or in the summarization pipeline itself.
 
 ## Validated
 

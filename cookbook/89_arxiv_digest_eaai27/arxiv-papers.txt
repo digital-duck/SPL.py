@@ -1,3 +1,10 @@
 # Sample paper list for testing Recipe 89 — one arXiv URL per line, '#' comments allowed.
+
+# deepseek
 https://arxiv.org/abs/2501.12948
-https://arxiv.org/abs/1706.03762
+
+# transformer
+# https://arxiv.org/abs/1706.03762
+
+# spl
+# https://arxiv.org/abs/2607.07727
