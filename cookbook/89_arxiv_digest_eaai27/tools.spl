@@ -98,9 +98,9 @@ def download_arxiv_pdf(url: str) -> str:
     return pdf_path
 $$;
 
-CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT)
+CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT, max_chars TEXT)
 RETURNS TEXT AS PYTHON $$
-def semantic_chunk_plan(pdf_path: str) -> str:
+def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     import json
     import re
     from pathlib import Path
@@ -109,9 +109,23 @@ def semantic_chunk_plan(pdf_path: str) -> str:
     if not path.exists():
         raise RuntimeError(f"PDF not found: {pdf_path}")
 
+    # Default 200_000 chars — raised from the 40_000 originally inherited from
+    # cookbook/47_arxiv_morning_brief/tools.spl, which silently truncated
+    # mid-paper and dropped trailing sections entirely (confirmed 2026-08-19: a
+    # 54,945-char paper had its Conclusion section, starting at offset 48,484,
+    # cut off before the header regex below ever saw it). Now caller-tunable —
+    # see arxiv_digest.spl's @pdf_max_chars / the frontend Settings page — since
+    # this doesn't change per-call LLM cost (each matched header still becomes
+    # its own independently-summarized chunk), only how much of the paper the
+    # chunker gets to see in the first place.
+    try:
+        effective_max_chars = int(float(max_chars)) if str(max_chars).strip() else 200_000
+    except (TypeError, ValueError):
+        effective_max_chars = 200_000
+
     try:
         from dd_extract.pdf import PDFExtractor
-        extractor = PDFExtractor(engine="pypdf", max_chars=40_000)
+        extractor = PDFExtractor(engine="pypdf", max_chars=effective_max_chars)
         text = extractor.from_file(pdf_path)
     except Exception as e:
         raise RuntimeError(f"dd-extract failed on {pdf_path}: {e}") from e
@@ -147,6 +161,25 @@ def semantic_chunk_plan(pdf_path: str) -> str:
                 "text":  "\n\n".join(group),
                 "page":  idx // group_size + 1,
             })
+
+    # Drop References/Bibliography, Appendix/Appendices, and Abstract
+    # sections — the first two are citation lists / supplementary material,
+    # not core paper content worth a section_summarizer call; Abstract is
+    # dropped for the opposite reason — it's already fetched verbatim as
+    # ground truth via lookup_arxiv (see summarize_arxiv_paper.spl's @abstract
+    # / assemble_paper_digest), so re-chunking and re-summarizing it here
+    # would be redundant and risks a paraphrased duplicate showing up
+    # alongside the real one. Only applied when it leaves at least one chunk
+    # behind, so a false-positive title match (e.g. a paragraph-grouped
+    # "Section N" chunk that happens to start with one of these words) can't
+    # silently empty the whole paper.
+    EXCLUDE_TITLE_RE = re.compile(
+        r'^(?:\d+\.?\s+)?(references?|bibliography|append(?:ix(?:es)?|ices)|abstract)\b',
+        re.IGNORECASE,
+    )
+    filtered = [c for c in chunks if not EXCLUDE_TITLE_RE.match(c["title"].strip())]
+    if filtered:
+        chunks = filtered
 
     if not chunks:
         chunks = [{"title": "Document", "text": text.strip(), "page": 1}]
@@ -184,18 +217,33 @@ CREATE TOOL_API parse_urls(raw TEXT)
 RETURNS TEXT AS PYTHON $$
 def parse_urls(raw: str) -> str:
     """Normalise the attendee's submitted paper list — accepts a JSON array
-    (what the web front's form POST will send), a comma/whitespace-delimited
-    string, or a file path (for CLI testing) — into a JSON array of URLs."""
+    (what the web front's form POST will send — see SubmitForm.vue, which
+    pre-splits on the same delimiter set client-side), or a raw string
+    delimited by any mix of commas, semicolons, or whitespace (space, tab,
+    newline), or a file path (for CLI testing) — into a JSON array of URLs.
+    Each entry may be a full arxiv.org URL or a bare arXiv id
+    ('2510.01230', optionally 'arXiv:2510.01230' or with a 'vN' suffix);
+    bare ids are expanded to 'https://arxiv.org/abs/<id>' so downstream
+    steps (extract_arxiv_id, lookup_arxiv, ...) only ever see URLs."""
     import json
     import re
     from pathlib import Path
+
+    ARXIV_ID_RE = re.compile(r'^(?:arxiv\s*:\s*)?(\d{4}\.\d{4,5})(?:v\d+)?$', re.IGNORECASE)
+
+    def _to_url(entry: str) -> str:
+        entry = entry.strip()
+        m = ARXIV_ID_RE.match(entry)
+        if m:
+            return f'https://arxiv.org/abs/{m.group(1)}'
+        return entry
 
     raw = raw.strip()
 
     try:
         parsed = json.loads(raw)
         if isinstance(parsed, list):
-            urls = [u.strip() for u in parsed if str(u).strip()]
+            urls = [_to_url(str(u)) for u in parsed if str(u).strip()]
             return json.dumps(urls)
     except (json.JSONDecodeError, ValueError):
         pass
@@ -205,12 +253,12 @@ def parse_urls(raw: str) -> str:
         if candidate.is_file():
             lines = candidate.read_text(encoding="utf-8").splitlines()
             urls = [
-                ln.strip() for ln in lines
+                _to_url(ln) for ln in lines
                 if ln.strip() and not ln.strip().startswith("#")
             ]
             return json.dumps(urls)
 
-    urls = [u.strip() for u in re.split(r"[,\s]+", raw) if u.strip()]
+    urls = [_to_url(u) for u in re.split(r"[,;\s]+", raw) if u.strip()]
     return json.dumps(urls)
 $$;
 
@@ -308,54 +356,100 @@ $$;
 CREATE TOOL_API lookup_arxiv(arxiv_id TEXT)
 RETURNS TEXT AS PYTHON $$
 def lookup_arxiv(arxiv_id: str) -> str:
-    """Query the public arXiv Atom API for the ground-truth record (title,
-    authors, abstract, pdf url) of arxiv_id — the source of truth for the
-    paper's title/authors, not a guess from PDF header text."""
+    """Look up the ground-truth record (title, authors, abstract, pdf url)
+    for arxiv_id, in three falling-back tiers:
+
+    1. The Atom API (export.arxiv.org) — richest metadata, but this host has
+       been observed (2026-08-19) to hang mid-TLS-handshake on some
+       networks, so it gets a short timeout and a fall-through on any
+       failure rather than blocking the whole paper for tens of seconds.
+    2. Scraping arxiv.org/abs/<id> directly — arxiv.org itself (as opposed
+       to export.arxiv.org) has stayed reliable even when the API host
+       hangs; its citation_* <meta> tags carry the same title/authors/
+       pdf-url data as the Atom API, just as HTML instead of Atom XML.
+    3. A deterministic https://arxiv.org/pdf/<id> URL with no metadata, so
+       the caller (summarize_arxiv_paper.spl) still downloads and chunks
+       the actual paper even when both lookups above fail — only the
+       title/authors are missing, not the paper's content.
+    """
+    import html as _html
     import json
     import re
     import xml.etree.ElementTree as ET
 
     import httpx
 
-    api_url = f'http://export.arxiv.org/api/query?id_list={arxiv_id}'
-    try:
-        resp = httpx.get(api_url, timeout=30.0, follow_redirects=True)
-    except Exception as e:
-        raise RuntimeError(f'Network error querying arXiv API for {arxiv_id}: {e}') from e
-    if resp.status_code != 200:
-        raise RuntimeError(f'HTTP {resp.status_code} from arXiv API for {arxiv_id}')
-
-    ns = {'atom': 'http://www.w3.org/2005/Atom'}
-    root = ET.fromstring(resp.text)
-    entry = root.find('atom:entry', ns)
-    if entry is None:
-        raise RuntimeError(f'No arXiv entry found for id {arxiv_id} (withdrawn or mistyped)')
+    fallback_pdf_url = f'https://arxiv.org/pdf/{arxiv_id}'
 
     def _clean(s):
-        return re.sub(r'\s+', ' ', (s or "")).strip()
+        return re.sub(r'\s+', ' ', _html.unescape(s or "")).strip()
 
-    title   = _clean(entry.findtext('atom:title', default="", namespaces=ns))
-    summary = _clean(entry.findtext('atom:summary', default="", namespaces=ns))
-    authors = [
-        _clean(a.findtext('atom:name', default="", namespaces=ns))
-        for a in entry.findall('atom:author', ns)
-    ]
-    authors = [a for a in authors if a]
+    # Tier 1: Atom API
+    try:
+        api_url = f'http://export.arxiv.org/api/query?id_list={arxiv_id}'
+        resp = httpx.get(api_url, timeout=8.0, follow_redirects=True)
+        if resp.status_code == 200:
+            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            root = ET.fromstring(resp.text)
+            entry = root.find('atom:entry', ns)
+            if entry is not None:
+                title = _clean(entry.findtext('atom:title', default="", namespaces=ns))
+                if title:
+                    summary = _clean(entry.findtext('atom:summary', default="", namespaces=ns))
+                    authors = [
+                        _clean(a.findtext('atom:name', default="", namespaces=ns))
+                        for a in entry.findall('atom:author', ns)
+                    ]
+                    authors = [a for a in authors if a]
+                    pdf_url = ""
+                    for link in entry.findall('atom:link', ns):
+                        if link.get('title') == 'pdf' or link.get('type') == 'application/pdf':
+                            pdf_url = link.get('href', "")
+                            break
+                    return json.dumps({
+                        'arxiv_id': arxiv_id,
+                        'title':    title,
+                        'authors':  '; '.join(authors),
+                        'summary':  summary,
+                        'pdf_url':  pdf_url or fallback_pdf_url,
+                    })
+    except Exception:
+        pass  # fall through to the HTML scrape below
 
-    pdf_url = ""
-    for link in entry.findall('atom:link', ns):
-        if link.get('title') == 'pdf' or link.get('type') == 'application/pdf':
-            pdf_url = link.get('href', "")
-            break
-    if not pdf_url:
-        pdf_url = f'https://arxiv.org/pdf/{arxiv_id}'
+    # Tier 2: scrape the abs page's citation_* meta tags
+    try:
+        abs_url = f'https://arxiv.org/abs/{arxiv_id}'
+        resp = httpx.get(abs_url, timeout=15.0, follow_redirects=True)
+        if resp.status_code == 200:
+            page = resp.text
+            m = re.search(r'<meta name="citation_title" content="([^"]*)"', page)
+            title = _clean(m.group(1)) if m else ""
+            if title:
+                authors = [
+                    _clean(a) for a in
+                    re.findall(r'<meta name="citation_author" content="([^"]*)"', page)
+                ]
+                m = re.search(r'<meta name="citation_abstract" content="([^"]*)"', page)
+                summary = _clean(m.group(1)) if m else ""
+                m = re.search(r'<meta name="citation_pdf_url" content="([^"]*)"', page)
+                pdf_url = m.group(1) if m else fallback_pdf_url
+                return json.dumps({
+                    'arxiv_id': arxiv_id,
+                    'title':    title,
+                    'authors':  '; '.join(authors),
+                    'summary':  summary,
+                    'pdf_url':  pdf_url,
+                })
+    except Exception:
+        pass  # fall through to the PDF-only fallback below
 
+    # Tier 3: no metadata source worked — still let the paper get processed
     return json.dumps({
         'arxiv_id': arxiv_id,
-        'title':    title,
-        'authors':  '; '.join(authors),
-        'summary':  summary,
-        'pdf_url':  pdf_url,
+        'title':    'Unknown',
+        'authors':  '',
+        'summary':  '',
+        'pdf_url':  fallback_pdf_url,
     })
 $$;
 
@@ -396,11 +490,15 @@ def append_json_array(array_json: str, item_json: str) -> str:
     return json.dumps(arr)
 $$;
 
-CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT)
+CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT, abstract TEXT)
 RETURNS TEXT AS PYTHON $$
-def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str) -> str:
+def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str, abstract: str = "") -> str:
     """Package one paper's result as a JSON object string — the shape a
-    FastAPI backend hands straight to the Vue frontend as one card."""
+    FastAPI backend hands straight to the Vue frontend as one card.
+    'abstract' is the paper's own abstract text verbatim (from lookup_arxiv's
+    ground-truth metadata, NOT an LLM summary — see semantic_chunk_plan's
+    Abstract-section exclusion in tools.spl), displayed as-is by the
+    frontend rather than run through paper_digest_writer."""
     import json
 
     try:
@@ -414,6 +512,7 @@ def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, sec
         "authors":       authors,
         "url":           url,
         "section_count": n,
+        "abstract":      abstract,
         "digest":        digest,
     })
 $$;

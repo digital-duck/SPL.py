@@ -12,8 +12,11 @@ RETURNS TEXT
 AS $$
 You are a technical summarizer. Produce a concise summary of the following
 research paper section in plain English. Focus on methods and findings.
-Aim for {max_tokens} words or fewer. Write plain prose only — no headings,
-no bullet points, no preamble such as "This section...".
+Stay well under {max_tokens} words — leave headroom, since generation is cut
+off at a hard token limit and an unfinished sentence is worse than a shorter
+complete one. Write 2-4 complete sentences and stop; do not pad toward the
+limit. Write plain prose only — no headings, no bullet points, no preamble
+such as "This section...".
 
 Section: {section_title}
 
@@ -28,13 +31,21 @@ live audience unfamiliar with it. You are given per-section summaries below,
 each already condensed. Using ONLY the information in these summaries (do
 not invent details not present in them), write:
 
-1. One short paragraph per section, in the same order as given, each
-   introduced by the section's name as a bold label (e.g. "**Introduction:**
-   ...").
+1. One paragraph per section, in the same order as given, each introduced by
+   the section's name as a bold label (e.g. "**Introduction:** ..."). Keep
+   each paragraph to at most 5 complete sentences — a paper with many
+   sections needs shorter paragraphs than one with few, since every section
+   AND the Key Contributions block below must fit in the length budget.
 2. A final "**Key Contributions:**" block with exactly 3 bullet points
-   capturing the paper's core contribution, method, and main result.
+   capturing the paper's core contribution, method, and main result. This
+   block is mandatory — never omit it or leave it unfinished.
 
-Target length: approximately {max_tokens} words total. Write Markdown.
+Hard length budget: {max_tokens} words total, generation is cut off at a hard
+token limit with no warning. Budget your words across ALL sections plus the
+Key Contributions block BEFORE writing, so you reach a complete final bullet
+rather than running out of room partway through — a shorter digest that
+finishes cleanly is far better than a longer one truncated mid-sentence.
+Write Markdown.
 
 Paper title: {title}
 

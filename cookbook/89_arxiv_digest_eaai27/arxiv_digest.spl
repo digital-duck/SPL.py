@@ -48,8 +48,14 @@ IMPORT 'tools'
 WORKFLOW arxiv_digest
     INPUT:
         @urls           TEXT,
-        @section_tokens INT DEFAULT 120,
-        @digest_tokens  INT DEFAULT 400,
+        -- Note: functions.spl's prompts tell the model to target this many
+        -- WORDS, but WITH OUTPUT BUDGET enforces it as a hard TOKEN cap —
+        -- English runs ~0.75 words/token, so these carry ~35% headroom over
+        -- the literal word target to avoid mid-sentence truncation (observed
+        -- 2026-08-19 at the old 120/400 defaults on a 9-section paper).
+        @section_tokens INT DEFAULT 180,
+        @digest_tokens  INT DEFAULT 700,
+        @pdf_max_chars  INT DEFAULT 200000,
         @out_dir        TEXT DEFAULT ''
     OUTPUT: @digest_json TEXT
 DO
@@ -82,15 +88,32 @@ DO
         LOGGING f'Paper {@i}/{@n}: {@url}'
 
         DO
-            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, '', @run_dir)
+            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir)
                 INTO @paper_digest_json
             CALL append_json_array(@results_json, @paper_digest_json)
                 INTO @results_json
         EXCEPTION
+            -- summarize_arxiv_paper.spl already catches its own ToolError/
+            -- OTHERS internally and returns a fallback digest card (see its
+            -- own EXCEPTION block) — this outer handler only fires for
+            -- failures that escape THAT try (e.g. an adapter-level error
+            -- during GENERATE, observed 2026-08-19 to propagate past the
+            -- inner handler and abort just this one CALL). Without adding a
+            -- fallback card here too, such a paper silently vanishes from
+            -- @results_json instead of showing up as a visible error in the
+            -- frontend — so mirror the same fallback shape here.
             WHEN ToolError THEN
                 LOGGING f'Skipping {@url}: tool/download error'
+                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.', '')
+                    INTO @paper_digest_json
+                CALL append_json_array(@results_json, @paper_digest_json)
+                    INTO @results_json
             WHEN OTHERS THEN
                 LOGGING f'Skipping {@url}: unexpected error'
+                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.', '')
+                    INTO @paper_digest_json
+                CALL append_json_array(@results_json, @paper_digest_json)
+                    INTO @results_json
         END
 
         @i := @i + 1

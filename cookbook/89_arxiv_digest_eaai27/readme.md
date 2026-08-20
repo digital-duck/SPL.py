@@ -62,6 +62,7 @@ debug-logging hierarchy — see "Debugging" below).
     "authors": "...",
     "url": "https://arxiv.org/abs/2501.12948",
     "section_count": 7,
+    "abstract": "... the paper's own abstract, verbatim from arXiv metadata — not LLM-summarized, and excluded from chunking (see tools.spl's semantic_chunk_plan) so it's never re-generated ...",
     "digest": "**Introduction:** ...\n\n**Key Contributions:**\n- ...\n- ...\n- ..."
   },
   ...
@@ -121,7 +122,7 @@ ARXIV_DIR = RUN_DIR/<arxiv-id>/            one per paper
 |---|---|---|
 | `pdf/<name>.pdf` | `summarize_arxiv_paper` | the exact PDF `semantic_chunk_plan` read — copied out of the shared download cache so it's inspectable per-run |
 | `chunk/NN_<slug>.md` | `summarize_arxiv_paper` | one file per section chunk — **the critical one for verifying the semantic chunking logic**: shows exactly how the PDF text got split, before any summarization touches it |
-| `section_summaries.md` | `summarize_arxiv_paper` | the MAP step's per-section summaries |
+| `section_summary_raw.md` | `summarize_arxiv_paper` | the MAP step's per-section summaries — named "_raw" so `digest-<arxiv-id>.json` (the actual REDUCE-step output) is what draws the eye |
 | `digest-<arxiv-id>.json` | `summarize_arxiv_paper` | the REDUCE step's digest and the final assembled card in one file — the card's `digest` field already carries the REDUCE output, so there's no separate `.md` copy |
 | `RUN_DIR/results.json` | `arxiv_digest` | the final aggregated JSON array for the whole batch |
 
@@ -148,7 +149,7 @@ spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
       chunk/00_1_introduction.md
       chunk/01_5_deepseek.md
       ...
-      section_summaries.md
+      section_summary_raw.md
       digest-2501.12948.json
 ```
 
@@ -194,6 +195,17 @@ in flight simultaneously" the EAAI-27 capstone describes comes from **concurrent
 attendee submissions**, each becoming its own script run against the shared hub —
 not from a single run's internal per-paper loop running in parallel. Worth being
 precise about this when describing the demo live.
+
+## Fixed issues
+
+- **Trailing sections silently dropped (2026-08-19).** `semantic_chunk_plan`'s
+  `PDFExtractor(..., max_chars=40_000)` (inherited from recipe 47) truncated the
+  extracted text before chunking ever ran. For a 54,945-char paper, the Conclusion
+  section (starting at offset 48,484) was cut off entirely — not mis-chunked, just
+  never seen by the header regex, so the digest silently ended at "Discussion" with
+  no indication anything was missing. Raised to `max_chars=200_000`; verified fixed
+  against the same paper (arXiv 2510.01230) — chunk count went from 6 to 9,
+  correctly including Limitations, Conclusion, and References.
 
 ## Not yet done
 

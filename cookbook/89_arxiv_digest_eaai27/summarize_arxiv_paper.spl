@@ -12,7 +12,12 @@
 --   ARXIV_DIR = RUN_DIR/<arxiv-id>/                one per paper
 --     ARXIV_DIR/pdf/<name>.pdf                     the exact PDF chunking ran on
 --     ARXIV_DIR/chunk/NN_<slug>.md                 one file per section chunk
---     ARXIV_DIR/section_summaries.md               MAP step output
+--     ARXIV_DIR/section_summary_raw.md              MAP step output (named
+--                                                    "_raw" so the final
+--                                                    digest-<id>.json — the
+--                                                    REDUCE step's actual
+--                                                    output — is what a
+--                                                    reader's eye lands on)
 --     ARXIV_DIR/digest-<arxiv-id>.json             REDUCE step output + final
 --                                                   assembled card (one file —
 --                                                   the card's "digest" field
@@ -25,9 +30,15 @@ IMPORT 'functions.spl'
 IMPORT 'tools'
 
 WORKFLOW summarize_arxiv_paper
+    -- Note: functions.spl's prompts target these values as WORDS, but WITH
+    -- OUTPUT BUDGET below enforces them as hard TOKEN caps — English runs
+    -- ~0.75 words/token, so these carry ~35% headroom over the literal word
+    -- target to avoid mid-sentence truncation (observed 2026-08-19 at the
+    -- old 120/400 defaults on a 9-section paper).
     INPUT:  @url            TEXT,
-            @section_tokens INT DEFAULT 120,
-            @digest_tokens  INT DEFAULT 400,
+            @section_tokens INT DEFAULT 180,
+            @digest_tokens  INT DEFAULT 700,
+            @pdf_max_chars  INT DEFAULT 200000,
             @out_dir        TEXT DEFAULT '',
             @run_dir        TEXT DEFAULT ''
     OUTPUT: @paper_digest_json TEXT
@@ -45,9 +56,12 @@ DO
     -- Step A: ground-truth metadata (title/authors), not a guess from PDF headers
     CALL extract_arxiv_id(@url) INTO @arxiv_id
     CALL lookup_arxiv(@arxiv_id) INTO @meta_json
-    CALL json_field(@meta_json, 'title')   INTO @title
-    CALL json_field(@meta_json, 'authors') INTO @authors
-    CALL json_field(@meta_json, 'pdf_url') INTO @pdf_url
+    CALL json_field(@meta_json, 'title')    INTO @title
+    CALL json_field(@meta_json, 'authors')  INTO @authors
+    CALL json_field(@meta_json, 'pdf_url')  INTO @pdf_url
+    -- Verbatim, not LLM-summarized — see assemble_paper_digest's comment and
+    -- semantic_chunk_plan's Abstract-section exclusion in tools.spl.
+    CALL json_field(@meta_json, 'summary')  INTO @abstract
 
     -- ARXIV_DIR = RUN_DIR/<arxiv-id>/ — only meaningful once RUN_DIR is known
     @arxiv_dir := ''
@@ -69,7 +83,7 @@ DO
             CALL save_pdf_copy(@pdf_path, @arxiv_dir) INTO @pdf_debug_path
     END
 
-    CALL semantic_chunk_plan(@pdf_path) INTO @chunks_json
+    CALL semantic_chunk_plan(@pdf_path, @pdf_max_chars) INTO @chunks_json
     CALL list_count(@chunks_json) INTO @section_count
 
     LOGGING f'[{@arxiv_id}] {@section_count} sections'
@@ -103,7 +117,7 @@ DO
         INTO @digest
 
     -- Step E: package as one JSON object — the frontend's per-paper card
-    CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest)
+    CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest, @abstract)
         INTO @paper_digest_json
 
     -- Debug dump: the map-step summaries, and the final assembled card (its
@@ -111,7 +125,7 @@ DO
     -- file covers both rather than duplicating it into a separate .md).
     EVALUATE @arxiv_dir
         WHEN != '' THEN
-            CALL write_file(f'{@arxiv_dir}/section_summaries.md', @section_summaries) INTO NONE
+            CALL write_file(f'{@arxiv_dir}/section_summary_raw.md', @section_summaries) INTO NONE
             CALL write_file(f'{@arxiv_dir}/digest-{@arxiv_id}.json', @paper_digest_json) INTO NONE
     END
 
@@ -121,12 +135,12 @@ DO
 EXCEPTION
     WHEN ToolError THEN
         LOGGING f'[{@url}] download/lookup failed — skipping'
-        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.')
+        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.', '')
             INTO @paper_digest_json
         RETURN @paper_digest_json
     WHEN OTHERS THEN
         LOGGING f'[{@url}] unexpected error — skipping'
-        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.')
+        CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.', '')
             INTO @paper_digest_json
         RETURN @paper_digest_json
 END
