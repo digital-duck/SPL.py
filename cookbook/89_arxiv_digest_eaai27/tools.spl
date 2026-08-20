@@ -184,6 +184,30 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     if not chunks:
         chunks = [{"title": "Document", "text": text.strip(), "page": 1}]
 
+    # Split any oversized chunk instead of sending it as one giant prompt.
+    # The header-detection regex above can miss an interior header in an
+    # oddly-formatted PDF, letting one "section" swallow a huge fraction of
+    # the paper — observed 2026-08-19 producing an 83k-char section_text
+    # that blew past the Momagrid hub's MaxPromptChars guard (default
+    # 50,000, see internal/hub/app.go in the momagrid repo) with an HTTP 413,
+    # independent of which model was targeted. 30,000 leaves headroom under
+    # that default for section_summarizer's own prompt instructions text.
+    MAX_CHUNK_CHARS = 30_000
+    split_chunks = []
+    for c in chunks:
+        chunk_text = c["text"]
+        if len(chunk_text) <= MAX_CHUNK_CHARS:
+            split_chunks.append(c)
+            continue
+        parts = [chunk_text[i:i + MAX_CHUNK_CHARS] for i in range(0, len(chunk_text), MAX_CHUNK_CHARS)]
+        for i, part in enumerate(parts):
+            split_chunks.append({
+                "title": f'{c["title"]} (part {i + 1}/{len(parts)})',
+                "text":  part,
+                "page":  c["page"],
+            })
+    chunks = split_chunks
+
     return json.dumps(chunks)
 $$;
 
@@ -260,6 +284,32 @@ def parse_urls(raw: str) -> str:
 
     urls = [_to_url(u) for u in re.split(r"[,;\s]+", raw) if u.strip()]
     return json.dumps(urls)
+$$;
+
+CREATE TOOL_API now_seconds()
+RETURNS TEXT AS PYTHON $$
+def now_seconds() -> str:
+    """Wall-clock epoch time as a string — paired with elapsed_seconds() to
+    time one paper's processing (see summarize_arxiv_paper.spl's @start_ts /
+    @paper_elapsed_sec) without relying on SPL-level numeric arithmetic on
+    @vars, which this recipe doesn't otherwise use."""
+    import time
+
+    return str(time.time())
+$$;
+
+CREATE TOOL_API elapsed_seconds(start_ts TEXT)
+RETURNS TEXT AS PYTHON $$
+def elapsed_seconds(start_ts: str) -> str:
+    """Seconds elapsed since start_ts (a now_seconds() return value), rounded
+    to 1 decimal. Returns '0.0' if start_ts is missing/unparseable rather
+    than raising — a timing field is never worth failing a paper over."""
+    import time
+
+    try:
+        return str(round(time.time() - float(start_ts), 1))
+    except (TypeError, ValueError):
+        return "0.0"
 $$;
 
 CREATE TOOL_API make_run_dir(out_dir TEXT)
@@ -490,21 +540,30 @@ def append_json_array(array_json: str, item_json: str) -> str:
     return json.dumps(arr)
 $$;
 
-CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT, abstract TEXT)
+CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT, abstract TEXT, elapsed_sec TEXT)
 RETURNS TEXT AS PYTHON $$
-def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str, abstract: str = "") -> str:
+def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str, abstract: str = "", elapsed_sec: str = "") -> str:
     """Package one paper's result as a JSON object string — the shape a
     FastAPI backend hands straight to the Vue frontend as one card.
     'abstract' is the paper's own abstract text verbatim (from lookup_arxiv's
     ground-truth metadata, NOT an LLM summary — see semantic_chunk_plan's
     Abstract-section exclusion in tools.spl), displayed as-is by the
-    frontend rather than run through paper_digest_writer."""
+    frontend rather than run through paper_digest_writer. 'elapsed_sec' is
+    this one paper's own processing time (see now_seconds/elapsed_seconds
+    and @start_ts in summarize_arxiv_paper.spl) — distinct from the
+    whole-batch elapsed_sec api/app.py's digest() records in the run's own
+    meta.json."""
     import json
 
     try:
         n = int(float(section_count))
     except (TypeError, ValueError):
         n = 0
+
+    try:
+        elapsed = round(float(elapsed_sec), 1)
+    except (TypeError, ValueError):
+        elapsed = None
 
     return json.dumps({
         "arxiv_id":      arxiv_id,
@@ -514,5 +573,6 @@ def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, sec
         "section_count": n,
         "abstract":      abstract,
         "digest":        digest,
+        "elapsed_sec":   elapsed,
     })
 $$;

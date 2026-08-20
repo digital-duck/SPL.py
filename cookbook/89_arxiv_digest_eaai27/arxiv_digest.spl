@@ -86,6 +86,7 @@ DO
     WHILE @i < @n DO
         CALL list_get(@urls, @i + 1) INTO @url
         LOGGING f'Paper {@i}/{@n}: {@url}'
+        CALL now_seconds() INTO @paper_start_ts
 
         DO
             CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir)
@@ -101,16 +102,21 @@ DO
             -- inner handler and abort just this one CALL). Without adding a
             -- fallback card here too, such a paper silently vanishes from
             -- @results_json instead of showing up as a visible error in the
-            -- frontend — so mirror the same fallback shape here.
+            -- frontend — so mirror the same fallback shape here. Timed from
+            -- @paper_start_ts above (not the inner workflow's own @start_ts,
+            -- which is out of scope here) so even a crashed paper's card
+            -- shows how long it ran before failing.
             WHEN ToolError THEN
                 LOGGING f'Skipping {@url}: tool/download error'
-                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.', '')
+                CALL elapsed_seconds(@paper_start_ts) INTO @paper_elapsed_sec
+                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'Could not retrieve or process this paper.', '', @paper_elapsed_sec)
                     INTO @paper_digest_json
                 CALL append_json_array(@results_json, @paper_digest_json)
                     INTO @results_json
             WHEN OTHERS THEN
                 LOGGING f'Skipping {@url}: unexpected error'
-                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.', '')
+                CALL elapsed_seconds(@paper_start_ts) INTO @paper_elapsed_sec
+                CALL assemble_paper_digest(@url, 'Unavailable', '', @url, 0, 'An unexpected error occurred processing this paper.', '', @paper_elapsed_sec)
                     INTO @paper_digest_json
                 CALL append_json_array(@results_json, @paper_digest_json)
                     INTO @results_json
