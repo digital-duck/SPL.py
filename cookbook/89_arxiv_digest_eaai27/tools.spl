@@ -15,87 +15,18 @@
 CREATE TOOL_API download_arxiv_pdf(url TEXT)
 RETURNS TEXT AS PYTHON $$
 def download_arxiv_pdf(url: str) -> str:
-    import json
-    import logging
-    import time
-    from pathlib import Path
+    """Delegate to the FastAPI /api/pdf download service.
 
-    _log = logging.getLogger("arxiv_digest.tools")
-
-    CACHE_DIR = Path.home() / ".cache" / "dd_arxiv_digest"
-    PDF_DIR   = CACHE_DIR / "pdfs"
-    PDF_DIR.mkdir(parents=True, exist_ok=True)
-
-    RATE_LIMIT_SECS = 3.0
-    PDF_TTL_SECS    = 86_400  # 24 hours
-
-    _rate_file = CACHE_DIR / ".last_download"
-
-    def _get_last_download():
-        try:
-            return float(_rate_file.read_text())
-        except Exception:
-            return 0.0
-
-    def _set_last_download(t):
-        try:
-            _rate_file.write_text(str(t))
-        except Exception:
-            pass
-
-    _cache_index_path = CACHE_DIR / "url_cache.json"
-
-    def _cache_get(u):
-        try:
-            idx = json.loads(_cache_index_path.read_text())
-            entry = idx.get(u)
-            if entry:
-                ts, path = entry["ts"], entry["path"]
-                if time.time() - ts < PDF_TTL_SECS and Path(path).exists():
-                    return path
-        except Exception:
-            pass
-        return None
-
-    def _cache_set(u, path):
-        try:
-            try:
-                idx = json.loads(_cache_index_path.read_text())
-            except Exception:
-                idx = {}
-            idx[u] = {"ts": time.time(), "path": path}
-            _cache_index_path.write_text(json.dumps(idx))
-        except Exception:
-            pass
-
-    cached_path = _cache_get(url)
-    if cached_path:
-        _log.debug("Cache hit %s -> %s", url, cached_path)
-        return cached_path
-
-    elapsed = time.time() - _get_last_download()
-    if elapsed < RATE_LIMIT_SECS:
-        time.sleep(RATE_LIMIT_SECS - elapsed)
-
+    The service handles caching, concurrent-request deduplication, arXiv rate
+    limiting, and request_count tracking in the pdf_cache DB table.  This tool
+    just calls it and returns the local file path."""
+    import os
     import httpx
-    try:
-        resp = httpx.get(url, timeout=30.0, follow_redirects=True)
-    except Exception as e:
-        raise RuntimeError(f"Network error downloading {url}: {e}") from e
 
-    if resp.status_code != 200:
-        raise RuntimeError(f"HTTP {resp.status_code} downloading {url}")
-
-    safe_name = url.rstrip("/").split("/")[-1]
-    if not safe_name.endswith(".pdf"):
-        safe_name += ".pdf"
-    pdf_path = str(PDF_DIR / safe_name)
-    Path(pdf_path).write_bytes(resp.content)
-
-    _set_last_download(time.time())
-    _cache_set(url, pdf_path)
-    _log.info("Downloaded %s -> %s", url, pdf_path)
-    return pdf_path
+    api_url = os.environ.get("AD_API_URL", "http://localhost:8300")
+    resp = httpx.post(f"{api_url}/api/pdf", json={"url": url}, timeout=120.0)
+    resp.raise_for_status()
+    return resp.json()["file_path"]
 $$;
 
 CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT, max_chars TEXT)
@@ -180,6 +111,20 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     filtered = [c for c in chunks if not EXCLUDE_TITLE_RE.match(c["title"].strip())]
     if filtered:
         chunks = filtered
+
+    # Truncate at Conclusion (inclusive) — appendix sub-sections that follow it
+    # (e.g. cookbook recipes, table rows) are not core paper body. Only applied
+    # when a Conclusion chunk is found; papers without one keep everything.
+    STOP_AFTER_RE = re.compile(
+        r'^(?:\d+\.?\s+)?conclusions?\b',
+        re.IGNORECASE,
+    )
+    stop_idx = next(
+        (i for i, c in enumerate(chunks) if STOP_AFTER_RE.match(c["title"].strip())),
+        None,
+    )
+    if stop_idx is not None:
+        chunks = chunks[:stop_idx + 1]
 
     if not chunks:
         chunks = [{"title": "Document", "text": text.strip(), "page": 1}]
@@ -335,23 +280,25 @@ $$;
 CREATE TOOL_API save_pdf_copy(pdf_path TEXT, arxiv_dir TEXT)
 RETURNS TEXT AS PYTHON $$
 def save_pdf_copy(pdf_path: str, arxiv_dir: str) -> str:
-    """Copy the (cached) downloaded PDF into '<arxiv_dir>/pdf/<name>.pdf' so
-    the exact bytes semantic_chunk_plan saw are inspectable per-run, without
-    depending on the shared download cache. Returns the new path, or '' if
-    arxiv_dir is empty."""
-    import shutil
+    """Create a symlink '<arxiv_dir>/pdf/<name>.pdf' → the shared PDF in
+    ~/Documents/PDF/arxiv/ so the per-run debug tree shows the file without
+    duplicating bytes on disk.  The symlink target is absolute so it resolves
+    regardless of cwd.  Returns the symlink path, or '' if arxiv_dir is empty."""
+    import os
     from pathlib import Path
 
     arxiv_dir = arxiv_dir.strip()
     if not arxiv_dir:
         return ""
 
-    src = Path(pdf_path)
+    src  = Path(pdf_path).resolve()   # absolute path to shared PDF
     pdf_dir = Path(arxiv_dir) / "pdf"
     pdf_dir.mkdir(parents=True, exist_ok=True)
-    dest = pdf_dir / src.name
-    shutil.copy2(src, dest)
-    return str(dest)
+    link = pdf_dir / src.name
+    if link.exists() or link.is_symlink():   # replace stale link or old copy
+        link.unlink()
+    os.symlink(src, link)
+    return str(link)
 $$;
 
 CREATE TOOL_API save_chunks(chunks_json TEXT, arxiv_dir TEXT)
@@ -540,6 +487,212 @@ def append_json_array(array_json: str, item_json: str) -> str:
     return json.dumps(arr)
 $$;
 
+CREATE TOOL_API parallel_map_summarize(chunks_json TEXT, model TEXT, section_tokens TEXT, hub_url TEXT, timeout_s TEXT, db_path TEXT, paper_id TEXT, chunk_timeout_s TEXT, max_retries TEXT)
+RETURNS TEXT AS PYTHON $$
+async def parallel_map_summarize(chunks_json: str, model: str, section_tokens: str, hub_url: str = "", timeout_s: str = "300", db_path: str = "", paper_id: str = "", chunk_timeout_s: str = "60", max_retries: str = "3") -> str:
+    """Fan out ALL section summarizations to the momagrid hub simultaneously with
+    per-chunk timeout and retry — handles GPU nodes going offline mid-task.
+
+    Phase 1 — fan-out: all N chunks are submitted concurrently.
+    Phase 2 — poll+retry: each chunk is polled independently.  If a chunk times
+    out (chunk_timeout_s) its task is resubmitted with a fresh task_id (up to
+    max_retries times); the DB row tracks job_id, retry_count, and final status
+    so callers can see which node handled each chunk and whether any were retried.
+
+    Returns the same '### Title\\nSummary\\n\\n' string that the sequential WHILE
+    loop in summarize_arxiv_paper.spl produced, so the REDUCE step is unchanged.
+
+    -- Keep the system prompt below in sync with section_summarizer in functions.spl --
+    """
+    import asyncio
+    import datetime
+    import json
+    import logging
+    import os
+    import sqlite3
+    import uuid
+    from pathlib import Path
+
+    import httpx
+
+    _log = logging.getLogger("arxiv_digest.parallel_map")
+
+    chunks = json.loads(chunks_json)
+    max_tokens = int(float(section_tokens)) if str(section_tokens).strip() else 180
+    global_timeout = float(timeout_s) if str(timeout_s).strip() else 300.0
+    chunk_timeout = float(chunk_timeout_s) if str(chunk_timeout_s).strip() else 60.0
+    n_retries = int(float(max_retries)) if str(max_retries).strip() else 3
+    _db = db_path.strip()
+    _pid = paper_id.strip()
+
+    # Hub URL: param → env var → ~/.igrid/config.yaml (same priority as momagrid adapter)
+    _hub = (hub_url or "").strip().rstrip("/")
+    if not _hub:
+        _hub = os.environ.get("MOMAGRID_HUB_URL", "").rstrip("/")
+    if not _hub:
+        config_path = Path.home() / ".igrid" / "config.yaml"
+        try:
+            in_hub = in_urls = False
+            for line in config_path.read_text().splitlines():
+                s, indent = line.lstrip(), len(line) - len(line.lstrip())
+                if indent == 0:
+                    in_hub = s.startswith("hub:")
+                    in_urls = False
+                    continue
+                if in_hub and s.startswith("urls:"):
+                    in_urls = True
+                    continue
+                if in_hub and in_urls and s.startswith("- "):
+                    _hub = s[2:].strip().rstrip("/")
+                    break
+        except OSError:
+            pass
+    if not _hub:
+        _hub = "http://localhost:9000"
+
+    # Must match section_summarizer in functions.spl
+    system_prompt = (
+        f"You are a technical summarizer. Produce a concise summary of the following "
+        f"research paper section in plain English. Focus on methods and findings. "
+        f"Stay well under {max_tokens} words — leave headroom, since generation is cut "
+        f"off at a hard token limit and an unfinished sentence is worse than a shorter "
+        f"complete one. Write 2-4 complete sentences and stop; do not pad toward the "
+        f"limit. Write plain prose only — no headings, no bullet points, no preamble "
+        'such as "This section...".'
+    )
+
+    def _now() -> str:
+        return datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+    def _db_connect():
+        if not _db:
+            return None
+        con = sqlite3.connect(_db, timeout=10)
+        con.execute("PRAGMA journal_mode=WAL")
+        return con
+
+    def _init_chunk_rows() -> dict:
+        """Insert a PENDING row per chunk before fan-out; returns {chunk_idx: chunk_id}."""
+        if not _db or not _pid:
+            return {}
+        chunk_id_map = {i: str(uuid.uuid4()) for i in range(len(chunks))}
+        now = _now()
+        con = _db_connect()
+        con.execute("""CREATE TABLE IF NOT EXISTS chunks (
+            chunk_id TEXT PRIMARY KEY, paper_id TEXT NOT NULL, chunk_idx INTEGER NOT NULL,
+            title TEXT, text TEXT, summary TEXT,
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            job_id TEXT, agent_name TEXT, retry_count INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT, submitted_at TEXT, completed_at TEXT, elapsed_sec REAL
+        )""")
+        for i, c in enumerate(chunks):
+            con.execute(
+                "INSERT INTO chunks "
+                "(chunk_id,paper_id,chunk_idx,title,text,status,submitted_at) "
+                "VALUES (?,?,?,?,?,'PENDING',?)",
+                (chunk_id_map[i], _pid, i, c.get("title", ""), c.get("text", ""), now),
+            )
+        con.commit()
+        con.close()
+        return chunk_id_map
+
+    def _db_chunk_update(chunk_id: str, **kwargs) -> None:
+        if not _db or not chunk_id:
+            return
+        fields = [f"{k}=?" for k in kwargs]
+        values = list(kwargs.values()) + [chunk_id]
+        con = _db_connect()
+        try:
+            con.execute(f"UPDATE chunks SET {', '.join(fields)} WHERE chunk_id=?", values)
+            con.commit()
+        finally:
+            con.close()
+
+    chunk_id_map = _init_chunk_rows()
+
+    async def _submit_one(client: httpx.AsyncClient, idx: int, chunk: dict) -> str:
+        task_id = str(uuid.uuid4())
+        payload = {
+            "task_id": task_id,
+            "model": model,
+            "prompt": f"Section: {chunk['title']}\n\n{chunk['text']}",
+            "system": system_prompt,
+            "max_tokens": max_tokens,
+            "temperature": 0.7,
+            "timeout_s": int(global_timeout),
+            "priority": 1,
+        }
+        resp = await client.post(f"{_hub}/tasks", json=payload)
+        resp.raise_for_status()
+        return resp.json().get("task_id", task_id)
+
+    async def _poll_until_done(client: httpx.AsyncClient, task_id: str) -> dict:
+        url = f"{_hub}/tasks/{task_id}"
+        while True:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            data = resp.json()
+            state = data.get("state", "")
+            result = data.get("result", data)
+            if state == "COMPLETE":
+                return {"ok": True, "content": result.get("content", ""), "agent_name": result.get("agent_name", "")}
+            if state == "FAILED":
+                return {"ok": False, "error": result.get("error", "task failed")}
+            await asyncio.sleep(2.0)
+
+    async def _process_chunk(client: httpx.AsyncClient, idx: int, chunk: dict) -> tuple:
+        title = chunk["title"]
+        chunk_id = chunk_id_map.get(idx, "")
+        for attempt in range(n_retries + 1):
+            try:
+                task_id = await _submit_one(client, idx, chunk)
+                _log.info("MAP chunk %d attempt %d → task %s", idx, attempt, task_id[:8])
+                _db_chunk_update(chunk_id, status="IN_FLIGHT", job_id=task_id, retry_count=attempt)
+
+                result = await asyncio.wait_for(_poll_until_done(client, task_id), timeout=chunk_timeout)
+                if result["ok"]:
+                    content = result["content"]
+                    _db_chunk_update(chunk_id, status="COMPLETE", summary=content,
+                                     agent_name=result.get("agent_name", ""), completed_at=_now())
+                    _log.info("MAP chunk %d complete (attempt %d)", idx, attempt)
+                    return idx, title, content
+                else:
+                    error = result.get("error", "task failed")
+                    _log.warning("MAP chunk %d FAILED on attempt %d: %s", idx, attempt, error)
+                    if attempt < n_retries:
+                        continue
+                    _db_chunk_update(chunk_id, status="FAILED", last_error=error)
+                    return idx, title, f"[Summary unavailable: {error}]"
+
+            except asyncio.TimeoutError:
+                _log.warning("MAP chunk %d timed out on attempt %d (%.0fs)", idx, attempt, chunk_timeout)
+                if attempt < n_retries:
+                    _db_chunk_update(chunk_id, retry_count=attempt + 1, last_error="timeout — retrying")
+                    continue
+                _db_chunk_update(chunk_id, status="FAILED", last_error="timeout after max retries")
+                return idx, title, "[Summary unavailable: max retries exceeded]"
+
+            except Exception as exc:
+                _log.error("MAP chunk %d unexpected error on attempt %d: %s", idx, attempt, exc)
+                if attempt < n_retries:
+                    continue
+                _db_chunk_update(chunk_id, status="FAILED", last_error=str(exc))
+                return idx, title, f"[Summary unavailable: {exc}]"
+
+        return idx, title, "[Summary unavailable]"
+
+    async with httpx.AsyncClient(timeout=global_timeout + 30) as client:
+        _log.info("Parallel MAP: %d chunks → %s model=%s (chunk_timeout=%.0fs retries=%d)",
+                  len(chunks), _hub, model, chunk_timeout, n_retries)
+        results = await asyncio.gather(*[_process_chunk(client, i, c) for i, c in enumerate(chunks)])
+    ordered = sorted(results, key=lambda r: r[0])
+
+    section_summaries = ""
+    for _, title, summary in ordered:
+        section_summaries += f"### {title}\n{summary}\n\n"
+    return section_summaries
+$$;
+
 CREATE TOOL_API assemble_paper_digest(arxiv_id TEXT, title TEXT, authors TEXT, url TEXT, section_count TEXT, digest TEXT, abstract TEXT, elapsed_sec TEXT)
 RETURNS TEXT AS PYTHON $$
 def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, section_count: str, digest: str, abstract: str = "", elapsed_sec: str = "") -> str:
@@ -575,4 +728,160 @@ def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, sec
         "digest":        digest,
         "elapsed_sec":   elapsed,
     })
+$$;
+
+CREATE TOOL_API init_paper_record(db_path TEXT, run_id TEXT, url TEXT, arxiv_id TEXT, title TEXT, authors TEXT, abstract TEXT, section_count TEXT)
+RETURNS TEXT AS PYTHON $$
+def init_paper_record(db_path: str, run_id: str, url: str, arxiv_id: str, title: str, authors: str, abstract: str, section_count: str) -> str:
+    """Insert a PENDING papers row for this paper and return its paper_id UUID.
+    Returns a throwaway UUID (not persisted) when db_path is empty so callers
+    can always bind @paper_id without branching on DB availability."""
+    import datetime
+    import sqlite3
+    import uuid
+
+    paper_id = str(uuid.uuid4())
+    _db = db_path.strip()
+    if not _db:
+        return paper_id
+
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    try:
+        n = int(float(section_count))
+    except (TypeError, ValueError):
+        n = 0
+
+    con = sqlite3.connect(_db, timeout=10)
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("""CREATE TABLE IF NOT EXISTS papers (
+        paper_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, url TEXT NOT NULL,
+        arxiv_id TEXT, title TEXT, authors TEXT, abstract TEXT,
+        status TEXT NOT NULL DEFAULT 'PENDING', section_count INTEGER,
+        submitted_at TEXT NOT NULL, completed_at TEXT, elapsed_sec REAL
+    )""")
+    con.execute(
+        "INSERT INTO papers "
+        "(paper_id,run_id,url,arxiv_id,title,authors,abstract,section_count,submitted_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (paper_id, run_id, url, arxiv_id, title, authors, abstract, n, now),
+    )
+    con.commit()
+    con.close()
+    return paper_id
+$$;
+
+CREATE TOOL_API save_digest(db_path TEXT, paper_id TEXT, digest TEXT)
+RETURNS TEXT AS PYTHON $$
+def save_digest(db_path: str, paper_id: str, digest: str) -> str:
+    """Upsert digest text into digests table and mark the paper COMPLETE.
+    No-op when db_path is empty.  Returns '' always (callers use INTO NONE)."""
+    import datetime
+    import sqlite3
+
+    _db = db_path.strip()
+    if not _db or not paper_id.strip():
+        return ""
+
+    now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    con = sqlite3.connect(_db, timeout=10)
+    con.execute("PRAGMA journal_mode=WAL")
+    con.execute("""CREATE TABLE IF NOT EXISTS digests (
+        paper_id TEXT PRIMARY KEY, digest TEXT, created_at TEXT NOT NULL
+    )""")
+    con.execute(
+        "INSERT OR REPLACE INTO digests (paper_id, digest, created_at) VALUES (?,?,?)",
+        (paper_id, digest, now),
+    )
+    con.execute(
+        "UPDATE papers SET status='COMPLETE', completed_at=? WHERE paper_id=?",
+        (now, paper_id),
+    )
+    con.commit()
+    con.close()
+    return ""
+$$;
+
+CREATE TOOL_API batch_section_summaries(summaries TEXT, batch_size TEXT DEFAULT '8')
+RETURNS TEXT AS PYTHON $$
+def batch_section_summaries(summaries: str, batch_size: str = '8') -> str:
+    """Split section summaries (### Title\\nText\\n\\n...) into batches of batch_size
+    sections each. Returns a JSON array of strings — one per batch — so the caller
+    (summarize_arxiv_paper.spl) can iterate with list_count / get_batch without any
+    Python-side knowledge of the SPL workflow's variable state."""
+    import re
+    import json
+
+    try:
+        n = max(1, int(float(batch_size)) if str(batch_size).strip() else 8)
+    except (TypeError, ValueError):
+        n = 8
+
+    # Split on section headers; each part starts with '### <title>'
+    parts = re.split(r'(?=^### )', summaries, flags=re.MULTILINE)
+    parts = [p.strip() for p in parts if p.strip()]
+
+    if not parts:
+        return json.dumps([summaries.strip()] if summaries.strip() else [''])
+
+    batches = []
+    for i in range(0, len(parts), n):
+        batches.append('\n\n'.join(parts[i:i + n]))
+    return json.dumps(batches)
+$$;
+
+CREATE TOOL_API get_batch(batches_json TEXT, index TEXT)
+RETURNS TEXT AS PYTHON $$
+def get_batch(batches_json: str, index: str) -> str:
+    """Return the index-th batch (0-based) from the JSON array produced by
+    batch_section_summaries. Returns '' if index is out of range."""
+    import json
+
+    try:
+        batches = json.loads(batches_json)
+        i = int(float(index))
+        return str(batches[i]) if 0 <= i < len(batches) else ''
+    except (json.JSONDecodeError, TypeError, ValueError, IndexError):
+        return ''
+$$;
+
+CREATE TOOL_API cap_section_summaries(summaries TEXT, max_total_chars TEXT DEFAULT '18000')
+RETURNS TEXT AS PYTHON $$
+def cap_section_summaries(summaries: str, max_total_chars: str = '18000') -> str:
+    """Truncate per-section summaries so their total length stays within
+    max_total_chars before the REDUCE step.
+
+    Momagrid workers sometimes generate far beyond their max_tokens budget,
+    producing a concatenated summary that exceeds the REDUCE model's context
+    window and causes it to emit degenerate output like "Okay".  This tool
+    caps the damage client-side after MAP returns, distributing the budget
+    evenly across sections and breaking each at the nearest sentence end."""
+    import re
+
+    max_chars = int(float(max_total_chars)) if str(max_total_chars).strip() else 18000
+
+    if len(summaries) <= max_chars:
+        return summaries
+
+    # Split on section headers (### Title\n) — keep the header in the part.
+    parts = re.split(r'(?=^### )', summaries, flags=re.MULTILINE)
+    parts = [p for p in parts if p.strip()]
+
+    if not parts:
+        return summaries[:max_chars]
+
+    per_section = max(200, max_chars // len(parts))
+
+    result = []
+    for part in parts:
+        if len(part) <= per_section:
+            result.append(part)
+        else:
+            truncated = part[:per_section]
+            # Try to end at a sentence boundary so the summary stays readable.
+            last_dot = max(truncated.rfind('. '), truncated.rfind('.\n'))
+            if last_dot > per_section // 2:
+                truncated = truncated[:last_dot + 1]
+            result.append(truncated.rstrip() + '\n')
+
+    return '\n'.join(result)
 $$;

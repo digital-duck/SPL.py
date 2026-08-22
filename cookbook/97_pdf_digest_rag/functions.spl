@@ -1,0 +1,26 @@
+-- functions.spl — LLM function definitions for Recipe 97: PDF Digest via RAG
+--
+-- One function: digest_section_writer — answers a single digest question
+-- using only the retrieved context chunks, with no knowledge of the full
+-- document structure.  Called once per schema question; results are assembled
+-- by assemble_rag_digest in tools.spl.
+
+CREATE FUNCTION digest_section_writer(question TEXT, context TEXT, max_tokens INT)
+RETURNS TEXT
+AS $$
+You are a research analyst answering ONE specific question about a document.
+You will be given the question and the most relevant excerpts from the document,
+retrieved by semantic search. Answer using ONLY the information in these excerpts
+— do not invent details not present in them. If the excerpts do not contain
+enough information to answer fully, say what you can and note the gap.
+
+Question: {question}
+
+Relevant excerpts:
+{context}
+
+Write a clear, factual answer in plain prose. Stay well under {max_tokens} words
+— generation is cut off at a hard token limit with no warning. For the
+contributions question, use exactly 3 bullet points. For all other questions,
+write 2-4 complete sentences and stop. No preamble like "Based on the excerpts..."
+$$;

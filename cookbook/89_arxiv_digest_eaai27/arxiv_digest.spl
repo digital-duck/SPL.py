@@ -54,9 +54,13 @@ WORKFLOW arxiv_digest
         -- the literal word target to avoid mid-sentence truncation (observed
         -- 2026-08-19 at the old 120/400 defaults on a 9-section paper).
         @section_tokens INT DEFAULT 180,
-        @digest_tokens  INT DEFAULT 700,
+        @digest_tokens  INT DEFAULT 1200,
         @pdf_max_chars  INT DEFAULT 200000,
-        @out_dir        TEXT DEFAULT ''
+        @out_dir        TEXT DEFAULT '',
+        @hub_url        TEXT DEFAULT '',
+        @model          TEXT DEFAULT '',
+        @db_path        TEXT DEFAULT '',
+        @run_id         TEXT DEFAULT ''
     OUTPUT: @digest_json TEXT
 DO
     LOGGING 'arXiv Digest — starting'
@@ -89,7 +93,7 @@ DO
         CALL now_seconds() INTO @paper_start_ts
 
         DO
-            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir)
+            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir, @hub_url, @model, @db_path, @run_id)
                 INTO @paper_digest_json
             CALL append_json_array(@results_json, @paper_digest_json)
                 INTO @results_json

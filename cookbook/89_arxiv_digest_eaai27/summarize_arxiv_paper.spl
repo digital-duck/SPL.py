@@ -40,7 +40,11 @@ WORKFLOW summarize_arxiv_paper
             @digest_tokens  INT DEFAULT 700,
             @pdf_max_chars  INT DEFAULT 200000,
             @out_dir        TEXT DEFAULT '',
-            @run_dir        TEXT DEFAULT ''
+            @run_dir        TEXT DEFAULT '',
+            @hub_url        TEXT DEFAULT '',
+            @model          TEXT DEFAULT '',
+            @db_path        TEXT DEFAULT '',
+            @run_id         TEXT DEFAULT ''
     OUTPUT: @paper_digest_json TEXT
 DO
     -- Per-paper timing (distinct from the whole-batch elapsed_sec api/app.py's
@@ -92,6 +96,12 @@ DO
 
     LOGGING f'[{@arxiv_id}] {@section_count} sections'
 
+    -- Register this paper in the DB; @paper_id is threaded to parallel_map_summarize
+    -- and save_digest so chunk MAP results are linked to this paper row.
+    -- init_paper_record returns a throwaway UUID when @db_path is empty (no-op path).
+    CALL init_paper_record(@db_path, @run_id, @url, @arxiv_id, @title, @authors, @abstract, @section_count)
+        INTO @paper_id
+
     -- Debug dump: one file per section chunk in ARXIV_DIR/chunk/ — this is
     -- the critical one for verifying the semantic chunking logic, since it
     -- shows exactly how the PDF text got split before any summarization.
@@ -100,27 +110,63 @@ DO
             CALL save_chunks(@chunks_json, @arxiv_dir) INTO @chunk_debug_dir
     END
 
-    -- Step C: MAP — summarize each section independently
+    -- Step C: MAP — summarize all sections.
+    -- Momagrid (@hub_url set): fan out all chunks concurrently via parallel_map_summarize;
+    -- results arrive out of order but are sorted by chunk index before returning.
+    -- Local adapters (@hub_url empty): sequential WHILE loop (single-GPU, one at a time).
     @section_summaries := ''
-    @j := 0
-    WHILE @j < @section_count DO
-        CALL get_chunk_field(@chunks_json, @j, 'title') INTO @sec_title
-        CALL get_chunk_field(@chunks_json, @j, 'text')  INTO @sec_text
+    EVALUATE @hub_url
+        WHEN != '' THEN
+            CALL parallel_map_summarize(@chunks_json, @model, @section_tokens, @hub_url, '300', @db_path, @paper_id) INTO @section_summaries
+        WHEN = '' THEN
+            @j := 0
+            WHILE @j < @section_count DO
+                CALL get_chunk_field(@chunks_json, @j, 'title') INTO @sec_title
+                CALL get_chunk_field(@chunks_json, @j, 'text')  INTO @sec_text
 
-        GENERATE section_summarizer(@sec_title, @sec_text, @section_tokens)
-            WITH OUTPUT BUDGET @section_tokens TOKENS
-            INTO @sec_summary
+                GENERATE section_summarizer(@sec_title, @sec_text, @section_tokens)
+                    WITH OUTPUT BUDGET @section_tokens TOKENS
+                    INTO @sec_summary
 
-        @section_summaries := @section_summaries + f'### {@sec_title}\n{@sec_summary}\n\n'
-        @j := @j + 1
+                @section_summaries := @section_summaries + f'### {@sec_title}\n{@sec_summary}\n\n'
+                @j := @j + 1
+            END
     END
 
-    -- Step D: REDUCE — one structured digest for the whole paper
-    GENERATE paper_digest_writer(@title, @section_summaries, @digest_tokens)
+    -- Step D: REDUCE — hierarchical two-level reduce.
+    -- For papers with <= 8 sections: single-level reduce (direct to paper_digest_writer).
+    -- For papers with > 8 sections: group sections into batches of 8, do an
+    -- intermediate sequential reduce on each batch (group_summarizer), then final
+    -- reduce over the group summaries.  This replaces the lossy cap_section_summaries
+    -- workaround with a proper aggregation that reads every section regardless of count.
+    CALL batch_section_summaries(@section_summaries, '8') INTO @batches_json
+    CALL list_count(@batches_json) INTO @batch_count
+
+    @intermediate_summaries := ''
+    @reduce_input := @section_summaries
+    EVALUATE @batch_count
+        WHEN != '1' THEN
+            LOGGING f'[{@arxiv_id}] hierarchical reduce: {@batch_count} batches of 8'
+            @b := 0
+            WHILE @b < @batch_count DO
+                CALL get_batch(@batches_json, @b) INTO @batch_text
+                GENERATE group_summarizer(@batch_text, @section_tokens)
+                    WITH OUTPUT BUDGET @section_tokens TOKENS
+                    INTO @group_summary
+                @intermediate_summaries := @intermediate_summaries + @group_summary + '\n\n'
+                @b := @b + 1
+            END
+            @reduce_input := @intermediate_summaries
+    END
+
+    GENERATE paper_digest_writer(@title, @reduce_input, @digest_tokens)
         WITH OUTPUT BUDGET @digest_tokens TOKENS
         INTO @digest
 
     CALL elapsed_seconds(@start_ts) INTO @paper_elapsed_sec
+
+    -- Persist digest; marks paper COMPLETE in DB. No-op when @db_path is empty.
+    CALL save_digest(@db_path, @paper_id, @digest) INTO NONE
 
     -- Step E: package as one JSON object — the frontend's per-paper card
     CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest, @abstract, @paper_elapsed_sec)
@@ -136,6 +182,10 @@ DO
     EVALUATE @arxiv_dir
         WHEN != '' THEN
             CALL write_file(f'{@arxiv_dir}/section_summary_raw.md', @section_summaries) INTO NONE
+            EVALUATE @intermediate_summaries
+                WHEN != '' THEN
+                    CALL write_file(f'{@arxiv_dir}/group_summary_raw.md', @intermediate_summaries) INTO NONE
+            END
             CALL write_file(f'{@arxiv_dir}/digest-{@arxiv_id}.json', @paper_digest_json) INTO NONE
             CALL write_file(f'{@arxiv_dir}/meta.json', f'{{"elapsed_sec": {@paper_elapsed_sec}}}') INTO NONE
     END

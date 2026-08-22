@@ -1,10 +1,17 @@
-# Sample paper list for testing Recipe 89 — one arXiv URL per line, '#' comments allowed.
-
+# Sample paper list for testing Recipe 89 (Map-Reduce) or Reciple 97 (RAG)
 # deepseek
 https://arxiv.org/abs/2501.12948
 
 # transformer
-# https://arxiv.org/abs/1706.03762
+https://arxiv.org/abs/1706.03762
 
 # spl
-# https://arxiv.org/abs/2607.07727
+https://arxiv.org/abs/2607.07727
+
+# Agentic Operating System
+https://arxiv.org/pdf/2606.01508
+
+
+# Decentralised AI
+https://arxiv.org/abs/2606.24722
+

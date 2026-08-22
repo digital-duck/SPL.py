@@ -1,0 +1,112 @@
+-- Recipe 97: PDF Digest via RAG
+--
+-- Given any PDF (local path or URL), answer a fixed set of digest questions
+-- by retrieving the most relevant chunks per question via embedding similarity.
+-- Quality is independent of document length — 5 LLM calls total regardless of
+-- whether the PDF has 5 sections or 500.
+--
+-- Contrast with recipe 89 (MAP-REDUCE): recipe 89 makes N_sections LLM calls
+-- (one per section), reducing quality for long papers where the REDUCE step
+-- tries to compress too many section summaries into one output budget.
+-- Recipe 97 makes exactly N_questions LLM calls (default: 5), each grounded
+-- in the K most relevant chunks for that specific question.
+--
+-- Usage (local Ollama):
+--   spl3 run cookbook/97_pdf_digest_rag/pdf_digest_rag.spl \
+--       --adapter ollama --model gemma3 \
+--       -p pdf_url=https://arxiv.org/pdf/2607.07727
+--
+-- Usage (momagrid hub for LLM, local Ollama for embeddings):
+--   spl3 --hub http://192.168.0.177:9000 \
+--       run cookbook/97_pdf_digest_rag/pdf_digest_rag.spl \
+--       --adapter momagrid --model gemma3 \
+--       -p pdf_url=/path/to/doc.pdf
+--
+-- The embedding step always runs locally (TOOL_API, not a hub task) since
+-- Ollama's embedding endpoint is at localhost regardless of which adapter
+-- handles the GENERATE calls.
+
+IMPORT 'functions.spl'
+IMPORT 'tools'
+
+WORKFLOW pdf_digest_rag
+    INPUT:
+        @pdf_url       TEXT,
+        @title         TEXT DEFAULT '',
+        @authors       TEXT DEFAULT '',
+        @abstract      TEXT DEFAULT '',
+        -- Digest schema: JSON array of {field, question} objects.
+        -- Override to use a domain-specific schema (legal, medical, etc.)
+        -- without touching this file.
+        @schema_json   TEXT DEFAULT '[{"field":"problem","question":"What problem or need does this document address?"},{"field":"approach","question":"What method, design, or solution does it propose?"},{"field":"evidence","question":"What results, data, or arguments support the claims?"},{"field":"limitations","question":"What are the stated limitations, caveats, or open questions?"},{"field":"contributions","question":"What are the 3 most important takeaways from this document?"}]',
+        @k             INT DEFAULT 3,          -- top-K chunks retrieved per question
+        @max_tokens    INT DEFAULT 400,        -- per-answer token budget
+        @embed_model   TEXT DEFAULT 'nomic-embed-text',
+        @max_chars     INT DEFAULT 200000
+    OUTPUT: @digest_json TEXT
+DO
+    CALL now_seconds() INTO @start_ts
+
+    -- Step 0: Fetch arXiv title + authors + abstract (no-op for non-arXiv URLs)
+    CALL fetch_paper_metadata(@pdf_url) INTO @meta_json
+    CALL json_field(@meta_json, 'title') INTO @title
+    CALL json_field(@meta_json, 'authors') INTO @authors
+    CALL json_field(@meta_json, 'abstract') INTO @abstract
+    LOGGING f'Paper: {@title}'
+
+    -- Step 1: Load PDF (download if URL, resolve if local path)
+    CALL load_pdf(@pdf_url) INTO @pdf_path
+    LOGGING f'PDF: {@pdf_path}'
+
+    -- Step 2: Chunk by section headers (same logic as recipe 89 but keeps
+    --         all sections including appendix, since retrieval filters relevance)
+    CALL semantic_chunk_plan(@pdf_path, @max_chars) INTO @chunks_json
+    CALL list_count(@chunks_json) INTO @n_chunks
+    LOGGING f'{@n_chunks} chunks — embedding with {@embed_model}'
+
+    -- Step 3: Embed all chunks ONCE; stored in @embeddings_json for the
+    --         per-question retrieval loop below.  No vector DB needed — cosine
+    --         similarity in-process is fast enough at single-document scale.
+    -- embed_chunks returns a FILE PATH (not the JSON) so the SPL variable
+    -- stays small; retrieve_top_k loads embeddings from that path each call.
+    CALL embed_chunks(@chunks_json, @embed_model) INTO @embeddings_path
+    LOGGING f'Embeddings cached: {@embeddings_path}'
+
+    -- Step 4: For each digest question: retrieve top-K chunks, generate answer
+    @answers_json := '{}'
+    @i := 0
+    CALL list_count(@schema_json) INTO @n_questions
+    WHILE @i < @n_questions DO
+        CALL get_chunk_field(@schema_json, @i, 'field')    INTO @field
+        CALL get_chunk_field(@schema_json, @i, 'question') INTO @question
+        LOGGING f'[{@i}/{@n_questions}] {@field}: {@question}'
+
+        CALL retrieve_top_k(@embeddings_path, @question, @k, @embed_model)
+            INTO @context_json
+        CALL format_context(@context_json, @abstract) INTO @context_text
+
+        GENERATE digest_section_writer(@question, @context_text, @max_tokens)
+            WITH OUTPUT BUDGET @max_tokens TOKENS
+            INTO @answer
+
+        CALL set_answer(@answers_json, @field, @answer) INTO @answers_json
+        @i := @i + 1
+    END
+
+    CALL elapsed_seconds(@start_ts) INTO @elapsed
+    LOGGING f'Digest complete in {@elapsed}s ({@n_questions} questions, {@n_chunks} chunks, k={@k})'
+
+    -- Step 5: Package into the same JSON card shape as recipe 89 so the same
+    --         frontend (ResultsPanel.vue) renders it without modification
+    CALL assemble_rag_digest(@answers_json, @title, @authors, @abstract, @pdf_url, @elapsed)
+        INTO @digest_json
+
+    RETURN @digest_json WITH status = 'complete'
+
+EXCEPTION
+    WHEN OTHERS THEN
+        LOGGING f'PDF digest failed: {@pdf_url}'
+        CALL elapsed_seconds(@start_ts) INTO @elapsed
+        CALL assemble_rag_digest('{}', @title, @authors, @abstract, @pdf_url, @elapsed) INTO @digest_json
+        RETURN @digest_json WITH status = 'error'
+END

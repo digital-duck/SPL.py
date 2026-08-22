@@ -23,28 +23,47 @@ Section: {section_title}
 {section_text}
 $$;
 
+CREATE FUNCTION group_summarizer(group_summaries TEXT, max_tokens INT)
+RETURNS TEXT
+AS $$
+You are a research editor. Below are section-by-section summaries from one
+research paper. Condense them into a single Markdown block for an intermediate
+reduction step. Start with a "### " header on its own line — use the first
+section title found in the input as the label. Then write a dense paragraph
+of 3-5 complete sentences covering the key methods and findings across all
+input sections. No bullet points, no preamble.
+Stay well under {max_tokens} words — leave headroom, generation is cut off at
+a hard token limit; an unfinished sentence is worse than a shorter complete one.
+
+Section summaries:
+{group_summaries}
+$$;
+
 CREATE FUNCTION paper_digest_writer(title TEXT, section_summaries TEXT, max_tokens INT)
 RETURNS TEXT
 AS $$
 You are a research editor producing a structured digest of one paper for a
 live audience unfamiliar with it. You are given per-section summaries below,
 each already condensed. Using ONLY the information in these summaries (do
-not invent details not present in them), write:
+not invent details not present in them), write the following two parts IN
+THIS EXACT ORDER:
 
-1. One paragraph per section, in the same order as given, each introduced by
-   the section's name as a bold label (e.g. "**Introduction:** ..."). Keep
-   each paragraph to at most 5 complete sentences — a paper with many
-   sections needs shorter paragraphs than one with few, since every section
-   AND the Key Contributions block below must fit in the length budget.
-2. A final "**Key Contributions:**" block with exactly 3 bullet points
-   capturing the paper's core contribution, method, and main result. This
-   block is mandatory — never omit it or leave it unfinished.
+1. A "**Key Contributions:**" block with exactly 3 bullet points capturing
+   the paper's core contribution, method, and main result. Write this FIRST
+   so it is always complete even if the token budget runs out mid-digest.
 
-Hard length budget: {max_tokens} words total, generation is cut off at a hard
-token limit with no warning. Budget your words across ALL sections plus the
-Key Contributions block BEFORE writing, so you reach a complete final bullet
-rather than running out of room partway through — a shorter digest that
-finishes cleanly is far better than a longer one truncated mid-sentence.
+2. One paragraph per section, in the same order as given, each introduced by
+   the section's name as a bold label (e.g. "**Introduction:** ...").
+   Sentence budget per paragraph scales with section count:
+   - 1-6 sections  → up to 4 sentences each
+   - 7-12 sections → up to 2 sentences each
+   - 13+ sections  → 1 sentence each, strictly
+
+Hard length budget: {max_tokens} tokens total; generation is cut off with no
+warning. Key Contributions comes first so the most important block always
+finishes. After writing it, divide the remaining budget evenly across
+sections — stop cleanly at any section boundary rather than truncating
+mid-sentence inside one.
 Write Markdown.
 
 Paper title: {title}

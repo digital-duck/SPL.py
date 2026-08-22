@@ -1,0 +1,489 @@
+-- tools.spl — TOOL_API definitions for Recipe 97: PDF Digest via RAG
+--
+-- New tools unique to this recipe:
+--   load_pdf, embed_chunks, retrieve_top_k, format_context,
+--   set_answer, assemble_rag_digest
+--
+-- Shared tools copied from recipe 89 (semantic_chunk_plan, list_count,
+-- get_chunk_field, now_seconds, elapsed_seconds) — kept inline so this
+-- recipe is self-contained and runnable without any dependency on recipe 89.
+
+CREATE TOOL_API fetch_paper_metadata(url TEXT)
+RETURNS TEXT AS PYTHON $$
+def fetch_paper_metadata(url: str) -> str:
+    """For arXiv URLs (abs or pdf), fetch title and authors from the Atom API,
+    falling back to scraping the abs page's citation_* meta tags.
+    Returns JSON {"title": ..., "authors": ...}.
+    Returns empty strings for non-arXiv URLs — caller can use as-is."""
+    import html as _html
+    import json
+    import re
+    import xml.etree.ElementTree as ET
+
+    import httpx
+
+    def _clean(s):
+        return re.sub(r'\s+', ' ', _html.unescape(s or "")).strip()
+
+    # Normalise bare arXiv ID ("2607.07727") to abs URL so the regex below matches.
+    url = url.strip()
+    if re.match(r'^\d{4}\.\d{4,5}(?:v\d+)?$', url):
+        url = f'https://arxiv.org/abs/{url}'
+
+    _m = re.search(r'arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5}(?:v\d+)?)', url, re.IGNORECASE)
+    if not _m:
+        return json.dumps({"title": "", "authors": ""})
+
+    arxiv_id = _m.group(1)
+
+    # Tier 1: Atom API (richest, short timeout — can hang on some networks)
+    try:
+        resp = httpx.get(
+            f'http://export.arxiv.org/api/query?id_list={arxiv_id}',
+            timeout=8.0, follow_redirects=True,
+        )
+        if resp.status_code == 200:
+            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            entry = ET.fromstring(resp.text).find('atom:entry', ns)
+            if entry is not None:
+                title = _clean(entry.findtext('atom:title', default="", namespaces=ns))
+                if title:
+                    authors = [
+                        _clean(a.findtext('atom:name', default="", namespaces=ns))
+                        for a in entry.findall('atom:author', ns)
+                    ]
+                    abstract = _clean(entry.findtext('atom:summary', default="", namespaces=ns))
+                    return json.dumps({"title": title, "authors": '; '.join(a for a in authors if a), "abstract": abstract})
+    except Exception:
+        pass
+
+    # Tier 2: scrape abs page citation_* meta tags
+    try:
+        resp = httpx.get(f'https://arxiv.org/abs/{arxiv_id}', timeout=15.0, follow_redirects=True)
+        if resp.status_code == 200:
+            page = resp.text
+            m = re.search(r'<meta name="citation_title" content="([^"]*)"', page)
+            title = _clean(m.group(1)) if m else ""
+            if title:
+                authors = [
+                    _clean(a) for a in
+                    re.findall(r'<meta name="citation_author" content="([^"]*)"', page)
+                ]
+                m2 = re.search(r'<meta name="citation_abstract" content="([^"]*)"', page)
+                abstract = _clean(m2.group(1)) if m2 else ""
+                if not abstract:
+                    # Try <blockquote> abstract block on abs page
+                    m3 = re.search(r'<blockquote[^>]*class="abstract[^"]*"[^>]*>(.*?)</blockquote>', page, re.DOTALL)
+                    if m3:
+                        abstract = _clean(re.sub(r'<[^>]+>', ' ', m3.group(1)))
+                return json.dumps({"title": title, "authors": '; '.join(authors), "abstract": abstract})
+    except Exception:
+        pass
+
+    return json.dumps({"title": "", "authors": ""})
+$$;
+
+CREATE TOOL_API json_field(json_str TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_field(json_str: str, field: str) -> str:
+    import json
+    try:
+        return str(json.loads(json_str).get(field, ""))
+    except (json.JSONDecodeError, TypeError, AttributeError):
+        return ""
+$$;
+
+CREATE TOOL_API load_pdf(path_or_url TEXT)
+RETURNS TEXT AS PYTHON $$
+def load_pdf(path_or_url: str) -> str:
+    """Accept a local file path, bare arXiv ID, arXiv abs/pdf URL, or any
+    HTTP/HTTPS URL and return a local PDF path ready for semantic_chunk_plan.
+
+    Local paths are returned as-is.  All URLs are delegated to the FastAPI
+    /api/pdf download service, which handles caching, concurrent-request
+    deduplication, arXiv rate limiting, and request_count tracking."""
+    import os
+    import re
+    from pathlib import Path
+
+    url = path_or_url.strip()
+
+    # Normalise arXiv identifiers before the local-path check so a bare ID
+    # ("2607.07727") doesn't accidentally match a non-existent local path.
+    _m = re.match(r'^(\d{4}\.\d{4,5}(?:v\d+)?)$', url)
+    if _m:
+        url = f'https://arxiv.org/pdf/{_m.group(1)}'
+    else:
+        _m = re.match(r'https?://arxiv\.org/abs/(\S+)', url)
+        if _m:
+            url = f'https://arxiv.org/pdf/{_m.group(1)}'
+
+    if not url.startswith(("http://", "https://")):
+        p = Path(url)
+        if not p.exists():
+            raise RuntimeError(f"PDF not found: {url}")
+        return str(p)
+
+    import httpx
+    api_url = os.environ.get("AD_API_URL", "http://localhost:8300")
+    resp = httpx.post(f"{api_url}/api/pdf", json={"url": url}, timeout=120.0)
+    resp.raise_for_status()
+    return resp.json()["file_path"]
+$$;
+
+CREATE TOOL_API semantic_chunk_plan(pdf_path TEXT, max_chars TEXT)
+RETURNS TEXT AS PYTHON $$
+def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
+    """Copied from recipe 89 — chunk a PDF by section headers.
+    Returns a JSON array of {title, text, page} objects."""
+    import json
+    import re
+    from pathlib import Path
+
+    path = Path(pdf_path)
+    if not path.exists():
+        raise RuntimeError(f"PDF not found: {pdf_path}")
+
+    try:
+        effective_max_chars = int(float(max_chars)) if str(max_chars).strip() else 200_000
+    except (TypeError, ValueError):
+        effective_max_chars = 200_000
+
+    try:
+        from dd_extract.pdf import PDFExtractor
+        extractor = PDFExtractor(engine="pypdf", max_chars=effective_max_chars)
+        text = extractor.from_file(pdf_path)
+    except Exception as e:
+        raise RuntimeError(f"dd-extract failed on {pdf_path}: {e}") from e
+
+    if not text.strip():
+        raise RuntimeError(f"No text extracted from {pdf_path}")
+
+    header_re = re.compile(
+        r'^(?:\d+\.?\s+[A-Z][A-Za-z\s]{2,60}|[A-Z][A-Z\s]{4,60})$',
+        re.MULTILINE,
+    )
+    matches = list(header_re.finditer(text))
+    chunks = []
+
+    if len(matches) >= 2:
+        for i, m in enumerate(matches):
+            end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
+            chunk_text = text[m.start():end].strip()
+            if chunk_text:
+                chunks.append({"title": m.group().strip(), "text": chunk_text, "page": i + 1})
+    else:
+        paragraphs = [p.strip() for p in re.split(r'\n\s*\n', text) if p.strip()]
+        group_size = 3
+        for idx in range(0, len(paragraphs), group_size):
+            group = paragraphs[idx: idx + group_size]
+            chunks.append({
+                "title": f"Section {idx // group_size + 1}",
+                "text":  "\n\n".join(group),
+                "page":  idx // group_size + 1,
+            })
+
+    # For RAG: keep References/Appendix since they may hold relevant content;
+    # only drop Abstract (fetched separately via metadata or first chunk) and
+    # chunk-size-cap oversized sections to stay under the embedding model's
+    # context window (nomic-embed-text: 2048 tokens ≈ ~6000 chars).
+    MAX_CHUNK_CHARS = 3_000
+    split_chunks = []
+    for c in chunks:
+        chunk_text = c["text"]
+        if len(chunk_text) <= MAX_CHUNK_CHARS:
+            split_chunks.append(c)
+        else:
+            parts = [chunk_text[i:i + MAX_CHUNK_CHARS] for i in range(0, len(chunk_text), MAX_CHUNK_CHARS)]
+            for i, part in enumerate(parts):
+                split_chunks.append({
+                    "title": f'{c["title"]} (part {i + 1}/{len(parts)})',
+                    "text":  part,
+                    "page":  c["page"],
+                })
+
+    # Filter out chunks that are fragmented OCR from figures/tables.
+    # Heuristic: if the chunk has many lines but very few words per line it's
+    # likely an attention-visualization grid, a table column, or other
+    # single-token-per-line artifact extracted from a figure.
+    # Also drop chunks whose text contains NLP figure tokens (<EOS>, <pad>).
+    _NLP_TOKENS = re.compile(r'<(?:EOS|BOS|PAD|pad|eos|bos|SEP|CLS|MASK|UNK)>')
+    def _is_fragmented(chunk_text: str) -> bool:
+        lines = [l for l in chunk_text.splitlines() if l.strip()]
+        if len(lines) < 8:
+            return False
+        if _NLP_TOKENS.search(chunk_text):
+            return True
+        words = sum(len(l.split()) for l in lines)
+        return (words / len(lines)) < 2.5
+
+    split_chunks = [c for c in split_chunks if not _is_fragmented(c["text"])]
+
+    if not split_chunks:
+        split_chunks = [{"title": "Document", "text": text.strip(), "page": 1}]
+
+    return json.dumps(split_chunks)
+$$;
+
+CREATE TOOL_API embed_chunks(chunks_json TEXT, model TEXT)
+RETURNS TEXT AS PYTHON $$
+def embed_chunks(chunks_json: str, model: str = "nomic-embed-text") -> str:
+    """Embed every chunk's text via Ollama and write results to a cache file.
+    Returns the cache FILE PATH (not the embeddings JSON) so the SPL variable
+    stays small (~100 chars) instead of growing to 1-2MB for a typical paper.
+    retrieve_top_k reads this path directly.
+
+    Cache key: SHA-256 of (chunks_json + model) — same input always reuses
+    the cached embeddings, so re-running a question loop on the same document
+    costs zero additional embed calls.
+
+    Ollama URL: OLLAMA_HOST env var, or http://localhost:11434 default."""
+    import hashlib
+    import json
+    import os
+    from pathlib import Path
+
+    import httpx
+
+    ollama_base = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+    endpoint = f"{ollama_base}/api/embeddings"
+    _model = (model or "nomic-embed-text").strip()
+
+    CACHE_DIR = Path.home() / ".cache" / "dd_pdf_digest_rag" / "embeddings"
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+    key = hashlib.sha256((chunks_json + _model).encode()).hexdigest()[:24]
+    cache_path = CACHE_DIR / f"{key}.json"
+
+    if cache_path.exists():
+        return str(cache_path)
+
+    # nomic-embed-text context: 2048 tokens. Code-dense text can reach
+    # 2-3 chars/token, so 6000 chars may exceed the limit. Truncate the
+    # embed input to 3000 chars (safe at any content density); the FULL
+    # text is preserved in the output for the LLM to read after retrieval.
+    EMBED_MAX_CHARS = 3_000
+
+    chunks = json.loads(chunks_json)
+    enriched = []
+    with httpx.Client(timeout=30.0) as client:
+        for chunk in chunks:
+            text = chunk.get("text", "")
+            embed_text = text[:EMBED_MAX_CHARS]
+            resp = client.post(endpoint, json={"model": _model, "prompt": embed_text})
+            resp.raise_for_status()
+            embedding = resp.json().get("embedding", [])
+            enriched.append({**chunk, "embedding": embedding})
+
+    cache_path.write_text(json.dumps(enriched))
+    return str(cache_path)
+$$;
+
+CREATE TOOL_API retrieve_top_k(embeddings_path TEXT, query TEXT, k TEXT, model TEXT)
+RETURNS TEXT AS PYTHON $$
+def retrieve_top_k(embeddings_path: str, query: str, k: str = "5", model: str = "nomic-embed-text") -> str:
+    """Load embeddings from the file path returned by embed_chunks, embed the
+    query with the same model, compute cosine similarity, and return the top-K
+    chunks as a JSON array (embedding field stripped — title/text/page only,
+    matching semantic_chunk_plan's output shape so format_context works unchanged).
+
+    Pure-Python cosine similarity — fast enough for single-document scale."""
+    import json
+    import math
+    import os
+    from pathlib import Path
+
+    import httpx
+
+    ollama_base = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+    endpoint = f"{ollama_base}/api/embeddings"
+    _model = (model or "nomic-embed-text").strip()
+    top_k = max(1, int(float(k)) if str(k).strip() else 5)
+
+    entries = json.loads(Path(embeddings_path.strip()).read_text())
+
+    # Filter out very short chunks — these are typically catalogue/table rows
+    # (e.g. recipe appendix entries: "68 Problem Generator | Auto-generate...")
+    # that cosine-match action words in every digest question, drowning out
+    # the paper's actual thesis sections.  200 chars keeps all prose sections
+    # and drops single-line table rows.
+    entries = [e for e in entries if len(e.get("text", "").strip()) >= 200]
+
+    resp = httpx.post(endpoint, json={"model": _model, "prompt": query.strip()}, timeout=30.0)
+    resp.raise_for_status()
+    q_emb = resp.json().get("embedding", [])
+
+    def _cosine(a: list, b: list) -> float:
+        dot = sum(x * y for x, y in zip(a, b))
+        na  = math.sqrt(sum(x * x for x in a))
+        nb  = math.sqrt(sum(x * x for x in b))
+        return dot / (na * nb + 1e-10)
+
+    scored = sorted(
+        ((
+            _cosine(q_emb, e.get("embedding", [])),
+            {kk: v for kk, v in e.items() if kk != "embedding"},
+        ) for e in entries),
+        reverse=True,
+    )
+
+    return json.dumps([chunk for _, chunk in scored[:top_k]])
+$$;
+
+CREATE TOOL_API format_context(chunks_json TEXT, abstract TEXT DEFAULT '')
+RETURNS TEXT AS PYTHON $$
+def format_context(chunks_json: str, abstract: str = '') -> str:
+    """Convert a JSON array of retrieved chunks into a readable text block
+    for injection into the digest_section_writer prompt.  Each chunk is
+    rendered as '--- <title> ---\\n<text>\\n' so the LLM can clearly see
+    section boundaries within the retrieved context.
+
+    If abstract is provided it is pinned at the top as an authoritative
+    summary so the LLM is always grounded in the paper's own description
+    even when retrieved chunks are suboptimal."""
+    import json
+
+    try:
+        chunks = json.loads(chunks_json)
+    except (json.JSONDecodeError, TypeError):
+        return ""
+
+    parts = []
+    if abstract and abstract.strip():
+        parts.append(f"--- Paper Abstract ---\n{abstract.strip()}")
+
+    for c in chunks:
+        title = str(c.get("title", "")).strip()
+        text  = str(c.get("text",  "")).strip()
+        if text:
+            header = f"--- {title} ---" if title else "---"
+            parts.append(f"{header}\n{text}")
+
+    return "\n\n".join(parts)
+$$;
+
+CREATE TOOL_API set_answer(answers_json TEXT, field TEXT, answer TEXT)
+RETURNS TEXT AS PYTHON $$
+def set_answer(answers_json: str, field: str, answer: str) -> str:
+    """Add or update one field in the running answers JSON object."""
+    import json
+
+    try:
+        answers = json.loads(answers_json) if answers_json.strip() not in ("", "{}") else {}
+        if not isinstance(answers, dict):
+            answers = {}
+    except (json.JSONDecodeError, TypeError):
+        answers = {}
+
+    answers[field.strip()] = answer
+    return json.dumps(answers)
+$$;
+
+CREATE TOOL_API assemble_rag_digest(answers_json TEXT, title TEXT, authors TEXT, abstract TEXT, source_url TEXT, elapsed_sec TEXT)
+RETURNS TEXT AS PYTHON $$
+def assemble_rag_digest(answers_json: str, title: str, authors: str, abstract: str, source_url: str, elapsed_sec: str) -> str:
+    """Package the per-question answers into the standard frontend card shape
+    used by ResultsPanel.vue (same as recipe 89's assemble_paper_digest).
+
+    The 'digest' field is formatted as Markdown paragraphs in field order so
+    the existing renderer displays it without any frontend changes.
+
+    Field ordering follows the digest schema: problem → approach → evidence →
+    limitations → contributions, with contributions rendered as a bullet block."""
+    import json
+
+    try:
+        answers = json.loads(answers_json)
+        if not isinstance(answers, dict):
+            answers = {}
+    except (json.JSONDecodeError, TypeError):
+        answers = {}
+
+    try:
+        elapsed = round(float(elapsed_sec), 1)
+    except (TypeError, ValueError):
+        elapsed = None
+
+    # Accept both arXiv abs and pdf URLs — frontend submits abs, but load_pdf
+    # normalises to pdf internally so @pdf_url stays as the original abs URL.
+    import re
+    _m = re.match(r'https?://arxiv\.org/(?:abs|pdf)/([\w./]+?)(?:\.pdf)?$', source_url)
+    if _m:
+        arxiv_id_display = _m.group(1)
+        card_url = f'https://arxiv.org/abs/{arxiv_id_display}'
+    else:
+        arxiv_id_display = source_url
+        card_url = source_url
+
+    FIELD_LABELS = {
+        "problem":       "Problem",
+        "approach":      "Approach",
+        "evidence":      "Evidence",
+        "limitations":   "Limitations",
+        "contributions": "Key Contributions",
+    }
+
+    parts = []
+    for field, label in FIELD_LABELS.items():
+        answer = answers.get(field, "").strip()
+        if answer:
+            parts.append(f"**{label}:** {answer}")
+
+    # Any fields not in the canonical list (custom schema) come last
+    for field, answer in answers.items():
+        if field not in FIELD_LABELS and answer.strip():
+            label = field.replace("_", " ").title()
+            parts.append(f"**{label}:** {answer.strip()}")
+
+    digest_md = "\n\n".join(parts)
+
+    return json.dumps({
+        "arxiv_id":      arxiv_id_display,
+        "title":         (title or "").strip() or "PDF Document",
+        "authors":       (authors or "").strip(),
+        "url":           card_url,
+        "section_count": len(answers),
+        "abstract":      (abstract or "").strip(),
+        "digest":        digest_md,
+        "elapsed_sec":   elapsed,
+    })
+$$;
+
+CREATE TOOL_API get_chunk_field(chunks_json TEXT, idx TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def get_chunk_field(chunks_json: str, idx: str, field: str) -> str:
+    import json
+    try:
+        chunks = json.loads(chunks_json)
+        i = int(float(idx))
+        return str(chunks[i].get(field, ""))
+    except (json.JSONDecodeError, TypeError, IndexError, ValueError, AttributeError):
+        return ""
+$$;
+
+CREATE TOOL_API list_count(json_list TEXT)
+RETURNS TEXT AS PYTHON $$
+def list_count(json_list: str) -> str:
+    import json
+    try:
+        return str(len(json.loads(json_list)))
+    except (json.JSONDecodeError, TypeError):
+        return "0"
+$$;
+
+CREATE TOOL_API now_seconds()
+RETURNS TEXT AS PYTHON $$
+def now_seconds() -> str:
+    import time
+    return str(time.time())
+$$;
+
+CREATE TOOL_API elapsed_seconds(start_ts TEXT)
+RETURNS TEXT AS PYTHON $$
+def elapsed_seconds(start_ts: str) -> str:
+    import time
+    try:
+        return str(round(time.time() - float(start_ts), 1))
+    except (TypeError, ValueError):
+        return "0.0"
+$$;
