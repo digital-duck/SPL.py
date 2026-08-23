@@ -25,10 +25,11 @@ def fetch_paper_metadata(url: str) -> str:
     def _clean(s):
         return re.sub(r'\s+', ' ', _html.unescape(s or "")).strip()
 
-    # Normalise bare arXiv ID ("2607.07727") to abs URL so the regex below matches.
+    # Normalise bare arXiv ID or arXiv:NNNN.NNNNN prefix to abs URL.
     url = url.strip()
-    if re.match(r'^\d{4}\.\d{4,5}(?:v\d+)?$', url):
-        url = f'https://arxiv.org/abs/{url}'
+    _bare = re.match(r'^(?:arxiv\s*:\s*)?(\d{4}\.\d{4,5}(?:v\d+)?)$', url, re.IGNORECASE)
+    if _bare:
+        url = f'https://arxiv.org/abs/{_bare.group(1)}'
 
     _m = re.search(r'arxiv\.org/(?:abs|pdf)/(\d{4}\.\d{4,5}(?:v\d+)?)', url, re.IGNORECASE)
     if not _m:
@@ -109,8 +110,8 @@ def load_pdf(path_or_url: str) -> str:
     url = path_or_url.strip()
 
     # Normalise arXiv identifiers before the local-path check so a bare ID
-    # ("2607.07727") doesn't accidentally match a non-existent local path.
-    _m = re.match(r'^(\d{4}\.\d{4,5}(?:v\d+)?)$', url)
+    # ("2607.07727" or "arXiv:2607.07727") doesn't accidentally match a non-existent local path.
+    _m = re.match(r'^(?:arxiv\s*:\s*)?(\d{4}\.\d{4,5}(?:v\d+)?)$', url, re.IGNORECASE)
     if _m:
         url = f'https://arxiv.org/pdf/{_m.group(1)}'
     else:
@@ -322,12 +323,13 @@ def retrieve_top_k(embeddings_path: str, query: str, k: str = "5", model: str = 
     scored = sorted(
         ((
             _cosine(q_emb, e.get("embedding", [])),
+            i,   # stable tiebreaker — dicts aren't comparable in Python 3
             {kk: v for kk, v in e.items() if kk != "embedding"},
-        ) for e in entries),
+        ) for i, e in enumerate(entries)),
         reverse=True,
     )
 
-    return json.dumps([chunk for _, chunk in scored[:top_k]])
+    return json.dumps([chunk for _, _, chunk in scored[:top_k]])
 $$;
 
 CREATE TOOL_API format_context(chunks_json TEXT, abstract TEXT DEFAULT '')
@@ -404,16 +406,21 @@ def assemble_rag_digest(answers_json: str, title: str, authors: str, abstract: s
     except (TypeError, ValueError):
         elapsed = None
 
-    # Accept both arXiv abs and pdf URLs — frontend submits abs, but load_pdf
-    # normalises to pdf internally so @pdf_url stays as the original abs URL.
     import re
+    # Normalise source_url to a canonical arxiv_id and card_url.
+    # Handles: https://arxiv.org/abs|pdf/ID, bare ID, arXiv:ID prefix.
     _m = re.match(r'https?://arxiv\.org/(?:abs|pdf)/([\w./]+?)(?:\.pdf)?$', source_url)
     if _m:
         arxiv_id_display = _m.group(1)
         card_url = f'https://arxiv.org/abs/{arxiv_id_display}'
     else:
-        arxiv_id_display = source_url
-        card_url = source_url
+        _m2 = re.match(r'^(?:arxiv\s*:\s*)?(\d{4}\.\d{4,5}(?:v\d+)?)$', source_url, re.IGNORECASE)
+        if _m2:
+            arxiv_id_display = _m2.group(1)
+            card_url = f'https://arxiv.org/abs/{arxiv_id_display}'
+        else:
+            arxiv_id_display = source_url
+            card_url = source_url
 
     FIELD_LABELS = {
         "problem":       "Problem",

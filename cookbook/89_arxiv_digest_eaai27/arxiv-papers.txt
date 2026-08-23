@@ -7,11 +7,38 @@ https://arxiv.org/abs/1706.03762
 
 # spl
 https://arxiv.org/abs/2607.07727
+arXiv:2602.21257
+arXiv:2508.02721
+arXiv:2501.00539
+arXiv:2603.23909
+arXiv:2603.15087
+arXiv:2410.19135
+
+# Workflow
+arXiv:2308.08155
+arXiv:2212.06094
+arXiv:2310.03714
+arXiv:2312.07104
+arXiv:2510.04173
+arXiv:2604.05150
+arXiv:2304.11477
+arXiv:2306.15626
+arXiv:2203.07814
 
 # Agentic Operating System
 https://arxiv.org/pdf/2606.01508
 
 
+arXiv:2303.17651
+
 # Decentralised AI
 https://arxiv.org/abs/2606.24722
 
+# Edu
+arXiv:2501.12300
+arXiv:2506.05751
+arXiv:2507.05528
+
+# my research
+arXiv:2502.19428
+arXiv:2605.09635
