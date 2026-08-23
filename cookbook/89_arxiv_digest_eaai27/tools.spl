@@ -61,6 +61,9 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     except Exception as e:
         raise RuntimeError(f"dd-extract failed on {pdf_path}: {e}") from e
 
+    # PostgreSQL (Momagrid hub) rejects null bytes in text columns.
+    text = text.replace('\x00', '')
+
     if not text.strip():
         raise RuntimeError(f"No text extracted from {pdf_path}")
 
