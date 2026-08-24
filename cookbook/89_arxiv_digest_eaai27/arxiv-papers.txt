@@ -1,9 +1,9 @@
 # Sample paper list for testing Recipe 89 (Map-Reduce) or Reciple 97 (RAG)
-# deepseek
-https://arxiv.org/abs/2501.12948
-
 # transformer
 https://arxiv.org/abs/1706.03762
+
+# deepseek
+https://arxiv.org/abs/2501.12948
 
 # spl
 https://arxiv.org/abs/2607.07727
@@ -34,6 +34,10 @@ arXiv:2303.17651
 # Decentralised AI
 https://arxiv.org/abs/2606.24722
 
+
+# FreeToken
+https://arxiv.org/abs/2608.16157v1
+
 # Edu
 arXiv:2501.12300
 arXiv:2506.05751
@@ -42,3 +46,5 @@ arXiv:2507.05528
 # my research
 arXiv:2502.19428
 arXiv:2605.09635
+
+

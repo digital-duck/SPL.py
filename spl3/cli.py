@@ -675,12 +675,16 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--workflow-id", default=None, metavar="ID",
               help="Workflow run ID for persistence. Auto-generated UUID if omitted. "
                    "Pass the same ID to resume a crashed run from its last checkpoint.")
+@click.option("--kernel-store", "kernel_store_path", default=None, metavar="PATH",
+              help="Enable KernelStore: path to SQLite DB for persisting SOLVE/ASSERT "
+                   "Python namespace across steps, crashes, and subprocess boundaries. "
+                   "Auto-enabled at ~/.spl/workflows.db when --persistence is active.")
 @click.option("--llm-max-output-tokens", "llm_max_output_tokens", default=None, type=int, metavar="N",
               help="Default max output tokens per GENERATE call (overrides built-in default of 1000).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
         llm_timeout, kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
-        llm_max_output_tokens):
+        kernel_store_path, llm_max_output_tokens):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -720,6 +724,17 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
             click.echo(f"[persistence] workflow-id: {workflow_id}")
         persistence_backend = get_backend(persistence)
         click.echo(f"[persistence] backend={persistence}  workflow-id={workflow_id}")
+        # Auto-enable KernelStore on the same DB when --persistence is active
+        # and the user hasn't already pointed --kernel-store elsewhere.
+        if kernel_store_path is None:
+            kernel_store_path = "~/.spl/workflows.db"
+
+    # Build KernelStore if requested
+    kernel_store = None
+    if kernel_store_path:
+        from spl3.kernel_store import KernelStore
+        kernel_store = KernelStore(db_path=kernel_store_path)
+        click.echo(f"[kernel-store] db={kernel_store_path}")
 
     asyncio.run(_run_workflow(path, adapter, model, params, hub_url, log_prompts,
                               tools_module, allowed_tools,
@@ -727,6 +742,7 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
                               kernel=kernel, kernel_scope=kernel_scope,
                               kernel_timeout=kernel_timeout, kernel_name=kernel_name,
                               persistence=persistence_backend, workflow_id=workflow_id,
+                              kernel_store=kernel_store,
                               llm_max_output_tokens=llm_max_output_tokens))
 
 
@@ -735,6 +751,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                         kernel=False, kernel_scope="session", kernel_timeout=60.0,
                         kernel_name="python3",
                         persistence=None, workflow_id=None,
+                        kernel_store=None,
                         llm_max_output_tokens=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
@@ -792,7 +809,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
     executor = Executor(adapter=capturing,
                         kernel=kernel, kernel_scope=kernel_scope,
                         kernel_timeout=kernel_timeout, kernel_name=kernel_name,
-                        persistence=persistence, workflow_id=workflow_id)
+                        persistence=persistence, workflow_id=workflow_id,
+                        kernel_store=kernel_store)
     if llm_max_output_tokens is not None:
         executor.default_max_tokens = llm_max_output_tokens
     executor.composer = WorkflowComposer(registry, executor)

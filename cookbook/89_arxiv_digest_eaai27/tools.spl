@@ -490,9 +490,9 @@ def append_json_array(array_json: str, item_json: str) -> str:
     return json.dumps(arr)
 $$;
 
-CREATE TOOL_API parallel_map_summarize(chunks_json TEXT, model TEXT, section_tokens TEXT, hub_url TEXT, timeout_s TEXT, db_path TEXT, paper_id TEXT, chunk_timeout_s TEXT, max_retries TEXT)
+CREATE TOOL_API parallel_map_summarize(chunks_json TEXT, model TEXT, section_tokens TEXT, hub_url TEXT, timeout_s TEXT, db_path TEXT, paper_id TEXT, chunk_timeout_s TEXT, max_retries TEXT, created_by TEXT DEFAULT '')
 RETURNS TEXT AS PYTHON $$
-async def parallel_map_summarize(chunks_json: str, model: str, section_tokens: str, hub_url: str = "", timeout_s: str = "300", db_path: str = "", paper_id: str = "", chunk_timeout_s: str = "60", max_retries: str = "3") -> str:
+async def parallel_map_summarize(chunks_json: str, model: str, section_tokens: str, hub_url: str = "", timeout_s: str = "300", db_path: str = "", paper_id: str = "", chunk_timeout_s: str = "60", max_retries: str = "3", created_by: str = "") -> str:
     """Fan out ALL section summarizations to the momagrid hub simultaneously with
     per-chunk timeout and retry — handles GPU nodes going offline mid-task.
 
@@ -580,20 +580,22 @@ async def parallel_map_summarize(chunks_json: str, model: str, section_tokens: s
             return {}
         chunk_id_map = {i: str(uuid.uuid4()) for i in range(len(chunks))}
         now = _now()
+        _who = created_by.strip() or None
         con = _db_connect()
         con.execute("""CREATE TABLE IF NOT EXISTS chunks (
             chunk_id TEXT PRIMARY KEY, paper_id TEXT NOT NULL, chunk_idx INTEGER NOT NULL,
             title TEXT, text TEXT, summary TEXT,
             status TEXT NOT NULL DEFAULT 'PENDING',
             job_id TEXT, agent_name TEXT, retry_count INTEGER NOT NULL DEFAULT 0,
-            last_error TEXT, submitted_at TEXT, completed_at TEXT, elapsed_sec REAL
+            last_error TEXT, submitted_at TEXT, completed_at TEXT, elapsed_sec REAL,
+            created_by TEXT, updated_by TEXT
         )""")
         for i, c in enumerate(chunks):
             con.execute(
                 "INSERT INTO chunks "
-                "(chunk_id,paper_id,chunk_idx,title,text,status,submitted_at) "
-                "VALUES (?,?,?,?,?,'PENDING',?)",
-                (chunk_id_map[i], _pid, i, c.get("title", ""), c.get("text", ""), now),
+                "(chunk_id,paper_id,chunk_idx,title,text,status,submitted_at,created_by,updated_by) "
+                "VALUES (?,?,?,?,?,'PENDING',?,?,?)",
+                (chunk_id_map[i], _pid, i, c.get("title", ""), c.get("text", ""), now, _who, _who),
             )
         con.commit()
         con.close()
@@ -602,6 +604,18 @@ async def parallel_map_summarize(chunks_json: str, model: str, section_tokens: s
     def _db_chunk_update(chunk_id: str, **kwargs) -> None:
         if not _db or not chunk_id:
             return
+        if kwargs.get('status') == 'COMPLETE' and 'elapsed_sec' not in kwargs:
+            con = _db_connect()
+            row = con.execute("SELECT submitted_at FROM chunks WHERE chunk_id=?", (chunk_id,)).fetchone()
+            con.close()
+            if row and row[0]:
+                try:
+                    sub = datetime.datetime.fromisoformat(row[0])
+                    kwargs['elapsed_sec'] = round(
+                        (datetime.datetime.now(datetime.timezone.utc) - sub).total_seconds(), 2
+                    )
+                except (ValueError, TypeError):
+                    pass
         fields = [f"{k}=?" for k in kwargs]
         values = list(kwargs.values()) + [chunk_id]
         con = _db_connect()
@@ -733,9 +747,9 @@ def assemble_paper_digest(arxiv_id: str, title: str, authors: str, url: str, sec
     })
 $$;
 
-CREATE TOOL_API init_paper_record(db_path TEXT, run_id TEXT, url TEXT, arxiv_id TEXT, title TEXT, authors TEXT, abstract TEXT, section_count TEXT)
+CREATE TOOL_API init_paper_record(db_path TEXT, run_id TEXT, url TEXT, arxiv_id TEXT, title TEXT, authors TEXT, abstract TEXT, section_count TEXT, created_by TEXT DEFAULT '')
 RETURNS TEXT AS PYTHON $$
-def init_paper_record(db_path: str, run_id: str, url: str, arxiv_id: str, title: str, authors: str, abstract: str, section_count: str) -> str:
+def init_paper_record(db_path: str, run_id: str, url: str, arxiv_id: str, title: str, authors: str, abstract: str, section_count: str, created_by: str = "") -> str:
     """Insert a PENDING papers row for this paper and return its paper_id UUID.
     Returns a throwaway UUID (not persisted) when db_path is empty so callers
     can always bind @paper_id without branching on DB availability."""
@@ -754,28 +768,30 @@ def init_paper_record(db_path: str, run_id: str, url: str, arxiv_id: str, title:
     except (TypeError, ValueError):
         n = 0
 
+    _who = created_by.strip() or None
     con = sqlite3.connect(_db, timeout=10)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("""CREATE TABLE IF NOT EXISTS papers (
         paper_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, url TEXT NOT NULL,
         arxiv_id TEXT, title TEXT, authors TEXT, abstract TEXT,
         status TEXT NOT NULL DEFAULT 'PENDING', section_count INTEGER,
-        submitted_at TEXT NOT NULL, completed_at TEXT, elapsed_sec REAL
+        submitted_at TEXT NOT NULL, completed_at TEXT, elapsed_sec REAL,
+        created_by TEXT, updated_by TEXT
     )""")
     con.execute(
         "INSERT INTO papers "
-        "(paper_id,run_id,url,arxiv_id,title,authors,abstract,section_count,submitted_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?)",
-        (paper_id, run_id, url, arxiv_id, title, authors, abstract, n, now),
+        "(paper_id,run_id,url,arxiv_id,title,authors,abstract,section_count,submitted_at,created_by,updated_by) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (paper_id, run_id, url, arxiv_id, title, authors, abstract, n, now, _who, _who),
     )
     con.commit()
     con.close()
     return paper_id
 $$;
 
-CREATE TOOL_API save_digest(db_path TEXT, paper_id TEXT, digest TEXT)
+CREATE TOOL_API save_digest(db_path TEXT, paper_id TEXT, digest TEXT, created_by TEXT DEFAULT '')
 RETURNS TEXT AS PYTHON $$
-def save_digest(db_path: str, paper_id: str, digest: str) -> str:
+def save_digest(db_path: str, paper_id: str, digest: str, created_by: str = "") -> str:
     """Upsert digest text into digests table and mark the paper COMPLETE.
     No-op when db_path is empty.  Returns '' always (callers use INTO NONE)."""
     import datetime
@@ -786,18 +802,30 @@ def save_digest(db_path: str, paper_id: str, digest: str) -> str:
         return ""
 
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    _who = created_by.strip() or None
     con = sqlite3.connect(_db, timeout=10)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("""CREATE TABLE IF NOT EXISTS digests (
-        paper_id TEXT PRIMARY KEY, digest TEXT, created_at TEXT NOT NULL
+        paper_id TEXT PRIMARY KEY, digest TEXT, created_at TEXT NOT NULL,
+        created_by TEXT, updated_by TEXT
     )""")
     con.execute(
-        "INSERT OR REPLACE INTO digests (paper_id, digest, created_at) VALUES (?,?,?)",
-        (paper_id, digest, now),
+        "INSERT OR REPLACE INTO digests (paper_id, digest, created_at, created_by, updated_by) VALUES (?,?,?,?,?)",
+        (paper_id, digest, now, _who, _who),
     )
+    row = con.execute("SELECT submitted_at FROM papers WHERE paper_id=?", (paper_id,)).fetchone()
+    elapsed_sec = None
+    if row and row[0]:
+        try:
+            sub = datetime.datetime.fromisoformat(row[0])
+            elapsed_sec = round(
+                (datetime.datetime.now(datetime.timezone.utc) - sub).total_seconds(), 1
+            )
+        except (ValueError, TypeError):
+            pass
     con.execute(
-        "UPDATE papers SET status='COMPLETE', completed_at=? WHERE paper_id=?",
-        (now, paper_id),
+        "UPDATE papers SET status='COMPLETE', completed_at=?, elapsed_sec=?, updated_by=? WHERE paper_id=?",
+        (now, elapsed_sec, _who, paper_id),
     )
     con.commit()
     con.close()

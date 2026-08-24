@@ -60,7 +60,9 @@ WORKFLOW arxiv_digest
         @hub_url        TEXT DEFAULT '',
         @model          TEXT DEFAULT '',
         @db_path        TEXT DEFAULT '',
-        @run_id         TEXT DEFAULT ''
+        @run_id         TEXT DEFAULT '',
+        @caller_email   TEXT DEFAULT '',
+        @use_tree_reduce TEXT DEFAULT 'true'
     OUTPUT: @digest_json TEXT
 DO
     LOGGING 'arXiv Digest — starting'
@@ -93,7 +95,7 @@ DO
         CALL now_seconds() INTO @paper_start_ts
 
         DO
-            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir, @hub_url, @model, @db_path, @run_id)
+            CALL summarize_arxiv_paper(@url, @section_tokens, @digest_tokens, @pdf_max_chars, '', @run_dir, @hub_url, @model, @db_path, @run_id, @caller_email, @use_tree_reduce)
                 INTO @paper_digest_json
             CALL append_json_array(@results_json, @paper_digest_json)
                 INTO @results_json

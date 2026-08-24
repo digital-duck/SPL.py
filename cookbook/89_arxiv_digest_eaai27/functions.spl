@@ -10,13 +10,12 @@
 CREATE FUNCTION section_summarizer(section_title TEXT, section_text TEXT, max_tokens INT)
 RETURNS TEXT
 AS $$
-You are a technical summarizer. Produce a concise summary of the following
-research paper section in plain English. Focus on methods and findings.
-Stay well under {max_tokens} words — leave headroom, since generation is cut
-off at a hard token limit and an unfinished sentence is worse than a shorter
-complete one. Write 2-4 complete sentences and stop; do not pad toward the
-limit. Write plain prose only — no headings, no bullet points, no preamble
-such as "This section...".
+Summarize the research paper section below in exactly 2-3 complete sentences.
+Rules (violations cause downstream truncation — follow them strictly):
+- NO preamble. Do not start with "Here is", "This section", "The following", or anything other than the actual content.
+- NO bullet points, headings, or lists.
+- 2-3 sentences maximum. Stop after the third sentence even if there is more to say.
+- Plain prose only. Focus on the key method or finding.
 
 Section: {section_title}
 
@@ -26,14 +25,12 @@ $$;
 CREATE FUNCTION group_summarizer(group_summaries TEXT, max_tokens INT)
 RETURNS TEXT
 AS $$
-You are a research editor. Below are section-by-section summaries from one
-research paper. Condense them into a single Markdown block for an intermediate
-reduction step. Start with a "### " header on its own line — use the first
-section title found in the input as the label. Then write a dense paragraph
-of 3-5 complete sentences covering the key methods and findings across all
-input sections. No bullet points, no preamble.
-Stay well under {max_tokens} words — leave headroom, generation is cut off at
-a hard token limit; an unfinished sentence is worse than a shorter complete one.
+Compress the section summaries below into one short Markdown block.
+Rules (follow strictly):
+- Start with a "### " header using the first section title in the input.
+- Write exactly 3-4 complete sentences covering the key methods and findings across ALL input sections.
+- NO preamble, NO bullet points, NO additional headers.
+- Stop after the fourth sentence.
 
 Section summaries:
 {group_summaries}
@@ -49,25 +46,29 @@ not invent details not present in them), write the following two parts IN
 THIS EXACT ORDER:
 
 1. A "**Key Contributions:**" block with exactly 3 bullet points capturing
-   the paper's core contribution, method, and main result. Write this FIRST
-   so it is always complete even if the token budget runs out mid-digest.
+   the paper's core contribution, method, and main result.
 
-2. One paragraph per section, in the same order as given, each introduced by
-   the section's name as a bold label (e.g. "**Introduction:** ...").
-   Sentence budget per paragraph scales with section count:
-   - 1-6 sections  → up to 4 sentences each
-   - 7-12 sections → up to 2 sentences each
-   - 13+ sections  → 1 sentence each, strictly
+2. One short paragraph per section. CRITICAL RULES:
+   - Cover EVERY section — do not skip or omit any, regardless of how many there are.
+   - Follow the EXACT ORDER the sections appear in the input below. Ignore any
+     section numbers in the titles; order is determined solely by position in the list.
+   - Introduce each paragraph with the section's name as a bold label
+     (e.g. "**Introduction:** ...").
+   - Sentence budget per paragraph scales with section count:
+     - 1-6 sections  → up to 4 sentences each
+     - 7-12 sections → 2 sentences each, strictly
+     - 13+ sections  → 1 sentence each, strictly
+   - Do NOT write long paragraphs. Exceeding the sentence budget wastes token
+     space and causes later sections to be cut off — keep each paragraph tight.
 
-Hard length budget: {max_tokens} tokens total; generation is cut off with no
-warning. Key Contributions comes first so the most important block always
-finishes. After writing it, divide the remaining budget evenly across
-sections — stop cleanly at any section boundary rather than truncating
-mid-sentence inside one.
+Hard length budget: {max_tokens} tokens total; output is cut off without warning
+at that limit. Distribute your budget evenly: if you find yourself writing long
+paragraphs for early sections, you will run out of budget before reaching the
+last sections. Finish every section's paragraph before moving to the next.
 Write Markdown.
 
 Paper title: {title}
 
-Section summaries:
+Section summaries (in order — preserve this order exactly):
 {section_summaries}
 $$;

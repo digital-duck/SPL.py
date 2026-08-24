@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import json
 import logging
+import pickle
 import re
 
 _log = logging.getLogger("spl.executor")
@@ -98,7 +99,8 @@ class SPL3Executor(SPL2Executor):
 
     def __init__(self, *args, kernel: bool = False, kernel_scope: str = "session",
                  kernel_timeout: float = 60.0, kernel_name: str = "python3",
-                 persistence=None, workflow_id: str | None = None, **kwargs):
+                 persistence=None, workflow_id: str | None = None,
+                 kernel_store: "KernelStore | None" = None, **kwargs):
         super().__init__(*args, **kwargs)
         self.functions._builtins["clean_code"] = lambda text: _builtin_clean_code(str(text))
 
@@ -121,6 +123,9 @@ class SPL3Executor(SPL2Executor):
         self._persistence_started: bool = False   # guards top-level-only lifecycle
         if persistence is not None:
             self._register_hitl_tools()
+
+        # KernelStore — shared SQLite state for SOLVE/ASSERT across crashes/subprocesses
+        self._kernel_store = kernel_store
 
     def _register_run_python(self) -> None:
         """Register run_python(@code) as a synchronous @spl_tool."""
@@ -199,41 +204,94 @@ class SPL3Executor(SPL2Executor):
         return re.sub(r'@@(\w+)@@', lambda m: state.get_var(m.group(1)), template)
 
     async def _exec_solve(self, stmt: SolveStatement, state) -> None:
-        """Execute SOLVE @var [TYPE] := python_template via the IPython kernel.
+        """Execute SOLVE @var [TYPE] := python_template.
 
-        Substitutes @@varname@@ markers, wraps the expression in a
-        _spl_solve_result = ...; print(str(_spl_solve_result)) pattern,
-        sends to the kernel, and assigns the printed output to @var.
+        Three execution paths:
+        - Path A (kernel): send to IPython kernel; also write result to KernelStore
+          so it survives a kernel restart.
+        - Path B (kernel_store only): load namespace from DB, exec() in-process,
+          write result + side-effect bindings back to DB.  No live kernel needed.
+        - Neither: raise ToolFailed with a helpful message.
         """
-        if self._kernel is None:
-            from spl.executor import ToolFailed
-            raise ToolFailed(
-                "SOLVE requires --kernel flag; run with 'spl3 run --kernel ...'"
-            )
-        code = self._resolve_python_template(stmt.python_template, state)
-        kernel_code = (
-            f"_spl_solve_result = {code}\n"
-            f"print(str(_spl_solve_result))"
-        )
         from spl.executor import ToolFailed
-        from spl3.kernel import KernelExecutionError
-        try:
-            result = self._kernel.execute(kernel_code)
-        except KernelExecutionError as e:
-            raise ToolFailed(f"SOLVE kernel error: {e}") from e
-        except TimeoutError as e:
-            raise ToolFailed(f"SOLVE timeout: {e}") from e
 
-        state.set_var(stmt.target_variable, result.strip())
-        _log.info("SOLVE @%s := %s -> %r", stmt.target_variable, code, result.strip())
+        code = self._resolve_python_template(stmt.python_template, state)
+
+        if self._kernel is not None:
+            # ── Path A: IPythonKernel ──────────────────────────────────────
+            # Restore saved namespace into a fresh/restarted kernel (no-op when warm)
+            if self._kernel_store and self._workflow_id:
+                saved = self._kernel_store.load_namespace(self._workflow_id)
+                if saved:
+                    restore_lines = [f"_spl_restore = {repr(saved)}"]
+                    restore_lines += [f"{k} = _spl_restore[{k!r}]" for k in saved]
+                    restore_lines.append("del _spl_restore")
+                    try:
+                        self._kernel.execute("\n".join(restore_lines))
+                    except Exception as e:
+                        _log.warning("kernel_store: namespace restore failed: %s", e)
+
+            kernel_code = (
+                f"_spl_solve_result = {code}\n"
+                f"print(str(_spl_solve_result))"
+            )
+            from spl3.kernel import KernelExecutionError
+            try:
+                result = self._kernel.execute(kernel_code)
+            except KernelExecutionError as e:
+                raise ToolFailed(f"SOLVE kernel error: {e}") from e
+            except TimeoutError as e:
+                raise ToolFailed(f"SOLVE timeout: {e}") from e
+
+            if self._kernel_store and self._workflow_id:
+                # Retrieve the typed object from the kernel for pickling
+                try:
+                    repr_code = f"import pickle as _pkl; print(_pkl.dumps(_spl_solve_result).hex())"
+                    hex_pkl = self._kernel.execute(repr_code).strip()
+                    typed = pickle.loads(bytes.fromhex(hex_pkl))
+                except Exception as e:
+                    _log.debug("kernel_store: typed retrieval failed (%s); storing str", e)
+                    typed = result.strip()
+                self._kernel_store.save_var(
+                    self._workflow_id, stmt.target_variable, typed, self._step_counter
+                )
+
+            state.set_var(stmt.target_variable, result.strip())
+            _log.info("SOLVE @%s := %s -> %r", stmt.target_variable, code, result.strip())
+
+        elif self._kernel_store is not None and self._workflow_id is not None:
+            # ── Path B: stateless exec() with DB as shared namespace ───────
+            ns = self._kernel_store.load_namespace(self._workflow_id)
+            try:
+                exec(compile(f"_spl_solve_result = {code}", "<spl-solve>", "exec"), ns)
+            except Exception as e:
+                raise ToolFailed(f"SOLVE exec error: {e}") from e
+            typed_result = ns["_spl_solve_result"]
+            result = str(typed_result)
+            self._kernel_store.save_var(
+                self._workflow_id, stmt.target_variable, typed_result, self._step_counter
+            )
+            self._kernel_store.save_namespace(
+                self._workflow_id, ns, self._step_counter
+            )
+            state.set_var(stmt.target_variable, result)
+            _log.info("SOLVE @%s := %s -> %r", stmt.target_variable, code, result)
+
+        else:
+            raise ToolFailed(
+                "SOLVE requires --kernel or kernel_store; "
+                "run with 'spl3 run --kernel ...' or 'spl3 run --kernel-store ...'"
+            )
 
     async def _exec_assert(self, stmt: AssertStatement, state) -> None:
         """Execute ASSERT python_template [OTHERWISE ...].
 
-        Two execution paths:
-        - Kernel present: send to IPython kernel (symbolic / SOLVE context).
-        - No kernel: eval in a namespace of registered tools + builtins.
-          Safe for TOOL_API predicates (e.g. ASSERT is_optimal(@solution)).
+        Three execution paths:
+        - Kernel present: restore saved namespace (crash recovery), then evaluate
+          in IPython kernel (symbolic / SOLVE context).
+        - KernelStore only: load namespace from DB, eval in-process.
+        - Neither: eval in a namespace of registered tools + builtins.
+          Safe for TOOL_API predicates (ASSERT is_optimal(@solution)).
 
         If the result is falsy, executes otherwise_body; if otherwise_body is
         empty, raises ToolFailed (assertion failure).
@@ -242,27 +300,20 @@ class SPL3Executor(SPL2Executor):
 
         code = self._resolve_python_template(stmt.python_template, state)
 
-        if self._kernel is None:
-            # Kernel-free path: eval with tools namespace.
-            # Covers TOOL_API predicates without requiring --kernel.
-            # Use repr()-quoted substitution so state values become proper
-            # Python string literals (not bare JSON/dict literals).
-            import re as _re
-            code = _re.sub(
-                r'@@(\w+)@@',
-                lambda m: repr(state.get_var(m.group(1))),
-                stmt.python_template,
-            )
-            ns: dict = {}
-            ns.update(self.functions._builtins)
-            ns.update(self.functions._tools)
-            try:
-                passed = bool(eval(code, ns))  # noqa: S307
-            except Exception as e:
-                raise ToolFailed(f"ASSERT eval error: {e}") from e
-            _log.info("ASSERT (tools-eval) %s -> %s", code, passed)
-        else:
-            # Kernel path: symbolic / math expressions in IPython context.
+        if self._kernel is not None:
+            # ── Kernel path ────────────────────────────────────────────────
+            # Restore saved namespace into a fresh/restarted kernel (no-op when warm)
+            if self._kernel_store and self._workflow_id:
+                saved = self._kernel_store.load_namespace(self._workflow_id)
+                if saved:
+                    restore_lines = [f"_spl_restore = {repr(saved)}"]
+                    restore_lines += [f"{k} = _spl_restore[{k!r}]" for k in saved]
+                    restore_lines.append("del _spl_restore")
+                    try:
+                        self._kernel.execute("\n".join(restore_lines))
+                    except Exception as e:
+                        _log.warning("kernel_store: namespace restore failed: %s", e)
+
             kernel_code = (
                 f"_spl_assert_result = bool({code})\n"
                 f"print(_spl_assert_result)"
@@ -276,6 +327,37 @@ class SPL3Executor(SPL2Executor):
                 raise ToolFailed(f"ASSERT timeout: {e}") from e
             passed = result.strip() == "True"
             _log.info("ASSERT %s -> %s", code, passed)
+
+        elif self._kernel_store is not None and self._workflow_id is not None:
+            # ── KernelStore path: eval with DB namespace ───────────────────
+            ns = self._kernel_store.load_namespace(self._workflow_id)
+            ns.update(self.functions._builtins)
+            ns.update(self.functions._tools)
+            try:
+                exec(compile(f"_spl_assert_result = bool({code})", "<spl-assert>", "exec"), ns)
+            except Exception as e:
+                raise ToolFailed(f"ASSERT eval error: {e}") from e
+            passed = bool(ns["_spl_assert_result"])
+            _log.info("ASSERT (kernel-store) %s -> %s", code, passed)
+
+        else:
+            # ── Tool-eval path: no kernel, no store ────────────────────────
+            # Use repr()-quoted substitution so state values become proper
+            # Python string literals (not bare JSON/dict literals).
+            import re as _re
+            code = _re.sub(
+                r'@@(\w+)@@',
+                lambda m: repr(state.get_var(m.group(1))),
+                stmt.python_template,
+            )
+            ns2: dict = {}
+            ns2.update(self.functions._builtins)
+            ns2.update(self.functions._tools)
+            try:
+                passed = bool(eval(code, ns2))  # noqa: S307
+            except Exception as e:
+                raise ToolFailed(f"ASSERT eval error: {e}") from e
+            _log.info("ASSERT (tools-eval) %s -> %s", code, passed)
 
         if not passed:
             if stmt.otherwise_body:
@@ -795,6 +877,8 @@ class SPL3Executor(SPL2Executor):
             status = getattr(result, "status", "complete") if result else "complete"
             value = getattr(result, "content", str(result)) if result else ""
             await self._persistence.finish_workflow(wf_id, value, status)
+            if self._kernel_store and status == "complete":
+                self._kernel_store.delete(wf_id)
             return result
         except Exception as exc:
             await self._persistence.finish_workflow(wf_id, str(exc), "error")

@@ -44,7 +44,9 @@ WORKFLOW summarize_arxiv_paper
             @hub_url        TEXT DEFAULT '',
             @model          TEXT DEFAULT '',
             @db_path        TEXT DEFAULT '',
-            @run_id         TEXT DEFAULT ''
+            @run_id         TEXT DEFAULT '',
+            @caller_email   TEXT DEFAULT '',
+            @use_tree_reduce TEXT DEFAULT 'true'
     OUTPUT: @paper_digest_json TEXT
 DO
     -- Per-paper timing (distinct from the whole-batch elapsed_sec api/app.py's
@@ -99,7 +101,7 @@ DO
     -- Register this paper in the DB; @paper_id is threaded to parallel_map_summarize
     -- and save_digest so chunk MAP results are linked to this paper row.
     -- init_paper_record returns a throwaway UUID when @db_path is empty (no-op path).
-    CALL init_paper_record(@db_path, @run_id, @url, @arxiv_id, @title, @authors, @abstract, @section_count)
+    CALL init_paper_record(@db_path, @run_id, @url, @arxiv_id, @title, @authors, @abstract, @section_count, @caller_email)
         INTO @paper_id
 
     -- Debug dump: one file per section chunk in ARXIV_DIR/chunk/ — this is
@@ -117,7 +119,7 @@ DO
     @section_summaries := ''
     EVALUATE @hub_url
         WHEN != '' THEN
-            CALL parallel_map_summarize(@chunks_json, @model, @section_tokens, @hub_url, '300', @db_path, @paper_id) INTO @section_summaries
+            CALL parallel_map_summarize(@chunks_json, @model, @section_tokens, @hub_url, '300', @db_path, @paper_id, '60', '3', @caller_email) INTO @section_summaries
         WHEN = '' THEN
             @j := 0
             WHILE @j < @section_count DO
@@ -133,30 +135,33 @@ DO
             END
     END
 
-    -- Step D: REDUCE — hierarchical two-level reduce.
-    -- For papers with <= 8 sections: single-level reduce (direct to paper_digest_writer).
-    -- For papers with > 8 sections: group sections into batches of 8, do an
-    -- intermediate sequential reduce on each batch (group_summarizer), then final
-    -- reduce over the group summaries.  This replaces the lossy cap_section_summaries
-    -- workaround with a proper aggregation that reads every section regardless of count.
-    CALL batch_section_summaries(@section_summaries, '8') INTO @batches_json
-    CALL list_count(@batches_json) INTO @batch_count
-
+    -- Step D: REDUCE.
+    -- use_tree_reduce=true (default): hierarchical two-level reduce for papers with >8 sections —
+    --   group sections into batches of 8, compress each batch with group_summarizer, then reduce
+    --   the group summaries into the final digest.  Keeps the REDUCE prompt bounded regardless of
+    --   paper length, at the cost of losing fine-grained section detail in the intermediate step.
+    -- use_tree_reduce=false: flat reduce — feed all section summaries directly to paper_digest_writer.
+    --   Better per-section coverage for shorter papers; can balloon the prompt for very long papers.
     @intermediate_summaries := ''
     @reduce_input := @section_summaries
-    EVALUATE @batch_count
-        WHEN != '1' THEN
-            LOGGING f'[{@arxiv_id}] hierarchical reduce: {@batch_count} batches of 8'
-            @b := 0
-            WHILE @b < @batch_count DO
-                CALL get_batch(@batches_json, @b) INTO @batch_text
-                GENERATE group_summarizer(@batch_text, @section_tokens)
-                    WITH OUTPUT BUDGET @section_tokens TOKENS
-                    INTO @group_summary
-                @intermediate_summaries := @intermediate_summaries + @group_summary + '\n\n'
-                @b := @b + 1
+    EVALUATE @use_tree_reduce
+        WHEN != 'false' THEN
+            CALL batch_section_summaries(@section_summaries, '8') INTO @batches_json
+            CALL list_count(@batches_json) INTO @batch_count
+            EVALUATE @batch_count
+                WHEN != '1' THEN
+                    LOGGING f'[{@arxiv_id}] hierarchical reduce: {@batch_count} batches of 8'
+                    @b := 0
+                    WHILE @b < @batch_count DO
+                        CALL get_batch(@batches_json, @b) INTO @batch_text
+                        GENERATE group_summarizer(@batch_text, @section_tokens)
+                            WITH OUTPUT BUDGET @section_tokens TOKENS
+                            INTO @group_summary
+                        @intermediate_summaries := @intermediate_summaries + @group_summary + '\n\n'
+                        @b := @b + 1
+                    END
+                    @reduce_input := @intermediate_summaries
             END
-            @reduce_input := @intermediate_summaries
     END
 
     GENERATE paper_digest_writer(@title, @reduce_input, @digest_tokens)
@@ -166,7 +171,7 @@ DO
     CALL elapsed_seconds(@start_ts) INTO @paper_elapsed_sec
 
     -- Persist digest; marks paper COMPLETE in DB. No-op when @db_path is empty.
-    CALL save_digest(@db_path, @paper_id, @digest) INTO NONE
+    CALL save_digest(@db_path, @paper_id, @digest, @caller_email) INTO NONE
 
     -- Step E: package as one JSON object — the frontend's per-paper card
     CALL assemble_paper_digest(@arxiv_id, @title, @authors, @url, @section_count, @digest, @abstract, @paper_elapsed_sec)
