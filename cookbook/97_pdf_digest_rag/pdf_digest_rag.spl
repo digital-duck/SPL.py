@@ -105,7 +105,13 @@ DO
 
 EXCEPTION
     WHEN OTHERS THEN
-        LOGGING f'PDF digest failed: {@pdf_url}'
+        -- SPL exposes no exception-message variable here, so the underlying
+        -- cause is whatever the failing TOOL_API already wrote to stderr
+        -- (embed_chunks / semantic_chunk_plan do this explicitly). The digest
+        -- below is an ABSTRACT-ONLY STUB (empty digest, section_count 0) —
+        -- api/app.py treats that as a failed run and returns 502 with the
+        -- stderr tail rather than persisting it as a result.
+        LOGGING f'RAG digest FAILED for {@pdf_url} — returning abstract-only stub. See the [embed_chunks]/[semantic_chunk_plan] line on stderr above for the underlying error (common cause: embedding model not pulled — `ollama pull <model>`).'
         CALL elapsed_seconds(@start_ts) INTO @elapsed
         CALL assemble_rag_digest('{}', @title, @authors, @abstract, @pdf_url, @elapsed) INTO @digest_json
         RETURN @digest_json WITH status = 'error'

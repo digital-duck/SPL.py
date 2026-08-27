@@ -254,6 +254,7 @@ def embed_chunks(chunks_json: str, model: str = "nomic-embed-text") -> str:
     import hashlib
     import json
     import os
+    import sys
     from pathlib import Path
 
     import httpx
@@ -261,6 +262,15 @@ def embed_chunks(chunks_json: str, model: str = "nomic-embed-text") -> str:
     ollama_base = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
     endpoint = f"{ollama_base}/api/embeddings"
     _model = (model or "nomic-embed-text").strip()
+
+    def _die(msg: str):
+        # The recipe's top-level EXCEPTION handler swallows ToolFailed and
+        # returns an abstract-only stub with no error detail, so write the
+        # real reason to stderr here — spl3 forwards it, and api/app.py
+        # surfaces the tail in its 502. Then raise so the run still fails.
+        sys.stderr.write(f"[embed_chunks] {msg}\n")
+        sys.stderr.flush()
+        raise RuntimeError(f"embed_chunks: {msg}")
 
     CACHE_DIR = Path.home() / ".cache" / "dd_pdf_digest_rag" / "embeddings"
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -280,15 +290,34 @@ def embed_chunks(chunks_json: str, model: str = "nomic-embed-text") -> str:
     chunks = json.loads(chunks_json)
     enriched = []
     with httpx.Client(timeout=30.0) as client:
-        for chunk in chunks:
+        # Preflight: one tiny embed call so a missing model / unreachable
+        # Ollama fails with an actionable message instead of a bare 404
+        # buried in the per-chunk loop.
+        try:
+            pre = client.post(endpoint, json={"model": _model, "prompt": "ping"})
+        except httpx.RequestError as e:
+            _die(f"cannot reach Ollama at {ollama_base} ({e!r}) — is `ollama serve` running?")
+        if pre.status_code == 404 or "not found" in pre.text.lower():
+            _die(f"Ollama has no embedding model {_model!r} at {ollama_base}. "
+                 f"Pull it first:  ollama pull {_model}")
+        if pre.status_code != 200:
+            _die(f"Ollama /api/embeddings returned HTTP {pre.status_code} for model "
+                 f"{_model!r}: {pre.text[:300]}")
+
+        for i, chunk in enumerate(chunks):
             text = chunk.get("text", "")
             # Defensive: strip any lone surrogate code points that would make
             # httpx's UTF-8 encode of the request body raise (see
             # semantic_chunk_plan — this is the encode boundary that fails).
             embed_text = text[:EMBED_MAX_CHARS].encode('utf-8', 'ignore').decode('utf-8')
             resp = client.post(endpoint, json={"model": _model, "prompt": embed_text})
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                _die(f"embed call failed for chunk {i + 1}/{len(chunks)} "
+                     f"(model {_model!r}): HTTP {resp.status_code} {resp.text[:300]}")
             embedding = resp.json().get("embedding", [])
+            if not embedding:
+                _die(f"Ollama returned an empty embedding for chunk {i + 1}/{len(chunks)} "
+                     f"with model {_model!r} — is this an embedding model?")
             enriched.append({**chunk, "embedding": embedding})
 
     cache_path.write_text(json.dumps(enriched))
