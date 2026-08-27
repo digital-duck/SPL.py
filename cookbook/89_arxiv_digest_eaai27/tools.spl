@@ -64,6 +64,12 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     # PostgreSQL (Momagrid hub) rejects null bytes in text columns.
     text = text.replace('\x00', '')
 
+    # pypdf occasionally emits lone UTF-16 surrogate code points (U+D800–U+DFFF)
+    # for broken glyphs/ligatures. These are not valid Unicode scalars, so any
+    # later UTF-8 encode (httpx JSON-encoding an LLM/hub request body) raises
+    # UnicodeEncodeError: 'surrogates not allowed'. Drop them at the source.
+    text = text.encode('utf-8', 'ignore').decode('utf-8')
+
     if not text.strip():
         raise RuntimeError(f"No text extracted from {pdf_path}")
 

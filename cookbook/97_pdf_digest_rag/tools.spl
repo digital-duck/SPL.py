@@ -160,6 +160,15 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
     # PostgreSQL (Momagrid hub) rejects null bytes in text columns.
     text = text.replace('\x00', '')
 
+    # pypdf occasionally emits lone UTF-16 surrogate code points (U+D800–U+DFFF)
+    # for broken glyphs/ligatures — e.g. two stray U+DD0E in 2511.08462's
+    # "Illustrative Example" section. These are not valid Unicode scalars, so
+    # any later UTF-8 encode (httpx JSON-encoding the Ollama embed request body)
+    # raises UnicodeEncodeError: 'surrogates not allowed', which the recipe's
+    # EXCEPTION handler swallows into an empty digest. Drop them here at the
+    # source so every downstream consumer gets clean text.
+    text = text.encode('utf-8', 'ignore').decode('utf-8')
+
     if not text.strip():
         raise RuntimeError(f"No text extracted from {pdf_path}")
 
@@ -273,7 +282,10 @@ def embed_chunks(chunks_json: str, model: str = "nomic-embed-text") -> str:
     with httpx.Client(timeout=30.0) as client:
         for chunk in chunks:
             text = chunk.get("text", "")
-            embed_text = text[:EMBED_MAX_CHARS]
+            # Defensive: strip any lone surrogate code points that would make
+            # httpx's UTF-8 encode of the request body raise (see
+            # semantic_chunk_plan — this is the encode boundary that fails).
+            embed_text = text[:EMBED_MAX_CHARS].encode('utf-8', 'ignore').decode('utf-8')
             resp = client.post(endpoint, json={"model": _model, "prompt": embed_text})
             resp.raise_for_status()
             embedding = resp.json().get("embedding", [])
