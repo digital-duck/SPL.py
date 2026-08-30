@@ -144,7 +144,7 @@ Fix the code. Common causes:
 Output ONLY the corrected Python code — no markdown fences, no commentary.
 $$;
 
-CREATE FUNCTION interpret_solution(problem TEXT, solution_json TEXT)
+CREATE FUNCTION interpret_solution(problem TEXT, solution_json TEXT, lang TEXT)
 RETURNS TEXT AS $$
 You are an operations research expert. Interpret this optimization result
 for a business user.
@@ -160,7 +160,7 @@ Provide a concise interpretation (under 120 words):
 3. Are any constraints binding (at their exact limit)?
 4. One-sentence recommendation.
 
-Write in plain English, no JSON, no code.
+Write in {lang}. No JSON, no code.
 $$;
 
 -- ── WORKFLOW ─────────────────────────────────────────────────
@@ -171,6 +171,7 @@ WORKFLOW constraint_opt
   -- that a human can verify by hand but which requires LP to prove optimal.
   INPUT @problem TEXT := "A bakery produces artisan bread and croissants. Each loaf of bread requires 3 hours of labor and 2 kg of flour, earning $12 profit. Each batch of croissants requires 1 hour of labor and 3 kg of flour, earning $8 profit. The bakery has 12 hours of labor and 15 kg of flour available each day. Both products must have non-negative quantities. Maximize daily profit."
   INPUT @max_tries INTEGER := 3
+  INPUT @lang TEXT := "English"
   INPUT @out_dir TEXT := "./cookbook/78_constraint_opt/output"
   OUTPUT @report TEXT
 DO
@@ -222,7 +223,7 @@ DO
 
   -- ── Stage 3: LLM interprets the verified result ───────────────
   LOGGING "[constraint_opt] Stage 3 — LLM interpreting verified solution" LEVEL INFO
-  GENERATE interpret_solution(@problem, @solution) INTO @narrative;
+  GENERATE interpret_solution(@problem, @solution, @lang) INTO @narrative;
 
   CALL format_report(@problem, @lp_code, @solution, @narrative) INTO @report;
 

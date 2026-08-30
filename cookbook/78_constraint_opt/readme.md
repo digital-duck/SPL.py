@@ -36,13 +36,26 @@ No additional configuration is needed. CBC (COIN-OR Branch and Cut) is bundled w
 
 ### What is PuLP?
 
-PuLP is a Python library for **Linear Programming (LP) and Mixed-Integer Programming (MIP)**. You describe an optimization problem in Python — decision variables, an objective function, linear constraints — and PuLP dispatches it to a solver backend (CBC by default). The solver returns not just a solution but a **proof of optimality**: a certificate that no better solution exists within the feasible region.
+[PuLP](https://coin-or.github.io/pulp/) ([GitHub](https://github.com/coin-or/pulp)) is a Python library for **[Linear Programming (LP)](https://en.wikipedia.org/wiki/Linear_programming) and [Mixed-Integer Programming (MIP)](https://en.wikipedia.org/wiki/Integer_programming)**. You describe an optimization problem in Python — decision variables, an objective function, linear constraints — and PuLP dispatches it to a solver backend (CBC by default). The solver returns not just a solution but a **proof of optimality**: a certificate that no better solution exists within the feasible region.
 
 PuLP sits at the mature, boring end of the operations research stack:
 - Open-source, BSD-licensed, actively maintained (v2.x)
-- Default backend is CBC (COIN-OR), one of the best open-source MIP solvers
-- Supports optional commercial backends (Gurobi, CPLEX, HiGHS) via the same API
-- Widely used in supply chain, scheduling, resource allocation, logistics
+- Default backend is [CBC (COIN-OR Branch and Cut)](https://github.com/coin-or/Cbc), one of the best open-source MIP solvers
+- Supports optional commercial backends ([Gurobi](https://www.gurobi.com/), [CPLEX](https://www.ibm.com/products/ilog-cplex-optimization-studio), [HiGHS](https://highs.dev/)) via the same API
+- Widely used in [supply chain optimization](https://en.wikipedia.org/wiki/Supply_chain_optimization), [scheduling](https://en.wikipedia.org/wiki/Job-shop_scheduling), [resource allocation](https://en.wikipedia.org/wiki/Resource_allocation), [logistics / transportation](https://en.wikipedia.org/wiki/Transportation_theory_(mathematics))
+
+#### Learning resources
+
+| Resource | What you'll learn |
+|---|---|
+| [PuLP official docs](https://coin-or.github.io/pulp/) | API reference, solver configuration |
+| [PuLP case studies](https://coin-or.github.io/pulp/CaseStudies/index.html) | Worked examples: beer distribution, whiskas cat food |
+| [LP Wikipedia](https://en.wikipedia.org/wiki/Linear_programming) | Theory: feasible region, simplex, duality |
+| [Transportation problem](https://en.wikipedia.org/wiki/Transportation_theory_(mathematics)) | Classic supply-chain LP — ships goods from warehouses to stores at minimum cost |
+| [Vehicle routing problem (VRP)](https://en.wikipedia.org/wiki/Vehicle_routing_problem) | Logistics: route a fleet of trucks to serve customers |
+| [Job-shop scheduling](https://en.wikipedia.org/wiki/Job-shop_scheduling) | Assign jobs to machines respecting precedence + capacity |
+| [Nurse scheduling problem](https://en.wikipedia.org/wiki/Nurse_scheduling_problem) | Staff shift assignment with coverage and fairness constraints |
+| [Knapsack / portfolio selection](https://en.wikipedia.org/wiki/Knapsack_problem) | Binary ILP: select best subset under budget/capacity limits |
 
 ### Why PuLP for this recipe?
 
@@ -70,20 +83,33 @@ But PuLP is only the demo rung. The `GENERATE → CALL solver → ASSERT → WHI
 
 In every case the .spl workflow is identical in structure. The LLM's job is always the same — read the natural-language specification and write the solver input. The solver's job is always the same — run the physics or mathematics and return a machine-readable verdict. `ASSERT` is always the formal boundary between them. Only the `TOOL_API` body changes, because only the solver changes. This is **DODA** (Design Once, Deploy Anywhere) applied to the deterministic layer: one workflow specification, many physical backends.
 
+## Companion recipes in this directory
+
+Three additional `.spl` files apply the same `GENERATE → CALL solver → ASSERT → WHILE repair → GENERATE interpret` pattern to different PuLP problem domains:
+
+| File | Domain | PuLP type | Default problem |
+|---|---|---|---|
+| `constraint_opt.spl` | Production planning | LP | Bakery: bread + croissants, maximize profit |
+| `supply_chain.spl` | Logistics / shipping | LP ([transportation problem](https://en.wikipedia.org/wiki/Transportation_theory_(mathematics))) | 2 warehouses → 3 stores, minimize shipping cost |
+| `staff_scheduling.spl` | HR / operations | ILP ([nurse scheduling](https://en.wikipedia.org/wiki/Nurse_scheduling_problem)) | 4 nurses, 3 shifts, minimize wage cost |
+| `resource_allocation.spl` | Portfolio / strategy | Binary ILP ([knapsack](https://en.wikipedia.org/wiki/Knapsack_problem)) | 6 IT projects, budget + headcount limits, maximize value |
+
+Each recipe is self-contained. The SPL structure is identical — only the tool bodies and LLM prompts change because only the solver problem changes. This is **DODA** in action: the orchestration logic is invariant across domains.
+
 ## Run
 
 ```bash
 # Default problem (bakery production planning)
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli
 
 # Custom problem
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
     --param problem="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tables (4h labor, 3kg wood, \$30 profit). Available: 20h labor, 24kg wood. Maximize profit."
 
 # More repair attempts (default 3)
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
     --param max_tries=5
 ```

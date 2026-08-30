@@ -1501,6 +1501,28 @@
       "notes": "spl-go: now parses OK (re-validated 2026-07-15 after SOLVE/ASSERT/TOOL_API parser support added); execution against kernel/tool dispatch still pending (Task #3, persistent-subprocess bridge)."
     },
     {
+      "id": "77",
+      "name": "Neurosymbolic Verifier Ladder",
+      "description": "Capstone of the verifier ladder: puts SymPy (recipe 67), SageMath (recipe 75), and Lean 4 (recipe 76) behind the same problem text via --param backend= flip. LLM decomposes/formalizes/narrates; the chosen kernel computes exact instances or kernel-checks against mathlib, returning a badge (machine_proved/statement_checked/unfaithful/unverified).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/77_neurosymbolic/symbolic_math.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "77_neurosymbolic",
+      "log": "neurosymbolic",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": [
+        "sympy",
+        "sagemath",
+        "lean4"
+      ]
+    },
+    {
       "id": "78",
       "name": "Constraint Optimization",
       "description": "Demonstrates SPL's deterministic-probabilistic boundary: LLM reads a natural-language LP problem and generates PuLP solver code (probabilistic), PuLP/CBC finds the optimal solution with a proof of optimality (deterministic), ASSERT gates on solver status (formal verification), LLM interprets the result (probabilistic). Repair loop retries up to max_tries on Error/Infeasible. Default problem: bakery production planning (known optimum: bread=3, croissants=3, profit=$60). Requires: pip install pulp.",
@@ -1723,6 +1745,134 @@
         "ortools"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "90",
+      "name": "Physics Conservation Check",
+      "description": "LLM writes NumPy code for 1-D collision problems; run_conservation_check() independently recomputes momentum and kinetic energy; ASSERT gates on conservation within 1% tolerance. Repair loop retries up to max_tries. Default: elastic collision, equal masses.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/90_compsci_physics/physics_conservation.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "90_compsci_physics",
+      "log": "physics_conservation",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": [
+        "numpy"
+      ]
+    },
+    {
+      "id": "91",
+      "name": "Chemical Equation Balancing",
+      "description": "LLM proposes a balanced chemical equation; run_balance_check() parses formulae (recursive descent, supports parentheses) and sums atoms × coefficient per element; ASSERT gates on exact mass balance. Repair loop retries on mismatched elements. Default: combustion of methane.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/91_compsci_chemistry/chemistry_balance.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "91_compsci_chemistry",
+      "log": "chemistry_balance",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
+    },
+    {
+      "id": "92",
+      "name": "Crystal Structure Check",
+      "description": "LLM writes code reporting crystal system, lattice parameters, Z, molar mass, and density; run_materials_check() independently verifies symmetry constraints and recomputes density from scratch via Avogadro's number; ASSERT gates on both. Default: NaCl rock-salt structure (~2.1636 g/cm³).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/92_compsci_materials/materials_crystal.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "92_compsci_materials",
+      "log": "materials_crystal",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
+    },
+    {
+      "id": "93",
+      "name": "Automated Planning (PDDL / STRIPS)",
+      "description": "LLM proposes a grounded JSON action plan over a fixed logistics-lite domain (truck, packages, locations); run_plan_check() replays the plan against STRIPS precondition/effect semantics, a minimal VAL-style validator; ASSERT gates on preconditions holding AND goal reached. Default: deliver 2 packages (6-step optimal plan).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/93_auto_planning/auto_planning.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "93_auto_planning",
+      "log": "auto_planning",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
+    },
+    {
+      "id": "94",
+      "name": "Text-to-SQL with Data-Quality Gates",
+      "description": "LLM writes SQL from natural language; run_quality_gated_sql() checks referential integrity, requires non-empty result, and cross-checks two independent SQL formulations within 1e-6; ASSERT gates on clean execution AND all quality gates passing. Default: average Enterprise-segment order amount ($6,000.00).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/94_data_eng_text2spl/text2sql_quality.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "94_data_eng_text2spl",
+      "log": "text2sql_quality",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
+    },
+    {
+      "id": "95",
+      "name": "Music Theory: Chorale Voice-Leading",
+      "description": "LLM harmonizes a soprano melody into four-part chorale; check_voice_leading() deterministically checks parallel fifths/octaves, voice crossing, spacing, and large leaps via pure interval arithmetic on MIDI pitch numbers. Repair loop retries on violations. Default melody: C5 D5 E5 F5 G5 F5 E5 C5.",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/95_music_theory/music_theory.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "95_music_theory",
+      "log": "music_theory",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
+    },
+    {
+      "id": "96",
+      "name": "Pharmacovigilance: Drug-Interaction Screening",
+      "description": "SYNTHETIC DEMO. LLM extracts structured drug list from clinical note; screen_regimen() normalizes names and checks pairwise interactions against a synthetic severity table; contraindicated result halts BEFORE narration (safety gate). Default note: sildenafil + nitroglycerin (contraindicated pair).",
+      "args": [
+        "spl-go",
+        "run",
+        "cookbook/96_drug_sim/drug_sim.spl",
+        "--llm",
+        "claude_cli"
+      ],
+      "dir": "96_drug_sim",
+      "log": "drug_sim",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "requires": []
     }
   ]
 }
