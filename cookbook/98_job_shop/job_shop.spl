@@ -1,0 +1,267 @@
+-- ============================================================
+-- Recipe 98: Job-shop Scheduling — OR-Tools CP-SAT
+--
+-- Demonstrates the deterministic–probabilistic boundary:
+--   Probabilistic (LLM)   — extract job/machine structure from NL
+--   Deterministic (CP-SAT)— find proven-optimal schedule
+--   Deterministic (ASSERT)— gate: continue only on OPTIMAL/FEASIBLE
+--   Probabilistic (LLM)   — interpret Gantt chart for user
+--
+-- use_solver="true"  → CP-SAT (OR-Tools) pipeline
+-- use_solver="false" → LLM-only baseline with back-substitution check
+--
+-- Requires: pip install ortools
+-- Run:
+--   spl3 run cookbook/98_job_shop/job_shop.spl \
+--       --adapter claude_cli --param use_solver=true \
+--       --param "problem=3 jobs, 3 machines. Job1: M1(3)->M2(2)->M3(2). Job2: M2(2)->M1(3)->M3(1). Job3: M3(2)->M2(1)->M1(2). Minimize makespan."
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API is_scheduled(solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_scheduled(solution_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_scheduled as _fn
+    return _fn(solution_json)
+$$;
+
+CREATE TOOL_API solve_job_shop(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_job_shop(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import solve_job_shop as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API verify_job_shop(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_job_shop(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_job_shop as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API format_gantt(solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_gantt(solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_gantt as _fn
+    return _fn(solution_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_job_structure(problem TEXT)
+RETURNS TEXT AS $$
+Extract this job-shop scheduling problem into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "jobs": [
+    {{"name": "Job1", "operations": [
+      {{"machine": "M1", "duration": 3}},
+      {{"machine": "M2", "duration": 2}}
+    ]}},
+    ...
+  ],
+  "machines": ["M1", "M2", ...],
+  "deadline": null
+}}
+
+Rules:
+- Each operation must specify exactly one machine and an integer duration.
+- Operations within a job are in the required processing order.
+- deadline is null unless the problem states one.
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION extract_solution_json_js(problem TEXT, schedule_text TEXT)
+RETURNS TEXT AS $$
+Convert this job-shop schedule description to JSON.
+Return ONLY a JSON object — no markdown:
+{{
+  "makespan": <integer>,
+  "schedule": [
+    {{"job": "Job1", "operation": 1, "machine": "M1", "start": 0, "end": 3, "duration": 3}},
+    ...
+  ]
+}}
+
+Problem: {problem}
+Schedule description:
+{schedule_text}
+$$;
+
+CREATE FUNCTION interpret_schedule(problem TEXT, solution_json TEXT, gantt TEXT)
+RETURNS TEXT AS $$
+Interpret this job-shop scheduling result for a non-expert.
+
+Problem: {problem}
+Schedule (JSON): {solution_json}
+Gantt chart:
+{gantt}
+
+Your interpretation should:
+1. State the optimal makespan and what it means
+2. Identify the bottleneck machine (most loaded)
+3. Describe the schedule in plain language (which job runs when on which machine)
+4. Note any waiting time and why it occurs
+5. One-sentence practical takeaway
+
+Be concise and practical.
+$$;
+
+CREATE FUNCTION solve_directly_js(problem TEXT)
+RETURNS TEXT AS $$
+You are an expert operations researcher. Solve this job-shop scheduling problem.
+
+Problem: {problem}
+
+Job-shop rules:
+- Each job has a fixed sequence of operations on specific machines.
+- Each machine handles only one job at a time (no overlap).
+- Operations within a job must run in order (no preemption).
+- Goal: minimise the total makespan (time to finish all jobs).
+
+Steps:
+1. List all jobs, their operation sequences, and durations.
+2. Build a schedule using a dispatching heuristic (FIFO, SPT, or NEH).
+3. Show the Gantt chart as a text table (machine vs time slots).
+4. State the makespan.
+5. Verify no machine overlap and no precedence violation.
+$$;
+
+CREATE FUNCTION extract_verdict(verify_json TEXT)
+RETURNS TEXT AS $$
+Extract the verdict field from this verification JSON.
+Return ONLY one word: PASS, FAIL, or UNPARSEABLE.
+
+JSON: {verify_json}
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW job_shop_scheduling
+  INPUT @problem TEXT := "3 jobs, 3 machines. Job1: M1(3)->M2(2)->M3(2). Job2: M2(2)->M1(3)->M3(1). Job3: M3(2)->M2(1)->M1(2). Minimize makespan. Known optimal: 8."
+  INPUT @use_solver TEXT := "true"
+  INPUT @adapter TEXT := "claude_cli"
+  INPUT @model TEXT := ""
+  OUTPUT @report TEXT
+DO
+  @makespan_str  := "";
+  @verify_status := "N/A";
+  @solution_json := "{}";
+  @problem_json  := "{}";
+  @llm_calls     := 0;
+
+  LOGGING f"[job_shop] start  use_solver={@use_solver}  adapter={@adapter}  model={@model}" LEVEL INFO
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- Stage 1: LLM extracts structure; CP-SAT solves
+      LOGGING "[job_shop] solver=ON — extracting job structure for CP-SAT" LEVEL INFO
+      GENERATE extract_job_structure(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[job_shop] solver_input (extracted_json):\n{@problem_json}" LEVEL DEBUG
+
+      CALL solve_job_shop(@problem_json) INTO @solution_json;
+
+      -- Gate: only continue when CP-SAT found an optimal or feasible schedule
+      ASSERT is_scheduled(@solution_json);
+      LOGGING "[job_shop] ASSERT passed — CP-SAT confirmed scheduled" LEVEL INFO
+
+      CALL format_gantt(@solution_json) INTO @gantt;
+
+      GENERATE interpret_schedule(@problem, @solution_json, @gantt) INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      CALL json_get_field(@solution_json, "makespan") INTO @makespan_str;
+
+      @report := f"=== Job-Shop Scheduling (solver=ON / OR-Tools CP-SAT) ===
+
+Problem:
+{@problem}
+
+CP-SAT Solution (JSON):
+{@solution_json}
+
+Gantt Chart:
+{@gantt}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      -- solver=OFF: LLM reasons through schedule directly
+      LOGGING "[job_shop] solver=OFF — LLM direct scheduling" LEVEL INFO
+      GENERATE solve_directly_js(@problem) INTO @llm_schedule;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[job_shop] llm_decomposition_output:\n{@llm_schedule}" LEVEL DEBUG
+
+      GENERATE extract_solution_json_js(@problem, @llm_schedule) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+
+      GENERATE extract_job_structure(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL verify_job_shop(@problem_json, @solution_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@solution_json, "makespan") INTO @makespan_str;
+
+      LOGGING f"[job_shop] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+
+      @report := f"=== Job-Shop Scheduling (solver=OFF / LLM direct) ===
+
+Problem:
+{@problem}
+
+LLM Schedule:
+{@llm_schedule}
+
+Extracted Schedule (JSON):
+{@solution_json}
+
+Verification:
+{@verify_result}
+
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[job_shop] makespan_claimed={@makespan_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @makespan_str,
+         verify = @verify_status;
+
+END;

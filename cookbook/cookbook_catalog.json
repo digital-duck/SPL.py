@@ -1922,6 +1922,61 @@
         "re"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "98",
+      "name": "Job-Shop Scheduling via OR-Tools CP-SAT",
+      "description": "Classic job-shop scheduling: N jobs x M machines, each job has a fixed sequence of operations. LLM extracts problem structure from natural language (probabilistic); solve_job_shop() runs OR-Tools CP-SAT constraint programming to find the provably-optimal schedule with minimum makespan (deterministic). ASSERT gates on OPTIMAL/FEASIBLE CP-SAT status. Ablation: use_solver=false lets the LLM schedule directly; verify_job_shop() back-substitutes to check no-overlap and precedence constraints. format_gantt() renders an ASCII Gantt chart. Demonstrates C5 (constraint propagation / CP-SAT) solver class. Solver class: C5. Requires: pip install ortools.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/98_job_shop/job_shop.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "98_job_shop",
+      "log": "job_shop",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "ortools"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "99",
+      "name": "Portfolio Optimization via cvxpy (Markowitz)",
+      "description": "Personal investment demo: given a capital amount and a pool of stock tickers, minimize portfolio variance subject to a target annual return using Markowitz mean-variance optimization. fetch_stock_data() downloads historical prices via yfinance and computes annual returns and covariance matrix (deterministic). optimize_portfolio() runs cvxpy CLARABEL interior-point QP solver (deterministic). ASSERT gates on OPTIMAL status; repair loop relaxes the target return if infeasible. Ablation: use_solver=false lets the LLM suggest weights heuristically; verify_portfolio() checks weight sum, bounds, and non-negativity. LLM interprets weights and capital allocation in plain language. Adaptive: run monthly with fresh data for rebalancing signals. Not financial advice. Requires: pip install cvxpy yfinance.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/99_portfolio_opt/portfolio_opt.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true",
+        "--param",
+        "tickers=AAPL,MSFT,GOOGL,AMZN,NVDA",
+        "--param",
+        "capital=10000",
+        "--param",
+        "target_return=0.12"
+      ],
+      "dir": "99_portfolio_opt",
+      "log": "portfolio_opt",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "cvxpy",
+        "yfinance"
+      ],
+      "excluded_adapters": []
     }
   ]
 }

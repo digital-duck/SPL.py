@@ -38,7 +38,11 @@ def run_pulp(code: str) -> str:
     import json, re, pulp
     code = re.sub(r'^```(?:python)?\s*\n?', '', code.strip(), flags=re.IGNORECASE)
     code = re.sub(r'\n?```\s*$', '', code)
+    code = re.sub(r'(?m)^\s*import\s+pulp\s*(?:#.*)?$', '', code)
+    code = re.sub(r'(?m)^\s*from\s+pulp\s+import\s+.*$', '', code)
+    code = code.replace('pulp.pulp.LpStatus', 'pulp.LpStatus')
     namespace = {"pulp": pulp}
+    namespace.update({k: getattr(pulp, k) for k in dir(pulp) if not k.startswith('_') and k != 'pulp'})
     try:
         exec(code, namespace)
         result = namespace.get("_result")
@@ -47,7 +51,11 @@ def run_pulp(code: str) -> str:
                                "error": "code did not set _result"})
         return json.dumps(result, default=str)
     except Exception as e:
-        return json.dumps({"status": "Error", "error": str(e)})
+        err = str(e)
+        hint = ""
+        if "pulp.pulp" in err and "LpStatus" in err:
+            hint = " — use pulp.LpStatus[prob.status], never pulp.pulp.LpStatus"
+        return json.dumps({"status": "Error", "error": err + hint})
 $$;
 
 CREATE TOOL_API is_optimal(result_json TEXT)
@@ -58,6 +66,91 @@ def is_optimal(result_json: str) -> bool:
         return json.loads(result_json).get("status") == "Optimal"
     except Exception:
         return False
+$$;
+
+CREATE TOOL_API json_get_objective(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_objective(result_json: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get("objective")
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API json_get_field(result_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(result_json: str, field: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get(field)
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API verify_off_staff(problem TEXT, claimed_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_off_staff(problem: str, claimed_json: str) -> str:
+    import json, re
+    raw = claimed_json.strip()
+    raw = re.sub(r'^```(?:json)?\s*\n?', '', raw, flags=re.IGNORECASE)
+    raw = re.sub(r'\n?```\s*$', '', raw)
+    try:
+        claimed = json.loads(raw)
+    except Exception as e:
+        return json.dumps({"verdict": "UNPARSEABLE", "notes": f"JSON error: {e}",
+                           "raw_prefix": claimed_json[:120]})
+
+    obj_claimed  = claimed.get("objective")
+    assignment   = claimed.get("assignment", {})
+    coverage_min = claimed.get("coverage_min", {})
+    wage         = claimed.get("wage", {})
+
+    violations = []
+
+    # Normalize: nurse→shift or shift→[nurses]
+    shift_nurses: dict = {}
+    for k, v in assignment.items():
+        if isinstance(v, str):
+            shift_nurses.setdefault(v, []).append(k)
+        elif isinstance(v, list):
+            shift_nurses[k] = v
+
+    # Coverage
+    for shift, min_n in coverage_min.items():
+        count = len(shift_nurses.get(shift, []))
+        if count < int(min_n):
+            violations.append(f"{shift}: {count} nurses < required {min_n}")
+
+    # Each nurse at most 1 shift
+    nurse_counts: dict = {}
+    for shift, nurses in shift_nurses.items():
+        for n in nurses:
+            nurse_counts[n] = nurse_counts.get(n, 0) + 1
+    for nurse, cnt in nurse_counts.items():
+        if cnt > 1:
+            violations.append(f"{nurse} assigned to {cnt} shifts (max 1)")
+
+    # Recompute cost
+    if wage and shift_nurses:
+        try:
+            recomputed = sum(float(wage.get(s, 0)) * len(ns)
+                            for s, ns in shift_nurses.items())
+            if obj_claimed is not None and abs(recomputed - float(obj_claimed)) > 0.5:
+                violations.append(f"cost mismatch: claimed {obj_claimed} vs computed {recomputed:.2f}")
+        except Exception as e:
+            violations.append(f"cost recompute error: {e}")
+
+    if violations:
+        return json.dumps({"verdict": "FAIL", "claimed_obj": obj_claimed,
+                           "notes": "; ".join(violations)})
+    if not assignment:
+        return json.dumps({"verdict": "UNPARSEABLE", "claimed_obj": obj_claimed,
+                           "notes": "no assignment in JSON"})
+    return json.dumps({"verdict": "PASS", "claimed_obj": obj_claimed,
+                       "notes": "coverage and workload constraints verified"})
 $$;
 
 CREATE TOOL_API make_metrics(use_solver TEXT, llm_calls TEXT,
@@ -150,25 +243,51 @@ $$;
 CREATE FUNCTION formulate_scheduling_ilp(problem TEXT)
 RETURNS TEXT AS $$
 You are an operations research expert specializing in workforce scheduling.
-Convert this staff scheduling problem to runnable PuLP Integer Linear Program (ILP) code.
+Convert this staff scheduling problem to runnable PuLP ILP code.
 
-Rules:
-- The `pulp` module is already in scope — do NOT add import statements
-- Model this as a binary ILP:
-    * Create a pulp.LpProblem with sense=pulp.LpMinimize
-    * Decision variables: x[nurse][shift] = binary (1 if nurse works shift, 0 otherwise)
-      Use pulp.LpVariable(f"x_{nurse}_{shift}", cat='Binary')
-    * Objective: minimize total wage cost = Σ wage[shift] · Σ_nurse x[nurse][shift]
-    * Coverage constraints: for each shift s, sum of x[n][s] over all nurses >= min_nurses[s]
-    * Workload constraints: for each nurse n, sum of x[n][s] over all shifts <= max_shifts_per_nurse
-    * Call: prob.solve(pulp.PULP_CBC_CMD(msg=0))
-- After solving, store the result EXACTLY as:
-    _result = {
-        "status": pulp.LpStatus[prob.status],
-        "objective": pulp.value(prob.objective),
-        "variables": {v.name: pulp.value(v) for v in prob.variables()}
-    }
-- Output ONLY raw Python code — no markdown fences, no commentary
+Follow the TEMPLATE below EXACTLY — replace the placeholder data with the actual
+nurses, shifts, wages, and coverage requirements from the problem.
+
+The `pulp` module is already in scope. Do NOT import anything.
+Output ONLY raw Python code — no markdown fences, no comments.
+
+TEMPLATE (copy this structure, fill in the actual data):
+
+nurses = ["Nurse1", "Nurse2", "Nurse3", "Nurse4", "Nurse5"]
+shifts = ["Morning", "Afternoon", "Night"]
+wage         = {"Morning": 200, "Afternoon": 180, "Night": 320}
+min_coverage = {"Morning": 2, "Afternoon": 2, "Night": 1}
+max_per_nurse = 1   # each nurse works at most this many shifts
+
+prob = pulp.LpProblem("scheduling", pulp.LpMinimize)
+
+# CRITICAL: x is a 2D DICT — x[nurse][shift] — NOT a single variable
+# Every nurse × shift combination gets its own LpVariable
+x = {n: {s: pulp.LpVariable(f"x_{n}_{s}", cat="Binary")
+         for s in shifts}
+     for n in nurses}
+
+# Objective: minimize total wage cost
+prob += pulp.lpSum(wage[s] * x[n][s] for n in nurses for s in shifts)
+
+# Coverage constraints: each shift gets enough nurses
+for s in shifts:
+    prob += pulp.lpSum(x[n][s] for n in nurses) >= min_coverage[s]
+
+# Workload constraints: each nurse works at most max_per_nurse shifts
+for n in nurses:
+    prob += pulp.lpSum(x[n][s] for s in shifts) <= max_per_nurse
+
+prob.solve(pulp.PULP_CBC_CMD(msg=0))
+_result = {
+    "status": pulp.LpStatus[prob.status],
+    "objective": pulp.value(prob.objective),
+    "variables": {v.name: pulp.value(v) for v in prob.variables()}
+}
+
+IMPORTANT: use `pulp.LpStatus[prob.status]` — NEVER `pulp.pulp.LpStatus`.
+
+Now write the code for this problem (same structure, actual data):
 
 Problem:
 {problem}
@@ -188,12 +307,17 @@ Error / solver status:
 {error_info}
 
 Fix the code. Common causes for scheduling ILPs:
+- x must be a 2D DICT: x = {n: {s: LpVariable(...) for s in shifts} for n in nurses}
+  If you wrote a single variable in a loop it gets overwritten — EVERY nurse×shift pair
+  needs its own variable
 - Forgot cat='Binary' on decision variables (treats them as continuous)
 - Coverage constraint uses wrong direction (must be >=, not <=)
 - Infeasible: total nurse capacity < total minimum coverage required
-  → Check if sum of (max_shifts_per_nurse * num_nurses) >= sum of min_coverage
+  → Check if sum(max_shifts_per_nurse * num_nurses) >= sum(min_coverage)
 - Variable name typos in constraints
 - Missing _result assignment
+- Using `pulp.pulp.LpStatus` — ALWAYS use `pulp.LpStatus[prob.status]` instead
+- Adding `import pulp` at top — the module is already injected, do not import it
 
 Output ONLY the corrected Python code — no markdown fences, no commentary.
 $$;
@@ -225,6 +349,30 @@ Confirm the assignment is correct:
 - Compute total wage cost step by step (nurses per shift × wage, then sum).
 
 Write in {lang}. Show all arithmetic explicitly.
+$$;
+
+CREATE FUNCTION extract_solution_json_staff(problem TEXT, narrative TEXT)
+RETURNS TEXT AS $$
+Extract the staff scheduling solution from the narrative as structured JSON.
+
+Problem:
+{problem}
+
+Solution narrative:
+{narrative}
+
+Return ONLY a valid JSON object — no prose, no fences:
+{{
+  "objective": <total wage cost as a number>,
+  "assignment": {{"<NurseN>": "<ShiftName>", ...}},
+  "coverage_min": {{"<ShiftName>": <minimum nurses required>, ...}},
+  "wage": {{"<ShiftName>": <cost per nurse>, ...}}
+}}
+
+Instructions:
+- List every nurse's assigned shift (or omit if unassigned).
+- Extract coverage minimums and wage rates from the problem statement.
+- Use the total wage cost the narrative claims as "objective".
 $$;
 
 CREATE FUNCTION interpret_schedule(problem TEXT, solution_json TEXT, lang TEXT)
@@ -277,7 +425,10 @@ DO
   @lp_code   := "";
   @solution  := "{}";
   @stage1_s  := "0";
-  @stage2_s  := "0";
+  @stage2_s      := "0";
+  @obj_str       := "";
+  @verify_status := "N/A";
+  @verify_result := "{}";
 
   EVALUATE @use_solver
     WHEN = "true" THEN
@@ -319,6 +470,9 @@ DO
       LOGGING f"[staff_scheduling] ASSERT gate (status={@status})" LEVEL INFO
       ASSERT is_optimal(@solution);
       LOGGING "[staff_scheduling] ASSERT passed — schedule confirmed Optimal" LEVEL INFO
+      LOGGING f"[staff_scheduling] solver_input (lp_code):\n{@lp_code}" LEVEL DEBUG
+      CALL json_get_objective(@solution) INTO @obj_str;
+      LOGGING f"[staff_scheduling] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
 
       -- ── Stage 3: LLM interprets verified result ───────────────
       LOGGING "[staff_scheduling] Stage 3 — LLM interpreting verified schedule" LEVEL INFO
@@ -336,6 +490,16 @@ DO
       @llm_calls := @llm_calls + 1;
       CALL time_elapsed(@t_s1) INTO @stage1_s;
       LOGGING f"[staff_scheduling] Stage 1 done — latency={@stage1_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
+
+      -- ── Verification: back-substitute LLM solution ───────────
+      LOGGING "[staff_scheduling] verify_off — extracting solution JSON from narrative" LEVEL INFO
+      GENERATE extract_solution_json_staff(@problem, @narrative) INTO @claimed_json;
+      @llm_calls := @llm_calls + 1;
+      CALL verify_off_staff(@problem, @claimed_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@verify_result, "claimed_obj") INTO @obj_str;
+      LOGGING f"[staff_scheduling] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+      LOGGING f"[staff_scheduling] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
   END;
 
   CALL time_elapsed(@t_start) INTO @total_s;
@@ -346,7 +510,7 @@ DO
   CALL write_file(f"{@out_dir}/staff_scheduling_{@ts_safe}.md", @report) INTO @out_path;
   LOGGING f"[staff_scheduling] done — report → {@out_path}  ({@total_s}s, llm_calls={@llm_calls})" LEVEL INFO
 
-  RETURN @report WITH status = "complete";
+  RETURN @report WITH status = "complete", objective = @obj_str, verify = @verify_status;
 
 EXCEPTION
   WHEN ToolFailed THEN
@@ -354,5 +518,5 @@ EXCEPTION
     CALL write_file(f"{@out_dir}/staff_scheduling_{@ts_safe}.md", @report) INTO @out_path;
     CALL time_elapsed(@t_start) INTO @total_s;
     LOGGING f"[staff_scheduling] infeasible — {@out_path}  ({@total_s}s)" LEVEL INFO
-    RETURN @report WITH status = "infeasible";
+    RETURN @report WITH status = "infeasible", objective = "", verify = "N/A";
 END;

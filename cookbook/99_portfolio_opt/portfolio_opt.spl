@@ -1,0 +1,292 @@
+-- ============================================================
+-- Recipe 99: Portfolio Optimization — cvxpy Markowitz
+--
+-- Personal investment use: given capital + stock pool,
+-- minimize portfolio risk for a target annual return.
+--
+-- Demonstrates the deterministic–probabilistic boundary:
+--   Deterministic (yfinance) — fetch historical price data
+--   Deterministic (cvxpy)    — Markowitz QP, provably optimal
+--   Deterministic (ASSERT)   — gate on OPTIMAL solver status
+--   Probabilistic (LLM)      — interpret weights for the user
+--
+-- use_solver="true"  → cvxpy Markowitz QP
+-- use_solver="false" → LLM heuristic allocation (back-checked)
+--
+-- Requires: pip install cvxpy yfinance
+-- Adaptive: run monthly with fresh data for rebalancing signals.
+-- Run:
+--   spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+--       --adapter claude_cli \
+--       --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA" \
+--       --param capital=10000 --param target_return=0.12
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API is_optimized(optimization_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_optimized(optimization_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_optimized as _fn
+    return _fn(optimization_json)
+$$;
+
+CREATE TOOL_API fetch_stock_data(tickers_str TEXT, period TEXT)
+RETURNS TEXT AS PYTHON $$
+def fetch_stock_data(tickers_str: str, period: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import fetch_stock_data as _fn
+    return _fn(tickers_str, period)
+$$;
+
+CREATE TOOL_API optimize_portfolio(market_data_json TEXT, target_return TEXT, max_weight TEXT)
+RETURNS TEXT AS PYTHON $$
+def optimize_portfolio(market_data_json: str, target_return: str, max_weight: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import optimize_portfolio as _fn
+    return _fn(market_data_json, float(target_return), float(max_weight), 0.0)
+$$;
+
+CREATE TOOL_API allocate_capital(optimization_json TEXT, capital TEXT)
+RETURNS TEXT AS PYTHON $$
+def allocate_capital(optimization_json: str, capital: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import allocate_capital as _fn
+    return _fn(optimization_json, float(capital))
+$$;
+
+CREATE TOOL_API verify_portfolio(optimization_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_portfolio(optimization_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_portfolio as _fn
+    return _fn(optimization_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION interpret_portfolio(tickers TEXT, period TEXT, capital TEXT,
+                                    target_return TEXT, max_weight TEXT,
+                                    optimization_json TEXT, allocation_json TEXT)
+RETURNS TEXT AS $$
+Interpret this portfolio optimization result for a personal investor.
+
+Stocks considered: {tickers}
+Historical period: {period}
+Capital to invest: ${capital}
+Target annual return: {target_return} (decimal, e.g. 0.12 = 12%)
+Max single position: {max_weight} (decimal, e.g. 0.40 = 40%)
+
+Optimization result (JSON): {optimization_json}
+Capital allocation (JSON): {allocation_json}
+
+Your interpretation should:
+1. Summarise the recommended portfolio (which stocks and their % weights)
+2. State expected annual return, volatility, and Sharpe ratio in plain terms
+3. Explain any stocks excluded or at very low weight
+4. Give one rebalancing tip (e.g. review quarterly)
+5. Add disclaimer: past performance does not guarantee future results
+
+Be friendly and practical — this is for personal use, not a formal report.
+$$;
+
+CREATE FUNCTION suggest_allocation(tickers TEXT, market_data_json TEXT,
+                                   capital TEXT, target_return TEXT, max_weight TEXT)
+RETURNS TEXT AS $$
+You are a personal finance advisor. Suggest a stock portfolio allocation.
+
+Stocks to consider: {tickers}
+Historical data (annual returns and covariance): {market_data_json}
+Capital to invest: ${capital}
+Target annual return: at least {target_return} (e.g. 0.12 = 12%)
+Max per stock: {max_weight} (e.g. 0.40 = 40%)
+
+Steps:
+1. Review each stock's historical annual return and volatility.
+2. Rank stocks by risk-adjusted return (return / volatility).
+3. Propose percentage weights that sum to 100%, each <= {max_weight}.
+4. Estimate the blended expected return and risk level (low/medium/high).
+5. Show dollar amounts for ${capital} capital.
+
+Be concrete. Show your reasoning.
+$$;
+
+CREATE FUNCTION extract_weights_json(allocation_text TEXT)
+RETURNS TEXT AS $$
+Extract the portfolio weights from this analysis into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "status": "OPTIMAL",
+  "weights": {{"TICKER1": 0.30, "TICKER2": 0.25, ...}},
+  "expected_return": 0.12,
+  "annual_volatility": 0.18,
+  "sharpe_ratio": 0.39
+}}
+
+All weights must be decimals (not percentages). They must sum to approximately 1.0.
+
+Analysis: {allocation_text}
+$$;
+
+CREATE FUNCTION suggest_relaxed_target(target_return TEXT, market_data_json TEXT)
+RETURNS TEXT AS $$
+The portfolio optimization was infeasible with target_return={target_return}.
+Given these historical returns: {market_data_json}
+Suggest an achievable target return.
+Return ONLY a decimal number, e.g. 0.08
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW portfolio_optimization
+  INPUT @tickers TEXT := "AAPL,MSFT,GOOGL,AMZN,NVDA"
+  INPUT @capital TEXT := "10000"
+  INPUT @period TEXT := "1y"
+  INPUT @target_return TEXT := "0.12"
+  INPUT @max_weight TEXT := "0.40"
+  INPUT @use_solver TEXT := "true"
+  INPUT @adapter TEXT := "claude_cli"
+  INPUT @model TEXT := ""
+  OUTPUT @report TEXT
+DO
+  @sharpe_str        := "";
+  @verify_status     := "N/A";
+  @optimization_json := "{}";
+  @allocation_json   := "{}";
+  @llm_calls         := 0;
+
+  LOGGING f"[portfolio] start  use_solver={@use_solver}  tickers={@tickers}  period={@period}  capital={@capital}" LEVEL INFO
+
+  -- Fetch market data (same for both solver arms)
+  CALL fetch_stock_data(@tickers, @period) INTO @market_data_json;
+  LOGGING f"[portfolio] market_data:\n{@market_data_json}" LEVEL DEBUG
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- solver=ON: cvxpy Markowitz mean-variance QP
+      LOGGING "[portfolio] solver=ON — cvxpy Markowitz optimization" LEVEL INFO
+
+      CALL optimize_portfolio(@market_data_json, @target_return, @max_weight) INTO @optimization_json;
+      CALL json_get_field(@optimization_json, "status") INTO @opt_status;
+
+      -- If infeasible, relax the return target once and retry
+      EVALUATE @opt_status
+        WHEN = "OPTIMAL" THEN
+          @opt_status := "OPTIMAL";   -- proceed as-is
+
+        ELSE
+          GENERATE suggest_relaxed_target(@target_return, @market_data_json) INTO @relaxed_target;
+          @llm_calls := @llm_calls + 1;
+          CALL optimize_portfolio(@market_data_json, @relaxed_target, @max_weight) INTO @optimization_json;
+          -- Gate: must be optimal after relaxation
+          ASSERT is_optimized(@optimization_json);
+      END;
+
+      CALL allocate_capital(@optimization_json, @capital) INTO @allocation_json;
+
+      GENERATE interpret_portfolio(@tickers, @period, @capital, @target_return,
+                                   @max_weight, @optimization_json, @allocation_json)
+               INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      CALL json_get_field(@optimization_json, "sharpe_ratio") INTO @sharpe_str;
+
+      @report := f"=== Portfolio Optimization (solver=ON / cvxpy Markowitz) ===
+
+Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
+Target return: {@target_return}  |  Max position: {@max_weight}
+
+Market Data:
+{@market_data_json}
+
+Optimization Result:
+{@optimization_json}
+
+Capital Allocation:
+{@allocation_json}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      -- solver=OFF: LLM heuristic allocation with back-check
+      LOGGING "[portfolio] solver=OFF — LLM heuristic allocation" LEVEL INFO
+
+      GENERATE suggest_allocation(@tickers, @market_data_json,
+                                  @capital, @target_return, @max_weight)
+               INTO @llm_allocation;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[portfolio] llm_decomposition_output:\n{@llm_allocation}" LEVEL DEBUG
+
+      GENERATE extract_weights_json(@llm_allocation) INTO @optimization_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL allocate_capital(@optimization_json, @capital) INTO @allocation_json;
+      CALL verify_portfolio(@optimization_json) INTO @verify_result;
+
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@optimization_json, "sharpe_ratio") INTO @sharpe_str;
+
+      LOGGING f"[portfolio] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+
+      @report := f"=== Portfolio Optimization (solver=OFF / LLM heuristic) ===
+
+Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
+
+Market Data:
+{@market_data_json}
+
+LLM Allocation:
+{@llm_allocation}
+
+Extracted Weights (JSON):
+{@optimization_json}
+
+Capital Allocation:
+{@allocation_json}
+
+Verification:
+{@verify_result}
+
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[portfolio] sharpe_ratio={@sharpe_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @sharpe_str,
+         verify = @verify_status;
+
+END;

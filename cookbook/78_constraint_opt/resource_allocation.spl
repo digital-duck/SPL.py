@@ -49,7 +49,11 @@ def run_pulp(code: str) -> str:
     import json, re, pulp
     code = re.sub(r'^```(?:python)?\s*\n?', '', code.strip(), flags=re.IGNORECASE)
     code = re.sub(r'\n?```\s*$', '', code)
+    code = re.sub(r'(?m)^\s*import\s+pulp\s*(?:#.*)?$', '', code)
+    code = re.sub(r'(?m)^\s*from\s+pulp\s+import\s+.*$', '', code)
+    code = code.replace('pulp.pulp.LpStatus', 'pulp.LpStatus')
     namespace = {"pulp": pulp}
+    namespace.update({k: getattr(pulp, k) for k in dir(pulp) if not k.startswith('_') and k != 'pulp'})
     try:
         exec(code, namespace)
         result = namespace.get("_result")
@@ -58,7 +62,17 @@ def run_pulp(code: str) -> str:
                                "error": "code did not set _result"})
         return json.dumps(result, default=str)
     except Exception as e:
-        return json.dumps({"status": "Error", "error": str(e)})
+        err = str(e)
+        hints = []
+        if "pulp.pulp" in err and "LpStatus" in err:
+            hints.append("use pulp.LpStatus[prob.status], never pulp.pulp.LpStatus")
+        if "Error while executing" in err and "cbc" in err.lower():
+            hints.append(
+                "CBC rejected the LP — likely cause: coefficient is a string not a number, "
+                "or variable not declared before use. Check all dict values are int/float."
+            )
+        suffix = (" — HINTS: " + "; ".join(hints)) if hints else ""
+        return json.dumps({"status": "Error", "error": err + suffix})
 $$;
 
 CREATE TOOL_API is_optimal(result_json TEXT)
@@ -69,6 +83,90 @@ def is_optimal(result_json: str) -> bool:
         return json.loads(result_json).get("status") == "Optimal"
     except Exception:
         return False
+$$;
+
+CREATE TOOL_API json_get_objective(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_objective(result_json: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get("objective")
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API json_get_field(result_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(result_json: str, field: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get(field)
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API verify_off_bilp(problem TEXT, claimed_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_off_bilp(problem: str, claimed_json: str) -> str:
+    import json, re
+    # Strip markdown fences gemma3 emits despite "no fences" instruction
+    raw = claimed_json.strip()
+    raw = re.sub(r'^```(?:json)?\s*\n?', '', raw, flags=re.IGNORECASE)
+    raw = re.sub(r'\n?```\s*$', '', raw)
+    try:
+        claimed = json.loads(raw)
+    except Exception as e:
+        return json.dumps({"verdict": "UNPARSEABLE", "notes": f"JSON error: {e}",
+                           "raw_prefix": claimed_json[:120]})
+
+    obj_claimed  = claimed.get("objective")
+    selected     = claimed.get("selected_projects", [])
+    project_data = claimed.get("project_data", [])
+
+    projects = {p["id"]: p for p in project_data if "id" in p}
+
+    violations = []
+    total_cost = total_dev = total_val = 0.0
+
+    for pid in selected:
+        p = projects.get(pid, {})
+        total_cost += float(p.get("cost_K", 0))
+        total_dev  += float(p.get("dev_months", 0))
+        total_val  += float(p.get("value", 0))
+
+    budget_m = re.search(
+        r'(?:total )?budget (?:is )?\$(\d+(?:\.\d+)?)K', problem, re.IGNORECASE)
+    dev_m = re.search(
+        r'(\d+(?:\.\d+)?) developer-months available', problem, re.IGNORECASE)
+
+    if budget_m:
+        budget = float(budget_m.group(1))
+        if total_cost > budget + 0.001:
+            violations.append(f"budget violated: ${total_cost:.0f}K > ${budget:.0f}K")
+
+    if dev_m:
+        headcount = float(dev_m.group(1))
+        if total_dev > headcount + 0.001:
+            violations.append(f"headcount violated: {total_dev:.0f}mo > {headcount:.0f}mo")
+
+    if obj_claimed is not None and project_data:
+        if abs(total_val - float(obj_claimed)) > 0.5:
+            violations.append(
+                f"value mismatch: claimed {obj_claimed} vs computed {total_val:.0f}")
+
+    if violations:
+        return json.dumps({"verdict": "FAIL", "claimed_obj": obj_claimed,
+                           "verified_obj": total_val, "notes": "; ".join(violations)})
+    if not selected:
+        return json.dumps({"verdict": "UNPARSEABLE", "claimed_obj": obj_claimed,
+                           "notes": "no selected_projects in JSON"})
+    return json.dumps({
+        "verdict": "PASS", "claimed_obj": obj_claimed, "verified_obj": total_val,
+        "notes": (f"{len(selected)} projects: cost=${total_cost:.0f}K, "
+                  f"dev={total_dev:.0f}mo, value={total_val:.0f}")
+    })
 $$;
 
 CREATE TOOL_API make_metrics(use_solver TEXT, llm_calls TEXT,
@@ -166,27 +264,35 @@ $$;
 
 CREATE FUNCTION formulate_portfolio_ilp(problem TEXT)
 RETURNS TEXT AS $$
-You are an operations research expert specializing in resource allocation and
-portfolio optimization. Convert this project selection problem to runnable PuLP
-Binary Integer Linear Program (0-1 ILP) code.
+You are an operations research expert. Convert this project selection problem to
+runnable PuLP Binary ILP code. Follow the template below EXACTLY — replace the
+placeholder data with the actual numbers from the problem.
 
-Rules:
-- The `pulp` module is already in scope — do NOT add import statements
-- Model this as a binary knapsack / portfolio ILP:
-    * Create a pulp.LpProblem with sense=pulp.LpMaximize
-    * Decision variables: y[project] = binary (1 if selected, 0 if rejected)
-      Use pulp.LpVariable(f"y_{project_id}", cat='Binary')
-    * Objective: maximize total value = Σ value[p] · y[p]
-    * Budget constraint:    Σ cost[p]      · y[p] ≤ total_budget
-    * Headcount constraint: Σ devmonths[p] · y[p] ≤ total_devmonths
-    * Call: prob.solve(pulp.PULP_CBC_CMD(msg=0))
-- After solving, store the result EXACTLY as:
-    _result = {
-        "status": pulp.LpStatus[prob.status],
-        "objective": pulp.value(prob.objective),
-        "variables": {v.name: pulp.value(v) for v in prob.variables()}
-    }
-- Output ONLY raw Python code — no markdown fences, no commentary
+The `pulp` module is already in scope. Do NOT import anything.
+Output ONLY raw Python code — no markdown fences, no comments.
+
+TEMPLATE (copy this structure, fill in the actual project IDs, costs, dev-months, values, budget, capacity):
+
+projects = ["P1", "P2", "P3"]          # list every project ID
+cost     = {"P1": 120, "P2": 80, "P3": 200}   # cost in $K per project
+devmos   = {"P1": 3,   "P2": 2,  "P3": 5}     # developer-months per project
+value    = {"P1": 8,   "P2": 5,  "P3": 10}    # strategic value per project
+budget   = 500    # total budget in $K
+capacity = 10     # total developer-months available
+
+prob = pulp.LpProblem("portfolio", pulp.LpMaximize)
+y = {{p: pulp.LpVariable(f"y_{{p}}", cat="Binary") for p in projects}}
+prob += pulp.lpSum(value[p] * y[p] for p in projects)
+prob += (pulp.lpSum(cost[p] * y[p] for p in projects) <= budget)
+prob += (pulp.lpSum(devmos[p] * y[p] for p in projects) <= capacity)
+prob.solve(pulp.PULP_CBC_CMD(msg=0))
+_result = {{
+    "status": pulp.LpStatus[prob.status],
+    "objective": pulp.value(prob.objective),
+    "variables": {{v.name: pulp.value(v) for v in prob.variables()}}
+}}
+
+Now write the code for this problem (use the SAME structure — dicts keyed by project ID):
 
 Problem:
 {problem}
@@ -194,26 +300,44 @@ $$;
 
 CREATE FUNCTION repair_portfolio_ilp(problem TEXT, lp_code TEXT, error_info TEXT)
 RETURNS TEXT AS $$
-This PuLP project portfolio ILP produced an error or non-Optimal result.
+This PuLP project portfolio ILP produced an error. Fix it.
 
 Problem:
 {problem}
 
-Previous code:
+Previous (broken) code:
 {lp_code}
 
-Error / solver status:
+Error:
 {error_info}
 
-Fix the code. Common causes:
-- Forgot cat='Binary' (treats selection as fractional — wrong)
-- Wrong objective sense: use LpMaximize for value maximization
-- Budget/headcount constraint direction must be <= (upper bound)
-- Infeasible: if even the cheapest/smallest project exceeds all constraints
-- Variable name collision (use consistent naming like y_P1, y_P2, ...)
-- Missing _result assignment
+REQUIRED fix — rewrite using this exact structure (dicts keyed by project ID, never lists):
 
-Output ONLY the corrected Python code — no markdown fences, no commentary.
+projects = ["P1", "P2", ...]          # all project IDs as strings
+cost     = {{"P1": 120, "P2": 80, ...}}   # cost in $K
+devmos   = {{"P1": 3,   "P2": 2,  ...}}   # developer-months
+value    = {{"P1": 8,   "P2": 5,  ...}}   # strategic value
+budget   = ...    # from problem
+capacity = ...    # from problem
+
+prob = pulp.LpProblem("portfolio", pulp.LpMaximize)
+y = {{p: pulp.LpVariable(f"y_{{p}}", cat="Binary") for p in projects}}
+prob += pulp.lpSum(value[p] * y[p] for p in projects)
+prob += (pulp.lpSum(cost[p] * y[p] for p in projects) <= budget)
+prob += (pulp.lpSum(devmos[p] * y[p] for p in projects) <= capacity)
+prob.solve(pulp.PULP_CBC_CMD(msg=0))
+_result = {{
+    "status": pulp.LpStatus[prob.status],
+    "objective": pulp.value(prob.objective),
+    "variables": {{v.name: pulp.value(v) for v in prob.variables()}}
+}}
+
+Rules:
+- Use DICTS (cost["P1"], not cost[0]) — list indexing by string causes TypeError
+- Use y[p] everywhere — no bare variable named p
+- cat="Binary" is required — never LpContinuous
+- Objective must be LpMaximize (maximise value)
+- Output ONLY raw Python code — no markdown fences, no commentary
 $$;
 
 CREATE FUNCTION solve_directly_portfolio(problem TEXT, lang TEXT)
@@ -244,6 +368,37 @@ Confirm the selected portfolio is feasible and optimal:
   scores lower or is infeasible.
 
 Write in {lang}. Show all arithmetic explicitly.
+$$;
+
+CREATE FUNCTION extract_solution_json_bilp(problem TEXT, narrative TEXT)
+RETURNS TEXT AS $$
+Extract the project portfolio selection from the narrative as JSON.
+
+IMPORTANT: Your entire response must be ONLY the JSON object below.
+Do NOT write any text before or after. Do NOT use markdown code fences (no backticks).
+Start your response with {{ and end with }}.
+
+Problem:
+{problem}
+
+Solution narrative:
+{narrative}
+
+Required JSON format (fill in the actual values):
+{{
+  "objective": <total portfolio value as a number>,
+  "selected_projects": ["P1", "P4", ...],
+  "project_data": [
+    {{"id": "P1", "cost_K": 120, "dev_months": 3, "value": 8}},
+    {{"id": "P2", "cost_K": 80,  "dev_months": 2, "value": 5}},
+    ...
+  ]
+}}
+
+Instructions:
+- selected_projects: only the project IDs the narrative chooses
+- project_data: ALL projects from the problem statement (not just selected ones)
+- objective: the total strategic value the narrative claims for the selected portfolio
 $$;
 
 CREATE FUNCTION interpret_portfolio(problem TEXT, solution_json TEXT, lang TEXT)
@@ -299,7 +454,10 @@ DO
   @lp_code   := "";
   @solution  := "{}";
   @stage1_s  := "0";
-  @stage2_s  := "0";
+  @stage2_s      := "0";
+  @obj_str       := "";
+  @verify_status := "N/A";
+  @verify_result := "{}";
 
   EVALUATE @use_solver
     WHEN = "true" THEN
@@ -341,6 +499,9 @@ DO
       LOGGING f"[resource_allocation] ASSERT gate (status={@status})" LEVEL INFO
       ASSERT is_optimal(@solution);
       LOGGING "[resource_allocation] ASSERT passed — portfolio is provably optimal" LEVEL INFO
+      LOGGING f"[resource_allocation] solver_input (lp_code):\n{@lp_code}" LEVEL DEBUG
+      CALL json_get_objective(@solution) INTO @obj_str;
+      LOGGING f"[resource_allocation] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
 
       -- ── Stage 3: LLM frames portfolio decision for leadership ──
       LOGGING "[resource_allocation] Stage 3 — LLM interpreting verified portfolio" LEVEL INFO
@@ -358,6 +519,16 @@ DO
       @llm_calls := @llm_calls + 1;
       CALL time_elapsed(@t_s1) INTO @stage1_s;
       LOGGING f"[resource_allocation] Stage 1 done — latency={@stage1_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
+
+      -- ── Verification: back-substitute LLM solution ───────────
+      LOGGING "[resource_allocation] verify_off — extracting solution JSON from narrative" LEVEL INFO
+      GENERATE extract_solution_json_bilp(@problem, @narrative) INTO @claimed_json;
+      @llm_calls := @llm_calls + 1;
+      CALL verify_off_bilp(@problem, @claimed_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@verify_result, "claimed_obj") INTO @obj_str;
+      LOGGING f"[resource_allocation] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+      LOGGING f"[resource_allocation] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
   END;
 
   CALL time_elapsed(@t_start) INTO @total_s;
@@ -368,7 +539,7 @@ DO
   CALL write_file(f"{@out_dir}/resource_allocation_{@ts_safe}.md", @report) INTO @out_path;
   LOGGING f"[resource_allocation] done — report → {@out_path}  ({@total_s}s, llm_calls={@llm_calls})" LEVEL INFO
 
-  RETURN @report WITH status = "complete";
+  RETURN @report WITH status = "complete", objective = @obj_str, verify = @verify_status;
 
 EXCEPTION
   WHEN ToolFailed THEN
@@ -376,5 +547,5 @@ EXCEPTION
     CALL write_file(f"{@out_dir}/resource_allocation_{@ts_safe}.md", @report) INTO @out_path;
     CALL time_elapsed(@t_start) INTO @total_s;
     LOGGING f"[resource_allocation] infeasible — {@out_path}  ({@total_s}s)" LEVEL INFO
-    RETURN @report WITH status = "infeasible";
+    RETURN @report WITH status = "infeasible", objective = "", verify = "N/A";
 END;

@@ -46,7 +46,11 @@ def run_pulp(code: str) -> str:
     import json, re, pulp
     code = re.sub(r'^```(?:python)?\s*\n?', '', code.strip(), flags=re.IGNORECASE)
     code = re.sub(r'\n?```\s*$', '', code)
+    code = re.sub(r'(?m)^\s*import\s+pulp\s*(?:#.*)?$', '', code)
+    code = re.sub(r'(?m)^\s*from\s+pulp\s+import\s+.*$', '', code)
+    code = code.replace('pulp.pulp.LpStatus', 'pulp.LpStatus')
     namespace = {"pulp": pulp}
+    namespace.update({k: getattr(pulp, k) for k in dir(pulp) if not k.startswith('_') and k != 'pulp'})
     try:
         exec(code, namespace)
         result = namespace.get("_result")
@@ -66,6 +70,81 @@ def is_optimal(result_json: str) -> bool:
         return json.loads(result_json).get("status") == "Optimal"
     except Exception:
         return False
+$$;
+
+CREATE TOOL_API json_get_objective(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_objective(result_json: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get("objective")
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API json_get_field(result_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(result_json: str, field: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get(field)
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API verify_off_transport(problem TEXT, claimed_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_off_transport(problem: str, claimed_json: str) -> str:
+    import json, re
+    raw = claimed_json.strip()
+    raw = re.sub(r'^```(?:json)?\s*\n?', '', raw, flags=re.IGNORECASE)
+    raw = re.sub(r'\n?```\s*$', '', raw)
+    try:
+        claimed = json.loads(raw)
+    except Exception as e:
+        return json.dumps({"verdict": "UNPARSEABLE", "notes": f"JSON error: {e}",
+                           "raw_prefix": claimed_json[:120]})
+
+    obj_claimed = claimed.get("objective")
+    routes      = claimed.get("routes", {})     # {"W1_S1": qty, ...}
+    supply      = claimed.get("supply", {})     # {"W1": cap, ...}
+    demand      = claimed.get("demand", {})     # {"S1": req, ...}
+    costs       = claimed.get("costs", {})      # {"W1_S1": cost_per_unit, ...}
+
+    violations = []
+
+    for wh, cap in supply.items():
+        shipped = sum(float(q) for r, q in routes.items() if r.startswith(wh + "_"))
+        if shipped > float(cap) + 0.001:
+            violations.append(f"{wh} supply violated: {shipped:.2f} > {cap}")
+
+    for st, req in demand.items():
+        received = sum(float(q) for r, q in routes.items() if r.endswith("_" + st))
+        if abs(received - float(req)) > 0.001:
+            violations.append(f"{st} demand unmet: {received:.2f} != {req}")
+
+    for route, qty in routes.items():
+        if float(qty) < -0.001:
+            violations.append(f"{route} negative: {qty}")
+
+    if costs and routes:
+        try:
+            recomputed = sum(float(costs.get(r, 0)) * float(q) for r, q in routes.items())
+            if obj_claimed is not None and abs(recomputed - float(obj_claimed)) > 0.5:
+                violations.append(f"cost mismatch: claimed {obj_claimed} vs computed {recomputed:.2f}")
+        except Exception as e:
+            violations.append(f"cost recompute error: {e}")
+
+    if violations:
+        return json.dumps({"verdict": "FAIL", "claimed_obj": obj_claimed,
+                           "notes": "; ".join(violations)})
+    if not routes:
+        return json.dumps({"verdict": "UNPARSEABLE", "claimed_obj": obj_claimed,
+                           "notes": "no routes in JSON"})
+    return json.dumps({"verdict": "PASS", "claimed_obj": obj_claimed,
+                       "notes": f"{len(routes)} routes verified"})
 $$;
 
 CREATE TOOL_API make_metrics(use_solver TEXT, llm_calls TEXT,
@@ -231,6 +310,32 @@ Plug the optimal plan back in and confirm:
 Write in {lang}. Show all arithmetic explicitly.
 $$;
 
+CREATE FUNCTION extract_solution_json_transport(problem TEXT, narrative TEXT)
+RETURNS TEXT AS $$
+Extract the transportation solution from the narrative as structured JSON.
+
+Problem:
+{problem}
+
+Solution narrative:
+{narrative}
+
+Return ONLY a valid JSON object — no prose, no fences:
+{{
+  "objective": <total shipping cost as a number>,
+  "routes": {{"<Wi_Sj>": <quantity shipped>, ...}},
+  "supply": {{"<Wi>": <capacity>, ...}},
+  "demand": {{"<Sj>": <requirement>, ...}},
+  "costs": {{"<Wi_Sj>": <cost per unit>, ...}}
+}}
+
+Instructions:
+- Name routes using the format "W1_S1" (warehouse underscore store).
+- Extract all warehouse supply capacities and store demand requirements from the problem.
+- Extract all unit shipping costs from the cost matrix in the problem.
+- Use the total shipping cost the narrative claims as "objective".
+$$;
+
 CREATE FUNCTION interpret_shipping_plan(problem TEXT, solution_json TEXT, lang TEXT)
 RETURNS TEXT AS $$
 You are a supply chain analyst. Interpret this shipping optimization result for
@@ -282,7 +387,10 @@ DO
   @lp_code   := "";
   @solution  := "{}";
   @stage1_s  := "0";
-  @stage2_s  := "0";
+  @stage2_s      := "0";
+  @obj_str       := "";
+  @verify_status := "N/A";
+  @verify_result := "{}";
 
   EVALUATE @use_solver
     WHEN = "true" THEN
@@ -324,6 +432,9 @@ DO
       LOGGING f"[supply_chain] ASSERT gate (status={@status})" LEVEL INFO
       ASSERT is_optimal(@solution);
       LOGGING "[supply_chain] ASSERT passed — minimum cost route confirmed" LEVEL INFO
+      LOGGING f"[supply_chain] solver_input (lp_code):\n{@lp_code}" LEVEL DEBUG
+      CALL json_get_objective(@solution) INTO @obj_str;
+      LOGGING f"[supply_chain] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
 
       -- ── Stage 3: LLM interprets verified result ───────────────
       LOGGING "[supply_chain] Stage 3 — LLM interpreting verified shipping plan" LEVEL INFO
@@ -341,6 +452,16 @@ DO
       @llm_calls := @llm_calls + 1;
       CALL time_elapsed(@t_s1) INTO @stage1_s;
       LOGGING f"[supply_chain] Stage 1 done — latency={@stage1_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
+
+      -- ── Verification: back-substitute LLM solution ───────────
+      LOGGING "[supply_chain] verify_off — extracting solution JSON from narrative" LEVEL INFO
+      GENERATE extract_solution_json_transport(@problem, @narrative) INTO @claimed_json;
+      @llm_calls := @llm_calls + 1;
+      CALL verify_off_transport(@problem, @claimed_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@verify_result, "claimed_obj") INTO @obj_str;
+      LOGGING f"[supply_chain] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+      LOGGING f"[supply_chain] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
   END;
 
   CALL time_elapsed(@t_start) INTO @total_s;
@@ -351,7 +472,7 @@ DO
   CALL write_file(f"{@out_dir}/supply_chain_{@ts_safe}.md", @report) INTO @out_path;
   LOGGING f"[supply_chain] done — report → {@out_path}  ({@total_s}s, llm_calls={@llm_calls})" LEVEL INFO
 
-  RETURN @report WITH status = "complete";
+  RETURN @report WITH status = "complete", objective = @obj_str, verify = @verify_status;
 
 EXCEPTION
   WHEN ToolFailed THEN
@@ -359,5 +480,5 @@ EXCEPTION
     CALL write_file(f"{@out_dir}/supply_chain_{@ts_safe}.md", @report) INTO @out_path;
     CALL time_elapsed(@t_start) INTO @total_s;
     LOGGING f"[supply_chain] infeasible — {@out_path}  ({@total_s}s)" LEVEL INFO
-    RETURN @report WITH status = "infeasible";
+    RETURN @report WITH status = "infeasible", objective = "", verify = "N/A";
 END;

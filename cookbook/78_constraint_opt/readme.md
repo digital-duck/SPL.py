@@ -307,3 +307,129 @@ The same `GENERATE → SOLVE → ASSERT → WHILE` pattern replicates directly t
 - **Recipe 75** (SymPy): symbolic algebra verifier rung
 - **Recipe 76** (Lean): formal proof verifier rung
 - **Recipe 78** (PuLP): combinatorial optimization verifier rung
+
+## Experiment runner
+
+`run_experiment.py` is the systematic harness for the solver=ON vs solver=OFF ablation study. It follows the same design as `cookbook/77_neurosymbolic/run_experiment.py` — SQLite persistence, multi-axis CLI, streaming output.
+
+### Axes
+
+| Flag | Values | What it controls |
+|---|---|---|
+| `-r` / `RECIPES=` | `r78a` `r78b` `r78c` `r78d` | Which recipe (LP / transport LP / ILP / Binary ILP) |
+| `-m` / `MODELS=` | `m001` (sonnet-4-6) `m002` (gemma3) `m003` (gemma4:e2b) … | Which model/adapter |
+| `-n` / `SIZES=` | `n05` `n10` `n20` | Problem scale (default / H2 scaled / large) |
+| `-s` / `SOLVERS=` | `true` `false` | solver=ON (PuLP+ASSERT) vs solver=OFF (LLM only) |
+| `-k` | integer | Repetitions per cell |
+
+`n05` uses the default problem embedded in each `.spl` file (hand-verifiable, ≤ 6 variables). `n10` and `n20` are the H2 scale problems documented in `experiment_H2_scale_sensitivity.md`.
+
+### Quick start
+
+```bash
+conda activate spl123
+cd ~/projects/digital-duck/SPL.py
+
+# List all available recipe and model IDs
+python cookbook/78_constraint_opt/run_experiment.py --list
+
+# H1: one recipe, one model, default scale, both arms
+bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05
+# bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m002 -n n05
+
+# H2: run 4 recipes with claude/gemma3 for size=10,20
+bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s true
+
+# solver=OFF tax heavily on LLM
+LLM_TIMEOUT=1800 \
+   bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s false
+
+
+LLM_TIMEOUT=1800 \
+   bash cookbook/78_constraint_opt/run_experiment.sh -m m001,m002 -n n05,n10,n20 -s false
+
+# see /home/papagame/projects/digital-duck/SPL.py/cookbook/78_constraint_opt/logs/recipe-78-log-20260830-131237.md
+
+# Full H2 scale-sensitivity study (all recipes, all scales)
+bash cookbook/78_constraint_opt/run_experiment.sh \
+    -r r78a,r78b,r78c,r78d -m m001 -n n05,n10,n20
+
+# Swap to gemma3 for model comparison
+MODELS="m001 m002" SIZES="n05 n10" \
+    bash cookbook/78_constraint_opt/run_experiment.sh -r r78d
+
+# solver=ON only (ground-truth pass to establish known optima)
+bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n10,n20 -s true
+
+# Dry run — shows commands without executing
+python cookbook/78_constraint_opt/run_experiment.py \
+    -r r78a,r78d -m m001,m002 -n n05,n10 --dry-run
+```
+
+### What gets logged to SQLite
+
+Every cell (recipe × model × n_size × solver × run) writes one row to `experiment_results.db`:
+
+| Column | Source | Notes |
+|---|---|---|
+| `recipe_id` / `recipe_name` | runner | e.g. `r78d` / `resource_allocation` |
+| `model_id` / `model_label` | runner | e.g. `m001` / `sonnet-4-6` |
+| `n_size` | runner | `n05` / `n10` / `n20` |
+| `solver` | runner | `true` / `false` |
+| `status` | spl3 RETURN | `complete` / `infeasible` |
+| `objective_claimed` | `RETURN … objective=` | solver=ON: CBC result; solver=OFF: LLM's claimed value |
+| `correct` | post-hoc backfill | 1 if solver=OFF objective matches solver=ON ground truth |
+| `verify_status` | `RETURN … verify=` | solver=OFF only: `PASS` / `FAIL` / `UNPARSEABLE` |
+| `llm_calls` | `LLM calls:` stdout line | |
+| `latency_ms` | `Latency:` stdout line | |
+| `input_tokens` / `output_tokens` | `tokens_in=` / `tokens_out=` LOGGING line | |
+
+After each run `backfill_correct()` matches solver=OFF rows against solver=ON ground truth for the same (recipe, model, n_size) cell and sets `correct`.
+
+### Verification for solver=OFF
+
+When `use_solver=false`, the workflow adds two extra LLM calls after the direct solve:
+
+1. `extract_solution_json_*` — asks the LLM to structure its own answer (variable values, constraint coefficients, selected projects, etc.) as JSON
+2. `verify_off_*` (TOOL_API) — re-computes all constraint LHS values in Python from the extracted JSON, compares against problem RHS values, re-computes the objective independently
+
+The `verify_status` field records the verdict: `PASS` (constraints satisfied, objective consistent), `FAIL` (violation or arithmetic mismatch), or `UNPARSEABLE` (LLM returned unstructured text). This catches hallucinations that look correct in prose but violate constraints arithmetically.
+
+### Analysis queries
+
+```sql
+-- Correctness by recipe and scale
+SELECT recipe_name, n_size,
+       AVG(CASE WHEN solver='true'  THEN pass       END) AS on_pass_rate,
+       AVG(CASE WHEN solver='false' THEN correct     END) AS off_correct_rate,
+       AVG(CASE WHEN solver='false' THEN
+               verify_status = 'PASS' END)               AS off_verify_pass_rate
+FROM results
+GROUP BY recipe_name, n_size;
+
+-- Token cost comparison
+SELECT recipe_name, n_size, solver,
+       AVG(input_tokens)  AS avg_in,
+       AVG(output_tokens) AS avg_out,
+       AVG(latency_ms)    AS avg_ms
+FROM results
+WHERE status = 'complete'
+GROUP BY recipe_name, n_size, solver;
+
+-- solver=OFF failures: what did the LLM claim vs ground truth?
+SELECT recipe_name, model_label, n_size,
+       objective_claimed,
+       verify_status, correct
+FROM results
+WHERE solver = 'false'
+ORDER BY recipe_name, n_size, correct;
+```
+
+### Output files
+
+| Path | Contents |
+|---|---|
+| `logs/recipe-78-log-<timestamp>.md` | Full streaming output for every cell in the run |
+| `output/constraint_opt_<timestamp>.md` | Per-run formatted report (solver code, metrics table) |
+| `experiment_results.db` | SQLite DB — single source of truth for analysis |
+| `exp-claude_cli-n05.md` | Hand-annotated experiment results for model=claude_cli, n05 |

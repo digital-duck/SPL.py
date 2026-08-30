@@ -40,7 +40,18 @@ def run_pulp(code: str) -> str:
     # Strip markdown fences the LLM occasionally emits despite instructions
     code = re.sub(r'^```(?:python)?\s*\n?', '', code.strip(), flags=re.IGNORECASE)
     code = re.sub(r'\n?```\s*$', '', code)
+    # Strip import lines that shadow the pre-injected pulp namespace.
+    # 'import pulp' is harmless but redundant.
+    # 'from pulp import *' is dangerous: it rebinds the name 'pulp' in the exec
+    # namespace to pulp.pulp (the submodule), which lacks LpStatus.
+    code = re.sub(r'(?m)^\s*import\s+pulp\s*(?:#.*)?$', '', code)
+    code = re.sub(r'(?m)^\s*from\s+pulp\s+import\s+.*$', '', code)
+    # Patch residual pulp.pulp.LpStatus references (gemma3 hallucination)
+    code = code.replace('pulp.pulp.LpStatus', 'pulp.LpStatus')
+    # Pre-inject all pulp exports so unqualified names (LpProblem, LpVariable, etc.)
+    # still work after stripping 'from pulp import *'
     namespace = {"pulp": pulp}
+    namespace.update({k: getattr(pulp, k) for k in dir(pulp) if not k.startswith('_') and k != 'pulp'})
     try:
         exec(code, namespace)
         result = namespace.get("_result")
@@ -49,7 +60,11 @@ def run_pulp(code: str) -> str:
                                "error": "code did not set _result"})
         return json.dumps(result, default=str)
     except Exception as e:
-        return json.dumps({"status": "Error", "error": str(e)})
+        err = str(e)
+        hint = ""
+        if "pulp.pulp" in err and "LpStatus" in err:
+            hint = " — use pulp.LpStatus[prob.status], never pulp.pulp.LpStatus"
+        return json.dumps({"status": "Error", "error": err + hint})
 $$;
 
 CREATE TOOL_API is_optimal(result_json TEXT)
@@ -61,6 +76,82 @@ def is_optimal(result_json: str) -> bool:
         return json.loads(result_json).get("status") == "Optimal"
     except Exception:
         return False
+$$;
+
+CREATE TOOL_API json_get_objective(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_objective(result_json: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get("objective")
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API json_get_field(result_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(result_json: str, field: str) -> str:
+    import json
+    try:
+        v = json.loads(result_json).get(field)
+        return str(v) if v is not None else ""
+    except Exception:
+        return ""
+$$;
+
+CREATE TOOL_API verify_off_lp(problem TEXT, claimed_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_off_lp(problem: str, claimed_json: str) -> str:
+    import json, re
+    raw = claimed_json.strip()
+    raw = re.sub(r'^```(?:json)?\s*\n?', '', raw, flags=re.IGNORECASE)
+    raw = re.sub(r'\n?```\s*$', '', raw)
+    try:
+        claimed = json.loads(raw)
+    except Exception as e:
+        return json.dumps({"verdict": "UNPARSEABLE", "notes": f"JSON error: {e}",
+                           "raw_prefix": claimed_json[:120]})
+
+    obj_claimed = claimed.get("objective")
+    variables   = claimed.get("variables", {})
+    obj_coeffs  = claimed.get("obj_coefficients", {})
+    constraints = claimed.get("constraints", [])
+
+    violations = []
+
+    if obj_coeffs and variables:
+        try:
+            recomputed = sum(float(obj_coeffs.get(k, 0)) * float(v)
+                            for k, v in variables.items())
+            if obj_claimed is not None and abs(recomputed - float(obj_claimed)) > 0.5:
+                violations.append(
+                    f"objective mismatch: claimed {obj_claimed} vs recomputed {recomputed:.4g}")
+        except Exception as e:
+            violations.append(f"objective recompute error: {e}")
+
+    for c in constraints:
+        name   = c.get("name", "?")
+        coeffs = c.get("coefficients", {})
+        limit  = c.get("limit")
+        op     = c.get("op", "<=")
+        try:
+            lhs = sum(float(coeffs.get(k, 0)) * float(variables.get(k, 0)) for k in coeffs)
+            if op == "<=" and limit is not None and lhs > float(limit) + 1e-6:
+                violations.append(f"{name}: {lhs:.4g} > {limit}")
+            elif op == ">=" and limit is not None and lhs < float(limit) - 1e-6:
+                violations.append(f"{name}: {lhs:.4g} < {limit}")
+        except Exception as e:
+            violations.append(f"{name}: compute error {e}")
+
+    if violations:
+        return json.dumps({"verdict": "FAIL", "claimed_obj": obj_claimed,
+                           "notes": "; ".join(violations)})
+    if not constraints:
+        return json.dumps({"verdict": "UNPARSEABLE", "claimed_obj": obj_claimed,
+                           "notes": "no constraints in JSON"})
+    return json.dumps({"verdict": "PASS", "claimed_obj": obj_claimed,
+                       "notes": f"{len(constraints)} constraints verified"})
 $$;
 
 CREATE TOOL_API make_metrics(use_solver TEXT, llm_calls TEXT,
@@ -163,6 +254,8 @@ Rules:
         "objective": pulp.value(prob.objective),
         "variables": {v.name: pulp.value(v) for v in prob.variables()}
     }
+- CRITICAL: use `pulp.LpStatus[prob.status]` — NEVER `pulp.pulp.LpStatus` (that submodule
+  path does not exist and will raise AttributeError)
 - All quantity variables must have lowBound=0 (non-negative); PuLP uses lowBound, not lb
 - Output ONLY raw Python code — no markdown fences, no commentary
 
@@ -187,6 +280,8 @@ Fix the code. Common causes:
 - Typo in variable names used in constraints
 - Missing or duplicate _result assignment
 - Incorrect sense for LpProblem (LpMaximize vs LpMinimize)
+- Using `pulp.pulp.LpStatus` — ALWAYS use `pulp.LpStatus[prob.status]` instead
+- Adding `import pulp` at top — the module is already injected, do not import it
 
 Output ONLY the corrected Python code — no markdown fences, no commentary.
 $$;
@@ -215,6 +310,35 @@ Plug the optimal values back in and confirm:
 - Compute the objective value step by step (e.g. "3.6 × $20 + 3.2 × $30 = $72 + $96 = $168").
 
 Write in {lang}. Show all arithmetic explicitly.
+$$;
+
+CREATE FUNCTION extract_solution_json(problem TEXT, narrative TEXT)
+RETURNS TEXT AS $$
+Extract the optimization solution from the narrative as structured JSON.
+
+Problem:
+{problem}
+
+Solution narrative:
+{narrative}
+
+Return ONLY a valid JSON object with this exact structure — no prose, no fences:
+{{
+  "objective": <the claimed optimal objective value as a number>,
+  "variables": {{"<variable_name>": <value>, ...}},
+  "obj_coefficients": {{"<variable_name>": <profit or cost per unit>, ...}},
+  "constraints": [
+    {{"name": "<resource name>", "coefficients": {{"<variable_name>": <amount per unit>}},
+     "limit": <RHS number>, "op": "<= or >="}}
+  ]
+}}
+
+Instructions:
+- Extract all decision variable values from the solution (use the names from the problem).
+- Extract each variable's profit/cost coefficient from the problem statement.
+- List every resource constraint: for each constraint write how much of the resource
+  each product consumes and the total available (limit).
+- Use the objective value the narrative claims as the optimal.
 $$;
 
 CREATE FUNCTION interpret_solution(problem TEXT, solution_json TEXT, lang TEXT)
@@ -266,13 +390,16 @@ DO
   CALL time_now() INTO @ts_safe;
   LOGGING f"[constraint_opt] start  run_id={@ts_safe}  use_solver={@use_solver}" LEVEL INFO
 
-  @llm_calls := 0;
-  @tries     := 0;
-  @status    := "";
-  @lp_code   := "";
-  @solution  := "{}";
-  @stage1_s  := "0";
-  @stage2_s  := "0";
+  @llm_calls     := 0;
+  @tries         := 0;
+  @status        := "";
+  @lp_code       := "";
+  @solution      := "{}";
+  @stage1_s      := "0";
+  @stage2_s      := "0";
+  @obj_str       := "";
+  @verify_status := "N/A";
+  @verify_result := "{}";
 
   EVALUATE @use_solver
     WHEN = "true" THEN
@@ -317,6 +444,9 @@ DO
       LOGGING f"[constraint_opt] Stage 2 — ASSERT gate (status={@status})" LEVEL INFO
       ASSERT is_optimal(@solution);
       LOGGING "[constraint_opt] ASSERT passed — solver confirmed Optimal" LEVEL INFO
+      LOGGING f"[constraint_opt] solver_input (lp_code):\n{@lp_code}" LEVEL DEBUG
+      CALL json_get_objective(@solution) INTO @obj_str;
+      LOGGING f"[constraint_opt] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
 
       -- ── Stage 3: LLM interprets the verified result ───────────
       LOGGING "[constraint_opt] Stage 3 — LLM interpreting verified solution" LEVEL INFO
@@ -334,6 +464,16 @@ DO
       @llm_calls := @llm_calls + 1;
       CALL time_elapsed(@t_s1) INTO @stage1_s;
       LOGGING f"[constraint_opt] Stage 1 done — latency={@stage1_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
+
+      -- ── Verification: back-substitute LLM solution ───────────
+      LOGGING "[constraint_opt] verify_off — extracting solution JSON from narrative" LEVEL INFO
+      GENERATE extract_solution_json(@problem, @narrative) INTO @claimed_json;
+      @llm_calls := @llm_calls + 1;
+      CALL verify_off_lp(@problem, @claimed_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@verify_result, "claimed_obj") INTO @obj_str;
+      LOGGING f"[constraint_opt] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+      LOGGING f"[constraint_opt] objective_claimed={@obj_str}  tokens_in={@_total_input_tokens}  tokens_out={@_total_output_tokens}" LEVEL INFO
   END;
 
   CALL time_elapsed(@t_start) INTO @total_s;
@@ -344,7 +484,7 @@ DO
   CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
   LOGGING f"[constraint_opt] done — report → {@out_path}  ({@total_s}s, llm_calls={@llm_calls})" LEVEL INFO
 
-  RETURN @report WITH status = "complete";
+  RETURN @report WITH status = "complete", objective = @obj_str, verify = @verify_status;
 
 EXCEPTION
   WHEN ToolFailed THEN
@@ -352,5 +492,5 @@ EXCEPTION
     CALL write_file(f"{@out_dir}/constraint_opt_{@ts_safe}.md", @report) INTO @out_path;
     CALL time_elapsed(@t_start) INTO @total_s;
     LOGGING f"[constraint_opt] infeasible — report → {@out_path}  ({@total_s}s)" LEVEL INFO
-    RETURN @report WITH status = "infeasible";
+    RETURN @report WITH status = "infeasible", objective = "", verify = "N/A";
 END;
