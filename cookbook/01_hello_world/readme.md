@@ -54,7 +54,7 @@ export FILE_SPL="$HOME/projects/digital-duck/SPL20/cookbook/01_hello_world/hello
 
 ## different commands
 # python
-spl    run $FILE_SPL --adapter ollama --model gemma3 --param user_input="hello wen" --param lang="Chinese"
+spl3    run $FILE_SPL --adapter ollama --model gemma3 --param user_input="hello wen" --param lang="Chinese"
 
 # TypeScript
 spl-ts run $FILE_SPL --adapter ollama --model gemma3 --param user_input="hello wen" --param lang="Chinese"

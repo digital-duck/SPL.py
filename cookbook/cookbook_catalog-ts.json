@@ -1,5 +1,5 @@
 {
-  "description": "SPL.ts native cookbook — 32 pure-TypeScript recipes, no Python tools. All pass echo adapter.",
+  "description": "SPL.ts native cookbook — 61 pure-TypeScript recipes, no Python tools. All pass echo adapter.",
   "recipes": [
     {
       "id": "01",
@@ -7,11 +7,11 @@
       "description": "Simplest possible workflow — one GENERATE, one output variable",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/01_hello/hello.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/01_hello/hello.spl",
         "--adapter", "ollama",
         "--param", "name=TypeScript"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/01_hello",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/01_hello",
       "log": "hello",
       "is_active": true,
       "approval_status": "verified",
@@ -23,11 +23,11 @@
       "description": "Sequential GENERATE INTO — break a problem into steps before answering",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/02_chain_of_thought/chain_of_thought.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/02_chain_of_thought/chain_of_thought.spl",
         "--adapter", "ollama",
         "--param", "question=If a train leaves Chicago at 9am travelling at 60mph towards New York 790 miles away, and another train leaves New York at 10am at 80mph, when do they meet?"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/02_chain_of_thought",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/02_chain_of_thought",
       "log": "chain_of_thought",
       "is_active": true,
       "approval_status": "verified",
@@ -39,11 +39,11 @@
       "description": "WHILE + EVALUATE + COMMIT — iterative quality improvement loop",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/03_self_refine/self_refine.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/03_self_refine/self_refine.spl",
         "--adapter", "ollama",
         "--param", "topic=the importance of sleep for cognitive performance"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/03_self_refine",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/03_self_refine",
       "log": "self_refine",
       "is_active": true,
       "approval_status": "verified",
@@ -55,10 +55,10 @@
       "description": "PROCEDURE + CALL chain — modular sub-task decomposition",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/04_nested_procedures/nested_procedures.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/04_nested_procedures/nested_procedures.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/04_nested_procedures",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/04_nested_procedures",
       "log": "nested_procedures",
       "is_active": true,
       "approval_status": "verified",
@@ -70,11 +70,11 @@
       "description": "CALL PARALLEL ... END — three viewpoints generated simultaneously, then synthesized",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/05_parallel_perspectives/parallel_perspectives.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/05_parallel_perspectives/parallel_perspectives.spl",
         "--adapter", "ollama",
         "--param", "topic=Universal Basic Income"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/05_parallel_perspectives",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/05_parallel_perspectives",
       "log": "parallel_perspectives",
       "is_active": true,
       "approval_status": "verified",
@@ -86,11 +86,11 @@
       "description": "Multi-branch EVALUATE — classify input then route to positive/negative/neutral handler",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/06_sentiment_router/sentiment_router.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/06_sentiment_router/sentiment_router.spl",
         "--adapter", "ollama",
         "--param", "text=This product exceeded all my expectations. The build quality is outstanding!"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/06_sentiment_router",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/06_sentiment_router",
       "log": "sentiment_router",
       "is_active": true,
       "approval_status": "verified",
@@ -102,10 +102,10 @@
       "description": "WHILE + list_get (1-based) + list_length — process a comma-separated list item by item",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/07_batch_processing/batch_processing.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/07_batch_processing/batch_processing.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/07_batch_processing",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/07_batch_processing",
       "log": "batch_processing",
       "is_active": true,
       "approval_status": "verified",
@@ -117,11 +117,11 @@
       "description": "PROCEDURE delegation + LOGGING — specialist agents hand off work via CALL chain",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/08_multi_agent/multi_agent.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/08_multi_agent/multi_agent.spl",
         "--adapter", "ollama",
         "--param", "topic=climate change mitigation strategies"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/08_multi_agent",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/08_multi_agent",
       "log": "multi_agent",
       "is_active": true,
       "approval_status": "verified",
@@ -133,11 +133,11 @@
       "description": "Sequential generation pipeline: spec → code → tests → review",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/09_code_gen_tests/code_gen_tests.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/09_code_gen_tests/code_gen_tests.spl",
         "--adapter", "ollama",
         "--param", "spec=Write a Python function that validates email addresses using regex"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/09_code_gen_tests",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/09_code_gen_tests",
       "log": "code_gen_tests",
       "is_active": true,
       "approval_status": "verified",
@@ -149,10 +149,10 @@
       "description": "json_get + iif with comparison args — extract, validate, and transform structured data",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/10_data_pipeline/data_pipeline.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/10_data_pipeline/data_pipeline.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/10_data_pipeline",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/10_data_pipeline",
       "log": "data_pipeline",
       "is_active": true,
       "approval_status": "verified",
@@ -164,12 +164,12 @@
       "description": "CALL PARALLEL opening statements + WHILE rebuttals — structured adversarial discourse",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/11_debate_arena/debate_arena.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/11_debate_arena/debate_arena.spl",
         "--adapter", "ollama",
         "--param", "topic=Artificial intelligence will eliminate more jobs than it creates",
         "--param", "max_rounds=2"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/11_debate_arena",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/11_debate_arena",
       "log": "debate_arena",
       "is_active": true,
       "approval_status": "verified",
@@ -181,11 +181,11 @@
       "description": "WHILE + EVALUATE > 0.85 — attempt → critique → refine until quality threshold met",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/12_reflection/reflection.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/12_reflection/reflection.spl",
         "--adapter", "ollama",
         "--param", "task=Write a concise executive summary of the challenges in AI safety alignment"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/12_reflection",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/12_reflection",
       "log": "reflection",
       "is_active": true,
       "approval_status": "verified",
@@ -197,11 +197,11 @@
       "description": "CALL PARALLEL 5-way candidate generation + score/consensus/select winner",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/13_ensemble/ensemble.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/13_ensemble/ensemble.spl",
         "--adapter", "ollama",
         "--param", "question=What is the best strategy for learning a new programming language quickly?"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/13_ensemble",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/13_ensemble",
       "log": "ensemble",
       "is_active": true,
       "approval_status": "verified",
@@ -213,11 +213,11 @@
       "description": "CALL PARALLEL sub-WORKFLOWs + fan-out merge — three articles summarized simultaneously",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/14_parallel_news/parallel_news.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/14_parallel_news/parallel_news.spl",
         "--adapter", "ollama",
         "--param", "topic=quantum computing breakthroughs"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/14_parallel_news",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/14_parallel_news",
       "log": "parallel_news",
       "is_active": true,
       "approval_status": "verified",
@@ -229,12 +229,12 @@
       "description": "3-layer compression: sentence → paragraph → page; EVALUATE >= 3 routing",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/15_progressive_summary/progressive_summary.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/15_progressive_summary/progressive_summary.spl",
         "--adapter", "ollama",
         "--param", "topic=the history and impact of the internet",
         "--param", "layers=3"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/15_progressive_summary",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/15_progressive_summary",
       "log": "progressive_summary",
       "is_active": true,
       "approval_status": "verified",
@@ -246,11 +246,11 @@
       "description": "Multi-branch EVALUATE with variable confidence threshold; evidence schema via TEXT return",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/16_hypothesis/hypothesis.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/16_hypothesis/hypothesis.spl",
         "--adapter", "ollama",
         "--param", "hypothesis=Remote work increases software developer productivity"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/16_hypothesis",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/16_hypothesis",
       "log": "hypothesis",
       "is_active": true,
       "approval_status": "verified",
@@ -262,10 +262,10 @@
       "description": "CALL PARALLEL 3 reviewer sub-WORKFLOWs (style, security, tests) + merge_reviews synthesis",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/17_parallel_code_review/parallel_code_review.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/17_parallel_code_review/parallel_code_review.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/17_parallel_code_review",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/17_parallel_code_review",
       "log": "parallel_code_review",
       "is_active": true,
       "approval_status": "verified",
@@ -277,10 +277,10 @@
       "description": "read_file + severity-gated EVALUATE verdict; CALL read_file returns '' on missing file",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/18_code_review/code_review.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/18_code_review/code_review.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/18_code_review",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/18_code_review",
       "log": "code_review",
       "is_active": true,
       "approval_status": "verified",
@@ -292,11 +292,11 @@
       "description": "EVALUATE = exact string + EXCEPTION + RETRY WITH temperature LIMIT — hallucination guard",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/19_safe_generation/safe_generation.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/19_safe_generation/safe_generation.spl",
         "--adapter", "ollama",
         "--param", "question=What are the main causes of the 2008 financial crisis?"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/19_safe_generation",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/19_safe_generation",
       "log": "safe_generation",
       "is_active": true,
       "approval_status": "verified",
@@ -308,11 +308,11 @@
       "description": "Research → Analyze → Write with per-step USING MODEL; quality loop refines draft until score > 0.7",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/20_multi_model_pipeline/multi_model_pipeline.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/20_multi_model_pipeline/multi_model_pipeline.spl",
         "--adapter", "ollama",
         "--param", "topic=the impact of large language models on software development"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/20_multi_model_pipeline",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/20_multi_model_pipeline",
       "log": "multi_model_pipeline",
       "is_active": true,
       "approval_status": "verified",
@@ -324,12 +324,12 @@
       "description": "Generate headlines → expand → EVALUATE > 0.75 coverage → refine gaps → format",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/21_headline_news/headline_news.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/21_headline_news/headline_news.spl",
         "--adapter", "ollama",
         "--param", "topic=artificial intelligence",
         "--param", "max_headlines=5"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/21_headline_news",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/21_headline_news",
       "log": "headline_news",
       "is_active": true,
       "approval_status": "verified",
@@ -341,11 +341,11 @@
       "description": "Extract facts → merge profile → reply; EVALUATE = 'no_new_facts'; trim_turns stdlib; stateless caller-managed",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/22_memory_chat/memory_chat.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/22_memory_chat/memory_chat.spl",
         "--adapter", "ollama",
         "--param", "user_input=My name is Alice and I am a data scientist at a fintech startup"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/22_memory_chat",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/22_memory_chat",
       "log": "memory_chat",
       "is_active": true,
       "approval_status": "verified",
@@ -357,11 +357,11 @@
       "description": "EVALUATE < 600 / >= 750 int fast path; iif+contains stdlib replaces Python extraction tool",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/23_credit_risk/credit_risk.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/23_credit_risk/credit_risk.spl",
         "--adapter", "ollama",
         "--param", "borrower_info=Annual income $85,000, credit score 720, existing debt $15,000, requesting $50,000 loan"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/23_credit_risk",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/23_credit_risk",
       "log": "credit_risk",
       "is_active": true,
       "approval_status": "verified",
@@ -373,11 +373,11 @@
       "description": "classify once + contains() decision tree — scene label routes to security/delivery/general action",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/24_vision_to_action/vision_to_action.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/24_vision_to_action/vision_to_action.spl",
         "--adapter", "ollama",
         "--param", "image_description=A person in dark clothing approaches the back door of the building after hours"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/24_vision_to_action",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/24_vision_to_action",
       "log": "vision_to_action",
       "is_active": true,
       "approval_status": "verified",
@@ -389,11 +389,11 @@
       "description": "CALL PARALLEL 2 variants + iif(to_int(@score_a) > to_int(@score_b)) winner selection",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/25_ab_test/ab_test.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/25_ab_test/ab_test.spl",
         "--adapter", "ollama",
         "--param", "topic=benefits of daily exercise"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/25_ab_test",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/25_ab_test",
       "log": "ab_test",
       "is_active": true,
       "approval_status": "verified",
@@ -405,11 +405,11 @@
       "description": "GENERATE JSON → validate → WHILE retry with enrichment; EVALUATE = 'valid' exits loop",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/26_structured_extract/structured_extract.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/26_structured_extract/structured_extract.spl",
         "--adapter", "ollama",
         "--param", "raw_text=John Smith, 45, works as a senior software engineer at TechCorp in San Francisco. He joined in 2019 and earns $180,000 annually."
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/26_structured_extract",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/26_structured_extract",
       "log": "structured_extract",
       "is_active": true,
       "approval_status": "verified",
@@ -421,11 +421,11 @@
       "description": "line_count(@plan) for step count; WHILE + split_part step extraction; EVALUATE = '' to skip empties",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/27_plan_execute/plan_execute.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/27_plan_execute/plan_execute.spl",
         "--adapter", "ollama",
         "--param", "goal=Build a simple REST API with user authentication in Python"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/27_plan_execute",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/27_plan_execute",
       "log": "plan_execute",
       "is_active": true,
       "approval_status": "verified",
@@ -437,11 +437,11 @@
       "description": "Four-way CALL PARALLEL (sentiment, entities, themes, summary); json_set accumulates structured report",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/28_text_analytics/text_analytics.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/28_text_analytics/text_analytics.spl",
         "--adapter", "ollama",
         "--param", "text=The Federal Reserve raised interest rates by 25 basis points, citing persistent inflation and a strong labor market. Tech stocks dropped 2%."
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/28_text_analytics",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/28_text_analytics",
       "log": "text_analytics",
       "is_active": true,
       "approval_status": "verified",
@@ -453,12 +453,12 @@
       "description": "Generator vs critic with WHILE AND compound condition; score-gated termination; argument hardens under attack",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/29_adversarial_refine/adversarial_refine.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/29_adversarial_refine/adversarial_refine.spl",
         "--adapter", "ollama",
         "--param", "claim=Switching to a 4-day work week increases productivity",
         "--param", "max_rounds=2"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/29_adversarial_refine",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/29_adversarial_refine",
       "log": "adversarial_refine",
       "is_active": true,
       "approval_status": "verified",
@@ -470,11 +470,11 @@
       "description": "Primary model → stdlib quality gate (word_count + contains) → transparent fallback to stronger model",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/30_adaptive_failover/adaptive_failover.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/30_adaptive_failover/adaptive_failover.spl",
         "--adapter", "ollama",
         "--param", "query=Explain quantum entanglement for a technical audience"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/30_adaptive_failover",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/30_adaptive_failover",
       "log": "adaptive_failover",
       "is_active": true,
       "approval_status": "verified",
@@ -486,12 +486,12 @@
       "description": "CALL PARALLEL variant generation + A/B test on failing case + nested EVALUATE winner selection",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/31_prompt_self_tuning/prompt_self_tuning.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/31_prompt_self_tuning/prompt_self_tuning.spl",
         "--adapter", "ollama",
         "--param", "baseline_prompt=Summarize this technical document.",
         "--param", "failed_case=The document describes a novel quantum error-correction scheme."
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/31_prompt_self_tuning",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/31_prompt_self_tuning",
       "log": "prompt_self_tuning",
       "is_active": true,
       "approval_status": "verified",
@@ -503,11 +503,11 @@
       "description": "Draft → critique → rewrite → score with WHILE AND compound; early exit when critic is satisfied",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/32_product_refine/product_refine.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/32_product_refine/product_refine.spl",
         "--adapter", "ollama",
         "--param", "product_info=Wireless noise-cancelling headphones, 40h battery, USB-C, foldable, touch controls"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/32_product_refine",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/32_product_refine",
       "log": "product_refine",
       "is_active": true,
       "approval_status": "verified",
@@ -519,11 +519,11 @@
       "description": "CALL PARALLEL 3 explore_path procedures (different models + reasoning lenses); score + select + refine; EVALUATE = 'sound' verify",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/33_tree_of_thought/tree_of_thought.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/33_tree_of_thought/tree_of_thought.spl",
         "--adapter", "ollama",
         "--param", "problem=Design a sustainable urban transport system for a city of 2 million people."
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/33_tree_of_thought",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/33_tree_of_thought",
       "log": "tree_of_thought",
       "is_active": true,
       "approval_status": "verified",
@@ -535,10 +535,10 @@
       "description": "WHILE line_count+split_part iteration; LLM JSON audit per item; json_get risk routing; EVALUATE = 'high' alert escalation",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/34_regulatory_news_audit/regulatory_news_audit.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/34_regulatory_news_audit/regulatory_news_audit.spl",
         "--adapter", "ollama"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/34_regulatory_news_audit",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/34_regulatory_news_audit",
       "log": "regulatory_news_audit",
       "is_active": true,
       "approval_status": "verified",
@@ -550,12 +550,12 @@
       "description": "Persona function injected into GENERATE args; 3-turn simulated dialogue; EVALUATE > understanding score routes consolidation vs hint",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/35_socratic_tutor/socratic_tutor.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/35_socratic_tutor/socratic_tutor.spl",
         "--adapter", "ollama",
         "--param", "topic=How does recursion work in programming?",
         "--param", "student_level=high school"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/35_socratic_tutor",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/35_socratic_tutor",
       "log": "socratic_tutor",
       "is_active": true,
       "approval_status": "verified",
@@ -567,16 +567,421 @@
       "description": "Spec gate → gen → review → improve → test (WHILE AND loop) → document → optional closure check; 8 PROCEDURE sub-steps",
       "args": [
         "spl-ts", "run",
-        "/home/papagame/projects/digital-duck/SPL.ts/cookbook/36_code_pipeline/code_pipeline.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/36_code_pipeline/code_pipeline.spl",
         "--adapter", "ollama",
         "--param", "spec=Write a binary search function that works on a sorted integer array and returns the index or -1 if not found.",
         "--param", "lang=python"
       ],
-      "dir": "/home/papagame/projects/digital-duck/SPL.ts/cookbook/36_code_pipeline",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/36_code_pipeline",
       "log": "code_pipeline",
       "is_active": true,
       "approval_status": "verified",
       "category": "agentic"
+    },
+    {
+      "id": "37",
+      "name": "Ollama Proxy",
+      "description": "Minimal PROMPT workflow — pipe any prompt through any adapter/model; SELECT system role + user message; pure passthrough",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/37_ollama_proxy/proxy.spl",
+        "--adapter", "ollama",
+        "--param", "prompt=Explain quantum computing in one sentence"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/37_ollama_proxy",
+      "log": "ollama_proxy",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "basics"
+    },
+    {
+      "id": "38",
+      "name": "RAG Query",
+      "description": "Retrieval-augmented generation: SELECT context from external documents + GENERATE answer; PROMPT workflow with grounded knowledge",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/38_rag_query/rag_query.spl",
+        "--adapter", "ollama",
+        "--param", "question=What is the main topic of the indexed documents?"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/38_rag_query",
+      "log": "rag_query",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "retrieval"
+    },
+    {
+      "id": "39",
+      "name": "Map-Reduce Summarizer",
+      "description": "line_count + WHILE + split_part chunks document; GENERATE per-chunk summaries (map); GENERATE combined final (reduce); quality-score gate",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/39_map_reduce/map_reduce.spl",
+        "--adapter", "ollama",
+        "--param", "style=concise executive summary"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/39_map_reduce",
+      "log": "map_reduce",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "40",
+      "name": "Few-Shot Prompting",
+      "description": "Gold-standard examples embedded in SELECT context; PROMPT workflow guides output format and style via in-context learning; no fine-tuning",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/40_few_shot/few_shot.spl",
+        "--adapter", "ollama",
+        "--param", "text=The quarterly results exceeded all analyst forecasts by a significant margin"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/40_few_shot",
+      "log": "few_shot",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "basics"
+    },
+    {
+      "id": "41",
+      "name": "Parallel Code Review v2",
+      "description": "IMPORT-based modular design: 3 sub-workflow files loaded at runtime; CALL PARALLEL style + security + test-gen run concurrently; merged report",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/41_parallel_code_review_v2/parallel_code_review.spl",
+        "--adapter", "ollama",
+        "--param", "code=def divide(a, b):\n    return a / b",
+        "--param", "lang=python"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/41_parallel_code_review_v2",
+      "log": "parallel_code_review_v2",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
+    },
+    {
+      "id": "42",
+      "name": "Parallel News Digest",
+      "description": "Sub-WORKFLOW per topic run concurrently; synthesise into morning briefing; IMPORT pattern",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/42_parallel_news_digest/parallel_news_digest.spl",
+        "--adapter", "ollama",
+        "--param", "topic_business=global markets and energy transition"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/42_parallel_news_digest",
+      "log": "parallel_news_digest",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "43",
+      "name": "Geometry QA",
+      "description": "Two-mode: answer_on_demand.spl (Q&A over concept graph) + build_concept_book.spl (concept-book generation); DODA pattern",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/43_geometry_qa/answer_on_demand.spl",
+        "--adapter", "ollama",
+        "--param", "question=What is the Pythagorean theorem?"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/43_geometry_qa",
+      "log": "geometry_qa",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "45",
+      "name": "Image Caption",
+      "description": "Vision-model GENERATE: describe image from file path or URL; multimodal INPUT; PROMPT with structured question and log output",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/45_image_caption/image_caption.spl",
+        "--adapter", "ollama",
+        "--param", "question=What is in this image? Describe it in detail."
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/45_image_caption",
+      "log": "image_caption",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "46",
+      "name": "Audio Summary",
+      "description": "Speech-model GENERATE: transcribe and summarise an audio clip; multimodal INPUT; outputs transcript + summary",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/46_audio_summary/audio_summary.spl",
+        "--adapter", "ollama"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/46_audio_summary",
+      "log": "audio_summary",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "47",
+      "name": "Video Summary",
+      "description": "Video-understanding GENERATE: analyse clip and produce text summary, transcript, or key-moment list; multimodal INPUT",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/47_video_summary/video_summary.spl",
+        "--adapter", "ollama"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/47_video_summary",
+      "log": "video_summary",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "48",
+      "name": "Text to Image",
+      "description": "Image generation: text prompt → DALL-E 3 (cloud) or local Stable Diffusion; GENERATE IMAGE OUTPUT; saves result to file",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/48_text_to_image/text_to_image.spl",
+        "--adapter", "openai",
+        "--param", "prompt=A serene mountain lake at sunrise, photorealistic"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/48_text_to_image",
+      "log": "text_to_image",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "49",
+      "name": "Text to Speech",
+      "description": "Speech synthesis: text → natural-sounding audio file; GENERATE AUDIO OUTPUT; configurable voice and speed",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/49_text_to_speech/text_to_speech.spl",
+        "--adapter", "openai",
+        "--param", "text=Hello, this is a text-to-speech demonstration."
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/49_text_to_speech",
+      "log": "text_to_speech",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "50",
+      "name": "Text to Video",
+      "description": "Video generation: text prompt → short video clip via Google Veo 2 or similar; GENERATE VIDEO OUTPUT",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/50_text_to_video/text_to_video.spl",
+        "--adapter", "google",
+        "--param", "prompt=A timelapse of a flower blooming in a sunny garden"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/50_text_to_video",
+      "log": "text_to_video",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "52",
+      "name": "Image Restyle",
+      "description": "Vision → generation pipeline: describe image with vision model then generate restyled version; IMAGE INPUT → IMAGE OUTPUT",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/52_image_restyle/image_restyle.spl",
+        "--adapter", "ollama",
+        "--param", "style=oil painting in the style of Van Gogh"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/52_image_restyle",
+      "log": "image_restyle",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "54",
+      "name": "Voice Dialogue",
+      "description": "Full audio-in / audio-out pipeline: AUDIO INPUT → speech-to-text → LLM response → text-to-speech → AUDIO OUTPUT; end-to-end voice agent",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/54_voice_dialogue/voice_dialogue.spl",
+        "--adapter", "openai"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/54_voice_dialogue",
+      "log": "voice_dialogue",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multimodal"
+    },
+    {
+      "id": "55",
+      "name": "Model Showdown",
+      "description": "Same prompt to two Ollama models concurrently via CALL PARALLEL + PROCEDURE; compare responses side-by-side with LLM judge",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/55_model_showdown/model_showdown.spl",
+        "--adapter", "ollama",
+        "--param", "prompt=What is the meaning of life?",
+        "--param", "model_1=gemma3",
+        "--param", "model_2=phi3"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/55_model_showdown",
+      "log": "model_showdown",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
+    },
+    {
+      "id": "56",
+      "name": "Bedrock Quickstart",
+      "description": "Fan out same prompt to three model families concurrently via CALL PARALLEL; compare with LLM judge; USING MODEL per PROCEDURE",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/56_bedrock_quickstart/bedrock_quickstart.spl",
+        "--adapter", "anthropic",
+        "--param", "prompt=Explain the CAP theorem in two sentences.",
+        "--param", "model_1=claude-sonnet-4-5",
+        "--param", "model_2=claude-haiku-4-5",
+        "--param", "model_3=claude-opus-4-8"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/56_bedrock_quickstart",
+      "log": "bedrock_quickstart",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
+    },
+    {
+      "id": "57",
+      "name": "Vertex AI Quickstart",
+      "description": "Fan out same prompt to Gemini Pro/Flash/Lite tiers concurrently via CALL PARALLEL; tier-comparison evaluation with cost recommendation",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/57_vertex_quickstart/vertex_quickstart.spl",
+        "--adapter", "google",
+        "--param", "prompt=Explain the CAP theorem in two sentences."
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/57_vertex_quickstart",
+      "log": "vertex_quickstart",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
+    },
+    {
+      "id": "58",
+      "name": "Azure OpenAI Quickstart",
+      "description": "Fan out same prompt to three Azure OpenAI deployments concurrently via CALL PARALLEL; compare GPT tiers for quality and cost-effectiveness",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/58_azure_quickstart/azure_quickstart.spl",
+        "--adapter", "openai",
+        "--param", "prompt=Explain the CAP theorem in two sentences."
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/58_azure_quickstart",
+      "log": "azure_quickstart",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
+    },
+    {
+      "id": "59",
+      "name": "ReAct Agent",
+      "description": "PROCEDURE wraps GENERATE for population search; calc_growth_rate Python tool replaced with GENERATE compute_growth_rate",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/59_react_agent/react_agent.spl",
+        "--adapter", "ollama",
+        "--param", "country=France"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/59_react_agent",
+      "log": "react_agent",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "agentic"
+    },
+    {
+      "id": "60",
+      "name": "Guardrails Pipeline",
+      "description": "4-gate safety: contains() keyword pre-screen → LLM classify → GENERATE detect/redact PII → GENERATE validate output",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/60_guardrails/guardrails.spl",
+        "--adapter", "ollama",
+        "--param", "user_input=How does AES-256 encryption work?"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/60_guardrails",
+      "log": "guardrails",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "agentic"
+    },
+    {
+      "id": "61",
+      "name": "Customer Support Triage",
+      "description": "Classify → urgency score → EVALUATE > 8 escalation vs draft → quality check → revise; EVALUATE replaces SELECT CASE tone routing",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/61_support_triage/support_triage.spl",
+        "--adapter", "ollama",
+        "--param", "ticket=I was charged twice for the same order. Please refund the duplicate charge."
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/61_support_triage",
+      "log": "support_triage",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "62",
+      "name": "Meeting Notes to Actions",
+      "description": "CALL read_file + GENERATE replace Python tools; extract speakers, normalize dates, validate ownership; output as JSON/markdown/email",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/62_meeting_actions/meeting_actions.spl",
+        "--adapter", "ollama",
+        "--param", "transcript=Alice: fix the login bug by Friday. Bob: I will handle it by end of week.",
+        "--param", "output_format=markdown"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/62_meeting_actions",
+      "log": "meeting_actions",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "63",
+      "name": "Sentiment Pipeline",
+      "description": "Batch GENERATE sentiment on item list; GENERATE compute_stats and find_extremes replace Python tools; trend narrative + report",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/63_sentiment_pipeline/sentiment.spl",
+        "--adapter", "ollama",
+        "--param", "domain=product_reviews"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/63_sentiment_pipeline",
+      "log": "sentiment_pipeline",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "application"
+    },
+    {
+      "id": "64",
+      "name": "Interview Simulator",
+      "description": "Interviewer+candidate personas; GENERATE questions; split_part extracts Q1-3; GENERATE score/aggregate/compile transcript",
+      "args": [
+        "spl-ts", "run",
+        "~/projects/digital-duck/SPL.ts/cookbook/64_interview_sim/interview_sim.spl",
+        "--adapter", "ollama",
+        "--param", "role=Senior Software Engineer",
+        "--param", "focus=system design"
+      ],
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/64_interview_sim",
+      "log": "interview_sim",
+      "is_active": true,
+      "approval_status": "verified",
+      "category": "multi-agent"
     }
   ]
 }

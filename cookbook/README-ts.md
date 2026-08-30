@@ -1,6 +1,6 @@
 # SPL.ts Native Cookbook
 
-The SPL.ts cookbook lives at `/home/papagame/projects/digital-duck/SPL.ts/cookbook/`. It contains **36 pure-TypeScript recipes** — no Python tools, no external bridges, no TOOL_API dependencies. Every recipe runs against the echo adapter (deterministic, zero-cost) and against any real adapter (Ollama, OpenAI, Anthropic, Google).
+The SPL.ts cookbook lives at `~/projects/digital-duck/SPL.ts/cookbook/`. It contains **61 pure-TypeScript recipes** — no Python tools, no external bridges, no TOOL_API dependencies. Every recipe runs against the echo adapter (deterministic, zero-cost) and against any real adapter (Ollama, OpenAI, Anthropic, Google).
 
 ## Prerequisites
 
@@ -105,6 +105,31 @@ cat ~/projects/digital-duck/SPL.ts/cookbook/catalog.json | python3 -m json.tool 
 | 34 | Regulatory News Audit | application | WHILE line_count+split_part; json_get risk routing; EVALUATE = 'high' alert |
 | 35 | Socratic Tutor | application | Persona func in GENERATE; EVALUATE > understanding score; adaptive Q3 |
 | 36 | Autonomous Code Pipeline | agentic | WHILE AND test-gated loop; 8 PROCEDURE sub-steps; optional closure check |
+| 37 | Ollama Proxy | basics | Minimal PROMPT workflow; SELECT system role + user message; pure passthrough |
+| 38 | RAG Query | retrieval | SELECT context from external docs + GENERATE answer; grounded knowledge |
+| 39 | Map-Reduce Summarizer | application | line_count+split_part chunk loop; GENERATE map; GENERATE reduce; quality-score gate |
+| 40 | Few-Shot Prompting | basics | Gold examples in SELECT context; in-context learning; PROMPT workflow |
+| 41 | Parallel Code Review v2 | multi-agent | IMPORT-based modular sub-workflows; CALL PARALLEL 3 reviewers; merged report |
+| 42 | Parallel News Digest | application | CALL PARALLEL per topic; sub-WORKFLOW IMPORT pattern; morning briefing |
+| 43 | Geometry QA | application | answer_on_demand.spl + build_concept_book.spl; DODA two-mode pattern |
+| 45 | Image Caption | multimodal | Vision-model GENERATE; image file/URL input; question-driven description |
+| 46 | Audio Summary | multimodal | Speech-model GENERATE; transcribe + summarise audio clip |
+| 47 | Video Summary | multimodal | Video-understanding GENERATE; summary / transcript / key moments |
+| 48 | Text to Image | multimodal | Text prompt → DALL-E 3 / Stable Diffusion; GENERATE IMAGE OUTPUT |
+| 49 | Text to Speech | multimodal | Text → natural speech audio file; GENERATE AUDIO OUTPUT |
+| 50 | Text to Video | multimodal | Text prompt → video clip via Google Veo 2; GENERATE VIDEO OUTPUT |
+| 52 | Image Restyle | multimodal | Vision describe → generate restyled version; IMAGE INPUT → IMAGE OUTPUT |
+| 54 | Voice Dialogue | multimodal | Full audio-in/audio-out: STT → LLM → TTS; end-to-end voice agent |
+| 55 | Model Showdown | multi-agent | CALL PARALLEL 2 models; PROCEDURE ask_model; LLM judge compares side-by-side |
+| 56 | Bedrock Quickstart | multi-agent | CALL PARALLEL 3 model families; USING MODEL per PROCEDURE; cross-family comparison |
+| 57 | Vertex AI Quickstart | multi-agent | CALL PARALLEL Gemini Pro/Flash/Lite; tier comparison with cost recommendation |
+| 58 | Azure OpenAI Quickstart | multi-agent | CALL PARALLEL 3 GPT deployments; deployment comparison for production selection |
+| 59 | ReAct Agent | agentic | PROCEDURE wraps GENERATE search; calc_growth_rate → GENERATE compute_growth_rate |
+| 60 | Guardrails Pipeline | agentic | contains() keyword gate → LLM classify → GENERATE detect/redact PII → validate output |
+| 61 | Customer Support Triage | application | classify → urgency > 8 escalate → draft → quality < 6 revise; EVALUATE tone routing |
+| 62 | Meeting Notes to Actions | application | read_file + GENERATE replace Python tools; JSON/markdown/email output format |
+| 63 | Sentiment Pipeline | application | batch GENERATE sentiment; GENERATE stats/extremes replace Python tools; trend report |
+| 64 | Interview Simulator | multi-agent | Interviewer+candidate personas; split_part extracts Q1-3; GENERATE score+aggregate |
 
 ## SPL.ts parser notes
 

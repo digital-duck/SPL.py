@@ -19,6 +19,17 @@ This recipe showcases the most distinctive feature of SPL: the **deterministic-p
 
 This boundary is **inexpressible in PDL (https://github.com/IBM/prompt-declaration-language), LangChain, or AutoGen** without external orchestration scaffolding. In SPL it is four tokens: `ASSERT is_optimal(@solution)`.
 
+### Ablation mode: `use_solver=false`
+
+The workflow accepts a `use_solver` flag (default `"true"`) that swaps in a pure-LLM baseline for direct comparison:
+
+| `use_solver` | Stage 1 | Stage 2 | Gate | Metrics tracked |
+|---|---|---|---|---|
+| `true` | LLM formulates PuLP code → CBC solves (with repair loop) | LLM interprets verified JSON result | `ASSERT is_optimal()` — hard gate | LLM calls, stage-1 latency, stage-2 latency, total |
+| `false` | LLM solves directly via corner enumeration (no solver) | — | None | LLM calls, stage-1 latency, total |
+
+Both modes emit a `## Run Metrics` table at the bottom of the report. This makes it easy to compare solution quality, token cost, and latency with and without the deterministic solver rung.
+
 
 
 ## Setup
@@ -99,19 +110,31 @@ Each recipe is self-contained. The SPL structure is identical — only the tool 
 ## Run
 
 ```bash
-# Default problem (bakery production planning)
-spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
+# Default problem (bakery production planning) — solver ON
+spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli
 
-# Custom problem
-spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
+
+# Set problem once; reuse in all commands below
+export PROBLEM="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tables (4h labor, 3kg wood, \$30 profit). Available: 20h labor, 24kg wood. Maximize profit."
+
+
+# solver ON (default)
+spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
-    --param problem="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tables (4h labor, 3kg wood, \$30 profit). Available: 20h labor, 24kg wood. Maximize profit."
+    --param problem="$PROBLEM"
+
+# solver OFF — LLM baseline for ablation comparison
+spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+    --llm claude_cli \
+    --param use_solver=false \
+    --param problem="$PROBLEM"
 
 # More repair attempts (default 3)
-spl-go run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
-    --param max_tries=5
+    --param max_tries=5 \
+    --param problem="$PROBLEM"
 ```
 
 ## Default problem
@@ -123,54 +146,154 @@ Labor: 3×3 + 3×1 = 12 ✓ · Flour: 3×2 + 3×3 = 15 ✓ · Both constraints b
 
 ## Execution flow
 
+### solver=ON (default)
+
 ```
-GENERATE formulate_lp(@problem)     -- LLM writes PuLP code
+GENERATE formulate_lp(@problem)     -- LLM writes PuLP code        [LLM call +1]
     │
 CALL run_pulp(@lp_code)             -- CBC solver executes
     │
-CALL get_status(@solution)          -- extract status string
+CALL result_status(@solution)       -- extract status string
     │
 WHILE @tries < @max_tries
     ├── status = "Optimal" → exit loop
     ├── status = "init"    → first attempt (above)
     └── status = Error/Infeasible
             │
-        CALL get_error()            -- get error message
-        GENERATE repair_lp()        -- LLM rewrites with error
+        CALL result_error()         -- get error message
+        GENERATE repair_lp()        -- LLM rewrites with error      [LLM call +1]
         CALL run_pulp()             -- retry
             │
-ASSERT is_optimal(@solution)        -- hard gate: AssertionError if not Optimal
-    │
-GENERATE interpret_solution()       -- LLM explains verified result
-    │
-CALL format_report()                -- Markdown report
+ASSERT is_optimal(@solution)        -- hard gate: ToolFailed if not Optimal
+    │                                  ◄── stage 1 latency recorded here
+GENERATE interpret_solution()       -- LLM explains verified result [LLM call +1]
+    │                                  ◄── stage 2 latency recorded here
+CALL make_metrics(...)              -- assemble metrics table
+CALL format_report(...)             -- Markdown report with metrics
+```
+
+### solver=OFF (ablation baseline)
+
+```
+GENERATE solve_directly(@problem)   -- LLM enumerates corners,      [LLM call +1]
+    │                                  evaluates objective, verifies
+    │                                  ◄── stage 1 latency recorded here
+CALL make_metrics(...)              -- assemble metrics table
+CALL format_report(...)             -- Markdown report with metrics
 ```
 
 ## Output format
+
+### solver=ON
 
 ```markdown
 # Constraint Optimization Report
 
 **Problem:** ...
 **Solver status:** `Optimal`
-**Optimal objective value:** 60
+**Optimal objective value:** 168
 
 **Decision variables:**
-  - Bread = 3
-  - Croissants = 3
+  - chairs = 3.6
+  - tables = 3.2
 
 ## Interpretation
-The bakery should produce 3 loaves of bread and 3 batches of croissants ...
+...
+
+## Solution Verification
+- Labor: 2(3.6) + 4(3.2) = 7.2 + 12.8 = 20h ✓ (binding)
+- Wood:  4(3.6) + 3(3.2) = 14.4 + 9.6 = 24kg ✓ (binding)
+- Profit: 3.6 × $20 + 3.2 × $30 = $72 + $96 = $168 ✓
 
 ## Solver Code (LLM-generated, PuLP)
 ```python
 ...
 ```
+
+## Run Metrics
+
+| Metric | Value |
+|---|---|
+| Mode | solver=ON  (PuLP/CBC + ASSERT gate) |
+| LLM calls | 2 |
+| Stage 1 — formulation + solve (s) | 7.00 |
+| Stage 2 — interpretation (s) | 14.90 |
+| Total latency (s) | 22.60 |
+| Input tokens | 541 |
+| Output tokens | 441 |
+| Total tokens | 982 |
 ```
+
+### solver=OFF
+
+```markdown
+# Constraint Optimization Report
+
+**Problem:** ...
+
+## Solution
+...
+
+## Verification
+...
+
+## Run Metrics
+
+| Metric | Value |
+|---|---|
+| Mode | solver=OFF (LLM reasoning only) |
+| LLM calls | 1 |
+| Stage 1 — direct LLM solve (s) | 44.70 |
+| Stage 2 — interpretation (s) | — |
+| Total latency (s) | 45.20 |
+| Input tokens | 275 |
+| Output tokens | 760 |
+| Total tokens | 1,035 |
+```
+
+## Why deterministic workflow matters — observed results
+
+The `use_solver` ablation on the chairs-and-tables factory problem (claude-sonnet-4-6, 2026-08-30) produced a striking result:
+
+| Metric | solver=ON | solver=OFF | Δ |
+|---|---|---|---|
+| LLM calls | 2 | 1 | solver=OFF uses fewer calls… |
+| Stage 1 latency | 7.0s | 44.7s | …but Stage 1 is **6.4× slower** |
+| Stage 2 latency | 14.9s | — | |
+| **Total latency** | **22.6s** | **45.2s** | **solver=ON is 2× faster end-to-end** |
+| Input tokens | 541 | 275 | solver=ON sends more context (code + JSON) |
+| Output tokens | **441** | **760** | solver=OFF generates **72% more output tokens** |
+| **Total tokens** | **982** | **1,035** | similar volume, opposite composition |
+| Optimality guarantee | ✅ CBC proof | ❌ none | |
+| Answer correctness | ✅ verified by ASSERT | ⚠️ LLM arithmetic, may hallucinate | |
+
+**What this tells us:**
+
+1. **The token composition tells the real story.** Total token counts are nearly identical (982 vs 1,035 — a 5% difference), but the mix is opposite: solver=OFF generates **72% more output tokens** (760 vs 441) while consuming far fewer input tokens. Output tokens are what slow the LLM down and drive up cost on per-token APIs — solver=OFF's single call takes 44.7s because the model must generate a long reasoning chain. solver=ON splits the work: short code synthesis (Stage 1) + short interpretation of a pre-computed JSON result (Stage 2).
+
+2. **Fewer LLM calls ≠ faster or cheaper.** solver=OFF uses one call, but that call is 6.4× slower than solver=ON's Stage 1 alone. The 72% output-token gap is exactly the reasoning work the solver would have done for free in microseconds.
+
+3. **solver=ON adds a correctness guarantee at negative latency cost.** The ASSERT gate is not overhead — it is the mechanism that lets the LLM skip the arithmetic entirely. The solver proves optimality in milliseconds; the LLM never touches a number.
+
+4. **This generalises beyond LP.** Wherever a deterministic oracle exists (physics simulator, symbolic solver, formal verifier, database query), plugging it in via `CALL solver → ASSERT` relieves the LLM of the hardest part of the task — and makes the output provably correct. This is the core value proposition of SPL's deterministic-probabilistic boundary.
+
+> *"The token counts are nearly the same — but solver=ON spends them differently: less generation, more correctness."*
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `problem` | TEXT | bakery LP | Natural-language optimization problem |
+| `use_solver` | TEXT | `"true"` | `"true"` = PuLP/CBC pipeline; `"false"` = LLM-only baseline |
+| `max_tries` | INTEGER | `3` | Max LLM repair attempts before giving up (solver=ON only) |
+| `lang` | TEXT | `"English"` | Output language for interpretation |
+| `out_dir` | TEXT | `./cookbook/78_constraint_opt/output` | Directory for the generated report |
 
 ## Exception handling
 
-If the solver cannot reach Optimal status within `max_tries`, `ASSERT is_optimal` raises `AssertionError`, caught by `EXCEPTION WHEN AssertionError THEN`. The workflow exits with `status = "infeasible"` and a diagnostic message. This means the report variable always carries either a verified solution or an explicit failure — never a hallucinated number.
+If the solver cannot reach Optimal status within `max_tries`, `ASSERT is_optimal` raises `ToolFailed`, caught by `EXCEPTION WHEN ToolFailed THEN`. The workflow exits with `status = "infeasible"` and a diagnostic message. This means the report variable always carries either a verified solution or an explicit failure — never a hallucinated number.
+
+The `use_solver=false` path has no ASSERT gate and therefore never raises `ToolFailed` — it always produces output, but that output carries no optimality guarantee.
 
 ## Connection to TMLR paper
 

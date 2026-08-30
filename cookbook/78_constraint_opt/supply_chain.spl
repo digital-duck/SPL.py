@@ -24,17 +24,13 @@
 --     W1→S3: 50, W1→S1: 30, W2→S1: 20, W2→S2: 40
 --     Verify: 50×1 + 30×2 + 20×5 + 40×4 = 50+60+100+160 = $370
 --
--- SPL value demonstrated:
---   The LLM reads the natural-language problem and writes the PuLP
---   formulation. The solver proves global optimality. ASSERT is the
---   hard gate — hallucinated shipping plans cannot pass it.
+-- use_solver="true"  → full deterministic pipeline (PuLP + ASSERT)
+-- use_solver="false" → LLM-only baseline for ablation comparison
 --
 -- Run:
---   spl-go run cookbook/78_constraint_opt/supply_chain.spl \
---       --adapter claude_cli
---   spl-go run cookbook/78_constraint_opt/supply_chain.spl \
---       --adapter ollama --model gemma3 \
---       --param problem="A company has ..."
+--   spl3 run cookbook/78_constraint_opt/supply_chain.spl --llm claude_cli
+--   spl3 run cookbook/78_constraint_opt/supply_chain.spl --llm claude_cli \
+--       --param use_solver=false
 -- ============================================================
 
 -- ── Deterministic regime: PuLP solver tools ──────────────────
@@ -72,17 +68,63 @@ def is_optimal(result_json: str) -> bool:
         return False
 $$;
 
-CREATE TOOL_API format_report(problem TEXT, lp_code TEXT,
-                              solution_json TEXT, narrative TEXT)
+CREATE TOOL_API make_metrics(use_solver TEXT, llm_calls TEXT,
+                             stage1_s TEXT, stage2_s TEXT, total_s TEXT,
+                             input_tokens TEXT, output_tokens TEXT)
 RETURNS TEXT AS PYTHON $$
-def format_report(problem: str, lp_code: str,
-                  solution_json: str, narrative: str) -> str:
+def make_metrics(use_solver: str, llm_calls: str,
+                 stage1_s: str, stage2_s: str, total_s: str,
+                 input_tokens: str, output_tokens: str) -> str:
+    solver_on = use_solver.strip().lower() in ("true", "1", "yes")
+    mode      = "solver=ON  (PuLP/CBC + ASSERT gate)" if solver_on else "solver=OFF (LLM reasoning only)"
+    s1_label  = "Stage 1 — formulation + solve (s)" if solver_on else "Stage 1 — direct LLM solve (s)"
+
+    def fmt_f(v):
+        try:
+            return f"{float(v):.2f}"
+        except Exception:
+            return v or "—"
+
+    def fmt_i(v):
+        try:
+            return f"{int(v):,}"
+        except Exception:
+            return v or "—"
+
+    total_tok = "—"
+    try:
+        total_tok = f"{int(input_tokens) + int(output_tokens):,}"
+    except Exception:
+        pass
+
+    rows = [
+        ("Mode",                         mode),
+        ("LLM calls",                    llm_calls),
+        (s1_label,                       fmt_f(stage1_s)),
+        ("Stage 2 — interpretation (s)", fmt_f(stage2_s) if solver_on else "—"),
+        ("Total latency (s)",            fmt_f(total_s)),
+        ("Input tokens",                 fmt_i(input_tokens)),
+        ("Output tokens",                fmt_i(output_tokens)),
+        ("Total tokens",                 total_tok),
+    ]
+    header = "| Metric | Value |"
+    sep    = "|---|---|"
+    lines  = [header, sep] + [f"| {k} | {v} |" for k, v in rows]
+    return "\n".join(lines)
+$$;
+
+CREATE TOOL_API format_report(problem TEXT, use_solver TEXT, lp_code TEXT,
+                              solution_json TEXT, narrative TEXT, metrics TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_report(problem: str, use_solver: str, lp_code: str,
+                  solution_json: str, narrative: str, metrics: str) -> str:
     import json
+    solver_on = use_solver.strip().lower() in ("true", "1", "yes")
     try:
         sol = json.loads(solution_json)
     except Exception:
         sol = {}
-    status    = sol.get("status", "Unknown")
+    status    = sol.get("status")
     objective = sol.get("objective")
     variables = sol.get("variables", {})
 
@@ -90,20 +132,24 @@ def format_report(problem: str, lp_code: str,
         "# Supply Chain Optimization Report",
         "",
         f"**Problem:** {problem.strip()}",
-        "",
-        f"**Solver status:** `{status}`",
     ]
-    if objective is not None:
+    if solver_on and status:
+        lines += ["", f"**Solver status:** `{status}`"]
+    if solver_on and objective is not None:
         lines.append(f"**Minimum total shipping cost:** ${objective:.2f}")
-    if variables:
-        lines.append("")
-        lines.append("**Shipping plan (units):**")
+    if solver_on and variables:
+        lines += ["", "**Shipping plan (units):**"]
         for route, qty in variables.items():
             val = float(qty) if not isinstance(qty, (int, float)) else qty
             if val > 1e-6:
                 lines.append(f"  - {route}: {val:.4g} units")
-    lines += ["", "## Interpretation", "", narrative.strip()]
-    lines += ["", "## Solver Code (LLM-generated, PuLP)", "", "```python", lp_code.strip(), "```"]
+
+    lines += ["", narrative.strip()]
+
+    if solver_on and lp_code.strip():
+        lines += ["", "## Solver Code (LLM-generated, PuLP)", "", "```python", lp_code.strip(), "```"]
+
+    lines += ["", "## Run Metrics", "", metrics]
     return "\n".join(lines)
 $$;
 
@@ -159,6 +205,32 @@ Fix the code. Common causes for transportation LPs:
 Output ONLY the corrected Python code — no markdown fences, no commentary.
 $$;
 
+CREATE FUNCTION solve_directly_supply_chain(problem TEXT, lang TEXT)
+RETURNS TEXT AS $$
+You are a supply chain analyst. Solve this transportation cost minimization problem
+using mathematical reasoning only — no solver software.
+
+Problem: {problem}
+
+Your response must have two sections:
+
+## Solution
+Work through the transportation problem step by step:
+1. Set up the cost matrix and supply/demand table.
+2. Apply the Minimum Cost Method (or Northwest Corner + MODI) to find an initial
+   feasible solution, then improve it until no further cost reduction is possible.
+3. State the optimal shipping plan: which routes carry how many units, and the
+   total minimum cost.
+
+## Verification
+Plug the optimal plan back in and confirm:
+- Each supply constraint is satisfied (show arithmetic, label binding or slack).
+- Each demand constraint is exactly met (show arithmetic).
+- Compute total cost step by step (e.g. "50×$1 + 30×$2 + ... = $370").
+
+Write in {lang}. Show all arithmetic explicitly.
+$$;
+
 CREATE FUNCTION interpret_shipping_plan(problem TEXT, solution_json TEXT, lang TEXT)
 RETURNS TEXT AS $$
 You are a supply chain analyst. Interpret this shipping optimization result for
@@ -170,19 +242,31 @@ Problem:
 Optimal solution (JSON):
 {solution_json}
 
-Write a concise interpretation (under 150 words):
+Your response must have two sections:
+
+## Interpretation
+Concise summary (under 150 words):
 1. What is the total minimum shipping cost?
 2. Which routes carry the most volume? Which routes are unused and why?
 3. Are any warehouse capacities fully used (binding constraints)?
 4. One practical recommendation for the logistics team.
 
-Write in {lang}. No JSON, no code. Round dollar amounts to 2 decimal places.
+## Solution Verification
+Walk through the math to confirm correctness:
+- For each supply constraint, substitute the route quantities and show whether
+  it is binding (fully used) or has slack (unused capacity).
+- For each demand constraint, show that total inbound units = demand exactly.
+- Compute total shipping cost step by step (route × cost per unit, then sum).
+- Confirm the computed cost matches the solver's reported value.
+
+Write in {lang}. No JSON, no code.
 $$;
 
 -- ── WORKFLOW ─────────────────────────────────────────────────
 
 WORKFLOW supply_chain
   INPUT @problem TEXT := "A company has two warehouses and three retail stores. Warehouse W1 has 80 units of inventory; Warehouse W2 has 60 units. Store S1 needs 50 units, Store S2 needs 40 units, Store S3 needs 50 units. Shipping costs per unit: W1 to S1 costs $2, W1 to S2 costs $3, W1 to S3 costs $1; W2 to S1 costs $5, W2 to S2 costs $4, W2 to S3 costs $8. All store demand must be met exactly. Minimize total shipping cost."
+  INPUT @use_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
   INPUT @lang TEXT := "English"
   INPUT @out_dir TEXT := "./cookbook/78_constraint_opt/output"
@@ -190,51 +274,82 @@ WORKFLOW supply_chain
 DO
   CALL time_monotonic() INTO @t_start;
   CALL time_now() INTO @ts_safe;
-  LOGGING f"[supply_chain] start  ts={@ts_safe}  max_tries={@max_tries}" LEVEL INFO
+  LOGGING f"[supply_chain] start  ts={@ts_safe}  use_solver={@use_solver}" LEVEL INFO
 
-  -- Stage 1: LLM formulates transportation LP; PuLP solves; repair on failure
-  @tries   := 0;
-  @status  := "init";
-  @lp_code := "";
-  @solution := "{}";
+  @llm_calls := 0;
+  @tries     := 0;
+  @status    := "";
+  @lp_code   := "";
+  @solution  := "{}";
+  @stage1_s  := "0";
+  @stage2_s  := "0";
 
-  WHILE @tries < @max_tries DO
-    EVALUATE @status
-      WHEN = "Optimal" THEN
-        @tries := @max_tries;
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- ── Stage 1: LLM formulates LP; PuLP solves; repair loop ──
+      LOGGING "[supply_chain] Stage 1 — LLM formulation + solver" LEVEL INFO
+      CALL time_monotonic() INTO @t_s1;
+      @status := "init";
 
-      WHEN = "init" THEN
-        LOGGING "[supply_chain] attempt 1 — LLM formulating transportation LP" LEVEL INFO
-        GENERATE formulate_transport_lp(@problem) INTO @lp_code;
-        CALL run_pulp(@lp_code) INTO @solution;
-        CALL result_status(@solution) INTO @status;
-        @tries := @tries + 1;
-        LOGGING f"[supply_chain] attempt {@tries}: status={@status}" LEVEL INFO
+      WHILE @tries < @max_tries DO
+        EVALUATE @status
+          WHEN = "Optimal" THEN
+            @tries := @max_tries;
 
-      ELSE
-        CALL result_error(@solution) INTO @error_info;
-        LOGGING f"[supply_chain] repair {@tries} — error: {@error_info}" LEVEL INFO
-        GENERATE repair_transport_lp(@problem, @lp_code, @error_info) INTO @lp_code;
-        CALL run_pulp(@lp_code) INTO @solution;
-        CALL result_status(@solution) INTO @status;
-        @tries := @tries + 1;
-        LOGGING f"[supply_chain] repair {@tries}: status={@status}" LEVEL INFO
-    END;
+          WHEN = "init" THEN
+            LOGGING "[supply_chain] attempt 1 — LLM formulating transportation LP" LEVEL INFO
+            GENERATE formulate_transport_lp(@problem) INTO @lp_code;
+            @llm_calls := @llm_calls + 1;
+            CALL run_pulp(@lp_code) INTO @solution;
+            CALL result_status(@solution) INTO @status;
+            @tries := @tries + 1;
+            LOGGING f"[supply_chain] attempt {@tries}: status={@status}" LEVEL INFO
+
+          ELSE
+            CALL result_error(@solution) INTO @error_info;
+            LOGGING f"[supply_chain] repair {@tries} — error: {@error_info}" LEVEL INFO
+            GENERATE repair_transport_lp(@problem, @lp_code, @error_info) INTO @lp_code;
+            @llm_calls := @llm_calls + 1;
+            CALL run_pulp(@lp_code) INTO @solution;
+            CALL result_status(@solution) INTO @status;
+            @tries := @tries + 1;
+            LOGGING f"[supply_chain] repair {@tries}: status={@status}" LEVEL INFO
+        END;
+      END;
+
+      CALL time_elapsed(@t_s1) INTO @stage1_s;
+      LOGGING f"[supply_chain] Stage 1 done — latency={@stage1_s}s  llm_calls={@llm_calls}" LEVEL INFO
+
+      -- ── Stage 2: deterministic gate ───────────────────────────
+      LOGGING f"[supply_chain] ASSERT gate (status={@status})" LEVEL INFO
+      ASSERT is_optimal(@solution);
+      LOGGING "[supply_chain] ASSERT passed — minimum cost route confirmed" LEVEL INFO
+
+      -- ── Stage 3: LLM interprets verified result ───────────────
+      LOGGING "[supply_chain] Stage 3 — LLM interpreting verified shipping plan" LEVEL INFO
+      CALL time_monotonic() INTO @t_s3;
+      GENERATE interpret_shipping_plan(@problem, @solution, @lang) INTO @narrative;
+      @llm_calls := @llm_calls + 1;
+      CALL time_elapsed(@t_s3) INTO @stage2_s;
+      LOGGING f"[supply_chain] Stage 3 done — latency={@stage2_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
+
+    ELSE
+      -- ── solver=OFF: LLM solves directly (ablation baseline) ───
+      LOGGING "[supply_chain] Stage 1 — LLM solving directly (no solver)" LEVEL INFO
+      CALL time_monotonic() INTO @t_s1;
+      GENERATE solve_directly_supply_chain(@problem, @lang) INTO @narrative;
+      @llm_calls := @llm_calls + 1;
+      CALL time_elapsed(@t_s1) INTO @stage1_s;
+      LOGGING f"[supply_chain] Stage 1 done — latency={@stage1_s}s  total_llm_calls={@llm_calls}" LEVEL INFO
   END;
 
-  -- Stage 2: deterministic gate — only Optimal reaches interpretation
-  LOGGING f"[supply_chain] ASSERT gate (status={@status})" LEVEL INFO
-  ASSERT is_optimal(@solution);
-  LOGGING "[supply_chain] ASSERT passed — minimum cost route confirmed" LEVEL INFO
-
-  -- Stage 3: LLM interprets the verified shipping plan
-  GENERATE interpret_shipping_plan(@problem, @solution, @lang) INTO @narrative;
-
-  CALL format_report(@problem, @lp_code, @solution, @narrative) INTO @report;
+  CALL time_elapsed(@t_start) INTO @total_s;
+  CALL make_metrics(@use_solver, @llm_calls, @stage1_s, @stage2_s, @total_s,
+                    @_total_input_tokens, @_total_output_tokens) INTO @metrics;
+  CALL format_report(@problem, @use_solver, @lp_code, @solution, @narrative, @metrics) INTO @report;
 
   CALL write_file(f"{@out_dir}/supply_chain_{@ts_safe}.md", @report) INTO @out_path;
-  CALL time_elapsed(@t_start) INTO @elapsed;
-  LOGGING f"[supply_chain] done — report → {@out_path}  ({@elapsed}s)" LEVEL INFO
+  LOGGING f"[supply_chain] done — report → {@out_path}  ({@total_s}s, llm_calls={@llm_calls})" LEVEL INFO
 
   RETURN @report WITH status = "complete";
 
@@ -242,7 +357,7 @@ EXCEPTION
   WHEN ToolFailed THEN
     @report := "Solver did not reach Optimal status after " + @tries + " attempts. Last status: " + @status;
     CALL write_file(f"{@out_dir}/supply_chain_{@ts_safe}.md", @report) INTO @out_path;
-    CALL time_elapsed(@t_start) INTO @elapsed;
-    LOGGING f"[supply_chain] infeasible — {@out_path}  ({@elapsed}s)" LEVEL INFO
+    CALL time_elapsed(@t_start) INTO @total_s;
+    LOGGING f"[supply_chain] infeasible — {@out_path}  ({@total_s}s)" LEVEL INFO
     RETURN @report WITH status = "infeasible";
 END;

@@ -330,6 +330,14 @@ class SPL3Executor(SPL2Executor):
 
         elif self._kernel_store is not None and self._workflow_id is not None:
             # ── KernelStore path: eval with DB namespace ───────────────────
+            # Use repr()-quoted substitution so JSON/string state values become
+            # proper Python string literals (not bare dict/list literals).
+            import re as _re
+            code = _re.sub(
+                r'@@(\w+)@@',
+                lambda m: repr(state.get_var(m.group(1))),
+                stmt.python_template,
+            )
             ns = self._kernel_store.load_namespace(self._workflow_id)
             ns.update(self.functions._builtins)
             ns.update(self.functions._tools)
@@ -639,6 +647,9 @@ class SPL3Executor(SPL2Executor):
 
             state.record_llm_call(gen_result)
             last_content = gen_result.content
+            # Expose cumulative token counts as readable workflow variables
+            state.set_var("_total_input_tokens",  str(state.total_input_tokens))
+            state.set_var("_total_output_tokens", str(state.total_output_tokens))
 
             _log.info("GENERATE segment %d (%s) -> %d tokens, %.0fms",
                       segment_count, current_gen.function_name,
