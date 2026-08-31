@@ -1,0 +1,266 @@
+-- ============================================================
+-- Recipe 101: Production Sustainability — Multi-Objective Pareto
+--
+-- Benchmark B3: maximize profit AND minimize carbon footprint.
+-- Uses PuLP weighted-sum scalarization to trace the Pareto front.
+--
+-- Demonstrates the deterministic–probabilistic boundary:
+--   Deterministic (PuLP)  — sweep λ ∈ [0,1], collect Pareto front
+--   Deterministic (ASSERT) — gate on feasibility of Pareto front
+--   Probabilistic (LLM)   — interpret tradeoff, recommend operating points
+--
+-- use_solver="true"  → PuLP scalarization sweep (provably correct front)
+-- use_solver="false" → LLM proposes (x, y) directly (back-verified)
+--
+-- Requires: pip install pulp
+-- Run:
+--   spl3 run cookbook/101_production_sustainability/production_sustainability.spl \
+--       --adapter claude_cli --param use_solver=true --param n_points=10
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API sweep_pareto_scalarization(problem_json TEXT, n_points TEXT)
+RETURNS TEXT AS PYTHON $$
+def sweep_pareto_scalarization(problem_json: str, n_points: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "101_production_sustainability")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import sweep_pareto_scalarization as _fn
+    return _fn(problem_json, int(n_points))
+$$;
+
+CREATE TOOL_API is_pareto_feasible(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_pareto_feasible(front_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "101_production_sustainability")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_pareto_feasible as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API format_pareto_table(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_pareto_table(front_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "101_production_sustainability")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_pareto_table as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API verify_production_off(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_production_off(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "101_production_sustainability")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_production_off as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "101_production_sustainability")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_production_problem(problem TEXT)
+RETURNS TEXT AS $$
+Extract the production problem data from the text below into JSON.
+
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "products": [
+    {{"name": "A", "profit": 10.0, "carbon": 3.0, "labor": 2.0, "material": 3.0}},
+    {{"name": "B", "profit": 6.0,  "carbon": 1.0, "labor": 1.0, "material": 2.0}}
+  ],
+  "resources": {{"labor": 20.0, "material": 30.0}}
+}}
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION interpret_pareto_front(problem TEXT, front_table TEXT)
+RETURNS TEXT AS $$
+You are a sustainability consultant. Interpret the Pareto front below for a factory manager.
+
+Problem: {problem}
+
+Pareto front (profit vs. carbon tradeoff):
+{front_table}
+
+Your interpretation should:
+1. Explain the profit-carbon tradeoff in plain language — why maximizing profit increases emissions.
+2. Recommend 2-3 concrete operating points from the table (e.g. balanced, profit-leaning, green-leaning).
+3. Note the sustainability angle: how much profit is sacrificed to achieve a meaningful carbon reduction?
+4. Suggest which point a sustainability-conscious manager should choose, and why.
+
+Be practical and concrete. The audience is a factory manager, not a mathematician.
+$$;
+
+CREATE FUNCTION propose_solution(problem TEXT, problem_json TEXT)
+RETURNS TEXT AS $$
+You are a production planner. Choose a production plan (x units of Product A, y units of Product B)
+that balances profit and carbon footprint.
+
+Problem: {problem}
+
+Parsed problem data (JSON): {problem_json}
+
+Constraints:
+  2x + y ≤ 20   (labor hours)
+  3x + 2y ≤ 30  (kg material)
+  x ≥ 0, y ≥ 0
+
+Objectives:
+  Maximize profit = 10x + 6y
+  Minimize carbon = 3x + y
+
+Choose (x, y) and explain your reasoning. Then output your answer as JSON:
+{{
+  "x": <float>,
+  "y": <float>,
+  "profit": <float>,
+  "carbon": <float>,
+  "reasoning": "<one sentence>"
+}}
+
+Show calculations. Verify your constraints before answering.
+$$;
+
+CREATE FUNCTION extract_solution_json(problem TEXT, solution_text TEXT)
+RETURNS TEXT AS $$
+Extract the production plan from the analysis below into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "x": <float>,
+  "y": <float>,
+  "profit": <float>,
+  "carbon": <float>,
+  "reasoning": "<str>"
+}}
+
+Problem: {problem}
+Analysis: {solution_text}
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW production_sustainability
+  INPUT @problem TEXT := "A factory produces standard product A and green product B. A: $10 profit, 3 kg CO₂, uses 2 hr labor and 3 kg material. B: $6 profit, 1 kg CO₂, uses 1 hr labor and 2 kg material. Available: 20 labor-hours, 30 kg material. Find production plans that maximize profit and minimize carbon footprint."
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_points TEXT := "10"
+  OUTPUT @report TEXT
+DO
+  @profit_str    := "";
+  @verify_status := "N/A";
+  @problem_json  := "{}";
+  @llm_calls     := 0;
+
+  LOGGING f"[sustainability] start  use_solver={@use_solver}  n_points={@n_points}" LEVEL INFO
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- solver=ON: PuLP weighted-sum scalarization sweep
+      LOGGING "[sustainability] solver=ON — PuLP Pareto scalarization" LEVEL INFO
+
+      GENERATE extract_production_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[sustainability] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+      CALL sweep_pareto_scalarization(@problem_json, @n_points) INTO @front_json;
+
+      LOGGING f"[sustainability] front_json:\n{@front_json}" LEVEL DEBUG
+
+      ASSERT is_pareto_feasible(@front_json);
+
+      CALL format_pareto_table(@front_json) INTO @front_table;
+
+      GENERATE interpret_pareto_front(@problem, @front_table) INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      CALL json_get_field(@front_json, "n_points") INTO @profit_str;
+
+      @report := f"=== Production Sustainability (solver=ON / PuLP Pareto Sweep) ===
+
+Problem:
+{@problem}
+
+Extracted Problem Data (JSON):
+{@problem_json}
+
+Pareto Front ({@profit_str} non-dominated points):
+{@front_table}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      -- solver=OFF: LLM proposes (x, y) with back-verification
+      LOGGING "[sustainability] solver=OFF — LLM heuristic production plan" LEVEL INFO
+
+      GENERATE extract_production_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[sustainability] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+      GENERATE propose_solution(@problem, @problem_json) INTO @solution_text;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[sustainability] llm_solution:\n{@solution_text}" LEVEL DEBUG
+
+      GENERATE extract_solution_json(@problem, @solution_text) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL verify_production_off(@problem_json, @solution_json) INTO @verify_result;
+
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@solution_json, "profit") INTO @profit_str;
+
+      LOGGING f"[sustainability] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+
+      @report := f"=== Production Sustainability (solver=OFF / LLM heuristic) ===
+
+Problem:
+{@problem}
+
+Extracted Problem Data (JSON):
+{@problem_json}
+
+LLM Proposed Solution:
+{@solution_text}
+
+Extracted Solution (JSON):
+{@solution_json}
+
+Verification:
+{@verify_result}
+
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[sustainability] profit_str={@profit_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @profit_str,
+         verify = @verify_status;
+
+END;

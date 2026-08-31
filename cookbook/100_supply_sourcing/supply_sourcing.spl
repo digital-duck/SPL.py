@@ -1,0 +1,266 @@
+-- ============================================================
+-- Recipe 100: Supply Sourcing — Multi-objective Pareto (cost vs. fill rate)
+--
+-- Benchmark B1: 3 suppliers, 1000 units demanded.
+-- Objectives: minimize total cost AND maximize blended fill rate.
+-- Solver: PuLP ε-constraint sweep traces the full Pareto front.
+--
+-- Demonstrates the deterministic–probabilistic boundary:
+--   Probabilistic (LLM)       — extract supplier/demand structure from NL
+--   Deterministic (PuLP)      — ε-constraint sweep builds Pareto front
+--   Deterministic (ASSERT)    — gate: at least 2 feasible Pareto points
+--   Probabilistic (LLM)       — interpret tradeoff curve for the user
+--
+-- use_solver="true"  → PuLP ε-constraint pipeline (solver=ON)
+-- use_solver="false" → LLM heuristic allocation with back-substitution check
+--
+-- Requires: pip install pulp
+-- Run:
+--   spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
+--       --adapter claude_cli --param use_solver=true
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API sweep_pareto_front(problem_json TEXT, n_points TEXT)
+RETURNS TEXT AS PYTHON $$
+def sweep_pareto_front(problem_json: str, n_points: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import sweep_pareto_front as _fn
+    return _fn(problem_json, int(n_points))
+$$;
+
+CREATE TOOL_API is_pareto_feasible(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_pareto_feasible(front_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_pareto_feasible as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API format_pareto_table(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_pareto_table(front_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_pareto_table as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API verify_sourcing_off(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_sourcing_off(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_sourcing_off as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_sourcing_problem(problem TEXT)
+RETURNS TEXT AS $$
+Extract this supply sourcing problem into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "suppliers": [
+    {{"name": "S1", "cost": 10.0, "fill_rate": 0.95, "capacity": 400.0}},
+    {{"name": "S2", "cost": 7.0,  "fill_rate": 0.80, "capacity": 500.0}},
+    {{"name": "S3", "cost": 5.0,  "fill_rate": 0.60, "capacity": 400.0}}
+  ],
+  "demand": 1000.0
+}}
+
+Rules:
+- cost is dollars per unit (numeric, not a string)
+- fill_rate is a decimal in [0, 1] (e.g. 95% → 0.95)
+- capacity is maximum units this supplier can provide
+- demand is the total units required
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION interpret_pareto_front(problem TEXT, front_table TEXT)
+RETURNS TEXT AS $$
+Interpret this supply sourcing Pareto front for a supply chain manager.
+
+Problem: {problem}
+
+Pareto front (cost vs. fill rate):
+{front_table}
+
+Your interpretation should:
+1. Explain the cost/fill-rate tradeoff in plain language.
+2. Recommend 2-3 concrete operating points with reasoning:
+   - a low-cost anchor (acceptable fill rate)
+   - a balanced midpoint
+   - a high-fill anchor (for critical supply scenarios)
+3. Identify which suppliers dominate each recommended point.
+4. One-sentence practical takeaway for procurement.
+
+Be concise and actionable.
+$$;
+
+CREATE FUNCTION propose_allocation(problem TEXT, problem_json TEXT)
+RETURNS TEXT AS $$
+You are a supply chain analyst. Propose a single allocation across these suppliers.
+
+Problem: {problem}
+Supplier data (JSON): {problem_json}
+
+Steps:
+1. List each supplier's cost, fill rate, and capacity.
+2. Choose an allocation strategy (e.g. fill cheapest first, or balance cost and fill rate).
+3. Assign units to each supplier so that the total equals the demand.
+4. Respect each supplier's capacity limit.
+5. Compute the total cost and the blended fill rate.
+
+Return your answer as a JSON object:
+{{
+  "cost": <total cost as a number>,
+  "fill_rate": <blended fill rate as a decimal, e.g. 0.735>,
+  "allocation": {{"S1": <units>, "S2": <units>, "S3": <units>}},
+  "reasoning": "<one sentence explaining the strategy>"
+}}
+
+Return ONLY the JSON — no markdown, no prose.
+$$;
+
+CREATE FUNCTION extract_solution_json(problem TEXT, allocation_text TEXT)
+RETURNS TEXT AS $$
+Extract the sourcing allocation from this text into JSON.
+Return ONLY a JSON object — no markdown:
+{{
+  "cost": <total cost as a number>,
+  "fill_rate": <blended fill rate as a decimal>,
+  "allocation": {{"S1": <units>, "S2": <units>, "S3": <units>}},
+  "reasoning": "<strategy summary>"
+}}
+
+Problem: {problem}
+Allocation text:
+{allocation_text}
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW supply_sourcing
+  INPUT @problem TEXT := "A manufacturer needs 1000 units from 3 suppliers. S1: $10/unit, 95% fill rate, capacity 400 units. S2: $7/unit, 80% fill rate, capacity 500 units. S3: $5/unit, 60% fill rate, capacity 400 units. Find allocations that minimize cost and maximize fill rate."
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_points TEXT := "8"
+  OUTPUT @report TEXT
+DO
+  @fill_rate_str := "";
+  @verify_status := "N/A";
+  @problem_json  := "{}";
+  @llm_calls     := 0;
+
+  LOGGING f"[supply_sourcing] start  use_solver={@use_solver}  n_points={@n_points}" LEVEL INFO
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- Stage 1: extract problem structure
+      LOGGING "[supply_sourcing] solver=ON — extracting problem for PuLP ε-constraint sweep" LEVEL INFO
+      GENERATE extract_sourcing_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[supply_sourcing] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+      -- Stage 2: sweep Pareto front
+      CALL sweep_pareto_front(@problem_json, @n_points) INTO @front_json;
+
+      -- Gate: must have at least 2 Pareto-optimal points
+      ASSERT is_pareto_feasible(@front_json);
+      LOGGING "[supply_sourcing] ASSERT passed — Pareto front is feasible" LEVEL INFO
+
+      -- Stage 3: format + interpret
+      CALL format_pareto_table(@front_json) INTO @front_table;
+
+      GENERATE interpret_pareto_front(@problem, @front_table) INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      CALL json_get_field(@front_json, "n_points") INTO @fill_rate_str;
+
+      @report := f"=== Supply Sourcing (solver=ON / PuLP ε-constraint) ===
+
+Problem:
+{@problem}
+
+Pareto Front ({@fill_rate_str} points):
+{@front_table}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      -- solver=OFF: LLM picks one allocation heuristically
+      LOGGING "[supply_sourcing] solver=OFF — LLM heuristic allocation" LEVEL INFO
+
+      GENERATE extract_sourcing_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[supply_sourcing] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+      GENERATE propose_allocation(@problem, @problem_json) INTO @allocation_text;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[supply_sourcing] llm_allocation_output:\n{@allocation_text}" LEVEL DEBUG
+
+      GENERATE extract_solution_json(@problem, @allocation_text) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL verify_sourcing_off(@problem_json, @solution_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@solution_json, "fill_rate") INTO @fill_rate_str;
+
+      LOGGING f"[supply_sourcing] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+
+      @report := f"=== Supply Sourcing (solver=OFF / LLM heuristic) ===
+
+Problem:
+{@problem}
+
+LLM Allocation:
+{@allocation_text}
+
+Extracted Solution (JSON):
+{@solution_json}
+
+Verification:
+{@verify_result}
+
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[supply_sourcing] fill_rate={@fill_rate_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @fill_rate_str,
+         verify = @verify_status;
+
+END;
