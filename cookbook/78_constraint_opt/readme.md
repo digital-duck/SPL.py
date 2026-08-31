@@ -339,10 +339,26 @@ bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05
 
 # H2: run 4 recipes with claude/gemma3 for size=10,20
 bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s true
+# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-175154.md
+
 
 # solver=OFF tax heavily on LLM
 LLM_TIMEOUT=1800 \
    bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s false
+# 4/12 done
+
+# run in smaller batch to avoid session limit
+# Batch 2 — r78b n10,n20 (2 cells)
+LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78b -m m001 -n n10,n20 -s false
+# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-202050.md
+
+# Batch 3 — r78c all sizes (3 cells)
+LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78c -m m001 -n n05,n10,n20 -s false
+# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-203434.md
+
+# Batch 4 — r78d all sizes (3 cells)
+LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05,n10,n20 -s false
+# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-204031.md
 
 
 LLM_TIMEOUT=1800 \
