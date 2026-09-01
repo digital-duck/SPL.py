@@ -1,0 +1,291 @@
+-- ============================================================
+-- Recipe 114: Nonlinear Optimization — scipy.optimize
+--
+-- Demonstrates constrained nonlinear optimization where the
+-- objective or constraints are nonlinear (LP/ILP cannot apply).
+--
+-- Two problem types:
+--   pricing   — profit-maximizing price given a power demand curve
+--               D(p) = demand_scale * p^(-elasticity)
+--   logistics — profit-maximizing shipment volume with quadratic
+--               revenue saturation and congestion costs
+--
+-- Three scipy methods selectable via --param method=:
+--   SLSQP                — gradient-based, handles constraints (default)
+--   Nelder-Mead          — derivative-free, bounds only
+--   differential_evolution — global search, bounds only
+--
+-- Deterministic (scipy)  — finds provably locally-optimal solution
+-- Deterministic (ASSERT) — back-substitution verifier gates output
+-- Probabilistic (LLM)    — formulates problem spec; interprets result
+--
+-- use_solver="true"  → scipy constrained nonlinear solve
+-- use_solver="false" → LLM estimates optimum (back-checked)
+--
+-- Requires: pip install scipy
+-- Run:
+--   spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
+--       --adapter claude_cli \
+--       --param problem_type=pricing --param method=SLSQP
+--
+--   spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
+--       --adapter ollama -m gemma3 \
+--       --param problem_type=logistics --param use_solver=false
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API solve_nonlinear(problem_json TEXT, method TEXT, max_iterations TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_nonlinear(problem_json: str, method: str, max_iterations: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "114_scipy_nonlinear")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import solve_nonlinear as _fn
+    return _fn(problem_json, method, int(max_iterations))
+$$;
+
+CREATE TOOL_API verify_solution(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_solution(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "114_scipy_nonlinear")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_solution as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API is_optimal(solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_optimal(solution_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "114_scipy_nonlinear")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_optimal as _fn
+    return _fn(solution_json)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION formulate_pricing_problem(
+    demand_scale TEXT, elasticity TEXT,
+    unit_cost TEXT, fixed_cost TEXT,
+    x_min TEXT, x_max TEXT, min_demand TEXT)
+RETURNS TEXT AS $$
+Formulate the following nonlinear pricing problem as a JSON specification.
+
+A company sells a product with a power demand curve:
+  D(price) = {demand_scale} * price^(-{elasticity})
+
+Economics:
+  Unit cost:   ${unit_cost}
+  Fixed cost:  ${fixed_cost} per period
+  Price range: [${x_min}, ${x_max}]
+  Min demand:  {min_demand} units (0 = unconstrained)
+
+Objective: maximize profit = (price - unit_cost) * D(price) - fixed_cost
+
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "type": "pricing",
+  "sense": "maximize",
+  "params": {{
+    "demand_scale": {demand_scale},
+    "elasticity": {elasticity},
+    "unit_cost": {unit_cost},
+    "fixed_cost": {fixed_cost},
+    "min_demand": {min_demand}
+  }},
+  "bounds": {{"x_min": {x_min}, "x_max": {x_max}}}
+}}
+$$;
+
+CREATE FUNCTION formulate_logistics_problem(
+    fixed_cost TEXT, unit_cost TEXT, congestion_factor TEXT,
+    revenue_scale TEXT, saturation_factor TEXT,
+    x_min TEXT, x_max TEXT, min_demand TEXT)
+RETURNS TEXT AS $$
+Formulate the following nonlinear logistics problem as a JSON specification.
+
+A firm ships x units per period with quadratic cost and revenue:
+  Revenue(x) = {revenue_scale} * x - {saturation_factor} * x^2
+  Cost(x)    = {fixed_cost} + {unit_cost} * x + {congestion_factor} * x^2
+
+Volume range: [{x_min}, {x_max}] units
+Min demand:   {min_demand} units (0 = unconstrained)
+
+Objective: maximize profit = Revenue(x) - Cost(x)
+
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "type": "logistics",
+  "sense": "maximize",
+  "params": {{
+    "fixed_cost": {fixed_cost},
+    "unit_cost": {unit_cost},
+    "congestion_factor": {congestion_factor},
+    "revenue_scale": {revenue_scale},
+    "saturation_factor": {saturation_factor},
+    "min_demand": {min_demand}
+  }},
+  "bounds": {{"x_min": {x_min}, "x_max": {x_max}}}
+}}
+$$;
+
+CREATE FUNCTION interpret_result(
+    problem_type TEXT, problem_json TEXT,
+    solution_json TEXT, verify_json TEXT)
+RETURNS TEXT AS $$
+Interpret this nonlinear optimization result for a business decision-maker.
+
+Problem type: {problem_type}
+Problem specification: {problem_json}
+Solver result: {solution_json}
+Verification: {verify_json}
+
+Your interpretation should:
+1. State the optimal decision in plain business terms
+   - pricing: "Set price to $X.XX — this maximizes profit at $Y.YY per period"
+   - logistics: "Ship X.X units per period — this maximizes profit at $Y.YY"
+2. Explain why the optimum is where it is (e.g. "above this price, demand falls too steeply")
+3. Report the payoff (profit/loss) at the optimum and at the boundaries as comparison
+4. State whether the solution passed verification and what that means
+5. Suggest one sensitivity to explore (e.g. "what happens if elasticity rises to 2.0?")
+
+Be concrete with numbers. Avoid jargon.
+$$;
+
+CREATE FUNCTION estimate_optimum(problem_type TEXT, problem_json TEXT)
+RETURNS TEXT AS $$
+You are an operations analyst. Estimate the profit-maximizing decision for this
+nonlinear {problem_type} problem WITHOUT using a solver.
+
+Problem specification: {problem_json}
+
+Steps:
+1. Parse the key parameters from the JSON.
+2. Reason about the tradeoff: higher x raises revenue but also cost (or lowers demand).
+3. Estimate where marginal revenue equals marginal cost (the economic optimum).
+4. Propose a specific value for the decision variable x_opt.
+5. Estimate the resulting profit.
+
+Show your reasoning step by step. End with:
+  x_opt: <number>
+  estimated_profit: <number>
+$$;
+
+CREATE FUNCTION extract_solution_json(estimate_text TEXT)
+RETURNS TEXT AS $$
+Extract the optimization estimate into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "success": true,
+  "method": "LLM-heuristic",
+  "x_opt": <decimal>,
+  "objective": <decimal>
+}}
+
+Estimate text: {estimate_text}
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW nonlinear_opt
+  -- Problem selection
+  INPUT @problem_type    TEXT := "pricing"
+  -- Pricing parameters
+  INPUT @demand_scale    TEXT := "10000"
+  INPUT @elasticity      TEXT := "1.5"
+  -- Logistics parameters
+  INPUT @revenue_scale   TEXT := "20"
+  INPUT @saturation      TEXT := "0.02"
+  INPUT @congestion      TEXT := "0.05"
+  -- Shared parameters
+  INPUT @unit_cost       TEXT := "8"
+  INPUT @fixed_cost      TEXT := "200"
+  INPUT @x_min           TEXT := "6"
+  INPUT @x_max           TEXT := "150"
+  INPUT @min_demand      TEXT := "0"
+  -- Solver control
+  INPUT @method          TEXT := "SLSQP"
+  INPUT @max_iterations  TEXT := "1000"
+  INPUT @use_solver      TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  @solution_json := "{}";
+  @verify_json   := "{}";
+  @llm_calls     := 0;
+
+  -- LLM formulates the structured problem spec (Pillar 1: Decomposition)
+  EVALUATE @problem_type
+    WHEN = "pricing" THEN
+      GENERATE formulate_pricing_problem(
+        @demand_scale, @elasticity,
+        @unit_cost, @fixed_cost,
+        @x_min, @x_max, @min_demand)
+      INTO @problem_json;
+    ELSE
+      GENERATE formulate_logistics_problem(
+        @fixed_cost, @unit_cost, @congestion,
+        @revenue_scale, @saturation,
+        @x_min, @x_max, @min_demand)
+      INTO @problem_json;
+  END;
+  @llm_calls := @llm_calls + 1;
+
+  LOGGING f"[nonlinear] problem_json={@problem_json}" LEVEL DEBUG
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- Pillar 2: Routing & solving — scipy constrained nonlinear solve
+      LOGGING f"[nonlinear] solver=ON  method={@method}" LEVEL INFO
+
+      CALL solve_nonlinear(@problem_json, @method, @max_iterations) INTO @solution_json;
+
+      -- Pillar 3: Verification — back-substitution ASSERT gate
+      ASSERT is_optimal(@solution_json);
+      CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
+
+    ELSE
+      -- solver=OFF: LLM estimates the optimum
+      LOGGING "[nonlinear] solver=OFF — LLM heuristic estimate" LEVEL INFO
+
+      GENERATE estimate_optimum(@problem_type, @problem_json) INTO @estimate_text;
+      @llm_calls := @llm_calls + 1;
+
+      GENERATE extract_solution_json(@estimate_text) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
+  END;
+
+  -- Pillar 4: Interpretation & reporting — LLM translates result → business language
+  GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
+  INTO @interpretation;
+  @llm_calls := @llm_calls + 1;
+
+  LOGGING f"[nonlinear] solution={@solution_json}  verify={@verify_json}" LEVEL INFO
+
+  @report := f"=== Nonlinear Optimization (scipy.optimize / {@problem_type}) ===
+
+Problem specification:
+{@problem_json}
+
+Solution (solver={@use_solver}, method={@method}):
+{@solution_json}
+
+Verification:
+{@verify_json}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+  RETURN @report
+    WITH status = "complete";
+
+END;

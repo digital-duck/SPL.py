@@ -1,0 +1,156 @@
+-- ============================================================
+-- Recipe 113: Bayesian Optimization (scikit-optimize)
+--
+-- PURPOSE: Maximize a black-box objective with minimum trials
+-- using Gaussian Process regression + Expected Improvement.
+-- Bayesian optimization builds a probabilistic model of the
+-- objective and focuses experiments where improvement is most
+-- likely — outperforming random/uniform search on tight budgets.
+--
+-- KEY STORY: Web page A/B test with 25 trial budget and 3
+-- continuous parameters. Random search finds 11.3% conversion.
+-- Bayesian GP finds 18.5% in the same 25 trials — concentrating
+-- trials near the true optimum at (headline=0.75, layout=0.85,
+-- cta=0.60) after seeing the initial 5 random samples.
+--
+-- solver=ON  : scikit-optimize GP + EI acquisition
+-- solver=OFF : LLM heuristic parameter guessing
+--
+-- Install: pip install scikit-optimize
+--
+-- Run:
+--   spl3 run cookbook/113_bayesian_opt/bayesian_opt.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/113_bayesian_opt/bayesian_opt.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_default_problem()
+RETURNS TEXT AS PYTHON $$
+def get_default_problem() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "113_bayesian_opt")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_problem as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API run_bayesian_opt(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def run_bayesian_opt(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "113_bayesian_opt")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import run_bayesian_opt as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API bayesian_improved(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def bayesian_improved(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "113_bayesian_opt")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import bayesian_improved as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_bayesian_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_bayesian_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "113_bayesian_opt")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_bayesian_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "113_bayesian_opt")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION guess_page_design_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a conversion rate optimization (CRO) expert helping a product team.
+
+OPTIMIZATION PROBLEM:
+{problem_description}
+
+The team can tune three continuous design parameters (each on a 0–1 scale):
+- headline_score: 0 = generic headline, 1 = personalized/dynamic headline
+- layout_score: 0 = cluttered, 1 = clean minimalist layout
+- cta_placement: 0 = CTA at bottom, 1 = CTA above the fold
+
+They have 25 experiment slots. Their intuition says:
+"Start with a clean layout, personalized headline, and CTA above the fold."
+
+Without running experiments:
+1. What specific parameter values would you test first?
+2. How would you allocate 25 experiment slots across the parameter space?
+3. What is your predicted optimal configuration?
+4. What conversion rate do you expect at that configuration?
+$$;
+
+CREATE FUNCTION explain_bayesian_prompt(bayesian_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are a CRO analyst. scikit-optimize just ran a 25-trial Bayesian optimization.
+
+PROBLEM:
+{problem_description}
+
+BAYESIAN RESULT:
+{bayesian_report}
+
+Explain (≤150 words):
+1. Why did Bayesian optimization outperform random search with the same 25-trial budget?
+2. What does "Expected Improvement" mean — how does it decide where to sample next?
+3. The true optimum is at (0.75, 0.85, 0.60) — not at the extremes. Why does CRO often work this way?
+4. When would you use Bayesian optimization vs Optuna TPE (r112)?
+$$;
+
+WORKFLOW bayesian_opt
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r113] bayesian_opt start" LEVEL INFO
+
+  CALL get_default_problem() INTO @problem_json;
+  CALL json_get_field(@problem_json, "description") INTO @problem_description;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      CALL run_bayesian_opt(@problem_json) INTO @result_json;
+      ASSERT bayesian_improved(@result_json);
+      CALL format_bayesian_report(@result_json) INTO @bayesian_report;
+      CALL json_get_field(@result_json, "best_rate") INTO @best_rate;
+      CALL json_get_field(@result_json, "improvement_over_random") INTO @improvement;
+      LOGGING f"[r113] best rate={@best_rate}  improvement={@improvement}% vs random" LEVEL INFO;
+      GENERATE explain_bayesian_prompt(@bayesian_report, @problem_description) INTO @explanation;
+      @report := f"=== Bayesian Optimization (r113) | solver=ON ===
+
+{@bayesian_report}
+
+── Analyst Explanation ─────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      GENERATE guess_page_design_prompt(@problem_description) INTO @llm_guess;
+      @report := f"=== Bayesian Optimization (r113) | solver=OFF ===
+
+── LLM CRO Heuristics ──────────────────────────────────────
+{@llm_guess}
+
+Note: LLM guesses without modeling uncertainty. Run --param use_solver=true
+to use Bayesian GP+EI to find the optimum efficiently."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;
