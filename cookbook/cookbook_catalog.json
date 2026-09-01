@@ -1977,6 +1977,99 @@
         "yfinance"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "102",
+      "name": "Z3 SMT Compliance Checker",
+      "description": "Encodes business eligibility rules as Z3 SMT constraints and determines whether the policy is SAT (qualifying profile exists) or UNSAT (contradictory rules). Default: QuickLoan Policy v2.1 with 5 interconnected rules — Z3 finds hidden rule interactions (self-employed + income $40-49K trap) that LLM sequential tracing misses. solver=ON: Z3 theorem prover. solver=OFF: LLM manual rule tracing. ASSERT: is_satisfiable (C1). Requires: pip install z3-solver.",
+      "dir": "102_z3_compliance",
+      "log": "z3_compliance",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["z3-solver"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "103",
+      "name": "Data Quality Validator",
+      "description": "Validates a DataFrame against a declarative expectation suite (GE-style): not_null, between, in_set, unique, regex_match. Default: SalesTransactions_v1 suite with 10 expectations on a 500-row synthetic dataset with 4 injected issues (12 negative amounts, 8 null customer_ids, 5 duplicate IDs, 3 invalid regions). LLM inspects description and misses all issues; expectation engine catches all 4 in <0.1s. solver=ON: expectation engine. solver=OFF: LLM description analysis. ASSERT: all_expectations_pass (C1). Requires: pandas (already in spl123).",
+      "dir": "103_data_quality",
+      "log": "data_quality",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["pandas"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "104",
+      "name": "pandera Schema Validator",
+      "description": "Schema-as-code DataFrame validation: define column types, value ranges, categorical checks, uniqueness, and nullability as a pandera DataFrameSchema. Default: EmployeePayroll_v1 schema on 200-row synthetic payroll with 3 violation types (salary=0, department=Temp, null name). pandera validates all rows with lazy=True to collect all failures in one pass. LLM reasons from schema description; pandera finds exact row-level failures. ASSERT: schema_passes (C1). Requires: pip install pandera.",
+      "dir": "104_pandera_schema",
+      "log": "pandera_schema",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["pandera"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "105",
+      "name": "Prolog Inference Engine",
+      "description": "Pure-Python backward-chaining inference engine (no SWI-Prolog required). Resolves eligibility queries by recursively matching rule heads, substituting known facts, and backtracking. Default: ComprehensiveAuto_v3 insurance policy with 4 rules and 3 customers — alice (ELIGIBLE via deductible path), bob (NOT ELIGIBLE: basic policy), carol (ELIGIBLE via catastrophic_event path, 4-level chain). LLM traces simple cases but misses carol's indirect proof path. ASSERT: inference_succeeded (C1). No additional install required.",
+      "dir": "105_prolog_inference",
+      "log": "prolog_inference",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [],
+      "excluded_adapters": []
+    },
+    {
+      "id": "106",
+      "name": "Shapely Geospatial Coverage",
+      "description": "Geospatial polygon analysis using Shapely: computes pairwise zone overlaps (routing conflicts), city-minus-union coverage gaps, and point-in-zone customer assignments. Default: Maplewood city (10x8 km) with 3 delivery zones (Alice/Bob/Carol) — 6 km² Zone A/B overlap (routing conflict) and 4 km² northeast gap (2 customers unassigned). Shapely computes exact areas; LLM estimates from description. solver=ON: Shapely exact geometry. solver=OFF: LLM spatial estimate. ASSERT: coverage_is_valid (C1). Requires: pip install shapely.",
+      "dir": "106_shapely_geo",
+      "log": "shapely_geo",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["shapely"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "109",
+      "name": "Synthetic Problem Generator",
+      "description": "Training-data factory for OR benchmarks: given one verified (problem, known_optimal) pair, generates N structural variants via LLM, batch-solves each with the domain solver (PuLP CBC for LP/ILP, epsilon-constraint for supply-sourcing), and saves a labeled test suite \u2014 (problem_text, formal_spec, solver_status, optimal) \u2014 to output/{domain}_{timestamp}.json. WHILE repair loop fixes malformed JSON (\u22643 attempts); ASSERT gates on at least 1 valid variant before solving. n_size parameter controls decision-variable count per problem, mirroring r78 ablation scale levels (n05=5, n10=10, n20=20) to find the LLM formulation crossover point. n_variants controls batch size. LLM analyzes difficulty spread and recommends next scale. Supports domains: LP, ILP, supply-sourcing. Output JSON is directly usable as benchmark input for solver=ON vs solver=OFF ablation sweeps, as training data for problem-decomposition fine-tuning, or as a regression suite for any target .spl recipe. Requires: pip install pulp.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/109_synthetic_problems/synthetic_problem_gen.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "domain=LP",
+        "--param",
+        "n_variants=5",
+        "--param",
+        "n_size=5"
+      ],
+      "dir": "109_synthetic_problems",
+      "log": "synthetic_problem_gen",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pulp"
+      ],
+      "excluded_adapters": []
     }
   ]
 }

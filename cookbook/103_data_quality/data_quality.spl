@@ -1,0 +1,160 @@
+-- ============================================================
+-- Recipe 103: Data Quality Validator (Great Expectations style)
+--
+-- PURPOSE: Validate a dataset against a declarative expectation
+-- suite (GE-style). Each expectation is a named rule:
+-- not_null, between, in_set, unique, regex_match, etc.
+--
+-- KEY STORY: A sales dataset has 12 negative amounts (billing
+-- reversal bug) and 8 null customer_ids (ingestion failure).
+-- LLM inspects 20 sample rows → "data looks clean."
+-- Expectation engine validates all 500 rows → FAIL on 2 rules.
+--
+-- solver=ON  : expectation engine validates all rows in <0.1s
+-- solver=OFF : LLM inspects sample rows and describes issues
+--
+-- Run:
+--   spl3 run cookbook/103_data_quality/data_quality.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/103_data_quality/data_quality.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+-- ── Tool APIs ────────────────────────────────────────────────
+
+CREATE TOOL_API get_default_suite()
+RETURNS TEXT AS PYTHON $$
+def get_default_suite() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "103_data_quality")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_suite as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API run_expectations(suite_json TEXT, data_csv TEXT)
+RETURNS TEXT AS PYTHON $$
+def run_expectations(suite_json: str, data_csv: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "103_data_quality")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import run_expectations as _fn
+    return _fn(suite_json, data_csv)
+$$;
+
+CREATE TOOL_API all_expectations_pass(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def all_expectations_pass(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "103_data_quality")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import all_expectations_pass as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_quality_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_quality_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "103_data_quality")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_quality_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "103_data_quality")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION inspect_data_prompt(data_description TEXT)
+RETURNS TEXT AS $$
+You are a data quality analyst reviewing a sales transaction dataset.
+
+DATASET DESCRIPTION:
+{data_description}
+
+The dataset has columns: transaction_id, amount, customer_id, region, date.
+Expected rules:
+- transaction_id: unique, not null
+- amount: not null, must be > 0 and <= $10,000
+- customer_id: not null
+- region: one of [North, South, East, West]
+
+Examine the description and report:
+1. Which data quality rules appear to be satisfied?
+2. Which rules might be violated, and why?
+3. Estimate how many rows might have quality issues.
+4. What action do you recommend for each issue found?
+
+Be specific. Work from the description — do not assume the data is clean.
+$$;
+
+CREATE FUNCTION explain_failures_prompt(quality_report TEXT, data_description TEXT)
+RETURNS TEXT AS $$
+You are a data quality analyst. The automated expectation engine just validated a sales dataset.
+
+DATA DESCRIPTION:
+{data_description}
+
+VALIDATION REPORT:
+{quality_report}
+
+Explain the findings in plain English (≤150 words):
+1. What quality issues were found?
+2. What is the likely business cause of each issue?
+3. Which issue is most urgent to fix?
+4. How would each issue affect downstream analysis if left uncorrected?
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW data_quality
+  INPUT @data_description TEXT := "Sales transactions dataset: 500 rows, columns transaction_id, amount, customer_id, region, date. Data imported from POS systems across 4 regions over the past 6 months."
+  INPUT @data_csv         TEXT := "demo"
+  INPUT @use_solver       TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r103] data_quality start" LEVEL INFO
+
+  CALL get_default_suite() INTO @suite_json;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      -- solver=ON: expectation engine validates all rows
+      CALL run_expectations(@suite_json, @data_csv) INTO @result_json;
+      CALL format_quality_report(@result_json) INTO @quality_report;
+      CALL json_get_field(@result_json, "n_failed") INTO @n_failed;
+      CALL json_get_field(@result_json, "n_rows") INTO @n_rows;
+      LOGGING f"[r103] {@n_rows} rows, {@n_failed} expectations failed" LEVEL INFO;
+      GENERATE explain_failures_prompt(@quality_report, @data_description) INTO @explanation;
+      @report := f"=== Data Quality Validator (r103) | solver=ON ===
+
+{@quality_report}
+
+── Business Explanation ────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      -- solver=OFF: LLM inspects description and estimates issues
+      GENERATE inspect_data_prompt(@data_description) INTO @llm_analysis;
+      @report := f"=== Data Quality Validator (r103) | solver=OFF ===
+
+── LLM Sample-Based Analysis ───────────────────────────────
+{@llm_analysis}
+
+Note: LLM inspects the description only — run with --param use_solver=true
+to validate all rows with the expectation engine."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

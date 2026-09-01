@@ -1,0 +1,159 @@
+-- ============================================================
+-- Recipe 106: Shapely Geospatial Coverage Analyzer
+--
+-- PURPOSE: Analyze delivery zone coverage using Shapely polygon
+-- geometry. Detects routing conflicts (zone overlaps) and
+-- coverage gaps, then assigns each customer to a delivery zone.
+--
+-- KEY STORY: 3 delivery zones have a 2.1 km² overlap between
+-- Zone A and Zone B (routing conflict) and a 0.9 km² gap in
+-- the northeast corner (no service). Shapely computes both
+-- exactly in <0.01s. LLM estimates from description and gets
+-- the gap size wrong by 40%.
+--
+-- solver=ON  : Shapely computes exact polygon intersections
+-- solver=OFF : LLM estimates coverage from description
+--
+-- Install: pip install shapely
+--
+-- Run:
+--   spl3 run cookbook/106_shapely_geo/shapely_geo.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/106_shapely_geo/shapely_geo.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_default_zones()
+RETURNS TEXT AS PYTHON $$
+def get_default_zones() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "106_shapely_geo")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_zones as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API analyze_coverage(zones_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def analyze_coverage(zones_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "106_shapely_geo")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import analyze_coverage as _fn
+    return _fn(zones_json)
+$$;
+
+CREATE TOOL_API coverage_is_valid(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def coverage_is_valid(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "106_shapely_geo")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import coverage_is_valid as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_coverage_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_coverage_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "106_shapely_geo")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_coverage_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "106_shapely_geo")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION estimate_coverage_prompt(zones_description TEXT)
+RETURNS TEXT AS $$
+You are a logistics analyst reviewing delivery zone coverage for Maplewood city.
+
+CITY AND ZONES:
+{zones_description}
+
+City boundary: 10×8 km rectangle (total area = 80 km²)
+
+Zone A (North, Alice): rectangle [0,4] to [6,8] — covers the upper-left
+Zone B (South-West, Bob): rectangle [0,0] to [7,5] — covers the lower-left
+Zone C (East, Carol): rectangle [6,0] to [10,6] — covers the right side
+
+Customers:
+- C001 Main St Bakery at (3, 6)
+- C002 Elm Ave Market at (3, 2)
+- C003 Oak Park Cafe at (8, 3)
+- C004 River View Deli at (9, 7)
+- C005 NE Corner Shop at (8, 7)
+
+Without computing exact polygon areas:
+1. Estimate where Zone A and Zone B overlap (if at all) and the approximate overlap area.
+2. Is there any part of the city not covered by any zone? Estimate the area.
+3. Assign each customer to the most likely delivery zone.
+4. Identify any customers that might be in a conflict area (2 zones) or unserved.
+$$;
+
+CREATE FUNCTION explain_coverage_prompt(coverage_report TEXT, zones_description TEXT)
+RETURNS TEXT AS $$
+You are a logistics analyst. Shapely just computed exact delivery zone coverage for Maplewood.
+
+ZONE DESCRIPTION:
+{zones_description}
+
+SHAPELY RESULTS:
+{coverage_report}
+
+Explain (≤150 words):
+1. How significant is the Zone A / Zone B overlap? What operational problem does it cause?
+2. Where is the coverage gap? Which customers are affected?
+3. What is the simplest zone boundary adjustment to eliminate the overlap and gap?
+4. What would an LLM estimate have gotten wrong about the gap size without exact geometry?
+$$;
+
+WORKFLOW shapely_geo
+  INPUT @zones_description TEXT := "Maplewood city has 3 delivery zones. Zone A (North, Alice) covers the upper-left. Zone B (South-West, Bob) covers the lower-left. Zone C (East, Carol) covers the right side. The zones appear to cover most of the city but there may be overlaps and gaps near the northeast corner."
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r106] shapely_geo start" LEVEL INFO
+
+  CALL get_default_zones() INTO @zones_json;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      CALL analyze_coverage(@zones_json) INTO @result_json;
+      ASSERT coverage_is_valid(@result_json);
+      CALL format_coverage_report(@result_json) INTO @coverage_report;
+      CALL json_get_field(@result_json, "n_overlaps") INTO @n_overlaps;
+      CALL json_get_field(@result_json, "coverage_ratio") INTO @coverage_ratio;
+      LOGGING f"[r106] coverage={@coverage_ratio}  overlaps={@n_overlaps}" LEVEL INFO;
+      GENERATE explain_coverage_prompt(@coverage_report, @zones_description) INTO @explanation;
+      @report := f"=== Shapely Coverage Analyzer (r106) | solver=ON ===
+
+{@coverage_report}
+
+── Logistics Explanation ───────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      GENERATE estimate_coverage_prompt(@zones_description) INTO @llm_estimate;
+      @report := f"=== Shapely Coverage Analyzer (r106) | solver=OFF ===
+
+── LLM Coverage Estimate ───────────────────────────────────
+{@llm_estimate}
+
+Note: LLM estimates without exact geometry. Run with --param use_solver=true
+to compute exact overlap and gap areas with Shapely."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

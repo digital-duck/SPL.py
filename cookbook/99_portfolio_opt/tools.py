@@ -27,14 +27,33 @@ def json_get_field(data_json: str, field: str) -> str:
         return ""
 
 
-def fetch_stock_data(tickers_str: str, period: str = "1y") -> str:
+def fetch_stock_data(tickers_str: str, period: str = "1y",
+                     trading_days_per_year: int = 252,
+                     min_data_fraction: float = 0.8) -> str:
     """
     Fetch historical adjusted-close prices for a comma-separated list of tickers.
+
+    Args:
+        tickers_str:           Comma-separated ticker symbols (e.g. "AAPL,MSFT,GOOG").
+        period:                Look-back window — "1mo","3mo","6mo","1y","2y","3y" (default "1y").
+        trading_days_per_year: Used to annualize daily mean returns and covariance
+                               (default 252 = NYSE/NASDAQ trading days; use 261 for a
+                               broader market or 250 for a conservative estimate).
+                               Must be in [200, 300].
+        min_data_fraction:     Fraction of trading days a ticker must have data for to be
+                               included; tickers below this threshold are dropped
+                               (default 0.8 = 80%; use 1.0 to require complete data).
+                               Must be in (0.0, 1.0].
+
     Returns JSON: {"tickers": [...], "annual_returns": {...}, "cov_matrix": [[...]], "period": "..."}
     """
+    if not (200 <= trading_days_per_year <= 300):
+        return json.dumps({"error": f"trading_days_per_year {trading_days_per_year} out of range [200, 300]"})
+    if not (0.0 < min_data_fraction <= 1.0):
+        return json.dumps({"error": f"min_data_fraction {min_data_fraction} out of range (0.0, 1.0]"})
+
     try:
         import yfinance as yf
-        import numpy as np
 
         tickers = [t.strip().upper() for t in tickers_str.split(",") if t.strip()]
         if not tickers:
@@ -57,14 +76,14 @@ def fetch_stock_data(tickers_str: str, period: str = "1y") -> str:
             prices = prices.to_frame(name=tickers[0])
 
         # Drop tickers with insufficient data
-        min_count = int(0.8 * len(prices))
+        min_count = int(min_data_fraction * len(prices))
         prices = prices.loc[:, prices.count() >= min_count]
         valid_tickers = list(prices.columns)
 
         # Daily returns → annualise
         daily_ret = prices.pct_change().dropna()
-        annual_returns = (daily_ret.mean() * 252).to_dict()
-        cov_matrix = (daily_ret.cov() * 252).values.tolist()
+        annual_returns = (daily_ret.mean() * trading_days_per_year).to_dict()
+        cov_matrix = (daily_ret.cov() * trading_days_per_year).values.tolist()
 
         return json.dumps({
             "tickers": valid_tickers,
@@ -79,13 +98,23 @@ def fetch_stock_data(tickers_str: str, period: str = "1y") -> str:
 
 
 def optimize_portfolio(market_data_json: str, target_return: float = 0.10,
-                       max_weight: float = 0.40, min_weight: float = 0.0) -> str:
+                       max_weight: float = 0.25, min_weight: float = 0.0,
+                       risk_free_rate: float = 0.05) -> str:
     """
     Run Markowitz mean-variance optimization via cvxpy.
     Minimizes portfolio variance subject to:
       - expected return >= target_return
       - sum of weights = 1  (fully invested, long only)
       - min_weight <= w_i <= max_weight  (position limits)
+
+    Args:
+        market_data_json: JSON output from fetch_market_data.
+        target_return:    Minimum annualized portfolio return (default 0.10 = 10%).
+        max_weight:       Maximum allocation per asset, 0–1 (default 0.25 = 25%).
+        min_weight:       Minimum allocation per asset, 0–1 (default 0.0 = long-only).
+        risk_free_rate:   Annual risk-free rate used in Sharpe ratio calculation,
+                          must be in [0.0, 0.20] (default 0.05 = 5%).
+                          Typical range: 0.03–0.06 for US Treasuries.
 
     Returns JSON: {status, weights, expected_return, annual_volatility, sharpe_ratio, solver_log}
     """
@@ -127,11 +156,14 @@ def optimize_portfolio(market_data_json: str, target_return: float = 0.10,
                 "solver_log": f"cvxpy status: {status}",
             })
 
+        if not (0.0 <= risk_free_rate <= 0.20):
+            return json.dumps({"status": "INPUT_ERROR",
+                               "error": f"risk_free_rate {risk_free_rate} out of range [0.0, 0.20]"})
+
         weights_arr = w.value
         exp_ret = float(mu @ weights_arr)
         volatility = float(np.sqrt(weights_arr @ Sigma @ weights_arr))
-        rf = 0.05  # risk-free rate assumption
-        sharpe = (exp_ret - rf) / volatility if volatility > 0 else 0.0
+        sharpe = (exp_ret - risk_free_rate) / volatility if volatility > 0 else 0.0
 
         weights_dict = {
             t: round(float(weights_arr[i]), 6)
@@ -184,14 +216,30 @@ def allocate_capital(optimization_json: str, capital: float) -> str:
         return json.dumps({"error": str(e)})
 
 
-def verify_portfolio(optimization_json: str) -> str:
+def verify_portfolio(optimization_json: str,
+                     max_weight_limit: float = 0.40,
+                     weight_sum_tol: float = 0.02) -> str:
     """
     Back-substitution verifier for solver=OFF path.
     Checks: weights sum ≈ 1, all weights in [0,1], return/volatility consistency.
-    """
-    try:
-        import numpy as np
 
+    Args:
+        optimization_json: JSON output from optimize_portfolio or an LLM-generated portfolio.
+        max_weight_limit:  Per-asset weight cap for the sanity check (default 0.40 = 40%).
+                           Set to match the optimizer's max_weight when running ablation sweeps.
+                           Must be in (0.0, 1.0].
+        weight_sum_tol:    Absolute tolerance for the weights-sum-to-1 check
+                           (default 0.02; tighten to 0.001 for high-precision verification).
+                           Must be in [0.0, 0.05].
+    """
+    if not (0.0 < max_weight_limit <= 1.0):
+        return json.dumps({"verdict": "INPUT_ERROR",
+                           "notes": f"max_weight_limit {max_weight_limit} out of range (0.0, 1.0]"})
+    if not (0.0 <= weight_sum_tol <= 0.05):
+        return json.dumps({"verdict": "INPUT_ERROR",
+                           "notes": f"weight_sum_tol {weight_sum_tol} out of range [0.0, 0.05]"})
+
+    try:
         data = json.loads(optimization_json)
         weights = data.get("weights", {})
         notes: list[str] = []
@@ -203,8 +251,8 @@ def verify_portfolio(optimization_json: str) -> str:
         weight_values = list(weights.values())
         total = sum(weight_values)
 
-        if abs(total - 1.0) > 0.02:
-            notes.append(f"weights sum to {total:.4f}, expected 1.0")
+        if abs(total - 1.0) > weight_sum_tol:
+            notes.append(f"weights sum to {total:.4f}, expected 1.0 ± {weight_sum_tol}")
             ok = False
 
         negative = [t for t, w in weights.items() if w < -0.01]
@@ -212,9 +260,9 @@ def verify_portfolio(optimization_json: str) -> str:
             notes.append(f"negative weights: {negative}")
             ok = False
 
-        over_limit = [t for t, w in weights.items() if w > 0.401]
+        over_limit = [t for t, w in weights.items() if w > max_weight_limit]
         if over_limit:
-            notes.append(f"weights exceed 40% limit: {over_limit}")
+            notes.append(f"weights exceed {max_weight_limit:.0%} limit: {over_limit}")
             ok = False
 
         exp_ret = data.get("expected_return")
