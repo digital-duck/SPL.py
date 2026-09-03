@@ -68,6 +68,7 @@ class WorkflowComposer:
         workflow_name: str,
         args: dict[str, str],
         into_var: str,
+        grid: str | None = None,
     ) -> SubWorkflowResult:
         """Execute a named workflow and return its OUTPUT binding.
 
@@ -79,7 +80,9 @@ class WorkflowComposer:
         defn = self.registry.get(workflow_name)
         stmt = defn.ast_node
 
-        _log.info("CALL %s(%s) INTO @%s", workflow_name, list(args), into_var)
+        _log.info("CALL %s(%s) INTO @%s%s",
+                  workflow_name, list(args), into_var,
+                  f" [grid={grid}]" if grid else "")
         start = time.perf_counter()
 
         result = await self.executor.execute_workflow(stmt, params=args)
@@ -112,10 +115,14 @@ class WorkflowComposer:
     async def call_parallel(
         self,
         calls: list[tuple[str, dict[str, str], str]],
+        grid: str | None = None,
     ) -> list[SubWorkflowResult]:
         """Execute multiple sub-workflows concurrently (CALL PARALLEL).
 
         calls: list of (workflow_name, args, into_var) tuples
+        grid:  optional grid name from ON GRID "..." clause; passed to each
+               branch call so the Hub can route to the named compute grid
+               (e.g. "momagrid"). None → Hub default node-selection policy.
 
         All sub-workflows run concurrently via asyncio.gather.
         The Hub routes each to an available node — same as existing
@@ -124,8 +131,11 @@ class WorkflowComposer:
         If any sub-workflow fails, all results are still collected;
         the first failure raises after all have completed.
         """
+        if grid:
+            _log.info("CALL PARALLEL ON GRID %r — routing %d branch(es) to grid",
+                      grid, len(calls))
         tasks = [
-            self.call(name, args, into_var)
+            self.call(name, args, into_var, grid=grid)
             for name, args, into_var in calls
         ]
 

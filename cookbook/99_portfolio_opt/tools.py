@@ -127,9 +127,18 @@ def optimize_portfolio(market_data_json: str, target_return: float = 0.10,
             return json.dumps({"status": "DATA_ERROR", "error": data["error"]})
 
         tickers = data["tickers"]
+        n = len(tickers)
+        if n < 5:
+            return json.dumps({
+                "status": "INFEASIBLE",
+                "weights": {},
+                "expected_return": None,
+                "annual_volatility": None,
+                "sharpe_ratio": None,
+                "solver_log": f"portfolio requires at least 5 tickers; got {n}",
+            })
         mu = np.array([data["annual_returns"][t] for t in tickers])
         Sigma = np.array(data["cov_matrix"])
-        n = len(tickers)
 
         w = cp.Variable(n)
         port_return = mu @ w
@@ -216,6 +225,39 @@ def allocate_capital(optimization_json: str, capital: float) -> str:
         return json.dumps({"error": str(e)})
 
 
+def format_solver_report(tickers: str, period: str, capital: str,
+                         target_return: str, max_weight: str,
+                         market_data_json: str, optimization_json: str,
+                         allocation_json: str, interpretation: str,
+                         llm_calls: str) -> str:
+    return (
+        f"=== Portfolio Optimization (solver=ON / cvxpy Markowitz) ===\n\n"
+        f"Tickers: {tickers}  |  Period: {period}  |  Capital: ${capital}\n"
+        f"Target return: {target_return}  |  Max position: {max_weight}\n\n"
+        f"Market Data:\n{market_data_json}\n\n"
+        f"Optimization Result:\n{optimization_json}\n\n"
+        f"Capital Allocation:\n{allocation_json}\n\n"
+        f"Interpretation:\n{interpretation}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
+def format_heuristic_report(tickers: str, period: str, capital: str,
+                             market_data_json: str, llm_allocation: str,
+                             optimization_json: str, allocation_json: str,
+                             verify_result: str, llm_calls: str) -> str:
+    return (
+        f"=== Portfolio Optimization (solver=OFF / LLM heuristic) ===\n\n"
+        f"Tickers: {tickers}  |  Period: {period}  |  Capital: ${capital}\n\n"
+        f"Market Data:\n{market_data_json}\n\n"
+        f"LLM Allocation:\n{llm_allocation}\n\n"
+        f"Extracted Weights (JSON):\n{optimization_json}\n\n"
+        f"Capital Allocation:\n{allocation_json}\n\n"
+        f"Verification:\n{verify_result}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
 def verify_portfolio(optimization_json: str,
                      max_weight_limit: float = 0.40,
                      weight_sum_tol: float = 0.02) -> str:
@@ -283,3 +325,253 @@ def verify_portfolio(optimization_json: str,
 
     except Exception as e:
         return json.dumps({"verdict": "UNPARSEABLE", "notes": str(e)})
+
+
+# ── Alternative algorithm implementations ─────────────────────
+
+def _portfolio_result(tickers, w, mu, Sigma, algorithm,
+                      risk_free_rate=0.05, status="OPTIMAL", solver_log=""):
+    import numpy as np
+    w = np.maximum(w, 0)
+    w = w / w.sum()
+    exp_ret = float(mu @ w)
+    vol = float(np.sqrt(w @ Sigma @ w))
+    sharpe = (exp_ret - risk_free_rate) / vol if vol > 0 else 0.0
+    weights_dict = {t: round(float(w[i]), 6) for i, t in enumerate(tickers) if abs(w[i]) > 1e-4}
+    return {
+        "status": status,
+        "algorithm": algorithm,
+        "weights": weights_dict,
+        "expected_return": round(exp_ret, 4),
+        "annual_volatility": round(vol, 4),
+        "sharpe_ratio": round(sharpe, 4),
+        "solver_log": solver_log,
+    }
+
+
+def _opt_min_variance(tickers, mu, Sigma, max_weight, min_weight):
+    """Minimize wᵀΣw with no return target — most robust to μ estimation error."""
+    import cvxpy as cp
+    n = len(tickers)
+    w = cp.Variable(n)
+    prob = cp.Problem(
+        cp.Minimize(cp.quad_form(w, Sigma)),
+        [cp.sum(w) == 1, w >= min_weight, w <= max_weight],
+    )
+    prob.solve(solver=cp.CLARABEL, verbose=False)
+    if prob.status not in ("optimal", "optimal_inaccurate"):
+        return None, prob.status
+    return w.value, f"CLARABEL min-variance; obj={prob.value:.6f}"
+
+
+def _opt_max_sharpe(tickers, mu, Sigma, max_weight, min_weight, risk_free_rate=0.05):
+    """Charnes-Cooper transform: maximize (μᵀw − Rf) / √(wᵀΣw)."""
+    import cvxpy as cp
+    import numpy as np
+    excess = mu - risk_free_rate
+    if np.all(excess <= 0):
+        return None, "INFEASIBLE_NO_EXCESS_RETURN"
+    n = len(tickers)
+    y = cp.Variable(n)   # y = w * t, t = 1/(μᵀw − Rf)
+    t = cp.Variable()
+    prob = cp.Problem(
+        cp.Minimize(cp.quad_form(y, Sigma)),
+        [excess @ y == 1, cp.sum(y) == t,
+         y >= min_weight * t, y <= max_weight * t, t >= 0],
+    )
+    prob.solve(solver=cp.CLARABEL, verbose=False)
+    if prob.status not in ("optimal", "optimal_inaccurate") or t.value is None or t.value < 1e-8:
+        return None, prob.status
+    w = y.value / t.value
+    return w, f"CLARABEL Charnes-Cooper; obj={prob.value:.6f}"
+
+
+def _opt_risk_parity(tickers, mu, Sigma, max_weight):
+    """Equal Risk Contribution: each asset contributes 1/N of total portfolio risk."""
+    import numpy as np
+    from scipy.optimize import minimize
+    n = len(tickers)
+
+    def objective(w):
+        w = np.maximum(w, 1e-10)
+        port_var = w @ Sigma @ w
+        marginal = Sigma @ w
+        contrib = w * marginal / port_var
+        target = 1.0 / n
+        return float(np.sum((contrib - target) ** 2))
+
+    result = minimize(
+        objective,
+        x0=np.ones(n) / n,
+        method="SLSQP",
+        bounds=[(0.0, max_weight)] * n,
+        constraints={"type": "eq", "fun": lambda w: np.sum(w) - 1.0},
+        options={"maxiter": 2000, "ftol": 1e-12},
+    )
+    if not result.success:
+        return None, f"scipy SLSQP: {result.message}"
+    return result.x, f"scipy SLSQP risk-parity; obj={result.fun:.8f}"
+
+
+def _opt_hrp(tickers, mu, Sigma, max_weight):
+    """Hierarchical Risk Parity: cluster-based allocation, no matrix inversion."""
+    import numpy as np
+    from scipy.cluster.hierarchy import linkage
+    from scipy.spatial.distance import squareform
+
+    n = len(tickers)
+    std = np.sqrt(np.diag(Sigma))
+    corr = Sigma / np.outer(std, std)
+    corr = np.clip(corr, -1.0, 1.0)
+    np.fill_diagonal(corr, 1.0)
+
+    dist = np.sqrt(np.clip(0.5 * (1.0 - corr), 0, None))
+    np.fill_diagonal(dist, 0.0)
+    link = linkage(squareform(dist), method="single")
+
+    # Recover leaf ordering (quasi-diagonalisation)
+    def _leaf_order(link, n):
+        items = [[i] for i in range(n)]
+        for row in link:
+            i, j = int(row[0]), int(row[1])
+            items.append(items[i] + items[j])
+        return items[-1]
+
+    sort_ix = _leaf_order(link, n)
+
+    def _cluster_var(ix_list):
+        cov_slice = Sigma[np.ix_(ix_list, ix_list)]
+        inv_d = 1.0 / np.diag(cov_slice)
+        w_ = inv_d / inv_d.sum()
+        return float(w_ @ cov_slice @ w_)
+
+    weights = {i: 1.0 for i in range(n)}
+    clusters = [sort_ix]
+    while clusters:
+        next_lvl = []
+        for c in clusters:
+            if len(c) < 2:
+                continue
+            mid = len(c) // 2
+            left, right = c[:mid], c[mid:]
+            v_l, v_r = _cluster_var(left), _cluster_var(right)
+            alpha = 1.0 - v_l / (v_l + v_r)
+            for i in left:
+                weights[i] *= alpha
+            for i in right:
+                weights[i] *= 1.0 - alpha
+            next_lvl += [left, right]
+        clusters = next_lvl
+
+    w = np.array([weights[i] for i in range(n)])
+    w = np.minimum(w, max_weight)
+    w /= w.sum()
+    return w, "scipy HRP single-linkage"
+
+
+def _opt_cvar(tickers, mu, Sigma, max_weight, min_weight, target_return,
+              alpha=0.05, n_scenarios=1000):
+    """CVaR minimization: minimize expected loss in worst α% of scenarios."""
+    import cvxpy as cp
+    import numpy as np
+
+    np.random.seed(42)
+    n = len(tickers)
+    L = np.linalg.cholesky(Sigma + 1e-8 * np.eye(n))
+    scenarios = mu + (L @ np.random.randn(n, n_scenarios)).T   # (T, n)
+    T = n_scenarios
+
+    w = cp.Variable(n)
+    beta = cp.Variable()
+    losses = -scenarios @ w
+
+    cvar = beta + (1.0 / (alpha * T)) * cp.sum(cp.pos(losses - beta))
+    prob = cp.Problem(
+        cp.Minimize(cvar),
+        [cp.sum(w) == 1, w >= min_weight, w <= max_weight, mu @ w >= target_return],
+    )
+    prob.solve(solver=cp.CLARABEL, verbose=False)
+    if prob.status not in ("optimal", "optimal_inaccurate") or w.value is None:
+        return None, prob.status
+    return w.value, f"CLARABEL CVaR α={alpha}; obj={prob.value:.6f}"
+
+
+def optimize_by_algorithm(market_data_json: str, algorithm: str = "markowitz",
+                           target_return: float = 0.10, max_weight: float = 0.25,
+                           min_weight: float = 0.0, risk_free_rate: float = 0.05) -> str:
+    """
+    Unified dispatcher for all portfolio optimization algorithms.
+
+    algorithm choices:
+      markowitz   — Minimize variance subject to return target (default)
+      min_variance— Minimize variance with no return constraint; robust to noisy μ
+      max_sharpe  — Maximize Sharpe ratio via Charnes-Cooper transform
+      risk_parity — Equal risk contribution from each asset (no μ needed)
+      hrp         — Hierarchical Risk Parity; best for small N or short history
+      cvar        — Minimize Conditional Value at Risk (tail-loss focus)
+    """
+    try:
+        import numpy as np
+        data = json.loads(market_data_json)
+        if "error" in data:
+            return json.dumps({"status": "DATA_ERROR", "algorithm": algorithm, "error": data["error"]})
+
+        tickers = data["tickers"]
+        n = len(tickers)
+        if n < 5:
+            return json.dumps({
+                "status": "INFEASIBLE", "algorithm": algorithm, "weights": {},
+                "expected_return": None, "annual_volatility": None, "sharpe_ratio": None,
+                "solver_log": f"requires >= 5 tickers; got {n}",
+            })
+
+        mu = np.array([data["annual_returns"][t] for t in tickers])
+        Sigma = np.array(data["cov_matrix"])
+        alg = algorithm.lower().strip()
+
+        valid_algorithms = ("markowitz", "min_variance", "max_sharpe", "risk_parity", "hrp", "cvar")
+        if alg not in valid_algorithms:
+            return json.dumps({"status": "INPUT_ERROR", "algorithm": alg,
+                               "error": f"unknown algorithm '{alg}'; valid: {', '.join(valid_algorithms)}"})
+
+        if alg == "markowitz":
+            w, log = _markowitz_qp(mu, Sigma, max_weight, min_weight, target_return)
+        elif alg == "min_variance":
+            w, log = _opt_min_variance(tickers, mu, Sigma, max_weight, min_weight)
+        elif alg == "max_sharpe":
+            w, log = _opt_max_sharpe(tickers, mu, Sigma, max_weight, min_weight, risk_free_rate)
+        elif alg == "risk_parity":
+            w, log = _opt_risk_parity(tickers, mu, Sigma, max_weight)
+        elif alg == "hrp":
+            w, log = _opt_hrp(tickers, mu, Sigma, max_weight)
+        else:  # cvar
+            w, log = _opt_cvar(tickers, mu, Sigma, max_weight, min_weight, target_return)
+
+        if w is None:
+            return json.dumps({
+                "status": str(log).upper() if log else "INFEASIBLE",
+                "algorithm": alg, "weights": {}, "expected_return": None,
+                "annual_volatility": None, "sharpe_ratio": None, "solver_log": str(log),
+            })
+
+        return json.dumps(_portfolio_result(tickers, w, mu, Sigma, alg,
+                                            risk_free_rate=risk_free_rate,
+                                            solver_log=str(log)))
+
+    except Exception as e:
+        return json.dumps({"status": "ERROR", "algorithm": algorithm, "error": str(e)})
+
+
+def _markowitz_qp(mu, Sigma, max_weight, min_weight, target_return):
+    """Core Markowitz QP shared by optimize_portfolio and optimize_by_algorithm."""
+    import cvxpy as cp
+    n = len(mu)
+    w = cp.Variable(n)
+    prob = cp.Problem(
+        cp.Minimize(cp.quad_form(w, Sigma)),
+        [cp.sum(w) == 1, w >= min_weight, w <= max_weight, mu @ w >= target_return],
+    )
+    prob.solve(solver=cp.CLARABEL, verbose=False)
+    if prob.status not in ("optimal", "optimal_inaccurate"):
+        return None, prob.status
+    return w.value, f"CLARABEL Markowitz; obj={prob.value:.6f}"

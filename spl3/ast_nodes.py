@@ -138,17 +138,22 @@ class CallParallelBranch:
 
 @dataclass
 class CallParallelStatement:
-    """CALL PARALLEL workflow_a(@x) INTO @a, workflow_b(@y) INTO @b END
+    """CALL PARALLEL [ON GRID "name"] workflow_a(@x) INTO @a, ... END
 
     Dispatches multiple sub-workflows concurrently via asyncio.gather.
     The Hub routes each to an available node — same mechanism as
     existing multi-node task dispatch.
+
+    grid: optional grid name from ON GRID "..." clause.
+          Passed to the Hub as a routing hint; if None the Hub uses
+          its default node-selection policy.
 
     All branches must complete (or fail) before execution continues.
     If any branch fails its WorkflowCompositionError propagates to the
     caller's EXCEPTION WHEN handler.
     """
     branches: list[CallParallelBranch] = field(default_factory=list)
+    grid: str | None = None
 
 
 @dataclass

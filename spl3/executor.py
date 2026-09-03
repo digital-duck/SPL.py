@@ -970,7 +970,7 @@ class SPL3Executor(SPL2Executor):
 
             calls.append((branch.workflow_name, args, branch.target_var))
 
-        results = await composer.call_parallel(calls)
+        results = await composer.call_parallel(calls, grid=stmt.grid)
 
         for sub_result in results:
             state.set_var(sub_result.output_var, sub_result.output_value)

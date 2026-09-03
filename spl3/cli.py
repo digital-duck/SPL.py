@@ -137,7 +137,7 @@ def _write_run_log(
 
 @click.group(
     help=f"SPL 3.0 — Declarative Structured Prompt Language (v{_SPL_VERSION}).",
-    context_settings=dict(terminal_width=120),
+    context_settings=dict(terminal_width=120, help_option_names=["-h", "--help"]),
 )
 @click.version_option(_SPL_VERSION, "--version", "-V", prog_name="spl3")
 @click.option("--hub", default=None, envvar="SPL3_HUB", help="Momagrid Hub URL")
@@ -159,10 +159,28 @@ def cmd_help(ctx):
 
 
 # ------------------------------------------------------------------ #
-# spl3 install-skill                                                  #
+# spl3 util — format conversion, document tools, one-off helpers     #
 # ------------------------------------------------------------------ #
 
-@main.command("install-skill", short_help="Install the /spl3 Claude Code skill.")
+@main.group("util", short_help="Format conversion, document tools, and one-off helpers.")
+def cmd_util():
+    """Utility commands: format conversion, document generation, and helpers."""
+
+
+# ------------------------------------------------------------------ #
+# spl3 hub — Hub registry, peering, and workflow management          #
+# ------------------------------------------------------------------ #
+
+@main.group("hub", short_help="Hub registry, peering, and workflow management.")
+def cmd_hub():
+    """Manage the Momagrid Hub: registry, peering, and durable workflow runs."""
+
+
+# ------------------------------------------------------------------ #
+# spl3 util install-skill                                             #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("install-skill", short_help="Install the /spl3 Claude Code skill.")
 @click.option(
     "--global/--local", "global_", default=True,
     help="Install to ~/.claude (global, default) or ./.claude (project-local).",
@@ -940,7 +958,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 # spl workflow — durable run management                               #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def workflow():
     """Manage durable workflow runs (persistence required)."""
 
@@ -1081,7 +1099,7 @@ def workflow_resume(ctx, spl_file, workflow_id, adapter, model, backend):
 # spl registry                                                        #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def registry():
     """Manage the workflow registry."""
 
@@ -1102,7 +1120,7 @@ def registry_list(ctx):
         click.echo("No --hub specified. Use --hub <url> to query Hub registry.")
 
 
-@main.command()
+@click.command()
 @click.argument("path")
 @click.pass_context
 def register(ctx, path):
@@ -1143,7 +1161,7 @@ def register(ctx, path):
 # spl peers                                                           #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def peers():
     """Manage Hub-to-Hub peering."""
 
@@ -1186,6 +1204,12 @@ def peers_add(ctx, peer_url):
         click.echo(f"Peering established: {hub_url} <-> {peer_url}")
     except Exception as e:
         raise click.ClickException(str(e))
+
+
+cmd_hub.add_command(workflow)
+cmd_hub.add_command(registry)
+cmd_hub.add_command(register)
+cmd_hub.add_command(peers)
 
 
 # ------------------------------------------------------------------ #
@@ -2007,7 +2031,7 @@ def _extract_mmd_sections(text: str, llm, model) -> str:
     return _extract_spec_intro(text, llm=llm, model=model)
 
 
-@main.command("text2mmd", short_help="Generate a Mermaid flowchart from natural language.")
+@cmd_util.command("text2mmd", short_help="Generate a Mermaid flowchart from natural language.")
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language workflow description or file path.")
@@ -2254,7 +2278,7 @@ def _resolve_output_path(
     return None
 
 
-@main.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
+@cmd_util.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
 @click.argument("image_path")
 @llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
@@ -2291,7 +2315,7 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
         raise click.ClickException(str(e))
 
 
-@main.command("img2text", short_help="Extract text and pseudo-code from an image.")
+@cmd_util.command("img2text", short_help="Extract text and pseudo-code from an image.")
 @click.argument("image_path")
 @llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
@@ -2332,7 +2356,7 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 # spl3 spl2mmd                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("spl2mmd", short_help="Generate a Mermaid flowchart for each .spl file.")
+@cmd_util.command("spl2mmd", short_help="Generate a Mermaid flowchart for each .spl file.")
 @click.argument("spl_files", nargs=-1, required=True, metavar="SPL_FILE...")
 @click.option("--out-dir", default=None, metavar="DIR",
               help="Output directory for all generated files (default: mermaid/ subdir of each input's parent).")
@@ -2651,7 +2675,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
 # spl3 mmd2spl                                                    #
 # ------------------------------------------------------------------ #
 
-@main.command("mmd2spl")
+@cmd_util.command("mmd2spl")
 @click.argument("mermaid_file")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write generated SPL to FILE (overrides --out-dir).")
@@ -3022,7 +3046,7 @@ def cmd_validate(spl_files, semantic, strict):
 # spl3 explain                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("explain")
+@cmd_util.command("explain")
 @click.argument("spl_file")
 def cmd_explain(spl_file):
     """Show execution plan for an .spl file (no LLM call)."""
@@ -3548,7 +3572,7 @@ Write the specification now.
 """
 
 
-@main.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
+@cmd_util.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
 @click.argument("spl_path")
 @llm_options()
 @click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
@@ -3625,6 +3649,95 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 
     spec_path.write_text(spec_text, encoding="utf-8")
     click.echo(f"Spec written to: {spec_path}")
+
+
+# ------------------------------------------------------------------ #
+# spl3 util md2pdf                                                    #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("md2pdf", short_help="Convert a Markdown file to PDF via pandoc + XeLaTeX.")
+@click.argument("md_file", metavar="MD_FILE")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Output PDF path (default: same directory as input, same stem).")
+@click.option("--font", default="DejaVu Serif", show_default=True,
+              help="Body font name (must be installed on the system).")
+@click.option("--mono-font", default="DejaVu Sans Mono", show_default=True,
+              help="Monospace font for code blocks.")
+@click.option("--font-size", default="11pt", show_default=True,
+              help="Base font size (e.g. 10pt, 12pt).")
+@click.option("--margin", default="1.1in", show_default=True,
+              help="Page margin (e.g. 1in, 2cm).")
+@click.option("--toc/--no-toc", default=True, show_default=True,
+              help="Include a table of contents.")
+@click.option("--toc-depth", default=2, show_default=True, type=int,
+              help="TOC depth (number of heading levels to include).")
+def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_depth):
+    """Convert a Markdown file to PDF using pandoc + XeLaTeX.
+
+    Handles Unicode, box-drawing characters, and local image paths.
+    Requires pandoc and a XeLaTeX installation (e.g. texlive-xetex).
+
+    \b
+    Examples:
+      spl3 util md2pdf docs/solver-guide.md
+      spl3 util md2pdf report.md -o /tmp/report.pdf --no-toc
+      spl3 util md2pdf spec.md --font "Liberation Serif" --font-size 12pt
+    """
+    import subprocess
+    from pathlib import Path
+
+    md_path = Path(md_file).resolve()
+    if not md_path.exists():
+        raise click.ClickException(f"File not found: {md_path}")
+
+    if output:
+        out_path = Path(output).resolve()
+    else:
+        out_path = md_path.with_suffix(".pdf")
+
+    click.echo(f"Input:  {md_path}", err=True)
+    click.echo(f"Output: {out_path}", err=True)
+
+    cmd = [
+        "pandoc", str(md_path),
+        "--pdf-engine=xelatex",
+        "--resource-path=.",
+        f"-V", f"mainfont={font}",
+        f"-V", "sansfont=DejaVu Sans",
+        f"-V", f"monofont={mono_font}",
+        f"-V", "monofontoptions=Scale=0.88",
+        f"-V", f"geometry=margin={margin}",
+        f"-V", f"fontsize={font_size}",
+        f"-V", "colorlinks=true",
+        f"-V", "linkcolor=NavyBlue",
+        f"-V", "urlcolor=NavyBlue",
+        f"-V", "toccolor=black",
+        f"-V", "linestretch=1.15",
+        "--standalone",
+        "-f", "markdown+smart",
+        "-o", str(out_path),
+    ]
+    if toc:
+        cmd += ["--toc", f"--toc-depth={toc_depth}"]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=str(md_path.parent),   # resolve relative image paths correctly
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if result.stderr.strip():
+            click.echo(result.stderr.strip(), err=True)
+        click.echo(f"Done: {out_path}")
+    except FileNotFoundError:
+        raise click.ClickException(
+            "pandoc not found. Install with: sudo apt install pandoc texlive-xetex"
+        )
+    except subprocess.CalledProcessError as e:
+        click.echo(e.stderr, err=True)
+        raise click.ClickException("pandoc conversion failed (see errors above).")
 
 
 # ------------------------------------------------------------------ #

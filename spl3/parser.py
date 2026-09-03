@@ -248,7 +248,16 @@ class SPL3Parser(SPL2Parser):
         )
 
     def _parse_call_parallel_body(self) -> CallParallelStatement:
-        """Parse the branch list after CALL PARALLEL ... END"""
+        """Parse the branch list after CALL PARALLEL [ON GRID "name"] ... END"""
+        grid: str | None = None
+        tok = self._current()
+        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "on":
+            self._advance()  # consume 'on'
+            grid_tok = self._current()
+            if grid_tok.type == TokenType.IDENTIFIER and grid_tok.value.lower() == "grid":
+                self._advance()  # consume 'grid'
+                grid = self._expect(TokenType.STRING).value
+
         branches: list[CallParallelBranch] = []
         while not self._check(TokenType.END) and not self._check(TokenType.EOF):
             branch = self._parse_parallel_branch()
@@ -256,7 +265,7 @@ class SPL3Parser(SPL2Parser):
             if self._check(TokenType.COMMA):
                 self._advance()  # optional comma between branches
         self._expect(TokenType.END)
-        return CallParallelStatement(branches=branches)
+        return CallParallelStatement(branches=branches, grid=grid)
 
     def _parse_parallel_branch(self) -> CallParallelBranch:
         """Parse a single  workflow_name(@args) INTO @var  branch."""

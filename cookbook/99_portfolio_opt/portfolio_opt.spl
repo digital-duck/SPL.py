@@ -90,6 +90,56 @@ def json_get_field(data_json: str, field: str) -> str:
     return _fn(data_json, field)
 $$;
 
+CREATE TOOL_API format_solver_report(
+    tickers TEXT, period TEXT, capital TEXT, target_return TEXT, max_weight TEXT,
+    market_data_json TEXT, optimization_json TEXT, allocation_json TEXT,
+    interpretation TEXT, llm_calls TEXT
+)
+RETURNS TEXT AS PYTHON $$
+def format_solver_report(tickers, period, capital, target_return, max_weight,
+                         market_data_json, optimization_json, allocation_json,
+                         interpretation, llm_calls):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_solver_report as _fn
+    return _fn(tickers, period, capital, target_return, max_weight,
+               market_data_json, optimization_json, allocation_json,
+               interpretation, llm_calls)
+$$;
+
+CREATE TOOL_API format_heuristic_report(
+    tickers TEXT, period TEXT, capital TEXT,
+    market_data_json TEXT, llm_allocation TEXT,
+    optimization_json TEXT, allocation_json TEXT,
+    verify_result TEXT, llm_calls TEXT
+)
+RETURNS TEXT AS PYTHON $$
+def format_heuristic_report(tickers, period, capital, market_data_json,
+                             llm_allocation, optimization_json, allocation_json,
+                             verify_result, llm_calls):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_heuristic_report as _fn
+    return _fn(tickers, period, capital, market_data_json, llm_allocation,
+               optimization_json, allocation_json, verify_result, llm_calls)
+$$;
+
+CREATE TOOL_API optimize_by_algorithm(market_data_json TEXT, algorithm TEXT,
+                                      target_return TEXT, max_weight TEXT)
+RETURNS TEXT AS PYTHON $$
+def optimize_by_algorithm(market_data_json, algorithm, target_return, max_weight):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import optimize_by_algorithm as _fn
+    return _fn(market_data_json, algorithm, float(target_return), float(max_weight))
+$$;
+
 -- ── LLM prompt templates ─────────────────────────────────────
 
 CREATE FUNCTION interpret_portfolio(tickers TEXT, period TEXT, capital TEXT,
@@ -155,6 +205,53 @@ All weights must be decimals (not percentages). They must sum to approximately 1
 Analysis: {allocation_text}
 $$;
 
+CREATE FUNCTION suggest_algorithm(tickers TEXT, market_data_json TEXT, target_return TEXT)
+RETURNS TEXT AS $$
+You are a quantitative portfolio analyst. Select the best optimization algorithm for this portfolio.
+
+Tickers: {tickers}
+Target annual return: {target_return}
+Market data (returns + covariance): {market_data_json}
+
+Available algorithms:
+  markowitz   — Classic mean-variance QP. Best when history is long (>2yr) and N>=10.
+  min_variance— Ignore return target, minimize risk only. Best when μ estimates are noisy.
+  max_sharpe  — Maximize return per unit risk. Best for single optimal portfolio.
+  risk_parity — Equal risk contribution. Best for multi-asset, defensive mandates.
+  hrp         — Hierarchical Risk Parity. Best for small N (<10) or short history (<1yr).
+  cvar        — Minimize tail loss. Best when downside protection matters most.
+
+Consider: number of tickers, data period length, return spread across assets, correlation structure.
+Return ONLY the algorithm name, exactly as listed above (e.g. "hrp").
+$$;
+
+CREATE FUNCTION compare_algorithms(tickers TEXT, market_data_json TEXT,
+                                   result_markowitz TEXT, result_min_variance TEXT,
+                                   result_max_sharpe TEXT, result_risk_parity TEXT,
+                                   result_hrp TEXT, result_cvar TEXT)
+RETURNS TEXT AS $$
+You are a quantitative portfolio analyst. Compare these six optimization results for the same stock universe and recommend the best one for a personal investor.
+
+Tickers: {tickers}
+Market data: {market_data_json}
+
+Results:
+  Markowitz:    {result_markowitz}
+  Min Variance: {result_min_variance}
+  Max Sharpe:   {result_max_sharpe}
+  Risk Parity:  {result_risk_parity}
+  HRP:          {result_hrp}
+  CVaR:         {result_cvar}
+
+Your analysis should:
+1. Show a comparison table: algorithm | return | volatility | sharpe | # positions
+2. Identify which algorithm gives the best risk-adjusted return (Sharpe)
+3. Identify which gives the most diversified allocation
+4. Recommend ONE algorithm for this specific portfolio and explain why in 2-3 sentences
+5. Note any algorithms that failed or produced degenerate results
+6. Add disclaimer: past performance does not guarantee future results
+$$;
+
 CREATE FUNCTION suggest_relaxed_target(target_return TEXT, market_data_json TEXT)
 RETURNS TEXT AS $$
 The portfolio optimization was infeasible with target_return={target_return}.
@@ -170,8 +267,9 @@ WORKFLOW portfolio_optimization
   INPUT @capital TEXT := "10000"
   INPUT @period TEXT := "1y"
   INPUT @target_return TEXT := "0.12"
-  INPUT @max_weight TEXT := "0.40"
+  INPUT @max_weight TEXT := "0.25"
   INPUT @use_solver TEXT := "true"
+  INPUT @algorithm TEXT := "markowitz"
   INPUT @adapter TEXT := "claude_cli"
   INPUT @model TEXT := ""
   OUTPUT @report TEXT
@@ -190,10 +288,20 @@ DO
 
   EVALUATE @use_solver
     WHEN = "true" THEN
-      -- solver=ON: cvxpy Markowitz mean-variance QP
-      LOGGING "[portfolio] solver=ON — cvxpy Markowitz optimization" LEVEL INFO
+      -- solver=ON: deterministic optimization — algorithm selected or auto-picked by LLM
+      LOGGING f"[portfolio] solver=ON — algorithm={@algorithm}" LEVEL INFO
 
-      CALL optimize_portfolio(@market_data_json, @target_return, @max_weight) INTO @optimization_json;
+      -- If algorithm=auto, let the LLM pick the best one for this data
+      EVALUATE @algorithm
+        WHEN = "auto" THEN
+          GENERATE suggest_algorithm(@tickers, @market_data_json, @target_return) INTO @algorithm;
+          @llm_calls := @llm_calls + 1;
+          LOGGING f"[portfolio] auto-selected algorithm: {@algorithm}" LEVEL INFO
+        ELSE
+          @algorithm := @algorithm;
+      END;
+
+      CALL optimize_by_algorithm(@market_data_json, @algorithm, @target_return, @max_weight) INTO @optimization_json;
       CALL json_get_field(@optimization_json, "status") INTO @opt_status;
 
       -- If infeasible, relax the return target once and retry
@@ -204,7 +312,7 @@ DO
         ELSE
           GENERATE suggest_relaxed_target(@target_return, @market_data_json) INTO @relaxed_target;
           @llm_calls := @llm_calls + 1;
-          CALL optimize_portfolio(@market_data_json, @relaxed_target, @max_weight) INTO @optimization_json;
+          CALL optimize_by_algorithm(@market_data_json, @algorithm, @relaxed_target, @max_weight) INTO @optimization_json;
           -- Gate: must be optimal after relaxation
           ASSERT is_optimized(@optimization_json);
       END;
@@ -218,24 +326,9 @@ DO
 
       CALL json_get_field(@optimization_json, "sharpe_ratio") INTO @sharpe_str;
 
-      @report := f"=== Portfolio Optimization (solver=ON / cvxpy Markowitz) ===
-
-Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
-Target return: {@target_return}  |  Max position: {@max_weight}
-
-Market Data:
-{@market_data_json}
-
-Optimization Result:
-{@optimization_json}
-
-Capital Allocation:
-{@allocation_json}
-
-Interpretation:
-{@interpretation}
-
-LLM calls: {@llm_calls}";
+      CALL format_solver_report(@tickers, @period, @capital, @target_return, @max_weight,
+                               @market_data_json, @optimization_json, @allocation_json,
+                               @interpretation, @llm_calls) INTO @report;
 
     ELSE
       -- solver=OFF: LLM heuristic allocation with back-check
@@ -259,26 +352,9 @@ LLM calls: {@llm_calls}";
 
       LOGGING f"[portfolio] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
 
-      @report := f"=== Portfolio Optimization (solver=OFF / LLM heuristic) ===
-
-Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
-
-Market Data:
-{@market_data_json}
-
-LLM Allocation:
-{@llm_allocation}
-
-Extracted Weights (JSON):
-{@optimization_json}
-
-Capital Allocation:
-{@allocation_json}
-
-Verification:
-{@verify_result}
-
-LLM calls: {@llm_calls}";
+      CALL format_heuristic_report(@tickers, @period, @capital, @market_data_json,
+                                  @llm_allocation, @optimization_json, @allocation_json,
+                                  @verify_result, @llm_calls) INTO @report;
 
   END;
 
@@ -288,5 +364,62 @@ LLM calls: {@llm_calls}";
     WITH status = "complete",
          objective = @sharpe_str,
          verify = @verify_status;
+
+END;
+
+-- ── Cross-algorithm comparison workflow ───────────────────────
+-- Runs all 6 algorithms on the same data, then uses LLM to
+-- synthesise results and recommend the best for this portfolio.
+-- This is the SPL synthesis pattern: N deterministic solvers → 1 LLM synthesis.
+
+WORKFLOW portfolio_comparison
+  INPUT @tickers TEXT := "AAPL,MSFT,GOOGL,AMZN,NVDA"
+  INPUT @capital TEXT := "10000"
+  INPUT @period TEXT := "1y"
+  INPUT @target_return TEXT := "0.12"
+  INPUT @max_weight TEXT := "0.25"
+  INPUT @adapter TEXT := "claude_cli"
+  INPUT @model TEXT := ""
+  OUTPUT @report TEXT
+DO
+  LOGGING f"[compare] start  tickers={@tickers}  period={@period}" LEVEL INFO
+
+  CALL fetch_stock_data(@tickers, @period) INTO @market_data_json;
+
+  -- Run all 6 algorithms concurrently on the grid — inputs are ready, outputs are independent
+  CALL PARALLEL ON GRID "momagrid"
+    optimize_by_algorithm(@market_data_json, "markowitz",    @target_return, @max_weight) INTO @r_markowitz,
+    optimize_by_algorithm(@market_data_json, "min_variance", @target_return, @max_weight) INTO @r_min_var,
+    optimize_by_algorithm(@market_data_json, "max_sharpe",   @target_return, @max_weight) INTO @r_max_sharpe,
+    optimize_by_algorithm(@market_data_json, "risk_parity",  @target_return, @max_weight) INTO @r_risk_parity,
+    optimize_by_algorithm(@market_data_json, "hrp",          @target_return, @max_weight) INTO @r_hrp,
+    optimize_by_algorithm(@market_data_json, "cvar",         @target_return, @max_weight) INTO @r_cvar
+  END;
+
+  LOGGING "[compare] all 6 algorithms complete — synthesising with LLM" LEVEL INFO
+
+  -- LLM synthesises all results and recommends the best
+  GENERATE compare_algorithms(@tickers, @market_data_json,
+                               @r_markowitz, @r_min_var, @r_max_sharpe,
+                               @r_risk_parity, @r_hrp, @r_cvar)
+           INTO @synthesis;
+
+  @report := f"=== Cross-Algorithm Portfolio Comparison ===
+
+Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
+Target return: {@target_return}  |  Max position: {@max_weight}
+
+Raw Results:
+  Markowitz:    {@r_markowitz}
+  Min Variance: {@r_min_var}
+  Max Sharpe:   {@r_max_sharpe}
+  Risk Parity:  {@r_risk_parity}
+  HRP:          {@r_hrp}
+  CVaR:         {@r_cvar}
+
+LLM Synthesis & Recommendation:
+{@synthesis}";
+
+  RETURN @report WITH status = "complete";
 
 END;
