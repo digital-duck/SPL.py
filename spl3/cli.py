@@ -3684,6 +3684,7 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
       spl3 util md2pdf spec.md --font "Liberation Serif" --font-size 12pt
     """
     import subprocess
+    import tempfile
     from pathlib import Path
 
     md_path = Path(md_file).resolve()
@@ -3697,6 +3698,65 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
 
     click.echo(f"Input:  {md_path}", err=True)
     click.echo(f"Output: {out_path}", err=True)
+
+    # Lua filter: reassign table column widths from actual content length.
+    # Pandoc's default uses separator-dash counts (|:---:| = 5 dashes → ~45%
+    # for a 3-column table) which ignores content — short columns bloat,
+    # long-text columns overflow. This filter measures the longest cell text
+    # per column, distributes widths proportionally (clamped 4%–60%), then
+    # renormalises so the sum ≤ 0.98 — LaTeX wraps long columns instead of
+    # letting them run off the page.
+    _LUA_AUTO_TABLE_WIDTHS = """\
+local function col_len(cell)
+  -- cell.content is a list of Blocks; stringify handles it correctly
+  return #pandoc.utils.stringify(cell.content)
+end
+
+function Table(t)
+  local n = #t.colspecs
+  if n == 0 then return t end
+
+  local maxlen = {}
+  for i = 1, n do maxlen[i] = 4 end   -- floor so empty cols still get space
+
+  for _, row in ipairs(t.head.rows) do
+    for i, cell in ipairs(row.cells) do
+      if i <= n then
+        local l = col_len(cell)
+        if l > maxlen[i] then maxlen[i] = l end
+      end
+    end
+  end
+
+  for _, body in ipairs(t.bodies) do
+    for _, row in ipairs(body.body) do
+      for i, cell in ipairs(row.cells) do
+        if i <= n then
+          local l = col_len(cell)
+          if l > maxlen[i] then maxlen[i] = l end
+        end
+      end
+    end
+  end
+
+  local total = 0
+  for i = 1, n do total = total + maxlen[i] end
+
+  for i = 1, n do
+    local w = maxlen[i] / total
+    t.colspecs[i][2] = math.max(0.04, math.min(0.60, w))
+  end
+
+  local sum = 0
+  for i = 1, n do sum = sum + t.colspecs[i][2] end
+  if sum > 0.98 then
+    local scale = 0.98 / sum
+    for i = 1, n do t.colspecs[i][2] = t.colspecs[i][2] * scale end
+  end
+
+  return t
+end
+"""
 
     cmd = [
         "pandoc", str(md_path),
@@ -3720,7 +3780,13 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
     if toc:
         cmd += ["--toc", f"--toc-depth={toc_depth}"]
 
+    lua_path = None
     try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".lua", delete=False) as lf:
+            lf.write(_LUA_AUTO_TABLE_WIDTHS)
+            lua_path = lf.name
+        cmd += [f"--lua-filter={lua_path}"]
+
         result = subprocess.run(
             cmd,
             cwd=str(md_path.parent),   # resolve relative image paths correctly
@@ -3738,6 +3804,13 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
     except subprocess.CalledProcessError as e:
         click.echo(e.stderr, err=True)
         raise click.ClickException("pandoc conversion failed (see errors above).")
+    finally:
+        import os
+        if lua_path:
+            try:
+                os.unlink(lua_path)
+            except Exception:
+                pass
 
 
 # ------------------------------------------------------------------ #
