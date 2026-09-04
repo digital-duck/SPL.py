@@ -12,6 +12,14 @@ Supported problem types:
 
 import json
 import math
+import re
+
+
+def _clean_json(text: str) -> str:
+    """Strip markdown code fences that LLMs sometimes add around JSON output."""
+    text = text.strip()
+    m = re.match(r'^```(?:json)?\s*(.*?)\s*```$', text, re.DOTALL)
+    return m.group(1) if m else text
 
 
 def solve_nonlinear(problem_json: str,
@@ -41,7 +49,7 @@ def solve_nonlinear(problem_json: str,
     try:
         from scipy.optimize import minimize, differential_evolution
 
-        prob = json.loads(problem_json)
+        prob = json.loads(_clean_json(problem_json))
         ptype = prob.get("type", "pricing")
         params = prob.get("params", {})
         bounds_raw = prob.get("bounds", {})
@@ -143,8 +151,8 @@ def verify_solution(problem_json: str, solution_json: str) -> str:
     Returns JSON: {verdict, x_opt, recomputed_objective, reported_objective, delta, notes}
     """
     try:
-        prob = json.loads(problem_json)
-        sol  = json.loads(solution_json)
+        prob = json.loads(_clean_json(problem_json))
+        sol  = json.loads(_clean_json(solution_json))
 
         if not sol.get("success"):
             return json.dumps({"verdict": "SKIP", "notes": "solver did not succeed"})
@@ -209,3 +217,21 @@ def is_optimal(solution_json: str) -> bool:
                 and math.isfinite(float(data["objective"])))
     except Exception:
         return False
+
+
+def solver_enabled(use_solver: str) -> str:
+    """Return 'run_solver' or 'run_llm' — distinctive strings for unambiguous EVALUATE matching."""
+    if use_solver.strip().lower() in ("true", "1", "yes", "on"):
+        return "run_solver"
+    return "run_llm"
+
+
+def save_report(report: str, out_dir: str, filename: str) -> str:
+    """Write report text to out_dir/filename, creating the directory if needed."""
+    import os
+    from pathlib import Path
+    out = Path(out_dir) if os.path.isabs(out_dir) else Path(os.getcwd()) / out_dir
+    out.mkdir(parents=True, exist_ok=True)
+    dest = out / filename
+    dest.write_text(report, encoding="utf-8")
+    return str(dest)

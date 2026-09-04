@@ -1,0 +1,78 @@
+=== Nonlinear Optimization (scipy.optimize / logistics) ===
+
+── Problem Specification ────────────────────────────────────
+```json
+{
+  "type": "logistics",
+  "sense": "maximize",
+  "params": {
+    "fixed_cost": 200,
+    "unit_cost": 8,
+    "congestion_factor": 0.05,
+    "revenue_scale": 20,
+    "saturation_factor": 0.02,
+    "min_demand": 0
+  },
+  "bounds": {"x_min": 6, "x_max": 150}
+}
+```
+
+── Solver Result (solver=ON, method=SLSQP) ──────────────
+{"success": true, "method": "SLSQP", "problem_type": "logistics", "x_opt": 85.7143, "objective": 314.2857, "n_iterations": 5, "message": "Optimization terminated successfully"}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "PASS", "x_opt": 85.7143, "recomputed_objective": 314.2857, "reported_objective": 314.2857, "delta": 0.0, "notes": "all checks passed"}
+
+── Business Interpretation ──────────────────────────────────
+Let me read the objective function definition to give you accurate boundary comparisons.
+
+**Reading the logistics objective function from the cookbook.**
+
+**Logistics Optimization — Business Interpretation**
+
+---
+
+**1. Optimal Decision**
+
+**Ship 85.7 units per period — this maximizes profit at $314.29 per period.**
+
+---
+
+**2. Why the Optimum Is Here**
+
+Two opposing forces set the ceiling at 85.7 units:
+
+- **Shipping more boosts revenue, but with diminishing returns.** The market saturates (saturation_factor = 0.02): each additional unit you ship earns a little less than the last, because you're filling demand that's harder and harder to reach.
+- **Shipping more also inflates costs non-linearly.** Congestion (congestion_factor = 0.05) means that as volume rises, trucks slow down, routes crowd, and cost-per-unit climbs. At high volumes this congestion cost grows faster than revenue.
+
+At 85.7 units, the marginal revenue from one more unit exactly equals the marginal cost of delivering it. Push past that and you're spending more to ship than you're earning.
+
+---
+
+**3. Payoff at Optimum vs. Boundaries**
+
+| Scenario | Units shipped | Estimated profit |
+|---|---|---|
+| Minimum (floor) | 6 | Well below breakeven — fixed cost of $200 barely offset |
+| **Optimum** | **85.7** | **$314.29** |
+| Maximum (ceiling) | 150 | Congestion and saturation crush the margin — likely near zero or negative |
+
+The optimum sits closer to the midpoint of [6, 150], which is typical when congestion costs are quadratic (they escalate steeply near the upper boundary).
+
+---
+
+**4. Verification**
+
+**PASS — the solution is confirmed correct.**
+
+The solver reported $314.29 and the independent verifier recomputed the same number exactly (delta = 0.0). This means there is no rounding error or numerical artifact in the result. The 5 iterations to convergence via SLSQP also signals a well-conditioned problem — the optimizer didn't struggle.
+
+---
+
+**5. Sensitivity to Explore First**
+
+**What happens if the congestion factor rises from 0.05 to 0.10?**
+
+Road congestion, port delays, or fuel surges could double your cost penalty per extra unit. A higher congestion factor will pull the optimal shipment volume down (perhaps to ~65–70 units) and compress profit. Knowing where your breakeven shipment volume lands under that scenario tells you whether to lock in current logistics contracts or hedge capacity now.
+
+LLM calls: 2  (formulation + interpretation)

@@ -49,7 +49,7 @@ The MILP optimizes **Stage 1** by pricing the cost consequences across **all Sta
 | **Lease** (MILP optimal) | $0 | $2,340 | **$2,340** |
 | Build (heuristic) | $4,000 | $1,520 | $5,520 |
 
-The $3,180 gap comes from the asymmetry: High demand (20% probability) would cost $9,000 extra in emergency sourcing if you lease — but you only need $6,000 build cost to avoid that. The MILP accounts for the 20% weight correctly; the heuristic ignores it.
+The \$3,180 gap comes from the asymmetry: High demand (20% probability) would cost \$9,000 extra in emergency sourcing if you lease — but you only need \$6,000 build cost to avoid that. The MILP accounts for the 20% weight correctly; the heuristic ignores it.
 
 Wait — this is the *opposite* of the default numbers above. The correct hand-calculation for the default B5:
 
@@ -67,7 +67,7 @@ Wait — this is the *opposite* of the default numbers above. The correct hand-c
 - Expected op = 0.3×800 + 0.5×1,600 + 0.2×2,400 = 240 + 800 + 480 = **$1,520**
 - **Total = $4,000 + $1,520 = $5,520**
 
-**MILP optimal: LEASE ($4,380) — saves $1,140 vs BUILD ($5,520)**
+**MILP optimal: LEASE (\$4,380) — saves \$1,140 vs BUILD ($5,520)**
 
 The naive heuristic (E[D]=190 > 150 lease cap) recommends BUILD and overpays by $1,140.
 
@@ -76,15 +76,15 @@ The naive heuristic (E[D]=190 > 150 lease cap) recommends BUILD and overpays by 
 ```bash
 # solver=ON — python-mip two-stage MILP
 spl3 run cookbook/108_robust_milp/robust_milp.spl \
-  --adapter claude_cli --param use_solver=true
+  --llm claude_cli --param use_solver=true
 
 # solver=OFF — naive heuristic + comparison
 spl3 run cookbook/108_robust_milp/robust_milp.spl \
-  --adapter ollama -m gemma3 --param use_solver=false
+  --llm claude_cli --param use_solver=false
 
 # Custom scenario (pipe a different problem)
 spl3 run cookbook/108_robust_milp/robust_milp.spl \
-  --adapter claude_cli --param use_solver=true \
+  --llm claude_cli --param use_solver=true \
   --param "problem=A retailer must decide whether to build a large warehouse (capacity 500 units, cost $8,000) or rent a small one (capacity 250 units). Production: $5/unit. Emergency restocking: $45/unit. Scenarios: Low (20%, 150 units), Normal (60%, 300 units), High (20%, 500 units)."
 ```
 
@@ -92,7 +92,9 @@ spl3 run cookbook/108_robust_milp/robust_milp.spl \
 
 ```bash
 conda activate spl123
-pip install python-mip   # CBC solver bundled
+
+# https://pypi.org/project/mip/
+pip install mip   # CBC solver bundled
 ```
 
 ## Optimization formulation

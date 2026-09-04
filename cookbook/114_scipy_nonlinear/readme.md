@@ -12,24 +12,60 @@ decision using `scipy.optimize` — and verify the result by independent back-su
 | Engine | scipy.optimize (SLSQP / Nelder-Mead / differential_evolution) | LLM heuristic estimate |
 | Guarantee | Locally/globally optimal (method-dependent) | Plausible estimate, unverified |
 | Verification | `ASSERT is_optimal` + back-substitution | Back-substitution only |
-| Solver class | C4 (Constrained nonlinear) | — |
+| Solver class | S028 — constrained nonlinear (SLSQP / global) | — |
+
+## Architecture
+
+The workflow uses three WORKFLOW declarations (same pattern as r116/r117):
+
+```
+nonlinear_opt (entry point)
+  ├── formulates problem spec via LLM (EVALUATE pricing vs logistics)
+  ├── calls solver_enabled() → "run_solver" or "run_llm" (unambiguous gate)
+  └── EVALUATE @gate
+        WHEN "run_solver" → CALL solver_on_nonlinear
+        WHEN "run_llm"    → CALL solver_off_llm_nonlinear
+  └── CALL save_report() → writes to @out_dir
+
+solver_on_nonlinear
+  ├── CALL solve_nonlinear (scipy) → @solution_json
+  ├── ASSERT is_optimal
+  ├── CALL verify_solution (back-substitution) → @verify_json
+  └── GENERATE interpret_result → @interpretation
+
+solver_off_llm_nonlinear
+  ├── GENERATE estimate_optimum (LLM reasoning)
+  ├── GENERATE extract_solution_json
+  ├── CALL verify_solution
+  └── GENERATE interpret_result
+```
 
 ## Default problems
 
 ### Pricing (power demand curve)
+
 ```
-Demand:     D(p) = 10000 * p^(-1.5)
-Unit cost:  $5    Fixed cost: $50/period
+D(p) = 10000 × p^(−1.5)
+Unit cost:   $8
+Fixed cost:  $200/period
 Price range: [$6, $150]
-Analytical optimum: p* = $15, profit* ≈ $5,218
+
+Analytical optimum (Lerner rule):
+  p* = ε × c / (ε − 1) = 1.5 × 8 / 0.5 = $24.00
+  profit* = (24 − 8) × 85.05 − 200 ≈ $1,160.83  [SLSQP verified ✓]
 ```
 
 ### Logistics (quadratic revenue / congestion cost)
+
 ```
-Revenue:    20x - 0.02x²
-Cost:       200 + 8x + 0.05x²
+Revenue(x) = 20x − 0.02x²
+Cost(x)    = 200 + 8x + 0.05x²
+Profit(x)  = 12x − 0.07x² − 200
 Volume range: [6, 150] units
-Analytical optimum: x* ≈ 85.7, profit* ≈ $257
+
+Analytical optimum (MR = MC):
+  x* = 12 / (2 × 0.07) = 85.71 units
+  profit* = 12×85.71 − 0.07×85.71² − 200 ≈ $314.29  [SLSQP verified ✓]
 ```
 
 ## Run commands
@@ -37,19 +73,19 @@ Analytical optimum: x* ≈ 85.7, profit* ≈ $257
 ```bash
 # Pricing — SLSQP (gradient-based, default)
 spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param problem_type=pricing \
   --param method=SLSQP
 
 # Pricing — differential_evolution (global search, no gradient needed)
 spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param problem_type=pricing \
   --param method=differential_evolution
 
 # Logistics — Nelder-Mead (derivative-free)
 spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param problem_type=logistics \
   --param method=Nelder-Mead
 
@@ -61,12 +97,18 @@ spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
 
 # Custom pricing problem (higher elasticity)
 spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param problem_type=pricing \
   --param demand_scale=50000 \
   --param elasticity=2.0 \
   --param unit_cost=10 \
   --param x_min=5 --param x_max=200
+
+# Write output to a custom directory
+spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
+  --llm claude_cli \
+  --param problem_type=pricing \
+  --param out_dir=./results/r114
 ```
 
 ## Parameters
@@ -77,6 +119,7 @@ spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
 | `method` | `SLSQP` | `SLSQP`, `Nelder-Mead`, `differential_evolution` |
 | `max_iterations` | `1000` | Solver iteration budget (100–10000) |
 | `use_solver` | `true` | `false` → LLM heuristic only (ablation) |
+| `out_dir` | `./cookbook/114_scipy_nonlinear/output` | Directory to write the report file |
 | `demand_scale` | `10000` | Pricing: D(p) scale coefficient |
 | `elasticity` | `1.5` | Pricing: price elasticity exponent |
 | `revenue_scale` | `20` | Logistics: linear revenue coefficient |
@@ -94,21 +137,28 @@ spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
 | `solve_nonlinear(problem_json, method, max_iterations)` | scipy constrained nonlinear solve |
 | `verify_solution(problem_json, solution_json)` | Back-substitution: recomputes objective at x_opt |
 | `is_optimal(solution_json)` | Returns True when scipy reports success and finite objective |
+| `solver_enabled(use_solver)` | Returns `"run_solver"` or `"run_llm"` — unambiguous gate for EVALUATE |
+| `save_report(report, out_dir, filename)` | Writes report text to `out_dir/filename` (creates dir if needed) |
 
 ## Optimization formulations
 
 **Pricing:**
 ```
-Maximize    (p - c) * S * p^(-ε) - F
+Maximize    (p − c) × S × p^(−ε) − F
 Subject to  p ∈ [x_min, x_max]
-            S * p^(-ε) ≥ min_demand   (optional)
+            S × p^(−ε) ≥ min_demand   (optional)
+
+Analytical solution: p* = ε × c / (ε − 1)   [only when min_demand = 0]
 ```
 
 **Logistics:**
 ```
-Maximize    (r * x - α * x²) - (F + c * x + β * x²)
+Maximize    (r × x − α × x²) − (F + c × x + β × x²)
+         =  (r − c) × x − (α + β) × x² − F
 Subject to  x ∈ [x_min, x_max]
             x ≥ min_demand            (optional)
+
+Analytical solution: x* = (r − c) / (2 × (α + β))   [interior optimum]
 ```
 
 ## Verification gate
@@ -118,6 +168,34 @@ Subject to  x ∈ [x_min, x_max]
 
 The ASSERT + back-substitution pattern appears in all solver recipes (r78, r98, r99) —
 see solver-research-plan.md §2 for the 4-pillar framework.
+
+## Sample output (pricing, solver=ON, SLSQP, claude_cli)
+
+```
+=== Nonlinear Optimization (scipy.optimize / pricing) ===
+
+── Solver Result (solver=ON, method=SLSQP) ──────────────
+{"success": true, "method": "SLSQP", "problem_type": "pricing",
+ "x_opt": 24.0, "objective": 1160.8276, "n_iterations": 13,
+ "message": "Optimization terminated successfully"}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "PASS", "x_opt": 24.0, "recomputed_objective": 1160.8276,
+ "reported_objective": 1160.8276, "delta": 0.0, "notes": "all checks passed"}
+
+── Business Interpretation ──────────────────────────────────
+Set price to $24.00 — this maximizes profit at $1,160.83 per period.
+
+Analytical check: p* = ε × c / (ε − 1) = 1.5 × $8 / 0.5 = $24.00 ✓
+Scipy found this in 13 iterations and landed exactly on the closed-form answer.
+
+Sensitivity: raising elasticity from 1.5 → 2.0 drops p* to $16 and
+profit collapses ~90% — the single biggest model risk.
+
+LLM calls: 2  (formulation + interpretation)
+```
+
+Report saved to: `./cookbook/114_scipy_nonlinear/output/pricing_true_SLSQP.txt`
 
 ## Related recipes
 

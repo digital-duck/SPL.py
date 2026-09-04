@@ -34,11 +34,13 @@ Random search has no memory — trial 20 is as uninformed as trial 1.
 ```bash
 # solver=ON — Bayesian GP optimization
 spl3 run cookbook/113_bayesian_opt/bayesian_opt.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli \
+    --param use_solver=true
 
 # solver=OFF — LLM heuristic guess
 spl3 run cookbook/113_bayesian_opt/bayesian_opt.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli \
+    --param use_solver=false
 ```
 
 ## Install

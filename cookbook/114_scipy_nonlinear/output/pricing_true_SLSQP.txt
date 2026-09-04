@@ -1,0 +1,69 @@
+=== Nonlinear Optimization (scipy.optimize / pricing) ===
+
+── Problem Specification ────────────────────────────────────
+```json
+{
+  "type": "pricing",
+  "sense": "maximize",
+  "params": {
+    "demand_scale": 10000,
+    "elasticity": 1.5,
+    "unit_cost": 8,
+    "fixed_cost": 200,
+    "min_demand": 0
+  },
+  "bounds": {"x_min": 6, "x_max": 150}
+}
+```
+
+── Solver Result (solver=ON, method=SLSQP) ──────────────
+{"success": true, "method": "SLSQP", "problem_type": "pricing", "x_opt": 24.0, "objective": 1160.8276, "n_iterations": 13, "message": "Optimization terminated successfully"}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "PASS", "x_opt": 24.0, "recomputed_objective": 1160.8276, "reported_objective": 1160.8276, "delta": 0.0, "notes": "all checks passed"}
+
+── Business Interpretation ──────────────────────────────────
+## Pricing Optimization Result
+
+### The Decision
+
+**Set your price to $24.00 per unit.** At this price, the model projects a profit of **$1,160.83 per period**.
+
+---
+
+### Why $24 Is the Sweet Spot
+
+Your customers are price-sensitive (elasticity = 1.5, meaning a 1% price increase cuts demand by 1.5%). Two opposing forces determine the optimal price:
+
+- **Too low (e.g., $6):** You sell a lot of units, but each unit costs $8 to produce. At $6 you're selling *below cost* — volume is high but you lose money on every sale.
+- **Too high (e.g., $150):** Your margin per unit is excellent, but almost no one buys at that price — demand collapses faster than margin grows.
+
+At **$24**, the margin per unit ($16) and the sales volume balance out to produce the highest total profit. The math confirms this exactly: with elasticity 1.5 and a $8 unit cost, the analytic optimum is `8 × 1.5 / (1.5 − 1) = $24`.
+
+---
+
+### Profit at Key Price Points
+
+| Price | What's happening | Profit |
+|-------|-----------------|--------|
+| $6 (floor) | High volume, selling below cost | **−$1,561** (loss) |
+| **$24 (optimum)** | Balanced margin and volume | **+$1,161** |
+| $150 (ceiling) | Almost no buyers | +$573 |
+
+The boundaries are instructive: the floor price is catastrophic, and even the far-end ceiling underperforms the optimum by half.
+
+---
+
+### Verification
+
+The solution **passed verification** with zero discrepancy between the solver's reported profit and the independently recomputed profit (delta = 0.0). This means the number is not an artifact of numerical rounding — you can trust the $1,160.83 figure.
+
+---
+
+### One Sensitivity to Explore
+
+**What if customers become more price-sensitive — elasticity rising from 1.5 to 2.0?**
+
+The optimal price would drop to **$16**, and profit would shrink to roughly **$113 per period** — a ~90% reduction. This is the single biggest lever in the model. If you're entering a more competitive market or launching a commodity version of your product, re-running the optimization with elasticity = 2.0 will tell you quickly whether the business case still holds.
+
+LLM calls: 2  (formulation + interpretation)
