@@ -48,17 +48,20 @@ No additional configuration needed. The recipe writes code and tests to a tempor
 
 ```bash
 # Default spec (merge two sorted lists, O(n+m))
-spl3 run cookbook/79_code_pytest/code_pytest.spl --llm claude_cli
-
-# Custom spec
 spl3 run cookbook/79_code_pytest/code_pytest.spl \
-    --llm ollama:gemma3 \
-    --param spec="Write a Python function count_words(text) that returns a dict mapping each word to its frequency. Words are case-insensitive and punctuation is stripped."
+    --main code_pytest \
+    --llm claude_cli
 
 # More repair attempts (default 3)
 spl3 run cookbook/79_code_pytest/code_pytest.spl \
     --llm claude_cli \
     --param max_tries=5
+
+# Custom spec
+spl3 run cookbook/79_code_pytest/code_pytest.spl \
+    --main code_pytest \
+    --llm ollama:gemma3 \
+    --param spec="Write a Python function count_words(text) that returns a dict mapping each word to its frequency. Words are case-insensitive and punctuation is stripped."
 ```
 
 ## Execution flow

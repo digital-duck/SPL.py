@@ -2044,6 +2044,45 @@
       "excluded_adapters": []
     },
     {
+      "id": "115",
+      "name": "Gambit 3-Player Game Theory",
+      "description": "Finds Nash equilibria in a 3-player normal-form game using pygambit (falls back to brute-force if not installed). Default: 3-firm SaaS pricing triopoly — each firm simultaneously chooses Premium ($200/mo) or Standard ($120/mo). Standard is a dominant strategy for every firm (3-player Prisoner's Dilemma), so Nash is (Standard,Standard,Standard) = $120K each vs cooperative (Premium,Premium,Premium) = $200K each. Extends r110 (nashpy, 2-player) to N-player competition. solver=ON: pygambit ExternalEnumPureSolver. solver=OFF: LLM 3-way competitive reasoning. ASSERT: nash_3p_found (C1). Optional: pip install pygambit.",
+      "dir": "115_gambit_3player",
+      "log": "gambit_3player",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["pygambit"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "117",
+      "name": "Two-Stage Stochastic Programming (Pyomo)",
+      "description": "Solves a two-stage stochastic LP via Pyomo's Extensive Form (EF). Stage 1: decide order quantity before demand is known. Stage 2: per-scenario recourse (shortage/excess). Default: seasonal inventory stocking with 3 demand scenarios (pessimistic/nominal/optimistic, probs 0.3/0.5/0.2). LLM baseline: order expected demand = 190 units → E[cost]=$1,409. Pyomo optimum: Q*=200 units → E[cost]=$1,360. VSS=$49 — ordering the mean is suboptimal when shortage costs ($15/unit) >> holding costs ($2/unit); critical ratio=0.833. ASSERT: sp_optimal (C1 — solver certified status=optimal). Requires: pip install pyomo && conda install -c conda-forge glpk.",
+      "dir": "117_pyomo_stochastic",
+      "log": "pyomo_stochastic",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["pyomo", "glpk"],
+      "excluded_adapters": []
+    },
+    {
+      "id": "116",
+      "name": "OpenSpiel CFR — Kuhn Poker",
+      "description": "Solves an imperfect-information extensive-form game (Kuhn Poker) via Counterfactual Regret Minimization (CFR) using DeepMind OpenSpiel. Kuhn Poker: 2 players, 3 cards (J<Q<K), 1-chip ante+bet. Since each player's card is private, optimal play requires a mixed strategy (bluffing J at probability 1/3). CFR converges to exploitability < 0.05 in ~1000 iterations vs LLM-naive ~0.25. Extends r111 (Stackelberg, perfect information) to private-information games. ASSERT: cfr_converged — exploitability < 0.05 (C1). Requires: pip install open_spiel.",
+      "dir": "116_openspiel_cfr",
+      "log": "openspiel_cfr",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["open_spiel"],
+      "excluded_adapters": []
+    },
+    {
       "id": "102",
       "name": "Z3 SMT Compliance Checker",
       "description": "Encodes business eligibility rules as Z3 SMT constraints and determines whether the policy is SAT (qualifying profile exists) or UNSAT (contradictory rules). Default: QuickLoan Policy v2.1 with 5 interconnected rules — Z3 finds hidden rule interactions (self-employed + income $40-49K trap) that LLM sequential tracing misses. solver=ON: Z3 theorem prover. solver=OFF: LLM manual rule tracing. ASSERT: is_satisfiable (C1). Requires: pip install z3-solver.",
