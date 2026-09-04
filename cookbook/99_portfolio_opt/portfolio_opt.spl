@@ -140,6 +140,43 @@ def optimize_by_algorithm(market_data_json, algorithm, target_return, max_weight
     return _fn(market_data_json, algorithm, float(target_return), float(max_weight))
 $$;
 
+CREATE TOOL_API comparison_to_csv(tickers TEXT,
+                                  r_markowitz TEXT, r_min_var TEXT, r_max_sharpe TEXT,
+                                  r_risk_parity TEXT, r_hrp TEXT, r_cvar TEXT)
+RETURNS TEXT AS PYTHON $$
+def comparison_to_csv(tickers, r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import comparison_to_csv as _fn
+    return _fn(tickers, r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar)
+$$;
+
+CREATE TOOL_API composition_to_csv(tickers TEXT, capital TEXT,
+                                   r_markowitz TEXT, r_min_var TEXT, r_max_sharpe TEXT,
+                                   r_risk_parity TEXT, r_hrp TEXT, r_cvar TEXT)
+RETURNS TEXT AS PYTHON $$
+def composition_to_csv(tickers, capital, r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import composition_to_csv as _fn
+    return _fn(tickers, capital, r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar)
+$$;
+
+CREATE TOOL_API save_csv(csv_text TEXT, out_dir TEXT, filename TEXT)
+RETURNS TEXT AS PYTHON $$
+def save_csv(csv_text, out_dir, filename):
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "99_portfolio_opt")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import save_csv as _fn
+    return _fn(csv_text, out_dir, filename)
+$$;
+
 -- ── LLM prompt templates ─────────────────────────────────────
 
 CREATE FUNCTION interpret_portfolio(tickers TEXT, period TEXT, capital TEXT,
@@ -267,11 +304,12 @@ WORKFLOW portfolio_optimization
   INPUT @capital TEXT := "10000"
   INPUT @period TEXT := "1y"
   INPUT @target_return TEXT := "0.12"
-  INPUT @max_weight TEXT := "0.25"
-  INPUT @use_solver TEXT := "true"
-  INPUT @algorithm TEXT := "markowitz"
+  INPUT @max_weight TEXT := "0.20"
   INPUT @adapter TEXT := "claude_cli"
   INPUT @model TEXT := ""
+  INPUT @log_dir TEXT := "./logs"
+  INPUT @algorithm TEXT := "markowitz"
+  INPUT @use_solver TEXT := "true"
   OUTPUT @report TEXT
 DO
   @sharpe_str        := "";
@@ -377,17 +415,19 @@ WORKFLOW portfolio_comparison
   INPUT @capital TEXT := "10000"
   INPUT @period TEXT := "1y"
   INPUT @target_return TEXT := "0.12"
-  INPUT @max_weight TEXT := "0.25"
+  INPUT @max_weight TEXT := "0.20"
   INPUT @adapter TEXT := "claude_cli"
   INPUT @model TEXT := ""
+  INPUT @log_dir TEXT := "./logs"
+  INPUT @out_dir TEXT := "cookbook/99_portfolio_opt/outputs"
   OUTPUT @report TEXT
 DO
   LOGGING f"[compare] start  tickers={@tickers}  period={@period}" LEVEL INFO
 
   CALL fetch_stock_data(@tickers, @period) INTO @market_data_json;
 
-  -- Run all 6 algorithms concurrently on the grid — inputs are ready, outputs are independent
-  CALL PARALLEL ON GRID "momagrid"
+  -- Run all 6 algorithms concurrently — inputs are ready, outputs are independent
+  CALL PARALLEL
     optimize_by_algorithm(@market_data_json, "markowitz",    @target_return, @max_weight) INTO @r_markowitz,
     optimize_by_algorithm(@market_data_json, "min_variance", @target_return, @max_weight) INTO @r_min_var,
     optimize_by_algorithm(@market_data_json, "max_sharpe",   @target_return, @max_weight) INTO @r_max_sharpe,
@@ -396,7 +436,21 @@ DO
     optimize_by_algorithm(@market_data_json, "cvar",         @target_return, @max_weight) INTO @r_cvar
   END;
 
-  LOGGING "[compare] all 6 algorithms complete — synthesising with LLM" LEVEL INFO
+  LOGGING "[compare] all 6 algorithms complete — building CSV and synthesising with LLM" LEVEL INFO
+
+  CALL comparison_to_csv(@tickers,
+                         @r_markowitz, @r_min_var, @r_max_sharpe,
+                         @r_risk_parity, @r_hrp, @r_cvar) INTO @summary_csv;
+
+  CALL composition_to_csv(@tickers, @capital,
+                          @r_markowitz, @r_min_var, @r_max_sharpe,
+                          @r_risk_parity, @r_hrp, @r_cvar) INTO @composition_csv;
+
+  CALL PARALLEL
+    save_csv(@summary_csv,     @out_dir, "comparison_summary.csv")     INTO @path_summary,
+    save_csv(@composition_csv, @out_dir, "comparison_composition.csv") INTO @path_composition
+  END;
+  LOGGING f"[compare] CSVs saved → {@path_summary}  {@path_composition}" LEVEL INFO
 
   -- LLM synthesises all results and recommends the best
   GENERATE compare_algorithms(@tickers, @market_data_json,
@@ -409,13 +463,11 @@ DO
 Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
 Target return: {@target_return}  |  Max position: {@max_weight}
 
-Raw Results:
-  Markowitz:    {@r_markowitz}
-  Min Variance: {@r_min_var}
-  Max Sharpe:   {@r_max_sharpe}
-  Risk Parity:  {@r_risk_parity}
-  HRP:          {@r_hrp}
-  CVaR:         {@r_cvar}
+Algorithm Summary (CSV):
+{@summary_csv}
+
+Portfolio Composition (CSV):
+{@composition_csv}
 
 LLM Synthesis & Recommendation:
 {@synthesis}";

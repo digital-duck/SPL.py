@@ -258,6 +258,85 @@ def format_heuristic_report(tickers: str, period: str, capital: str,
     )
 
 
+def _parse_algo_results(raws: list, algo_labels: list) -> list:
+    parsed = []
+    for name, raw in zip(algo_labels, raws):
+        try:
+            d = json.loads(raw)
+        except Exception:
+            d = {"status": "PARSE_ERROR", "weights": {}, "expected_return": None,
+                 "annual_volatility": None, "sharpe_ratio": None}
+        d["_name"] = name
+        parsed.append(d)
+    return parsed
+
+
+def comparison_to_csv(tickers: str,
+                      r_markowitz: str, r_min_var: str, r_max_sharpe: str,
+                      r_risk_parity: str, r_hrp: str, r_cvar: str) -> str:
+    """Algorithm summary: rows=algorithms, cols=metrics + per-ticker weight."""
+    import csv, io
+
+    ticker_list = [t.strip() for t in tickers.split(",")]
+    algo_labels = ["markowitz", "min_variance", "max_sharpe", "risk_parity", "hrp", "cvar"]
+    parsed = _parse_algo_results(
+        [r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar], algo_labels)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["algorithm", "status", "expected_return", "annual_volatility",
+                     "sharpe_ratio"] + ticker_list)
+    for d in parsed:
+        weights = d.get("weights", {})
+        writer.writerow([
+            d["_name"],
+            d.get("status", "UNKNOWN"),
+            f"{d.get('expected_return') or 0:.4f}",
+            f"{d.get('annual_volatility') or 0:.4f}",
+            f"{d.get('sharpe_ratio') or 0:.4f}",
+        ] + [f"{weights.get(t, 0.0):.4f}" for t in ticker_list])
+    return buf.getvalue().strip()
+
+
+def composition_to_csv(tickers: str, capital: str,
+                       r_markowitz: str, r_min_var: str, r_max_sharpe: str,
+                       r_risk_parity: str, r_hrp: str, r_cvar: str) -> str:
+    """Portfolio composition: rows=tickers, cols=weight% and $ per algorithm."""
+    import csv, io
+
+    ticker_list = [t.strip() for t in tickers.split(",")]
+    cap = float(capital)
+    algo_labels = ["markowitz", "min_variance", "max_sharpe", "risk_parity", "hrp", "cvar"]
+    parsed = _parse_algo_results(
+        [r_markowitz, r_min_var, r_max_sharpe, r_risk_parity, r_hrp, r_cvar], algo_labels)
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["ticker"]
+                    + [f"{a}_wt%" for a in algo_labels]
+                    + [f"{a}_$"   for a in algo_labels])
+    for ticker in ticker_list:
+        row = [ticker]
+        row += [f"{d.get('weights', {}).get(ticker, 0.0) * 100:.2f}" for d in parsed]
+        row += [f"{d.get('weights', {}).get(ticker, 0.0) * cap:.0f}" for d in parsed]
+        writer.writerow(row)
+    return buf.getvalue().strip()
+
+
+def save_csv(csv_text: str, out_dir: str, filename: str) -> str:
+    """Write csv_text to out_dir/filename, creating the directory if needed.
+
+    Returns the absolute path of the saved file.
+    """
+    import os
+    from pathlib import Path
+    out = Path(out_dir) if os.path.isabs(out_dir) else Path(os.getcwd()) / out_dir
+    out.mkdir(parents=True, exist_ok=True)
+    dest = out / filename
+    dest.write_text(csv_text, encoding="utf-8")
+    return str(dest)
+
+
 def verify_portfolio(optimization_json: str,
                      max_weight_limit: float = 0.40,
                      weight_sum_tol: float = 0.02) -> str:

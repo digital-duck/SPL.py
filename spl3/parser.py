@@ -251,10 +251,10 @@ class SPL3Parser(SPL2Parser):
         """Parse the branch list after CALL PARALLEL [ON GRID "name"] ... END"""
         grid: str | None = None
         tok = self._current()
-        if tok.type == TokenType.IDENTIFIER and tok.value.lower() == "on":
+        if tok.type == TokenType.ON:
             self._advance()  # consume 'on'
             grid_tok = self._current()
-            if grid_tok.type == TokenType.IDENTIFIER and grid_tok.value.lower() == "grid":
+            if grid_tok.type == TokenType.GRID:
                 self._advance()  # consume 'grid'
                 grid = self._expect(TokenType.STRING).value
 

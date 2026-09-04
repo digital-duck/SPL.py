@@ -64,21 +64,33 @@ Sharpe ratio is the headline quality metric. Higher is better; >1.0 is good, >2.
 ```bash
 # solver=ON, Markowitz — live data + deterministic optimization
 spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
+  --main portfolio_optimization \
   --param use_solver=true \
   --param algorithm=markowitz \
-  --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA" \
-  --param capital=10000 \
+  --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA,GDX,SILJ,WEAT,DBA,XLE" \
+  --param capital=100000 \
   --param period=1y \
   --param target_return=0.12 \
-  --param max_weight=0.25
+  --param max_weight=0.20
+
+# LLM calls: 1  Latency: 32535ms
+# Log:     ./logs/portfolio_opt-claude_cli-claude-sonnet-4-6-20260903-204126.md
+
 
 # solver=OFF — LLM heuristic allocation (back-checked by verify_portfolio)
 spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
-  --adapter ollama -m gemma3 \
+  --llm claude_cli \
+  --main portfolio_optimization \
   --param use_solver=false \
-  --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA" \
-  --param capital=10000
+  --param algorithm=markowitz \
+  --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA,GDX,SILJ,WEAT,DBA,XLE" \
+  --param capital=100000 \
+  --param period=1y \
+  --param target_return=0.12 \
+  --param max_weight=0.20
+
+
 ```
 
 ### TOOL_API Reference
@@ -228,13 +240,14 @@ Run the comparison workflow monthly. Fresh μ and Σ mean the algorithm recommen
 ```bash
 # Monthly rebalancing signal — let the data and LLM decide the method
 spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
-  --workflow portfolio_comparison \
-  --adapter claude_cli \
-  --param tickers="MOS,EWZ,GLD,TLT,XLE,VNQ,BRK-B,VZ" \
-  --param capital=50000 \
+  --llm claude_cli \
+  --main portfolio_comparison \
+  --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA,GDX,SILJ,WEAT,DBA,XLE" \
+  --param capital=100000 \
   --param period=1y \
-  --param target_return=0.10 \
-  --param max_weight=0.25
+  --param target_return=0.12 \
+  --param max_weight=0.20
+
 ```
 
 ---

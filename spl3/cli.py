@@ -92,22 +92,40 @@ class _CapturingAdapter:
         return await self._inner.generate(prompt, model=model, **kwargs)
 
 
+def _resolve_log_dir(workflow_node, params: dict, spl_file_dir: Path) -> Path:
+    """Return the log directory: params['log_dir'] > workflow INPUT default > ~/.spl/logs/."""
+    if "log_dir" in params:
+        raw = params["log_dir"]
+    else:
+        raw = None
+        for inp in getattr(workflow_node, "inputs", []):
+            if inp.name == "log_dir" and inp.default_value is not None:
+                raw = getattr(inp.default_value, "value", None)
+                break
+    if raw:
+        p = Path(raw)
+        return p if p.is_absolute() else (spl_file_dir / p).resolve()
+    return _SPL_LOG_DIR
+
+
 def _write_run_log(
     stem: str,
     adapter_name: str,
     model_name: str,
     result,
     started_at: datetime,
+    log_dir: Path | None = None,
 ) -> Path:
     """Write a rich markdown run log matching spl-go / spl-ts format. Returns the log path."""
-    _SPL_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = log_dir if log_dir is not None else _SPL_LOG_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
     ts_file  = started_at.strftime("%Y%m%d-%H%M%S")
     ts_human = started_at.strftime("%Y-%m-%d %H:%M:%S")
 
     model_slug = model_name.replace(":", "-").replace(" ", "_") if model_name else ""
     filename = (f"{stem}-{adapter_name}-{model_slug}-{ts_file}.md" if model_slug
                 else f"{stem}-{adapter_name}-{ts_file}.md")
-    log_path = _SPL_LOG_DIR / filename
+    log_path = out_dir / filename
 
     # Support both WorkflowResult (spl3) and SPLResult / GenerationResult (spl2)
     in_tok  = (getattr(result, "total_input_tokens",  None)
@@ -699,10 +717,13 @@ def cmd_configure_import(file, dest, keys, dry_run):
                    "Auto-enabled at ~/.spl/workflows.db when --persistence is active.")
 @click.option("--llm-max-output-tokens", "llm_max_output_tokens", default=None, type=int, metavar="N",
               help="Default max output tokens per GENERATE call (overrides built-in default of 1000).")
+@click.option("--main", "main_workflow", default=None, metavar="NAME",
+              help="Workflow name to use as the entry point. Overrides the implicit "
+                   "selection (filename-match → last defined).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
         llm_timeout, kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
-        kernel_store_path, llm_max_output_tokens):
+        kernel_store_path, llm_max_output_tokens, main_workflow):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -761,7 +782,8 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
                               kernel_timeout=kernel_timeout, kernel_name=kernel_name,
                               persistence=persistence_backend, workflow_id=workflow_id,
                               kernel_store=kernel_store,
-                              llm_max_output_tokens=llm_max_output_tokens))
+                              llm_max_output_tokens=llm_max_output_tokens,
+                              main_workflow=main_workflow))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
@@ -770,7 +792,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                         kernel_name="python3",
                         persistence=None, workflow_id=None,
                         kernel_store=None,
-                        llm_max_output_tokens=None):
+                        llm_max_output_tokens=None,
+                        main_workflow=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -904,8 +927,21 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     if defns:
         # ── SPL 3.0 WORKFLOW path ──────────────────────────────────────────
-        target = next((d for d in defns if d.name == stem), defns[-1])
+        if main_workflow:
+            target = next((d for d in defns if d.name == main_workflow), None)
+            if target is None:
+                available = ", ".join(d.name for d in defns)
+                raise click.BadParameter(
+                    f"Workflow '{main_workflow}' not found in {path.name}. "
+                    f"Available: {available}",
+                    param_hint="--main",
+                )
+        else:
+            target = next((d for d in defns if d.name == stem), defns[-1])
         click.echo(f"Running workflow: {target.name}({list(params)})")
+
+        log_stem = target.name
+        resolved_log_dir = _resolve_log_dir(target.ast_node, params, path.parent)
 
         result = await executor.execute_workflow(target.ast_node, params=params)
 
@@ -940,16 +976,19 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
             if toks_in:
                 click.echo(f"Tokens:     {toks_in} in / {toks_out} out")
 
+        log_stem = stem
+        resolved_log_dir = _SPL_LOG_DIR
         resolved_model = capturing.last_model or model or getattr(spl2_results[0], "model", "") if spl2_results else model or ""
         log_result = spl2_results[-1] if spl2_results else None
 
     if log_result is not None:
         log_path = _write_run_log(
-            stem=stem,
+            stem=log_stem,
             adapter_name=adapter_name,
             model_name=resolved_model,
             result=log_result,
             started_at=started_at,
+            log_dir=resolved_log_dir,
         )
         click.echo(f"Log:     {log_path}")
 

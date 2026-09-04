@@ -28,6 +28,7 @@ SPL 2.0 backward compatibility is fully preserved.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import pickle
@@ -35,7 +36,7 @@ import re
 
 _log = logging.getLogger("spl.executor")
 
-from spl.executor import Executor as SPL2Executor
+from spl.executor import Executor as SPL2Executor, SPLWorkflowError
 
 from spl.ast_nodes import Condition, NamedArg
 from spl3.ast_nodes import (
@@ -955,28 +956,93 @@ class SPL3Executor(SPL2Executor):
             )
             return
 
-        # Build (name, args_dict, into_var) tuples for all branches.
-        # Arguments are positional; we resolve names from the target workflow's
-        # INPUT param list if available, otherwise use arg0, arg1, ...
-        calls = []
+        # Split branches: registry workflows → composer, tools/builtins → direct dispatch.
+        from spl3.registry import RegistryError
+        from spl3.composer import SubWorkflowResult
+        import inspect, time as _time
+
+        workflow_calls: list[tuple[str, dict, str]] = []
+        tool_coros = []
+
         for branch in stmt.branches:
             try:
                 defn = composer.registry.get(branch.workflow_name)
                 param_names = [inp.name for inp in defn.ast_node.inputs]
-            except Exception:
+            except (RegistryError, Exception):
+                defn = None
                 param_names = []
 
-            args = self._resolve_sub_workflow_args(branch.arguments, param_names, state)
+            if defn is not None:
+                args = self._resolve_sub_workflow_args(branch.arguments, param_names, state)
+                workflow_calls.append((branch.workflow_name, args, branch.target_var))
+            else:
+                tool_coros.append(self._call_tool_branch_parallel(branch, state))
 
-            calls.append((branch.workflow_name, args, branch.target_var))
+        # Gather workflow branches via composer and tool branches directly.
+        workflow_coros = [
+            composer.call(name, args, into_var, grid=stmt.grid)
+            for name, args, into_var in workflow_calls
+        ]
+        all_results = await asyncio.gather(*workflow_coros, *tool_coros, return_exceptions=True)
 
-        results = await composer.call_parallel(calls, grid=stmt.grid)
+        errors = [r for r in all_results if isinstance(r, Exception)]
+        if errors:
+            raise errors[0]
 
-        for sub_result in results:
-            state.set_var(sub_result.output_var, sub_result.output_value)
-            state.total_llm_calls += sub_result.total_llm_calls
-            state.total_latency_ms += sub_result.latency_ms
-            state.response_workers |= sub_result.response_workers
+        for sub_result in all_results:
+            if isinstance(sub_result, SubWorkflowResult):
+                state.set_var(sub_result.output_var, sub_result.output_value)
+                state.total_llm_calls += sub_result.total_llm_calls
+                state.total_latency_ms += sub_result.latency_ms
+                state.response_workers |= sub_result.response_workers
+
+    async def _call_tool_branch_parallel(self, branch, state):
+        """Dispatch a single CALL PARALLEL branch as a tool/builtin call.
+
+        Returns a SubWorkflowResult so results merge uniformly with workflow branches.
+        """
+        import inspect, time as _time
+        from spl3.composer import SubWorkflowResult
+        from spl.executor import ToolFailed
+
+        name = branch.workflow_name
+        args_text = [self._eval_expression(a, state) for a in branch.arguments]
+        start = _time.perf_counter()
+
+        tool = self.functions.get_tool(name)
+        if tool is not None:
+            try:
+                if inspect.iscoroutinefunction(tool):
+                    result = await tool(*args_text)
+                else:
+                    result = tool(*args_text)
+            except SPLWorkflowError:
+                raise
+            except Exception as e:
+                raise ToolFailed(f"Tool '{name}' raised: {e}") from e
+        elif self.functions.is_builtin(name):
+            try:
+                result = self.functions.call_builtin(name, *args_text)
+            except SPLWorkflowError:
+                raise
+            except Exception as e:
+                raise ToolFailed(f"Built-in '{name}' raised: {e}") from e
+        else:
+            raise ToolFailed(
+                f"CALL PARALLEL branch '{name}' is not a registered workflow, tool, or builtin."
+            )
+
+        latency = (_time.perf_counter() - start) * 1000
+        _log.debug("CALL PARALLEL tool '%s' -> @%s (%.0fms)", name, branch.target_var, latency)
+        return SubWorkflowResult(
+            workflow_name=name,
+            output_var=branch.target_var,
+            output_value=str(result),
+            status="complete",
+            latency_ms=latency,
+            total_llm_calls=0,
+            response_workers=set(),
+        )
 
     # ------------------------------------------------------------------ #
     # CALL statement — registry-aware override with self-healing           #
