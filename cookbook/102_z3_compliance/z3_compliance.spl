@@ -28,14 +28,34 @@
 
 -- ── Tool APIs ────────────────────────────────────────────────
 
-CREATE TOOL_API extract_policy(policy_text TEXT)
+CREATE TOOL_API get_default_policy()
 RETURNS TEXT AS PYTHON $$
-def extract_policy(policy_text: str) -> str:
+def get_default_policy() -> str:
     import sys, os
     _dir = os.path.join(os.getcwd(), "cookbook", "102_z3_compliance")
     if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import extract_policy as _fn
+    from tools import get_default_policy as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API is_empty_policy(policy_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_empty_policy(policy_text: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "102_z3_compliance")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import is_empty_policy as _fn
     return _fn(policy_text)
+$$;
+
+CREATE TOOL_API parse_policy_json(json_str TEXT)
+RETURNS TEXT AS PYTHON $$
+def parse_policy_json(json_str: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "102_z3_compliance")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import parse_policy_json as _fn
+    return _fn(json_str)
 $$;
 
 CREATE TOOL_API check_z3_eligibility(policy_json TEXT)
@@ -103,6 +123,57 @@ Task: Manually trace through the rules and determine:
 Be specific with numbers. Do not use Z3 or any solver — reason manually.
 $$;
 
+CREATE FUNCTION extract_policy_prompt(policy_text TEXT)
+RETURNS TEXT AS $$
+You are a compliance engineer. Convert the natural-language policy below into a structured JSON object matching this schema exactly. Output JSON only — no explanation, no markdown fences.
+
+SCHEMA:
+{
+  "policy": "<policy name string>",
+  "variables": [
+    {"name": "<var_name>", "type": "int", "range": [<min>, <max>]},
+    {"name": "<var_name>", "type": "bool"}
+  ],
+  "rules": [
+    {"id": "R1", "desc": "<human description>", <op structure>}
+  ],
+  "query": "find_qualifying_profile"
+}
+
+SUPPORTED OPS:
+- Comparison:  {"op": "gte"|"lte"|"eq"|"neq", "var": "<name>", "value": <number|bool>}
+- Logical:     {"op": "and"|"or", "args": [<rule>, ...]}
+- Negation:    {"op": "not", "arg": <rule>}
+- Implication: {"op": "implies", "condition": <rule>, "then": <rule>}
+
+EXAMPLE:
+Policy text: "users must be 18+, have a verified email or phone, and premium members may skip the phone check."
+Output:
+{
+  "policy": "User Eligibility Policy",
+  "variables": [
+    {"name": "age", "type": "int", "range": [0, 120]},
+    {"name": "email_verified", "type": "bool"},
+    {"name": "phone_verified", "type": "bool"},
+    {"name": "premium_member", "type": "bool"}
+  ],
+  "rules": [
+    {"id": "R1", "desc": "Age >= 18", "op": "gte", "var": "age", "value": 18},
+    {"id": "R2", "desc": "Email verified or phone verified", "op": "or", "args": [
+      {"op": "eq", "var": "email_verified", "value": true},
+      {"op": "eq", "var": "phone_verified", "value": true}
+    ]},
+    {"id": "R3", "desc": "Non-premium members must verify phone", "op": "implies",
+      "condition": {"op": "eq", "var": "premium_member", "value": false},
+      "then":      {"op": "eq", "var": "phone_verified", "value": true}}
+  ],
+  "query": "find_qualifying_profile"
+}
+
+NOW CONVERT:
+Policy text: {policy_text}
+$$;
+
 CREATE FUNCTION explain_z3_result_prompt(z3_report TEXT, policy_text TEXT)
 RETURNS TEXT AS $$
 You are a compliance analyst. Z3 (an SMT theorem prover) just verified this loan eligibility policy.
@@ -123,13 +194,23 @@ $$;
 -- ── WORKFLOW ─────────────────────────────────────────────────
 
 WORKFLOW z3_compliance
-  INPUT @policy_text TEXT := "QuickLoan eligibility policy: applicants must be 18+, have income >= $30K or collateral, credit score >= 650 (or 600 with income >= $80K), be employed 12+ months or have collateral, and if self-employed must earn >= $50K."
+  INPUT @policy_text TEXT := ""
   INPUT @use_solver TEXT := "true"
   OUTPUT @report TEXT
 DO
   LOGGING "[r102] z3_compliance start" LEVEL INFO
 
-  CALL extract_policy(@policy_text) INTO @policy_json;
+  -- Route: no policy_text supplied → default QuickLoan demo (no LLM call)
+  --        custom policy_text       → LLM extraction → validate + sanitize
+  CALL is_empty_policy(@policy_text) INTO @use_default;
+  EVALUATE @use_default
+    WHEN "true" THEN
+      CALL get_default_policy() INTO @policy_json
+    WHEN "false" THEN
+      LOGGING "[r102] custom policy detected — extracting via LLM" LEVEL INFO;
+      GENERATE extract_policy_prompt(@policy_text) INTO @policy_json_raw;
+      CALL parse_policy_json(@policy_json_raw) INTO @policy_json
+  END;
 
   EVALUATE @use_solver
     WHEN "true" THEN

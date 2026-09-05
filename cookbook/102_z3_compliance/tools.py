@@ -77,9 +77,38 @@ def _build_constraint(rule: dict, z3_vars: dict):
     raise ValueError(f"Unknown op: {op}")
 
 
-def extract_policy(_: str) -> str:
-    """Return the default loan policy JSON (used as the canonical problem)."""
+def get_default_policy() -> str:
+    """Return the hardcoded QuickLoan policy JSON (demo / fallback)."""
     return json.dumps(_DEFAULT_LOAN_POLICY)
+
+
+def is_empty_policy(policy_text: str) -> str:
+    """Return 'true' if no custom policy was provided (empty string), 'false' otherwise."""
+    return "true" if not policy_text.strip() else "false"
+
+
+def parse_policy_json(json_str: str) -> str:
+    """Validate and clean LLM-extracted policy JSON; fall back to default on failure.
+
+    Strips markdown code fences, parses JSON, checks minimal schema, then
+    returns the cleaned JSON string. Falls back to _DEFAULT_LOAN_POLICY if
+    the LLM output cannot be parsed or is missing required fields.
+    """
+    import re
+    text = json_str.strip()
+    # Strip ```json ... ``` or ``` ... ``` fences
+    m = re.search(r"```(?:json)?\s*([\s\S]*?)```", text)
+    if m:
+        text = m.group(1).strip()
+    try:
+        policy = json.loads(text)
+        if "variables" not in policy or "rules" not in policy:
+            raise ValueError("missing required fields")
+        if "query" not in policy:
+            policy["query"] = "find_qualifying_profile"
+        return json.dumps(policy)
+    except Exception:
+        return json.dumps(_DEFAULT_LOAN_POLICY)
 
 
 def check_z3_eligibility(policy_json: str) -> str:

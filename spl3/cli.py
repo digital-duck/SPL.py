@@ -3007,6 +3007,115 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 
 
 # ------------------------------------------------------------------ #
+# spl3 util mmd2img                                                   #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("mmd2img", short_help="Convert a .mmd Mermaid file to PNG/SVG/PDF/HTML.")
+@click.argument("mmd_files", nargs=-1, required=True, metavar="MMD_FILE...")
+@click.option("--format", "-f", "fmt",
+              default="png", show_default=True,
+              type=click.Choice(["png", "svg", "pdf", "html"], case_sensitive=False),
+              help="Output format.")
+@click.option("--out", "-o", default=None, metavar="FILE",
+              help="Output file path (single input only).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory (default: same directory as each input file).")
+@click.option("--background", default="white", show_default=True,
+              help="Background colour for PNG/SVG (e.g. white, transparent).")
+@click.option("--theme", default="default", show_default=True,
+              type=click.Choice(["default", "forest", "dark", "neutral"]),
+              help="Mermaid theme.")
+def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme):
+    """Convert one or more Mermaid .mmd files to an image.
+
+    Uses mmdc (Mermaid CLI) if installed; otherwise falls back to
+    'npx --yes @mermaid-js/mermaid-cli' (requires Node.js).
+
+    HTML output uses the built-in renderer (no mmdc required).
+
+    \b
+    Install mmdc once:
+      npm install -g @mermaid-js/mermaid-cli
+
+    \b
+    Examples:
+      spl3 util mmd2img diagram.mmd                      # → diagram.png
+      spl3 util mmd2img diagram.mmd -f svg               # → diagram.svg
+      spl3 util mmd2img diagram.mmd -o /tmp/out.png      # explicit path
+      spl3 util mmd2img *.mmd --out-dir ./images         # batch convert
+      spl3 util mmd2img diagram.mmd -f pdf --theme dark
+      spl3 util mmd2img diagram.mmd -f html              # no mmdc needed
+    """
+    import shutil, subprocess, json, tempfile
+    from pathlib import Path
+
+    if out and len(mmd_files) > 1:
+        raise click.UsageError("--out/-o can only be used with a single input file.")
+
+    mmdc = shutil.which("mmdc")
+    mmdc_base = [mmdc] if mmdc else ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
+    puppet_cfg = Path(tempfile.mktemp(suffix=".json"))
+    puppet_cfg.write_text(json.dumps({"args": ["--no-sandbox"]}))
+
+    try:
+        for mmd_file in mmd_files:
+            mmd_path = Path(mmd_file)
+            if not mmd_path.exists():
+                click.echo(f"Warning: {mmd_file} not found — skipped", err=True)
+                continue
+
+            if fmt == "html":
+                mmd_text = mmd_path.read_text(encoding="utf-8")
+                if out:
+                    out_path = Path(out)
+                elif out_dir:
+                    out_path = Path(out_dir) / f"{mmd_path.stem}.html"
+                else:
+                    out_path = mmd_path.with_suffix(".html")
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(_mmd_single_html(mmd_text, mmd_path.stem), encoding="utf-8")
+                click.echo(f"HTML: {out_path}")
+                continue
+
+            # PNG / SVG / PDF — via mmdc
+            if out:
+                out_path = Path(out)
+            elif out_dir:
+                out_path = Path(out_dir) / f"{mmd_path.stem}.{fmt}"
+            else:
+                out_path = mmd_path.with_suffix(f".{fmt}")
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+
+            args = mmdc_base + [
+                "-i", str(mmd_path),
+                "-o", str(out_path),
+                "-p", str(puppet_cfg),
+                "--backgroundColor", background,
+                "--theme", theme,
+            ]
+            try:
+                r = subprocess.run(args, capture_output=True, timeout=60)
+                if r.returncode == 0:
+                    click.echo(f"{fmt.upper()}: {out_path}")
+                else:
+                    stderr = r.stderr.decode(errors="replace").strip()
+                    click.echo(f"Error rendering {mmd_path.name}:", err=True)
+                    if stderr:
+                        click.echo(f"  {stderr}", err=True)
+                    click.echo("  Install mmdc: npm install -g @mermaid-js/mermaid-cli", err=True)
+            except FileNotFoundError:
+                raise click.ClickException(
+                    "mmdc not found and npx is unavailable.\n"
+                    "Install: npm install -g @mermaid-js/mermaid-cli"
+                )
+            except subprocess.TimeoutExpired:
+                click.echo(f"Warning: mmdc timed out for {mmd_path.name}", err=True)
+    finally:
+        puppet_cfg.unlink(missing_ok=True)
+
+
+# ------------------------------------------------------------------ #
 # spl3 validate                                                       #
 # ------------------------------------------------------------------ #
 

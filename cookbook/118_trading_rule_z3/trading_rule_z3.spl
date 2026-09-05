@@ -1,0 +1,284 @@
+-- ============================================================
+-- Recipe 118: Z3 Trading Rule Checker
+--
+-- PURPOSE: Encode a trader's entry/exit/risk rulebook as Z3 SMT
+-- constraints and verify:
+--   SAT  → a valid market scenario exists (strategy can trigger)
+--   UNSAT → rules are contradictory (strategy can never fire)
+--   SNAPSHOT → given today's indicators, does the strategy signal?
+--
+-- KEY STORY: A trader's rulebook is a compliance policy over market
+-- variables. Z3 audits it for consistency and finds exact boundary
+-- conditions — the market state where all rules first align. Manual
+-- rule-tracing picks "typical" examples and misses the edges where
+-- two rules interact to block or trap the strategy.
+--
+-- AI ROLE: NL → Z3 translator (LLM extracts the formal spec)
+-- SOLVER ROLE: Z3 proves consistency / finds triggering scenario
+--
+-- This is the IT-era analogy: programmers once hand-coded custom
+-- solvers per domain. Now LLM translates; a rigorous solver proves.
+-- As the solver collection grows (Z3, LP, Prolog, Nash, CFR...),
+-- each becomes a composable building block for larger problems.
+--
+-- Install: pip install z3-solver
+--
+-- Run:
+--   # Default: Momentum Breakout strategy audit
+--   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--       --llm claude_cli
+--
+--   # Custom trading rules (NL → Z3)
+--   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--       --llm claude_cli \
+--       --param "rules_text=Enter long when RSI is between 30 and 40, \
+--         price is above the 50-day moving average, volume is at least \
+--         twice the 20-day average. Never enter if a Fed announcement \
+--         is today. Exit if RSI exceeds 70."
+--
+--   # Market snapshot check (all variables required)
+--   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--       --llm claude_cli \
+--       --param "snapshot_json={\"rsi\":31,\"price_vs_ma200\":5,\"volume_ratio\":180,\"adr_pct\":25,\"in_uptrend\":true,\"earnings_week\":false}"
+-- ============================================================
+
+-- ── Tool APIs ────────────────────────────────────────────────
+
+CREATE TOOL_API get_default_policy()
+RETURNS TEXT AS PYTHON $$
+def get_default_policy() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_policy as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API is_empty_policy(policy_text TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_empty_policy(policy_text: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import is_empty_policy as _fn
+    return _fn(policy_text)
+$$;
+
+CREATE TOOL_API parse_policy_json(json_str TEXT)
+RETURNS TEXT AS PYTHON $$
+def parse_policy_json(json_str: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import parse_policy_json as _fn
+    return _fn(json_str)
+$$;
+
+CREATE TOOL_API check_z3_strategy(policy_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def check_z3_strategy(policy_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import check_z3_strategy as _fn
+    return _fn(policy_json)
+$$;
+
+CREATE TOOL_API check_market_snapshot(policy_json TEXT, snapshot_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def check_market_snapshot(policy_json: str, snapshot_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import check_market_snapshot as _fn
+    return _fn(policy_json, snapshot_json)
+$$;
+
+CREATE TOOL_API is_strategy_consistent(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_strategy_consistent(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import is_strategy_consistent as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_strategy_report(result_json TEXT, policy_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_strategy_report(result_json: str, policy_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_strategy_report as _fn
+    return _fn(result_json, policy_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "118_trading_rule_z3")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_rules_prompt(rules_text TEXT)
+RETURNS TEXT AS $$
+You are a quantitative trading systems engineer. Convert the natural-language trading rules below into a structured JSON object matching this schema exactly. Output JSON only — no explanation, no markdown fences.
+
+SCHEMA:
+{
+  "policy": "<strategy name string>",
+  "variables": [
+    {"name": "<var_name>", "type": "int", "range": [<min>, <max>]},
+    {"name": "<var_name>", "type": "bool"}
+  ],
+  "entry_rules": [
+    {"id": "E1", "desc": "<human description>", <op structure>}
+  ],
+  "risk_rules": [
+    {"id": "R1", "desc": "<human description>", <op structure>}
+  ],
+  "query": "find_triggering_scenario"
+}
+
+SUPPORTED OPS:
+- Comparison:  {"op": "gte"|"lte"|"eq"|"neq", "var": "<name>", "value": <number|bool>}
+- Logical:     {"op": "and"|"or", "args": [<rule>, ...]}
+- Negation:    {"op": "not", "arg": <rule>}
+- Implication: {"op": "implies", "condition": <rule>, "then": <rule>}
+
+VARIABLE CONVENTIONS (use these names when the rule mentions these concepts):
+- RSI (0-100 int): "rsi"
+- Price vs 200-day MA in % × 10 (-100 to 200 int): "price_vs_ma200"
+- Volume / avg_volume × 100 (0-500 int): "volume_ratio"
+- Average daily range % × 10 (0-200 int): "adr_pct"
+- Boolean flags: use descriptive snake_case names (e.g. "earnings_week", "in_uptrend", "fed_day")
+- For other numeric indicators: choose a clear snake_case name with appropriate range
+
+EXAMPLE:
+Rules text: "Enter when RSI is between 25 and 38, and price is above the 50-day MA. Never trade on Fed announcement days."
+Output:
+{
+  "policy": "RSI Pullback Strategy",
+  "variables": [
+    {"name": "rsi", "type": "int", "range": [0, 100]},
+    {"name": "price_vs_ma50", "type": "int", "range": [-100, 200]},
+    {"name": "fed_day", "type": "bool"}
+  ],
+  "entry_rules": [
+    {"id": "E1", "desc": "RSI between 25 and 38",
+     "op": "and", "args": [
+       {"op": "gte", "var": "rsi", "value": 25},
+       {"op": "lte", "var": "rsi", "value": 38}
+     ]},
+    {"id": "E2", "desc": "Price above 50-day MA",
+     "op": "gte", "var": "price_vs_ma50", "value": 0}
+  ],
+  "risk_rules": [
+    {"id": "R1", "desc": "No trading on Fed announcement days",
+     "op": "eq", "var": "fed_day", "value": false}
+  ],
+  "query": "find_triggering_scenario"
+}
+
+NOW CONVERT:
+Trading rules: {rules_text}
+$$;
+
+CREATE FUNCTION explain_audit_prompt(strategy_report TEXT, rules_text TEXT)
+RETURNS TEXT AS $$
+You are a quantitative trading analyst reviewing a Z3 formal verification of a trading strategy.
+
+RULES:
+{rules_text}
+
+Z3 AUDIT RESULT:
+{strategy_report}
+
+Explain the result in plain English for a trader (≤200 words):
+1. What did Z3 find? (consistent strategy, or contradictory rules?)
+2. If SAT: what does the triggering scenario tell us? Is it a realistic market state?
+3. If UNSAT: which rules are likely conflicting? What should the trader fix?
+4. What is the key insight a manual rule-check would have missed?
+5. What is the risk of running this strategy without a formal consistency check?
+$$;
+
+CREATE FUNCTION explain_snapshot_prompt(snapshot_result TEXT, policy_text TEXT)
+RETURNS TEXT AS $$
+You are a quantitative trading analyst. Z3 just evaluated today's market against a trading strategy.
+
+STRATEGY:
+{policy_text}
+
+SNAPSHOT CHECK RESULT:
+{snapshot_result}
+
+Explain in plain English for the trader (≤150 words):
+1. Signal: BUY or NO_SIGNAL?
+2. Which rules passed? Which blocked the signal?
+3. What would need to change in the market for a signal to fire?
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW trading_rule_z3
+  INPUT @rules_text  TEXT := ""
+  INPUT @snapshot_json TEXT := ""
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r118] trading_rule_z3 start" LEVEL INFO
+
+  -- Step 1: resolve policy (default demo or NL extraction)
+  CALL is_empty_policy(@rules_text) INTO @use_default;
+  EVALUATE @use_default
+    WHEN "true" THEN
+      CALL get_default_policy() INTO @policy_json
+    WHEN "false" THEN
+      LOGGING "[r118] custom rules detected — extracting via LLM" LEVEL INFO;
+      GENERATE extract_rules_prompt(@rules_text) INTO @policy_json_raw;
+      CALL parse_policy_json(@policy_json_raw) INTO @policy_json
+  END;
+
+  -- Step 2: route on snapshot vs. strategy audit
+  CALL is_empty_policy(@snapshot_json) INTO @is_audit_mode;
+  EVALUATE @is_audit_mode
+    WHEN "true" THEN
+      -- Strategy audit: Z3 checks if all rules can ever simultaneously hold
+      LOGGING "[r118] audit mode — checking strategy consistency" LEVEL INFO;
+      CALL check_z3_strategy(@policy_json) INTO @z3_result;
+      ASSERT is_strategy_consistent(@z3_result);
+      CALL format_strategy_report(@z3_result, @policy_json) INTO @solver_report;
+      CALL json_get_field(@z3_result, "status") INTO @sat_status;
+      LOGGING f"[r118] Z3 result: {@sat_status}" LEVEL INFO;
+      GENERATE explain_audit_prompt(@solver_report, @rules_text) INTO @explanation;
+      @report := f"=== Z3 Trading Rule Checker (r118) | mode=AUDIT ===
+
+{@solver_report}
+
+── Analyst Explanation ─────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      -- Snapshot check: does today's market fire the strategy?
+      LOGGING "[r118] snapshot mode — checking today's indicators" LEVEL INFO;
+      CALL check_market_snapshot(@policy_json, @snapshot_json) INTO @snapshot_result;
+      CALL json_get_field(@snapshot_result, "signal") INTO @signal;
+      LOGGING f"[r118] snapshot signal: {@signal}" LEVEL INFO;
+      GENERATE explain_snapshot_prompt(@snapshot_result, @rules_text) INTO @explanation;
+      @report := f"=== Z3 Trading Rule Checker (r118) | mode=SNAPSHOT ===
+
+── Market Snapshot Evaluation ──────────────────────────────
+{@snapshot_result}
+
+── Analyst Explanation ─────────────────────────────────────
+{@explanation}"
+  END;
+
+  RETURN @report WITH status = "complete";
+
+END;

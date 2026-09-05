@@ -43,15 +43,15 @@ Z3 finds a qualifying profile: `age=18, income=50000, credit_score=650, months_e
 ```bash
 # solver=ON — Z3 theorem prover
 spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF — LLM manual tracing
 spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 
 # Custom policy text
 spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
-    --adapter claude_cli --param use_solver=true \
+    --llm claude_cli --param use_solver=true \
     --param "policy_text=Subscription eligibility: user must be 13+, account in good standing, and premium_tier=true or lifetime_member=true."
 ```
 
@@ -59,6 +59,9 @@ spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
 
 ```bash
 conda activate spl123
+
+# https://github.com/Z3Prover/z3/wiki#background
+# https://z3prover.github.io/papers/programmingz3.html
 pip install z3-solver
 ```
 
@@ -66,7 +69,9 @@ pip install z3-solver
 
 | Function | Purpose |
 |---|---|
-| `extract_policy(policy_text)` | Returns default loan policy JSON (canonical B-class problem) |
+| `get_default_policy()` | Returns hardcoded QuickLoan policy JSON — demo / fast-path fallback when no `policy_text` is supplied |
+| `is_empty_policy(policy_text)` | Returns `"true"` if `policy_text` is empty (user did not pass `--param policy_text=...`); deterministic branch, no LLM call |
+| `parse_policy_json(json_str)` | Strips markdown fences, parses and validates LLM-extracted policy JSON; falls back to default if malformed |
 | `check_z3_eligibility(policy_json)` | Z3 SAT/UNSAT check → qualifying profile or contradiction |
 | `is_satisfiable(result_json)` | ASSERT gate: `status == "SAT"` |
 | `format_z3_report(result_json, policy_json)` | Markdown report of Z3 results |
@@ -77,6 +82,10 @@ pip install z3-solver
 - **Regulatory compliance**: verify that rule sets from different departments don't conflict
 - **Access control**: prove that a permission matrix has no dead locks (users who can never access required resources)
 - **Tax code**: find edge cases where two deduction rules cancel each other out
+
+## Z3 as a SolverHub in miniature
+
+Z3's internal architecture (Figure 1 of the [Z3 programming guide](https://z3prover.github.io/papers/programmingz3.html)) is itself a composition of specialist sub-solvers — SAT core, arithmetic solver, array solver, bit-vector solver, quantifier engine — coordinated by a central engine that routes each constraint to the best-suited internal solver. This is the SolverHub model applied within a single tool: a registry of solvers, each with a defined domain, composed by a dispatch layer. The parallel validates the architecture: the right abstraction at the problem layer is a registry + advisor, whether the registry spans open-source libraries (SolverHub) or internal algorithmic engines (Z3).
 
 ## Related recipes
 
