@@ -46,16 +46,55 @@ emergency_claim(carol):
 3. `claim_covered(X, emergency_repair) :- catastrophic_event(X)`
 4. `emergency_claim(X) :- eligible_claim(X, emergency_repair), emergency_event(X)`
 
+## Run results — solver=ON vs solver=OFF
+
+Both runs used `claude_cli` / `claude-sonnet-4-6` on the same KB (3 customers, 4 rules).
+
+### Performance
+
+| Metric | solver=ON | solver=OFF |
+|---|---|---|
+| Timestamp | 2026-09-06 19:16:11 | 2026-09-06 19:16:28 |
+| Tokens in | 317 | 346 |
+| Tokens out | 587 | 670 |
+| Total tokens | 904 | 1,016 (+12%) |
+| Latency | 34.5s | 46.9s (1.4×) |
+| Verdict coverage | All 3 customers, all proof paths | Sequential trace, first-path-wins |
+
+### Verdict comparison
+
+| Customer | Ground truth | solver=ON | solver=OFF |
+|---|---|---|---|
+| alice | ELIGIBLE | ✓ ELIGIBLE | ✓ ELIGIBLE |
+| bob | NOT ELIGIBLE | ✓ NOT ELIGIBLE | ✓ NOT ELIGIBLE |
+| carol | NOT ELIGIBLE | ✓ NOT ELIGIBLE | ✗ ELIGIBLE (wrong) |
+
+### Analysis
+
+**solver=ON is correct.** Carol has `comprehensive`, `policy_active`, and `catastrophic_event` — sufficient to satisfy `claim_covered` via R3. But Rule 4 additionally requires `emergency_event(carol)`, which is absent from the KB. The backward-chaining engine correctly fails the proof at R4.
+
+**solver=OFF is wrong on carol.** The LLM reasoned semantically: *"a catastrophic event is a strict subset of emergency events — this holds ✓"* — importing real-world domain knowledge not present in the KB. From a strict logic standpoint this is an unsound inference; `emergency_event(carol)` is simply not a stated fact. The LLM's semantic intuition overrode the KB boundary.
+
+**The LLM explanation in solver=ON is also wrong.** After receiving the correct solver output (carol=NOT ELIGIBLE), the LLM explanation step applied the same semantic injection: it constructed a proof chain that omitted the `emergency_event` requirement entirely and flagged the correct solver verdict as a "solver defect." The solver was right; its post-hoc interpreter was not.
+
+### Key takeaway
+
+This run pair reveals a failure mode absent from r103/r104: **the LLM explanation phase can contradict a correct solver result.** The solver's backward-chaining is sound by construction — it only accepts facts explicitly in the KB. The LLM, in both solver=OFF tracing and solver=ON explanation, injected world-knowledge (`catastrophic_event` semantically implies `emergency_event`) that is not encoded as a rule. The gap here is not about counting rows (r103/r104) but about **KB boundary enforcement**: solvers are immune to semantic drift; LLMs are not.
+
+Token gap is smaller than r103/r104 (12% vs 70–230%) because the solver=ON explanation was verbose — the LLM wrote a detailed (incorrect) counter-argument. A tighter explain prompt scoped to "explain the solver's verdicts" rather than "evaluate the report" would reduce this.
+
 ## Run commands
 
 ```bash
 # solver=ON — backward-chaining inference
 spl3 run cookbook/105_prolog_inference/prolog_inference.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli \
+    --param use_solver=true
 
 # solver=OFF — LLM manual tracing
 spl3 run cookbook/105_prolog_inference/prolog_inference.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli \
+    --param use_solver=false
 ```
 
 ## Install

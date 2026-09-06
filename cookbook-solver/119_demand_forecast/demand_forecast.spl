@@ -1,0 +1,154 @@
+-- ============================================================
+-- Recipe 119: Demand Forecasting — statsmodels structural time series
+--
+-- Demonstrates the deterministic–probabilistic boundary in forecasting:
+--   Probabilistic (LLM)         — extract time-series description from NL
+--   Deterministic (statsmodels) — UnobservedComponents Kalman-filter fit
+--   Deterministic (ASSERT)      — hold-out RMSE must beat naïve baseline
+--   Probabilistic (LLM)         — interpret seasonal pattern for user
+--
+-- use_solver="true"  → statsmodels UnobservedComponents (solver=ON)
+-- use_solver="false" → LLM seasonal trend extrapolation (solver=OFF)
+--
+-- Default problem: 36 months of widget sales (trend + Q4 seasonality).
+-- Production upgrade path: swap statsmodels for PyMC or Prophet
+--   with no changes to this .spl file (DODA applies).
+--
+-- Requires: pip install statsmodels
+-- Run:
+--   spl3 run cookbook/119_demand_forecast/demand_forecast.spl \
+--       --llm claude_cli --param use_solver=true
+-- ============================================================
+
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION describe_ts_problem(problem TEXT)
+RETURNS TEXT AS $$
+Describe this time-series forecasting problem as a JSON object.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "description": "<one-sentence summary>",
+  "frequency": "monthly",
+  "seasonal_period": 12,
+  "history": [<list of numeric values in chronological order>]
+}}
+
+Rules:
+- history must be a flat list of numbers (no labels, no dates)
+- seasonal_period: 12 for monthly, 4 for quarterly, 7 for daily-weekly
+- if the problem provides raw data, use it exactly
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION interpret_forecast(problem TEXT, forecast_table TEXT)
+RETURNS TEXT AS $$
+Interpret this demand forecast for a supply chain or inventory planner.
+
+Problem: {problem}
+
+Forecast table (statsmodels UnobservedComponents — local linear trend + seasonal):
+{forecast_table}
+
+Your interpretation should:
+1. Summarize the overall trend direction.
+2. Identify any seasonal pattern visible in the forecast.
+3. Give a plain-English recommendation for inventory planning based on the forecast.
+4. Note any uncertainty (wide vs. narrow confidence intervals).
+
+Be concise and practical — one paragraph.
+$$;
+
+CREATE FUNCTION propose_forecast_heuristic(problem TEXT)
+RETURNS TEXT AS $$
+You are a demand planner. Given this historical time-series, forecast the next 6 periods
+using seasonal trend extrapolation (no solver — use your judgment).
+
+{problem}
+
+Steps:
+1. Identify the trend (growing, flat, declining).
+2. Identify any seasonal pattern (e.g. Q4 spike).
+3. Extrapolate the next 6 periods, respecting both trend and seasonality.
+4. Return a JSON object:
+{{
+  "forecast": [<6 numeric values>],
+  "trend": "<growing|flat|declining>",
+  "reasoning": "<one sentence>"
+}}
+
+Return ONLY the JSON — no markdown, no prose.
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW demand_forecast
+  INPUT @problem TEXT := "Use the default 36-month widget sales dataset."
+  INPUT @use_solver TEXT := "true"
+  INPUT @periods TEXT := "6"
+  OUTPUT @report TEXT
+DO
+  @verify_status := "N/A";
+  @forecast_json := "{}";
+  @llm_calls     := 0;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+  LOGGING f"[demand_forecast] start  use_solver={@use_solver}  periods={@periods}" LEVEL INFO
+
+  -- Load default problem if user did not supply structured data
+  CALL get_default_problem() INTO @default_problem_json;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      LOGGING "[demand_forecast] solver=ON — statsmodels UnobservedComponents" LEVEL INFO
+
+      -- Stage 1: parse problem description to structured JSON (or use default)
+      GENERATE describe_ts_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[demand_forecast] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+      -- Stage 2: fit structural time series + forecast
+      CALL fit_structural_ts(@problem_json, @periods) INTO @forecast_json;
+
+      -- Gate: RMSE must beat naïve baseline
+      ASSERT is_forecast_valid(@forecast_json);
+      LOGGING "[demand_forecast] ASSERT passed — forecast beats naïve baseline" LEVEL INFO
+
+      -- Stage 3: format + interpret
+      CALL format_forecast_table(@forecast_json) INTO @forecast_table;
+
+      GENERATE interpret_forecast(@problem, @forecast_table) INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      CALL json_get(@forecast_json, "n_periods") INTO @n_periods_str;
+
+      CALL format_report_solver_on(@problem, @n_periods_str, @forecast_table, @interpretation, @llm_calls) INTO @report;
+
+    ELSE
+      -- solver=OFF: LLM seasonal trend extrapolation
+      LOGGING "[demand_forecast] solver=OFF — LLM heuristic extrapolation" LEVEL INFO
+
+      GENERATE propose_forecast_heuristic(@problem) INTO @forecast_text;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[demand_forecast] llm_forecast:\n{@forecast_text}" LEVEL DEBUG
+
+      CALL verify_forecast_off(@default_problem_json, @forecast_text) INTO @verify_result;
+      CALL json_get(@verify_result, "verdict") INTO @verify_status;
+
+      LOGGING f"[demand_forecast] verify_off: verdict={@verify_status}" LEVEL INFO
+
+      CALL format_report_solver_off(@problem, @forecast_text, @forecast_text, @verify_result, @llm_calls) INTO @report;
+
+  END;
+
+  LOGGING f"[demand_forecast] verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @periods,
+         verify = @verify_status;
+
+END;

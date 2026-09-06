@@ -44,11 +44,14 @@ Actions:
 
 ```bash
 # Default problem (deliver p1 from A and p2 from B to C; known minimal plan: 6 steps)
-spl3 run cookbook/93_auto_planning/auto_planning.spl --llm claude_cli
+spl3 run cookbook/93_auto_planning/auto_planning.spl \
+    --llm claude_cli \
+    --param enable_solver=true
 
 # Unaided baseline arm
 spl3 run cookbook/93_auto_planning/auto_planning.spl \
-    --llm ollama:gemma4 --param enable_solver=true
+    --llm claude_cli \
+    --param enable_solver=false
 ```
 
 To try a different logistics problem, override both `problem_text` (the prose description shown to the LLM) and `problem_json` (the machine-readable initial state + goal the validator replays against) together — they must describe the same scenario.
@@ -59,7 +62,54 @@ To try a different logistics problem, override both `problem_text` (the prose de
 
 **Known minimal plan (6 steps):** load p1@A → drive A→B → load p2@B → drive B→C → unload p1@C → unload p2@C.
 
-Verified end-to-end (2026-07-19) with `--llm claude_cli`: correct 6-step plan on the first attempt, `ASSERT is_ok` passed (goal `{p1: C, p2: C}` reached), round-trip check returned `match`.
+Verified end-to-end (2026-09-06) with `--llm claude_cli`: correct 6-step plan on the first attempt, `ASSERT is_ok` passed (goal `{p1: C, p2: C}` reached), round-trip check returned `match`.
+
+## Example output (2026-09-06, claude-sonnet-4-6)
+
+### solver=ON (enable_solver=true)
+
+```
+Validator status (VAL-style): OK
+Plan length: 6 steps
+Final package locations: {'p1': 'C', 'p2': 'C'}
+Round-trip check: match
+
+Plan (JSON):
+[load t1 p1 A] → [drive t1 A→B] → [load t1 p2 B] → [drive t1 B→C]
+  → [unload t1 p1 C] → [unload t1 p2 C]
+```
+
+First attempt — no repair loops triggered. The VAL oracle confirmed every precondition held at each step and the goal `{p1: C, p2: C}` was reached. Round-trip check confirmed the LLM's own step-count narration (`Final answer: 6`) matched the validated plan length.
+
+### solver=OFF (enable_solver=false)
+
+The LLM traced each precondition step-by-step in prose:
+
+```
+Step 1 — load t1 p1 A:  truck_at(t1,A) ✓  pkg_at(p1,A) ✓  → pkg_in(p1,t1)
+Step 2 — drive t1 A B:  truck_at(t1,A) ✓               → truck_at(t1,B)
+Step 3 — load t1 p2 B:  truck_at(t1,B) ✓  pkg_at(p2,B) ✓  → pkg_in(p2,t1)
+Step 4 — drive t1 B C:  truck_at(t1,B) ✓               → truck_at(t1,C)
+Step 5 — unload t1 p1 C: truck_at(t1,C) ✓  pkg_in(p1,t1) ✓ → pkg_at(p1,C)
+Step 6 — unload t1 p2 C: truck_at(t1,C) ✓  pkg_in(p2,t1) ✓ → pkg_at(p2,C)
+Final answer: 6
+```
+
+Correct for this problem — but no formal VAL gate. The LLM's self-verification is only as reliable as its attention over the simulated state; a harder problem (more objects, longer plan, interleaved precondition violations) would not be caught here.
+
+### Comparison
+
+| | solver=ON | solver=OFF |
+|---|---|---|
+| Plan | 6 steps ✓ | 6 steps ✓ |
+| Validation | VAL hard gate (binary, non-negotiable) | LLM self-check (prose, unverified) |
+| Repair loop | Not needed (first attempt) | N/A — no loop |
+| Round-trip | `match` | N/A |
+| Tokens in/out | 581 / 219 | 348 / 216 |
+| Latency | 13s | 15s |
+| Guarantee | Formal — precondition errors **cannot** slip through | Informal — LLM may miss a precondition failure on longer plans |
+
+For this clean 2-package, 3-location problem the LLM gets it right unaided. The VAL gate's value shows on harder instances: longer plans, more packages, revisited locations, or interleaved pick-up/drop sequences where precondition state becomes non-obvious.
 
 ## Execution flow
 

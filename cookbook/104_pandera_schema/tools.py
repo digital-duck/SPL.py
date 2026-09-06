@@ -115,13 +115,22 @@ def validate_schema(schema_json: str, data_csv: str) -> str:
             })
         except pa.errors.SchemaErrors as e:
             errors_df = e.failure_cases
-            for _, grp in errors_df.groupby(["schema_context", "column"]):
+            for _, grp in errors_df.groupby(["schema_context", "column"], dropna=False):
                 row = grp.iloc[0]
+                col = row.get("column", "?")
+                # NaN column = DataFrame-level check (e.g. cross-column uniqueness)
+                import math
+                if isinstance(col, float) and math.isnan(col):
+                    col = "DataFrame"
+                # Replace NaN failure_case values with None for valid JSON
+                raw_samples = grp["failure_case"].head(5).tolist()
+                samples = [None if (isinstance(s, float) and math.isnan(s)) else s
+                           for s in raw_samples]
                 violations.append({
-                    "column":   str(row.get("column", "?")),
+                    "column":   str(col),
                     "check":    str(row.get("check", "?")),
                     "n_failed": len(grp),
-                    "samples":  grp["failure_case"].head(5).tolist(),
+                    "samples":  samples,
                 })
             return json.dumps({
                 "schema_name": schema_def.get("schema_name", "unnamed"),
@@ -146,9 +155,18 @@ def schema_passes(result_json: str) -> bool:
 def format_schema_report(result_json: str) -> str:
     """Markdown report of schema validation results."""
     try:
-        data       = json.loads(result_json)
+        data   = json.loads(result_json)
+        status = data.get("status", "ERROR")
+
+        if status == "ERROR":
+            return (
+                f"## pandera Schema Report — Error\n\n"
+                f"**Error:** {data.get('error', 'unknown error')}\n\n"
+                f"Run `pip install pandera` if pandera is not installed."
+            )
+
         violations = data.get("violations", [])
-        status_sym = "✓ PASS" if data.get("status") == "PASS" else "✗ FAIL"
+        status_sym = "✓ PASS" if status == "PASS" else "✗ FAIL"
         lines = [
             f"## pandera Schema Report — {data.get('schema_name', 'Schema')}",
             "",
@@ -160,7 +178,8 @@ def format_schema_report(result_json: str) -> str:
         if violations:
             lines += ["| Column | Check | Failures | Sample Values |", "|---|---|---|---|"]
             for v in violations:
-                samples = str(v.get("samples", [])[:3])
+                raw = v.get("samples", [])[:3]
+                samples = str(["(null)" if s is None else s for s in raw])
                 lines.append(f"| {v['column']} | {v['check']} | {v['n_failed']} | {samples} |")
         else:
             lines.append("All column checks passed.")

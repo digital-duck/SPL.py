@@ -1,0 +1,151 @@
+=== Nonlinear Optimization (scipy.optimize / pricing) ===
+
+── Problem Specification ────────────────────────────────────
+```json
+{
+  "type": "pricing",
+  "sense": "maximize",
+  "params": {
+    "demand_scale": 10000,
+    "elasticity": 1.5,
+    "unit_cost": 8,
+    "fixed_cost": 200,
+    "min_demand": 0
+  },
+  "bounds": {"x_min": 6, "x_max": 150}
+}
+```
+
+── LLM Estimate (solver=OFF) ────────────────────────────────
+## Step-by-Step Reasoning
+
+### 1. Parse Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| demand_scale (D₀) | 10,000 |
+| elasticity (ε) | 1.5 |
+| unit_cost (c) | 8 |
+| fixed_cost (F) | 200 |
+| bounds | x ∈ [6, 150] |
+
+### 2. Build the Model
+
+**Demand function** (constant-elasticity / power-law form):
+
+```
+Q(x) = D₀ · x^(−ε) = 10,000 · x^(−1.5)
+```
+
+**Profit function:**
+
+```
+π(x) = (x − c) · Q(x) − F
+     = (x − 8) · 10,000 · x^(−1.5) − 200
+```
+
+### 3. Apply the MR = MC Condition
+
+Differentiate the contribution margin `(x − 8) · x^(−1.5)`:
+
+```
+d/dx [(x − 8) · x^(−1.5)]
+  = x^(−1.5) + (x − 8)(−1.5)x^(−2.5)
+  = x^(−2.5) · [x − 1.5(x − 8)]
+  = x^(−2.5) · [−0.5x + 12]
+```
+
+Setting this to zero:
+
+```
+−0.5x + 12 = 0  →  x* = 24
+```
+
+This matches the standard Lerner markup rule:
+
+```
+x* = c · ε / (ε − 1) = 8 × 1.5 / 0.5 = 24
+```
+
+Both routes give the same answer — high confidence.
+
+### 4. Verify the Result
+
+- x* = 24 is inside bounds [6, 150] ✓
+- Second derivative at x = 24: the factor `(−0.5x + 12)` vanishes, leaving `−0.5 · x^(−2.5) < 0` ✓ (it's a maximum)
+
+### 5. Estimate Profit at x* = 24
+
+```
+Q(24)  = 10,000 / 24^1.5
+       = 10,000 / 117.58
+       ≈ 85.1 units
+
+Revenue   = 24 × 85.1 ≈ 2,042
+Var. cost =  8 × 85.1 ≈   681
+Margin    ≈ 1,361
+Fixed cost             =   200
+────────────────────────────────
+Profit    ≈ 1,161
+```
+
+---
+
+```
+x_opt: 24
+estimated_profit: 1161
+```
+
+── Extracted Solution ───────────────────────────────────────
+{"success": true, "method": "LLM-heuristic", "x_opt": 24, "objective": 1161}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "FAIL", "x_opt": 24.0, "recomputed_objective": 1160.8276, "reported_objective": 1161.0, "delta": 0.1724, "notes": "objective mismatch: recomputed=1160.8276, reported=1161.0, \u0394=0.1724"}
+
+── Business Interpretation ──────────────────────────────────
+## Pricing Optimization — Business Interpretation
+
+### 1. The Decision
+
+**Set your price at $24.00 — this maximizes profit at approximately $1,161 per period.**
+
+At $24, you're selling roughly 85 units. Below that price you're underearning on each sale; above it, customers leave faster than you gain margin.
+
+---
+
+### 2. Why $24 Is the Sweet Spot
+
+This market has an elasticity of 1.5, meaning every 1% price increase shrinks demand by 1.5%. That's moderately price-sensitive.
+
+The optimum sits at exactly **3× your unit cost** ($24 = 3 × $8). This is a well-known result for power-law demand: the profit-maximizing markup is determined by the elasticity alone. Push the price higher and you lose more customers than you gain in margin. Drop it lower and you're giving away margin without enough volume to compensate.
+
+At $24, the margin per unit ($16) and the volume (~85 units) are perfectly balanced.
+
+---
+
+### 3. Payoff at Key Price Points
+
+| Price | Units Sold | Gross Margin | Profit |
+|-------|-----------|--------------|--------|
+| $6 (floor) | ~680 | –$1,361 | **–$1,561** (loss) |
+| $24 (optimum) | ~85 | $1,361 | **+$1,161** |
+| $150 (ceiling) | ~5 | $773 | **+$573** |
+
+The floor price is a disaster — you sell below cost and lose over $1,500. Even the ceiling, while far from optimal, earns $573 because the margin per unit is huge. The optimum outperforms the ceiling by 2× because it captures far more volume.
+
+---
+
+### 4. Verification Result: FAIL (but trivially)
+
+The solver reported $1,161.00; the independent check computed $1,160.83 — a difference of **$0.17, or 0.015%**. This is a rounding artifact from the solver returning a whole-number approximation, not a substantive error. The optimal price of $24 is analytically exact and the profit figure is correct to within rounding. You can act on this result with confidence.
+
+---
+
+### 5. Sensitivity to Explore
+
+**What if customers become more price-sensitive (elasticity rises from 1.5 → 2.0)?**
+
+The optimal price would drop to $16 (from $24), and peak profit would collapse to roughly **$112** — a 90% reduction. This is the biggest lever in the model. If your market is trending more competitive or customers are gaining more alternatives, re-running this with elasticity = 2.0 would show how urgently you need to cut costs before repricing.
+
+LLM calls: 4  (formulation + estimate + extraction + interpretation)
+Note: run --param use_solver=true to compare with scipy's exact solution.

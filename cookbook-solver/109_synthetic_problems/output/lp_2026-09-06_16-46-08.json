@@ -1,0 +1,83 @@
+{
+  "status": "OK",
+  "n_total": 5,
+  "n_optimal": 5,
+  "n_failed": 0,
+  "results": [
+    {
+      "id": "v001",
+      "domain": "lp",
+      "problem_text": "A furniture workshop manufactures five products: Chairs (x1), Desks (x2), Shelves (x3), Tables (x4), and Cabinets (x5). Per-unit profits are $8, $6, $5, $4, and $3 respectively. Each unit requires labor-hours as follows: Chair 1, Desk 2, Shelf 1, Table 2, Cabinet 3. Each unit requires kg of wood: Chair 2, Desk 3, Shelf 2, Table 4, Cabinet 5. The workshop has 100 labor-hours and 120 kg of wood available per day. All production quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 480.0,
+      "variables": {
+        "x1": 60.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v002",
+      "domain": "lp",
+      "problem_text": "A bakery produces five baked goods daily: Croissants (x1), Muffins (x2), Scones (x3), Baguettes (x4), and Cookies (x5). Per-unit profits are $15, $18, $12, $8, and $5. Each unit requires flour (kg): Croissant 2, Muffin 4, Scone 2, Baguette 1, Cookie 1; butter (kg): Croissant 1, Muffin 1, Scone 2, Baguette 1, Cookie 0.5; and preparation time (hours): Croissant 0.5, Muffin 0.5, Scone 1, Baguette 0.5, Cookie 0.25. Daily resources available: 60 kg flour, 30 kg butter, 20 preparation hours. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 450.0,
+      "variables": {
+        "x1": 30.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v003",
+      "domain": "lp",
+      "problem_text": "A chemical plant synthesizes five compounds: Alpha (x1), Beta (x2), Gamma (x3), Delta (x4), and Epsilon (x5). Per-unit profits are $40, $30, $25, $15, and $8. Each unit requires reactant (liters): Alpha 4, Beta 3, Gamma 3, Delta 2, Epsilon 1; and catalyst (kg): Alpha 6, Beta 5, Gamma 4, Delta 3, Epsilon 2. Daily supply limits are 20 liters of reactant and 30 kg of catalyst. Both resources are fully consumed at the optimal production plan. All quantities must be non-negative. Maximize daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 200.0,
+      "variables": {
+        "x1": 5.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v004",
+      "domain": "lp",
+      "problem_text": "A garment factory produces five clothing items: Jackets (x1), Vests (x2), Shirts (x3), Skirts (x4), and Belts (x5). Per-unit profits are $30, $25, $18, $14, and $6. Each item requires labor (hours): Jacket 4, Vest 3, Shirt 2, Skirt 2, Belt 1; fabric (m\u00b2): Jacket 6, Vest 5, Shirt 3, Skirt 2, Belt 1; and buttons (units): Jacket 3, Vest 2, Shirt 4, Skirt 1, Belt 2. Daily capacity: 24 labor-hours, 36 m\u00b2 of fabric, and 30 buttons. All production quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 202.9091,
+      "variables": {
+        "x1": 0.0,
+        "x2": 3.2727,
+        "x3": 5.4545,
+        "x4": 1.6364,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v005",
+      "domain": "lp",
+      "problem_text": "A pharmaceutical company manufactures five drug formulations: Drug A (x1), Drug B (x2), Drug C (x3), Drug D (x4), and Drug E (x5). Per-batch profits (in $thousands) are $100, $80, $60, $40, and $20. Each batch requires lab time (hours): Drug A 8, Drug B 7, Drug C 5, Drug D 4, Drug E 2; raw material (kg): Drug A 12, Drug B 10, Drug C 8, Drug D 5, Drug E 3; and equipment time (machine-hours): Drug A 6, Drug B 5, Drug C 4, Drug D 3, Drug E 1. Daily limits are 40 lab hours, 60 kg of raw material, and 25 machine-hours. All batch quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 450.0,
+      "variables": {
+        "x1": 2.5,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 10.0
+      },
+      "fill_rate": null
+    }
+  ]
+}

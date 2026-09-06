@@ -30,21 +30,60 @@
 | `department = "Temp"` | 4 | `isin [Engineering, Sales, HR, Finance, Operations]` |
 | `name = None` | 3 | `name not null` |
 
+## Run results — solver=ON (fixed) vs solver=OFF
+
+All runs used `claude_cli` / `claude-sonnet-4-6` on the same demo dataset (200 rows, 3 injected violation types).
+
+### Performance
+
+| Metric | solver=ON (broken) | solver=ON (fixed) | solver=OFF |
+|---|---|---|---|
+| Timestamp | 2026-09-06 18:52:05 | 2026-09-06 19:02:01 | 2026-09-06 18:52:16 |
+| Tokens in | 164 | 232 | 279 |
+| Tokens out | 201 | 216 | 1,197 |
+| Total tokens | 365 | 448 | 1,476 (+230%) |
+| Latency | 14.4s | 12.9s | 57.7s (4.5×) |
+| Row coverage | All 200 rows | All 200 rows | Description + schema only |
+| Violations surfaced | 0 (bug) | 3 (correct) | 0 exact / fabricated samples |
+
+### Accuracy comparison
+
+| Violation | Injected | solver=ON broken | solver=ON fixed | solver=OFF |
+|---|---|---|---|---|
+| `salary = 0.0` | 6 rows | Not surfaced | **6 rows ✓** | Predicted (plausible) |
+| `department = "Temp"` | 4 rows | Not surfaced | **4 rows ✓** | Predicted ("Marketing", wrong value) |
+| `name = None` | 3 rows | Not surfaced | **3 rows ✓** | Not predicted |
+
+### Bug and fix
+
+**Before:** `format_schema_report` silently swallowed `ERROR` status — displayed `Status: FAIL / 0 violations / All column checks passed`, hiding the actual engine error. NaN null-samples were serialized as `NaN` (invalid JSON per spec).
+
+**After two fixes in `tools.py`:**
+- `validate_schema`: `groupby(..., dropna=False)` captures DataFrame-level checks; NaN samples replaced with `None` before `json.dumps` (valid JSON)
+- `format_schema_report`: detects `status == "ERROR"` early and surfaces the error message instead of rendering a misleading empty-violation report; null samples display as `(null)` in the table
+
+### Key takeaway
+
+solver=ON (fixed) is **4.5× faster** and uses **70% fewer output tokens** than solver=OFF, while returning exact row counts the LLM cannot fabricate. solver=OFF correctly risk-ranked columns (`department` > `salary`) but invented specific failing records that don't exist in the data — useful for design-time reasoning, not for production validation. The LLM explanation in solver=ON (fixed) is concise and actionable because it reasons from real counts, not hypotheticals.
+
 ## Run commands
 
 ```bash
 # solver=ON — pandera validates all 200 rows
 spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli \
+    --param use_solver=true
 
 # solver=OFF — LLM reasons from schema description
 spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli \
+    --param use_solver=false
 
 # Validate your own CSV
 spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
-    --adapter claude_cli --param use_solver=true \
-    --param "data_csv=$(cat employees.csv)"
+    --llm claude_cli \
+    --param use_solver=true \
+    --param data_csv="$(cat employees.csv)"
 ```
 
 ## Install

@@ -7,6 +7,19 @@ TOOL_APIs called from workforce_3obj.spl.
 import json
 
 
+def _strip_fences(text: str) -> str:
+    """Strip markdown code fences from LLM output before json.loads()."""
+    t = text.strip()
+    if t.startswith("```"):
+        lines = t.splitlines()
+        # drop first line (```json or ```) and last line (```)
+        inner = lines[1:] if lines[-1].strip() == "```" else lines[1:]
+        if inner and inner[-1].strip() == "```":
+            inner = inner[:-1]
+        t = "\n".join(inner).strip()
+    return t
+
+
 # ── Default B4 problem ────────────────────────────────────────────────────────
 
 _DEFAULT_B4 = {
@@ -103,7 +116,7 @@ def solve_workforce_pareto(problem_json: str, n_gen: int = 50, pop_size: int = 1
     from pymoo.operators.sampling.rnd import IntegerRandomSampling
 
     try:
-        data = json.loads(problem_json)
+        data = json.loads(_strip_fences(problem_json))
     except Exception as e:
         return json.dumps({"status": "PARSE_ERROR", "error": str(e)})
 
@@ -258,7 +271,7 @@ def compute_utopia_anchors(problem_json: str) -> str:
     import pulp
 
     try:
-        data = json.loads(problem_json)
+        data = json.loads(_strip_fences(problem_json))
     except Exception as e:
         return json.dumps({"error": f"parse error: {e}"})
 
@@ -362,8 +375,8 @@ def verify_workforce_off(problem_json: str, solution_json: str) -> str:
     Returns {"verdict": "PASS"/"FAIL"/"PARTIAL", "notes": str}
     """
     try:
-        problem = json.loads(problem_json)
-        sol = json.loads(solution_json)
+        problem = json.loads(_strip_fences(problem_json))
+        sol = json.loads(_strip_fences(solution_json))
     except Exception as e:
         return json.dumps({"verdict": "FAIL", "notes": f"parse error: {e}"})
 

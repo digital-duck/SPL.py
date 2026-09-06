@@ -7,6 +7,39 @@ TOOL_APIs called from production_sustainability.spl.
 import json
 
 
+def _strip_fences(text: str) -> str:
+    import re
+    text = text.strip()
+    text = re.sub(r'^```(?:json)?\s*\n?', '', text)
+    text = re.sub(r'\n?```\s*$', '', text)
+    return text.strip()
+
+
+def format_report_solver_on(problem: str, problem_json: str, n_points: str,
+                             front_table: str, interpretation: str, llm_calls: str) -> str:
+    return (
+        "=== Production Sustainability (solver=ON / PuLP Pareto Sweep) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"Extracted Problem Data (JSON):\n{problem_json}\n\n"
+        f"Pareto Front ({n_points} non-dominated points):\n{front_table}\n\n"
+        f"Interpretation:\n{interpretation}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
+def format_report_solver_off(problem: str, problem_json: str, solution_text: str,
+                              solution_json: str, verify_result: str, llm_calls: str) -> str:
+    return (
+        "=== Production Sustainability (solver=OFF / LLM heuristic) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"Extracted Problem Data (JSON):\n{problem_json}\n\n"
+        f"LLM Proposed Solution:\n{solution_text}\n\n"
+        f"Extracted Solution (JSON):\n{solution_json}\n\n"
+        f"Verification:\n{verify_result}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
 def extract_production_problem(problem_text: str) -> str:
     """
     Parse product/resource data from problem_text into JSON.
@@ -91,7 +124,7 @@ def sweep_pareto_scalarization(problem_json: str, n_points: int = 10) -> str:
     MAX_CARBON =  30.0   # anchor: x=10, y=0
 
     try:
-        data = json.loads(problem_json)
+        data = json.loads(_strip_fences(problem_json))
         products  = data["products"]
         resources = data["resources"]
 
@@ -199,8 +232,8 @@ def verify_production_off(problem_json: str, solution_json: str) -> str:
     TOLS = {"arith": 0.5}   # dollar / kg tolerance
 
     try:
-        prob = json.loads(problem_json)
-        sol  = json.loads(solution_json)
+        prob = json.loads(_strip_fences(problem_json))
+        sol  = json.loads(_strip_fences(solution_json))
 
         products  = prob["products"]
         resources = prob["resources"]
@@ -255,10 +288,3 @@ def verify_production_off(problem_json: str, solution_json: str) -> str:
         return json.dumps({"verdict": "FAIL", "notes": f"parse error: {e}"})
 
 
-def json_get_field(data_json: str, field: str) -> str:
-    """Extract a top-level field from a JSON object as a string."""
-    try:
-        data = json.loads(data_json)
-        return str(data.get(field, ""))
-    except Exception:
-        return ""

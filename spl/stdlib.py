@@ -226,6 +226,31 @@ def reverse(value: str) -> str:
     return str(value)[::-1]
 
 
+@spl_tool
+def strip_fences(text: str) -> str:
+    """STRIP_FENCES(text) — remove Markdown code fences from LLM output before
+    JSON parsing. Handles ```json ... ``` and bare ``` ... ``` wrappers (with
+    optional surrounding whitespace and a language tag), returning the inner
+    content trimmed. A no-op when the text carries no fence.
+
+    Central helper for solver recipes: LLM-produced JSON frequently arrives
+    fenced, which is the recurring `json.loads` "Expecting value: line 1
+    column 1" PARSE_ERROR source. Importable in Python tools as
+    `from spl.stdlib import strip_fences`, or callable from SPL as
+    `CALL strip_fences(@x)`.
+    """
+    t = str(text).strip()
+    if not t.startswith("```"):
+        return t
+    nl = t.find("\n")
+    if nl == -1:                       # single-line ```...``` form
+        return t.strip("`").strip()
+    t = t[nl + 1:]                     # drop opening fence line (``` or ```json)
+    if t.rstrip().endswith("```"):     # drop closing fence
+        t = t.rstrip()[:-3]
+    return t.strip()
+
+
 # ── Pattern Matching ─────────────────────────────────────────────────────────
 
 @spl_tool

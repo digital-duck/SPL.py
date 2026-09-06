@@ -1,0 +1,83 @@
+{
+  "status": "OK",
+  "n_total": 5,
+  "n_optimal": 5,
+  "n_failed": 0,
+  "results": [
+    {
+      "id": "v001",
+      "domain": "lp",
+      "problem_text": "A beverage company produces five drinks: Lemonade (x1), Orange Juice (x2), Apple Cider (x3), Grape Juice (x4), and Iced Tea (x5). Lemonade earns $24 profit per case and requires 3 labor-hours and 2 kg of fruit. Orange Juice earns $6 profit per case and requires 2 labor-hours and 4 kg of fruit. Apple Cider earns $5 profit per case and requires 1 labor-hour and 3 kg of fruit. Grape Juice earns $4 profit per case and requires 3 labor-hours and 2 kg of fruit. Iced Tea earns $3 profit per case and requires 2 labor-hours and 3 kg of fruit. The plant has 60 labor-hours and 40 kg of fruit available per day. All production quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 480.0,
+      "variables": {
+        "x1": 20.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v002",
+      "domain": "lp",
+      "problem_text": "A furniture maker produces five items: Armchairs (x1), Benches (x2), Coffee Tables (x3), Dining Sets (x4), and End Tables (x5). Armchairs earn $20 profit and require 2 labor-hours and 5 board-feet of wood. Benches earn $8 profit and require 1 labor-hour and 2 board-feet. Coffee Tables earn $15 profit and require 4 labor-hours and 2 board-feet. Dining Sets earn $6 profit and require 1 labor-hour and 3 board-feet. End Tables earn $4 profit and require 1 labor-hour and 1 board-foot. Available daily resources: 20 labor-hours and 30 board-feet of wood. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 137.5,
+      "variables": {
+        "x1": 5.0,
+        "x2": 0.0,
+        "x3": 2.5,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v003",
+      "domain": "lp",
+      "problem_text": "An electronics firm assembles five circuit-board types: Alpha (x1), Beta (x2), Gamma (x3), Delta (x4), and Epsilon (x5). Alpha boards earn $15 profit and consume 2 assembly-hours, 3 kg of solder, and 1 machine-hour. Beta boards earn $12 profit and consume 3 assembly-hours, 2 kg of solder, and 2 machine-hours. Gamma boards earn $10 profit and consume 1 assembly-hour, 2 kg of solder, and 1 machine-hour. Delta boards earn $8 profit and consume 2 assembly-hours, 1 kg of solder, and 2 machine-hours. Epsilon boards earn $6 profit and consume 1 assembly-hour, 2 kg of solder, and 1 machine-hour. Daily capacity: 25 assembly-hours, 30 kg of solder, and 20 machine-hours. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 165.0,
+      "variables": {
+        "x1": 5.0,
+        "x2": 0.0,
+        "x3": 5.0,
+        "x4": 5.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v004",
+      "domain": "lp",
+      "problem_text": "A pharmaceutical company manufactures five drug formulations: P1 (x1), P2 (x2), P3 (x3), P4 (x4), and P5 (x5). P1 earns $25 profit per batch and requires 4 chemist-hours, 3 kg of active ingredient, and 2 reactor-hours. P2 earns $20 profit per batch and requires 3 chemist-hours, 4 kg of active ingredient, and 3 reactor-hours. P3 earns $18 profit per batch and requires 5 chemist-hours, 2 kg of active ingredient, and 2 reactor-hours. P4 earns $15 profit per batch and requires 2 chemist-hours, 5 kg of active ingredient, and 3 reactor-hours. P5 earns $12 profit per batch and requires 3 chemist-hours, 3 kg of active ingredient, and 4 reactor-hours. Daily limits: 40 chemist-hours, 35 kg of active ingredient, and 30 reactor-hours. All batch quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 253.5714,
+      "variables": {
+        "x1": 9.2857,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 1.4286,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v005",
+      "domain": "lp",
+      "problem_text": "An apparel factory produces five garment styles: Jackets (x1), Trousers (x2), Shirts (x3), Dresses (x4), and Skirts (x5). Jackets earn $30 profit and require 5 labor-hours and 4 m\u00b2 of fabric. Trousers earn $25 profit and require 4 labor-hours and 5 m\u00b2 of fabric. Shirts earn $20 profit and require 6 labor-hours and 3 m\u00b2 of fabric. Dresses earn $18 profit and require 3 labor-hours and 6 m\u00b2 of fabric. Skirts earn $15 profit and require 5 labor-hours and 5 m\u00b2 of fabric. The factory has exactly 30 labor-hours and 30 m\u00b2 of fabric available per day. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 183.3333,
+      "variables": {
+        "x1": 3.3333,
+        "x2": 3.3333,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0
+      },
+      "fill_rate": null
+    }
+  ]
+}

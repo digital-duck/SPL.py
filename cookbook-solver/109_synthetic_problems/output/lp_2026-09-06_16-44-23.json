@@ -1,0 +1,108 @@
+{
+  "status": "OK",
+  "n_total": 5,
+  "n_optimal": 5,
+  "n_failed": 0,
+  "results": [
+    {
+      "id": "v001",
+      "domain": "lp",
+      "problem_text": "A garment factory produces 10 clothing products: shirts (x1), trousers (x2), jackets (x3), blouses (x4), skirts (x5), shorts (x6), dresses (x7), suits (x8), coats (x9), and vests (x10). Profit per unit ($): 12, 18, 25, 14, 10, 8, 20, 35, 30, 9. Machine-hours required per unit: 1, 2, 3, 1.5, 1, 1, 2, 4, 4, 1. Fabric (m\u00b2) required per unit: 2, 3, 4, 2, 1.5, 1, 3, 5, 5, 1.5. The factory has 200 machine-hours and 300 m\u00b2 of fabric available daily. All production quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 2000.0,
+      "variables": {
+        "x1": 50.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 100.0,
+        "x5": 0.0,
+        "x6": 0.0,
+        "x7": 0.0,
+        "x8": 0.0,
+        "x9": 0.0,
+        "x10": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v002",
+      "domain": "lp",
+      "problem_text": "A bakery produces 10 items, each measured in dozens: bread (x1), croissants (x2), muffins (x3), cakes (x4), cookies (x5), donuts (x6), bagels (x7), pies (x8), tarts (x9), and rolls (x10). Profit per dozen ($): 3, 5, 4, 12, 2, 3, 4, 10, 8, 2. Oven time per dozen (minutes): 30, 20, 15, 45, 10, 10, 20, 40, 30, 15. Flour per dozen (cups): 3, 2, 1, 4, 0.5, 1, 2, 3, 2, 1. The bakery has 300 oven-minutes and 30 cups of flour available per shift. All quantities must be non-negative. Maximize total profit per shift.",
+      "solver_status": "OPTIMAL",
+      "optimal": 90.0,
+      "variables": {
+        "x1": 0.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0,
+        "x6": 30.0,
+        "x7": 0.0,
+        "x8": 0.0,
+        "x9": 0.0,
+        "x10": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v003",
+      "domain": "lp",
+      "problem_text": "A chemical plant produces 10 specialty compounds (P1\u2013P10). Profit per unit ($): 40, 35, 28, 22, 18, 15, 12, 9, 7, 5. Reactor time per unit (hours): 5, 4, 3, 3, 2, 2, 1.5, 1, 1, 0.5. Raw material A per unit (kg): 8, 6, 5, 4, 3, 2, 2, 1, 1, 0.5. Raw material B per unit (liters): 4, 5, 3, 2, 2, 3, 1, 1, 0.5, 1. Available resources per day: 20 reactor-hours, 25 kg of material A, and 15 liters of material B. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 165.0,
+      "variables": {
+        "x1": 0.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0,
+        "x6": 0.0,
+        "x7": 10.0,
+        "x8": 5.0,
+        "x9": 0.0,
+        "x10": 0.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v004",
+      "domain": "lp",
+      "problem_text": "An electronics manufacturer assembles 10 product lines: wireless speakers (x1), headphones (x2), soundbars (x3), wireless earbuds (x4), home-theater receivers (x5), portable radios (x6), smart displays (x7), tablet stands (x8), USB hubs (x9), and charging cables (x10). Profit per unit ($): 100, 80, 65, 50, 40, 30, 25, 20, 15, 10. Assembly time per unit (hours): 10, 8, 6, 5, 4, 3, 2, 2, 1, 1. Component units required per product: 15, 12, 10, 8, 6, 5, 4, 3, 2, 1. The facility has 42 assembly-hours and 65 component units available per day. All quantities must be non-negative. Maximize total daily profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 535.0,
+      "variables": {
+        "x1": 0.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0,
+        "x6": 0.0,
+        "x7": 0.0,
+        "x8": 0.0,
+        "x9": 23.0,
+        "x10": 19.0
+      },
+      "fill_rate": null
+    },
+    {
+      "id": "v005",
+      "domain": "lp",
+      "problem_text": "A farm allocates resources across 10 crops (each variable measured in 100-lb units of harvest): wheat (x1), corn (x2), soybeans (x3), barley (x4), oats (x5), rye (x6), sunflowers (x7), canola (x8), flaxseed (x9), and millet (x10). Profit per unit ($): 200, 160, 140, 120, 100, 80, 65, 50, 35, 25. Land required per unit (acres): 20, 16, 14, 12, 10, 8, 6, 5, 4, 3. Water required per unit (thousand gallons): 50, 40, 35, 30, 25, 20, 15, 12, 9, 6. Labor required per unit (hours): 30, 24, 21, 18, 15, 12, 9, 7, 5, 4. Available resources per season: 100 acres of land, 250 thousand gallons of water, and 150 labor-hours. All quantities must be non-negative. Maximize total seasonal profit.",
+      "solver_status": "OPTIMAL",
+      "optimal": 1083.3334,
+      "variables": {
+        "x1": 0.0,
+        "x2": 0.0,
+        "x3": 0.0,
+        "x4": 0.0,
+        "x5": 0.0,
+        "x6": 0.0,
+        "x7": 16.6667,
+        "x8": 0.0,
+        "x9": 0.0,
+        "x10": 0.0
+      },
+      "fill_rate": null
+    }
+  ]
+}

@@ -1,0 +1,174 @@
+-- ============================================================
+-- Recipe 102: Z3 SMT Compliance Checker
+--
+-- PURPOSE: Encode business eligibility rules as Z3 SMT
+-- constraints and determine whether the policy is satisfiable
+-- (SAT → qualifying profile exists) or contradictory
+-- (UNSAT → no customer can ever qualify).
+--
+-- KEY STORY: Five interconnected loan-eligibility rules create
+-- a hidden constraint: a self-employed applicant with income
+-- $40K–$49K is ineligible even with a 700 credit score —
+-- UNLESS they have collateral (R3 ∧ ¬collateral → income≥50K
+-- which conflicts with ¬R2 unless collateral). Z3 surfaces this
+-- automatically; LLM traces rules linearly and misses it.
+--
+-- solver=ON  : Z3 finds SAT/UNSAT + qualifying profile
+-- solver=OFF : LLM traces rules manually
+--
+-- Install: pip install z3-solver
+--
+-- Run:
+--   spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION interpret_policy_prompt(policy_text TEXT)
+RETURNS TEXT AS $$
+You are a compliance analyst reviewing a loan eligibility policy.
+
+POLICY TEXT:
+{policy_text}
+
+The policy has the following eligibility rules:
+R1: Applicant must be 18 or older
+R2: Annual income >= $30,000 OR has collateral
+R3: If self-employed, then annual income >= $50,000
+R4: Credit score >= 650 OR (credit score >= 600 AND income >= $80,000)
+R5: Employed for >= 12 months OR has collateral
+
+Task: Manually trace through the rules and determine:
+1. Is this policy satisfiable — does a qualifying customer profile exist?
+2. If yes, give ONE example of a customer who would qualify (specify all variable values).
+3. Are there any hidden interactions between rules that could trap a customer?
+4. What is the most restrictive edge case?
+
+Be specific with numbers. Do not use Z3 or any solver — reason manually.
+$$;
+
+CREATE FUNCTION extract_policy_prompt(policy_text TEXT)
+RETURNS TEXT AS $$
+You are a compliance engineer. Convert the natural-language policy below into a structured JSON object matching this schema exactly. Output JSON only — no explanation, no markdown fences.
+
+SCHEMA:
+{
+  "policy": "<policy name string>",
+  "variables": [
+    {"name": "<var_name>", "type": "int", "range": [<min>, <max>]},
+    {"name": "<var_name>", "type": "bool"}
+  ],
+  "rules": [
+    {"id": "R1", "desc": "<human description>", <op structure>}
+  ],
+  "query": "find_qualifying_profile"
+}
+
+SUPPORTED OPS:
+- Comparison:  {"op": "gte"|"lte"|"eq"|"neq", "var": "<name>", "value": <number|bool>}
+- Logical:     {"op": "and"|"or", "args": [<rule>, ...]}
+- Negation:    {"op": "not", "arg": <rule>}
+- Implication: {"op": "implies", "condition": <rule>, "then": <rule>}
+
+EXAMPLE:
+Policy text: "users must be 18+, have a verified email or phone, and premium members may skip the phone check."
+Output:
+{
+  "policy": "User Eligibility Policy",
+  "variables": [
+    {"name": "age", "type": "int", "range": [0, 120]},
+    {"name": "email_verified", "type": "bool"},
+    {"name": "phone_verified", "type": "bool"},
+    {"name": "premium_member", "type": "bool"}
+  ],
+  "rules": [
+    {"id": "R1", "desc": "Age >= 18", "op": "gte", "var": "age", "value": 18},
+    {"id": "R2", "desc": "Email verified or phone verified", "op": "or", "args": [
+      {"op": "eq", "var": "email_verified", "value": true},
+      {"op": "eq", "var": "phone_verified", "value": true}
+    ]},
+    {"id": "R3", "desc": "Non-premium members must verify phone", "op": "implies",
+      "condition": {"op": "eq", "var": "premium_member", "value": false},
+      "then":      {"op": "eq", "var": "phone_verified", "value": true}}
+  ],
+  "query": "find_qualifying_profile"
+}
+
+NOW CONVERT:
+Policy text: {policy_text}
+$$;
+
+CREATE FUNCTION explain_z3_result_prompt(z3_report TEXT, policy_text TEXT)
+RETURNS TEXT AS $$
+You are a compliance analyst. Z3 (an SMT theorem prover) just verified this loan eligibility policy.
+
+POLICY:
+{policy_text}
+
+Z3 RESULT:
+{z3_report}
+
+Explain the result in plain English for a business audience (≤150 words):
+1. What did Z3 find?
+2. What does this mean for the business? (e.g. are the rules consistent? contradictory?)
+3. If Z3 found a qualifying profile, what is notable about it?
+4. What would be the risk of relying on manual rule-tracing (solver=OFF) instead?
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW z3_compliance
+  INPUT @policy_text TEXT := ""
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r102] z3_compliance start" LEVEL INFO
+
+  -- Route: no policy_text supplied → default QuickLoan demo (no LLM call)
+  --        custom policy_text       → LLM extraction → validate + sanitize
+  CALL is_empty_policy(@policy_text) INTO @use_default;
+  EVALUATE @use_default
+    WHEN "true" THEN
+      CALL get_default_policy() INTO @policy_json
+    WHEN "false" THEN
+      LOGGING "[r102] custom policy detected — extracting via LLM" LEVEL INFO;
+      GENERATE extract_policy_prompt(@policy_text) INTO @policy_json_raw;
+      CALL parse_policy_json(@policy_json_raw) INTO @policy_json
+  END;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      -- solver=ON: Z3 SMT theorem prover
+      CALL check_z3_eligibility(@policy_json) INTO @z3_result;
+      ASSERT is_satisfiable(@z3_result);
+      CALL format_z3_report(@z3_result, @policy_json) INTO @solver_report;
+      CALL json_get(@z3_result, "status") INTO @sat_status;
+      LOGGING f"[r102] Z3 result: {@sat_status}" LEVEL INFO;
+      GENERATE explain_z3_result_prompt(@solver_report, @policy_text) INTO @explanation;
+      @report := f"=== Z3 Compliance Checker (r102) | solver=ON ===
+
+{@solver_report}
+
+── Business Explanation ────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      -- solver=OFF: LLM manual rule tracing
+      GENERATE interpret_policy_prompt(@policy_text) INTO @llm_analysis;
+      @report := f"=== Z3 Compliance Checker (r102) | solver=OFF ===
+
+── LLM Manual Rule Analysis ────────────────────────────────
+{@llm_analysis}
+
+Note: solver=OFF relies on LLM sequential rule tracing. Run with --param use_solver=true
+to verify with Z3 (finds hidden rule interactions the LLM misses)."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

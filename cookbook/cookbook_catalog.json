@@ -2070,6 +2070,19 @@
       "excluded_adapters": []
     },
     {
+      "id": "119",
+      "name": "Demand Forecasting (statsmodels Structural Time Series)",
+      "description": "Fits a statsmodels UnobservedComponents model (local linear trend + seasonal, Kalman filter / MLE) to 36 months of widget sales data and forecasts 6 periods ahead. ASSERT: hold-out RMSE < naïve last-value baseline. solver=OFF: LLM seasonal trend extrapolation with sanity bounds check. Production upgrade path: swap statsmodels for PyMC (full Bayesian posterior) or Prophet (auto-seasonality + holidays) with zero .spl changes (DODA). ERP relevance: replaces fixed EOQ reorder rules in open-source ERP with a data-driven demand signal. Requires: pip install statsmodels.",
+      "dir": "119_demand_forecast",
+      "log": "demand_forecast",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": ["statsmodels"],
+      "excluded_adapters": []
+    },
+    {
       "id": "116",
       "name": "OpenSpiel CFR — Kuhn Poker",
       "description": "Solves an imperfect-information extensive-form game (Kuhn Poker) via Counterfactual Regret Minimization (CFR) using DeepMind OpenSpiel. Kuhn Poker: 2 players, 3 cards (J<Q<K), 1-chip ante+bet. Since each player's card is private, optimal play requires a mixed strategy (bluffing J at probability 1/3). CFR converges to exploitability < 0.05 in ~1000 iterations vs LLM-naive ~0.25. Extends r111 (Stackelberg, perfect information) to private-information games. ASSERT: cfr_converged — exploitability < 0.05 (C1). Requires: pip install open_spiel.",
