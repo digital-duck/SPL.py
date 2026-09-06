@@ -3822,7 +3822,7 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
               help="Monospace font for code blocks.")
 @click.option("--font-size", default="11pt", show_default=True,
               help="Base font size (e.g. 10pt, 12pt).")
-@click.option("--margin", default="1.1in", show_default=True,
+@click.option("--margin", default="0.75in", show_default=True,
               help="Page margin (e.g. 1in, 2cm).")
 @click.option("--toc/--no-toc", default=True, show_default=True,
               help="Include a table of contents.")

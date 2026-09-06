@@ -74,6 +74,28 @@ def json_get_field(data_json: str, field: str) -> str:
     return _fn(data_json, field)
 $$;
 
+CREATE TOOL_API format_report_solver_on(problem TEXT, solution_json TEXT, gantt TEXT, interpretation TEXT, llm_calls TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_report_solver_on(problem: str, solution_json: str, gantt: str, interpretation: str, llm_calls: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_report_solver_on as _fn
+    return _fn(problem, solution_json, gantt, interpretation, llm_calls)
+$$;
+
+CREATE TOOL_API format_report_solver_off(problem TEXT, llm_schedule TEXT, solution_json TEXT, verify_result TEXT, llm_calls TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_report_solver_off(problem: str, llm_schedule: str, solution_json: str, verify_result: str, llm_calls: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "98_job_shop")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_report_solver_off as _fn
+    return _fn(problem, llm_schedule, solution_json, verify_result, llm_calls)
+$$;
+
 -- ── LLM prompt templates ─────────────────────────────────────
 
 CREATE FUNCTION extract_job_structure(problem TEXT)
@@ -179,6 +201,7 @@ DO
   @problem_json  := "{}";
   @llm_calls     := 0;
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
   LOGGING f"[job_shop] start  use_solver={@use_solver}  adapter={@adapter}  model={@model}" LEVEL INFO
 
   EVALUATE @use_solver
@@ -203,21 +226,7 @@ DO
 
       CALL json_get_field(@solution_json, "makespan") INTO @makespan_str;
 
-      @report := f"=== Job-Shop Scheduling (solver=ON / OR-Tools CP-SAT) ===
-
-Problem:
-{@problem}
-
-CP-SAT Solution (JSON):
-{@solution_json}
-
-Gantt Chart:
-{@gantt}
-
-Interpretation:
-{@interpretation}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_on(@problem, @solution_json, @gantt, @interpretation, @llm_calls) INTO @report;
 
     ELSE
       -- solver=OFF: LLM reasons through schedule directly
@@ -239,21 +248,7 @@ LLM calls: {@llm_calls}";
 
       LOGGING f"[job_shop] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
 
-      @report := f"=== Job-Shop Scheduling (solver=OFF / LLM direct) ===
-
-Problem:
-{@problem}
-
-LLM Schedule:
-{@llm_schedule}
-
-Extracted Schedule (JSON):
-{@solution_json}
-
-Verification:
-{@verify_result}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_off(@problem, @llm_schedule, @solution_json, @verify_result, @llm_calls) INTO @report;
 
   END;
 

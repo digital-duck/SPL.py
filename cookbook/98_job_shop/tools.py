@@ -27,6 +27,37 @@ def json_get_field(data_json: str, field: str) -> str:
         return ""
 
 
+def _strip_fences(text: str) -> str:
+    """Strip markdown code fences from LLM output before JSON parsing."""
+    import re
+    text = text.strip()
+    text = re.sub(r'^```(?:json)?\s*\n?', '', text)
+    text = re.sub(r'\n?```\s*$', '', text)
+    return text.strip()
+
+
+def format_report_solver_on(problem: str, solution_json: str, gantt: str, interpretation: str, llm_calls: str) -> str:
+    return (
+        "=== Job-Shop Scheduling (solver=ON / OR-Tools CP-SAT) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"CP-SAT Solution (JSON):\n{solution_json}\n\n"
+        f"Gantt Chart:\n{gantt}\n\n"
+        f"Interpretation:\n{interpretation}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
+def format_report_solver_off(problem: str, llm_schedule: str, solution_json: str, verify_result: str, llm_calls: str) -> str:
+    return (
+        "=== Job-Shop Scheduling (solver=OFF / LLM direct) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"LLM Schedule:\n{llm_schedule}\n\n"
+        f"Extracted Schedule (JSON):\n{solution_json}\n\n"
+        f"Verification:\n{verify_result}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
 def parse_job_shop_problem(problem: str) -> str:
     """
     Parse a natural-language job-shop problem description into structured JSON.
@@ -68,7 +99,7 @@ def solve_job_shop(problem_json: str) -> str:
     from ortools.sat.python import cp_model
 
     try:
-        data = json.loads(problem_json)
+        data = json.loads(_strip_fences(problem_json))
     except Exception as e:
         return json.dumps({"status": "PARSE_ERROR", "error": str(e)})
 

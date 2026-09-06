@@ -66,15 +66,26 @@ def verify_sourcing_off(problem_json: str, solution_json: str) -> str:
     return _fn(problem_json, solution_json)
 $$;
 
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+CREATE TOOL_API format_report_solver_on(problem TEXT, n_points TEXT, front_table TEXT, interpretation TEXT, llm_calls TEXT)
 RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
+def format_report_solver_on(problem: str, n_points: str, front_table: str, interpretation: str, llm_calls: str) -> str:
     import sys, os
     _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
     if _dir not in sys.path:
         sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
+    from tools import format_report_solver_on as _fn
+    return _fn(problem, n_points, front_table, interpretation, llm_calls)
+$$;
+
+CREATE TOOL_API format_report_solver_off(problem TEXT, allocation_text TEXT, solution_json TEXT, verify_result TEXT, llm_calls TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_report_solver_off(problem: str, allocation_text: str, solution_json: str, verify_result: str, llm_calls: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "100_supply_sourcing")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_report_solver_off as _fn
+    return _fn(problem, allocation_text, solution_json, verify_result, llm_calls)
 $$;
 
 -- ── LLM prompt templates ─────────────────────────────────────
@@ -176,6 +187,7 @@ DO
   @problem_json  := "{}";
   @llm_calls     := 0;
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
   LOGGING f"[supply_sourcing] start  use_solver={@use_solver}  n_points={@n_points}" LEVEL INFO
 
   EVALUATE @use_solver
@@ -200,20 +212,9 @@ DO
       GENERATE interpret_pareto_front(@problem, @front_table) INTO @interpretation;
       @llm_calls := @llm_calls + 1;
 
-      CALL json_get_field(@front_json, "n_points") INTO @fill_rate_str;
+      CALL json_get(@front_json, "n_points") INTO @fill_rate_str;
 
-      @report := f"=== Supply Sourcing (solver=ON / PuLP ε-constraint) ===
-
-Problem:
-{@problem}
-
-Pareto Front ({@fill_rate_str} points):
-{@front_table}
-
-Interpretation:
-{@interpretation}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_on(@problem, @fill_rate_str, @front_table, @interpretation, @llm_calls) INTO @report;
 
     ELSE
       -- solver=OFF: LLM picks one allocation heuristically
@@ -233,26 +234,12 @@ LLM calls: {@llm_calls}";
       @llm_calls := @llm_calls + 1;
 
       CALL verify_sourcing_off(@problem_json, @solution_json) INTO @verify_result;
-      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
-      CALL json_get_field(@solution_json, "fill_rate") INTO @fill_rate_str;
+      CALL json_get(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get(@solution_json, "fill_rate") INTO @fill_rate_str;
 
       LOGGING f"[supply_sourcing] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
 
-      @report := f"=== Supply Sourcing (solver=OFF / LLM heuristic) ===
-
-Problem:
-{@problem}
-
-LLM Allocation:
-{@allocation_text}
-
-Extracted Solution (JSON):
-{@solution_json}
-
-Verification:
-{@verify_result}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_off(@problem, @allocation_text, @solution_json, @verify_result, @llm_calls) INTO @report;
 
   END;
 

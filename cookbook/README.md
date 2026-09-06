@@ -104,6 +104,14 @@ python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-ts.json \
 
 **Tier key:** 1 = Ollama only (no API key) · 2 = OpenAI key · 3 = OpenRouter key · 4 = OpenAI + OpenRouter + Ollama
 
+
+### Solver related recipes
+
+[SPL-solver-recipes](https://github.com/digital-duck/dd-research/blob/main/docs/research/solver/SPL-solver-recipes.md)
+
+see `$HOME/projects/digital-duck/dd-research/docs/research/solver/SPL-solver-recipes.md` locally
+
+
 ---
 
 ## Setup

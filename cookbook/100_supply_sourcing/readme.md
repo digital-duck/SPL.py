@@ -30,33 +30,60 @@ Objectives: minimize total cost AND maximize blended fill rate
 ```
 
 Known anchor points:
-- Min-cost: x1=100, x2=500, x3=400 → cost=$6,500, fill=73.5%
-- Max-fill: x1=400, x2=500, x3=100 → cost=$8,000, fill=84.0%
+- Min-cost: x1=100, x2=500, x3=400 → cost=\$6,500, fill=73.5%
+- Max-fill: x1=400, x2=500, x3=100 → cost=\$8,000, fill=84.0%
+
+**Plain English**: You need 1,000 units. S1 is the most reliable supplier (95% fill) but the most expensive (\$10/unit). S3 is the cheapest (\$5/unit) but least reliable (60% fill). The solver finds every Pareto-optimal split across the three suppliers — no single allocation can simultaneously be cheaper and have a higher fill rate than any point on the front. A procurement manager picks the row that matches their risk appetite.
+
+## Example output (solver=ON, B1 default)
+
+```
+| Cost ($)  | Fill rate (%) | S1  |  S2  |  S3 |
+|---|---|---|---|---|
+| 6,500.00  | 73.5          | 100 |  500 | 400 |
+| 6,714.30  | 75.0          | 143 |  500 | 357 |
+| 6,928.55  | 76.5          | 186 |  500 | 314 |
+| 7,142.85  | 78.0          | 229 |  500 | 271 |
+| 7,357.15  | 79.5          | 271 |  500 | 228 |
+| 7,571.45  | 81.0          | 314 |  500 | 185 |
+| 7,785.70  | 82.5          | 357 |  500 | 142 |
+| 8,000.00  | 84.0          | 400 |  500 | 100 |
+```
+
+Reading the table:
+- **Row 1** ($6,500 / 73.5%) — pure cost minimization: load S2 and S3 to capacity, top up with just 100 units from S1.
+- **Row 8** ($8,000 / 84.0%) — maximum fill rate: saturate S1 and S2, cut S3 to 100 units.
+- **Rows 2–7** — the trade-off band: every $214 you spend above the floor buys 1.5 percentage points of fill rate. S2 stays at 500 in every row (always optimal to fill the mid-tier supplier first); the solver only swaps units between S1 and S3.
+
+S2 maxes out in every solution because it dominates — it is strictly better than S3 on both cost and fill rate, and cheaper than S1.
 
 ## Run commands
 
 ```bash
 # solver=ON — PuLP ε-constraint sweep (default 8 Pareto points)
 spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param use_solver=true
-
-# solver=ON — custom n_points
-spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
-  --adapter claude_cli \
-  --param use_solver=true \
-  --param n_points=12
 
 # solver=OFF — LLM heuristic allocation with back-substitution check
 spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
-  --adapter ollama -m gemma3 \
+  --llm claude_cli \
   --param use_solver=false
+
+# solver=ON — custom n_points
+spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
+  --llm claude_cli \
+  --param use_solver=true \
+  --param n_points=12
+
+# n_points controls how many evenly-spaced points the ε-constraint sweep generates along the Pareto front.
+# More points = finer coverage of the tradeoff curve, at the cost of more LP solves 
 
 # Custom problem
 spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
-  --adapter claude_cli \
+  --llm claude_cli \
   --param use_solver=true \
-  --param "problem=A factory needs 2000 units. SupA: $12/unit, 98% fill rate, capacity 800. SupB: $8/unit, 75% fill rate, capacity 1200. SupC: $6/unit, 55% fill rate, capacity 900."
+  --param problem="A factory needs 2000 units. SupA: $12/unit, 98% fill rate, capacity 800. SupB: $8/unit, 75% fill rate, capacity 1200. SupC: $6/unit, 55% fill rate, capacity 900."
 ```
 
 ## TOOL_API reference
@@ -67,7 +94,6 @@ spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
 | `is_pareto_feasible(front_json)` | ASSERT gate: status==OK and n_points >= 2 |
 | `format_pareto_table(front_json)` | Pareto front → markdown table |
 | `verify_sourcing_off(problem_json, solution_json)` | Arithmetic back-check for solver=OFF path |
-| `json_get_field(data_json, field)` | Extract a field from JSON as string |
 
 ## Optimization formulation
 

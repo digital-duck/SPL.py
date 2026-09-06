@@ -21,21 +21,33 @@ Job 3: M3(2) → M2(1) → M1(2)
 Known optimal makespan: 8
 ```
 
+
+You have 3 jobs and 3 machines. Each job must visit all 3 machines in a specific order — and each visit takes a certain amount of time. No machine can work on two jobs at once.
+
+- Job 1: First go to M1 (takes 3), then M2 (takes 2), then M3 (takes 2)
+- Job 2: First go to M2 (takes 2), then M1 (takes 3), then M3 (takes 1)
+- Job 3: First go to M3 (takes 2), then M2 (takes 1), then M1 (takes 2)
+
+The goal is to schedule all the operations so everything finishes as early as possible. The makespan is when the last operation across all jobs finishes — the known optimal answer here is 8 time units.
+
+The challenge: Job 1 needs M1 first, but Job 2 also needs M1 (second step). They can't overlap, so you have to decide who waits. Get the ordering wrong and you waste time; get it right and you hit makespan 8.
+
 ## Run commands
 
 ```bash
+export PROBLEM="3 jobs, 3 machines. Job1: M1(3)→M2(2)→M3(2). Job2: M2(2)→M1(3)→M3(1). Job3: M3(2)→M2(1)→M1(2). Minimize makespan."
+
 # solver=ON, claude_cli
 spl3 run cookbook/98_job_shop/job_shop.spl \
-  --adapter claude_cli \
-  --param use_solver=ON \
-  --param problem="3 jobs, 3 machines. Job1: M1(3)→M2(2)→M3(2). Job2: M2(2)→M1(3)→M3(1). Job3: M3(2)→M2(1)→M1(2). Minimize makespan." \
-  --param capital=0 --param tickers="" --param period=1y
+  --llm claude_cli \
+  --param use_solver=true \
+  --param problem="$PROBLEM"
 
-# solver=OFF, ollama/gemma3
+# solver=OFF
 spl3 run cookbook/98_job_shop/job_shop.spl \
-  --adapter ollama -m gemma3 \
-  --param use_solver=OFF \
-  --param problem="3 jobs, 3 machines. Job1: M1(3)→M2(2)→M3(2). Job2: M2(2)→M1(3)→M3(1). Job3: M3(2)→M2(1)→M1(2). Minimize makespan."
+  --llm claude_cli \
+  --param use_solver=false \
+  --param problem="$PROBLEM"
 ```
 
 ## TOOL_API reference
@@ -53,6 +65,32 @@ spl3 run cookbook/98_job_shop/job_shop.spl \
 1. **No-overlap**: no two jobs assigned to the same machine at the same time
 2. **Precedence**: each job's operations run in the specified order
 3. **Makespan consistency**: claimed makespan matches max end-time in schedule
+
+## Example output (solver=ON, 3×3 default problem)
+
+CP-SAT finds the optimal schedule and `format_gantt` renders it as an ASCII timeline.  
+Each cell is one time unit; the letter is the **first character of the job name** (all three jobs start with "J" here).
+
+```
+Makespan = 8 time units
+
+Machine  |012345678
+-------------------
+M1       |JJJJJJJJ.
+M2       |JJJJJ....
+M3       |JJ...JJJ.
+```
+
+Reading the chart against the solution schedule:
+
+| Time | M1 | M2 | M3 |
+|------|----|----|-----|
+| 0–3  | Job1 (op1, dur=3) | Job2 (op1, dur=2) | Job3 (op1, dur=2) |
+| 3–5  | Job2 (op2, dur=3, ends t=6) | Job1 (op2, dur=2) | idle |
+| 5–7  | …Job2 cont. | idle | Job1 (op3, dur=2) |
+| 6–8  | Job3 (op3, dur=2) | idle | Job2 (op3, dur=1, ends t=8) |
+
+All three machines stay busy until t=8 — no slack left; makespan 8 is proven optimal.
 
 ## Scale sensitivity
 
