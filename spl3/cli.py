@@ -3025,7 +3025,11 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 @click.option("--theme", default="default", show_default=True,
               type=click.Choice(["default", "forest", "dark", "neutral"]),
               help="Mermaid theme.")
-def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme):
+@click.option("--width", "-w", default=None, type=int, metavar="PX",
+              help="Output width in pixels (PNG/SVG only). mmdc default: 800.")
+@click.option("--height", "-H", default=None, type=int, metavar="PX",
+              help="Output height in pixels (PNG/SVG only). mmdc default: auto.")
+def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme, width, height):
     """Convert one or more Mermaid .mmd files to an image.
 
     Uses mmdc (Mermaid CLI) if installed; otherwise falls back to
@@ -3045,6 +3049,7 @@ def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme):
       spl3 util mmd2img *.mmd --out-dir ./images         # batch convert
       spl3 util mmd2img diagram.mmd -f pdf --theme dark
       spl3 util mmd2img diagram.mmd -f html              # no mmdc needed
+      spl3 util mmd2img diagram.mmd -w 1800 -H 900       # custom dimensions
     """
     import shutil, subprocess, json, tempfile
     from pathlib import Path
@@ -3094,6 +3099,10 @@ def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme):
                 "--backgroundColor", background,
                 "--theme", theme,
             ]
+            if width is not None and fmt in ("png", "svg"):
+                args += ["-w", str(width)]
+            if height is not None and fmt in ("png", "svg"):
+                args += ["-H", str(height)]
             try:
                 r = subprocess.run(args, capture_output=True, timeout=60)
                 if r.returncode == 0:
