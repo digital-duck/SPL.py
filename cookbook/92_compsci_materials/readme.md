@@ -32,16 +32,19 @@ No new dependency — the symmetry and volume/density checks are pure stdlib Pyt
 
 ```bash
 # Default problem (NaCl, cubic rock-salt structure; known density ~2.165 g/cm^3)
-spl3 run cookbook/92_compsci_materials/materials_crystal.spl --llm claude_cli
-
-# Custom problem
 spl3 run cookbook/92_compsci_materials/materials_crystal.spl \
-    --llm ollama:gemma3 \
-    --param problem="Silicon has a cubic diamond structure with a = 5.431 Angstrom, Z = 8, molar mass 28.09 g/mol. What is its theoretical density in g/cm^3?"
+    --llm claude_cli
 
 # Unaided baseline arm
 spl3 run cookbook/92_compsci_materials/materials_crystal.spl \
-    --llm claude_cli --param enable_solver=false
+    --llm claude_cli \
+    --param enable_solver=false
+
+# Custom problem
+spl3 run cookbook/92_compsci_materials/materials_crystal.spl \
+    --llm claude_cli \
+    --param problem="Silicon has a cubic diamond structure with a = 5.431 Angstrom, Z = 8, molar mass 28.09 g/mol. What is its theoretical density in g/cm^3?"
+
 ```
 
 ## Default problem

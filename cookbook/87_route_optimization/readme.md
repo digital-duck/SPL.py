@@ -41,7 +41,8 @@ spl3 run cookbook/87_route_optimization/route_optimization.spl \
 
 # Unaided baseline arm
 spl3 run cookbook/87_route_optimization/route_optimization.spl \
-    --llm claude_cli --param enable_solver=false
+    --llm claude_cli \
+    --param enable_solver=false
 
 
 # Custom problem

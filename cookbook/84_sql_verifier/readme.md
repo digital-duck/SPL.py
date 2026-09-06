@@ -31,17 +31,19 @@ No installation needed — `sqlite3` is part of the Python standard library.
 
 ```bash
 # Default question (average Engineering salary)
-spl3 run cookbook/84_sql_verifier/sql_verifier.spl --llm claude_cli
-
-# Custom question (also update the ground-truth SQL to match!)
 spl3 run cookbook/84_sql_verifier/sql_verifier.spl \
-    --llm ollama:gemma3 \
-    --param question="How many employees were hired before 2020?" \
-    --param ground_truth_sql="SELECT COUNT(*) FROM employees WHERE hire_year < 2020;"
+    --llm claude_cli
 
 # Unaided baseline arm
 spl3 run cookbook/84_sql_verifier/sql_verifier.spl \
     --llm claude_cli --param enable_solver=false
+
+# Custom question (also update the ground-truth SQL to match!)
+spl3 run cookbook/84_sql_verifier/sql_verifier.spl \
+    --llm claude_cli \
+    --param question="How many employees were hired before 2020?" \
+    --param ground_truth_sql="SELECT COUNT(*) FROM employees WHERE hire_year < 2020;"
+
 ```
 
 ## Default problem
