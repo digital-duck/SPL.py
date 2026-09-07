@@ -83,6 +83,41 @@ sage = [
     "ipykernel>=6.0",
     "jupyter_client>=8.0",
 ]
+solver = [
+    # Deterministic solver backends for the cookbook-solver/ recipes.
+    # `pip install spl-llm[solver]` sets up every pip-installable solver.
+    # A few recipes also need non-pip system binaries — see
+    # cookbook-solver/README.md ("Installing dependencies").
+    #
+    # Optimization / operations research
+    "pulp>=2.7",              # LP / MILP  (r78, r100, r101, r109)
+    "ortools>=9.7",           # CP-SAT + routing  (r87, r98)
+    "cvxpy>=1.4",             # convex / QP portfolio  (r99)
+    "pymoo>=0.6",             # NSGA-II multi-objective  (r107)
+    "mip>=1.15",              # python-mip MILP  (r108)
+    "pyomo>=6.7",             # two-stage stochastic LP  (r117) — needs a solver binary (glpk)
+    "scipy>=1.11",            # constrained nonlinear (SLSQP / DE)  (r114)
+    "scikit-optimize>=0.9",   # Bayesian optimization (GP + EI)  (r113)
+    "optuna>=3.4",            # black-box optimization (TPE)  (r112)
+    # Logic / SMT / constraints
+    "z3-solver>=4.12",        # SMT theorem prover  (r102, r118)
+    "python-constraint>=1.4", # finite-domain CSP  (r82)
+    # Game theory
+    "nashpy>=0.0.38",         # 2-player Nash equilibria  (r110)
+    "pygambit>=16.1",         # N-player Nash  (r115) — needs a C++ toolchain
+    "open_spiel>=1.4",        # CFR, imperfect-info games  (r116) — heavy build
+    # Data / stats / geospatial / graph / units
+    "pandas>=2.0",            # data-quality checks  (r103)
+    "pandera>=0.18",          # dataframe schema validation  (r104)
+    "shapely>=2.0",           # geospatial coverage  (r106)
+    "statsmodels>=0.14",      # structural time-series forecasting  (r119)
+    "networkx>=3.0",          # graph algorithms  (r81)
+    "numpy>=1.24",            # conservation-law recompute  (r90, r92)
+    "pint>=0.22",             # dimensional analysis  (r83)
+    "yfinance>=0.2",          # market data for portfolio opt  (r99)
+    # Property-based verification
+    "hypothesis>=6.0",        # falsification tests  (r79, r85)
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",

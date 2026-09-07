@@ -31,73 +31,13 @@
 -- Install: pip install open_spiel
 --
 -- Run:
---   spl3 run cookbook/116_openspiel_cfr/openspiel_cfr.spl \
+--   spl3 run cookbook-solver/116_openspiel_cfr/openspiel_cfr.spl \
 --       --adapter claude_cli --param use_solver=true \
 --       --param n_iterations=1000
 --
---   spl3 run cookbook/116_openspiel_cfr/openspiel_cfr.spl \
+--   spl3 run cookbook-solver/116_openspiel_cfr/openspiel_cfr.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_game_description()
-RETURNS TEXT AS PYTHON $$
-def get_game_description() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_game_description as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API solve_with_cfr(n_iterations TEXT)
-RETURNS TEXT AS PYTHON $$
-def solve_with_cfr(n_iterations: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import solve_with_cfr as _fn
-    return _fn(int(n_iterations))
-$$;
-
-CREATE TOOL_API cfr_converged(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def cfr_converged(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import cfr_converged as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_cfr_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_cfr_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_cfr_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API solver_enabled(use_solver TEXT)
-RETURNS TEXT AS PYTHON $$
-def solver_enabled(use_solver: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import solver_enabled as _fn
-    return _fn(use_solver)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION reason_poker_strategy_prompt(game_description TEXT)
 RETURNS TEXT AS $$
@@ -133,44 +73,6 @@ Explain (≤200 words):
    multi-round negotiation with private information?
 $$;
 
--- solver_on_cfr: CFR path (requires open_spiel installed)
-WORKFLOW solver_on_cfr
-  INPUT @n_iterations TEXT := "1000"
-  INPUT @game_description TEXT := ""
-  OUTPUT @report TEXT
-DO
-  CALL solve_with_cfr(@n_iterations) INTO @result_json;
-  ASSERT cfr_converged(@result_json);
-  CALL format_cfr_report(@result_json) INTO @cfr_report;
-  CALL json_get_field(@result_json, "exploitability") INTO @exploit;
-  LOGGING f"[r116] CFR exploitability={@exploit} after {@n_iterations} iterations" LEVEL INFO;
-  GENERATE explain_cfr_result_prompt(@cfr_report, @game_description) INTO @explanation;
-  @report := f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=ON ===
-
-{@cfr_report}
-
-── Game Theory Explanation ─────────────────────────────────
-{@explanation}";
-  RETURN @report WITH status = "complete";
-END;
-
--- solver_off_llm: LLM reasoning path (no solver dependency)
-WORKFLOW solver_off_llm
-  INPUT @game_description TEXT := ""
-  OUTPUT @report TEXT
-DO
-  GENERATE reason_poker_strategy_prompt(@game_description) INTO @llm_strategy;
-  @report := f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=OFF ===
-
-── LLM Strategic Reasoning ─────────────────────────────────
-{@llm_strategy}
-
-Note: LLM gives intuitive strategy (~0.25 exploitability).
-Run --param use_solver=true to compute the Nash equilibrium
-mixed strategy via CFR (converges to <0.05 exploitability).";
-  RETURN @report WITH status = "complete";
-END;
-
 WORKFLOW openspiel_cfr
   INPUT @use_solver TEXT := "true"
   INPUT @n_iterations TEXT := "1000"
@@ -179,16 +81,26 @@ DO
   LOGGING "[r116] openspiel_cfr start" LEVEL INFO
 
   CALL get_game_description() INTO @game_json;
-  CALL json_get_field(@game_json, "rules") INTO @game_description;
+  CALL json_get(@game_json, "rules") INTO @game_description;
 
-  -- Use Python gate to avoid LLM-evaluated EVALUATE for boolean flags
-  CALL solver_enabled(@use_solver) INTO @run_solver;
+  -- Normalize the ablation flag (true/1/yes/on → "true") then route deterministically
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
-  EVALUATE @run_solver
-    WHEN "run_solver" THEN
-      CALL solver_on_cfr(@n_iterations, @game_description) INTO @report;
-    WHEN "run_llm" THEN
-      CALL solver_off_llm(@game_description) INTO @report;
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- solver=ON: CFR (requires open_spiel)
+      CALL solve_with_cfr(@n_iterations) INTO @result_json;
+      ASSERT cfr_converged(@result_json);
+      CALL format_cfr_report(@result_json) INTO @cfr_report;
+      CALL json_get(@result_json, "exploitability") INTO @exploit;
+      LOGGING f"[r116] CFR exploitability={@exploit} after {@n_iterations} iterations" LEVEL INFO;
+      GENERATE explain_cfr_result_prompt(@cfr_report, @game_description) INTO @explanation;
+      CALL format_report_solver_on(@cfr_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      -- solver=OFF: LLM reasons about poker strategy directly (no solver dependency)
+      GENERATE reason_poker_strategy_prompt(@game_description) INTO @llm_strategy;
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
   END;
 
   RETURN @report WITH status = "complete",

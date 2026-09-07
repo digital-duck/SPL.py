@@ -193,3 +193,25 @@ def format_schema_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(schema_report: str, explanation: str) -> str:
+    return f"""=== pandera Schema Validator (r104) | solver=ON ===
+
+{schema_report}
+
+── Business Explanation ────────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_analysis: str) -> str:
+    return f"""=== pandera Schema Validator (r104) | solver=OFF ===
+
+── LLM Schema Analysis ─────────────────────────────────────
+{llm_analysis}
+
+Note: LLM describes expected violations. Run --param use_solver=true
+to validate all rows with pandera."""
+

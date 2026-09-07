@@ -18,62 +18,12 @@
 -- Install: pip install nashpy
 --
 -- Run:
---   spl3 run cookbook/110_nash_game_theory/nash_game_theory.spl \
+--   spl3 run cookbook-solver/110_nash_game_theory/nash_game_theory.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/110_nash_game_theory/nash_game_theory.spl \
+--   spl3 run cookbook-solver/110_nash_game_theory/nash_game_theory.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_default_game()
-RETURNS TEXT AS PYTHON $$
-def get_default_game() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "110_nash_game_theory")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_default_game as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API find_nash_equilibria(game_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def find_nash_equilibria(game_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "110_nash_game_theory")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import find_nash_equilibria as _fn
-    return _fn(game_json)
-$$;
-
-CREATE TOOL_API nash_found(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def nash_found(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "110_nash_game_theory")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import nash_found as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_nash_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_nash_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "110_nash_game_theory")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_nash_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "110_nash_game_theory")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION reason_about_pricing_prompt(game_description TEXT)
 RETURNS TEXT AS $$
@@ -115,32 +65,23 @@ DO
   LOGGING "[r110] nash_game_theory start" LEVEL INFO
 
   CALL get_default_game() INTO @game_json;
-  CALL json_get_field(@game_json, "description") INTO @game_description;
+  CALL json_get(@game_json, "description") INTO @game_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL find_nash_equilibria(@game_json) INTO @result_json;
       ASSERT nash_found(@result_json);
       CALL format_nash_report(@result_json) INTO @nash_report;
-      CALL json_get_field(@result_json, "n_equilibria") INTO @n_eq;
+      CALL json_get(@result_json, "n_equilibria") INTO @n_eq;
       LOGGING f"[r110] found {@n_eq} Nash equilibria" LEVEL INFO;
       GENERATE explain_nash_prompt(@nash_report, @game_description) INTO @explanation;
-      @report := f"=== Nash Equilibrium Game Theory (r110) | solver=ON ===
+      CALL format_report_solver_on(@nash_report, @explanation) INTO @report;
 
-{@nash_report}
-
-── Business Explanation ────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE reason_about_pricing_prompt(@game_description) INTO @llm_strategy;
-      @report := f"=== Nash Equilibrium Game Theory (r110) | solver=OFF ===
-
-── LLM Strategic Reasoning ─────────────────────────────────
-{@llm_strategy}
-
-Note: LLM reasons from intuition. Run --param use_solver=true to find
-Nash equilibria with nashpy (often differs from cooperative intuition)."
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

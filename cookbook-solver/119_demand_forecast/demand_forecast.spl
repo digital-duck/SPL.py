@@ -16,7 +16,7 @@
 --
 -- Requires: pip install statsmodels
 -- Run:
---   spl3 run cookbook/119_demand_forecast/demand_forecast.spl \
+--   spl3 run cookbook-solver/119_demand_forecast/demand_forecast.spl \
 --       --llm claude_cli --param use_solver=true
 -- ============================================================
 

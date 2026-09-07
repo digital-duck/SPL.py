@@ -25,16 +25,16 @@
 -- Output: JSON test suite saved to output/{domain}_{timestamp}.json
 --
 -- Run:
---   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--   spl3 run cookbook-solver/109_synthetic_problems/synthetic_problem_gen.spl \
 --       --adapter ollama -m gemma3 \
 --       --param domain=LP --param n_variants=5 --param n_size=5
 --
 --   # Scale up like r78 ablation: n05 → n10 → n20
---   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--   spl3 run cookbook-solver/109_synthetic_problems/synthetic_problem_gen.spl \
 --       --adapter claude_cli \
 --       --param domain=LP --param n_variants=5 --param n_size=10
 --
---   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--   spl3 run cookbook-solver/109_synthetic_problems/synthetic_problem_gen.spl \
 --       --adapter claude_cli \
 --       --param domain=supply-sourcing --param n_variants=5 --param n_size=20
 -- ============================================================

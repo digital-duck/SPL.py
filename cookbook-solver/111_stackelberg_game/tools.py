@@ -215,3 +215,25 @@ def format_stackelberg_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(spne_report: str, explanation: str) -> str:
+    return f"""=== Stackelberg Game (r111) | solver=ON ===
+
+{spne_report}
+
+── Explanation ─────────────────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_strategy: str) -> str:
+    return f"""=== Stackelberg Game (r111) | solver=OFF ===
+
+── LLM Sequential Strategy Reasoning ───────────────────────
+{llm_strategy}
+
+Note: LLM reasons intuitively. Run --param use_solver=true for backward induction
+(finds the subgame-perfect Nash equilibrium the LLM often misses)."""
+

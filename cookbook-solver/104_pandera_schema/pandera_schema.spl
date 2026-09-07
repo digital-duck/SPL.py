@@ -15,62 +15,12 @@
 -- Install: pip install pandera
 --
 -- Run:
---   spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
+--   spl3 run cookbook-solver/104_pandera_schema/pandera_schema.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
+--   spl3 run cookbook-solver/104_pandera_schema/pandera_schema.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_default_schema()
-RETURNS TEXT AS PYTHON $$
-def get_default_schema() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_default_schema as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API validate_schema(schema_json TEXT, data_csv TEXT)
-RETURNS TEXT AS PYTHON $$
-def validate_schema(schema_json: str, data_csv: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import validate_schema as _fn
-    return _fn(schema_json, data_csv)
-$$;
-
-CREATE TOOL_API schema_passes(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def schema_passes(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import schema_passes as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_schema_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_schema_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_schema_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION describe_schema_prompt(schema_description TEXT)
 RETURNS TEXT AS $$
@@ -119,30 +69,21 @@ DO
 
   CALL get_default_schema() INTO @schema_json;
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL validate_schema(@schema_json, @data_csv) INTO @result_json;
       CALL format_schema_report(@result_json) INTO @schema_report;
-      CALL json_get_field(@result_json, "n_violations") INTO @n_violations;
-      CALL json_get_field(@result_json, "n_rows") INTO @n_rows;
+      CALL json_get(@result_json, "n_violations") INTO @n_violations;
+      CALL json_get(@result_json, "n_rows") INTO @n_rows;
       LOGGING f"[r104] {@n_rows} rows, {@n_violations} violation groups" LEVEL INFO;
       GENERATE explain_violations_prompt(@schema_report) INTO @explanation;
-      @report := f"=== pandera Schema Validator (r104) | solver=ON ===
+      CALL format_report_solver_on(@schema_report, @explanation) INTO @report;
 
-{@schema_report}
-
-── Business Explanation ────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE describe_schema_prompt(@schema_description) INTO @llm_analysis;
-      @report := f"=== pandera Schema Validator (r104) | solver=OFF ===
-
-── LLM Schema Analysis ─────────────────────────────────────
-{@llm_analysis}
-
-Note: LLM describes expected violations. Run --param use_solver=true
-to validate all rows with pandera."
+      CALL format_report_solver_off(@llm_analysis) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

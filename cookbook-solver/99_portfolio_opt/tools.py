@@ -226,7 +226,7 @@ def allocate_capital(optimization_json: str, capital: float) -> str:
 
 
 @spl_tool
-def format_solver_report(tickers: str, period: str, capital: str,
+def format_report_solver_on(tickers: str, period: str, capital: str,
                          target_return: str, max_weight: str,
                          market_data_json: str, optimization_json: str,
                          allocation_json: str, interpretation: str,
@@ -244,7 +244,7 @@ def format_solver_report(tickers: str, period: str, capital: str,
 
 
 @spl_tool
-def format_heuristic_report(tickers: str, period: str, capital: str,
+def format_report_solver_off(tickers: str, period: str, capital: str,
                              market_data_json: str, llm_allocation: str,
                              optimization_json: str, allocation_json: str,
                              verify_result: str, llm_calls: str) -> str:

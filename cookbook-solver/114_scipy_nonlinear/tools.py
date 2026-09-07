@@ -241,7 +241,7 @@ def save_report(report: str, out_dir: str, filename: str) -> str:
 
 @spl_tool
 def format_report_solver_on(problem_json: str, method: str, solution_json: str,
-                            verify_json: str, interpretation: str) -> str:
+                            verify_json: str, interpretation: str, llm_calls: str) -> str:
     return (
         f"── Problem Specification ────────────────────────────────────\n"
         f"{problem_json}\n\n"
@@ -251,13 +251,13 @@ def format_report_solver_on(problem_json: str, method: str, solution_json: str,
         f"{verify_json}\n\n"
         f"── Business Interpretation ──────────────────────────────────\n"
         f"{interpretation}\n\n"
-        f"LLM calls: 2  (formulation + interpretation)"
+        f"LLM calls: {llm_calls}"
     )
 
 
 @spl_tool
 def format_report_solver_off(problem_json: str, estimate_text: str, solution_json: str,
-                             verify_json: str, interpretation: str) -> str:
+                             verify_json: str, interpretation: str, llm_calls: str) -> str:
     return (
         f"── Problem Specification ────────────────────────────────────\n"
         f"{problem_json}\n\n"
@@ -269,7 +269,7 @@ def format_report_solver_off(problem_json: str, estimate_text: str, solution_jso
         f"{verify_json}\n\n"
         f"── Business Interpretation ──────────────────────────────────\n"
         f"{interpretation}\n\n"
-        f"LLM calls: 4  (formulation + estimate + extraction + interpretation)\n"
+        f"LLM calls: {llm_calls}\n"
         f"Note: run --param use_solver=true to compare with scipy's exact solution."
     )
 

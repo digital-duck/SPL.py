@@ -202,3 +202,25 @@ def format_coverage_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(coverage_report: str, explanation: str) -> str:
+    return f"""=== Shapely Coverage Analyzer (r106) | solver=ON ===
+
+{coverage_report}
+
+── Logistics Explanation ───────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_estimate: str) -> str:
+    return f"""=== Shapely Coverage Analyzer (r106) | solver=OFF ===
+
+── LLM Coverage Estimate ───────────────────────────────────
+{llm_estimate}
+
+Note: LLM estimates without exact geometry. Run with --param use_solver=true
+to compute exact overlap and gap areas with Shapely."""
+

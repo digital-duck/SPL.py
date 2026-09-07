@@ -1,6 +1,6 @@
 # Recipe 106 — Shapely Geospatial Coverage Analyzer
 
-**The key story:** Three delivery zones in Maplewood have a 2 km² routing conflict (Zone A ∩ Zone B) where Alice and Bob both claim the same neighborhood, and a 2 km² northeast gap where no driver is assigned. Shapely computes both exactly in <0.01s. LLM estimates the gap as "small" from the description.
+**The key story:** Three delivery zones in Maplewood have a 6 km² routing conflict (Zone A ∩ Zone B) and a 5 km² conflict (Zone B ∩ Zone C), plus an 8 km² northeast gap where no driver is assigned (10% of city uncovered). Shapely computes all of this exactly in <0.01s. For axis-aligned rectangles the LLM can also compute correct answers via inclusion-exclusion arithmetic — but it would fail on irregular or rotated polygons where Shapely's comparative advantage is decisive.
 
 ## What it demonstrates
 
@@ -35,11 +35,49 @@ City: 10×8 = 80 km²
 
 | Finding | Value |
 |---|---|
-| Zone A ∩ Zone B overlap | 6 km² (routing conflict for Alice + Bob) |
-| Northeast gap (x>6, y>6) | 4 km² (no driver assigned) |
-| Coverage ratio | 95% of city |
+| Zone A ∩ Zone B overlap | 6 km² — 25% of Zone A (routing conflict: Alice + Bob) |
+| Zone B ∩ Zone C overlap | 5 km² — 14.3% of Zone B (routing conflict: Bob + Carol) |
+| Northeast gap (x>6, y>6) | 8 km² uncovered — 10% of city |
+| Coverage ratio | 90% (72 km² of 80 km²) |
 | C004 River View Deli (9,7) | UNASSIGNED — in the gap |
 | C005 NE Corner Shop (8,7) | UNASSIGNED — in the gap |
+
+## Run results — solver=ON vs solver=OFF
+
+Both runs used `claude_cli` / `claude-sonnet-4-6` on the same Maplewood dataset (3 zones, 5 customers, 10×8 km city).
+
+| Metric | solver=ON | solver=OFF |
+|---|---|---|
+| Timestamp | 2026-09-06 21:57:59 | 2026-09-06 23:43:39 |
+| Tokens in | 425 | 354 |
+| Tokens out | 254 | 550 |
+| Total tokens | 679 | 904 (+33%) |
+| Latency | 12.9s | 49.1s (3.8×) |
+| A∩B overlap | 6.0 km² ✓ | 6.0 km² ✓ |
+| B∩C overlap | 5.0 km² ✓ | 5.0 km² ✓ |
+| Coverage gap | 8.0 km² ✓ | 8.0 km² ✓ |
+| Gap location | NE corner ✓ | NE corner, x∈[6,10] y∈[6,8] ✓ |
+| Customer assignments | All 5 correct ✓ | All 5 correct ✓ |
+| Customers in conflict zones | 0 (correct) ✓ | 0 (correct) ✓ |
+
+### Key finding: solver=OFF was accurate — on this problem
+
+The LLM applied inclusion-exclusion correctly across all three rectangle pairs and identified the exact 4×2 km northeast gap. All values match Shapely's output to the km². This is an outlier result compared to r103–r105: **simple axis-aligned rectangles are amenable to pencil-and-paper arithmetic**, which LLMs handle well.
+
+### Where solver=OFF would fail
+
+| Polygon type | LLM | Shapely |
+|---|---|---|
+| Axis-aligned rectangles | ✓ correct (this run) | ✓ exact |
+| Rotated rectangles | ✗ likely wrong (sin/cos errors) | ✓ exact |
+| Irregular polygons | ✗ wrong | ✓ exact |
+| Non-convex shapes | ✗ wrong | ✓ exact |
+| Polygon with holes | ✗ wrong | ✓ exact |
+| 10+ zone overlap matrix | ✗ combinatorial explosion | ✓ exact |
+
+### Key takeaway
+
+solver=ON is 3.8× faster and uses 25% fewer output tokens. The accuracy gap here is zero because the zones happen to be rectangles — a best-case scenario for LLM spatial reasoning. In production delivery logistics, zones are rarely rectangular: they follow streets, admin boundaries, and terrain. Any deviation from axis-alignment makes LLM spatial arithmetic unreliable. Shapely's value is not that it does better on simple cases — it's that it scales correctly to cases the LLM cannot handle at all.
 
 ## Run commands
 

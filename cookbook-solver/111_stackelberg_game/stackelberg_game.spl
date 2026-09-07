@@ -20,62 +20,12 @@
 -- solver=OFF : LLM strategic reasoning for sequential game
 --
 -- Run:
---   spl3 run cookbook/111_stackelberg_game/stackelberg_game.spl \
+--   spl3 run cookbook-solver/111_stackelberg_game/stackelberg_game.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/111_stackelberg_game/stackelberg_game.spl \
+--   spl3 run cookbook-solver/111_stackelberg_game/stackelberg_game.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_default_game()
-RETURNS TEXT AS PYTHON $$
-def get_default_game() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "111_stackelberg_game")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_default_game as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API solve_stackelberg(game_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def solve_stackelberg(game_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "111_stackelberg_game")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import solve_stackelberg as _fn
-    return _fn(game_json)
-$$;
-
-CREATE TOOL_API spne_solved(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def spne_solved(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "111_stackelberg_game")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import spne_solved as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_stackelberg_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_stackelberg_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "111_stackelberg_game")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_stackelberg_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "111_stackelberg_game")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION reason_sequential_prompt(game_description TEXT)
 RETURNS TEXT AS $$
@@ -124,32 +74,23 @@ DO
   LOGGING "[r111] stackelberg_game start" LEVEL INFO
 
   CALL get_default_game() INTO @game_json;
-  CALL json_get_field(@game_json, "description") INTO @game_description;
+  CALL json_get(@game_json, "description") INTO @game_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL solve_stackelberg(@game_json) INTO @result_json;
       ASSERT spne_solved(@result_json);
       CALL format_stackelberg_report(@result_json) INTO @spne_report;
-      CALL json_get_field(@result_json, "spne_vs_llm") INTO @comparison;
+      CALL json_get(@result_json, "spne_vs_llm") INTO @comparison;
       LOGGING f"[r111] SPNE: {@comparison}" LEVEL INFO;
       GENERATE explain_spne_prompt(@spne_report, @game_description) INTO @explanation;
-      @report := f"=== Stackelberg Game (r111) | solver=ON ===
+      CALL format_report_solver_on(@spne_report, @explanation) INTO @report;
 
-{@spne_report}
-
-── Explanation ─────────────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE reason_sequential_prompt(@game_description) INTO @llm_strategy;
-      @report := f"=== Stackelberg Game (r111) | solver=OFF ===
-
-── LLM Sequential Strategy Reasoning ───────────────────────
-{@llm_strategy}
-
-Note: LLM reasons intuitively. Run --param use_solver=true for backward induction
-(finds the subgame-perfect Nash equilibrium the LLM often misses)."
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

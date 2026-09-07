@@ -16,9 +16,9 @@
 --
 -- Requires: pip install python-mip
 -- Run:
---   spl3 run cookbook/108_robust_milp/robust_milp.spl \
+--   spl3 run cookbook-solver/108_robust_milp/robust_milp.spl \
 --       --adapter claude_cli --param use_solver=true
---   spl3 run cookbook/108_robust_milp/robust_milp.spl \
+--   spl3 run cookbook-solver/108_robust_milp/robust_milp.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
 

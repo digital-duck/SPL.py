@@ -19,10 +19,10 @@
 -- Install: pip install z3-solver
 --
 -- Run:
---   spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
+--   spl3 run cookbook-solver/102_z3_compliance/z3_compliance.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/102_z3_compliance/z3_compliance.spl \
+--   spl3 run cookbook-solver/102_z3_compliance/z3_compliance.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
 

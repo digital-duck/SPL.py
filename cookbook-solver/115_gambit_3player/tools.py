@@ -239,3 +239,25 @@ def format_gambit_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(nash_report: str, explanation: str) -> str:
+    return f"""=== Gambit 3-Player Game Theory (r115) | solver=ON ===
+
+{nash_report}
+
+── Business Explanation ────────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_strategy: str) -> str:
+    return f"""=== Gambit 3-Player Game Theory (r115) | solver=OFF ===
+
+── LLM Strategic Reasoning ─────────────────────────────────
+{llm_strategy}
+
+Note: LLM reasons from intuition. Run --param use_solver=true to find
+Nash equilibria (Standard dominates regardless of rivals — 3-player PD)."""
+

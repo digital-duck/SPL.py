@@ -16,9 +16,9 @@
 --
 -- Requires: pip install pymoo pulp
 -- Run:
---   spl3 run cookbook/107_workforce_3obj/workforce_3obj.spl \
+--   spl3 run cookbook-solver/107_workforce_3obj/workforce_3obj.spl \
 --       --adapter claude_cli --param use_solver=true
---   spl3 run cookbook/107_workforce_3obj/workforce_3obj.spl \
+--   spl3 run cookbook-solver/107_workforce_3obj/workforce_3obj.spl \
 --       --adapter claude_cli --param use_solver=false
 -- ============================================================
 

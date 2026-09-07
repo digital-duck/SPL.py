@@ -1,0 +1,300 @@
+-- ============================================================
+-- Recipe 121: Platypus MOEA 3-Objective Workforce Scheduling (S020)
+--
+-- Same B4 benchmark as r107 (pymoo), solved with platypus NSGA-II —
+-- a pure-Python lighter-weight MOEA library.
+--
+-- Objectives (all three simultaneously):
+--   1. Minimize total cost
+--   2. Maximize blended service quality
+--   3. Minimize blended fatigue risk
+--
+-- Solver: platypus NSGA-II (Integer variables, native Python)
+--
+-- use_solver="true"  → platypus NSGA-II 3-objective Pareto surface
+-- use_solver="false" → LLM-only baseline with back-substitution check
+--
+-- Requires: pip install platypus-opt pulp
+-- Run:
+--   spl3 run cookbook/121_platypus_moea/platypus_moea.spl \
+--       --adapter claude_cli --param use_solver=true
+--   spl3 run cookbook/121_platypus_moea/platypus_moea.spl \
+--       --adapter claude_cli --param use_solver=false
+-- ============================================================
+
+-- ── TOOL_API wrappers ─────────────────────────────────────────
+
+CREATE TOOL_API solve_workforce_platypus(problem_json TEXT, n_eval TEXT, pop_size TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_workforce_platypus(problem_json: str, n_eval: str, pop_size: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import solve_workforce_platypus as _fn
+    return _fn(problem_json, n_eval=n_eval, pop_size=pop_size)
+$$;
+
+CREATE TOOL_API is_pareto_feasible(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_pareto_feasible(front_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_pareto_feasible as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API format_pareto_surface(front_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_pareto_surface(front_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_pareto_surface as _fn
+    return _fn(front_json)
+$$;
+
+CREATE TOOL_API compute_utopia_anchors(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def compute_utopia_anchors(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import compute_utopia_anchors as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API verify_workforce_off(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_workforce_off(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_workforce_off as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "121_platypus_moea")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_workforce_problem(problem TEXT)
+RETURNS TEXT AS $$
+Extract this workforce scheduling problem into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "shifts": [
+    {{"name": "Day",     "cost": 100.0, "quality": 0.90, "risk": 0.10, "min": 10, "max": 20}},
+    {{"name": "Evening", "cost": 130.0, "quality": 1.00, "risk": 0.25, "min": 10, "max": 20}},
+    {{"name": "Night",   "cost": 160.0, "quality": 0.70, "risk": 0.40, "min": 10, "max": 20}}
+  ],
+  "total_min": 30
+}}
+
+Rules:
+- shifts is a list; each entry has name, cost, quality, risk, min, max.
+- total_min is the minimum total headcount across all shifts.
+- If any value is missing, use the defaults above.
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION interpret_pareto_surface(problem TEXT, surface_table TEXT, anchors_json TEXT)
+RETURNS TEXT AS $$
+You are a workforce planning expert. Interpret this 3-objective Pareto surface for a manager.
+The surface was computed by platypus NSGA-II — a pure-Python multi-objective evolutionary solver.
+
+Problem:
+{problem}
+
+Pareto surface (sorted by cost, showing representative rows):
+{surface_table}
+
+Utopia anchors (best possible per objective, computed analytically):
+{anchors_json}
+
+Your interpretation must cover:
+1. The nature of the 3-way tradeoff: explain why cost and risk align (both prefer Day shifts)
+   while quality pulls toward Evening shifts.
+2. Identify 2-3 recommended operating points from the table with justification:
+   - A cost-minimizing option (for budget-constrained operations)
+   - A quality-maximizing option (for customer-facing peak periods)
+   - A balanced option (reasonable cost, acceptable quality and risk)
+3. How close are the Pareto-optimal points to the utopia anchors?
+4. One-sentence practical recommendation for a typical service center.
+
+Be concise (under 200 words). No JSON, no code.
+$$;
+
+CREATE FUNCTION propose_schedule(problem TEXT, problem_json TEXT)
+RETURNS TEXT AS $$
+You are a workforce planning expert. Propose a staffing schedule for this problem.
+
+Problem: {problem}
+
+Shift parameters (JSON): {problem_json}
+
+Choose integer staff counts (xD for Day, xE for Evening, xN for Night) that balance
+cost, service quality, and fatigue risk well.
+
+Constraints:
+- xD in [10, 20], xE in [10, 20], xN in [10, 20] (all integers)
+- xD + xE + xN >= 30
+
+Compute the exact values:
+  cost    = 100*xD + 130*xE + 160*xN
+  quality = (0.90*xD + 1.00*xE + 0.70*xN) / (xD+xE+xN)
+  risk    = (0.10*xD + 0.25*xE + 0.40*xN) / (xD+xE+xN)
+
+Output ONLY a JSON object — no prose, no fences:
+{{
+  "xD": <integer>,
+  "xE": <integer>,
+  "xN": <integer>,
+  "cost": <number>,
+  "quality": <number>,
+  "risk": <number>,
+  "reasoning": "<one sentence explaining the tradeoff choice>"
+}}
+$$;
+
+CREATE FUNCTION extract_schedule_json(problem TEXT, schedule_text TEXT)
+RETURNS TEXT AS $$
+Extract the workforce schedule from this text as JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "xD": <integer>,
+  "xE": <integer>,
+  "xN": <integer>,
+  "cost": <number>,
+  "quality": <number>,
+  "risk": <number>
+}}
+
+Problem: {problem}
+Schedule text:
+{schedule_text}
+
+If values are missing, set them to 0. Use integer values for xD, xE, xN.
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW platypus_moea
+  INPUT @problem TEXT := "A service center runs 3 shift types. Day shift: $100/employee, 0.90 service quality, 0.10 fatigue risk, min 10 max 20 staff. Evening shift: $130/employee, 1.00 quality, 0.25 risk, min 10 max 20. Night shift: $160/employee, 0.70 quality, 0.40 risk, min 10 max 20. Total minimum: 30 staff. Find staffing plans that minimize cost, maximize quality, and minimize fatigue risk simultaneously."
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_eval TEXT := "5000"
+  INPUT @pop_size TEXT := "100"
+  OUTPUT @report TEXT
+DO
+  @problem_json  := "{}";
+  @anchors_json  := "{}";
+  @front_json    := "{}";
+  @surface_table := "";
+  @verify_status := "N/A";
+  @n_points_str  := "N/A";
+  @llm_calls     := 0;
+
+  LOGGING f"[platypus_moea] start  use_solver={@use_solver}  n_eval={@n_eval}  pop_size={@pop_size}" LEVEL INFO
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      LOGGING "[platypus_moea] solver=ON — platypus NSGA-II" LEVEL INFO
+
+      GENERATE extract_workforce_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL compute_utopia_anchors(@problem_json) INTO @anchors_json;
+
+      LOGGING "[platypus_moea] running platypus NSGA-II..." LEVEL INFO
+      CALL solve_workforce_platypus(@problem_json, @n_eval, @pop_size) INTO @front_json;
+
+      ASSERT is_pareto_feasible(@front_json);
+      LOGGING "[platypus_moea] ASSERT passed — Pareto front has >= 3 points" LEVEL INFO
+
+      CALL json_get_field(@front_json, "n_points") INTO @n_points_str;
+      LOGGING f"[platypus_moea] n_pareto_points={@n_points_str}" LEVEL INFO
+
+      CALL format_pareto_surface(@front_json) INTO @surface_table;
+
+      GENERATE interpret_pareto_surface(@problem, @surface_table, @anchors_json) INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      @report := f"=== Platypus MOEA Workforce Scheduling (r121) | solver=ON ===
+
+Problem:
+{@problem}
+
+Utopia Anchors (per-objective best):
+{@anchors_json}
+
+Pareto Surface ({@n_points_str} non-dominated points):
+{@surface_table}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      LOGGING "[platypus_moea] solver=OFF — LLM direct scheduling" LEVEL INFO
+
+      GENERATE extract_workforce_problem(@problem) INTO @problem_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL compute_utopia_anchors(@problem_json) INTO @anchors_json;
+
+      GENERATE propose_schedule(@problem, @problem_json) INTO @schedule_text;
+      @llm_calls := @llm_calls + 1;
+
+      GENERATE extract_schedule_json(@problem, @schedule_text) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+
+      CALL verify_workforce_off(@problem_json, @solution_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+
+      LOGGING f"[platypus_moea] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
+
+      @report := f"=== Platypus MOEA Workforce Scheduling (r121) | solver=OFF ===
+
+Problem:
+{@problem}
+
+Utopia Anchors (reference):
+{@anchors_json}
+
+LLM Proposed Schedule:
+{@schedule_text}
+
+Extracted Schedule (JSON):
+{@solution_json}
+
+Verification:
+{@verify_result}
+
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[platypus_moea] done  n_points={@n_points_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @n_points_str,
+         verify = @verify_status;
+
+END;

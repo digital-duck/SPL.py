@@ -26,62 +26,12 @@
 --   pip install pygambit
 --
 -- Run:
---   spl3 run cookbook/115_gambit_3player/gambit_3player.spl \
+--   spl3 run cookbook-solver/115_gambit_3player/gambit_3player.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/115_gambit_3player/gambit_3player.spl \
+--   spl3 run cookbook-solver/115_gambit_3player/gambit_3player.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_default_game()
-RETURNS TEXT AS PYTHON $$
-def get_default_game() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_default_game as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API find_nash_equilibria_3p(game_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def find_nash_equilibria_3p(game_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import find_nash_equilibria_3p as _fn
-    return _fn(game_json)
-$$;
-
-CREATE TOOL_API nash_3p_found(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def nash_3p_found(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import nash_3p_found as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_gambit_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_gambit_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_gambit_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION reason_3player_prompt(game_description TEXT)
 RETURNS TEXT AS $$
@@ -124,33 +74,24 @@ DO
   LOGGING "[r115] gambit_3player start" LEVEL INFO
 
   CALL get_default_game() INTO @game_json;
-  CALL json_get_field(@game_json, "description") INTO @game_description;
+  CALL json_get(@game_json, "description") INTO @game_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL find_nash_equilibria_3p(@game_json) INTO @result_json;
       ASSERT nash_3p_found(@result_json);
       CALL format_gambit_report(@result_json) INTO @nash_report;
-      CALL json_get_field(@result_json, "n_equilibria") INTO @n_eq;
-      CALL json_get_field(@result_json, "solver_used") INTO @solver_used;
+      CALL json_get(@result_json, "n_equilibria") INTO @n_eq;
+      CALL json_get(@result_json, "solver_used") INTO @solver_used;
       LOGGING f"[r115] found {@n_eq} Nash equilibria via {@solver_used}" LEVEL INFO;
       GENERATE explain_3p_nash_prompt(@nash_report, @game_description) INTO @explanation;
-      @report := f"=== Gambit 3-Player Game Theory (r115) | solver=ON ===
+      CALL format_report_solver_on(@nash_report, @explanation) INTO @report;
 
-{@nash_report}
-
-── Business Explanation ────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE reason_3player_prompt(@game_description) INTO @llm_strategy;
-      @report := f"=== Gambit 3-Player Game Theory (r115) | solver=OFF ===
-
-── LLM Strategic Reasoning ─────────────────────────────────
-{@llm_strategy}
-
-Note: LLM reasons from intuition. Run --param use_solver=true to find
-Nash equilibria (Standard dominates regardless of rivals — 3-player PD)."
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

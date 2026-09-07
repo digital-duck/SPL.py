@@ -1,73 +1,73 @@
 {
-  "_comment": "SPL 2.0 Cookbook Catalog \u2014 single source of truth for all recipes.",
+  "_comment": "SPL 2.0 Cookbook Catalog — single source of truth for all recipes.",
   "_schema": {
-    "is_active": "bool   \u2014 included in default batch run (python run_all.py)",
-    "approval_status": "string \u2014 new | approved | wip | disabled | rejected",
-    "category": "string \u2014 basics | agentic | reasoning | safety | retrieval | multi-agent | application | benchmarking"
+    "is_active": "bool   — included in default batch run (python run_all.py)",
+    "approval_status": "string — new | approved | wip | disabled | rejected",
+    "category": "string — basics | agentic | reasoning | safety | retrieval | multi-agent | application | benchmarking"
   },
   "recipes": [
     {
-      "id": "01",
+      "id": "001",
       "name": "Hello World",
-      "description": "Minimal SPL program \u2014 verify spl2 + adapter + model work",
+      "description": "Minimal SPL program — verify spl2 + adapter + model work",
       "args": [
         "spl3",
         "run",
-        "./cookbook/01_hello_world/hello.spl",
+        "./cookbook/001_hello_world/hello.spl",
         "--llm",
         "ollama:gemma3"
       ],
-      "dir": "01_hello_world",
+      "dir": "001_hello_world",
       "log": "hello",
       "is_active": true,
       "approval_status": "approved",
       "category": "basics"
     },
     {
-      "id": "02",
+      "id": "002",
       "name": "Ollama Proxy",
-      "description": "General-purpose LLM query \u2014 proxy any Ollama model",
+      "description": "General-purpose LLM query — proxy any Ollama model",
       "args": [
         "spl3",
         "run",
-        "./cookbook/02_ollama_proxy/proxy.spl",
+        "./cookbook/002_ollama_proxy/proxy.spl",
         "--adapter",
         "ollama",
         "prompt=Explain quantum computing in one sentence"
       ],
-      "dir": "02_ollama_proxy",
+      "dir": "002_ollama_proxy",
       "log": "proxy",
       "is_active": true,
       "approval_status": "approved",
       "category": "basics"
     },
     {
-      "id": "03",
+      "id": "003",
       "name": "Multilingual Greeting",
-      "description": "Greet in any language \u2014 parametric context demo",
+      "description": "Greet in any language — parametric context demo",
       "args": [
         "spl3",
         "run",
-        "./cookbook/03_multilingual/multilingual.spl",
+        "./cookbook/003_multilingual/multilingual.spl",
         "--adapter",
         "ollama",
         "user_input=Hello Wen-Guang",
         "lang=Chinese"
       ],
-      "dir": "03_multilingual",
+      "dir": "003_multilingual",
       "log": "multilingual",
       "is_active": true,
       "approval_status": "approved",
       "category": "basics"
     },
     {
-      "id": "04",
+      "id": "004",
       "name": "Model Showdown",
-      "description": "Same prompt to multiple models \u2014 compare output and latency via parallel CTEs",
+      "description": "Same prompt to multiple models — compare output and latency via parallel CTEs",
       "args": [
         "spl3",
         "run",
-        "./cookbook/04_model_showdown/showdown.spl",
+        "./cookbook/004_model_showdown/showdown.spl",
         "--adapter",
         "ollama",
         "prompt=Write a poem about Spring season",
@@ -75,38 +75,38 @@
         "model_2=gemma3",
         "model_3=gemma3"
       ],
-      "dir": "04_model_showdown",
+      "dir": "004_model_showdown",
       "log": "showdown",
       "is_active": true,
       "approval_status": "approved",
       "category": "benchmarking"
     },
     {
-      "id": "05",
+      "id": "005",
       "name": "Self-Refine",
-      "description": "Iterative improvement: draft \u2192 critique \u2192 refine loop",
+      "description": "Iterative improvement: draft → critique → refine loop",
       "args": [
         "spl3",
         "run",
-        "./cookbook/05_self_refine/self_refine.spl",
+        "./cookbook/005_self_refine/self_refine.spl",
         "--llm",
         "ollama:gemma3",
         "task=Write a haiku about coding"
       ],
-      "dir": "05_self_refine",
+      "dir": "005_self_refine",
       "log": "self_refine",
       "is_active": true,
       "approval_status": "approved",
       "category": "agentic"
     },
     {
-      "id": "06",
+      "id": "006",
       "name": "ReAct Agent",
-      "description": "Population growth via WebSearch + Python tool \u2014 requires claude_cli adapter and --allowed-tools WebSearch",
+      "description": "Population growth via WebSearch + Python tool — requires claude_cli adapter and --allowed-tools WebSearch",
       "args": [
         "spl3",
         "run",
-        "./cookbook/06_react_agent/react_agent.spl",
+        "./cookbook/006_react_agent/react_agent.spl",
         "--adapter",
         "claude_cli",
         "--model",
@@ -114,10 +114,10 @@
         "--claude-allowed-tools",
         "WebSearch",
         "--tools",
-        "./cookbook/06_react_agent/tools.py",
+        "./cookbook/006_react_agent/tools.py",
         "country=France"
       ],
-      "dir": "06_react_agent",
+      "dir": "006_react_agent",
       "log": "react_agent",
       "is_active": true,
       "approval_status": "approved",
@@ -129,646 +129,646 @@
       "notes": "requires claude_cli adapter + WebSearch tool; momagrid does not support tool-use or claude_cli forwarding. Excluded from momagrid batch runs."
     },
     {
-      "id": "07",
+      "id": "007",
       "name": "Safe Generation",
       "description": "Exception handling for production LLM safety",
       "args": [
         "spl3",
         "run",
-        "./cookbook/07_safe_generation/safe_generation.spl",
+        "./cookbook/007_safe_generation/safe_generation.spl",
         "--adapter",
         "ollama",
         "prompt=Explain how encryption works"
       ],
-      "dir": "07_safe_generation",
+      "dir": "007_safe_generation",
       "log": "safe_generation",
       "is_active": true,
       "approval_status": "approved",
       "category": "safety"
     },
     {
-      "id": "08",
+      "id": "008",
       "name": "RAG Query",
-      "description": "Retrieval-augmented generation over indexed documents \u2014 requires: spl2 rag add <doc>",
+      "description": "Retrieval-augmented generation over indexed documents — requires: spl2 rag add <doc>",
       "args": [
         "spl3",
         "run",
-        "./cookbook/08_rag_query/rag_query.spl",
+        "./cookbook/008_rag_query/rag_query.spl",
         "--adapter",
         "ollama",
         "question=Who is Wen?"
       ],
-      "dir": "08_rag_query",
+      "dir": "008_rag_query",
       "log": "rag_query",
       "is_active": true,
       "approval_status": "approved",
       "category": "retrieval"
     },
     {
-      "id": "09",
+      "id": "009",
       "name": "Chain of Thought",
-      "description": "Multi-step reasoning: Research \u2192 Analyze \u2192 Summarize",
+      "description": "Multi-step reasoning: Research → Analyze → Summarize",
       "args": [
         "spl3",
         "run",
-        "./cookbook/09_chain_of_thought/chain.spl",
+        "./cookbook/009_chain_of_thought/chain.spl",
         "--llm",
         "ollama:gemma3",
         "topic=distributed AI inference"
       ],
-      "dir": "09_chain_of_thought",
+      "dir": "009_chain_of_thought",
       "log": "chain",
       "is_active": true,
       "approval_status": "approved",
       "category": "reasoning"
     },
     {
-      "id": "10",
+      "id": "010",
       "name": "Batch Test",
       "description": "Automated testing of cookbook recipes across models via parallel CTEs",
       "args": [
         "spl3",
         "run",
-        "./cookbook/10_batch_test/batch_test.spl",
+        "./cookbook/010_batch_test/batch_test.spl",
         "--adapter",
         "ollama"
       ],
-      "dir": "10_batch_test",
+      "dir": "010_batch_test",
       "log": "batch_test",
       "is_active": true,
       "approval_status": "approved",
       "category": "benchmarking"
     },
     {
-      "id": "11",
+      "id": "011",
       "name": "Debate Arena",
       "description": "Adversarial debate between two LLM personas with a judge",
       "args": [
         "spl3",
         "run",
-        "./cookbook/11_debate_arena/debate.spl",
+        "./cookbook/011_debate_arena/debate.spl",
         "--llm",
         "ollama:gemma3",
         "topic=AI should be open-sourced"
       ],
-      "dir": "11_debate_arena",
+      "dir": "011_debate_arena",
       "log": "debate",
       "is_active": true,
       "approval_status": "approved",
       "category": "multi-agent"
     },
     {
-      "id": "12",
+      "id": "012",
       "name": "Plan and Execute",
       "description": "Planner decomposes task into steps, executor runs each one",
       "args": [
         "spl3",
         "run",
-        "./cookbook/12_plan_and_execute/plan_execute.spl",
+        "./cookbook/012_plan_and_execute/plan_execute.spl",
         "--adapter",
         "ollama",
         "task=Build a REST API for a todo app"
       ],
-      "dir": "12_plan_and_execute",
+      "dir": "012_plan_and_execute",
       "log": "plan_execute",
       "is_active": true,
       "approval_status": "approved",
       "category": "agentic"
     },
     {
-      "id": "13",
+      "id": "013",
       "name": "Map-Reduce Summarizer",
       "description": "Split large docs into chunks, summarize each, combine results",
       "args": [
         "spl3",
         "run",
-        "./cookbook/13_map_reduce/map_reduce.spl",
+        "./cookbook/013_map_reduce/map_reduce.spl",
         "--tools",
-        "./cookbook/13_map_reduce/tools.py",
+        "./cookbook/013_map_reduce/tools.py",
         "--adapter",
         "ollama",
         "document=The quick brown fox jumps over the lazy dog. This is a test document for map-reduce summarization.",
         "style=bullet points"
       ],
-      "dir": "13_map_reduce",
+      "dir": "013_map_reduce",
       "log": "map_reduce",
       "is_active": true,
       "approval_status": "approved",
       "category": "application"
     },
     {
-      "id": "14",
+      "id": "014",
       "name": "Multi-Agent Collaboration",
-      "description": "Researcher \u2192 Analyst \u2192 Writer collaboration via PROCEDURE",
+      "description": "Researcher → Analyst → Writer collaboration via PROCEDURE",
       "args": [
         "spl3",
         "run",
-        "./cookbook/14_multi_agent/multi_agent.spl",
+        "./cookbook/014_multi_agent/multi_agent.spl",
         "--adapter",
         "ollama",
         "topic=Impact of AI on healthcare"
       ],
-      "dir": "14_multi_agent",
+      "dir": "014_multi_agent",
       "log": "multi_agent",
       "is_active": true,
       "approval_status": "approved",
       "category": "multi-agent"
     },
     {
-      "id": "15",
+      "id": "015",
       "name": "Code Review",
       "description": "Multi-pass review: security, performance, style, bugs",
       "args": [
         "spl3",
         "run",
-        "./cookbook/15_code_review/code_review.spl",
+        "./cookbook/015_code_review/code_review.spl",
         "--adapter",
         "ollama",
-        "code=./cookbook/15_code_review/code_review.spl"
+        "code=./cookbook/015_code_review/code_review.spl"
       ],
-      "dir": "15_code_review",
+      "dir": "015_code_review",
       "log": "code_review",
       "is_active": true,
       "approval_status": "approved",
       "category": "application"
     },
     {
-      "id": "16",
+      "id": "016",
       "name": "Reflection Agent",
-      "description": "Meta-cognitive loop: solve \u2192 reflect \u2192 correct until confident",
+      "description": "Meta-cognitive loop: solve → reflect → correct until confident",
       "args": [
         "spl3",
         "run",
-        "./cookbook/16_reflection/reflection.spl",
+        "./cookbook/016_reflection/reflection.spl",
         "--adapter",
         "ollama",
         "problem=Design a URL shortener system"
       ],
-      "dir": "16_reflection",
+      "dir": "016_reflection",
       "log": "reflection",
       "is_active": true,
       "approval_status": "approved",
       "category": "agentic"
     },
     {
-      "id": "17",
+      "id": "017",
       "name": "Tree of Thought",
       "description": "Explore multiple reasoning paths, score and pick the best",
       "args": [
         "spl3",
         "run",
-        "./cookbook/17_tree_of_thought/tree_of_thought.spl",
+        "./cookbook/017_tree_of_thought/tree_of_thought.spl",
         "--adapter",
         "ollama",
         "problem=Should we rewrite the legacy system or incrementally refactor?"
       ],
-      "dir": "17_tree_of_thought",
+      "dir": "017_tree_of_thought",
       "log": "tree_of_thought",
       "is_active": true,
       "approval_status": "approved",
       "category": "reasoning"
     },
     {
-      "id": "18",
+      "id": "018",
       "name": "Guardrails Pipeline",
       "description": "Input/output safety pipeline with PII detection and filtering",
       "args": [
         "spl3",
         "run",
-        "./cookbook/18_guardrails/guardrails.spl",
+        "./cookbook/018_guardrails/guardrails.spl",
         "--llm",
         "ollama:gemma3",
         "user_input=Explain how encryption works"
       ],
-      "dir": "18_guardrails",
+      "dir": "018_guardrails",
       "log": "guardrails",
       "is_active": true,
       "approval_status": "approved",
       "category": "safety"
     },
     {
-      "id": "19",
+      "id": "019",
       "name": "Memory Conversation",
       "description": "Persistent memory across conversations via memory.get/set",
       "args": [
         "spl3",
         "run",
-        "./cookbook/19_memory_conversation/memory_chat.spl",
+        "./cookbook/019_memory_conversation/memory_chat.spl",
         "--adapter",
         "ollama",
         "user_input=My name is Alice and I am a data scientist"
       ],
-      "dir": "19_memory_conversation",
+      "dir": "019_memory_conversation",
       "log": "memory_chat",
       "is_active": true,
       "approval_status": "approved",
       "category": "application"
     },
     {
-      "id": "20",
+      "id": "020",
       "name": "Ensemble Voting",
       "description": "Generate multiple answers, score and vote for consensus",
       "args": [
         "spl3",
         "run",
-        "./cookbook/20_ensemble_voting/ensemble.spl",
+        "./cookbook/020_ensemble_voting/ensemble.spl",
         "--adapter",
         "ollama",
         "question=What causes inflation?"
       ],
-      "dir": "20_ensemble_voting",
+      "dir": "020_ensemble_voting",
       "log": "ensemble",
       "is_active": true,
       "approval_status": "approved",
       "category": "multi-agent"
     },
     {
-      "id": "21",
+      "id": "021",
       "name": "Multi-Model Pipeline",
       "description": "Per-step model selection with GENERATE...USING MODEL and quality loop",
       "args": [
         "spl3",
         "run",
-        "./cookbook/21_multi_model_pipeline/multi_model.spl",
+        "./cookbook/021_multi_model_pipeline/multi_model.spl",
         "--adapter",
         "ollama",
         "topic=climate change"
       ],
-      "dir": "21_multi_model_pipeline",
+      "dir": "021_multi_model_pipeline",
       "log": "multi_model",
       "is_active": true,
       "approval_status": "approved",
       "category": "agentic"
     },
     {
-      "id": "22",
+      "id": "022",
       "name": "Text2SPL Demo",
-      "description": "Natural language to SPL 2.0 compiler \u2014 prompt, workflow, and auto modes",
+      "description": "Natural language to SPL 2.0 compiler — prompt, workflow, and auto modes",
       "args": [
         "bash",
-        "./cookbook/22_text2spl_demo/text2spl_demo.sh"
+        "./cookbook/022_text2spl_demo/text2spl_demo.sh"
       ],
-      "dir": "22_text2spl_demo",
+      "dir": "022_text2spl_demo",
       "log": "text2spl_demo",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "23",
+      "id": "023",
       "name": "Structured Output",
-      "description": "CREATE FUNCTION with JSON schema \u2014 extract typed data from free text",
+      "description": "CREATE FUNCTION with JSON schema — extract typed data from free text",
       "args": [
         "spl3",
         "run",
-        "./cookbook/23_structured_output/structured_output.spl",
+        "./cookbook/023_structured_output/structured_output.spl",
         "--adapter",
         "ollama",
         "text=John Smith, 42, joined Acme Corp in March 2021 earning $95,000/year"
       ],
-      "dir": "23_structured_output",
+      "dir": "023_structured_output",
       "log": "structured_output",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "24",
+      "id": "024",
       "name": "Few-Shot Prompting",
-      "description": "Gold-standard examples embedded in SELECT context \u2014 in-context learning",
+      "description": "Gold-standard examples embedded in SELECT context — in-context learning",
       "args": [
         "spl3",
         "run",
-        "./cookbook/24_few_shot/few_shot.spl",
+        "./cookbook/024_few_shot/few_shot.spl",
         "--adapter",
         "ollama",
         "text=The quarterly results exceeded all analyst forecasts by a significant margin",
         "domain=finance"
       ],
-      "dir": "24_few_shot",
+      "dir": "024_few_shot",
       "log": "few_shot",
       "is_active": true,
       "approval_status": "new",
       "category": "basics"
     },
     {
-      "id": "25",
+      "id": "025",
       "name": "Nested Procedures",
-      "description": "PROCEDURE calling PROCEDURE \u2014 deep composability without external orchestration",
+      "description": "PROCEDURE calling PROCEDURE — deep composability without external orchestration",
       "args": [
         "spl3",
         "run",
-        "./cookbook/25_nested_procs/nested_procs.spl",
+        "./cookbook/025_nested_procs/nested_procs.spl",
         "--adapter",
         "ollama",
         "topic=quantum computing",
         "audience=high school students"
       ],
-      "dir": "25_nested_procs",
+      "dir": "025_nested_procs",
       "log": "nested_procs",
       "is_active": true,
       "approval_status": "new",
       "category": "agentic"
     },
     {
-      "id": "26",
+      "id": "026",
       "name": "Prompt A/B Test",
-      "description": "CTEs + EVALUATE scoring \u2014 compare two prompt variants, pick winner automatically",
+      "description": "CTEs + EVALUATE scoring — compare two prompt variants, pick winner automatically",
       "args": [
         "spl3",
         "run",
-        "./cookbook/26_ab_test/ab_test.spl",
+        "./cookbook/026_ab_test/ab_test.spl",
         "--adapter",
         "ollama",
         "task=Explain neural networks",
         "prompt_a=Explain like I'm 5",
         "prompt_b=Give a technical explanation with analogies"
       ],
-      "dir": "26_ab_test",
+      "dir": "026_ab_test",
       "log": "ab_test",
       "is_active": true,
       "approval_status": "new",
       "category": "benchmarking"
     },
     {
-      "id": "27",
+      "id": "027",
       "name": "Data Extraction",
-      "description": "Pull structured fields from messy text \u2014 names, dates, amounts, references",
+      "description": "Pull structured fields from messy text — names, dates, amounts, references",
       "args": [
         "spl3",
         "run",
-        "./cookbook/27_data_extraction/data_extraction.spl",
+        "./cookbook/027_data_extraction/data_extraction.spl",
         "--adapter",
         "ollama",
         "text=Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March.",
         "format=general"
       ],
-      "dir": "27_data_extraction",
+      "dir": "027_data_extraction",
       "log": "data_extraction",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "28",
+      "id": "028",
       "name": "Customer Support Triage",
-      "description": "Classify \u2192 route \u2192 draft response in one workflow",
+      "description": "Classify → route → draft response in one workflow",
       "args": [
         "spl3",
         "run",
-        "./cookbook/28_support_triage/support_triage.spl",
+        "./cookbook/028_support_triage/support_triage.spl",
         "--adapter",
         "ollama",
         "ticket=My account has been charged twice for the same order #12345"
       ],
-      "dir": "28_support_triage",
+      "dir": "028_support_triage",
       "log": "support_triage",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "29",
+      "id": "029",
       "name": "Meeting Notes to Actions",
       "description": "Transcript in, structured TODO list + owners out",
       "args": [
         "spl3",
         "run",
-        "./cookbook/29_meeting_actions/meeting_actions.spl",
+        "./cookbook/029_meeting_actions/meeting_actions.spl",
         "--adapter",
         "ollama",
         "transcript=Alice: we need to fix the login bug before Friday. Bob: I'll handle it. Alice: also need to update the docs",
         "output_format=markdown"
       ],
-      "dir": "29_meeting_actions",
+      "dir": "029_meeting_actions",
       "log": "meeting_actions",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "30",
+      "id": "030",
       "name": "Code Generator + Tests",
       "description": "Generate a function then generate its unit tests in one workflow",
       "args": [
         "spl3",
         "run",
-        "./cookbook/30_code_gen/code_gen.spl",
+        "./cookbook/030_code_gen/code_gen.spl",
         "--adapter",
         "ollama",
         "spec=A function that validates an email address",
         "language=Python"
       ],
-      "dir": "30_code_gen",
+      "dir": "030_code_gen",
       "log": "code_gen",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "31",
+      "id": "031",
       "name": "Sentiment Pipeline",
       "description": "Batch sentiment over a list, aggregate trend statistics",
       "args": [
         "spl3",
         "run",
-        "./cookbook/31_sentiment_pipeline/sentiment.spl",
+        "./cookbook/031_sentiment_pipeline/sentiment.spl",
         "--adapter",
         "ollama",
         "items=Great product, love it! | Terrible experience, never again | It was okay I guess",
         "domain=product_reviews"
       ],
-      "dir": "31_sentiment_pipeline",
+      "dir": "031_sentiment_pipeline",
       "log": "sentiment",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "32",
+      "id": "032",
       "name": "Socratic Tutor",
-      "description": "Ask guiding questions rather than giving answers \u2014 persona-constrained generation",
+      "description": "Ask guiding questions rather than giving answers — persona-constrained generation",
       "args": [
         "spl3",
         "run",
-        "./cookbook/32_socratic_tutor/socratic_tutor.spl",
+        "./cookbook/032_socratic_tutor/socratic_tutor.spl",
         "--adapter",
         "ollama",
         "topic=Why does the sky appear blue?",
         "student_level=middle school"
       ],
-      "dir": "32_socratic_tutor",
+      "dir": "032_socratic_tutor",
       "log": "socratic_tutor",
       "is_active": true,
       "approval_status": "new",
       "category": "multi-agent"
     },
     {
-      "id": "33",
+      "id": "033",
       "name": "Interview Simulator",
       "description": "Two-persona structured Q&A with per-question scoring and overall evaluation",
       "args": [
         "spl3",
         "run",
-        "./cookbook/33_interview_sim/interview_sim.spl",
+        "./cookbook/033_interview_sim/interview_sim.spl",
         "--adapter",
         "ollama",
         "role=Senior Software Engineer",
         "focus=system design"
       ],
-      "dir": "33_interview_sim",
+      "dir": "033_interview_sim",
       "log": "interview_sim",
       "is_active": true,
       "approval_status": "new",
       "category": "multi-agent"
     },
     {
-      "id": "34",
+      "id": "034",
       "name": "Progressive Summarizer",
-      "description": "Layered summary: sentence \u2192 paragraph \u2192 page with fidelity verification",
+      "description": "Layered summary: sentence → paragraph → page with fidelity verification",
       "args": [
         "spl3",
         "run",
-        "./cookbook/34_progressive_summary/progressive_summary.spl",
+        "./cookbook/034_progressive_summary/progressive_summary.spl",
         "--adapter",
         "ollama",
         "text=Artificial intelligence has transformed industries from healthcare to finance, enabling automation of complex tasks that previously required human expertise. Machine learning models can now diagnose diseases from medical images, detect fraud in financial transactions, and generate human-like text. However, these advances raise important questions about bias, accountability, and the future of work.",
         "audience=executive"
       ],
-      "dir": "34_progressive_summary",
+      "dir": "034_progressive_summary",
       "log": "progressive_summary",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "35",
+      "id": "035",
       "name": "Hypothesis Tester",
-      "description": "Generate hypothesis \u2192 design test \u2192 evaluate evidence \u2192 conclude",
+      "description": "Generate hypothesis → design test → evaluate evidence → conclude",
       "args": [
         "spl3",
         "run",
-        "./cookbook/35_hypothesis_tester/hypothesis.spl",
+        "./cookbook/035_hypothesis_tester/hypothesis.spl",
         "--adapter",
         "ollama",
         "observation=Remote teams show lower productivity in the first month after joining",
         "domain=management"
       ],
-      "dir": "35_hypothesis_tester",
+      "dir": "035_hypothesis_tester",
       "log": "hypothesis",
       "is_active": true,
       "approval_status": "new",
       "category": "reasoning"
     },
     {
-      "id": "36",
+      "id": "036",
       "name": "Tool-Use / Function-Call",
-      "description": "Register Python functions as CALL-able tools \u2014 deterministic math, zero LLM cost",
+      "description": "Register Python functions as CALL-able tools — deterministic math, zero LLM cost",
       "args": [
         "spl3",
         "run",
-        "./cookbook/36_tool_use/tool_use.spl",
+        "./cookbook/036_tool_use/tool_use.spl",
         "--adapter",
         "ollama",
         "--tools",
-        "./cookbook/36_tool_use/tools.py",
+        "./cookbook/036_tool_use/tools.py",
         "sales=1200,1450,1380,1600,1750,1900",
         "prev_total=7800",
         "period=H1 2025"
       ],
-      "dir": "36_tool_use",
+      "dir": "036_tool_use",
       "log": "tool_use",
       "is_active": true,
       "approval_status": "new",
       "category": "agentic"
     },
     {
-      "id": "37",
+      "id": "037",
       "name": "Headline News Aggregator",
-      "description": "Generate \u2192 expand \u2192 evaluate coverage \u2192 daily news digest for any topic area",
+      "description": "Generate → expand → evaluate coverage → daily news digest for any topic area",
       "args": [
         "spl3",
         "run",
-        "./cookbook/37_headline_news/headline_news.spl",
+        "./cookbook/037_headline_news/headline_news.spl",
         "--adapter",
         "claude_cli",
         "--model",
         "claude-opus-4-6",
         "topic=artificial intelligence"
       ],
-      "dir": "37_headline_news",
+      "dir": "037_headline_news",
       "log": "headline_news",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "38",
+      "id": "038",
       "name": "Bedrock Quickstart",
-      "description": "Fan out to three AWS Bedrock model families (Claude + Nova) and compare \u2014 adapter smoke test for enterprise environments",
+      "description": "Fan out to three AWS Bedrock model families (Claude + Nova) and compare — adapter smoke test for enterprise environments",
       "args": [
         "spl3",
         "run",
-        "./cookbook/38_bedrock_quickstart/bedrock_quickstart.spl",
+        "./cookbook/038_bedrock_quickstart/bedrock_quickstart.spl",
         "--adapter",
         "bedrock",
         "prompt=Explain the CAP theorem in two sentences."
       ],
-      "dir": "38_bedrock_quickstart",
+      "dir": "038_bedrock_quickstart",
       "log": "bedrock_quickstart",
       "is_active": false,
       "approval_status": "new",
       "category": "basics"
     },
     {
-      "id": "39",
+      "id": "039",
       "name": "Vertex AI Quickstart",
-      "description": "Fan out to three Gemini tiers (Pro / Flash / Lite) on GCP Vertex AI and compare \u2014 adapter smoke test for GCP environments",
+      "description": "Fan out to three Gemini tiers (Pro / Flash / Lite) on GCP Vertex AI and compare — adapter smoke test for GCP environments",
       "args": [
         "spl3",
         "run",
-        "./cookbook/39_vertex_quickstart/vertex_quickstart.spl",
+        "./cookbook/039_vertex_quickstart/vertex_quickstart.spl",
         "--adapter",
         "vertex",
         "prompt=Explain the CAP theorem in two sentences."
       ],
-      "dir": "39_vertex_quickstart",
+      "dir": "039_vertex_quickstart",
       "log": "vertex_quickstart",
       "is_active": false,
       "approval_status": "new",
       "category": "basics"
     },
     {
-      "id": "40",
+      "id": "040",
       "name": "Azure OpenAI Quickstart",
-      "description": "Fan out to three Azure OpenAI deployments (GPT-4o / GPT-4o mini / GPT-3.5 Turbo) and compare \u2014 adapter smoke test for Azure environments",
+      "description": "Fan out to three Azure OpenAI deployments (GPT-4o / GPT-4o mini / GPT-3.5 Turbo) and compare — adapter smoke test for Azure environments",
       "args": [
         "spl3",
         "run",
-        "./cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl",
+        "./cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl",
         "--adapter",
         "azure_openai",
         "prompt=Explain the CAP theorem in two sentences."
       ],
-      "dir": "40_azure_openai_quickstart",
+      "dir": "040_azure_openai_quickstart",
       "log": "azure_openai_quickstart",
       "is_active": false,
       "approval_status": "new",
       "category": "basics"
     },
     {
-      "id": "41",
+      "id": "041",
       "name": "Human Steering",
-      "description": "Human-in-the-loop: draft \u2192 pause for stdin feedback \u2192 conditionally refine \u2014 demonstrates EVALUATE on human input",
+      "description": "Human-in-the-loop: draft → pause for stdin feedback → conditionally refine — demonstrates EVALUATE on human input",
       "args": [
         "spl3",
         "run",
-        "./cookbook/41_human_steering/human_steering.spl",
+        "./cookbook/041_human_steering/human_steering.spl",
         "--adapter",
         "ollama",
         "topic=The future of agentic AI"
       ],
-      "dir": "41_human_steering",
+      "dir": "041_human_steering",
       "log": "human_steering",
       "is_active": true,
       "approval_status": "new",
@@ -780,94 +780,94 @@
       "notes": "requires interactive stdin (human feedback loop); incompatible with nohup/batch execution. Run interactively only."
     },
     {
-      "id": "42",
+      "id": "042",
       "name": "Knowledge Synthesis",
-      "description": "RAG-writer pattern: extract 3 insights via LLM, persist to vector store via CALL rag_update \u2014 agents that write back to the knowledge base",
+      "description": "RAG-writer pattern: extract 3 insights via LLM, persist to vector store via CALL rag_update — agents that write back to the knowledge base",
       "args": [
         "spl3",
         "run",
-        "./cookbook/42_knowledge_synthesis/knowledge_synthesis.spl",
+        "./cookbook/042_knowledge_synthesis/knowledge_synthesis.spl",
         "--adapter",
         "ollama",
         "raw_text=Recent advances in sparse attention mechanisms dramatically reduce transformer memory footprint while preserving model quality on long-context tasks."
       ],
-      "dir": "42_knowledge_synthesis",
+      "dir": "042_knowledge_synthesis",
       "log": "knowledge_synthesis",
       "is_active": true,
       "approval_status": "new",
       "category": "retrieval"
     },
     {
-      "id": "43",
+      "id": "043",
       "name": "Prompt Self-Tuning",
-      "description": "Meta-programming: generate two improved prompt variants, A/B test via check_quality, select winner \u2014 automated prompt optimization",
+      "description": "Meta-programming: generate two improved prompt variants, A/B test via check_quality, select winner — automated prompt optimization",
       "args": [
         "spl3",
         "run",
-        "./cookbook/43_prompt_self_tuning/prompt_self_tuning.spl",
+        "./cookbook/043_prompt_self_tuning/prompt_self_tuning.spl",
         "--adapter",
         "ollama",
         "baseline_prompt=Summarize this technical document.",
         "failed_case=The document describes a complex quantum algorithm."
       ],
-      "dir": "43_prompt_self_tuning",
+      "dir": "043_prompt_self_tuning",
       "log": "prompt_self_tuning",
       "is_active": true,
       "approval_status": "new",
       "category": "agentic"
     },
     {
-      "id": "44",
+      "id": "044",
       "name": "Adaptive Failover",
-      "description": "Resilience: try primary model \u2192 quality gate \u2192 auto-failover to stronger model if needed \u2014 GENERATE USING MODEL @var",
+      "description": "Resilience: try primary model → quality gate → auto-failover to stronger model if needed — GENERATE USING MODEL @var",
       "args": [
         "spl3",
         "run",
-        "./cookbook/44_adaptive_failover/adaptive_failover.spl",
+        "./cookbook/044_adaptive_failover/adaptive_failover.spl",
         "--adapter",
         "ollama",
         "query=Explain quantum entanglement for a technical audience.",
         "primary_model=phi4",
         "fallback_model=gemma3"
       ],
-      "dir": "44_adaptive_failover",
+      "dir": "044_adaptive_failover",
       "log": "adaptive_failover",
       "is_active": true,
       "approval_status": "new",
       "category": "agentic"
     },
     {
-      "id": "45",
+      "id": "045",
       "name": "Vision to Action",
-      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE \u2014 deterministic EVALUATE decision tree, zero-cost routing",
+      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE — deterministic EVALUATE decision tree, zero-cost routing",
       "args": [
         "spl3",
         "run",
-        "./cookbook/45_vision_to_action/vision_to_action.spl",
+        "./cookbook/045_vision_to_action/vision_to_action.spl",
         "--adapter",
         "ollama",
         "image_description=Image shows a package being delivered to the front door."
       ],
-      "dir": "45_vision_to_action",
+      "dir": "045_vision_to_action",
       "log": "vision_to_action",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "46",
+      "id": "046",
       "name": "MCP Integration",
-      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation \u2014 DODA across deployment modes via a single EVALUATE branch",
+      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation — DODA across deployment modes via a single EVALUATE branch",
       "args": [
         "spl3",
         "run",
-        "cookbook/46_mcp/mcp.spl",
+        "cookbook/046_mcp/mcp.spl",
         "--adapter",
         "ollama",
         "--param",
         "question=what is 7 factorial"
       ],
-      "dir": "46_mcp",
+      "dir": "046_mcp",
       "log": "mcp",
       "is_active": true,
       "approval_status": "new",
@@ -876,74 +876,74 @@
       "excluded_adapters": []
     },
     {
-      "id": "47",
+      "id": "047",
       "name": "arXiv Morning Brief",
-      "description": "Download arXiv PDFs \u2192 chunk \u2192 summarize each \u2192 reduce \u2192 assemble Markdown brief \u2014 WHILE loop, list tools, WITH OUTPUT BUDGET",
+      "description": "Download arXiv PDFs → chunk → summarize each → reduce → assemble Markdown brief — WHILE loop, list tools, WITH OUTPUT BUDGET",
       "args": [
         "spl3",
         "run",
-        "./cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl",
+        "./cookbook/047_arxiv_morning_brief/arxiv_morning_brief.spl",
         "--adapter",
         "ollama",
-        "urls=cookbook/47_arxiv_morning_brief/arxiv-papers.txt"
+        "urls=cookbook/047_arxiv_morning_brief/arxiv-papers.txt"
       ],
-      "dir": "47_arxiv_morning_brief",
+      "dir": "047_arxiv_morning_brief",
       "log": "arxiv_morning_brief",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "48",
+      "id": "048",
       "name": "Credit Risk Assessment",
-      "description": "Fin-service: deterministic score gate \u2192 LLM qualitative review \u2192 EVALUATE routing \u2014 APPROVED / MANUAL_REVIEW / REJECTED",
+      "description": "Fin-service: deterministic score gate → LLM qualitative review → EVALUATE routing — APPROVED / MANUAL_REVIEW / REJECTED",
       "args": [
         "spl3",
         "run",
-        "./cookbook/48_credit_risk/assess_credit_risk.spl",
+        "./cookbook/048_credit_risk/assess_credit_risk.spl",
         "--adapter",
         "ollama",
         "applicant_data=Applicant: Jane Doe | Income: $72,000 | Debt: $18,000 | Employment: 5 years | Prior defaults: none",
         "credit_score=680"
       ],
-      "dir": "48_credit_risk",
+      "dir": "048_credit_risk",
       "log": "credit_risk",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "49",
+      "id": "049",
       "name": "Regulatory News Audit",
-      "description": "Fin-service: WHILE loop over news feed \u2014 LLM compliance audit per item, JSON risk extraction, CRITICAL ALERT on high-risk findings",
+      "description": "Fin-service: WHILE loop over news feed — LLM compliance audit per item, JSON risk extraction, CRITICAL ALERT on high-risk findings",
       "args": [
         "spl3",
         "run",
-        "./cookbook/49_regulatory_news_audit/audit_news.spl",
+        "./cookbook/049_regulatory_news_audit/audit_news.spl",
         "--adapter",
         "ollama",
-        "news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt"
+        "news_batch_path=cookbook/049_regulatory_news_audit/data/news_feed.txt"
       ],
-      "dir": "49_regulatory_news_audit",
+      "dir": "049_regulatory_news_audit",
       "log": "audit_news",
       "is_active": true,
       "approval_status": "new",
       "category": "application"
     },
     {
-      "id": "50",
+      "id": "050",
       "name": "Code Pipeline",
-      "description": "NDD closure: generate \u2192 review \u2192 improve \u2192 test \u2192 document \u2192 spec_judge (TEXT \u2192 TEXT)",
+      "description": "NDD closure: generate → review → improve → test → document → spec_judge (TEXT → TEXT)",
       "args": [
         "spl3",
         "run",
-        "cookbook/50_code_pipeline/code_pipeline.spl",
+        "cookbook/050_code_pipeline/code_pipeline.spl",
         "--param",
         "spec=Write a binary search function that returns the index or -1",
         "--param",
         "pipeline_model=gemma3"
       ],
-      "dir": "50_code_pipeline",
+      "dir": "050_code_pipeline",
       "log": "code_pipeline",
       "is_active": true,
       "approval_status": "new",
@@ -954,18 +954,18 @@
       ]
     },
     {
-      "id": "51",
+      "id": "051",
       "name": "Image Caption",
-      "description": "Describe / analyse / OCR an image using Gemma4 vision (IMAGE \u2192 TEXT)",
+      "description": "Describe / analyse / OCR an image using Gemma4 vision (IMAGE → TEXT)",
       "args": [
         "python",
-        "cookbook/51_image_caption/run.py",
+        "cookbook/051_image_caption/run.py",
         "--image",
-        "cookbook/51_image_caption/sample/photo.jpg",
+        "cookbook/051_image_caption/sample/photo.jpg",
         "--model",
         "gemma4"
       ],
-      "dir": "51_image_caption",
+      "dir": "051_image_caption",
       "log": "image_caption",
       "is_active": true,
       "approval_status": "approved",
@@ -976,16 +976,16 @@
       ]
     },
     {
-      "id": "52",
+      "id": "052",
       "name": "Audio Summary",
-      "description": "Transcribe / summarise / extract key points from audio (AUDIO \u2192 TEXT)",
+      "description": "Transcribe / summarise / extract key points from audio (AUDIO → TEXT)",
       "args": [
         "python",
-        "cookbook/52_audio_summary/run.py",
+        "cookbook/052_audio_summary/run.py",
         "--audio",
-        "cookbook/52_audio_summary/sample/short-conversation.mp3"
+        "cookbook/052_audio_summary/sample/short-conversation.mp3"
       ],
-      "dir": "52_audio_summary",
+      "dir": "052_audio_summary",
       "log": "audio_summary",
       "is_active": false,
       "approval_status": "disabled",
@@ -997,16 +997,16 @@
       ]
     },
     {
-      "id": "53",
+      "id": "053",
       "name": "Video Summary",
-      "description": "Summarise / transcribe / extract key moments from a video using gemma4 (VIDEO \u2192 TEXT)",
+      "description": "Summarise / transcribe / extract key moments from a video using gemma4 (VIDEO → TEXT)",
       "args": [
         "python",
-        "cookbook/53_video_summary/run.py",
+        "cookbook/053_video_summary/run.py",
         "--video",
-        "cookbook/53_video_summary/sample/clip.mp4"
+        "cookbook/053_video_summary/sample/clip.mp4"
       ],
-      "dir": "53_video_summary",
+      "dir": "053_video_summary",
       "log": "video_summary",
       "is_active": false,
       "approval_status": "new",
@@ -1018,16 +1018,16 @@
       ]
     },
     {
-      "id": "54",
+      "id": "054",
       "name": "Text to Image",
-      "description": "Generate an image from a text prompt using gpt-image-1 (TEXT \u2192 IMAGE)",
+      "description": "Generate an image from a text prompt using gpt-image-1 (TEXT → IMAGE)",
       "args": [
         "python",
-        "cookbook/54_text_to_image/run.py",
+        "cookbook/054_text_to_image/run.py",
         "--prompt",
         "A serene mountain lake at golden hour, photorealistic"
       ],
-      "dir": "54_text_to_image",
+      "dir": "054_text_to_image",
       "log": "text_to_image",
       "is_active": false,
       "approval_status": "new",
@@ -1038,16 +1038,16 @@
       ]
     },
     {
-      "id": "55",
+      "id": "055",
       "name": "Text to Speech",
-      "description": "Convert text to natural speech and save as audio file (TEXT \u2192 AUDIO)",
+      "description": "Convert text to natural speech and save as audio file (TEXT → AUDIO)",
       "args": [
         "python",
-        "cookbook/55_text_to_speech/run.py",
+        "cookbook/055_text_to_speech/run.py",
         "--text",
         "Welcome to SPL 3.0 multimodal support."
       ],
-      "dir": "55_text_to_speech",
+      "dir": "055_text_to_speech",
       "log": "text_to_speech",
       "is_active": false,
       "approval_status": "new",
@@ -1058,16 +1058,16 @@
       ]
     },
     {
-      "id": "56",
+      "id": "056",
       "name": "Text to Video",
-      "description": "Generate a video clip from a text prompt via Google Veo 2 / RunwayML (TEXT \u2192 VIDEO)",
+      "description": "Generate a video clip from a text prompt via Google Veo 2 / RunwayML (TEXT → VIDEO)",
       "args": [
         "python",
-        "cookbook/56_text_to_video/run.py",
+        "cookbook/056_text_to_video/run.py",
         "--prompt",
         "A duck walking through a quiet forest at dawn"
       ],
-      "dir": "56_text_to_video",
+      "dir": "056_text_to_video",
       "log": "text_to_video",
       "is_active": false,
       "approval_status": "new",
@@ -1079,18 +1079,18 @@
       ]
     },
     {
-      "id": "57",
+      "id": "057",
       "name": "Image Format Conversion",
-      "description": "Convert image between formats: PNG \u2194 JPEG \u2194 WebP \u2194 BMP (IMAGE \u2192 IMAGE, codec only)",
+      "description": "Convert image between formats: PNG ↔ JPEG ↔ WebP ↔ BMP (IMAGE → IMAGE, codec only)",
       "args": [
         "python",
-        "cookbook/57_image_convert/run.py",
+        "cookbook/057_image_convert/run.py",
         "--image",
-        "cookbook/57_image_convert/sample/photo.jpg",
+        "cookbook/057_image_convert/sample/photo.jpg",
         "--target-format",
         "jpeg"
       ],
-      "dir": "57_image_convert",
+      "dir": "057_image_convert",
       "log": "image_convert",
       "is_active": true,
       "approval_status": "new",
@@ -1101,18 +1101,18 @@
       ]
     },
     {
-      "id": "58",
+      "id": "058",
       "name": "Image Restyle",
-      "description": "Analyse image with Gemma4 vision, restyle with DALL-E 3 (IMAGE+TEXT \u2192 TEXT+IMAGE)",
+      "description": "Analyse image with Gemma4 vision, restyle with DALL-E 3 (IMAGE+TEXT → TEXT+IMAGE)",
       "args": [
         "python",
-        "cookbook/58_image_restyle/run.py",
+        "cookbook/058_image_restyle/run.py",
         "--image",
-        "cookbook/58_image_restyle/sample/photo.jpg",
+        "cookbook/058_image_restyle/sample/photo.jpg",
         "--style",
         "watercolor painting, soft edges, pastel tones"
       ],
-      "dir": "58_image_restyle",
+      "dir": "058_image_restyle",
       "log": "image_restyle",
       "is_active": false,
       "approval_status": "new",
@@ -1124,18 +1124,18 @@
       ]
     },
     {
-      "id": "59",
+      "id": "059",
       "name": "Audio Format Conversion",
-      "description": "Convert audio between formats: WAV \u2194 MP3 \u2194 OGG \u2194 FLAC (AUDIO \u2192 AUDIO, codec only)",
+      "description": "Convert audio between formats: WAV ↔ MP3 ↔ OGG ↔ FLAC (AUDIO → AUDIO, codec only)",
       "args": [
         "python",
-        "cookbook/59_audio_convert/run.py",
+        "cookbook/059_audio_convert/run.py",
         "--audio",
-        "cookbook/59_audio_convert/sample/clip.wav",
+        "cookbook/059_audio_convert/sample/clip.wav",
         "--target-format",
         "mp3"
       ],
-      "dir": "59_audio_convert",
+      "dir": "059_audio_convert",
       "log": "audio_convert",
       "is_active": false,
       "approval_status": "wip",
@@ -1147,20 +1147,20 @@
       ]
     },
     {
-      "id": "60",
+      "id": "060",
       "name": "Voice Dialogue",
-      "description": "Full voice assistant pipeline: transcribe \u2192 respond \u2192 speak (AUDIO+TEXT \u2192 TEXT+AUDIO)",
+      "description": "Full voice assistant pipeline: transcribe → respond → speak (AUDIO+TEXT → TEXT+AUDIO)",
       "args": [
         "python",
-        "cookbook/60_voice_dialogue/run.py",
+        "cookbook/060_voice_dialogue/run.py",
         "--audio",
-        "cookbook/52_audio_summary/sample/short-conversation.mp3"
+        "cookbook/052_audio_summary/sample/short-conversation.mp3"
       ],
-      "dir": "60_voice_dialogue",
+      "dir": "060_voice_dialogue",
       "log": "voice_dialogue",
       "is_active": false,
       "approval_status": "disabled",
-      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) \u2014 same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ \u2014 args point at recipe 52's sample as a stand-in.)",
+      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) — same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ — args point at recipe 52's sample as a stand-in.)",
       "category": "multimodal",
       "tier": 4,
       "requires": [
@@ -1170,16 +1170,16 @@
       ]
     },
     {
-      "id": "61",
+      "id": "061",
       "name": "Video to Audio",
-      "description": "Extract audio track from a video file: .mp4 \u2192 .mp3 / .wav / .flac (VIDEO \u2192 AUDIO, codec only)",
+      "description": "Extract audio track from a video file: .mp4 → .mp3 / .wav / .flac (VIDEO → AUDIO, codec only)",
       "args": [
         "python",
-        "cookbook/61_video_to_audio/run.py",
+        "cookbook/061_video_to_audio/run.py",
         "--video",
-        "cookbook/61_video_to_audio/sample/clip.mp4"
+        "cookbook/061_video_to_audio/sample/clip.mp4"
       ],
-      "dir": "61_video_to_audio",
+      "dir": "061_video_to_audio",
       "log": "video_to_audio",
       "is_active": true,
       "approval_status": "approved",
@@ -1191,16 +1191,16 @@
       ]
     },
     {
-      "id": "62",
+      "id": "062",
       "name": "Video to Image",
-      "description": "Extract frame(s) from a video; optionally caption with gemma4 vision (VIDEO \u2192 IMAGE)",
+      "description": "Extract frame(s) from a video; optionally caption with gemma4 vision (VIDEO → IMAGE)",
       "args": [
         "python",
-        "cookbook/62_video_to_image/run.py",
+        "cookbook/062_video_to_image/run.py",
         "--video",
-        "cookbook/62_video_to_image/sample/clip.mp4"
+        "cookbook/062_video_to_image/sample/clip.mp4"
       ],
-      "dir": "62_video_to_image",
+      "dir": "062_video_to_image",
       "log": "video_to_image",
       "is_active": false,
       "approval_status": "new",
@@ -1212,18 +1212,18 @@
       ]
     },
     {
-      "id": "63",
+      "id": "063",
       "name": "Parallel Code Review",
-      "description": "Style, security, and test-generation reviews run concurrently via CALL PARALLEL; merged into one report (TEXT \u2192 TEXT)",
+      "description": "Style, security, and test-generation reviews run concurrently via CALL PARALLEL; merged into one report (TEXT → TEXT)",
       "args": [
         "spl3",
         "run",
-        "cookbook/63_parallel_code_review/parallel_code_review.spl",
+        "cookbook/063_parallel_code_review/parallel_code_review.spl",
         "--param",
         "code=def add(a, b): return a - b",
         "review_model=gemma3"
       ],
-      "dir": "63_parallel_code_review",
+      "dir": "063_parallel_code_review",
       "log": "parallel_code_review",
       "is_active": true,
       "approval_status": "new",
@@ -1234,15 +1234,15 @@
       ]
     },
     {
-      "id": "64",
+      "id": "064",
       "name": "Parallel News Digest",
-      "description": "Summarise three news topics concurrently via CALL PARALLEL; merge into a morning briefing (TEXT \u2192 TEXT)",
+      "description": "Summarise three news topics concurrently via CALL PARALLEL; merge into a morning briefing (TEXT → TEXT)",
       "args": [
         "spl3",
         "run",
-        "cookbook/64_parallel_news_digest/parallel_news_digest.spl"
+        "cookbook/064_parallel_news_digest/parallel_news_digest.spl"
       ],
-      "dir": "64_parallel_news_digest",
+      "dir": "064_parallel_news_digest",
       "log": "parallel_news_digest",
       "is_active": true,
       "approval_status": "new",
@@ -1253,19 +1253,19 @@
       ]
     },
     {
-      "id": "65",
+      "id": "065",
       "name": "LLM-powered SPL Compiler (vibe-splc)",
-      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler \u2014 run both and cross-compare to surface gaps",
+      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler — run both and cross-compare to surface gaps",
       "args": [
         "spl3",
         "run",
-        "cookbook/65_llm_splc/llm_splc.spl",
+        "cookbook/065_llm_splc/llm_splc.spl",
         "--param",
-        "spl_file=cookbook/05_self_refine/self_refine.spl",
+        "spl_file=cookbook/005_self_refine/self_refine.spl",
         "--param",
         "target=langgraph"
       ],
-      "dir": "65_llm_splc",
+      "dir": "065_llm_splc",
       "log": "llm_splc",
       "is_active": true,
       "approval_status": "new",
@@ -1277,15 +1277,15 @@
       "excluded_adapters": []
     },
     {
-      "id": "66",
+      "id": "066",
       "name": "Mixed-Regime Stock Analysis",
       "description": "Demonstrates CREATE TOOL_API: deterministic Python tools (fetch_ohlcv, compute_metrics) + LLM analysis (interpret_metrics, synthesize_report) in one self-contained .spl file",
       "args": [
         "spl3",
         "run",
-        "cookbook/66_stock_analysis/stock_analysis.spl"
+        "cookbook/066_stock_analysis/stock_analysis.spl"
       ],
-      "dir": "66_stock_analysis",
+      "dir": "066_stock_analysis",
       "log": "stock_analysis",
       "is_active": true,
       "approval_status": "approved",
@@ -1295,16 +1295,16 @@
       "excluded_adapters": []
     },
     {
-      "id": "67",
+      "id": "067",
       "name": "Symbolic Math Solver",
-      "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem \u2192 SymPy solves exactly \u2192 LLM explains result. Shows LLM handling only what it is uniquely suited for.",
+      "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem → SymPy solves exactly → LLM explains result. Shows LLM handling only what it is uniquely suited for.",
       "args": [
         "spl3",
         "run",
-        "cookbook/67_symbolic_math/hello_symbolic_math.spl",
+        "cookbook/067_symbolic_math/hello_symbolic_math.spl",
         "--kernel"
       ],
-      "dir": "67_symbolic_math",
+      "dir": "067_symbolic_math",
       "log": "symbolic_math",
       "is_active": true,
       "approval_status": "approved",
@@ -1316,15 +1316,15 @@
       "excluded_adapters": []
     },
     {
-      "id": "68",
+      "id": "068",
       "name": "Answer-First Problem Generator",
       "description": "SymPy generates exact answers first; LLM writes word problems and worked solutions around them. Hallucination on math is structurally impossible.",
       "args": [
         "spl3",
         "run",
-        "cookbook/68_problem_generator/problem_generator.spl"
+        "cookbook/068_problem_generator/problem_generator.spl"
       ],
-      "dir": "68_problem_generator",
+      "dir": "068_problem_generator",
       "log": "problem_generator",
       "is_active": true,
       "approval_status": "approved",
@@ -1336,18 +1336,18 @@
       "excluded_adapters": []
     },
     {
-      "id": "69",
+      "id": "069",
       "name": "Jupyter Notebook Generator",
-      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps \u2014 the kernel does exact eigendecomposition and symbolic A\u00b7v=\u03bb\u00b7v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
+      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps — the kernel does exact eigendecomposition and symbolic A·v=λ·v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
       "args": [
         "spl3",
         "run",
-        "cookbook/69_notebook_gen/notebook_gen.spl",
+        "cookbook/069_notebook_gen/notebook_gen.spl",
         "--kernel",
         "--adapter",
         "ollama"
       ],
-      "dir": "69_notebook_gen",
+      "dir": "069_notebook_gen",
       "log": "notebook_gen",
       "is_active": true,
       "approval_status": "approved",
@@ -1359,19 +1359,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "70",
+      "id": "070",
       "name": "Linear Algebra Core Concepts (Content-Cache Experiment)",
-      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) \u2014 verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
+      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) — verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
       "args": [
         "spl3",
         "run",
-        "cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
+        "cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
         "--adapter",
         "ollama",
         "--model",
         "gemma3"
       ],
-      "dir": "70_linalg_core_concepts",
+      "dir": "070_linalg_core_concepts",
       "log": "linalg_core_concepts",
       "is_active": true,
       "approval_status": "approved",
@@ -1383,19 +1383,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "71",
+      "id": "071",
       "name": "Linear Algebra Concept-Book Generator",
-      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline \u2014 compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view \u2192 physical notebook artifact)",
+      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline — compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view → physical notebook artifact)",
       "args": [
         "spl3",
         "splc",
         "compile",
-        "cookbook/71_linalg_concept_book/build_concept_book.spl",
+        "cookbook/071_linalg_concept_book/build_concept_book.spl",
         "--lang",
         "python/linalg",
         "--overwrite"
       ],
-      "dir": "71_linalg_concept_book",
+      "dir": "071_linalg_concept_book",
       "log": "linalg_concept_book",
       "is_active": true,
       "approval_status": "approved",
@@ -1408,21 +1408,21 @@
       "excluded_adapters": []
     },
     {
-      "id": "72",
+      "id": "072",
       "name": "Verify arXiv References",
-      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV \u2014 automates the spot-check a careful reviewer does by hand",
+      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV — automates the spot-check a careful reviewer does by hand",
       "args": [
         "spl3",
         "run",
-        "cookbook/72_verify_arxiv_references/verify_arxiv_references.spl",
+        "cookbook/072_verify_arxiv_references/verify_arxiv_references.spl",
         "--adapter",
         "ollama",
         "--model",
         "phi3",
         "in_refs=Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948.",
-        "out_dir=cookbook/72_verify_arxiv_references/output"
+        "out_dir=cookbook/072_verify_arxiv_references/output"
       ],
-      "dir": "72_verify_arxiv_references",
+      "dir": "072_verify_arxiv_references",
       "log": "verify_arxiv_references",
       "is_active": true,
       "approval_status": "approved",
@@ -1434,15 +1434,15 @@
       "excluded_adapters": []
     },
     {
-      "id": "73",
+      "id": "073",
       "name": "Intro Geometry Concept-Book Generator",
       "description": "Sibling to recipe 71, retargeted at intro (plane) geometry: a 29-node/50-edge concept graph where 'distance' and 'angle' radicals meet at trigonometric_ratios, plus two new K-12 style profiles (middle_school, high_school) proving styles are additive. Both build_concept_book and answer_on_demand notebooks validated end-to-end.",
       "args": [
         "spl3",
         "validate",
-        "cookbook/73_intro_geometry/build_concept_book.spl"
+        "cookbook/073_intro_geometry/build_concept_book.spl"
       ],
-      "dir": "73_intro_geometry",
+      "dir": "073_intro_geometry",
       "log": "intro_geometry",
       "is_active": true,
       "approval_status": "approved",
@@ -1455,15 +1455,15 @@
       "excluded_adapters": []
     },
     {
-      "id": "74",
+      "id": "074",
       "name": "Concept-Book Generator",
-      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml \u2014 compiled once, runs against any domain shaped the same way.",
+      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml — compiled once, runs against any domain shaped the same way.",
       "args": [
         "spl3",
         "validate",
-        "cookbook/74_concept_book/build_concept_book.spl"
+        "cookbook/074_concept_book/build_concept_book.spl"
       ],
-      "dir": "74_concept_book",
+      "dir": "074_concept_book",
       "log": "concept_book",
       "is_active": false,
       "approval_status": "approved",
@@ -1476,19 +1476,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "75",
+      "id": "075",
       "name": "SageMath Solver",
-      "description": "Second rung of the verifier ladder: LLM parses NL problem \u2192 Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) \u2192 LLM explains. Requires --kernel-name sagemath.",
+      "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
       "args": [
         "spl3",
         "run",
-        "cookbook/75_sage_math/basic_sagemath.spl",
+        "cookbook/075_sage_math/basic_sagemath.spl",
         "--llm",
         "ollama:gemma3",
         "--kernel-name",
         "sagemath"
       ],
-      "dir": "75_sage_math",
+      "dir": "075_sage_math",
       "log": "sage_math",
       "is_active": true,
       "approval_status": "approved",
@@ -1500,18 +1500,18 @@
       "excluded_adapters": []
     },
     {
-      "id": "76",
+      "id": "076",
       "name": "Lean Proof Verifier",
-      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
       "args": [
         "spl3",
         "run",
-        "cookbook/76_lean_proof/lean_proof.spl",
+        "cookbook/076_lean_proof/lean_proof.spl",
         "--kernel",
         "--llm",
         "claude_cli"
       ],
-      "dir": "76_lean_proof",
+      "dir": "076_lean_proof",
       "log": "lean_proof",
       "is_active": true,
       "approval_status": "approved",
@@ -1523,17 +1523,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "78",
+      "id": "078",
       "name": "Constraint Optimization",
       "description": "Demonstrates SPL's deterministic-probabilistic boundary: LLM reads a natural-language LP problem and generates PuLP solver code (probabilistic), PuLP/CBC finds the optimal solution with a proof of optimality (deterministic), ASSERT gates on solver status (formal verification), LLM interprets the result (probabilistic). Repair loop retries up to max_tries on Error/Infeasible. Default problem: bakery production planning (known optimum: bread=3, croissants=3, profit=$60). Requires: pip install pulp.",
       "args": [
         "spl3",
         "run",
-        "cookbook/78_constraint_opt/constraint_opt.spl",
+        "cookbook/078_constraint_opt/constraint_opt.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "78_constraint_opt",
+      "dir": "078_constraint_opt",
       "log": "constraint_opt",
       "is_active": true,
       "approval_status": "approved",
@@ -1545,17 +1545,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "79",
+      "id": "079",
       "name": "Code Generation + Pytest Verification",
-      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 \u2014 Software Development.",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
       "args": [
         "spl3",
         "run",
-        "cookbook/79_code_pytest/code_pytest.spl",
+        "cookbook/079_code_pytest/code_pytest.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "79_code_pytest",
+      "dir": "079_code_pytest",
       "log": "code_pytest",
       "is_active": true,
       "approval_status": "approved",
@@ -1567,17 +1567,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "80",
+      "id": "080",
       "name": "OpenCV Scene Triage",
       "description": "OpenCV measures pixels deterministically and cheaply, SPL's LLM step reasons over the resulting structured report.",
       "args": [
         "spl3",
         "run",
-        "cookbook/80_opencv_5/opencv5_scene_triage.spl",
+        "cookbook/080_opencv_5/opencv5_scene_triage.spl",
         "--llm",
         "ollama:gemma4"
       ],
-      "dir": "80_opencv_5",
+      "dir": "080_opencv_5",
       "log": "opencv_5",
       "is_active": true,
       "approval_status": "approved",
@@ -1589,18 +1589,18 @@
       "excluded_adapters": []
     },
     {
-      "id": "77",
+      "id": "077",
       "name": "Neurosymbolic Verifier Ladder",
       "description": "Capstone of the verifier ladder: ONE declarative workflow puts all three deterministic rungs (SymPy from recipe 67, SageMath from recipe 75, Lean 4 + mathlib from recipe 76) behind the same problem text via a single --param backend= flip. LLM decomposes/formalizes/narrates (probabilistic); the chosen kernel computes exact instances (SymPy/Sage) or kernel-checks statements against mathlib (Lean), returning a badge (machine_proved/statement_checked/unfaithful/unverified). enable_solver=false runs the unaided-LLM baseline for direct A/B comparison. Backed by a cross-model experiment harness (run_experiment.py) with round-trip verification across ~1,200 cells.",
       "args": [
         "spl3",
         "run",
-        "cookbook/77_neurosymbolic/symbolic_math.spl",
+        "cookbook/077_neurosymbolic/symbolic_math.spl",
         "--kernel",
         "--llm",
         "claude_cli"
       ],
-      "dir": "77_neurosymbolic",
+      "dir": "077_neurosymbolic",
       "log": "neurosymbolic",
       "is_active": true,
       "approval_status": "approved",
@@ -1614,17 +1614,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "81",
+      "id": "081",
       "name": "Graph Reasoning",
       "description": "Extends the verifier ladder into discrete/combinatorial math: LLM reads a natural-language graph problem and writes networkx code (probabilistic), networkx computes the exact shortest-path/bipartite/cycle answer (deterministic), ASSERT gates on tool success, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the networkx ground truth. Repair loop retries up to max_tries on Error. Default problem: 6-warehouse shortest-path network (known optimum: A-C-B-D-E-F, distance=13). Requires: networkx (already installed).",
       "args": [
         "spl3",
         "run",
-        "cookbook/81_graph_reasoning/graph_reasoning.spl",
+        "cookbook/081_graph_reasoning/graph_reasoning.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "81_graph_reasoning",
+      "dir": "081_graph_reasoning",
       "log": "graph_reasoning",
       "is_active": true,
       "approval_status": "new",
@@ -1636,17 +1636,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "82",
+      "id": "082",
       "name": "Logic Puzzle Solver",
       "description": "Adds a CSP verifier class distinct from 78's LP/numeric optimization: LLM reads a natural-language zebra-style logic puzzle and writes python-constraint code (probabilistic), the CSP solver enumerates all solutions (deterministic), ASSERT gates on a Unique solution being found, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the solver's unique solution. Repair loop retries up to max_tries on Error/Ambiguous/NoSolution. Default problem: 3-house zebra-lite puzzle (known unique answer: the Dane drinks Coffee). Requires: pip install python-constraint.",
       "args": [
         "spl3",
         "run",
-        "cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl",
+        "cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "82_logic_puzzle_solver",
+      "dir": "082_logic_puzzle_solver",
       "log": "logic_puzzle_solver",
       "is_active": true,
       "approval_status": "new",
@@ -1658,17 +1658,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "83",
+      "id": "083",
       "name": "Unit / Dimensional Check",
       "description": "Demonstrates a categorical (not numeric-fuzzy) verifier for physics/engineering word problems: LLM writes pint unit-aware code (probabilistic), pint executes the calculation with units attached and raises DimensionalityError on any unit mismatch (deterministic), ASSERT gates on dimensional consistency, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches pint's computed magnitude (0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: kinematics (car accelerating from rest; known answer: 108 km/h). Requires: pip install pint.",
       "args": [
         "spl3",
         "run",
-        "cookbook/83_unit_dimensional_check/unit_dimensional_check.spl",
+        "cookbook/083_unit_dimensional_check/unit_dimensional_check.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "83_unit_dimensional_check",
+      "dir": "083_unit_dimensional_check",
       "log": "unit_dimensional_check",
       "is_active": true,
       "approval_status": "new",
@@ -1680,17 +1680,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "84",
+      "id": "084",
       "name": "SQL Verifier",
       "description": "Text-to-SQL with a row-level verifier: LLM writes a SQL SELECT from a natural-language question (probabilistic), stdlib sqlite3 executes it against a seeded in-memory database (deterministic), ASSERT gates on clean execution, a deterministic classify_roundtrip() function row-diffs the LLM's result against an independently-authored ground-truth SQL query over the same seeded data, LLM interprets the verified rows. Repair loop retries up to max_tries on SQL error. Default question: average Engineering salary (known ground truth: $97,333.33). Requires: stdlib sqlite3 only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/84_sql_verifier/sql_verifier.spl",
+        "cookbook/084_sql_verifier/sql_verifier.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "84_sql_verifier",
+      "dir": "084_sql_verifier",
       "log": "sql_verifier",
       "is_active": true,
       "approval_status": "new",
@@ -1702,17 +1702,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "85",
+      "id": "085",
       "name": "Property-Based Code Verification",
       "description": "Upgrades recipe 79's example-based pytest verification one rung further: LLM generates an implementation AND independent Hypothesis properties from the same spec (probabilistic), pytest+Hypothesis execute the properties against hundreds of auto-generated inputs in a subprocess (deterministic), ASSERT gates on all properties passing (a genuine falsifying example is never repaired away, only broken test-harness code is), LLM interprets the verified result, a deterministic classify_roundtrip() check confirms the LLM's narration agrees with the actual pass/fail verdict. Default spec: merge two sorted lists. Requires: pip install hypothesis pytest.",
       "args": [
         "spl3",
         "run",
-        "cookbook/85_property_based_code_verify/property_based_code_verify.spl",
+        "cookbook/085_property_based_code_verify/property_based_code_verify.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "85_property_based_code_verify",
+      "dir": "085_property_based_code_verify",
       "log": "property_based_code_verify",
       "is_active": true,
       "approval_status": "new",
@@ -1725,17 +1725,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "86",
+      "id": "086",
       "name": "Financial Calculation Verifier",
       "description": "Demonstrates exact closed-form arithmetic verification for compound-interest/loan-amortization word problems: LLM writes stdlib decimal code implementing the correct formula (probabilistic), Decimal arithmetic computes the exact figure with no floating-point drift (deterministic), ASSERT gates on clean execution, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated dollar figure matches the Decimal-computed ground truth (1 cent / 0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: 5-year loan amortization (known answer: $193.33/month). Requires: stdlib decimal only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/86_financial_calc_verifier/financial_calc_verifier.spl",
+        "cookbook/086_financial_calc_verifier/financial_calc_verifier.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "86_financial_calc_verifier",
+      "dir": "086_financial_calc_verifier",
       "log": "financial_calc_verifier",
       "is_active": true,
       "approval_status": "new",
@@ -1747,17 +1747,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "87",
+      "id": "087",
       "name": "Route Optimization",
       "description": "A second, harder optimization class beyond recipe 78's linear program: LLM writes Google OR-Tools vehicle-routing code from a natural-language logistics problem (probabilistic), OR-Tools' combinatorial routing solver searches the NP-hard space and returns a feasible route with its total distance (deterministic), ASSERT gates on a feasible route being found, LLM interprets the route and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated total distance matches the solver's computed ground truth. Repair loop retries up to max_tries on Error. Default problem: 1 depot + 5 customer TSP (known optimum: 101 miles). Requires: pip install ortools.",
       "args": [
         "spl3",
         "run",
-        "cookbook/87_route_optimization/route_optimization.spl",
+        "cookbook/087_route_optimization/route_optimization.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "87_route_optimization",
+      "dir": "087_route_optimization",
       "log": "route_optimization",
       "is_active": true,
       "approval_status": "new",
@@ -1769,17 +1769,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "90",
+      "id": "090",
       "name": "Physics Conservation Check",
       "description": "Opens the computational-science domain: a categorical + numeric verifier for 1-D collision problems. LLM writes NumPy code reporting final-state velocities (probabilistic); run_conservation_check() independently recomputes total momentum and kinetic energy before/after from the reported values (deterministic, never trusts the code's own self-report); ASSERT gates on momentum (and, for elastic collisions, energy) being conserved within 1% tolerance. Repair loop retries up to max_tries on a conservation-law violation. LLM interprets the verified velocity and restates a Final answer line, cross-checked by classify_roundtrip() (0.5% tolerance). Default problem: elastic collision, equal masses (known answer: ball 1 stops at 0 m/s). Requires: numpy only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/90_compsci_physics/physics_conservation.spl",
+        "cookbook/090_compsci_physics/physics_conservation.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "90_compsci_physics",
+      "dir": "090_compsci_physics",
       "log": "physics_conservation",
       "is_active": true,
       "approval_status": "new",
@@ -1791,17 +1791,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "91",
+      "id": "091",
       "name": "Chemical Equation Balancing",
       "description": "Second computational-science recipe: a categorical mass-balance verifier for chemical equations, with no chemistry library dependency. LLM proposes a strict-format balanced equation with explicit integer coefficients (probabilistic); run_balance_check() parses every formula (recursive-descent parser, supports parentheses e.g. Ca(OH)2) and sums atoms x coefficient per element on each side (deterministic); ASSERT gates on exact mass balance for every element. Repair loop retries up to max_tries on a mismatched element. LLM interprets the verified equation and restates a Final answer coefficient line, cross-checked by classify_roundtrip(). Default problem: combustion of methane (known answer: 1 CH4 + 2 O2 -> 1 CO2 + 2 H2O). Requires: stdlib re only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/91_compsci_chemistry/chemistry_balance.spl",
+        "cookbook/091_compsci_chemistry/chemistry_balance.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "91_compsci_chemistry",
+      "dir": "091_compsci_chemistry",
       "log": "chemistry_balance",
       "is_active": true,
       "approval_status": "new",
@@ -1813,17 +1813,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "92",
+      "id": "092",
       "name": "Crystal Structure Check",
       "description": "Third computational-science recipe: stacks two independent oracles (categorical symmetry + numeric density round-trip) in one ASSERT. LLM writes Python code reporting a crystal system, lattice parameters, Z, molar mass, and computed density (probabilistic); run_materials_check() independently verifies the claimed crystal system's own symmetry constraints (cubic: a=b=c, angles=90; hexagonal: a=b, gamma=120; etc.) and recomputes cell volume (general triclinic formula) and theoretical density from scratch via Avogadro's number (deterministic); ASSERT gates on both symmetry holding and density matching within 1%. Repair loop retries up to max_tries. LLM interprets the verified density and restates a Final answer line, cross-checked by classify_roundtrip(). Default problem: NaCl rock-salt structure (known answer: ~2.1636 g/cm^3). Requires: stdlib math only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/92_compsci_materials/materials_crystal.spl",
+        "cookbook/092_compsci_materials/materials_crystal.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "92_compsci_materials",
+      "dir": "092_compsci_materials",
       "log": "materials_crystal",
       "is_active": true,
       "approval_status": "new",
@@ -1835,17 +1835,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "93",
+      "id": "093",
       "name": "Automated Planning (PDDL / STRIPS)",
       "description": "Opens the automated-planning domain: GENERATE plan -> CALL validator -> ASSERT valid -> WHILE repair, the two-phase pattern applied to STRIPS-style planning (LLM+P / DUPLEX generalized into a head-to-head baseline). LLM proposes a grounded JSON action plan over a fixed logistics-lite domain (truck, packages, locations; drive/load/unload actions) (probabilistic); run_plan_check() replays the plan action-by-action against the domain's STRIPS precondition/effect semantics, a minimal VAL-style validator (deterministic); ASSERT gates on every action's precondition holding AND the goal being reached. Repair loop retries up to max_tries, fed the exact failing step and reason. LLM interprets the validated plan and restates a Final answer step-count line, cross-checked by classify_roundtrip(). Default problem: deliver 2 packages to a common destination (known minimal plan: 6 steps). Requires: stdlib json only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/93_auto_planning/auto_planning.spl",
+        "cookbook/093_auto_planning/auto_planning.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "93_auto_planning",
+      "dir": "093_auto_planning",
       "log": "auto_planning",
       "is_active": true,
       "approval_status": "new",
@@ -1857,17 +1857,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "94",
+      "id": "094",
       "name": "Text-to-SQL with Data-Quality Gates",
       "description": "Opens the data-engineering domain, extending recipe 84's row-diff verifier with Great-Expectations-style data-quality gates. LLM writes SQL from a natural-language question (probabilistic); run_quality_gated_sql() checks referential integrity (every orders.customer_id exists in customers.id), requires a non-empty result, and computes the same statistic two structurally independent SQL formulations (AVG(x) vs SUM(x)/COUNT(x)) asserting they agree within 1e-6 (deterministic, independent of the LLM's query); ASSERT gates on clean execution AND all quality gates passing. Repair loop retries up to max_tries on any gate failure. classify_roundtrip() row-diffs (order-insensitive, float-tolerant) the LLM's result against an independently-authored ground-truth query; LLM interprets the verified, quality-gated answer. Default question: average Enterprise-segment order amount (known ground truth: $6,000.00). Requires: stdlib sqlite3 only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/94_data_eng_text2spl/text2sql_quality.spl",
+        "cookbook/094_data_eng_text2spl/text2sql_quality.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "94_data_eng_text2spl",
+      "dir": "094_data_eng_text2spl",
       "log": "text2sql_quality",
       "is_active": true,
       "approval_status": "new",
@@ -1879,17 +1879,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "95",
+      "id": "095",
       "name": "Music Theory: Chorale Voice-Leading",
       "description": "The 'unexpected domain' demonstration: an LLM harmonizes a given soprano melody into a four-part chorale (probabilistic); check_voice_leading() deterministically checks parallel fifths/octaves between every voice pair across consecutive beats, voice crossing, adjacent-voice spacing, and large leaps (pure interval arithmetic on MIDI pitch numbers, stdlib json only -- no music21 dependency). Repair loop lets the LLM revise A/T/B only, up to max_tries; ASSERT gates on zero violations. classify_roundtrip() confirms the soprano voice still matches the original input melody note-for-note, catching the LLM 'fixing' a violation by silently altering the given melody instead. Default melody: C5 D5 E5 F5 G5 F5 E5 C5 (8 beats). Verified 2026-07-26: the checker correctly caught real parallel octaves/fifths from a model's naive parallel-motion harmonization. Requires: stdlib json only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/95_music_theory/music_theory.spl",
+        "cookbook/095_music_theory/music_theory.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "95_music_theory",
+      "dir": "095_music_theory",
       "log": "music_theory",
       "is_active": true,
       "approval_status": "new",
@@ -1901,17 +1901,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "96",
+      "id": "096",
       "name": "Pharmacovigilance: Drug-Interaction Screening",
       "description": "SYNTHETIC DEMO ONLY (not a clinical tool). Demonstrates the two-mode split as non-optional: an LLM extracts a structured drug list (name/dose/frequency) from a free-text clinical note (probabilistic); screen_regimen() normalizes names via a synthetic RxNorm-style alias table and checks every pairwise combination against a synthetic DrugBank-style severity table (deterministic). A contraindicated result is a load-bearing safety gate that halts BEFORE narration, unconditionally, drafting a clinical alert instead. A moderate result enters a bounded WHILE repair loop (LLM suggests dropping/substituting one drug, kernel re-screens). ASSERT gates on nothing severe/contraindicated remaining. classify_roundtrip() deterministically recounts drug mentions in the note against the LLM's extraction count, catching silently dropped/invented medications. Default note: sildenafil + nitroglycerin (a well-known contraindicated pair -- life-threatening hypotension). Verified end-to-end 2026-07-26 with ollama:gemma4 on both the contraindicated-halt path and the moderate-repair-loop path. Requires: stdlib json/re only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook/96_drug_sim/drug_sim.spl",
+        "cookbook/096_drug_sim/drug_sim.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "96_drug_sim",
+      "dir": "096_drug_sim",
       "log": "drug_sim",
       "is_active": true,
       "approval_status": "new",
@@ -1924,19 +1924,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "98",
+      "id": "098",
       "name": "Job-Shop Scheduling via OR-Tools CP-SAT",
       "description": "Classic job-shop scheduling: N jobs x M machines, each job has a fixed sequence of operations. LLM extracts problem structure from natural language (probabilistic); solve_job_shop() runs OR-Tools CP-SAT constraint programming to find the provably-optimal schedule with minimum makespan (deterministic). ASSERT gates on OPTIMAL/FEASIBLE CP-SAT status. Ablation: use_solver=false lets the LLM schedule directly; verify_job_shop() back-substitutes to check no-overlap and precedence constraints. format_gantt() renders an ASCII Gantt chart. Demonstrates C5 (constraint propagation / CP-SAT) solver class. Solver class: C5. Requires: pip install ortools.",
       "args": [
         "spl3",
         "run",
-        "cookbook/98_job_shop/job_shop.spl",
+        "cookbook/098_job_shop/job_shop.spl",
         "--adapter",
         "claude_cli",
         "--param",
         "use_solver=true"
       ],
-      "dir": "98_job_shop",
+      "dir": "098_job_shop",
       "log": "job_shop",
       "is_active": true,
       "approval_status": "new",
@@ -1948,13 +1948,13 @@
       "excluded_adapters": []
     },
     {
-      "id": "99",
+      "id": "099",
       "name": "Portfolio Optimization via cvxpy (Markowitz)",
       "description": "Personal investment demo: given a capital amount and a pool of stock tickers, minimize portfolio variance subject to a target annual return using Markowitz mean-variance optimization. fetch_stock_data() downloads historical prices via yfinance and computes annual returns and covariance matrix (deterministic). optimize_portfolio() runs cvxpy CLARABEL interior-point QP solver (deterministic). ASSERT gates on OPTIMAL status; repair loop relaxes the target return if infeasible. Ablation: use_solver=false lets the LLM suggest weights heuristically; verify_portfolio() checks weight sum, bounds, and non-negativity. LLM interprets weights and capital allocation in plain language. Adaptive: run monthly with fresh data for rebalancing signals. Not financial advice. Requires: pip install cvxpy yfinance.",
       "args": [
         "spl3",
         "run",
-        "cookbook/99_portfolio_opt/portfolio_opt.spl",
+        "cookbook/099_portfolio_opt/portfolio_opt.spl",
         "--adapter",
         "claude_cli",
         "--param",
@@ -1966,7 +1966,7 @@
         "--param",
         "target_return=0.12"
       ],
-      "dir": "99_portfolio_opt",
+      "dir": "099_portfolio_opt",
       "log": "portfolio_opt",
       "is_active": true,
       "approval_status": "new",
@@ -1988,7 +1988,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["nashpy"],
+      "requires": [
+        "nashpy"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2014,7 +2016,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["optuna"],
+      "requires": [
+        "optuna"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2027,7 +2031,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["scikit-optimize"],
+      "requires": [
+        "scikit-optimize"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2053,7 +2059,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["pygambit"],
+      "requires": [
+        "pygambit"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2066,7 +2074,10 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["pyomo", "glpk"],
+      "requires": [
+        "pyomo",
+        "glpk"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2079,7 +2090,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["statsmodels"],
+      "requires": [
+        "statsmodels"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2092,7 +2105,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["open_spiel"],
+      "requires": [
+        "open_spiel"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2105,7 +2120,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["z3-solver"],
+      "requires": [
+        "z3-solver"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2118,7 +2135,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["pandas"],
+      "requires": [
+        "pandas"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2131,7 +2150,9 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["pandera"],
+      "requires": [
+        "pandera"
+      ],
       "excluded_adapters": []
     },
     {
@@ -2157,13 +2178,15 @@
       "approval_status": "new",
       "category": "reasoning",
       "tier": 2,
-      "requires": ["shapely"],
+      "requires": [
+        "shapely"
+      ],
       "excluded_adapters": []
     },
     {
       "id": "109",
       "name": "Synthetic Problem Generator",
-      "description": "Training-data factory for OR benchmarks: given one verified (problem, known_optimal) pair, generates N structural variants via LLM, batch-solves each with the domain solver (PuLP CBC for LP/ILP, epsilon-constraint for supply-sourcing), and saves a labeled test suite \u2014 (problem_text, formal_spec, solver_status, optimal) \u2014 to output/{domain}_{timestamp}.json. WHILE repair loop fixes malformed JSON (\u22643 attempts); ASSERT gates on at least 1 valid variant before solving. n_size parameter controls decision-variable count per problem, mirroring r78 ablation scale levels (n05=5, n10=10, n20=20) to find the LLM formulation crossover point. n_variants controls batch size. LLM analyzes difficulty spread and recommends next scale. Supports domains: LP, ILP, supply-sourcing. Output JSON is directly usable as benchmark input for solver=ON vs solver=OFF ablation sweeps, as training data for problem-decomposition fine-tuning, or as a regression suite for any target .spl recipe. Requires: pip install pulp.",
+      "description": "Training-data factory for OR benchmarks: given one verified (problem, known_optimal) pair, generates N structural variants via LLM, batch-solves each with the domain solver (PuLP CBC for LP/ILP, epsilon-constraint for supply-sourcing), and saves a labeled test suite — (problem_text, formal_spec, solver_status, optimal) — to output/{domain}_{timestamp}.json. WHILE repair loop fixes malformed JSON (≤3 attempts); ASSERT gates on at least 1 valid variant before solving. n_size parameter controls decision-variable count per problem, mirroring r78 ablation scale levels (n05=5, n10=10, n20=20) to find the LLM formulation crossover point. n_variants controls batch size. LLM analyzes difficulty spread and recommends next scale. Supports domains: LP, ILP, supply-sourcing. Output JSON is directly usable as benchmark input for solver=ON vs solver=OFF ablation sweeps, as training data for problem-decomposition fine-tuning, or as a regression suite for any target .spl recipe. Requires: pip install pulp.",
       "args": [
         "spl3",
         "run",

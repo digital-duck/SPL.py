@@ -149,20 +149,20 @@ off during the regression batch.
 | r100 | 100_supply_sourcing           | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
 | r101 | 101_production_sustainability | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
 | r102 | 102_z3_compliance             | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
-| r103 | 103_data_quality              | Great Expectations (S015)  |   |   | — | ☐ |
-| r104 | 104_pandera_schema            | pandera (S016)             |   |   | — | ☐ |
-| r105 | 105_prolog_inference          | SWI-Prolog (S017)          |   |   | — | ☐ |
-| r106 | 106_shapely_geo               | Shapely (S018)             |   |   | — | ☐ |
+| r103 | 103_data_quality              | Great Expectations (S015)  |   |   | ✅ | ☐ |
+| r104 | 104_pandera_schema            | pandera (S016)             |   |   | ✅ | ☐ |
+| r105 | 105_prolog_inference          | SWI-Prolog (S017)          |   |   | ✅ | ☐ |
+| r106 | 106_shapely_geo               | Shapely (S018)             |   |   | ✅ | ☐ |
 | r107 | 107_workforce_3obj            | pymoo NSGA-II (S019)       | ✓ | ✓ | ✅ | ✅ |
 | r108 | 108_robust_milp               | python-mip (S022)          | ✓ | ✓ | ✅ | ✅ |
 | r109 | 109_synthetic_problems        | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ⚠ |
-| r110 | 110_nash_game_theory          | nashpy (S023)              |   |   | — | ☐ |
-| r111 | 111_stackelberg_game          | pure-Python (no Sxxx)      |   |   | — | ☐ |
-| r112 | 112_optuna_blackbox           | optuna (S026)              |   |   | — | ☐ |
+| r110 | 110_nash_game_theory          | nashpy (S023)              |   |   | ✅ | ☐ |
+| r111 | 111_stackelberg_game          | pure-Python (no Sxxx)      |   |   | ✅ | ☐ |
+| r112 | 112_optuna_blackbox           | optuna (S026)              |   |   | ✅ | ☐ |
 | r113 | 113_bayesian_opt              | scikit-optimize (S027)     | ✓ | ✓ | ✅ | ✅ |
 | r114 | 114_scipy_nonlinear           | scipy.optimize (S028)      | ✓ | ✓ | ✅ | ✅ |
-| r115 | 115_gambit_3player            | pygambit (S024)            |   |   | — | ☐ |
-| r116 | 116_openspiel_cfr             | OpenSpiel CFR (S025)       |   |   | — | ☐ |
+| r115 | 115_gambit_3player            | pygambit (S024)            |   |   | ✅ | ☐ |
+| r116 | 116_openspiel_cfr             | OpenSpiel CFR (S025)       |   |   | ✅ | ☐ |
 | r117 | 117_pyomo_stochastic          | Pyomo+GLPK (S021)          | ✓ | ✓ | ✅ | ✅ |
 | r118 | 118_trading_rule_z3           | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
 | r119 | 119_demand_forecast           | statsmodels (S029)         | ✓ | ✓ | ✅ | ✅ |
@@ -172,6 +172,29 @@ the remaining 26. Recipes with blank **OrigValid** (r76, r103, r104, r105, r106,
 r110, r111, r112, r115, r116) need a first-time validation on their originals
 too — track that alongside the refactor so the batch run isn't the first time
 they're exercised.
+
+### Audit of the remaining 26 — two structural clusters (2026-09-06)
+
+The 26 are **not** uniform. The refactor only applies cleanly to one cluster:
+
+- **Cluster B — r103, r104, r105, r106, r110, r111, r112, r115, r116 (9):** have
+  `tools.py` + thin re-import `CREATE TOOL_API` wrappers = the exact T1
+  redundancy, plus `@use_solver`, `json_get_field`, and 2 report f-strings each.
+  **✅ Refactored** (decorator + `normalize_bool` + `json_get` + report helpers;
+  r116 also had `solver_enabled` + an `int` coercion). Flipped to `ready` in the
+  catalog. NB: 8 of the 9 were never validated as originals — the batch is their
+  first real exercise.
+
+- **Cluster A — r67, r75, r76, r77, r78, r79, r81–r94 (17):** have **no
+  `tools.py`**. Their `CREATE TOOL_API` blocks hold **unique inline Python**
+  (the actual oracle/solver logic), *not* boilerplate. There is **no wrapper
+  redundancy to remove**. Applying the `@spl_tool` convention would mean
+  *extracting* inline code into new `tools.py` files — a larger, riskier
+  architectural change with little dedup payoff. Rules (2)/(3) barely apply
+  either: only r78 has `@use_solver`; only r76/r77 have workflow f-strings.
+  **Deferred pending a decision** — recommend leaving Cluster A inline (it isn't
+  the redundancy this effort targets), or a separate, careful extraction pass if
+  a uniform `@spl_tool` style across the whole cookbook is desired.
 
 ---
 
@@ -270,3 +293,29 @@ Verified at runtime: `use_solver=on` → solver arm; `use_solver=0` → LLM arm.
 **Still deferred:** `is_empty_policy` (r102/r118) stays a decorated recipe tool —
 it's an emptiness check, *not* `normalize_bool` semantics. `status_ok` generic
 ASSERT gate — still just a proposal.
+
+### Consistency pass (2026-09-07)
+
+Structural review across ~22 recipes surfaced (and fixed) these:
+
+- **Single-workflow convention** — converted the 3 multi-workflow recipes
+  (r114, r116, r117) from `solver_on`/`solver_off`/dispatcher into one workflow
+  with inlined `EVALUATE @use_solver` branches. All recipes now share one shape.
+  (r99 keeps 2 workflows — optimization vs cross-algorithm comparison are
+  distinct features, not an on/off dispatch.)
+- **Hardcoded-path sweep** — real output-path bugs fixed: r114 `@out_dir`, r99
+  `@out_dir`, r109 `save_test_suite` all pointed at the original `cookbook/`
+  tree; repointed to `cookbook-solver/`. Also bulk-fixed the `spl3 run cookbook/…`
+  run-example comments in every active recipe → `cookbook-solver/…`.
+- **`@llm_calls`** — r114 hardcoded `LLM calls: 2`/`4` in its report helpers;
+  replaced with a real `@llm_calls` counter incremented after each `GENERATE`,
+  passed into the helpers. No other active recipe hardcodes counts.
+- **Report-helper names** — r99's `format_solver_report`/`format_heuristic_report`
+  renamed to `format_report_solver_on`/`_off` (standard everywhere now);
+  `format_comparison_report` kept (distinct workflow). r109 `format_report` and
+  r118 `format_report_audit`/`_snapshot` kept — not on/off ablations.
+- **Skipped (by decision):** `status_ok` generic gate; standardized
+  failure-handling pattern.
+
+Verified: r117 & r114 single-workflow smoke runs green (r114 saves to the
+corrected path; `LLM calls: 2` now from the counter).

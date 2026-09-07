@@ -68,6 +68,7 @@ def solve_with_cfr(n_iterations: int = 1000) -> str:
       {"game", "n_iterations", "exploitability", "converged",
        "nash_summary", "player_strategies", "status"}
     """
+    n_iterations = int(n_iterations)   # SPL passes args as strings
     try:
         import pyspiel  # type: ignore[import-untyped]
         from open_spiel.python.algorithms import cfr  # type: ignore[import-untyped]
@@ -196,12 +197,28 @@ def format_cfr_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+# solver_enabled removed — the .spl now uses stdlib normalize_bool(@use_solver)
+# + EVALUATE @use_solver WHEN = "true"/"false" (deterministic, no recipe-local helper).
+
+
+
 @spl_tool
-def solver_enabled(use_solver: str) -> str:
-    """Return 'run_solver' or 'run_llm' so the SPL EVALUATE has distinctive
-    condition strings that the LLM can match unambiguously."""
-    if use_solver.strip().lower() in ("true", "1", "yes", "on"):
-        return "run_solver"
-    return "run_llm"
+def format_report_solver_on(cfr_report: str, explanation: str) -> str:
+    return (
+        f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=ON ===\n\n"
+        f"{cfr_report}\n\n"
+        f"── Game Theory Explanation ─────────────────────────────────\n"
+        f"{explanation}"
+    )
 
 
+@spl_tool
+def format_report_solver_off(llm_strategy: str) -> str:
+    return (
+        f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=OFF ===\n\n"
+        f"── LLM Strategic Reasoning ─────────────────────────────────\n"
+        f"{llm_strategy}\n\n"
+        f"Note: LLM gives intuitive strategy (~0.25 exploitability).\n"
+        f"Run --param use_solver=true to compute the Nash equilibrium\n"
+        f"mixed strategy via CFR (converges to <0.05 exploitability)."
+    )

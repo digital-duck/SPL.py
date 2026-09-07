@@ -197,3 +197,25 @@ def format_optuna_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(optuna_report: str, explanation: str) -> str:
+    return f"""=== Optuna Black-Box Optimization (r112) | solver=ON ===
+
+{optuna_report}
+
+── Analytics Explanation ───────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_guess: str) -> str:
+    return f"""=== Optuna Black-Box Optimization (r112) | solver=OFF ===
+
+── LLM Heuristic Strategy ──────────────────────────────────
+{llm_guess}
+
+Note: LLM guesses from intuition without exploring the search space.
+Run --param use_solver=true to let Optuna TPE find the optimum in 50 trials."""
+

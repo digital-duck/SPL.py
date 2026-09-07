@@ -220,3 +220,25 @@ def format_quality_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(quality_report: str, explanation: str) -> str:
+    return f"""=== Data Quality Validator (r103) | solver=ON ===
+
+{quality_report}
+
+── Business Explanation ────────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_analysis: str) -> str:
+    return f"""=== Data Quality Validator (r103) | solver=OFF ===
+
+── LLM Sample-Based Analysis ───────────────────────────────
+{llm_analysis}
+
+Note: LLM inspects the description only — run with --param use_solver=true
+to validate all rows with the expectation engine."""
+

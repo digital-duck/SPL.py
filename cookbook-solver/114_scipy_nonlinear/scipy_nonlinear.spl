@@ -24,11 +24,11 @@
 --
 -- Requires: pip install scipy
 -- Run:
---   spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
+--   spl3 run cookbook-solver/114_scipy_nonlinear/scipy_nonlinear.spl \
 --       --adapter claude_cli \
 --       --param problem_type=pricing --param method=SLSQP
 --
---   spl3 run cookbook/114_scipy_nonlinear/scipy_nonlinear.spl \
+--   spl3 run cookbook-solver/114_scipy_nonlinear/scipy_nonlinear.spl \
 --       --adapter ollama -m gemma3 \
 --       --param problem_type=logistics --param use_solver=false
 -- ============================================================
@@ -157,56 +157,6 @@ Return ONLY a JSON object — no markdown, no prose:
 Estimate text: {estimate_text}
 $$;
 
--- ── Sub-workflows for clean branching ────────────────────────
-
-WORKFLOW solver_on_nonlinear
-  INPUT @problem_json    TEXT := "{}"
-  INPUT @problem_type    TEXT := "pricing"
-  INPUT @method          TEXT := "SLSQP"
-  INPUT @max_iterations  TEXT := "1000"
-  OUTPUT @report TEXT
-DO
-  LOGGING f"[r114] solver=ON  method={@method}" LEVEL INFO
-
-  CALL solve_nonlinear(@problem_json, @method, @max_iterations) INTO @solution_json;
-
-  -- Pillar 3: Verification — back-substitution ASSERT gate
-  ASSERT is_optimal(@solution_json);
-  CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
-
-  -- Pillar 4: Interpretation
-  GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
-  INTO @interpretation;
-
-  LOGGING f"[r114] solution={@solution_json}  verify={@verify_json}" LEVEL INFO
-
-  CALL format_report_solver_on(@problem_json, @method, @solution_json,
-                               @verify_json, @interpretation) INTO @report;
-  RETURN @report WITH status = "complete";
-END;
-
-WORKFLOW solver_off_llm_nonlinear
-  INPUT @problem_json    TEXT := "{}"
-  INPUT @problem_type    TEXT := "pricing"
-  OUTPUT @report TEXT
-DO
-  LOGGING "[r114] solver=OFF — LLM heuristic estimate" LEVEL INFO
-
-  GENERATE estimate_optimum(@problem_type, @problem_json) INTO @estimate_text;
-  GENERATE extract_solution_json(@estimate_text) INTO @solution_json;
-  CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
-
-  -- Pillar 4: Interpretation
-  GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
-  INTO @interpretation;
-
-  CALL format_report_solver_off(@problem_json, @estimate_text, @solution_json,
-                                @verify_json, @interpretation) INTO @report;
-  RETURN @report WITH status = "complete";
-END;
-
--- ── Entry point ──────────────────────────────────────────────
-
 WORKFLOW nonlinear_opt
   -- Problem selection
   INPUT @problem_type    TEXT := "pricing"
@@ -227,9 +177,10 @@ WORKFLOW nonlinear_opt
   INPUT @method          TEXT := "SLSQP"
   INPUT @max_iterations  TEXT := "1000"
   INPUT @use_solver      TEXT := "true"
-  INPUT @out_dir         TEXT := "./cookbook/114_scipy_nonlinear/output"
+  INPUT @out_dir         TEXT := "./cookbook-solver/114_scipy_nonlinear/output"
   OUTPUT @report TEXT
 DO
+  @llm_calls := 0;
   LOGGING f"[r114] nonlinear_opt start  type={@problem_type}  solver={@use_solver}" LEVEL INFO
 
   -- Pillar 1: LLM formulates the structured problem spec (Decomposition)
@@ -247,6 +198,7 @@ DO
         @x_min, @x_max, @min_demand)
       INTO @problem_json;
   END;
+  @llm_calls := @llm_calls + 1;
 
   LOGGING f"[r114] problem_json={@problem_json}" LEVEL DEBUG
 
@@ -255,9 +207,30 @@ DO
 
   EVALUATE @use_solver
     WHEN = "true" THEN
-      CALL solver_on_nonlinear(@problem_json, @problem_type, @method, @max_iterations) INTO @body;
+      -- solver=ON: scipy.optimize + back-substitution verification
+      LOGGING f"[r114] solver=ON  method={@method}" LEVEL INFO
+      CALL solve_nonlinear(@problem_json, @method, @max_iterations) INTO @solution_json;
+      ASSERT is_optimal(@solution_json);
+      CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
+      GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
+        INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+      CALL format_report_solver_on(@problem_json, @method, @solution_json,
+                                   @verify_json, @interpretation, @llm_calls) INTO @body;
+
     WHEN = "false" THEN
-      CALL solver_off_llm_nonlinear(@problem_json, @problem_type) INTO @body;
+      -- solver=OFF: LLM estimates the optimum, back-checked
+      LOGGING "[r114] solver=OFF — LLM heuristic estimate" LEVEL INFO
+      GENERATE estimate_optimum(@problem_type, @problem_json) INTO @estimate_text;
+      @llm_calls := @llm_calls + 1;
+      GENERATE extract_solution_json(@estimate_text) INTO @solution_json;
+      @llm_calls := @llm_calls + 1;
+      CALL verify_solution(@problem_json, @solution_json) INTO @verify_json;
+      GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
+        INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+      CALL format_report_solver_off(@problem_json, @estimate_text, @solution_json,
+                                    @verify_json, @interpretation, @llm_calls) INTO @body;
   END;
 
   CALL format_report_wrapper(@problem_type, @body) INTO @report;

@@ -12,7 +12,7 @@
 --
 -- Requires: pip install ortools
 -- Run:
---   spl3 run cookbook/98_job_shop/job_shop.spl \
+--   spl3 run cookbook-solver/98_job_shop/job_shop.spl \
 --       --adapter claude_cli --param use_solver=true \
 --       --param "problem=3 jobs, 3 machines. Job1: M1(3)->M2(2)->M3(2). Job2: M2(2)->M1(3)->M3(1). Job3: M3(2)->M2(1)->M1(2). Minimize makespan."
 -- ============================================================

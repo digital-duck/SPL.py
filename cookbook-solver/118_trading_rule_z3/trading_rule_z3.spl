@@ -25,11 +25,11 @@
 --
 -- Run:
 --   # Default: Momentum Breakout strategy audit
---   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--   spl3 run cookbook-solver/118_trading_rule_z3/trading_rule_z3.spl \
 --       --llm claude_cli
 --
 --   # Custom trading rules (NL → Z3)
---   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--   spl3 run cookbook-solver/118_trading_rule_z3/trading_rule_z3.spl \
 --       --llm claude_cli \
 --       --param "rules_text=Enter long when RSI is between 30 and 40, \
 --         price is above the 50-day moving average, volume is at least \
@@ -37,7 +37,7 @@
 --         is today. Exit if RSI exceeds 70."
 --
 --   # Market snapshot check (all variables required)
---   spl3 run cookbook/118_trading_rule_z3/trading_rule_z3.spl \
+--   spl3 run cookbook-solver/118_trading_rule_z3/trading_rule_z3.spl \
 --       --llm claude_cli \
 --       --param "snapshot_json={\"rsi\":31,\"price_vs_ma200\":5,\"volume_ratio\":180,\"adr_pct\":25,\"in_uptrend\":true,\"earnings_week\":false}"
 -- ============================================================

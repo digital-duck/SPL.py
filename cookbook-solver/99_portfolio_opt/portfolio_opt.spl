@@ -16,7 +16,7 @@
 -- Requires: pip install cvxpy yfinance
 -- Adaptive: run monthly with fresh data for rebalancing signals.
 -- Run:
---   spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+--   spl3 run cookbook-solver/99_portfolio_opt/portfolio_opt.spl \
 --       --adapter claude_cli \
 --       --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA" \
 --       --param capital=10000 --param target_return=0.12
@@ -212,7 +212,7 @@ DO
 
       CALL json_get(@optimization_json, "sharpe_ratio") INTO @sharpe_str;
 
-      CALL format_solver_report(@tickers, @period, @capital, @target_return, @max_weight,
+      CALL format_report_solver_on(@tickers, @period, @capital, @target_return, @max_weight,
                                @market_data_json, @optimization_json, @allocation_json,
                                @interpretation, @llm_calls) INTO @report;
 
@@ -238,7 +238,7 @@ DO
 
       LOGGING f"[portfolio] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
 
-      CALL format_heuristic_report(@tickers, @period, @capital, @market_data_json,
+      CALL format_report_solver_off(@tickers, @period, @capital, @market_data_json,
                                   @llm_allocation, @optimization_json, @allocation_json,
                                   @verify_result, @llm_calls) INTO @report;
 
@@ -267,7 +267,7 @@ WORKFLOW portfolio_comparison
   INPUT @adapter TEXT := "claude_cli"
   INPUT @model TEXT := ""
   INPUT @log_dir TEXT := "./logs"
-  INPUT @out_dir TEXT := "cookbook/99_portfolio_opt/outputs"
+  INPUT @out_dir TEXT := "cookbook-solver/99_portfolio_opt/outputs"
   OUTPUT @report TEXT
 DO
   LOGGING f"[compare] start  tickers={@tickers}  period={@period}" LEVEL INFO

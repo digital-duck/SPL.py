@@ -18,62 +18,12 @@
 -- Install: pip install optuna
 --
 -- Run:
---   spl3 run cookbook/112_optuna_blackbox/optuna_blackbox.spl \
+--   spl3 run cookbook-solver/112_optuna_blackbox/optuna_blackbox.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/112_optuna_blackbox/optuna_blackbox.spl \
+--   spl3 run cookbook-solver/112_optuna_blackbox/optuna_blackbox.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
-
-CREATE TOOL_API get_default_problem()
-RETURNS TEXT AS PYTHON $$
-def get_default_problem() -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "112_optuna_blackbox")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import get_default_problem as _fn
-    return _fn()
-$$;
-
-CREATE TOOL_API run_optuna_study(problem_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def run_optuna_study(problem_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "112_optuna_blackbox")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import run_optuna_study as _fn
-    return _fn(problem_json)
-$$;
-
-CREATE TOOL_API optimization_improved(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def optimization_improved(result_json: str) -> bool:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "112_optuna_blackbox")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import optimization_improved as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API format_optuna_report(result_json TEXT)
-RETURNS TEXT AS PYTHON $$
-def format_optuna_report(result_json: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "112_optuna_blackbox")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import format_optuna_report as _fn
-    return _fn(result_json)
-$$;
-
-CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
-RETURNS TEXT AS PYTHON $$
-def json_get_field(data_json: str, field: str) -> str:
-    import sys, os
-    _dir = os.path.join(os.getcwd(), "cookbook", "112_optuna_blackbox")
-    if _dir not in sys.path: sys.path.insert(0, _dir)
-    from tools import json_get_field as _fn
-    return _fn(data_json, field)
-$$;
 
 CREATE FUNCTION guess_strategy_prompt(problem_description TEXT)
 RETURNS TEXT AS $$
@@ -121,33 +71,24 @@ DO
   LOGGING "[r112] optuna_blackbox start" LEVEL INFO
 
   CALL get_default_problem() INTO @problem_json;
-  CALL json_get_field(@problem_json, "description") INTO @problem_description;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL run_optuna_study(@problem_json) INTO @result_json;
       ASSERT optimization_improved(@result_json);
       CALL format_optuna_report(@result_json) INTO @optuna_report;
-      CALL json_get_field(@result_json, "improvement_pct") INTO @improvement;
-      CALL json_get_field(@result_json, "best_value") INTO @best_ltv;
+      CALL json_get(@result_json, "improvement_pct") INTO @improvement;
+      CALL json_get(@result_json, "best_value") INTO @best_ltv;
       LOGGING f"[r112] best LTV=${@best_ltv} (+{@improvement}% vs naive)" LEVEL INFO;
       GENERATE explain_optuna_result_prompt(@optuna_report, @problem_description) INTO @explanation;
-      @report := f"=== Optuna Black-Box Optimization (r112) | solver=ON ===
+      CALL format_report_solver_on(@optuna_report, @explanation) INTO @report;
 
-{@optuna_report}
-
-── Analytics Explanation ───────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE guess_strategy_prompt(@problem_description) INTO @llm_guess;
-      @report := f"=== Optuna Black-Box Optimization (r112) | solver=OFF ===
-
-── LLM Heuristic Strategy ──────────────────────────────────
-{@llm_guess}
-
-Note: LLM guesses from intuition without exploring the search space.
-Run --param use_solver=true to let Optuna TPE find the optimum in 50 trials."
+      CALL format_report_solver_off(@llm_guess) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

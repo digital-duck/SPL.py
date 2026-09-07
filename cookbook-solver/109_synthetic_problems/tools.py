@@ -272,10 +272,10 @@ def format_test_suite(results_json: str) -> str:
 
 @spl_tool
 def save_test_suite(results_json: str, domain: str) -> str:
-    """Persist test suite JSON to cookbook/109_synthetic_problems/output/."""
+    """Persist test suite JSON to cookbook-solver/109_synthetic_problems/output/."""
     try:
         out_dir = os.path.join(
-            os.getcwd(), "cookbook", "109_synthetic_problems", "output"
+            os.getcwd(), "cookbook-solver", "109_synthetic_problems", "output"
         )
         os.makedirs(out_dir, exist_ok=True)
         ts   = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

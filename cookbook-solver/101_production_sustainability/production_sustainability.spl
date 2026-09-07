@@ -14,7 +14,7 @@
 --
 -- Requires: pip install pulp
 -- Run:
---   spl3 run cookbook/101_production_sustainability/production_sustainability.spl \
+--   spl3 run cookbook-solver/101_production_sustainability/production_sustainability.spl \
 --       --adapter claude_cli --param use_solver=true --param n_points=10
 -- ============================================================
 

@@ -16,7 +16,7 @@
 --
 -- Requires: pip install pulp
 -- Run:
---   spl3 run cookbook/100_supply_sourcing/supply_sourcing.spl \
+--   spl3 run cookbook-solver/100_supply_sourcing/supply_sourcing.spl \
 --       --adapter claude_cli --param use_solver=true
 -- ============================================================
 

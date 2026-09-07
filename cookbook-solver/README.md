@@ -67,6 +67,58 @@ Helpers prefixed with `_` stay undecorated (internal only). Report formatters
 
 ---
 
+## Installing dependencies
+
+Most solver backends are pip-installable via the **`solver`** extra:
+
+```bash
+pip install "spl-llm[solver]"          # from PyPI
+pip install -e ".[solver]"             # from a source checkout (dev)
+```
+
+That covers: `pulp`, `ortools`, `cvxpy`, `pymoo`, `mip`, `pyomo`, `scipy`,
+`scikit-optimize`, `optuna`, `z3-solver`, `python-constraint`, `nashpy`,
+`pygambit`, `open_spiel`, `pandas`, `pandera`, `shapely`, `statsmodels`,
+`networkx`, `numpy`, `pint`, `yfinance`, `hypothesis`.
+
+### Non-pip / system binaries
+
+A few recipes need something the `solver` extra can't provide:
+
+| Recipe | Needs | Install |
+|---|---|---|
+| **r117** pyomo_stochastic | a Pyomo-callable LP/MIP **solver binary** (Pyomo is just the modeling layer) | `conda install -c conda-forge glpk` — or `sudo apt install glpk-utils` (provides `glpsol`). Pyomo also accepts `cbc` / `highs`. |
+| **r115** gambit_3player | a **C++ toolchain** to build `pygambit` | `sudo apt install build-essential` (Debian/Ubuntu) / Xcode CLT (macOS), then `pip install pygambit` |
+| **r116** openspiel_cfr | `open_spiel` (heavy C++ build; Linux wheels usually resolve) | `pip install open_spiel`; if the wheel fails, build from source or use conda |
+| **r75 / r77** (Cluster A) | SageMath | `pip install "spl-llm[sage]"` or `conda install -c conda-forge sage` |
+| **r76** (Cluster A) | Lean 4 | install `elan` (the Lean toolchain manager) |
+
+**No dependency at all:** r105 (prolog_inference) and r111 (stackelberg_game)
+are **pure Python** — they demonstrate the reasoning model without SWI-Prolog or
+any external solver, so they run out of the box.
+
+### Verify what's installed
+
+```bash
+python cookbook-solver/run_all.py --check   # env/ollama checks (see note below)
+```
+
+`--check` only validates `env:`/`ollama:`-prefixed `requires`; bare pip packages
+aren't verified there — a missing solver surfaces as a recipe failure in the run
+log. To probe the solver packages directly:
+
+```bash
+python - <<'PY'
+import importlib.util as u
+for m in ["pulp","ortools","cvxpy","pymoo","mip","pyomo","scipy","skopt",
+          "optuna","z3","constraint","nashpy","pygambit","pyspiel",
+          "pandas","pandera","shapely","statsmodels","networkx","pint","yfinance"]:
+    print(("  ok " if u.find_spec(m) else "  MISSING "), m)
+PY
+```
+
+---
+
 ## Running the regression batch
 
 ```bash

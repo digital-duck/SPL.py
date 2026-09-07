@@ -231,3 +231,25 @@ def format_inference_report(result_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+
+@spl_tool
+def format_report_solver_on(inference_report: str, explanation: str) -> str:
+    return f"""=== Prolog Inference Engine (r105) | solver=ON ===
+
+{inference_report}
+
+── Explanation ─────────────────────────────────────────────
+{explanation}"""
+
+
+@spl_tool
+def format_report_solver_off(llm_trace: str) -> str:
+    return f"""=== Prolog Inference Engine (r105) | solver=OFF ===
+
+── LLM Manual Rule Tracing ─────────────────────────────────
+{llm_trace}
+
+Note: LLM traces rules sequentially. Run with --param use_solver=true
+to verify with backward-chaining inference (catches indirect proof paths)."""
+

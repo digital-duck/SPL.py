@@ -39,10 +39,10 @@
 --   conda install -c conda-forge glpk
 --
 -- Run:
---   spl3 run cookbook/117_pyomo_stochastic/pyomo_stochastic.spl \
+--   spl3 run cookbook-solver/117_pyomo_stochastic/pyomo_stochastic.spl \
 --       --adapter claude_cli --param use_solver=true
 --
---   spl3 run cookbook/117_pyomo_stochastic/pyomo_stochastic.spl \
+--   spl3 run cookbook-solver/117_pyomo_stochastic/pyomo_stochastic.spl \
 --       --adapter ollama -m gemma3 --param use_solver=false
 -- ============================================================
 
@@ -83,36 +83,6 @@ Explain (≤200 words):
    (e.g., energy dispatch, clinical trials, financial hedging)
 $$;
 
--- ── Sub-workflows for clean branching ────────────────────────
-
-WORKFLOW solver_on_sp
-  INPUT @problem_json TEXT := "{}"
-  OUTPUT @report TEXT
-DO
-  CALL solve_two_stage_sp(@problem_json) INTO @result_json;
-  ASSERT sp_optimal(@result_json);
-  CALL compute_ev_baseline(@problem_json) INTO @baseline_json;
-  CALL format_sp_report(@result_json, @baseline_json) INTO @sp_report;
-  CALL json_get(@result_json, "order_qty") INTO @q_star;
-  CALL json_get(@result_json, "expected_cost") INTO @e_cost;
-  LOGGING f"[r117] SP optimal: Q*={@q_star}, E[cost]=${@e_cost}" LEVEL INFO;
-  CALL json_get(@problem_json, "description") INTO @problem_description;
-  GENERATE explain_sp_result_prompt(@sp_report, @problem_description) INTO @explanation;
-  CALL format_report_solver_on(@sp_report, @explanation) INTO @report;
-  RETURN @report WITH status = "complete";
-END;
-
-WORKFLOW solver_off_llm_sp
-  INPUT @problem_description TEXT := ""
-  OUTPUT @report TEXT
-DO
-  GENERATE reason_stochastic_prompt(@problem_description) INTO @llm_strategy;
-  CALL format_report_solver_off(@llm_strategy) INTO @report;
-  RETURN @report WITH status = "complete";
-END;
-
--- ── Entry point ──────────────────────────────────────────────
-
 WORKFLOW pyomo_stochastic
   INPUT @use_solver TEXT := "true"
   OUTPUT @report TEXT
@@ -125,9 +95,21 @@ DO
 
   EVALUATE @use_solver
     WHEN = "true" THEN
-      CALL solver_on_sp(@problem_json) INTO @report;
+      -- solver=ON: Pyomo Extensive Form
+      CALL solve_two_stage_sp(@problem_json) INTO @result_json;
+      ASSERT sp_optimal(@result_json);
+      CALL compute_ev_baseline(@problem_json) INTO @baseline_json;
+      CALL format_sp_report(@result_json, @baseline_json) INTO @sp_report;
+      CALL json_get(@result_json, "order_qty") INTO @q_star;
+      CALL json_get(@result_json, "expected_cost") INTO @e_cost;
+      LOGGING f"[r117] SP optimal: Q*={@q_star}, E[cost]=${@e_cost}" LEVEL INFO;
+      GENERATE explain_sp_result_prompt(@sp_report, @problem_description) INTO @explanation;
+      CALL format_report_solver_on(@sp_report, @explanation) INTO @report;
+
     WHEN = "false" THEN
-      CALL solver_off_llm_sp(@problem_description) INTO @report;
+      -- solver=OFF: LLM reasons about the stochastic decision directly
+      GENERATE reason_stochastic_prompt(@problem_description) INTO @llm_strategy;
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;
