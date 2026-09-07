@@ -144,28 +144,28 @@ off during the regression batch.
 | r92  | 92_compsci_materials          | NumPy (S009)               |   | ✓ | — | ☐ |
 | r93  | 93_auto_planning              | mini-VAL STRIPS (no Sxxx)  |   | ✓ | — | ☐ |
 | r94  | 94_data_eng_text2spl          | sqlite3 (S006)             |   | ✓ | — | ☐ |
-| r98  | 98_job_shop                   | OR-Tools CP-SAT (S012)     | ✓ | ✓ | ✅ | ☐ |
-| r99  | 99_portfolio_opt              | cvxpy (S013)               | ✓ | ✓ | ✅ | ☐ |
-| r100 | 100_supply_sourcing           | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ☐ |
-| r101 | 101_production_sustainability | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ☐ |
-| r102 | 102_z3_compliance             | Z3 (S014)                  | ✓ | ✓ | ✅ | ☐ |
+| r98  | 98_job_shop                   | OR-Tools CP-SAT (S012)     | ✓ | ✓ | ✅ | ✅ |
+| r99  | 99_portfolio_opt              | cvxpy (S013)               | ✓ | ✓ | ✅ | ✅ |
+| r100 | 100_supply_sourcing           | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
+| r101 | 101_production_sustainability | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
+| r102 | 102_z3_compliance             | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
 | r103 | 103_data_quality              | Great Expectations (S015)  |   |   | — | ☐ |
 | r104 | 104_pandera_schema            | pandera (S016)             |   |   | — | ☐ |
 | r105 | 105_prolog_inference          | SWI-Prolog (S017)          |   |   | — | ☐ |
 | r106 | 106_shapely_geo               | Shapely (S018)             |   |   | — | ☐ |
-| r107 | 107_workforce_3obj            | pymoo NSGA-II (S019)       | ✓ | ✓ | ✅ | ☐ |
-| r108 | 108_robust_milp               | python-mip (S022)          | ✓ | ✓ | ✅ | ☐ |
-| r109 | 109_synthetic_problems        | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ☐ |
+| r107 | 107_workforce_3obj            | pymoo NSGA-II (S019)       | ✓ | ✓ | ✅ | ✅ |
+| r108 | 108_robust_milp               | python-mip (S022)          | ✓ | ✓ | ✅ | ✅ |
+| r109 | 109_synthetic_problems        | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ⚠ |
 | r110 | 110_nash_game_theory          | nashpy (S023)              |   |   | — | ☐ |
 | r111 | 111_stackelberg_game          | pure-Python (no Sxxx)      |   |   | — | ☐ |
 | r112 | 112_optuna_blackbox           | optuna (S026)              |   |   | — | ☐ |
-| r113 | 113_bayesian_opt              | scikit-optimize (S027)     | ✓ | ✓ | ✅ | ☐ |
-| r114 | 114_scipy_nonlinear           | scipy.optimize (S028)      | ✓ | ✓ | ✅ | ☐ |
+| r113 | 113_bayesian_opt              | scikit-optimize (S027)     | ✓ | ✓ | ✅ | ✅ |
+| r114 | 114_scipy_nonlinear           | scipy.optimize (S028)      | ✓ | ✓ | ✅ | ✅ |
 | r115 | 115_gambit_3player            | pygambit (S024)            |   |   | — | ☐ |
 | r116 | 116_openspiel_cfr             | OpenSpiel CFR (S025)       |   |   | — | ☐ |
-| r117 | 117_pyomo_stochastic          | Pyomo+GLPK (S021)          | ✓ | ✓ | ✅ | ☐ |
-| r118 | 118_trading_rule_z3           | Z3 (S014)                  | ✓ | ✓ | ✅ | ☐ |
-| r119 | 119_demand_forecast           | statsmodels (S029)         | ✓ | ✓ | ✅ | ☐ |
+| r117 | 117_pyomo_stochastic          | Pyomo+GLPK (S021)          | ✓ | ✓ | ✅ | ✅ |
+| r118 | 118_trading_rule_z3           | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
+| r119 | 119_demand_forecast           | statsmodels (S029)         | ✓ | ✓ | ✅ | ✅ |
 
 **Order of attack:** T1 first (13, confirmed redundant) → then audit + refactor
 the remaining 26. Recipes with blank **OrigValid** (r76, r103, r104, r105, r106,
@@ -256,7 +256,17 @@ retired in favor of stdlib.
 - r108 OFF not smoke-run to completion (slow: naive + silent MILP + LLM compare)
   — left for the batch.
 
-**Deferred (not blocking):** `solver_enabled` / `is_empty_policy` kept as
-decorated recipe tools (no longer wrapper-duplicated). `is_empty_policy` is an
-emptiness check, *not* `normalize_bool` semantics; `solver_enabled` → possible
-future `normalize_bool` swap. `status_ok` generic gate — still just a proposal.
+**`@use_solver` standardized (2026-09-06):** every recipe that gates on
+`@use_solver` (11 of the 13) now calls stdlib **`normalize_bool(@use_solver)`**
+immediately before an `EVALUATE @use_solver WHEN = "true" … WHEN = "false"`
+(deterministic equality, not the LLM-judged `WHEN "true"` form). This makes the
+ablation flag robust to `True`/`1`/`YES`/`ON`/`on` etc. Changes:
+- added `normalize_bool` to r99, r102, r107, r108, r113 (previously raw `EVALUATE`)
+- retired recipe-local `solver_enabled` in r114 & r117 (replaced by
+  `normalize_bool` + `= "true"`/`= "false"`; the helper is deleted from tools.py)
+- r98, r100, r101, r119 already followed the pattern.
+Verified at runtime: `use_solver=on` → solver arm; `use_solver=0` → LLM arm.
+
+**Still deferred:** `is_empty_policy` (r102/r118) stays a decorated recipe tool —
+it's an emptiness check, *not* `normalize_bool` semantics. `status_ok` generic
+ASSERT gate — still just a proposal.

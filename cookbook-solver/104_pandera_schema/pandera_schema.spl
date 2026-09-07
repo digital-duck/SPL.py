@@ -1,0 +1,150 @@
+-- ============================================================
+-- Recipe 104: pandera Schema Validator
+--
+-- PURPOSE: Enforce a schema contract on a pandas DataFrame —
+-- column types, value ranges, categorical checks, uniqueness,
+-- nullability — using pandera's DataFrameSchema API.
+--
+-- KEY STORY: Employee payroll CSV has salary=0 entries and
+-- department="Temp". pandera catches both in one validation
+-- pass. LLM eyeballs a sample and misses edge-case violations.
+--
+-- solver=ON  : pandera validates all rows against typed schema
+-- solver=OFF : LLM describes expected schema and spot-checks
+--
+-- Install: pip install pandera
+--
+-- Run:
+--   spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/104_pandera_schema/pandera_schema.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_default_schema()
+RETURNS TEXT AS PYTHON $$
+def get_default_schema() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_schema as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API validate_schema(schema_json TEXT, data_csv TEXT)
+RETURNS TEXT AS PYTHON $$
+def validate_schema(schema_json: str, data_csv: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import validate_schema as _fn
+    return _fn(schema_json, data_csv)
+$$;
+
+CREATE TOOL_API schema_passes(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def schema_passes(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import schema_passes as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_schema_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_schema_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_schema_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "104_pandera_schema")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION describe_schema_prompt(schema_description TEXT)
+RETURNS TEXT AS $$
+You are a data engineer reviewing an employee payroll dataset.
+
+DATASET DESCRIPTION:
+{schema_description}
+
+Expected schema for the payroll DataFrame:
+- employee_id: integer, unique, >= 1000
+- name: string, not null
+- department: one of [Engineering, Sales, HR, Finance, Operations]
+- salary: float, > 0, < $500,000
+- hire_year: integer, between 2000 and 2026
+
+Task:
+1. Which columns are most likely to have quality issues, and why?
+2. Give 3 example records that would PASS this schema.
+3. Give 3 example records that would FAIL this schema (be specific about the violation).
+4. What downstream analysis would break if each violation type were left uncorrected?
+
+Be specific. Do not run any code — reason from the schema definition.
+$$;
+
+CREATE FUNCTION explain_violations_prompt(schema_report TEXT)
+RETURNS TEXT AS $$
+You are a data quality analyst. pandera just validated an employee payroll DataFrame.
+
+SCHEMA REPORT:
+{schema_report}
+
+Explain the violations in plain English (≤120 words):
+1. What specific data errors were found?
+2. What is the likely business cause of each error type?
+3. Which violation is highest priority to fix and why?
+4. What data pipeline fix would prevent this class of errors in future ingestion?
+$$;
+
+WORKFLOW pandera_schema
+  INPUT @schema_description TEXT := "Employee payroll CSV: 200 rows, columns employee_id (int), name (str), department (str), salary (float), hire_year (int). Imported from HR system monthly export."
+  INPUT @data_csv           TEXT := "demo"
+  INPUT @use_solver         TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r104] pandera_schema start" LEVEL INFO
+
+  CALL get_default_schema() INTO @schema_json;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      CALL validate_schema(@schema_json, @data_csv) INTO @result_json;
+      CALL format_schema_report(@result_json) INTO @schema_report;
+      CALL json_get_field(@result_json, "n_violations") INTO @n_violations;
+      CALL json_get_field(@result_json, "n_rows") INTO @n_rows;
+      LOGGING f"[r104] {@n_rows} rows, {@n_violations} violation groups" LEVEL INFO;
+      GENERATE explain_violations_prompt(@schema_report) INTO @explanation;
+      @report := f"=== pandera Schema Validator (r104) | solver=ON ===
+
+{@schema_report}
+
+── Business Explanation ────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      GENERATE describe_schema_prompt(@schema_description) INTO @llm_analysis;
+      @report := f"=== pandera Schema Validator (r104) | solver=OFF ===
+
+── LLM Schema Analysis ─────────────────────────────────────
+{@llm_analysis}
+
+Note: LLM describes expected violations. Run --param use_solver=true
+to validate all rows with pandera."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

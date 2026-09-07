@@ -457,3 +457,29 @@ def verify_workforce_off(problem_json: str, solution_json: str) -> str:
     })
 
 
+
+@spl_tool
+def format_report_solver_on(problem: str, anchors_json: str, n_points_str: str,
+                            surface_table: str, interpretation: str, llm_calls: str) -> str:
+    return (
+        f"=== Workforce 3-Objective Scheduling (solver=ON / NSGA-II) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"Utopia Anchors (per-objective best):\n{anchors_json}\n\n"
+        f"Pareto Surface ({n_points_str} non-dominated points):\n{surface_table}\n\n"
+        f"Interpretation:\n{interpretation}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
+@spl_tool
+def format_report_solver_off(problem: str, anchors_json: str, schedule_text: str,
+                             solution_json: str, verify_result: str, llm_calls: str) -> str:
+    return (
+        f"=== Workforce 3-Objective Scheduling (solver=OFF / LLM direct) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"Utopia Anchors (reference):\n{anchors_json}\n\n"
+        f"LLM Proposed Schedule:\n{schedule_text}\n\n"
+        f"Extracted Schedule (JSON):\n{solution_json}\n\n"
+        f"Verification:\n{verify_result}\n\n"
+        f"LLM calls: {llm_calls}"
+    )

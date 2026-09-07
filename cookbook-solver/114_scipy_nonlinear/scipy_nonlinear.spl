@@ -180,19 +180,8 @@ DO
 
   LOGGING f"[r114] solution={@solution_json}  verify={@verify_json}" LEVEL INFO
 
-  @report := f"── Problem Specification ────────────────────────────────────
-{@problem_json}
-
-── Solver Result (solver=ON, method={@method}) ──────────────
-{@solution_json}
-
-── Verification ─────────────────────────────────────────────
-{@verify_json}
-
-── Business Interpretation ──────────────────────────────────
-{@interpretation}
-
-LLM calls: 2  (formulation + interpretation)";
+  CALL format_report_solver_on(@problem_json, @method, @solution_json,
+                               @verify_json, @interpretation) INTO @report;
   RETURN @report WITH status = "complete";
 END;
 
@@ -211,23 +200,8 @@ DO
   GENERATE interpret_result(@problem_type, @problem_json, @solution_json, @verify_json)
   INTO @interpretation;
 
-  @report := f"── Problem Specification ────────────────────────────────────
-{@problem_json}
-
-── LLM Estimate (solver=OFF) ────────────────────────────────
-{@estimate_text}
-
-── Extracted Solution ───────────────────────────────────────
-{@solution_json}
-
-── Verification ─────────────────────────────────────────────
-{@verify_json}
-
-── Business Interpretation ──────────────────────────────────
-{@interpretation}
-
-LLM calls: 4  (formulation + estimate + extraction + interpretation)
-Note: run --param use_solver=true to compare with scipy's exact solution.";
+  CALL format_report_solver_off(@problem_json, @estimate_text, @solution_json,
+                                @verify_json, @interpretation) INTO @report;
   RETURN @report WITH status = "complete";
 END;
 
@@ -276,19 +250,17 @@ DO
 
   LOGGING f"[r114] problem_json={@problem_json}" LEVEL DEBUG
 
-  -- Route to solver or LLM via unambiguous gate strings (avoids LLM boolean mismatch)
-  CALL solver_enabled(@use_solver) INTO @gate;
+  -- Normalize the ablation flag (true/1/yes/on → "true") then route deterministically
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
-  EVALUATE @gate
-    WHEN "run_solver" THEN
+  EVALUATE @use_solver
+    WHEN = "true" THEN
       CALL solver_on_nonlinear(@problem_json, @problem_type, @method, @max_iterations) INTO @body;
-    WHEN "run_llm" THEN
+    WHEN = "false" THEN
       CALL solver_off_llm_nonlinear(@problem_json, @problem_type) INTO @body;
   END;
 
-  @report := f"=== Nonlinear Optimization (scipy.optimize / {@problem_type}) ===
-
-{@body}";
+  CALL format_report_wrapper(@problem_type, @body) INTO @report;
 
   -- Write report to disk
   CALL save_report(@report, @out_dir, f"{@problem_type}_{@use_solver}_{@method}.txt") INTO @saved_path;

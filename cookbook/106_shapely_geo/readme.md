@@ -46,11 +46,11 @@ City: 10×8 = 80 km²
 ```bash
 # solver=ON — Shapely exact geometry
 spl3 run cookbook/106_shapely_geo/shapely_geo.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF — LLM spatial estimate
 spl3 run cookbook/106_shapely_geo/shapely_geo.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 ```
 
 ## Install

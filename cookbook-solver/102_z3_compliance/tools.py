@@ -278,3 +278,23 @@ def format_z3_report(result_json: str, policy_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+@spl_tool
+def format_report_solver_on(solver_report: str, explanation: str) -> str:
+    return (
+        f"=== Z3 Compliance Checker (r102) | solver=ON ===\n\n"
+        f"{solver_report}\n\n"
+        f"── Business Explanation ────────────────────────────────────\n"
+        f"{explanation}"
+    )
+
+
+@spl_tool
+def format_report_solver_off(llm_analysis: str) -> str:
+    return (
+        f"=== Z3 Compliance Checker (r102) | solver=OFF ===\n\n"
+        f"── LLM Manual Rule Analysis ────────────────────────────────\n"
+        f"{llm_analysis}\n\n"
+        f"Note: solver=OFF relies on LLM sequential rule tracing. Run with --param use_solver=true\n"
+        f"to verify with Z3 (finds hidden rule interactions the LLM misses)."
+    )

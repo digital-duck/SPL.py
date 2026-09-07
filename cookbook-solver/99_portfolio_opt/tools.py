@@ -260,6 +260,21 @@ def format_heuristic_report(tickers: str, period: str, capital: str,
     )
 
 
+@spl_tool
+def format_comparison_report(tickers: str, period: str, capital: str,
+                             target_return: str, max_weight: str,
+                             summary_csv: str, composition_csv: str,
+                             synthesis: str) -> str:
+    return (
+        f"=== Cross-Algorithm Portfolio Comparison ===\n\n"
+        f"Tickers: {tickers}  |  Period: {period}  |  Capital: ${capital}\n"
+        f"Target return: {target_return}  |  Max position: {max_weight}\n\n"
+        f"Algorithm Summary (CSV):\n{summary_csv}\n\n"
+        f"Portfolio Composition (CSV):\n{composition_csv}\n\n"
+        f"LLM Synthesis & Recommendation:\n{synthesis}"
+    )
+
+
 def _parse_algo_results(raws: list, algo_labels: list) -> list:
     parsed = []
     for name, raw in zip(algo_labels, raws):

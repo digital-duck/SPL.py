@@ -287,3 +287,22 @@ def save_test_suite(results_json: str, domain: str) -> str:
         return f"save error: {e}"
 
 
+
+@spl_tool
+def format_report(domain: str, n_size: str, n_variants: str, n_valid: str,
+                  n_ok: str, n_total: str, attempts: str, suite_path: str,
+                  suite_table: str, analysis: str) -> str:
+    return (
+        f"=== Synthetic Problem Generator (r109) ===\n\n"
+        f"Domain      : {domain}\n"
+        f"n_size      : {n_size} decision variables per problem\n"
+        f"Requested   : {n_variants} variants\n"
+        f"Generated   : {n_valid} valid variants\n"
+        f"Solved      : {n_ok}/{n_total} optimally\n"
+        f"Repair loops: {attempts}\n"
+        f"Saved to    : {suite_path}\n\n"
+        f"── Test Suite ──────────────────────────────────────────────\n"
+        f"{suite_table}\n\n"
+        f"── Difficulty Analysis ─────────────────────────────────────\n"
+        f"{analysis}"
+    )

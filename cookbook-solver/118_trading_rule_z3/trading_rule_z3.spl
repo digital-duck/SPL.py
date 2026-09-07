@@ -175,12 +175,7 @@ DO
       CALL json_get(@z3_result, "status") INTO @sat_status;
       LOGGING f"[r118] Z3 result: {@sat_status}" LEVEL INFO;
       GENERATE explain_audit_prompt(@solver_report, @rules_text) INTO @explanation;
-      @report := f"=== Z3 Trading Rule Checker (r118) | mode=AUDIT ===
-
-{@solver_report}
-
-── Analyst Explanation ─────────────────────────────────────
-{@explanation}"
+      CALL format_report_audit(@solver_report, @explanation) INTO @report;
 
     WHEN "false" THEN
       -- Snapshot check: does today's market fire the strategy?
@@ -189,13 +184,7 @@ DO
       CALL json_get(@snapshot_result, "signal") INTO @signal;
       LOGGING f"[r118] snapshot signal: {@signal}" LEVEL INFO;
       GENERATE explain_snapshot_prompt(@snapshot_result, @rules_text) INTO @explanation;
-      @report := f"=== Z3 Trading Rule Checker (r118) | mode=SNAPSHOT ===
-
-── Market Snapshot Evaluation ──────────────────────────────
-{@snapshot_result}
-
-── Analyst Explanation ─────────────────────────────────────
-{@explanation}"
+      CALL format_report_snapshot(@snapshot_result, @explanation) INTO @report;
   END;
 
   RETURN @report WITH status = "complete";

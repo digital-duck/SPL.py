@@ -98,12 +98,7 @@ DO
   LOGGING f"[r117] SP optimal: Q*={@q_star}, E[cost]=${@e_cost}" LEVEL INFO;
   CALL json_get(@problem_json, "description") INTO @problem_description;
   GENERATE explain_sp_result_prompt(@sp_report, @problem_description) INTO @explanation;
-  @report := f"=== Two-Stage Stochastic Programming (r117) | solver=ON ===
-
-{@sp_report}
-
-── Operations Research Explanation ─────────────────────────
-{@explanation}";
+  CALL format_report_solver_on(@sp_report, @explanation) INTO @report;
   RETURN @report WITH status = "complete";
 END;
 
@@ -112,14 +107,7 @@ WORKFLOW solver_off_llm_sp
   OUTPUT @report TEXT
 DO
   GENERATE reason_stochastic_prompt(@problem_description) INTO @llm_strategy;
-  @report := f"=== Two-Stage Stochastic Programming (r117) | solver=OFF ===
-
-── LLM Reasoning Under Uncertainty ─────────────────────────
-{@llm_strategy}
-
-Note: LLM applies intuition but typically defaults to ordering the expected
-demand (Q=190, cost=$1,409). Run --param use_solver=true to see Pyomo's
-stochastic optimum (Q=200, cost=$1,360 — VSS=$49 improvement).";
+  CALL format_report_solver_off(@llm_strategy) INTO @report;
   RETURN @report WITH status = "complete";
 END;
 
@@ -133,12 +121,12 @@ DO
 
   CALL get_problem_setup() INTO @problem_json;
   CALL json_get(@problem_json, "description") INTO @problem_description;
-  CALL solver_enabled(@use_solver) INTO @gate;
+  CALL normalize_bool(@use_solver) INTO @use_solver;
 
-  EVALUATE @gate
-    WHEN "run_solver" THEN
+  EVALUATE @use_solver
+    WHEN = "true" THEN
       CALL solver_on_sp(@problem_json) INTO @report;
-    WHEN "run_llm" THEN
+    WHEN = "false" THEN
       CALL solver_off_llm_sp(@problem_description) INTO @report;
   END;
 

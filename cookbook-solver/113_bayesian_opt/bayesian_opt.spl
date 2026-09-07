@@ -77,8 +77,10 @@ DO
   CALL get_default_problem() INTO @problem_json;
   CALL json_get(@problem_json, "description") INTO @problem_description;
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       CALL run_bayesian_opt(@problem_json) INTO @result_json;
       ASSERT bayesian_improved(@result_json);
       CALL format_bayesian_report(@result_json) INTO @bayesian_report;
@@ -86,22 +88,11 @@ DO
       CALL json_get(@result_json, "improvement_over_random") INTO @improvement;
       LOGGING f"[r113] best rate={@best_rate}  improvement={@improvement}% vs random" LEVEL INFO;
       GENERATE explain_bayesian_prompt(@bayesian_report, @problem_description) INTO @explanation;
-      @report := f"=== Bayesian Optimization (r113) | solver=ON ===
+      CALL format_report_solver_on(@bayesian_report, @explanation) INTO @report;
 
-{@bayesian_report}
-
-── Analyst Explanation ─────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       GENERATE guess_page_design_prompt(@problem_description) INTO @llm_guess;
-      @report := f"=== Bayesian Optimization (r113) | solver=OFF ===
-
-── LLM CRO Heuristics ──────────────────────────────────────
-{@llm_guess}
-
-Note: LLM guesses without modeling uncertainty. Run --param use_solver=true
-to use Bayesian GP+EI to find the optimum efficiently."
+      CALL format_report_solver_off(@llm_guess) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

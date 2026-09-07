@@ -222,12 +222,8 @@ def sp_optimal(result_json: str) -> bool:
         return False
 
 
-@spl_tool
-def solver_enabled(use_solver: str) -> str:
-    """Return 'run_solver' or 'run_llm' for unambiguous EVALUATE matching."""
-    if use_solver.strip().lower() in ("true", "1", "yes", "on"):
-        return "run_solver"
-    return "run_llm"
+# solver_enabled removed — the .spl now uses stdlib normalize_bool(@use_solver)
+# + EVALUATE @use_solver WHEN = "true"/"false" (deterministic, no recipe-local helper).
 
 
 @spl_tool
@@ -299,3 +295,24 @@ def format_sp_report(result_json: str, baseline_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+@spl_tool
+def format_report_solver_on(sp_report: str, explanation: str) -> str:
+    return (
+        f"=== Two-Stage Stochastic Programming (r117) | solver=ON ===\n\n"
+        f"{sp_report}\n\n"
+        f"── Operations Research Explanation ─────────────────────────\n"
+        f"{explanation}"
+    )
+
+
+@spl_tool
+def format_report_solver_off(llm_strategy: str) -> str:
+    return (
+        f"=== Two-Stage Stochastic Programming (r117) | solver=OFF ===\n\n"
+        f"── LLM Reasoning Under Uncertainty ─────────────────────────\n"
+        f"{llm_strategy}\n\n"
+        f"Note: LLM applies intuition but typically defaults to ordering the expected\n"
+        f"demand (Q=190, cost=$1,409). Run --param use_solver=true to see Pyomo's\n"
+        f"stochastic optimum (Q=200, cost=$1,360 — VSS=$49 improvement)."
+    )

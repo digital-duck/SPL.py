@@ -1,0 +1,198 @@
+-- ============================================================
+-- Recipe 116: OpenSpiel CFR — Imperfect Information Games
+--
+-- PURPOSE: Solve imperfect-information extensive-form games
+-- via Counterfactual Regret Minimization (CFR) using DeepMind
+-- OpenSpiel. Extends r111 (Stackelberg perfect-info backward
+-- induction) to games where neither player sees the other's
+-- private information.
+--
+-- KEY STORY: Kuhn Poker — the smallest non-trivial poker
+-- variant. Two players each hold one private card (J/Q/K).
+-- Player 1 acts first: bet or pass. Since cards are hidden,
+-- optimal play is a MIXED strategy (randomized bluffing).
+--
+-- LLM: "Bet with K, pass with J, mix with Q."  (~0.25 exploit)
+-- CFR: Finds the Nash equilibrium mixed strategy after ~1000
+--      iterations: bluff J at probability 1/3, always bet K.
+--      Exploitability converges below 0.05 (near-unexploitable).
+--
+-- ASSERT: exploitability < 0.05 after n_iterations.
+--   Exploitability = how much an optimal opponent can gain per
+--   game on average by best-responding to your policy.
+--   0.0 = perfect Nash; ~0.25 = naive LLM always-bet-K.
+--
+-- Why CFR over backward induction (r111)?
+--   Backward induction requires perfect information.
+--   CFR handles PRIVATE information (hidden cards, sealed bids)
+--   by minimizing regret across all possible information sets
+--   simultaneously. Scales to poker, negotiation, sealed auctions.
+--
+-- Install: pip install open_spiel
+--
+-- Run:
+--   spl3 run cookbook/116_openspiel_cfr/openspiel_cfr.spl \
+--       --adapter claude_cli --param use_solver=true \
+--       --param n_iterations=1000
+--
+--   spl3 run cookbook/116_openspiel_cfr/openspiel_cfr.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_game_description()
+RETURNS TEXT AS PYTHON $$
+def get_game_description() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_game_description as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API solve_with_cfr(n_iterations TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_with_cfr(n_iterations: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import solve_with_cfr as _fn
+    return _fn(int(n_iterations))
+$$;
+
+CREATE TOOL_API cfr_converged(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def cfr_converged(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import cfr_converged as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_cfr_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_cfr_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_cfr_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API solver_enabled(use_solver TEXT)
+RETURNS TEXT AS PYTHON $$
+def solver_enabled(use_solver: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import solver_enabled as _fn
+    return _fn(use_solver)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "116_openspiel_cfr")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION reason_poker_strategy_prompt(game_description TEXT)
+RETURNS TEXT AS $$
+You are a poker strategist advising a player in Kuhn Poker.
+
+GAME RULES:
+{game_description}
+
+Without using game theory algorithms, reason through the optimal strategy:
+1. When should Player 1 bet vs pass? (Consider: bluffing with J, value-betting with K)
+2. When should Player 2 call vs fold? (Consider: pot odds, opponent's likely hand range)
+3. Is there a pure strategy (always bet K, always pass J) that an opponent cannot exploit?
+4. Why might randomizing (bluffing sometimes with J) be better than always playing the same way?
+
+Give concrete strategy recommendations. Focus on the hidden-information tension.
+$$;
+
+CREATE FUNCTION explain_cfr_result_prompt(cfr_report TEXT, game_description TEXT)
+RETURNS TEXT AS $$
+You are a game theory analyst explaining CFR results for Kuhn Poker.
+
+GAME RULES:
+{game_description}
+
+CFR RESULT:
+{cfr_report}
+
+Explain (≤200 words):
+1. What does exploitability measure, and why does a good player want it near zero?
+2. What is the Nash equilibrium mixed strategy CFR found, and why is bluffing optimal?
+3. Why can't a pure strategy (always bet with K, never bluff) achieve Nash equilibrium?
+4. How does CFR generalize beyond this toy game to real poker, sealed auctions, or
+   multi-round negotiation with private information?
+$$;
+
+-- solver_on_cfr: CFR path (requires open_spiel installed)
+WORKFLOW solver_on_cfr
+  INPUT @n_iterations TEXT := "1000"
+  INPUT @game_description TEXT := ""
+  OUTPUT @report TEXT
+DO
+  CALL solve_with_cfr(@n_iterations) INTO @result_json;
+  ASSERT cfr_converged(@result_json);
+  CALL format_cfr_report(@result_json) INTO @cfr_report;
+  CALL json_get_field(@result_json, "exploitability") INTO @exploit;
+  LOGGING f"[r116] CFR exploitability={@exploit} after {@n_iterations} iterations" LEVEL INFO;
+  GENERATE explain_cfr_result_prompt(@cfr_report, @game_description) INTO @explanation;
+  @report := f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=ON ===
+
+{@cfr_report}
+
+── Game Theory Explanation ─────────────────────────────────
+{@explanation}";
+  RETURN @report WITH status = "complete";
+END;
+
+-- solver_off_llm: LLM reasoning path (no solver dependency)
+WORKFLOW solver_off_llm
+  INPUT @game_description TEXT := ""
+  OUTPUT @report TEXT
+DO
+  GENERATE reason_poker_strategy_prompt(@game_description) INTO @llm_strategy;
+  @report := f"=== OpenSpiel CFR — Kuhn Poker (r116) | solver=OFF ===
+
+── LLM Strategic Reasoning ─────────────────────────────────
+{@llm_strategy}
+
+Note: LLM gives intuitive strategy (~0.25 exploitability).
+Run --param use_solver=true to compute the Nash equilibrium
+mixed strategy via CFR (converges to <0.05 exploitability).";
+  RETURN @report WITH status = "complete";
+END;
+
+WORKFLOW openspiel_cfr
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_iterations TEXT := "1000"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r116] openspiel_cfr start" LEVEL INFO
+
+  CALL get_game_description() INTO @game_json;
+  CALL json_get_field(@game_json, "rules") INTO @game_description;
+
+  -- Use Python gate to avoid LLM-evaluated EVALUATE for boolean flags
+  CALL solver_enabled(@use_solver) INTO @run_solver;
+
+  EVALUATE @run_solver
+    WHEN "run_solver" THEN
+      CALL solver_on_cfr(@n_iterations, @game_description) INTO @report;
+    WHEN "run_llm" THEN
+      CALL solver_off_llm(@game_description) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete",
+                      use_solver = @use_solver,
+                      n_iterations = @n_iterations;
+
+END;

@@ -293,3 +293,27 @@ def verify_robust_off(problem_json: str, solution_json: str) -> str:
                        "notes": f"All {len(plans)} scenario constraints satisfied"})
 
 
+
+@spl_tool
+def format_report_solver_on(problem: str, report_table: str,
+                            interpretation: str, llm_calls: str) -> str:
+    return (
+        f"=== Robust Supply Chain MILP (solver=ON / python-mip) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"MILP Solution:\n{report_table}\n\n"
+        f"Interpretation:\n{interpretation}\n\n"
+        f"LLM calls: {llm_calls}"
+    )
+
+
+@spl_tool
+def format_report_solver_off(problem: str, heuristic_table: str, comparison: str,
+                             verify_status: str, llm_calls: str) -> str:
+    return (
+        f"=== Robust Supply Chain MILP (solver=OFF / naive heuristic) ===\n\n"
+        f"Problem:\n{problem}\n\n"
+        f"Naive Heuristic Solution:\n{heuristic_table}\n\n"
+        f"Heuristic vs MILP Comparison:\n{comparison}\n\n"
+        f"Verification: {verify_status}\n"
+        f"LLM calls: {llm_calls}"
+    )

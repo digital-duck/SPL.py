@@ -158,6 +158,13 @@ WORKFLOW synthetic_problem_gen
 DO
   @attempts    := 0;
   @parse_error := "";
+  -- Defaults so the ModelOverloaded handler can emit a partial report even if
+  -- the session limit is hit on the very first GENERATE (before these are set).
+  @n_valid     := "0";
+  @n_ok        := "0";
+  @n_total     := "0";
+  @suite_path  := "(not saved)";
+  @suite_table := "(no variants generated)";
 
   LOGGING f"[r109] start  domain={@domain}  n_variants={@n_variants}  n_size={@n_size}" LEVEL INFO
 
@@ -196,26 +203,27 @@ DO
   GENERATE analyze_difficulty(@suite_table, @domain, @n_variants, @n_size)
            INTO @analysis;
 
-  @report := f"=== Synthetic Problem Generator (r109) ===
-
-Domain      : {@domain}
-n_size      : {@n_size} decision variables per problem
-Requested   : {@n_variants} variants
-Generated   : {@n_valid} valid variants
-Solved      : {@n_ok}/{@n_total} optimally
-Repair loops: {@attempts}
-Saved to    : {@suite_path}
-
-── Test Suite ──────────────────────────────────────────────
-{@suite_table}
-
-── Difficulty Analysis ─────────────────────────────────────
-{@analysis}";
+  CALL format_report(@domain, @n_size, @n_variants, @n_valid, @n_ok, @n_total,
+                     @attempts, @suite_path, @suite_table, @analysis) INTO @report;
 
   RETURN @report
     WITH status    = "complete",
          n_optimal = @n_ok,
          n_total   = @n_total,
-         saved_to  = @suite_path;
+         saved_to  = @suite_path
 
+EXCEPTION
+  -- Claude CLI session/rate limit: the solver path (variant gen + PuLP batch
+  -- solve + saved suite) is the real deliverable; only the LLM difficulty
+  -- narration needs an LLM. Degrade gracefully instead of failing the run.
+  WHEN ModelOverloaded THEN
+    LOGGING "[r109] analyze_difficulty skipped — Claude CLI limit reached; emitting solved suite without LLM commentary" LEVEL WARNING
+    @analysis := "(skipped — Claude CLI session limit reached; the solved test suite above is saved and complete. Re-run `--ids 109` after the quota resets to add the LLM difficulty analysis.)";
+    CALL format_report(@domain, @n_size, @n_variants, @n_valid, @n_ok, @n_total,
+                       @attempts, @suite_path, @suite_table, @analysis) INTO @report;
+    RETURN @report
+      WITH status    = "partial",
+           n_optimal = @n_ok,
+           n_total   = @n_total,
+           saved_to  = @suite_path
 END;

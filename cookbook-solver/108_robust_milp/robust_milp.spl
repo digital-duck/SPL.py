@@ -115,6 +115,8 @@ DO
   CALL extract_robust_problem(@problem) INTO @problem_json;
   LOGGING f"[robust_milp] problem_json:\n{@problem_json}" LEVEL DEBUG
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
     WHEN = "true" THEN
       -- ── solver=ON: two-stage stochastic MILP ──────────────
@@ -132,18 +134,7 @@ DO
                INTO @interpretation;
       @llm_calls := @llm_calls + 1;
 
-      @report := f"=== Robust Supply Chain MILP (solver=ON / python-mip) ===
-
-Problem:
-{@problem}
-
-MILP Solution:
-{@report_table}
-
-Interpretation:
-{@interpretation}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_on(@problem, @report_table, @interpretation, @llm_calls) INTO @report;
 
     ELSE
       -- ── solver=OFF: naive expected-demand heuristic ───────
@@ -164,19 +155,8 @@ LLM calls: {@llm_calls}";
 
       LOGGING f"[robust_milp] verify_off: verdict={@verify_status}" LEVEL INFO
 
-      @report := f"=== Robust Supply Chain MILP (solver=OFF / naive heuristic) ===
-
-Problem:
-{@problem}
-
-Naive Heuristic Solution:
-{@heuristic_table}
-
-Heuristic vs MILP Comparison:
-{@comparison}
-
-Verification: {@verify_status}
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_off(@problem, @heuristic_table, @comparison,
+                                    @verify_status, @llm_calls) INTO @report;
 
   END;
 

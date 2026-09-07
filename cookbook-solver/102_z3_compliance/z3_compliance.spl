@@ -141,8 +141,10 @@ DO
       CALL parse_policy_json(@policy_json_raw) INTO @policy_json
   END;
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
-    WHEN "true" THEN
+    WHEN = "true" THEN
       -- solver=ON: Z3 SMT theorem prover
       CALL check_z3_eligibility(@policy_json) INTO @z3_result;
       ASSERT is_satisfiable(@z3_result);
@@ -150,23 +152,12 @@ DO
       CALL json_get(@z3_result, "status") INTO @sat_status;
       LOGGING f"[r102] Z3 result: {@sat_status}" LEVEL INFO;
       GENERATE explain_z3_result_prompt(@solver_report, @policy_text) INTO @explanation;
-      @report := f"=== Z3 Compliance Checker (r102) | solver=ON ===
+      CALL format_report_solver_on(@solver_report, @explanation) INTO @report;
 
-{@solver_report}
-
-── Business Explanation ────────────────────────────────────
-{@explanation}"
-
-    WHEN "false" THEN
+    WHEN = "false" THEN
       -- solver=OFF: LLM manual rule tracing
       GENERATE interpret_policy_prompt(@policy_text) INTO @llm_analysis;
-      @report := f"=== Z3 Compliance Checker (r102) | solver=OFF ===
-
-── LLM Manual Rule Analysis ────────────────────────────────
-{@llm_analysis}
-
-Note: solver=OFF relies on LLM sequential rule tracing. Run with --param use_solver=true
-to verify with Z3 (finds hidden rule interactions the LLM misses)."
+      CALL format_report_solver_off(@llm_analysis) INTO @report;
   END;
 
   RETURN @report WITH status = "complete", use_solver = @use_solver;

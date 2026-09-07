@@ -1,0 +1,152 @@
+-- ============================================================
+-- Recipe 105: Prolog-style Inference Engine
+--
+-- PURPOSE: Resolve eligibility queries against a set of facts
+-- and rules using backward-chaining (Prolog-style inference).
+-- Demonstrates how multi-level rule chains produce non-obvious
+-- eligibility conclusions that LLM tracing misses.
+--
+-- KEY STORY: Insurance policy has 8 rules and 3 customers.
+-- carol is eligible via "catastrophic_event → claim_covered"
+-- (bypassing the deductible requirement) — a 4-level chain.
+-- LLM traces alice and bob correctly but misses carol's
+-- indirect proof path.
+--
+-- solver=ON  : backward-chaining inference (pure Python)
+-- solver=OFF : LLM traces rules manually per customer
+--
+-- Run:
+--   spl3 run cookbook/105_prolog_inference/prolog_inference.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/105_prolog_inference/prolog_inference.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_default_policy()
+RETURNS TEXT AS PYTHON $$
+def get_default_policy() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "105_prolog_inference")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_policy as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API run_inference(policy_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def run_inference(policy_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "105_prolog_inference")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import run_inference as _fn
+    return _fn(policy_json)
+$$;
+
+CREATE TOOL_API inference_succeeded(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def inference_succeeded(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "105_prolog_inference")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import inference_succeeded as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_inference_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_inference_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "105_prolog_inference")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_inference_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "105_prolog_inference")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION trace_rules_manually_prompt(policy_description TEXT)
+RETURNS TEXT AS $$
+You are an insurance compliance analyst. Evaluate whether each customer can file an emergency repair claim.
+
+POLICY RULES:
+1. eligible_claim(X, Type) IF has_policy(X, comprehensive) AND policy_active(X) AND claim_covered(X, Type)
+2. claim_covered(X, emergency_repair) IF deductible_met(X)
+3. claim_covered(X, emergency_repair) IF catastrophic_event(X)
+4. emergency_claim(X) IF eligible_claim(X, emergency_repair) AND emergency_event(X)
+
+CUSTOMER FACTS:
+{policy_description}
+
+For each customer, trace through the rules step-by-step:
+- Does the rule chain lead to emergency_claim(customer) being provable?
+- Which rule path proves or refutes the claim?
+- Are there any indirect proof paths you might miss on a first read?
+
+Conclude with a table: Customer | Eligible | Reason
+$$;
+
+CREATE FUNCTION explain_inference_prompt(inference_report TEXT, policy_description TEXT)
+RETURNS TEXT AS $$
+You are an insurance compliance analyst. The Prolog inference engine just evaluated 3 customers.
+
+POLICY:
+{policy_description}
+
+INFERENCE RESULT:
+{inference_report}
+
+Explain (≤150 words):
+1. Why is carol eligible? Walk through the exact proof chain.
+2. Why is bob NOT eligible? Which fact is missing?
+3. What is the risk of manual rule tracing (solver=OFF) for this policy?
+4. How would adding a 9th rule (e.g. high_value_client → deductible_waived) change the inference?
+$$;
+
+WORKFLOW prolog_inference
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r105] prolog_inference start" LEVEL INFO
+
+  CALL get_default_policy() INTO @policy_json;
+  CALL json_get_field(@policy_json, "description") INTO @policy_description;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      CALL run_inference(@policy_json) INTO @result_json;
+      ASSERT inference_succeeded(@result_json);
+      CALL format_inference_report(@result_json) INTO @inference_report;
+      CALL json_get_field(@result_json, "n_eligible") INTO @n_eligible;
+      CALL json_get_field(@result_json, "n_customers") INTO @n_customers;
+      LOGGING f"[r105] {@n_eligible}/{@n_customers} customers eligible" LEVEL INFO;
+      GENERATE explain_inference_prompt(@inference_report, @policy_description) INTO @explanation;
+      @report := f"=== Prolog Inference Engine (r105) | solver=ON ===
+
+{@inference_report}
+
+── Explanation ─────────────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      GENERATE trace_rules_manually_prompt(@policy_description) INTO @llm_trace;
+      @report := f"=== Prolog Inference Engine (r105) | solver=OFF ===
+
+── LLM Manual Rule Tracing ─────────────────────────────────
+{@llm_trace}
+
+Note: LLM traces rules sequentially. Run with --param use_solver=true
+to verify with backward-chaining inference (catches indirect proof paths)."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

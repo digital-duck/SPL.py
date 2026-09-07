@@ -224,12 +224,8 @@ def is_optimal(solution_json: str) -> bool:
         return False
 
 
-@spl_tool
-def solver_enabled(use_solver: str) -> str:
-    """Return 'run_solver' or 'run_llm' — distinctive strings for unambiguous EVALUATE matching."""
-    if use_solver.strip().lower() in ("true", "1", "yes", "on"):
-        return "run_solver"
-    return "run_llm"
+# solver_enabled removed — the .spl now uses stdlib normalize_bool(@use_solver)
+# + EVALUATE @use_solver WHEN = "true"/"false" (deterministic, no recipe-local helper).
 
 
 @spl_tool
@@ -242,3 +238,45 @@ def save_report(report: str, out_dir: str, filename: str) -> str:
     dest = out / filename
     dest.write_text(report, encoding="utf-8")
     return str(dest)
+
+@spl_tool
+def format_report_solver_on(problem_json: str, method: str, solution_json: str,
+                            verify_json: str, interpretation: str) -> str:
+    return (
+        f"── Problem Specification ────────────────────────────────────\n"
+        f"{problem_json}\n\n"
+        f"── Solver Result (solver=ON, method={method}) ──────────────\n"
+        f"{solution_json}\n\n"
+        f"── Verification ─────────────────────────────────────────────\n"
+        f"{verify_json}\n\n"
+        f"── Business Interpretation ──────────────────────────────────\n"
+        f"{interpretation}\n\n"
+        f"LLM calls: 2  (formulation + interpretation)"
+    )
+
+
+@spl_tool
+def format_report_solver_off(problem_json: str, estimate_text: str, solution_json: str,
+                             verify_json: str, interpretation: str) -> str:
+    return (
+        f"── Problem Specification ────────────────────────────────────\n"
+        f"{problem_json}\n\n"
+        f"── LLM Estimate (solver=OFF) ────────────────────────────────\n"
+        f"{estimate_text}\n\n"
+        f"── Extracted Solution ───────────────────────────────────────\n"
+        f"{solution_json}\n\n"
+        f"── Verification ─────────────────────────────────────────────\n"
+        f"{verify_json}\n\n"
+        f"── Business Interpretation ──────────────────────────────────\n"
+        f"{interpretation}\n\n"
+        f"LLM calls: 4  (formulation + estimate + extraction + interpretation)\n"
+        f"Note: run --param use_solver=true to compare with scipy's exact solution."
+    )
+
+
+@spl_tool
+def format_report_wrapper(problem_type: str, body: str) -> str:
+    return (
+        f"=== Nonlinear Optimization (scipy.optimize / {problem_type}) ===\n\n"
+        f"{body}"
+    )

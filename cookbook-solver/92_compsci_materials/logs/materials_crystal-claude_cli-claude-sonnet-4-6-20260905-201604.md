@@ -1,0 +1,69 @@
+# SPL Run: materials_crystal
+
+- **Adapter:** claude_cli
+- **Model:** claude-sonnet-4-6
+- **Tokens:** 684 in / 308 out
+- **Latency:** 14317ms
+- **Timestamp:** 2026-09-05 20:16:04
+
+## Output
+
+```output
+# Crystal Structure Check Report
+
+**Problem:** NaCl crystallizes in a cubic (rock-salt) structure with lattice parameter a = 5.640 Angstrom, all angles 90 degrees, Z = 4 formula units per unit cell, and molar mass 58.44 g/mol. What is its theoretical density, in g/cm^3?
+
+**Verifier status:** `OK`
+**Theoretical density:** `2.1636 g/cm^3`
+**Crystal system:** `cubic` (symmetry_ok=True)
+**Unit cell volume:** `179.406 Å³`
+**Round-trip check:** `match`
+
+## Interpretation
+
+NaCl adopts a **cubic (rock-salt) structure** with a unit-cell volume of **179.41 Å³**, packing 4 formula units into each cube defined by its 5.640 Å lattice parameter. The theoretical density is **2.1636 g/cm³** — matching the experimentally reported 2.164 g/cm³ to four significant figures. Cross-checking both symmetry constraints and an independent density recomputation guards against transcription errors and ensures materials databases contain physically self-consistent entries rather than plausible-looking but internally contradictory values.
+
+Final answer: 2.1636
+
+## Solver Code (LLM-generated, Python)
+
+```python
+a = 5.640
+b = 5.640
+c = 5.640
+alpha = 90.0
+beta = 90.0
+gamma = 90.0
+Z = 4
+molar_mass = 58.44
+
+alpha_r = math.radians(alpha)
+beta_r = math.radians(beta)
+gamma_r = math.radians(gamma)
+
+V = a * b * c * math.sqrt(
+    1
+    - math.cos(alpha_r)**2
+    - math.cos(beta_r)**2
+    - math.cos(gamma_r)**2
+    + 2 * math.cos(alpha_r) * math.cos(beta_r) * math.cos(gamma_r)
+)
+
+N_A = 6.02214076e23
+V_cm3 = V * 1e-24
+density = Z * molar_mass / (N_A * V_cm3)
+
+_result = {
+    "system": "cubic",
+    "a": 5.640,
+    "b": 5.640,
+    "c": 5.640,
+    "alpha": 90.0,
+    "beta": 90.0,
+    "gamma": 90.0,
+    "Z": 4,
+    "molar_mass": 58.44,
+    "density": float(f"{density:.4g}"),
+}
+```
+```

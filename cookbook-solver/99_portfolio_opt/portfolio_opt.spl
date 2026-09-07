@@ -170,6 +170,8 @@ DO
   CALL fetch_stock_data(@tickers, @period) INTO @market_data_json;
   LOGGING f"[portfolio] market_data:\n{@market_data_json}" LEVEL DEBUG
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
     WHEN = "true" THEN
       -- solver=ON: deterministic optimization — algorithm selected or auto-picked by LLM
@@ -304,19 +306,8 @@ DO
                                @r_risk_parity, @r_hrp, @r_cvar)
            INTO @synthesis;
 
-  @report := f"=== Cross-Algorithm Portfolio Comparison ===
-
-Tickers: {@tickers}  |  Period: {@period}  |  Capital: ${@capital}
-Target return: {@target_return}  |  Max position: {@max_weight}
-
-Algorithm Summary (CSV):
-{@summary_csv}
-
-Portfolio Composition (CSV):
-{@composition_csv}
-
-LLM Synthesis & Recommendation:
-{@synthesis}";
+  CALL format_comparison_report(@tickers, @period, @capital, @target_return, @max_weight,
+                                @summary_csv, @composition_csv, @synthesis) INTO @report;
 
   RETURN @report WITH status = "complete";
 

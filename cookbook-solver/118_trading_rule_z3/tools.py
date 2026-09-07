@@ -290,3 +290,23 @@ def format_strategy_report(result_json: str, policy_json: str) -> str:
         return f"(format error: {e})"
 
 
+
+@spl_tool
+def format_report_audit(solver_report: str, explanation: str) -> str:
+    return (
+        f"=== Z3 Trading Rule Checker (r118) | mode=AUDIT ===\n\n"
+        f"{solver_report}\n\n"
+        f"── Analyst Explanation ─────────────────────────────────────\n"
+        f"{explanation}"
+    )
+
+
+@spl_tool
+def format_report_snapshot(snapshot_result: str, explanation: str) -> str:
+    return (
+        f"=== Z3 Trading Rule Checker (r118) | mode=SNAPSHOT ===\n\n"
+        f"── Market Snapshot Evaluation ──────────────────────────────\n"
+        f"{snapshot_result}\n\n"
+        f"── Analyst Explanation ─────────────────────────────────────\n"
+        f"{explanation}"
+    )

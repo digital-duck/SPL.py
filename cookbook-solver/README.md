@@ -102,6 +102,47 @@ ID    Recipe                        Status   Elapsed
 
 ---
 
+## Latest batch run (2026-09-06, claude_cli, `--workers 4`)
+
+**12 / 13 SUCCESS** in 301s wall (4 parallel workers). The one failure is an
+**infrastructure limit, not a refactor regression**.
+
+| Recipe | Result | Notes |
+|---|---|---|
+| r98, r99, r100, r101, r102, r107, r108, r113, r114, r117, r118, r119 | ✅ OK | 18–50s each |
+| r109 Synthetic Problem Generator | ❌ FAILED (260s) | claude_cli session limit hit on the *final* LLM call |
+
+**r109 root cause — `ModelOverloaded` (external quota), solver path was fine.**
+The run log shows the recipe worked correctly right up to the last step:
+
+```
+GENERATE generate_variants_prompt -> 1828 tokens, 256073ms   # already throttled (256s)
+[r109] 5 valid variants after 0 repair(s)                     # ASSERT gate passed
+[r109] solved 5/5 optimally                                    # deterministic batch_solve OK
+ERROR ModelOverloaded: Claude CLI limit reached:
+      You've hit your session limit · resets 11:10pm           # final analyze_difficulty GENERATE
+```
+
+The 13-recipe parallel batch (each recipe makes 2–3 LLM calls) exhausted the
+account-wide **claude_cli session quota**. r109 ran last; its variant generation,
+the `has_valid_variants` ASSERT, and the PuLP batch-solve (5/5 optimal) all
+completed — only the closing LLM "difficulty analysis" narration was cut off.
+
+**Remedies (any one):**
+- Re-run r109 alone after the quota resets:
+  `python cookbook-solver/run_all.py --ids 109`
+- Lower `--workers` (e.g. `2`) to spread LLM load under the session limit.
+- *Recipe hardening (optional):* wrap the final `GENERATE analyze_difficulty`
+  in `EXCEPTION WHEN ModelOverloaded THEN …` so the recipe still emits the
+  solved, saved test suite (its real output) and degrades the LLM commentary
+  gracefully instead of failing the whole run.
+
+**Takeaway:** the refactor is validated — all 13 recipes reached (and mostly
+completed) their solver-gated logic; the lone failure is a claude_cli session
+cap, reproducible only under sustained parallel load.
+
+---
+
 ## The catalog (`cookbook_catalog.json`)
 
 Single source of truth for the batch. Each entry:

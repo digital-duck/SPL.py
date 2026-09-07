@@ -143,6 +143,8 @@ DO
 
   LOGGING f"[workforce_3obj] start  use_solver={@use_solver}  n_gen={@n_gen}  pop_size={@pop_size}" LEVEL INFO
 
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
   EVALUATE @use_solver
     WHEN = "true" THEN
       -- solver=ON: NSGA-II 3-objective Pareto surface
@@ -169,21 +171,8 @@ DO
       GENERATE interpret_pareto_surface(@problem, @surface_table, @anchors_json) INTO @interpretation;
       @llm_calls := @llm_calls + 1;
 
-      @report := f"=== Workforce 3-Objective Scheduling (solver=ON / NSGA-II) ===
-
-Problem:
-{@problem}
-
-Utopia Anchors (per-objective best):
-{@anchors_json}
-
-Pareto Surface ({@n_points_str} non-dominated points):
-{@surface_table}
-
-Interpretation:
-{@interpretation}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_on(@problem, @anchors_json, @n_points_str,
+                                   @surface_table, @interpretation, @llm_calls) INTO @report;
 
     ELSE
       -- solver=OFF: LLM picks a schedule, back-substitution verifies it
@@ -207,24 +196,8 @@ LLM calls: {@llm_calls}";
 
       LOGGING f"[workforce_3obj] verify_off: verdict={@verify_status}  result={@verify_result}" LEVEL INFO
 
-      @report := f"=== Workforce 3-Objective Scheduling (solver=OFF / LLM direct) ===
-
-Problem:
-{@problem}
-
-Utopia Anchors (reference):
-{@anchors_json}
-
-LLM Proposed Schedule:
-{@schedule_text}
-
-Extracted Schedule (JSON):
-{@solution_json}
-
-Verification:
-{@verify_result}
-
-LLM calls: {@llm_calls}";
+      CALL format_report_solver_off(@problem, @anchors_json, @schedule_text,
+                                    @solution_json, @verify_result, @llm_calls) INTO @report;
 
   END;
 

@@ -201,3 +201,23 @@ def format_bayesian_report(result_json: str) -> str:
         return "\n".join(lines)
     except Exception as e:
         return f"(format error: {e})"
+
+@spl_tool
+def format_report_solver_on(bayesian_report: str, explanation: str) -> str:
+    return (
+        f"=== Bayesian Optimization (r113) | solver=ON ===\n\n"
+        f"{bayesian_report}\n\n"
+        f"── Analyst Explanation ─────────────────────────────────────\n"
+        f"{explanation}"
+    )
+
+
+@spl_tool
+def format_report_solver_off(llm_guess: str) -> str:
+    return (
+        f"=== Bayesian Optimization (r113) | solver=OFF ===\n\n"
+        f"── LLM CRO Heuristics ──────────────────────────────────────\n"
+        f"{llm_guess}\n\n"
+        f"Note: LLM guesses without modeling uncertainty. Run --param use_solver=true\n"
+        f"to use Bayesian GP+EI to find the optimum efficiently."
+    )
