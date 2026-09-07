@@ -1,6 +1,6 @@
 # Recipe 111 — Stackelberg Sequential Game (Backward Induction)
 
-**The key story:** A market leader sets subscription price first; the follower observes and responds. LLM says "price High ($100) to signal quality." Backward induction: if the leader prices High, the follower always undercuts to Low and earns $52K while the leader earns $12K. The leader anticipates this and prices Low instead — ending at (Low, Low) = ($28K, $22K). The first-mover advantage is in correctly anticipating the follower's response, not in premium pricing.
+**The key story:** A market leader sets subscription price first; the follower observes and responds. LLM says "price High (\$100) to signal quality." Backward induction: if the leader prices High, the follower always undercuts to Low and earns \$52K while the leader earns \$12K. The leader anticipates this and prices Low instead — ending at (Low, Low) = (\$28K, \$22K). The first-mover advantage is in correctly anticipating the follower's response, not in premium pricing.
 
 ## What it demonstrates
 
@@ -27,11 +27,15 @@ Leader chooses:
 ```
 
 **Backward induction**:
-1. If leader plays High: follower chooses Low ($52K > $38K) → leader gets $12K
-2. If leader plays Low: follower chooses Low ($22K > $14K) → leader gets $28K
-3. Leader compares: $28K (play Low) > $12K (play High) → **leader plays Low**
+1. If leader plays High: follower chooses Low (\$52K > \$38K) → leader gets \$12K
+2. If leader plays Low: follower chooses Low (\$22K > \$14K) → leader gets \$28K
+3. Leader compares: \$28K (play Low) > \$12K (play High) → **leader plays Low**
 
-**SPNE**: (Low, Low) → Leader=$28K, Follower=$22K
+**SPNE**: (Low, Low) → Leader=\$28K, Follower=\$22K
+
+### Subgame-Perfect Nash Equilibrium (**SPNE**)
+
+It refines Nash equilibrium for sequential (extensive-form) games: not only must no player want to deviate at the top level, but the strategy must also prescribe rational play in every subgame (every decision point reachable in the tree). Backward induction is the standard algorithm for finding it.
 
 ## Simultaneous vs Sequential (r110 vs r111)
 
@@ -39,19 +43,19 @@ Leader chooses:
 |---|---|---|
 | Game structure | Both choose at same time | Leader commits first |
 | Solution concept | Nash equilibrium | Subgame-perfect Nash equilibrium |
-| Outcome | (Low, Low) = ($25K, $25K) | (Low, Low) = ($28K, $22K) |
-| Leader advantage | None (symmetric) | +$3K from first-mover anticipation |
+| Outcome | (Low, Low) = (\$25K, \$25K) | (Low, Low) = (\$28K, \$22K) |
+| Leader advantage | None (symmetric) | +\$3K from first-mover anticipation |
 
 ## Run commands
 
 ```bash
 # solver=ON — backward induction
 spl3 run cookbook/111_stackelberg_game/stackelberg_game.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF — LLM sequential reasoning
 spl3 run cookbook/111_stackelberg_game/stackelberg_game.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 ```
 
 ## Install

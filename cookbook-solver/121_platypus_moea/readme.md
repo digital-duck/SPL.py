@@ -110,11 +110,11 @@ deterministic and needs no such guard.
 
 ```bash
 # solver=ON — platypus NSGA-II Pareto surface
-spl3 run cookbook/121_platypus_moea/platypus_moea.spl \
+spl3 run cookbook-solver/121_platypus_moea/platypus_moea.spl \
     --llm claude_cli --param use_solver=true
 
 # solver=OFF — LLM direct scheduling + arithmetic verification
-spl3 run cookbook/121_platypus_moea/platypus_moea.spl \
+spl3 run cookbook-solver/121_platypus_moea/platypus_moea.spl \
     --llm claude_cli --param use_solver=false
 ```
 

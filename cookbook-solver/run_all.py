@@ -111,7 +111,12 @@ def load_catalog(catalog_file: str = "") -> list[dict]:
 
 
 def parse_id_filter(ids: str) -> set[str]:
-    """Parse comma-separated IDs / ranges like '1-4,10' into zero-padded strings."""
+    """Parse comma-separated IDs / ranges into 3-digit zero-padded strings.
+
+    Recipe IDs in cookbook-solver are 3-digit (e.g. 098, 116), so both
+    '--ids 98' and '--ids 098' normalize to '098'. '--ids 100-119' expands
+    to '100'..'119'.
+    """
     result: set[str] = set()
     for part in ids.split(","):
         part = part.strip()
@@ -120,9 +125,9 @@ def parse_id_filter(ids: str) -> set[str]:
         if "-" in part:
             lo, hi = part.split("-", 1)
             for n in range(int(lo.strip()), int(hi.strip()) + 1):
-                result.add(f"{n:02d}")
+                result.add(f"{n:03d}")
         else:
-            result.add(f"{int(part):02d}" if part.isdigit() else part)
+            result.add(f"{int(part):03d}" if part.isdigit() else part)
     return result
 
 

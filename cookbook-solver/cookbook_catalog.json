@@ -7,16 +7,16 @@
   },
   "recipes": [
     {
-      "id": "67",
+      "id": "067",
       "name": "Symbolic Math Solver",
       "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem → SymPy solves exactly → LLM explains result. Shows LLM handling only what it is uniquely suited for.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/67_symbolic_math/hello_symbolic_math.spl",
+        "cookbook-solver/067_symbolic_math/hello_symbolic_math.spl",
         "--kernel"
       ],
-      "dir": "67_symbolic_math",
+      "dir": "067_symbolic_math",
       "log": "symbolic_math",
       "is_active": false,
       "approval_status": "new",
@@ -28,19 +28,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "75",
+      "id": "075",
       "name": "SageMath Solver",
       "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/75_sage_math/basic_sagemath.spl",
+        "cookbook-solver/075_sage_math/basic_sagemath.spl",
         "--llm",
         "ollama:gemma3",
         "--kernel-name",
         "sagemath"
       ],
-      "dir": "75_sage_math",
+      "dir": "075_sage_math",
       "log": "sage_math",
       "is_active": false,
       "approval_status": "new",
@@ -52,18 +52,18 @@
       "excluded_adapters": []
     },
     {
-      "id": "76",
+      "id": "076",
       "name": "Lean Proof Verifier",
       "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/76_lean_proof/lean_proof.spl",
+        "cookbook-solver/076_lean_proof/lean_proof.spl",
         "--kernel",
         "--llm",
         "claude_cli"
       ],
-      "dir": "76_lean_proof",
+      "dir": "076_lean_proof",
       "log": "lean_proof",
       "is_active": false,
       "approval_status": "new",
@@ -75,18 +75,18 @@
       "excluded_adapters": []
     },
     {
-      "id": "77",
+      "id": "077",
       "name": "Neurosymbolic Verifier Ladder",
       "description": "Capstone of the verifier ladder: ONE declarative workflow puts all three deterministic rungs (SymPy from recipe 67, SageMath from recipe 75, Lean 4 + mathlib from recipe 76) behind the same problem text via a single --param backend= flip. LLM decomposes/formalizes/narrates (probabilistic); the chosen kernel computes exact instances (SymPy/Sage) or kernel-checks statements against mathlib (Lean), returning a badge (machine_proved/statement_checked/unfaithful/unverified). enable_solver=false runs the unaided-LLM baseline for direct A/B comparison. Backed by a cross-model experiment harness (run_experiment.py) with round-trip verification across ~1,200 cells.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/77_neurosymbolic/symbolic_math.spl",
+        "cookbook-solver/077_neurosymbolic/symbolic_math.spl",
         "--kernel",
         "--llm",
         "claude_cli"
       ],
-      "dir": "77_neurosymbolic",
+      "dir": "077_neurosymbolic",
       "log": "neurosymbolic",
       "is_active": false,
       "approval_status": "new",
@@ -100,17 +100,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "78",
+      "id": "078",
       "name": "Constraint Optimization",
       "description": "Demonstrates SPL's deterministic-probabilistic boundary: LLM reads a natural-language LP problem and generates PuLP solver code (probabilistic), PuLP/CBC finds the optimal solution with a proof of optimality (deterministic), ASSERT gates on solver status (formal verification), LLM interprets the result (probabilistic). Repair loop retries up to max_tries on Error/Infeasible. Default problem: bakery production planning (known optimum: bread=3, croissants=3, profit=$60). Requires: pip install pulp.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/78_constraint_opt/constraint_opt.spl",
+        "cookbook-solver/078_constraint_opt/constraint_opt.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "78_constraint_opt",
+      "dir": "078_constraint_opt",
       "log": "constraint_opt",
       "is_active": false,
       "approval_status": "new",
@@ -122,17 +122,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "79",
+      "id": "079",
       "name": "Code Generation + Pytest Verification",
       "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/79_code_pytest/code_pytest.spl",
+        "cookbook-solver/079_code_pytest/code_pytest.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "79_code_pytest",
+      "dir": "079_code_pytest",
       "log": "code_pytest",
       "is_active": false,
       "approval_status": "new",
@@ -144,17 +144,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "81",
+      "id": "081",
       "name": "Graph Reasoning",
       "description": "Extends the verifier ladder into discrete/combinatorial math: LLM reads a natural-language graph problem and writes networkx code (probabilistic), networkx computes the exact shortest-path/bipartite/cycle answer (deterministic), ASSERT gates on tool success, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the networkx ground truth. Repair loop retries up to max_tries on Error. Default problem: 6-warehouse shortest-path network (known optimum: A-C-B-D-E-F, distance=13). Requires: networkx (already installed).",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/81_graph_reasoning/graph_reasoning.spl",
+        "cookbook-solver/081_graph_reasoning/graph_reasoning.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "81_graph_reasoning",
+      "dir": "081_graph_reasoning",
       "log": "graph_reasoning",
       "is_active": false,
       "approval_status": "new",
@@ -166,17 +166,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "82",
+      "id": "082",
       "name": "Logic Puzzle Solver",
       "description": "Adds a CSP verifier class distinct from 78's LP/numeric optimization: LLM reads a natural-language zebra-style logic puzzle and writes python-constraint code (probabilistic), the CSP solver enumerates all solutions (deterministic), ASSERT gates on a Unique solution being found, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches the solver's unique solution. Repair loop retries up to max_tries on Error/Ambiguous/NoSolution. Default problem: 3-house zebra-lite puzzle (known unique answer: the Dane drinks Coffee). Requires: pip install python-constraint.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/82_logic_puzzle_solver/logic_puzzle_solver.spl",
+        "cookbook-solver/082_logic_puzzle_solver/logic_puzzle_solver.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "82_logic_puzzle_solver",
+      "dir": "082_logic_puzzle_solver",
       "log": "logic_puzzle_solver",
       "is_active": false,
       "approval_status": "new",
@@ -188,17 +188,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "83",
+      "id": "083",
       "name": "Unit / Dimensional Check",
       "description": "Demonstrates a categorical (not numeric-fuzzy) verifier for physics/engineering word problems: LLM writes pint unit-aware code (probabilistic), pint executes the calculation with units attached and raises DimensionalityError on any unit mismatch (deterministic), ASSERT gates on dimensional consistency, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated answer matches pint's computed magnitude (0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: kinematics (car accelerating from rest; known answer: 108 km/h). Requires: pip install pint.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/83_unit_dimensional_check/unit_dimensional_check.spl",
+        "cookbook-solver/083_unit_dimensional_check/unit_dimensional_check.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "83_unit_dimensional_check",
+      "dir": "083_unit_dimensional_check",
       "log": "unit_dimensional_check",
       "is_active": false,
       "approval_status": "new",
@@ -210,17 +210,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "84",
+      "id": "084",
       "name": "SQL Verifier",
       "description": "Text-to-SQL with a row-level verifier: LLM writes a SQL SELECT from a natural-language question (probabilistic), stdlib sqlite3 executes it against a seeded in-memory database (deterministic), ASSERT gates on clean execution, a deterministic classify_roundtrip() function row-diffs the LLM's result against an independently-authored ground-truth SQL query over the same seeded data, LLM interprets the verified rows. Repair loop retries up to max_tries on SQL error. Default question: average Engineering salary (known ground truth: $97,333.33). Requires: stdlib sqlite3 only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/84_sql_verifier/sql_verifier.spl",
+        "cookbook-solver/084_sql_verifier/sql_verifier.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "84_sql_verifier",
+      "dir": "084_sql_verifier",
       "log": "sql_verifier",
       "is_active": false,
       "approval_status": "new",
@@ -232,17 +232,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "85",
+      "id": "085",
       "name": "Property-Based Code Verification",
       "description": "Upgrades recipe 79's example-based pytest verification one rung further: LLM generates an implementation AND independent Hypothesis properties from the same spec (probabilistic), pytest+Hypothesis execute the properties against hundreds of auto-generated inputs in a subprocess (deterministic), ASSERT gates on all properties passing (a genuine falsifying example is never repaired away, only broken test-harness code is), LLM interprets the verified result, a deterministic classify_roundtrip() check confirms the LLM's narration agrees with the actual pass/fail verdict. Default spec: merge two sorted lists. Requires: pip install hypothesis pytest.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/85_property_based_code_verify/property_based_code_verify.spl",
+        "cookbook-solver/085_property_based_code_verify/property_based_code_verify.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "85_property_based_code_verify",
+      "dir": "085_property_based_code_verify",
       "log": "property_based_code_verify",
       "is_active": false,
       "approval_status": "new",
@@ -255,17 +255,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "86",
+      "id": "086",
       "name": "Financial Calculation Verifier",
       "description": "Demonstrates exact closed-form arithmetic verification for compound-interest/loan-amortization word problems: LLM writes stdlib decimal code implementing the correct formula (probabilistic), Decimal arithmetic computes the exact figure with no floating-point drift (deterministic), ASSERT gates on clean execution, LLM interprets the result and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated dollar figure matches the Decimal-computed ground truth (1 cent / 0.5% tolerance). Repair loop retries up to max_tries on Error. Default problem: 5-year loan amortization (known answer: $193.33/month). Requires: stdlib decimal only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/86_financial_calc_verifier/financial_calc_verifier.spl",
+        "cookbook-solver/086_financial_calc_verifier/financial_calc_verifier.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "86_financial_calc_verifier",
+      "dir": "086_financial_calc_verifier",
       "log": "financial_calc_verifier",
       "is_active": false,
       "approval_status": "new",
@@ -277,17 +277,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "87",
+      "id": "087",
       "name": "Route Optimization",
       "description": "A second, harder optimization class beyond recipe 78's linear program: LLM writes Google OR-Tools vehicle-routing code from a natural-language logistics problem (probabilistic), OR-Tools' combinatorial routing solver searches the NP-hard space and returns a feasible route with its total distance (deterministic), ASSERT gates on a feasible route being found, LLM interprets the route and restates a Final answer line, a deterministic classify_roundtrip() check confirms the LLM's stated total distance matches the solver's computed ground truth. Repair loop retries up to max_tries on Error. Default problem: 1 depot + 5 customer TSP (known optimum: 101 miles). Requires: pip install ortools.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/87_route_optimization/route_optimization.spl",
+        "cookbook-solver/087_route_optimization/route_optimization.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "87_route_optimization",
+      "dir": "087_route_optimization",
       "log": "route_optimization",
       "is_active": false,
       "approval_status": "new",
@@ -299,17 +299,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "90",
+      "id": "090",
       "name": "Physics Conservation Check",
       "description": "Opens the computational-science domain: a categorical + numeric verifier for 1-D collision problems. LLM writes NumPy code reporting final-state velocities (probabilistic); run_conservation_check() independently recomputes total momentum and kinetic energy before/after from the reported values (deterministic, never trusts the code's own self-report); ASSERT gates on momentum (and, for elastic collisions, energy) being conserved within 1% tolerance. Repair loop retries up to max_tries on a conservation-law violation. LLM interprets the verified velocity and restates a Final answer line, cross-checked by classify_roundtrip() (0.5% tolerance). Default problem: elastic collision, equal masses (known answer: ball 1 stops at 0 m/s). Requires: numpy only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/90_compsci_physics/physics_conservation.spl",
+        "cookbook-solver/090_compsci_physics/physics_conservation.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "90_compsci_physics",
+      "dir": "090_compsci_physics",
       "log": "physics_conservation",
       "is_active": false,
       "approval_status": "new",
@@ -321,17 +321,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "92",
+      "id": "092",
       "name": "Crystal Structure Check",
       "description": "Third computational-science recipe: stacks two independent oracles (categorical symmetry + numeric density round-trip) in one ASSERT. LLM writes Python code reporting a crystal system, lattice parameters, Z, molar mass, and computed density (probabilistic); run_materials_check() independently verifies the claimed crystal system's own symmetry constraints (cubic: a=b=c, angles=90; hexagonal: a=b, gamma=120; etc.) and recomputes cell volume (general triclinic formula) and theoretical density from scratch via Avogadro's number (deterministic); ASSERT gates on both symmetry holding and density matching within 1%. Repair loop retries up to max_tries. LLM interprets the verified density and restates a Final answer line, cross-checked by classify_roundtrip(). Default problem: NaCl rock-salt structure (known answer: ~2.1636 g/cm^3). Requires: stdlib math only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/92_compsci_materials/materials_crystal.spl",
+        "cookbook-solver/092_compsci_materials/materials_crystal.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "92_compsci_materials",
+      "dir": "092_compsci_materials",
       "log": "materials_crystal",
       "is_active": false,
       "approval_status": "new",
@@ -343,17 +343,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "93",
+      "id": "093",
       "name": "Automated Planning (PDDL / STRIPS)",
       "description": "Opens the automated-planning domain: GENERATE plan -> CALL validator -> ASSERT valid -> WHILE repair, the two-phase pattern applied to STRIPS-style planning (LLM+P / DUPLEX generalized into a head-to-head baseline). LLM proposes a grounded JSON action plan over a fixed logistics-lite domain (truck, packages, locations; drive/load/unload actions) (probabilistic); run_plan_check() replays the plan action-by-action against the domain's STRIPS precondition/effect semantics, a minimal VAL-style validator (deterministic); ASSERT gates on every action's precondition holding AND the goal being reached. Repair loop retries up to max_tries, fed the exact failing step and reason. LLM interprets the validated plan and restates a Final answer step-count line, cross-checked by classify_roundtrip(). Default problem: deliver 2 packages to a common destination (known minimal plan: 6 steps). Requires: stdlib json only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/93_auto_planning/auto_planning.spl",
+        "cookbook-solver/093_auto_planning/auto_planning.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "93_auto_planning",
+      "dir": "093_auto_planning",
       "log": "auto_planning",
       "is_active": false,
       "approval_status": "new",
@@ -365,17 +365,17 @@
       "excluded_adapters": []
     },
     {
-      "id": "94",
+      "id": "094",
       "name": "Text-to-SQL with Data-Quality Gates",
       "description": "Opens the data-engineering domain, extending recipe 84's row-diff verifier with Great-Expectations-style data-quality gates. LLM writes SQL from a natural-language question (probabilistic); run_quality_gated_sql() checks referential integrity (every orders.customer_id exists in customers.id), requires a non-empty result, and computes the same statistic two structurally independent SQL formulations (AVG(x) vs SUM(x)/COUNT(x)) asserting they agree within 1e-6 (deterministic, independent of the LLM's query); ASSERT gates on clean execution AND all quality gates passing. Repair loop retries up to max_tries on any gate failure. classify_roundtrip() row-diffs (order-insensitive, float-tolerant) the LLM's result against an independently-authored ground-truth query; LLM interprets the verified, quality-gated answer. Default question: average Enterprise-segment order amount (known ground truth: $6,000.00). Requires: stdlib sqlite3 only, no new pip dependency.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/94_data_eng_text2spl/text2sql_quality.spl",
+        "cookbook-solver/094_data_eng_text2spl/text2sql_quality.spl",
         "--llm",
         "claude_cli"
       ],
-      "dir": "94_data_eng_text2spl",
+      "dir": "094_data_eng_text2spl",
       "log": "text2sql_quality",
       "is_active": false,
       "approval_status": "new",
@@ -387,19 +387,19 @@
       "excluded_adapters": []
     },
     {
-      "id": "98",
+      "id": "098",
       "name": "Job-Shop Scheduling via OR-Tools CP-SAT",
       "description": "Classic job-shop scheduling: N jobs x M machines, each job has a fixed sequence of operations. LLM extracts problem structure from natural language (probabilistic); solve_job_shop() runs OR-Tools CP-SAT constraint programming to find the provably-optimal schedule with minimum makespan (deterministic). ASSERT gates on OPTIMAL/FEASIBLE CP-SAT status. Ablation: use_solver=false lets the LLM schedule directly; verify_job_shop() back-substitutes to check no-overlap and precedence constraints. format_gantt() renders an ASCII Gantt chart. Demonstrates C5 (constraint propagation / CP-SAT) solver class. Solver class: C5. Requires: pip install ortools.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/98_job_shop/job_shop.spl",
+        "cookbook-solver/098_job_shop/job_shop.spl",
         "--adapter",
         "claude_cli",
         "--param",
         "use_solver=true"
       ],
-      "dir": "98_job_shop",
+      "dir": "098_job_shop",
       "log": "job_shop",
       "is_active": true,
       "approval_status": "ready",
@@ -411,13 +411,13 @@
       "excluded_adapters": []
     },
     {
-      "id": "99",
+      "id": "099",
       "name": "Portfolio Optimization via cvxpy (Markowitz)",
       "description": "Personal investment demo: given a capital amount and a pool of stock tickers, minimize portfolio variance subject to a target annual return using Markowitz mean-variance optimization. fetch_stock_data() downloads historical prices via yfinance and computes annual returns and covariance matrix (deterministic). optimize_portfolio() runs cvxpy CLARABEL interior-point QP solver (deterministic). ASSERT gates on OPTIMAL status; repair loop relaxes the target return if infeasible. Ablation: use_solver=false lets the LLM suggest weights heuristically; verify_portfolio() checks weight sum, bounds, and non-negativity. LLM interprets weights and capital allocation in plain language. Adaptive: run monthly with fresh data for rebalancing signals. Not financial advice. Requires: pip install cvxpy yfinance.",
       "args": [
         "spl3",
         "run",
-        "cookbook-solver/99_portfolio_opt/portfolio_opt.spl",
+        "cookbook-solver/099_portfolio_opt/portfolio_opt.spl",
         "--adapter",
         "claude_cli",
         "--param",
@@ -429,7 +429,7 @@
         "--param",
         "target_return=0.12"
       ],
-      "dir": "99_portfolio_opt",
+      "dir": "099_portfolio_opt",
       "log": "portfolio_opt",
       "is_active": true,
       "approval_status": "ready",
@@ -920,6 +920,179 @@
         "--param",
         "use_solver=true"
       ]
+    },
+    {
+      "id": "120",
+      "name": "Insurance Policy Z3 Inference",
+      "description": "Z3 fixed-point / SMT inference over layered insurance eligibility rules — finds who qualifies and surfaces rule interactions a linear read misses. solver=ON: Z3; solver=OFF: LLM manual rule tracing.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/120_insurance_policy_z3/insurance_policy_z3.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "120_insurance_policy_z3",
+      "log": "insurance_policy_z3",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "z3-solver"
+      ],
+      "excluded_adapters": [],
+      "is_active": true,
+      "approval_status": "ready"
+    },
+    {
+      "id": "121",
+      "name": "Platypus MOEA Workforce Scheduling (S020)",
+      "description": "Same B4 3-objective workforce problem as r107, solved with platypus NSGA-II (pure-Python MOEA, lightweight pymoo alternative). solver=ON: platypus Pareto surface; solver=OFF: LLM schedule + back-substitution verify.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/121_platypus_moea/platypus_moea.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "121_platypus_moea",
+      "log": "platypus_moea",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "platypus-opt",
+        "pulp"
+      ],
+      "excluded_adapters": [],
+      "is_active": true,
+      "approval_status": "ready"
+    },
+    {
+      "id": "122",
+      "name": "Global MINLP — Chemical Reactor Yield",
+      "description": "Demonstrates the difference between locally-optimal and globally-optimal solutions for non-convex MINLP. scipy.minimize returns OPTIMAL but means only locally optimal. Pyomo + Couenne/Bonmin use spatial branch-and-bound with convex relaxations to certify the global optimum. Problem: choose catalyst (binary), temperature, and concentration to maximize reactor yield. Local solver misses global by ~130% yield. Falls back to dense grid search if Couenne/Bonmin unavailable. Install: conda install -c conda-forge coinor-couenne pyomo",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/122_global_minlp/global_minlp.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "122_global_minlp",
+      "log": "global_minlp",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pyomo",
+        "coinor-couenne"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "123",
+      "name": "Hard MILP — Unit Commitment (SCIP)",
+      "description": "Benchmarks SCIP vs HiGHS on hard MILP unit commitment: 5 generators, 24 hours, 120 binary variables, startup costs, ramp limits, minimum up/down times. HiGHS leaves larger optimality gap on hard instances; SCIP's cutting planes and branch-and-cut heuristics close the gap faster. Motivated by Open Energy Transition benchmark across 213 real energy models. solver=OFF: LLM merit-order heuristic. Install: pip install pyscipopt + SCIP binary from scipopt.org",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/123_hard_milp_scip/hard_milp_scip.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "123_hard_milp_scip",
+      "log": "hard_milp_scip",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pyscipopt"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "124",
+      "name": "Discrete-Event Simulation — Hospital ED (SimPy)",
+      "description": "Introduces the 'what happens?' solver class — DES produces trajectories, not optima. Hospital ED with bursty non-Poisson arrivals (shift handovers 2.5× spike) and lognormal treatment times. M/M/c analytic formula underestimates P95 wait by ~60% because it assumes Poisson arrivals. SimPy simulation captures actual stochastic dynamics. Pattern: simulate to understand, then optimize staffing (simulate-then-optimize). Install: pip install simpy",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/124_simpy_des/simpy_des.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "124_simpy_des",
+      "log": "simpy_des",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "simpy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "125",
+      "name": "Progressive Hedging — Battery Storage (Stochastic SP)",
+      "description": "Extends r117 (3-scenario monolithic stochastic LP) to 30-scenario two-stage SP via Progressive Hedging decomposition. Each scenario solved independently as a Pyomo/HiGHS subproblem; non-anticipativity enforced via quadratic penalty rho. Reports Value of Stochastic Solution (VSS = EV_cost - RP_cost). Subproblems are embarrassingly parallel — natural Momagrid workload. solver=OFF: deterministic EV (mean scenario) policy. Install: pip install pyomo highspy",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/125_progressive_hedging/progressive_hedging.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true",
+        "--param",
+        "n_scenarios=30"
+      ],
+      "dir": "125_progressive_hedging",
+      "log": "progressive_hedging",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "pyomo",
+        "highspy"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "126",
+      "name": "MiniZinc CP — Backend-Agnostic Nurse Scheduling",
+      "description": "Demonstrates 'DODA for constraint programming': MiniZinc .mzn model is invariant across CP backends (CP-SAT, Gecode, Choco) — same model, swappable solver. Parallel: .spl:LLM-adapter = .mzn:CP-backend. 8-nurse 7-day 3-shift scheduling with hard constraints (coverage, night→morning rest, max 5 days) and soft preferences. LLM schedule violates night→morning rule in ~2/7 days; MiniZinc CP proves all hard constraints satisfied. Install: pip install minizinc + MiniZinc binary from minizinc.org",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/126_minizinc_cp/minizinc_cp.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "126_minizinc_cp",
+      "log": "minizinc_cp",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "minizinc"
+      ],
+      "excluded_adapters": []
     }
   ]
 }

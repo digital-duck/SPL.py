@@ -1,15 +1,15 @@
 {
-  "_comment": "SPL 2.0 Cookbook Catalog — single source of truth for all recipes.",
+  "_comment": "SPL 2.0 Cookbook Catalog \u2014 single source of truth for all recipes.",
   "_schema": {
-    "is_active": "bool   — included in default batch run (python run_all.py)",
-    "approval_status": "string — new | approved | wip | disabled | rejected",
-    "category": "string — basics | agentic | reasoning | safety | retrieval | multi-agent | application | benchmarking"
+    "is_active": "bool   \u2014 included in default batch run (python run_all.py)",
+    "approval_status": "string \u2014 new | approved | wip | disabled | rejected",
+    "category": "string \u2014 basics | agentic | reasoning | safety | retrieval | multi-agent | application | benchmarking"
   },
   "recipes": [
     {
       "id": "001",
       "name": "Hello World",
-      "description": "Minimal SPL program — verify spl2 + adapter + model work",
+      "description": "Minimal SPL program \u2014 verify spl2 + adapter + model work",
       "args": [
         "spl3",
         "run",
@@ -26,7 +26,7 @@
     {
       "id": "002",
       "name": "Ollama Proxy",
-      "description": "General-purpose LLM query — proxy any Ollama model",
+      "description": "General-purpose LLM query \u2014 proxy any Ollama model",
       "args": [
         "spl3",
         "run",
@@ -44,7 +44,7 @@
     {
       "id": "003",
       "name": "Multilingual Greeting",
-      "description": "Greet in any language — parametric context demo",
+      "description": "Greet in any language \u2014 parametric context demo",
       "args": [
         "spl3",
         "run",
@@ -63,7 +63,7 @@
     {
       "id": "004",
       "name": "Model Showdown",
-      "description": "Same prompt to multiple models — compare output and latency via parallel CTEs",
+      "description": "Same prompt to multiple models \u2014 compare output and latency via parallel CTEs",
       "args": [
         "spl3",
         "run",
@@ -84,7 +84,7 @@
     {
       "id": "005",
       "name": "Self-Refine",
-      "description": "Iterative improvement: draft → critique → refine loop",
+      "description": "Iterative improvement: draft \u2192 critique \u2192 refine loop",
       "args": [
         "spl3",
         "run",
@@ -102,7 +102,7 @@
     {
       "id": "006",
       "name": "ReAct Agent",
-      "description": "Population growth via WebSearch + Python tool — requires claude_cli adapter and --allowed-tools WebSearch",
+      "description": "Population growth via WebSearch + Python tool \u2014 requires claude_cli adapter and --allowed-tools WebSearch",
       "args": [
         "spl3",
         "run",
@@ -149,7 +149,7 @@
     {
       "id": "008",
       "name": "RAG Query",
-      "description": "Retrieval-augmented generation over indexed documents — requires: spl2 rag add <doc>",
+      "description": "Retrieval-augmented generation over indexed documents \u2014 requires: spl2 rag add <doc>",
       "args": [
         "spl3",
         "run",
@@ -167,7 +167,7 @@
     {
       "id": "009",
       "name": "Chain of Thought",
-      "description": "Multi-step reasoning: Research → Analyze → Summarize",
+      "description": "Multi-step reasoning: Research \u2192 Analyze \u2192 Summarize",
       "args": [
         "spl3",
         "run",
@@ -259,7 +259,7 @@
     {
       "id": "014",
       "name": "Multi-Agent Collaboration",
-      "description": "Researcher → Analyst → Writer collaboration via PROCEDURE",
+      "description": "Researcher \u2192 Analyst \u2192 Writer collaboration via PROCEDURE",
       "args": [
         "spl3",
         "run",
@@ -295,7 +295,7 @@
     {
       "id": "016",
       "name": "Reflection Agent",
-      "description": "Meta-cognitive loop: solve → reflect → correct until confident",
+      "description": "Meta-cognitive loop: solve \u2192 reflect \u2192 correct until confident",
       "args": [
         "spl3",
         "run",
@@ -403,7 +403,7 @@
     {
       "id": "022",
       "name": "Text2SPL Demo",
-      "description": "Natural language to SPL 2.0 compiler — prompt, workflow, and auto modes",
+      "description": "Natural language to SPL 2.0 compiler \u2014 prompt, workflow, and auto modes",
       "args": [
         "bash",
         "./cookbook/022_text2spl_demo/text2spl_demo.sh"
@@ -417,7 +417,7 @@
     {
       "id": "023",
       "name": "Structured Output",
-      "description": "CREATE FUNCTION with JSON schema — extract typed data from free text",
+      "description": "CREATE FUNCTION with JSON schema \u2014 extract typed data from free text",
       "args": [
         "spl3",
         "run",
@@ -435,7 +435,7 @@
     {
       "id": "024",
       "name": "Few-Shot Prompting",
-      "description": "Gold-standard examples embedded in SELECT context — in-context learning",
+      "description": "Gold-standard examples embedded in SELECT context \u2014 in-context learning",
       "args": [
         "spl3",
         "run",
@@ -454,7 +454,7 @@
     {
       "id": "025",
       "name": "Nested Procedures",
-      "description": "PROCEDURE calling PROCEDURE — deep composability without external orchestration",
+      "description": "PROCEDURE calling PROCEDURE \u2014 deep composability without external orchestration",
       "args": [
         "spl3",
         "run",
@@ -473,7 +473,7 @@
     {
       "id": "026",
       "name": "Prompt A/B Test",
-      "description": "CTEs + EVALUATE scoring — compare two prompt variants, pick winner automatically",
+      "description": "CTEs + EVALUATE scoring \u2014 compare two prompt variants, pick winner automatically",
       "args": [
         "spl3",
         "run",
@@ -493,7 +493,7 @@
     {
       "id": "027",
       "name": "Data Extraction",
-      "description": "Pull structured fields from messy text — names, dates, amounts, references",
+      "description": "Pull structured fields from messy text \u2014 names, dates, amounts, references",
       "args": [
         "spl3",
         "run",
@@ -512,7 +512,7 @@
     {
       "id": "028",
       "name": "Customer Support Triage",
-      "description": "Classify → route → draft response in one workflow",
+      "description": "Classify \u2192 route \u2192 draft response in one workflow",
       "args": [
         "spl3",
         "run",
@@ -587,7 +587,7 @@
     {
       "id": "032",
       "name": "Socratic Tutor",
-      "description": "Ask guiding questions rather than giving answers — persona-constrained generation",
+      "description": "Ask guiding questions rather than giving answers \u2014 persona-constrained generation",
       "args": [
         "spl3",
         "run",
@@ -625,7 +625,7 @@
     {
       "id": "034",
       "name": "Progressive Summarizer",
-      "description": "Layered summary: sentence → paragraph → page with fidelity verification",
+      "description": "Layered summary: sentence \u2192 paragraph \u2192 page with fidelity verification",
       "args": [
         "spl3",
         "run",
@@ -644,7 +644,7 @@
     {
       "id": "035",
       "name": "Hypothesis Tester",
-      "description": "Generate hypothesis → design test → evaluate evidence → conclude",
+      "description": "Generate hypothesis \u2192 design test \u2192 evaluate evidence \u2192 conclude",
       "args": [
         "spl3",
         "run",
@@ -663,7 +663,7 @@
     {
       "id": "036",
       "name": "Tool-Use / Function-Call",
-      "description": "Register Python functions as CALL-able tools — deterministic math, zero LLM cost",
+      "description": "Register Python functions as CALL-able tools \u2014 deterministic math, zero LLM cost",
       "args": [
         "spl3",
         "run",
@@ -685,7 +685,7 @@
     {
       "id": "037",
       "name": "Headline News Aggregator",
-      "description": "Generate → expand → evaluate coverage → daily news digest for any topic area",
+      "description": "Generate \u2192 expand \u2192 evaluate coverage \u2192 daily news digest for any topic area",
       "args": [
         "spl3",
         "run",
@@ -705,7 +705,7 @@
     {
       "id": "038",
       "name": "Bedrock Quickstart",
-      "description": "Fan out to three AWS Bedrock model families (Claude + Nova) and compare — adapter smoke test for enterprise environments",
+      "description": "Fan out to three AWS Bedrock model families (Claude + Nova) and compare \u2014 adapter smoke test for enterprise environments",
       "args": [
         "spl3",
         "run",
@@ -723,7 +723,7 @@
     {
       "id": "039",
       "name": "Vertex AI Quickstart",
-      "description": "Fan out to three Gemini tiers (Pro / Flash / Lite) on GCP Vertex AI and compare — adapter smoke test for GCP environments",
+      "description": "Fan out to three Gemini tiers (Pro / Flash / Lite) on GCP Vertex AI and compare \u2014 adapter smoke test for GCP environments",
       "args": [
         "spl3",
         "run",
@@ -741,7 +741,7 @@
     {
       "id": "040",
       "name": "Azure OpenAI Quickstart",
-      "description": "Fan out to three Azure OpenAI deployments (GPT-4o / GPT-4o mini / GPT-3.5 Turbo) and compare — adapter smoke test for Azure environments",
+      "description": "Fan out to three Azure OpenAI deployments (GPT-4o / GPT-4o mini / GPT-3.5 Turbo) and compare \u2014 adapter smoke test for Azure environments",
       "args": [
         "spl3",
         "run",
@@ -759,7 +759,7 @@
     {
       "id": "041",
       "name": "Human Steering",
-      "description": "Human-in-the-loop: draft → pause for stdin feedback → conditionally refine — demonstrates EVALUATE on human input",
+      "description": "Human-in-the-loop: draft \u2192 pause for stdin feedback \u2192 conditionally refine \u2014 demonstrates EVALUATE on human input",
       "args": [
         "spl3",
         "run",
@@ -782,7 +782,7 @@
     {
       "id": "042",
       "name": "Knowledge Synthesis",
-      "description": "RAG-writer pattern: extract 3 insights via LLM, persist to vector store via CALL rag_update — agents that write back to the knowledge base",
+      "description": "RAG-writer pattern: extract 3 insights via LLM, persist to vector store via CALL rag_update \u2014 agents that write back to the knowledge base",
       "args": [
         "spl3",
         "run",
@@ -800,7 +800,7 @@
     {
       "id": "043",
       "name": "Prompt Self-Tuning",
-      "description": "Meta-programming: generate two improved prompt variants, A/B test via check_quality, select winner — automated prompt optimization",
+      "description": "Meta-programming: generate two improved prompt variants, A/B test via check_quality, select winner \u2014 automated prompt optimization",
       "args": [
         "spl3",
         "run",
@@ -819,7 +819,7 @@
     {
       "id": "044",
       "name": "Adaptive Failover",
-      "description": "Resilience: try primary model → quality gate → auto-failover to stronger model if needed — GENERATE USING MODEL @var",
+      "description": "Resilience: try primary model \u2192 quality gate \u2192 auto-failover to stronger model if needed \u2014 GENERATE USING MODEL @var",
       "args": [
         "spl3",
         "run",
@@ -839,7 +839,7 @@
     {
       "id": "045",
       "name": "Vision to Action",
-      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE — deterministic EVALUATE decision tree, zero-cost routing",
+      "description": "LLM classifies image description into DELIVERY/INTRUSION/IGNORE \u2014 deterministic EVALUATE decision tree, zero-cost routing",
       "args": [
         "spl3",
         "run",
@@ -857,7 +857,7 @@
     {
       "id": "046",
       "name": "MCP Integration",
-      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation — DODA across deployment modes via a single EVALUATE branch",
+      "description": "Discover and invoke tools via Model Context Protocol; LLM selects tool and parameters from the discovered tool list; dispatches via HTTP to an MCP server or falls back to a local embedded implementation \u2014 DODA across deployment modes via a single EVALUATE branch",
       "args": [
         "spl3",
         "run",
@@ -878,7 +878,7 @@
     {
       "id": "047",
       "name": "arXiv Morning Brief",
-      "description": "Download arXiv PDFs → chunk → summarize each → reduce → assemble Markdown brief — WHILE loop, list tools, WITH OUTPUT BUDGET",
+      "description": "Download arXiv PDFs \u2192 chunk \u2192 summarize each \u2192 reduce \u2192 assemble Markdown brief \u2014 WHILE loop, list tools, WITH OUTPUT BUDGET",
       "args": [
         "spl3",
         "run",
@@ -896,7 +896,7 @@
     {
       "id": "048",
       "name": "Credit Risk Assessment",
-      "description": "Fin-service: deterministic score gate → LLM qualitative review → EVALUATE routing — APPROVED / MANUAL_REVIEW / REJECTED",
+      "description": "Fin-service: deterministic score gate \u2192 LLM qualitative review \u2192 EVALUATE routing \u2014 APPROVED / MANUAL_REVIEW / REJECTED",
       "args": [
         "spl3",
         "run",
@@ -915,7 +915,7 @@
     {
       "id": "049",
       "name": "Regulatory News Audit",
-      "description": "Fin-service: WHILE loop over news feed — LLM compliance audit per item, JSON risk extraction, CRITICAL ALERT on high-risk findings",
+      "description": "Fin-service: WHILE loop over news feed \u2014 LLM compliance audit per item, JSON risk extraction, CRITICAL ALERT on high-risk findings",
       "args": [
         "spl3",
         "run",
@@ -933,7 +933,7 @@
     {
       "id": "050",
       "name": "Code Pipeline",
-      "description": "NDD closure: generate → review → improve → test → document → spec_judge (TEXT → TEXT)",
+      "description": "NDD closure: generate \u2192 review \u2192 improve \u2192 test \u2192 document \u2192 spec_judge (TEXT \u2192 TEXT)",
       "args": [
         "spl3",
         "run",
@@ -956,7 +956,7 @@
     {
       "id": "051",
       "name": "Image Caption",
-      "description": "Describe / analyse / OCR an image using Gemma4 vision (IMAGE → TEXT)",
+      "description": "Describe / analyse / OCR an image using Gemma4 vision (IMAGE \u2192 TEXT)",
       "args": [
         "python",
         "cookbook/051_image_caption/run.py",
@@ -978,7 +978,7 @@
     {
       "id": "052",
       "name": "Audio Summary",
-      "description": "Transcribe / summarise / extract key points from audio (AUDIO → TEXT)",
+      "description": "Transcribe / summarise / extract key points from audio (AUDIO \u2192 TEXT)",
       "args": [
         "python",
         "cookbook/052_audio_summary/run.py",
@@ -999,7 +999,7 @@
     {
       "id": "053",
       "name": "Video Summary",
-      "description": "Summarise / transcribe / extract key moments from a video using gemma4 (VIDEO → TEXT)",
+      "description": "Summarise / transcribe / extract key moments from a video using gemma4 (VIDEO \u2192 TEXT)",
       "args": [
         "python",
         "cookbook/053_video_summary/run.py",
@@ -1020,7 +1020,7 @@
     {
       "id": "054",
       "name": "Text to Image",
-      "description": "Generate an image from a text prompt using gpt-image-1 (TEXT → IMAGE)",
+      "description": "Generate an image from a text prompt using gpt-image-1 (TEXT \u2192 IMAGE)",
       "args": [
         "python",
         "cookbook/054_text_to_image/run.py",
@@ -1040,7 +1040,7 @@
     {
       "id": "055",
       "name": "Text to Speech",
-      "description": "Convert text to natural speech and save as audio file (TEXT → AUDIO)",
+      "description": "Convert text to natural speech and save as audio file (TEXT \u2192 AUDIO)",
       "args": [
         "python",
         "cookbook/055_text_to_speech/run.py",
@@ -1060,7 +1060,7 @@
     {
       "id": "056",
       "name": "Text to Video",
-      "description": "Generate a video clip from a text prompt via Google Veo 2 / RunwayML (TEXT → VIDEO)",
+      "description": "Generate a video clip from a text prompt via Google Veo 2 / RunwayML (TEXT \u2192 VIDEO)",
       "args": [
         "python",
         "cookbook/056_text_to_video/run.py",
@@ -1081,7 +1081,7 @@
     {
       "id": "057",
       "name": "Image Format Conversion",
-      "description": "Convert image between formats: PNG ↔ JPEG ↔ WebP ↔ BMP (IMAGE → IMAGE, codec only)",
+      "description": "Convert image between formats: PNG \u2194 JPEG \u2194 WebP \u2194 BMP (IMAGE \u2192 IMAGE, codec only)",
       "args": [
         "python",
         "cookbook/057_image_convert/run.py",
@@ -1103,7 +1103,7 @@
     {
       "id": "058",
       "name": "Image Restyle",
-      "description": "Analyse image with Gemma4 vision, restyle with DALL-E 3 (IMAGE+TEXT → TEXT+IMAGE)",
+      "description": "Analyse image with Gemma4 vision, restyle with DALL-E 3 (IMAGE+TEXT \u2192 TEXT+IMAGE)",
       "args": [
         "python",
         "cookbook/058_image_restyle/run.py",
@@ -1126,7 +1126,7 @@
     {
       "id": "059",
       "name": "Audio Format Conversion",
-      "description": "Convert audio between formats: WAV ↔ MP3 ↔ OGG ↔ FLAC (AUDIO → AUDIO, codec only)",
+      "description": "Convert audio between formats: WAV \u2194 MP3 \u2194 OGG \u2194 FLAC (AUDIO \u2192 AUDIO, codec only)",
       "args": [
         "python",
         "cookbook/059_audio_convert/run.py",
@@ -1149,7 +1149,7 @@
     {
       "id": "060",
       "name": "Voice Dialogue",
-      "description": "Full voice assistant pipeline: transcribe → respond → speak (AUDIO+TEXT → TEXT+AUDIO)",
+      "description": "Full voice assistant pipeline: transcribe \u2192 respond \u2192 speak (AUDIO+TEXT \u2192 TEXT+AUDIO)",
       "args": [
         "python",
         "cookbook/060_voice_dialogue/run.py",
@@ -1160,7 +1160,7 @@
       "log": "voice_dialogue",
       "is_active": false,
       "approval_status": "disabled",
-      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) — same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ — args point at recipe 52's sample as a stand-in.)",
+      "disabled_reason": "Upstream limitation: LFM-2.5 transcription step rejects audio input on both OpenRouter (404 'No endpoints found that support input audio') and Ollama (400 Bad Request) \u2014 same root cause as recipe 52. Blocked until LFM-2.5 audio-input support lands upstream. (Also: no sample audio shipped in sample/ \u2014 args point at recipe 52's sample as a stand-in.)",
       "category": "multimodal",
       "tier": 4,
       "requires": [
@@ -1172,7 +1172,7 @@
     {
       "id": "061",
       "name": "Video to Audio",
-      "description": "Extract audio track from a video file: .mp4 → .mp3 / .wav / .flac (VIDEO → AUDIO, codec only)",
+      "description": "Extract audio track from a video file: .mp4 \u2192 .mp3 / .wav / .flac (VIDEO \u2192 AUDIO, codec only)",
       "args": [
         "python",
         "cookbook/061_video_to_audio/run.py",
@@ -1193,7 +1193,7 @@
     {
       "id": "062",
       "name": "Video to Image",
-      "description": "Extract frame(s) from a video; optionally caption with gemma4 vision (VIDEO → IMAGE)",
+      "description": "Extract frame(s) from a video; optionally caption with gemma4 vision (VIDEO \u2192 IMAGE)",
       "args": [
         "python",
         "cookbook/062_video_to_image/run.py",
@@ -1214,7 +1214,7 @@
     {
       "id": "063",
       "name": "Parallel Code Review",
-      "description": "Style, security, and test-generation reviews run concurrently via CALL PARALLEL; merged into one report (TEXT → TEXT)",
+      "description": "Style, security, and test-generation reviews run concurrently via CALL PARALLEL; merged into one report (TEXT \u2192 TEXT)",
       "args": [
         "spl3",
         "run",
@@ -1236,7 +1236,7 @@
     {
       "id": "064",
       "name": "Parallel News Digest",
-      "description": "Summarise three news topics concurrently via CALL PARALLEL; merge into a morning briefing (TEXT → TEXT)",
+      "description": "Summarise three news topics concurrently via CALL PARALLEL; merge into a morning briefing (TEXT \u2192 TEXT)",
       "args": [
         "spl3",
         "run",
@@ -1255,7 +1255,7 @@
     {
       "id": "065",
       "name": "LLM-powered SPL Compiler (vibe-splc)",
-      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler — run both and cross-compare to surface gaps",
+      "description": "Compiles a .spl workflow to a target framework (langgraph / autogen / crewai) using LLM; complements the deterministic splc compiler \u2014 run both and cross-compare to surface gaps",
       "args": [
         "spl3",
         "run",
@@ -1297,7 +1297,7 @@
     {
       "id": "067",
       "name": "Symbolic Math Solver",
-      "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem → SymPy solves exactly → LLM explains result. Shows LLM handling only what it is uniquely suited for.",
+      "description": "Demonstrates SymPy as kernel deterministic substrate: LLM parses NL problem \u2192 SymPy solves exactly \u2192 LLM explains result. Shows LLM handling only what it is uniquely suited for.",
       "args": [
         "spl3",
         "run",
@@ -1338,7 +1338,7 @@
     {
       "id": "069",
       "name": "Jupyter Notebook Generator",
-      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps — the kernel does exact eigendecomposition and symbolic A·v=λ·v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
+      "description": "Persistent IPython kernel (--kernel) keeps state live across CALL run_python steps \u2014 the kernel does exact eigendecomposition and symbolic A\u00b7v=\u03bb\u00b7v verification (SymPy), the LLM only writes prose narrative; assembles and writes a real, runnable .ipynb",
       "args": [
         "spl3",
         "run",
@@ -1361,7 +1361,7 @@
     {
       "id": "070",
       "name": "Linear Algebra Core Concepts (Content-Cache Experiment)",
-      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) — verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
+      "description": "Two independently-run workflows share one content-addressed, write-once cache (cache_get/cache_put) \u2014 verified prose generated once by one script survives being asked for again by a different script, with zero extra LLM calls; a trimmed-down rehearsal for recipe 71's full curriculum pipeline",
       "args": [
         "spl3",
         "run",
@@ -1385,7 +1385,7 @@
     {
       "id": "071",
       "name": "Linear Algebra Concept-Book Generator",
-      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline — compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view → physical notebook artifact)",
+      "description": "Domain concept graph (37 nodes/51 edges, networkx.DiGraph) + style profiles drive a graph-curriculum-ordered, style-guided, SymPy-verified concept-book pipeline \u2014 compiled to a runnable notebook via the python/linalg splc target (DODA: logical .spl view \u2192 physical notebook artifact)",
       "args": [
         "spl3",
         "splc",
@@ -1410,7 +1410,7 @@
     {
       "id": "072",
       "name": "Verify arXiv References",
-      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV — automates the spot-check a careful reviewer does by hand",
+      "description": "Citation-integrity checker: scans free text for arXiv citations (no '## References' heading required; repeat citations of the same id are deduped), looks up ground-truth metadata via the public arXiv Atom API, downloads each PDF, and has the LLM write a verified-abstract digest into a summary CSV \u2014 automates the spot-check a careful reviewer does by hand",
       "args": [
         "spl3",
         "run",
@@ -1457,7 +1457,7 @@
     {
       "id": "074",
       "name": "Concept-Book Generator",
-      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml — compiled once, runs against any domain shaped the same way.",
+      "description": "Generic domain concept-book: ONE .spl workflow + graph_lib.py + declarative {domain}_graph.yaml drives concept-book generation for any domain (linalg, geometry, mechanics, music, Chinese characters, ...). Runtime-resolved via @domain_yaml \u2014 compiled once, runs against any domain shaped the same way.",
       "args": [
         "spl3",
         "validate",
@@ -1478,7 +1478,7 @@
     {
       "id": "075",
       "name": "SageMath Solver",
-      "description": "Second rung of the verifier ladder: LLM parses NL problem → Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) → LLM explains. Requires --kernel-name sagemath.",
+      "description": "Second rung of the verifier ladder: LLM parses NL problem \u2192 Sage kernel computes exact answer (Galois group, rational point, elliptic curve rank, factorization) \u2192 LLM explains. Requires --kernel-name sagemath.",
       "args": [
         "spl3",
         "run",
@@ -1502,7 +1502,7 @@
     {
       "id": "076",
       "name": "Lean Proof Verifier",
-      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim → Lean 4 elaborates the statement → LLM writes tactics → Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (≤ max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing — a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
+      "description": "Top rung of the verifier ladder (milestone B-3): LLM formalizes a prose claim \u2192 Lean 4 elaborates the statement \u2192 LLM writes tactics \u2192 Lean kernel-checks the proof. Repair loops fed Lean's actual diagnostics (\u2264 max_tries). Badges: machine_proved (kernel-checked) / statement_checked / unverified. Citation path (exact?) runs before proof-writing \u2014 a library hit costs zero tokens. Built on spl3/lean_bridge.py (15/15 tests green).",
       "args": [
         "spl3",
         "run",
@@ -1547,7 +1547,7 @@
     {
       "id": "079",
       "name": "Code Generation + Pytest Verification",
-      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 — Software Development.",
+      "description": "Upgrades recipe 50 (code_pipeline) by replacing the LLM-simulated test step with real pytest execution. LLM generates code AND tests independently from the spec; CALL run_pytest() executes both in a subprocess; ASSERT all_tests_passed() gates on the deterministic verdict. The repair loop feeds actual pytest tracebacks back to the LLM. Demonstrates that SPL's ASSERT is a formal correctness certificate, not a proxy for execution success. TMLR appendix: Domain #3 \u2014 Software Development.",
       "args": [
         "spl3",
         "run",
@@ -1981,7 +1981,7 @@
     {
       "id": "110",
       "name": "Nash Equilibrium Game Theory",
-      "description": "Finds Nash equilibria in 2-player normal-form games using nashpy support enumeration. Default: SaaS pricing duopoly — Firm A and Firm B simultaneously choose High ($100) or Low ($70). LLM says 'both should hold High prices for mutual benefit.' Nash: (Low, Low) is the unique dominant-strategy equilibrium (Prisoner's Dilemma). Reports equilibria, Prisoner's Dilemma gap, and joint optimum. solver=ON: nashpy. solver=OFF: LLM cooperative reasoning. ASSERT: nash_found (C1). Requires: pip install nashpy.",
+      "description": "Finds Nash equilibria in 2-player normal-form games using nashpy support enumeration. Default: SaaS pricing duopoly \u2014 Firm A and Firm B simultaneously choose High ($100) or Low ($70). LLM says 'both should hold High prices for mutual benefit.' Nash: (Low, Low) is the unique dominant-strategy equilibrium (Prisoner's Dilemma). Reports equilibria, Prisoner's Dilemma gap, and joint optimum. solver=ON: nashpy. solver=OFF: LLM cooperative reasoning. ASSERT: nash_found (C1). Requires: pip install nashpy.",
       "dir": "110_nash_game_theory",
       "log": "nash_game_theory",
       "is_active": true,
@@ -1996,7 +1996,7 @@
     {
       "id": "111",
       "name": "Stackelberg Sequential Game",
-      "description": "Solves an extensive-form Stackelberg leader-follower pricing game by backward induction (pure Python, no external install). Leader sets price first; follower observes and best-responds. Default: 2-level game tree with High/Low choices. LLM says 'leader should price High to signal quality.' Backward induction: follower always undercuts High, so leader earns $12K — but by pricing Low, leader earns $28K. SPNE: (Low, Low). Contrast with r110 (simultaneous Nash). ASSERT: spne_solved (C1). No install required.",
+      "description": "Solves an extensive-form Stackelberg leader-follower pricing game by backward induction (pure Python, no external install). Leader sets price first; follower observes and best-responds. Default: 2-level game tree with High/Low choices. LLM says 'leader should price High to signal quality.' Backward induction: follower always undercuts High, so leader earns $12K \u2014 but by pricing Low, leader earns $28K. SPNE: (Low, Low). Contrast with r110 (simultaneous Nash). ASSERT: spne_solved (C1). No install required.",
       "dir": "111_stackelberg_game",
       "log": "stackelberg_game",
       "is_active": true,
@@ -2009,7 +2009,7 @@
     {
       "id": "112",
       "name": "Optuna Black-Box Optimization",
-      "description": "Uses Optuna TPE (Tree-structured Parzen Estimator) to optimize a non-analytic, non-convex SaaS pricing strategy: (monthly_price, annual_discount_pct, trial_days) to maximize customer LTV. LTV is a black-box simulation (churn + conversion model, no gradient). LLM guesses price=$50, 20% discount, 14-day trial → LTV≈$172. Optuna (50 trials, TPE, seed=42) finds price≈$43, 28% discount, 7-day trial → LTV≈$218 (+21%). ASSERT: optimization_improved (C1). Requires: pip install optuna.",
+      "description": "Uses Optuna TPE (Tree-structured Parzen Estimator) to optimize a non-analytic, non-convex SaaS pricing strategy: (monthly_price, annual_discount_pct, trial_days) to maximize customer LTV. LTV is a black-box simulation (churn + conversion model, no gradient). LLM guesses price=$50, 20% discount, 14-day trial \u2192 LTV\u2248$172. Optuna (50 trials, TPE, seed=42) finds price\u2248$43, 28% discount, 7-day trial \u2192 LTV\u2248$218 (+21%). ASSERT: optimization_improved (C1). Requires: pip install optuna.",
       "dir": "112_optuna_blackbox",
       "log": "optuna_blackbox",
       "is_active": true,
@@ -2024,7 +2024,7 @@
     {
       "id": "113",
       "name": "Bayesian Optimization",
-      "description": "Uses scikit-optimize Gaussian Process + Expected Improvement to find the optimum of a web page conversion rate function with a 25-trial budget. Three continuous parameters: headline_score, layout_score, cta_placement (all 0–1). True optimum at (0.75, 0.85, 0.60) — not at extremes. Random search finds ≈11% conversion; Bayesian GP finds ≈18% in the same 25 trials by concentrating trials where improvement is most expected. ASSERT: bayesian_improved (C1). Contrast with r112 (Optuna TPE — better for large budgets). Requires: pip install scikit-optimize.",
+      "description": "Uses scikit-optimize Gaussian Process + Expected Improvement to find the optimum of a web page conversion rate function with a 25-trial budget. Three continuous parameters: headline_score, layout_score, cta_placement (all 0\u20131). True optimum at (0.75, 0.85, 0.60) \u2014 not at extremes. Random search finds \u224811% conversion; Bayesian GP finds \u224818% in the same 25 trials by concentrating trials where improvement is most expected. ASSERT: bayesian_improved (C1). Contrast with r112 (Optuna TPE \u2014 better for large budgets). Requires: pip install scikit-optimize.",
       "dir": "113_bayesian_opt",
       "log": "bayesian_opt",
       "is_active": true,
@@ -2039,7 +2039,7 @@
     {
       "id": "114",
       "name": "Scipy Nonlinear Optimization",
-      "description": "Constrained nonlinear profit maximization via scipy.optimize. Two problem types: (1) pricing — power-law demand curve, SLSQP finds price* = MC/(1-1/ε); (2) logistics — quadratic revenue/cost, SLSQP + differential_evolution for global search. Fills the gap between LP (linear formula) and black-box BO (no formula): use when objective is a known nonlinear expression. ASSERT: is_optimal (C2 — back-substitution verification). scipy.optimize ships with scipy; no extra install.",
+      "description": "Constrained nonlinear profit maximization via scipy.optimize. Two problem types: (1) pricing \u2014 power-law demand curve, SLSQP finds price* = MC/(1-1/\u03b5); (2) logistics \u2014 quadratic revenue/cost, SLSQP + differential_evolution for global search. Fills the gap between LP (linear formula) and black-box BO (no formula): use when objective is a known nonlinear expression. ASSERT: is_optimal (C2 \u2014 back-substitution verification). scipy.optimize ships with scipy; no extra install.",
       "dir": "114_scipy_nonlinear",
       "log": "scipy_nonlinear",
       "is_active": true,
@@ -2052,7 +2052,7 @@
     {
       "id": "115",
       "name": "Gambit 3-Player Game Theory",
-      "description": "Finds Nash equilibria in a 3-player normal-form game using pygambit (falls back to brute-force if not installed). Default: 3-firm SaaS pricing triopoly — each firm simultaneously chooses Premium ($200/mo) or Standard ($120/mo). Standard is a dominant strategy for every firm (3-player Prisoner's Dilemma), so Nash is (Standard,Standard,Standard) = $120K each vs cooperative (Premium,Premium,Premium) = $200K each. Extends r110 (nashpy, 2-player) to N-player competition. solver=ON: pygambit ExternalEnumPureSolver. solver=OFF: LLM 3-way competitive reasoning. ASSERT: nash_3p_found (C1). Optional: pip install pygambit.",
+      "description": "Finds Nash equilibria in a 3-player normal-form game using pygambit (falls back to brute-force if not installed). Default: 3-firm SaaS pricing triopoly \u2014 each firm simultaneously chooses Premium ($200/mo) or Standard ($120/mo). Standard is a dominant strategy for every firm (3-player Prisoner's Dilemma), so Nash is (Standard,Standard,Standard) = $120K each vs cooperative (Premium,Premium,Premium) = $200K each. Extends r110 (nashpy, 2-player) to N-player competition. solver=ON: pygambit ExternalEnumPureSolver. solver=OFF: LLM 3-way competitive reasoning. ASSERT: nash_3p_found (C1). Optional: pip install pygambit.",
       "dir": "115_gambit_3player",
       "log": "gambit_3player",
       "is_active": true,
@@ -2067,7 +2067,7 @@
     {
       "id": "117",
       "name": "Two-Stage Stochastic Programming (Pyomo)",
-      "description": "Solves a two-stage stochastic LP via Pyomo's Extensive Form (EF). Stage 1: decide order quantity before demand is known. Stage 2: per-scenario recourse (shortage/excess). Default: seasonal inventory stocking with 3 demand scenarios (pessimistic/nominal/optimistic, probs 0.3/0.5/0.2). LLM baseline: order expected demand = 190 units → E[cost]=$1,409. Pyomo optimum: Q*=200 units → E[cost]=$1,360. VSS=$49 — ordering the mean is suboptimal when shortage costs ($15/unit) >> holding costs ($2/unit); critical ratio=0.833. ASSERT: sp_optimal (C1 — solver certified status=optimal). Requires: pip install pyomo && conda install -c conda-forge glpk.",
+      "description": "Solves a two-stage stochastic LP via Pyomo's Extensive Form (EF). Stage 1: decide order quantity before demand is known. Stage 2: per-scenario recourse (shortage/excess). Default: seasonal inventory stocking with 3 demand scenarios (pessimistic/nominal/optimistic, probs 0.3/0.5/0.2). LLM baseline: order expected demand = 190 units \u2192 E[cost]=$1,409. Pyomo optimum: Q*=200 units \u2192 E[cost]=$1,360. VSS=$49 \u2014 ordering the mean is suboptimal when shortage costs ($15/unit) >> holding costs ($2/unit); critical ratio=0.833. ASSERT: sp_optimal (C1 \u2014 solver certified status=optimal). Requires: pip install pyomo && conda install -c conda-forge glpk.",
       "dir": "117_pyomo_stochastic",
       "log": "pyomo_stochastic",
       "is_active": true,
@@ -2083,7 +2083,7 @@
     {
       "id": "119",
       "name": "Demand Forecasting (statsmodels Structural Time Series)",
-      "description": "Fits a statsmodels UnobservedComponents model (local linear trend + seasonal, Kalman filter / MLE) to 36 months of widget sales data and forecasts 6 periods ahead. ASSERT: hold-out RMSE < naïve last-value baseline. solver=OFF: LLM seasonal trend extrapolation with sanity bounds check. Production upgrade path: swap statsmodels for PyMC (full Bayesian posterior) or Prophet (auto-seasonality + holidays) with zero .spl changes (DODA). ERP relevance: replaces fixed EOQ reorder rules in open-source ERP with a data-driven demand signal. Requires: pip install statsmodels.",
+      "description": "Fits a statsmodels UnobservedComponents model (local linear trend + seasonal, Kalman filter / MLE) to 36 months of widget sales data and forecasts 6 periods ahead. ASSERT: hold-out RMSE < na\u00efve last-value baseline. solver=OFF: LLM seasonal trend extrapolation with sanity bounds check. Production upgrade path: swap statsmodels for PyMC (full Bayesian posterior) or Prophet (auto-seasonality + holidays) with zero .spl changes (DODA). ERP relevance: replaces fixed EOQ reorder rules in open-source ERP with a data-driven demand signal. Requires: pip install statsmodels.",
       "dir": "119_demand_forecast",
       "log": "demand_forecast",
       "is_active": true,
@@ -2097,8 +2097,8 @@
     },
     {
       "id": "116",
-      "name": "OpenSpiel CFR — Kuhn Poker",
-      "description": "Solves an imperfect-information extensive-form game (Kuhn Poker) via Counterfactual Regret Minimization (CFR) using DeepMind OpenSpiel. Kuhn Poker: 2 players, 3 cards (J<Q<K), 1-chip ante+bet. Since each player's card is private, optimal play requires a mixed strategy (bluffing J at probability 1/3). CFR converges to exploitability < 0.05 in ~1000 iterations vs LLM-naive ~0.25. Extends r111 (Stackelberg, perfect information) to private-information games. ASSERT: cfr_converged — exploitability < 0.05 (C1). Requires: pip install open_spiel.",
+      "name": "OpenSpiel CFR \u2014 Kuhn Poker",
+      "description": "Solves an imperfect-information extensive-form game (Kuhn Poker) via Counterfactual Regret Minimization (CFR) using DeepMind OpenSpiel. Kuhn Poker: 2 players, 3 cards (J<Q<K), 1-chip ante+bet. Since each player's card is private, optimal play requires a mixed strategy (bluffing J at probability 1/3). CFR converges to exploitability < 0.05 in ~1000 iterations vs LLM-naive ~0.25. Extends r111 (Stackelberg, perfect information) to private-information games. ASSERT: cfr_converged \u2014 exploitability < 0.05 (C1). Requires: pip install open_spiel.",
       "dir": "116_openspiel_cfr",
       "log": "openspiel_cfr",
       "is_active": true,
@@ -2113,7 +2113,7 @@
     {
       "id": "102",
       "name": "Z3 SMT Compliance Checker",
-      "description": "Encodes business eligibility rules as Z3 SMT constraints and determines whether the policy is SAT (qualifying profile exists) or UNSAT (contradictory rules). Default: QuickLoan Policy v2.1 with 5 interconnected rules — Z3 finds hidden rule interactions (self-employed + income $40-49K trap) that LLM sequential tracing misses. solver=ON: Z3 theorem prover. solver=OFF: LLM manual rule tracing. ASSERT: is_satisfiable (C1). Requires: pip install z3-solver.",
+      "description": "Encodes business eligibility rules as Z3 SMT constraints and determines whether the policy is SAT (qualifying profile exists) or UNSAT (contradictory rules). Default: QuickLoan Policy v2.1 with 5 interconnected rules \u2014 Z3 finds hidden rule interactions (self-employed + income $40-49K trap) that LLM sequential tracing misses. solver=ON: Z3 theorem prover. solver=OFF: LLM manual rule tracing. ASSERT: is_satisfiable (C1). Requires: pip install z3-solver.",
       "dir": "102_z3_compliance",
       "log": "z3_compliance",
       "is_active": true,
@@ -2158,7 +2158,7 @@
     {
       "id": "105",
       "name": "Prolog Inference Engine",
-      "description": "Pure-Python backward-chaining inference engine (no SWI-Prolog required). Resolves eligibility queries by recursively matching rule heads, substituting known facts, and backtracking. Default: ComprehensiveAuto_v3 insurance policy with 4 rules and 3 customers — alice (ELIGIBLE via deductible path), bob (NOT ELIGIBLE: basic policy), carol (ELIGIBLE via catastrophic_event path, 4-level chain). LLM traces simple cases but misses carol's indirect proof path. ASSERT: inference_succeeded (C1). No additional install required.",
+      "description": "Pure-Python backward-chaining inference engine (no SWI-Prolog required). Resolves eligibility queries by recursively matching rule heads, substituting known facts, and backtracking. Default: ComprehensiveAuto_v3 insurance policy with 4 rules and 3 customers \u2014 alice (ELIGIBLE via deductible path), bob (NOT ELIGIBLE: basic policy), carol (ELIGIBLE via catastrophic_event path, 4-level chain). LLM traces simple cases but misses carol's indirect proof path. ASSERT: inference_succeeded (C1). No additional install required.",
       "dir": "105_prolog_inference",
       "log": "prolog_inference",
       "is_active": true,
@@ -2171,7 +2171,7 @@
     {
       "id": "106",
       "name": "Shapely Geospatial Coverage",
-      "description": "Geospatial polygon analysis using Shapely: computes pairwise zone overlaps (routing conflicts), city-minus-union coverage gaps, and point-in-zone customer assignments. Default: Maplewood city (10x8 km) with 3 delivery zones (Alice/Bob/Carol) — 6 km² Zone A/B overlap (routing conflict) and 4 km² northeast gap (2 customers unassigned). Shapely computes exact areas; LLM estimates from description. solver=ON: Shapely exact geometry. solver=OFF: LLM spatial estimate. ASSERT: coverage_is_valid (C1). Requires: pip install shapely.",
+      "description": "Geospatial polygon analysis using Shapely: computes pairwise zone overlaps (routing conflicts), city-minus-union coverage gaps, and point-in-zone customer assignments. Default: Maplewood city (10x8 km) with 3 delivery zones (Alice/Bob/Carol) \u2014 6 km\u00b2 Zone A/B overlap (routing conflict) and 4 km\u00b2 northeast gap (2 customers unassigned). Shapely computes exact areas; LLM estimates from description. solver=ON: Shapely exact geometry. solver=OFF: LLM spatial estimate. ASSERT: coverage_is_valid (C1). Requires: pip install shapely.",
       "dir": "106_shapely_geo",
       "log": "shapely_geo",
       "is_active": true,
@@ -2186,7 +2186,7 @@
     {
       "id": "109",
       "name": "Synthetic Problem Generator",
-      "description": "Training-data factory for OR benchmarks: given one verified (problem, known_optimal) pair, generates N structural variants via LLM, batch-solves each with the domain solver (PuLP CBC for LP/ILP, epsilon-constraint for supply-sourcing), and saves a labeled test suite — (problem_text, formal_spec, solver_status, optimal) — to output/{domain}_{timestamp}.json. WHILE repair loop fixes malformed JSON (≤3 attempts); ASSERT gates on at least 1 valid variant before solving. n_size parameter controls decision-variable count per problem, mirroring r78 ablation scale levels (n05=5, n10=10, n20=20) to find the LLM formulation crossover point. n_variants controls batch size. LLM analyzes difficulty spread and recommends next scale. Supports domains: LP, ILP, supply-sourcing. Output JSON is directly usable as benchmark input for solver=ON vs solver=OFF ablation sweeps, as training data for problem-decomposition fine-tuning, or as a regression suite for any target .spl recipe. Requires: pip install pulp.",
+      "description": "Training-data factory for OR benchmarks: given one verified (problem, known_optimal) pair, generates N structural variants via LLM, batch-solves each with the domain solver (PuLP CBC for LP/ILP, epsilon-constraint for supply-sourcing), and saves a labeled test suite \u2014 (problem_text, formal_spec, solver_status, optimal) \u2014 to output/{domain}_{timestamp}.json. WHILE repair loop fixes malformed JSON (\u22643 attempts); ASSERT gates on at least 1 valid variant before solving. n_size parameter controls decision-variable count per problem, mirroring r78 ablation scale levels (n05=5, n10=10, n20=20) to find the LLM formulation crossover point. n_variants controls batch size. LLM analyzes difficulty spread and recommends next scale. Supports domains: LP, ILP, supply-sourcing. Output JSON is directly usable as benchmark input for solver=ON vs solver=OFF ablation sweeps, as training data for problem-decomposition fine-tuning, or as a regression suite for any target .spl recipe. Requires: pip install pulp.",
       "args": [
         "spl3",
         "run",
@@ -2207,6 +2207,55 @@
       "category": "reasoning",
       "tier": 2,
       "requires": [
+        "pulp"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "120",
+      "name": "Insurance Policy Z3 Inference Engine",
+      "description": "Same 3-customer insurance policy as r105 (Prolog), re-solved with Z3 Fixedpoint (Datalog) engine. Z3 applies the closed-world assumption strictly: only KB-stated facts used, no semantic inference. Abductive diagnosis names the exact missing/blocking predicate per customer. Prevents LLM semantic drift observed in r105 explanation phase. Requires: pip install z3-solver.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/120_insurance_policy_z3/insurance_policy_z3.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "120_insurance_policy_z3",
+      "log": "insurance_policy_z3",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "z3-solver"
+      ],
+      "excluded_adapters": []
+    },
+    {
+      "id": "121",
+      "name": "Platypus MOEA 3-Objective Workforce Scheduling",
+      "description": "Same B4 benchmark as r107 (pymoo NSGA-II), re-solved with platypus NSGA-II \u2014 a pure-Python MOEA library (no C/Fortran extensions). Finds 100 non-dominated integer staffing plans on the Day/Evening/Night tradeoff surface. solver=OFF fails arithmetic back-substitution. Use platypus when dependency weight is a constraint; use pymoo (r107) for large-scale production runs. Requires: pip install platypus-opt pulp.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook/121_platypus_moea/platypus_moea.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "use_solver=true"
+      ],
+      "dir": "121_platypus_moea",
+      "log": "platypus_moea",
+      "is_active": true,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [
+        "platypus-opt",
         "pulp"
       ],
       "excluded_adapters": []

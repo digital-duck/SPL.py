@@ -127,42 +127,42 @@ off during the regression batch.
 
 | Recipe | Folder | Solver | T1 | OrigValid | Refac | Batch |
 |:---:|---|---|:---:|:---:|:---:|:---:|
-| r67  | 67_symbolic_math              | SymPy (S010)               |   | ✓ | — | ☐ |
-| r75  | 75_sage_math                  | SageMath (S011)            |   | ✓ | — | ☐ |
-| r76  | 76_lean_proof                 | Lean 4 (no Sxxx)           |   |   | — | ☐ |
-| r77  | 77_neurosymbolic              | SymPy+SageMath (S010,S011) |   | ✓ | — | ☐ |
-| r78  | 78_constraint_opt             | PuLP+CBC (S001)            |   | ✓ | — | ☐ |
-| r79  | 79_code_pytest                | pytest (S008)              |   | ✓ | — | ☐ |
-| r81  | 81_graph_reasoning            | networkx (S004)            |   | ✓ | — | ☐ |
-| r82  | 82_logic_puzzle_solver        | python-constraint (S003)   |   | ✓ | — | ☐ |
-| r83  | 83_unit_dimensional_check     | pint (S005)                |   | ✓ | — | ☐ |
-| r84  | 84_sql_verifier               | sqlite3 (S006)             |   | ✓ | — | ☐ |
-| r85  | 85_property_based_code_verify | Hypothesis/pytest (S008)   |   | ✓ | — | ☐ |
-| r86  | 86_financial_calc_verifier    | decimal (S007)             |   | ✓ | — | ☐ |
-| r87  | 87_route_optimization         | OR-Tools routing (S002)    |   | ✓ | — | ☐ |
-| r90  | 90_compsci_physics            | NumPy (S009)               |   | ✓ | — | ☐ |
-| r92  | 92_compsci_materials          | NumPy (S009)               |   | ✓ | — | ☐ |
-| r93  | 93_auto_planning              | mini-VAL STRIPS (no Sxxx)  |   | ✓ | — | ☐ |
-| r94  | 94_data_eng_text2spl          | sqlite3 (S006)             |   | ✓ | — | ☐ |
-| r98  | 98_job_shop                   | OR-Tools CP-SAT (S012)     | ✓ | ✓ | ✅ | ✅ |
-| r99  | 99_portfolio_opt              | cvxpy (S013)               | ✓ | ✓ | ✅ | ✅ |
+| r67  | 067_symbolic_math              | SymPy (S010)               |   | ✓ | — | ☐ |
+| r75  | 075_sage_math                  | SageMath (S011)            |   | ✓ | — | ☐ |
+| r76  | 076_lean_proof                 | Lean 4 (no Sxxx)           |   |   | — | ☐ |
+| r77  | 077_neurosymbolic              | SymPy+SageMath (S010,S011) |   | ✓ | — | ☐ |
+| r78  | 078_constraint_opt             | PuLP+CBC (S001)            |   | ✓ | — | ☐ |
+| r79  | 079_code_pytest                | pytest (S008)              |   | ✓ | — | ☐ |
+| r81  | 081_graph_reasoning            | networkx (S004)            |   | ✓ | — | ☐ |
+| r82  | 082_logic_puzzle_solver        | python-constraint (S003)   |   | ✓ | — | ☐ |
+| r83  | 083_unit_dimensional_check     | pint (S005)                |   | ✓ | — | ☐ |
+| r84  | 084_sql_verifier               | sqlite3 (S006)             |   | ✓ | — | ☐ |
+| r85  | 085_property_based_code_verify | Hypothesis/pytest (S008)   |   | ✓ | — | ☐ |
+| r86  | 086_financial_calc_verifier    | decimal (S007)             |   | ✓ | — | ☐ |
+| r87  | 087_route_optimization         | OR-Tools routing (S002)    |   | ✓ | — | ☐ |
+| r90  | 090_compsci_physics            | NumPy (S009)               |   | ✓ | — | ☐ |
+| r92  | 092_compsci_materials          | NumPy (S009)               |   | ✓ | — | ☐ |
+| r93  | 093_auto_planning              | mini-VAL STRIPS (no Sxxx)  |   | ✓ | — | ☐ |
+| r94  | 094_data_eng_text2spl          | sqlite3 (S006)             |   | ✓ | — | ☐ |
+| r98  | 098_job_shop                   | OR-Tools CP-SAT (S012)     | ✓ | ✓ | ✅ | ✅ |
+| r99  | 099_portfolio_opt              | cvxpy (S013)               | ✓ | ✓ | ✅ | ✅ |
 | r100 | 100_supply_sourcing           | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
 | r101 | 101_production_sustainability | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ✅ |
 | r102 | 102_z3_compliance             | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
-| r103 | 103_data_quality              | Great Expectations (S015)  |   |   | ✅ | ☐ |
-| r104 | 104_pandera_schema            | pandera (S016)             |   |   | ✅ | ☐ |
-| r105 | 105_prolog_inference          | SWI-Prolog (S017)          |   |   | ✅ | ☐ |
-| r106 | 106_shapely_geo               | Shapely (S018)             |   |   | ✅ | ☐ |
+| r103 | 103_data_quality              | Great Expectations (S015)  |   |   | ✅ | ✅ |
+| r104 | 104_pandera_schema            | pandera (S016)             |   |   | ✅ | ✅ |
+| r105 | 105_prolog_inference          | SWI-Prolog (S017)          |   |   | ✅ | ✅ |
+| r106 | 106_shapely_geo               | Shapely (S018)             |   |   | ✅ | ✅ |
 | r107 | 107_workforce_3obj            | pymoo NSGA-II (S019)       | ✓ | ✓ | ✅ | ✅ |
 | r108 | 108_robust_milp               | python-mip (S022)          | ✓ | ✓ | ✅ | ✅ |
 | r109 | 109_synthetic_problems        | PuLP+CBC (S001)            | ✓ | ✓ | ✅ | ⚠ |
-| r110 | 110_nash_game_theory          | nashpy (S023)              |   |   | ✅ | ☐ |
-| r111 | 111_stackelberg_game          | pure-Python (no Sxxx)      |   |   | ✅ | ☐ |
-| r112 | 112_optuna_blackbox           | optuna (S026)              |   |   | ✅ | ☐ |
+| r110 | 110_nash_game_theory          | nashpy (S023)              |   |   | ✅ | ✅ |
+| r111 | 111_stackelberg_game          | pure-Python (no Sxxx)      |   |   | ✅ | ✅ |
+| r112 | 112_optuna_blackbox           | optuna (S026)              |   |   | ✅ | ✅ |
 | r113 | 113_bayesian_opt              | scikit-optimize (S027)     | ✓ | ✓ | ✅ | ✅ |
 | r114 | 114_scipy_nonlinear           | scipy.optimize (S028)      | ✓ | ✓ | ✅ | ✅ |
-| r115 | 115_gambit_3player            | pygambit (S024)            |   |   | ✅ | ☐ |
-| r116 | 116_openspiel_cfr             | OpenSpiel CFR (S025)       |   |   | ✅ | ☐ |
+| r115 | 115_gambit_3player            | pygambit (S024)            |   |   | ✅ | ✅ |
+| r116 | 116_openspiel_cfr             | OpenSpiel CFR (S025)       |   |   | ✅ | ✅ |
 | r117 | 117_pyomo_stochastic          | Pyomo+GLPK (S021)          | ✓ | ✓ | ✅ | ✅ |
 | r118 | 118_trading_rule_z3           | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
 | r119 | 119_demand_forecast           | statsmodels (S029)         | ✓ | ✓ | ✅ | ✅ |

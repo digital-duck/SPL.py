@@ -1,0 +1,100 @@
+-- ============================================================
+-- Recipe 123: Hard MILP — Power Grid Unit Commitment (SCIP)
+--
+-- PURPOSE: Benchmark SCIP vs HiGHS on a hard MILP instance where
+-- HiGHS struggles to close the optimality gap. Unit commitment
+-- (which generators to switch on/off each hour) is the canonical
+-- hard MILP: strong LP relaxation but deep binary branching.
+--
+-- KEY STORY: 5-generator 24-hour dispatch. HiGHS solves easy
+-- instances well; on instances with tight ramp constraints and
+-- startup penalties, SCIP's cutting planes and primal heuristics
+-- close the gap significantly faster. Motivated by the Open Energy
+-- Transition benchmark across 213 real energy models.
+--
+-- solver=ON  : SCIP via pyscipopt (cutting planes + branching)
+-- solver=OFF : LLM merit-order heuristic dispatch (no gap proof)
+--
+-- ASSERT: SCIP finds a feasible schedule meeting all demand periods.
+--
+-- Install: pip install pyscipopt
+--          SCIP binary: https://www.scipopt.org (free academic)
+--
+-- Run:
+--   spl3 run cookbook-solver/123_hard_milp_scip/hard_milp_scip.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/123_hard_milp_scip/hard_milp_scip.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION merit_order_dispatch_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a grid operator doing manual unit commitment for a 24-hour period.
+
+GRID PROBLEM:
+{problem_description}
+
+Using merit-order heuristics (cheapest generators first):
+1. Which generators would you commit for each 6-hour block (midnight, morning, afternoon, evening)?
+   List the on/off decisions for all 5 generators across 4 time blocks.
+2. Estimate total generation cost for the day.
+3. Which constraints make this problem difficult?
+   - Startup costs (paid every time a generator is switched on)
+   - Minimum up/down times (generators can't be toggled every hour)
+   - Ramp rate limits (generators can't instantly change output)
+4. Why can't you guarantee your heuristic solution is optimal?
+
+Be specific: name generators (G1–G5), give power outputs (MW), and estimate hourly cost.
+$$;
+
+CREATE FUNCTION explain_scip_result_prompt(result_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are a power systems optimization analyst.
+
+PROBLEM:
+{problem_description}
+
+SCIP RESULT:
+{result_report}
+
+Explain (≤200 words):
+1. What is a "cutting plane" and why does SCIP use them to tighten the LP relaxation
+   before branching?
+2. Why does HiGHS sometimes leave a larger optimality gap than SCIP on this problem?
+   What structural properties of unit commitment make it hard?
+3. What is the economic cost of a 5% optimality gap in real grid dispatch?
+   (Hint: if annual fuel cost is $2 billion, 5% = $100M/year)
+4. How does SCIP scale to the full ISO-level problem (1000+ generators, 8760 hours/year)?
+$$;
+
+WORKFLOW hard_milp_scip
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r123] hard_milp_scip start" LEVEL INFO
+
+  CALL get_commitment_problem() INTO @problem_json;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL solve_unit_commitment(@problem_json) INTO @result_json;
+      ASSERT commitment_feasible(@result_json);
+      CALL format_commitment_report(@result_json) INTO @result_report;
+      CALL json_get(@result_json, "total_cost") INTO @total_cost;
+      CALL json_get(@result_json, "gap_pct") INTO @gap_pct;
+      LOGGING f"[r123] total_cost={@total_cost}  optimality_gap={@gap_pct}%" LEVEL INFO;
+      GENERATE explain_scip_result_prompt(@result_report, @problem_description) INTO @explanation;
+      CALL format_report_solver_on(@result_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE merit_order_dispatch_prompt(@problem_description) INTO @llm_dispatch;
+      CALL format_report_solver_off(@llm_dispatch) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

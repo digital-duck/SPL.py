@@ -234,8 +234,8 @@ recipes' deps (+ the `glpsol` binary for Pyomo) are confirmed installed.
 
 | ID | Recipe | Solver | Requires |
 |---|---|---|---|
-| r98  | Job-Shop Scheduling | OR-Tools CP-SAT | `ortools` |
-| r99  | Portfolio Optimization | cvxpy (Markowitz) | `cvxpy`, `yfinance` |
+| r098  | Job-Shop Scheduling | OR-Tools CP-SAT | `ortools` |
+| r099  | Portfolio Optimization | cvxpy (Markowitz) | `cvxpy`, `yfinance` |
 | r100 | Supply Sourcing (Pareto) | PuLP ε-constraint | `pulp` |
 | r101 | Production Sustainability | PuLP scalarization | `pulp` |
 | r102 | Z3 Compliance Checker | Z3 SMT | `z3-solver` |
@@ -250,6 +250,121 @@ recipes' deps (+ the `glpsol` binary for Pyomo) are confirmed installed.
 
 The other 26 solver recipes (r67–r94, r103–r106, r110–r112, r115–r116) are in the
 inventory table in [`readme-cleanup.md`](./readme-cleanup.md).
+
+---
+
+## Planned additions — reviewer-suggested solver gaps (r122–r126)
+
+*Source: 5-model review of Solver-Guide v0.1 (GPT-4o/o3, Claude Opus 5, Gemini 2.5 Pro, GLM-4-7, Qwen-3-7-plus), 2026-09-01. Lean (r76) already implemented in `cookbook/076_lean_proof` — excluded here.*
+
+These 5 recipes cover solver classes flagged as missing from the current catalog. Each follows the standard cookbook-solver convention: `@spl_tool` decorated `tools.py`, no `CREATE TOOL_API` wrappers, `use_solver=true/false` ablation, `ASSERT` gate.
+
+| ID | Recipe | Solver backend | Solver class gap | Key dependency |
+|---|---|---|---|---|
+| r122 | Global MINLP — Process Optimization | Couenne (open-source) + BARON (commercial baseline) | Certified **global** optima on non-convex NLP — scipy only gives local | `pyscipopt` or Pyomo+Couenne |
+| r123 | Hard MILP Benchmark — Unit Commitment | SCIP via `pyscipopt` | Hard MILP where HiGHS gap > 20%; demonstrates solver selection matters | `pyscipopt` + SCIP binary |
+| r124 | Discrete-Event Simulation — Queue System | SimPy | "What **happens**?" class — missing entirely; not an optimizer | `simpy` |
+| r125 | Parallel Stochastic Programming — Energy Storage | mpi-sppy (progressive hedging) | Many-scenario two-stage SP; r117 handles 3 scenarios, this handles 100+ | `mpi4py`, `mpi-sppy` |
+| r126 | MiniZinc CP — Backend-Agnostic Scheduling | MiniZinc (dispatches to CP-SAT / Gecode) | "DODA for CP" — model once, solve with any backend | `minizinc` (Python) + MiniZinc binary |
+
+### r122 — Global MINLP: Process Optimization
+
+**The gap:** Every NLP recipe so far (r113 Bayesian, r114 scipy, r112 Optuna) produces a *good* answer, not a *proved-global* answer. Opus 5 and ChatGPT both flag this as the most dangerous silent failure in nonlinear optimization: `scipy.minimize` returns OPTIMAL status but means only "locally optimal." BARON and Couenne use spatial branch-and-bound with convex relaxations to prove global optimality — the only open-source path to a global certificate.
+
+**Problem:** Chemical reactor design — choose reactor type (integer: CSTR/PFR/batch), temperature (continuous), and residence time (continuous) to minimize operating cost subject to conversion and safety constraints. The cost-conversion surface is non-convex; naive local solvers miss the global minimum.
+
+**Ablation story:**
+- `solver=ON` (Couenne): global optimum with proven lower bound; exploits convex relaxation to certify gap < ε
+- `solver=OFF` (LLM): recommends "typical industry parameters" — may be near-optimal or may be stuck at a local minimum with no way to know
+
+**Key install:**
+```bash
+conda install -c conda-forge coinor-couenne   # open-source global MINLP
+pip install pyomo                              # modeling layer
+# BARON: requires academic/commercial license from minlp.com
+```
+
+**FPGA hardening relevance:** spatial B&B for global MINLP has the same tree-traversal structure as MILP B&B — on-chip state machine directly applicable.
+
+---
+
+### r123 — Hard MILP Benchmark: Unit Commitment
+
+**The gap:** All current MILP recipes (r99, r100, r101, r108) are "easy" — HiGHS closes the gap in seconds. Reviewers (ChatGPT, Opus) flag that solver selection matters on *hard* instances: set partitioning, unit commitment, bin packing. This recipe benchmarks HiGHS vs SCIP on a problem where HiGHS stalls.
+
+**Problem:** Power grid unit commitment — which generators to switch on/off each hour over 24 hours to meet demand at minimum cost, subject to ramp-rate limits, minimum up/down times, and startup costs. Classic hard MILP: strong LP relaxation but binary decisions create deep branching.
+
+**Ablation story:**
+- `solver=ON` (SCIP): closes optimality gap to < 1% with cutting planes + branching heuristics tailored to MIP
+- `solver=OFF` (LLM): proposes a feasible dispatch schedule using heuristic merit-order logic; reasonable but not proved optimal and possibly 5–15% more expensive
+- **Bonus arm:** `--param backend=highs` vs `--param backend=scip` shows solver selection impact on hard instances — the benchmark the Open Energy Transition used across 213 real models
+
+**Key install:**
+```bash
+pip install pyscipopt   # Python interface to SCIP
+# SCIP binary: https://www.scipopt.org/index.php#download (free academic)
+```
+
+---
+
+### r124 — Discrete-Event Simulation: Queue System
+
+**The gap:** Every solver recipe so far asks "what is *optimal*?" — minimize cost, maximize throughput, find equilibrium. ChatGPT explicitly names DES as the missing class: problems that ask "what *happens*?" under stochastic dynamics. SimPy models event-driven systems (arrivals, service, queues, breakdowns) and produces *trajectories*, not solutions.
+
+**Problem:** Hospital emergency department — patients arrive at random intervals, triage takes variable time, specialist consults have random duration and availability. What is the average wait time, utilisation, and 95th-percentile queue length under current staffing? (Then: compare two staffing scenarios.)
+
+**Ablation story:**
+- `solver=ON` (SimPy, 10K-patient simulation): stochastic trajectories with confidence intervals; captures reneging, priority queue jumps, specialist bottlenecks
+- `solver=OFF` (LLM): applies M/M/c queuing formula analytically — correct for simple Poisson arrivals, wrong once service times are non-exponential, priorities exist, or reneging occurs
+- The gap: the LLM's M/M/c estimate is off by 30–60% on tail wait times because the actual arrival process is bursty (shift handovers, accident spikes), not Poisson
+
+**Key insight:** DES is complementary to optimization — you simulate to understand what happens, then optimize the parameters. The two can be chained in SPL (`CALL simulate → CALL optimize`).
+
+**Key install:**
+```bash
+pip install simpy
+```
+
+---
+
+### r125 — Parallel Stochastic Programming: Energy Storage Investment
+
+**The gap:** r117 (Pyomo stochastic) solves a 3-scenario two-stage SP in a single monolithic model — fine for 3–10 scenarios, intractable for 100+. `mpi-sppy` implements *progressive hedging* (PH): decompose by scenario, solve each independently in parallel, enforce non-anticipativity via penalty terms. This is how real stochastic programs (energy, agriculture, finance) are solved at scale.
+
+**Problem:** Battery storage investment under 100 demand/price scenarios — how much storage capacity to build now (Stage 1), and how to dispatch it in each scenario (Stage 2 recourse). 100 scenarios × 8760 hours = 876K recourse decisions; monolithic solve is infeasible; PH decomposes to 100 independent subproblems.
+
+**Ablation story:**
+- `solver=ON` (mpi-sppy PH, 100 scenarios): scenario-decomposed solution with convergence gap; shows value of stochastic solution (VSS) vs deterministic mean
+- `solver=OFF` (LLM): recommends capacity based on "typical storage economics" heuristics; ignores tail scenarios that drive the true optimum
+- **Contrast with r117:** same problem class, 30× more scenarios — demonstrates why decomposition is not optional at scale
+
+**Key install:**
+```bash
+pip install mpi4py mpi-sppy
+conda install -c conda-forge mpi4py   # if pip fails
+```
+
+---
+
+### r126 — MiniZinc: Backend-Agnostic CP Scheduling
+
+**The gap:** OR-Tools CP-SAT is our only CP backend. MiniZinc separates the *constraint model* (`.mzn` file) from the *solver backend* (CP-SAT, Gecode, Choco, Gurobi CP) — the same model runs on any backend by changing one parameter. This is "DODA for constraint programming": the `.mzn` model is the invariant; the backend is the runtime parameter.
+
+**Problem:** Nurse scheduling — assign nurses to shifts across a week with hard constraints (coverage minimums, no consecutive night→morning, max days) and soft constraints (nurse preferences). The MiniZinc model declares all constraints once; the recipe runs it against CP-SAT and Gecode and compares solve time and solution quality.
+
+**Ablation story:**
+- `solver=ON` (MiniZinc → CP-SAT backend): constraint-proved feasible schedule, satisfaction of all hard constraints verified
+- `solver=ON` (MiniZinc → Gecode backend): same model, different engine — compare performance
+- `solver=OFF` (LLM): generates a schedule that looks balanced but violates the night→morning constraint in 2 of 7 cases — "soft" reasoning doesn't track hard constraint interactions
+
+**The DODA parallel:** a `.mzn` file is to CP backends what a `.spl` file is to LLM adapters — the spec is invariant, the execution layer is swappable. Demonstrating MiniZinc inside an SPL workflow shows two levels of DODA stacked.
+
+**Key install:**
+```bash
+pip install minizinc                    # Python interface
+# MiniZinc binary: https://www.minizinc.org/software.html
+# OR-Tools CP-SAT backend ships with MiniZinc; Gecode requires separate install
+```
 
 ---
 

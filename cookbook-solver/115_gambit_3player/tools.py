@@ -101,19 +101,18 @@ def find_nash_equilibria_3p(game_json: str) -> str:
         C = np.array([[[payoff(2, a, b, c) for c in range(n)]
                         for b in range(n)] for a in range(n)], dtype=float)
 
-        g = gbt.Game.from_arrays(A, B, C)
-        for i, player in enumerate(g.players):
-            player.label = players[i]
-        for j, strat in enumerate(strategies):
-            for player in g.players:
-                player.strategies[j].label = strat
+        # pygambit 16.7 API: build with a title. Do NOT index players/strategies
+        # by int (g.players[i] is a label lookup that raises on an int) and do NOT
+        # set int-derived labels — the human-readable profile is taken from the
+        # `strategies` / `players` lists below, so gambit's internal labels are moot.
+        g = gbt.Game.from_arrays(A, B, C, title="3-player pricing game")
 
-        solver = gbt.nash.ExternalEnumPureSolver()
-        for eq in solver.solve(g):
+        for eq in gbt.nash.enumpure_solve(g).equilibria:
             profile = []
             eq_payoffs = []
-            for player in g.players:
-                probs = [float(eq[player][s]) for s in player.strategies]
+            for player in g.players:                      # iterate (no int subscript)
+                strats = list(player.strategies)
+                probs = [float(eq[s]) for s in strats]     # index profile by strategy
                 chosen = strategies[probs.index(max(probs))]
                 profile.append(chosen)
                 eq_payoffs.append(round(float(eq.payoff(player)), 2))
