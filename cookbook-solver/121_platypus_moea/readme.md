@@ -136,7 +136,9 @@ pip install pulp           # already present if r107 run; used for utopia anchor
 | `format_pareto_surface(front_json)` | Markdown table with Algorithm column |
 | `compute_utopia_anchors(problem_json)` | PuLP continuous relaxation; per-objective best |
 | `verify_workforce_off(problem_json, solution_json)` | Back-substitution check: integer, bounds, total, metrics |
-| `json_get_field(data_json, field)` | Extract single field from JSON as string |
+| `format_report_solver_on / _off` | Assemble the final report |
+
+*(JSON field access uses the stdlib `json_get` builtin — no recipe-local helper.)*
 
 ## When to prefer platypus over pymoo
 

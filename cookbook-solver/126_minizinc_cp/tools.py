@@ -122,6 +122,10 @@ def solve_with_minizinc(problem_json: str) -> str:
                                    note="minizinc not installed — pip install minizinc + binary from minizinc.org")
 
     p = json.loads(problem_json)
+
+    if minizinc.default_driver is None:
+        return _python_cp_fallback(p,
+                                   note="MiniZinc binary not found — install from https://www.minizinc.org/software.html")
     mzn_src = _MZN_MODEL.format(**p)
 
     try:

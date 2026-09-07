@@ -44,16 +44,47 @@ A nurse needed for morning on Monday (to meet coverage) might have worked night 
 but the LLM doesn't track all constraint interactions simultaneously. It sees "need 2 on
 Monday morning" and assigns N3 without checking N3's Sunday assignment.
 
+## Sample Results (2026-09-07, claude-sonnet-4-6)
+
+### solver=ON — Python backtracking fallback (MiniZinc not installed)
+
+| Metric | Result |
+|---|---|
+| Backend | `python_backtracking_fallback` |
+| Night→Morning violations | **0** ✓ |
+| Coverage shortages | **0** ✓ |
+| Overwork violations | **2** ✗ |
+| Preference score | 0 (no optimization) |
+
+N1 and N2 (both seniors) were assigned 7 days each, violating the ≤5-day maximum. The rest rule and all coverage constraints were satisfied. The fallback stopped at first feasibility with no objective function, so it never bounded senior hours.
+
+The analyst correctly identified this as a **search/implementation failure, not a reasoning failure**: the MiniZinc model is correct; the execution engine was absent. A true CP solver would have pruned 7-day senior assignments during domain propagation before they could ever appear as candidates.
+
+### solver=OFF — LLM heuristic
+
+| Metric | Result |
+|---|---|
+| Night→Morning violations | **0** ✓ |
+| Coverage shortages | **0** ✓ |
+| Overwork violations | **0** ✓ (all 8 nurses at exactly 5 days) |
+| Soft preferences met | **3/3** ✓ |
+
+The LLM produced a **fully hard-constraint-compliant schedule with all three soft preferences satisfied**: N3 on mornings Mon–Fri, N7 with zero night shifts, N8 with consecutive Sat–Sun off. It traced the Night→Morning rest rule through every nurse's week and verified each day's coverage explicitly.
+
+**Result inversion: solver=OFF beat solver=ON on this run.** The LLM's schedule had 0 violations; the Python fallback had 2. This is an artifact of the fallback, not a general claim about LLM vs. CP — when MiniZinc is installed, CP propagation will find a *proved* optimal schedule and catch infeasibilities the LLM cannot formally verify.
+
+**What the LLM cannot do even with a clean schedule:** prove that no better preference score exists, or certify that a harder instance (60 nurses, 4 weeks) is feasible. CP's guarantee is the critical asset — not just finding a good schedule, but proving no constraints were missed and no better solution exists.
+
 ## Run
 
 ```bash
 # solver=ON: MiniZinc → CP-SAT (or Gecode) backend
 spl3 run cookbook-solver/126_minizinc_cp/minizinc_cp.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF: LLM scheduling heuristic + constraint violation check
 spl3 run cookbook-solver/126_minizinc_cp/minizinc_cp.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 ```
 
 ## Install

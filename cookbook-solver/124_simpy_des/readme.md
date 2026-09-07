@@ -37,20 +37,59 @@ drive 2.5× spike rates. Real EDs are never Poisson.
 - ED arrivals have CV > 2 during handover spikes
 - Higher CV → longer tail → P95 wait is severely underestimated
 
+## Sample Results (2026-09-07, claude-sonnet-4-6)
+
+### solver=ON — SimPy DES (10,000 patients)
+
+| Metric | SimPy | M/M/c Analytic |
+|---|---|---|
+| Mean total wait | 62.0 min | 57.0 min |
+| Median wait | 50.6 min | — |
+| **P95 wait** | **145.6 min** | **97.0 min** |
+| Bay utilization | 13.4% | 26.7% |
+| Specialist utilization | 19.9% | ~40% |
+
+**The P95 gap is 50%.** M/M/c predicts a 97-minute 95th-percentile wait; the simulation measured 145.6 minutes — because bursty arrivals (2.5× surges at 8am/4pm/midnight handovers) create queue build-ups that Poisson-based formulas systematically miss.
+
+**Wait time distribution:**
+
+| Wait bucket | Patients | % |
+|---|---|---|
+| 0–10 min | 45 | 0.5% |
+| 10–30 min | 2,151 | 21.5% |
+| 30–60 min | 3,781 | 37.8% |
+| 60–90 min | 2,062 | 20.6% |
+| 90–120 min | 1,000 | 10.0% |
+| **120+ min** | **961** | **9.6%** |
+
+Nearly 1-in-10 patients waits over 2 hours — a tail the analytic model cannot see.
+
+**Resource utilization is deceptively low:** triage nurses at 1.8%, bays at 13.4%, specialists at 19.9% — yet P95 is 2.4 hours. The burst dynamics that drive the tail are invisible in time-averaged utilization. Specialists (highest utilization at 19.9%) are the binding constraint; simulation identifies them as the highest-leverage target for intervention.
+
+### solver=OFF — LLM M/M/c analysis
+
+A sharp contrast with r123: unlike the unit commitment LLM that hallucinated its own generator data, the r124 LLM correctly used the actual problem parameters (λ=3.2/hr, 3 triage nurses, 8 bays, 2 specialists, 40-min mean treatment) and worked through rigorous step-by-step Erlang-C math. It correctly identified the specialist subsystem (ρ=0.40) as the bottleneck, computed the burst scenario (ρ_bay jumps from 0.267 → 0.667 at 2.5× load), and gave accurate qualitative insight on why M/M/c fails for EDs.
+
+However, the LLM computed per-subsystem wait times in isolation (specialist Wq ≈ 5.7 min at mean load) rather than total end-to-end sojourn — its P95 estimate for the specialist stage alone was 17.1 min, far below the M/M/c total sojourn P95 of 97 min and the simulation's 145.6 min. The LLM correctly described the gap mechanism but could not quantify the combined tail without running the simulation.
+
+**Finding:** solver=OFF LLM is analytically capable but structurally limited — it reasons correctly about each queue stage but cannot integrate burst dynamics into a total-sojourn tail estimate. DES is the only way to measure the 120+ min tail accurately.
+
 ## Run
 
 ```bash
 # solver=ON: SimPy DES (10,000 patients, 1-week simulation)
 spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
-    --adapter claude_cli --param use_solver=true
-
-# With larger cohort (slower but better statistics)
-spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
-    --adapter claude_cli --param use_solver=true --param n_patients=50000
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF: M/M/c analytic formula + LLM reasoning
 spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
+
+# With larger cohort (slower but better statistics)
+spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
+    --llm claude_cli --param use_solver=true --param n_patients=50000
+
+
 ```
 
 ## Install

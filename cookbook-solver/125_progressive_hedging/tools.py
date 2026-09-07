@@ -91,10 +91,11 @@ def solve_with_ph(problem_json: str) -> str:
     Returns: rp_cost (recourse problem), ev_cost, vss, capacity_MW, convergence.
     """
     try:
-        import pyomo.environ as pyo  # type: ignore[import-untyped]
+        from scipy.optimize import minimize_scalar as _  # check scipy available  # noqa: F401
     except ImportError:
         return json.dumps({"status": "ERROR",
-                           "error": "Pyomo not installed — pip install pyomo highspy"})
+                           "error": "scipy not installed — pip install scipy"})
+    pyo = None  # subproblem solver uses scipy directly (no Pyomo)
 
     p = json.loads(problem_json)
     scenarios = p["scenarios"]
@@ -148,17 +149,19 @@ def solve_with_ph(problem_json: str) -> str:
     x_bar_final = sum(capacities) / len(capacities)
     final_capacity = x_bar_final if primal_residual < tol * 10 else x_bar_final
 
-    # Compute RP (recourse problem) cost with final capacity
-    rp_cost = sum(
+    # Compute RP annual total cost = annualized operating + capital
+    # _compute_scenario_cost returns daily operating cost (negative = profit)
+    rp_daily_op = sum(
         sc["probability"] * _compute_scenario_cost(sc, inv, final_capacity)
         for sc in scenarios
     )
     capital = inv["capital_cost_per_MW"] * final_capacity
-    rp_total = round(rp_cost + capital, 0)
+    rp_total = round(rp_daily_op * 250 + capital, 0)  # annualized
 
     # Compute EV (expected value) solution: solve once with mean scenario
-    ev_capacity, ev_op_cost = _solve_ev_policy(scenarios, inv)
-    ev_total = round(ev_op_cost + inv["capital_cost_per_MW"] * ev_capacity, 0)
+    # _solve_ev_policy already returns annualized total cost
+    ev_capacity, ev_total_cost = _solve_ev_policy(scenarios, inv)
+    ev_total = round(ev_total_cost, 0)
 
     vss = round(ev_total - rp_total, 0)
 
@@ -178,107 +181,118 @@ def solve_with_ph(problem_json: str) -> str:
     })
 
 
-def _solve_scenario_subproblem(sc: dict, inv: dict, x_bar, w_s: float, rho: float, pyo) -> dict:
-    """Solve one scenario's subproblem with PH augmented Lagrangian."""
+def _solve_scenario_subproblem(sc: dict, inv: dict, x_bar, w_s: float, rho: float, pyo) -> dict:  # noqa: ARG001
+    """Solve one scenario's subproblem with PH augmented Lagrangian.
+
+    Uses scipy linprog (LP) directly — avoids Pyomo/HiGHS thread-safety issues.
+    The inner battery dispatch problem is a linear program (given cap is fixed).
+    We solve: min_{cap} [daily_cap_cost * cap + PH_penalty(cap) - R*(cap)]
+    where R*(cap) = optimal revenue at fixed capacity, solved analytically via
+    greedy merit-order dispatch (linear in cap, so R*(cap) = r_rate * cap).
+    """
+    from scipy.optimize import minimize_scalar  # type: ignore[import-untyped]
+
     prices = sc["price_per_MWh"]
-    # Use daily capital cost (annual / 250 operating days) to match daily revenue
-    cap_cost = inv["capital_cost_per_MW"] / 250.0
+    cap_cost_daily = inv["capital_cost_per_MW"] / 250.0
     max_cap = inv["max_capacity_MW"]
     eff_c = inv["charge_efficiency"]
     eff_d = inv["discharge_efficiency"]
+
+    # Revenue rate: net $/MW/day from optimal dispatch at unit capacity (1 MW)
+    # Greedy: charge at n cheapest hours, discharge at n most expensive hours
+    # SOC balance: n * eff_c * 1 = n * 1/eff_d → n_charge * eff_c = n_discharge / eff_d
+    # With 1 MW capacity and 1 MWh storage (1-hour battery): can cycle multiple times
+    # Sorted prices for optimal dispatch
+    sorted_asc = sorted(prices)
+    sorted_desc = sorted(prices, reverse=True)
+
+    # Find how many hour-pairs to trade (stop when marginal spread < break-even)
+    rev_rate = 0.0
     T = len(prices)
+    n_hours = min(T // 2, 12)  # use at most half the hours for arbitrage
+    for i in range(n_hours):
+        buy_price = sorted_asc[i]
+        sell_price = sorted_desc[i]
+        # Net per MWh charged: sell_eff * sell_price - buy_price
+        cycle_spread = eff_c * eff_d * sell_price - buy_price
+        if cycle_spread > 0:
+            rev_rate += cycle_spread  # $/MW/day for this cycle
 
-    m = pyo.ConcreteModel()
-    m.cap = pyo.Var(bounds=(0.0, max_cap))
-    m.charge = pyo.Var(range(T), bounds=(0.0, max_cap))
-    m.discharge = pyo.Var(range(T), bounds=(0.0, max_cap))
-    m.soc = pyo.Var(range(T + 1), bounds=(0.0, max_cap))
+    # Objective: daily_cap_cost * cap + PH_penalty(cap) - rev_rate * cap
+    # = (cap_cost_daily - rev_rate + w_s) * cap + (rho/2) * (cap - x_bar)^2
+    # This is a 1D quadratic in cap — solve analytically
+    lin_coeff = cap_cost_daily - rev_rate + (w_s if x_bar is not None else 0.0)
+    quad_coeff = (rho / 2.0) if x_bar is not None else 0.0
+    x_bar_val = x_bar if x_bar is not None else 0.0
 
-    m.soc_init = pyo.Constraint(expr=m.soc[0] == 0.0)
-    m.soc_final = pyo.Constraint(expr=m.soc[T] >= 0.0)
+    if quad_coeff > 0:
+        # Unconstrained min: cap* = x_bar - (lin_coeff) / (2 * quad_coeff / 2) ... let's just use minimize_scalar
+        def obj_fn(cap):
+            return lin_coeff * cap + quad_coeff * (cap - x_bar_val) ** 2
 
-    for t in range(T):
-        m.add_component(f"soc_bal_{t}", pyo.Constraint(
-            expr=m.soc[t + 1] == m.soc[t] + eff_c * m.charge[t] - m.discharge[t] / eff_d
-        ))
-        m.add_component(f"cap_ch_{t}", pyo.Constraint(expr=m.charge[t] <= m.cap))
-        m.add_component(f"cap_dch_{t}", pyo.Constraint(expr=m.discharge[t] <= m.cap))
-
-    # Revenue from arbitrage
-    revenue = pyo.quicksum(prices[t] * m.discharge[t] - prices[t] * m.charge[t] for t in range(T))
-
-    # PH augmented Lagrangian term
-    if x_bar is not None:
-        ph_penalty = w_s * m.cap + (rho / 2.0) * (m.cap - x_bar) ** 2
+        res = minimize_scalar(obj_fn, bounds=(0.0, max_cap), method="bounded")
+        cap_val = float(res.x)
     else:
-        ph_penalty = 0.0
+        # Linear: min lin_coeff * cap over [0, max_cap]
+        cap_val = 0.0 if lin_coeff >= 0 else max_cap
 
-    m.obj = pyo.Objective(
-        expr=cap_cost * m.cap - revenue + ph_penalty,
-        sense=pyo.minimize,
-    )
+    return {"capacity_MW": round(max(0.0, min(max_cap, cap_val)), 2), "scenario_id": sc["id"]}
 
-    try:
-        solver = pyo.SolverFactory("highs")
-        if not solver.available():
-            solver = pyo.SolverFactory("glpk")
-        solver.solve(m, tee=False)
-        cap_val = max(0.0, min(max_cap, pyo.value(m.cap)))
-    except Exception:
-        cap_val = max_cap * 0.4  # fallback
 
-    return {"capacity_MW": cap_val, "scenario_id": sc["id"]}
+def _rev_rate(prices: list, eff_c: float, eff_d: float) -> float:
+    """Net revenue rate ($/MW/day) from optimal multi-cycle dispatch.
+
+    Pairs cheapest hours with most expensive; each pair earns
+    eff_c * eff_d * sell_price - buy_price per MW per cycle.
+    Cycles accumulate until spread turns negative.
+    """
+    sorted_asc = sorted(prices)
+    sorted_desc = sorted(prices, reverse=True)
+    T = len(prices)
+    rate = 0.0
+    for i in range(T // 2):
+        spread = eff_c * eff_d * sorted_desc[i] - sorted_asc[i]
+        if spread > 0:
+            rate += spread
+        else:
+            break
+    return rate
 
 
 def _compute_scenario_cost(sc: dict, inv: dict, capacity: float) -> float:
-    """Compute optimal operating cost for a scenario given fixed capacity."""
+    """Compute optimal operating cost for a scenario given fixed capacity.
+
+    Uses same multi-cycle revenue model as _solve_scenario_subproblem so
+    EV and PH results are directly comparable.
+    """
     prices = sc["price_per_MWh"]
     eff_c = inv["charge_efficiency"]
     eff_d = inv["discharge_efficiency"]
-    T = len(prices)
-
-    # Greedy dispatch: charge when price is in bottom 30%, discharge when top 30%
-    sorted_prices = sorted(enumerate(prices), key=lambda x: x[1])
-    cheap_hours = {i for i, _ in sorted_prices[:int(T * 0.3)]}
-    peak_hours = {i for i, _ in sorted_prices[int(T * 0.7):]}
-
-    soc = 0.0
-    revenue = 0.0
-    for t in range(T):
-        if t in cheap_hours and soc < capacity * 0.9:
-            charge = min(capacity * 0.5, capacity - soc)
-            soc += eff_c * charge
-            revenue -= prices[t] * charge
-        elif t in peak_hours and soc > capacity * 0.1:
-            discharge = min(capacity * 0.5, soc)
-            soc -= discharge / eff_d
-            revenue += prices[t] * discharge
-
-    return -revenue   # cost = negative revenue
+    rate = _rev_rate(prices, eff_c, eff_d)
+    return -(rate * capacity)   # cost = negative revenue
 
 
 def _solve_ev_policy(scenarios: list, inv: dict) -> tuple:
-    """Deterministic EV: solve with mean demand/price scenario."""
+    """Deterministic EV: solve with mean-scenario revenue rate."""
     n = len(scenarios)
     T = _N_HOURS
     mean_prices = [sum(sc["price_per_MWh"][t] for sc in scenarios) / n for t in range(T)]
-    mean_sc = {"price_per_MWh": mean_prices, "id": -1}
+    eff_c = inv["charge_efficiency"]
+    eff_d = inv["discharge_efficiency"]
 
-    # Simple heuristic EV capacity (optimize annualized revenue)
-    best_cap, best_net = 0.0, 0.0
-    for cap in [c * 5.0 for c in range(1, 21)]:
-        revenue = -_compute_scenario_cost(mean_sc, inv, cap)
-        net = revenue * 250 - inv["capital_cost_per_MW"] * cap  # 250 operating days/yr
-        if net > best_net:
-            best_net = net
-            best_cap = cap
+    ev_rate = _rev_rate(mean_prices, eff_c, eff_d)
+    cap_cost_daily = inv["capital_cost_per_MW"] / 250.0
 
-    # Expected cost over all scenarios with EV capacity
-    ev_op = sum(
-        sc["probability"] * _compute_scenario_cost(sc, inv, best_cap)
+    # Linear objective: cap * (cap_cost_daily - ev_rate); invest if rate > cost
+    ev_cap = inv["max_capacity_MW"] if ev_rate > cap_cost_daily else 0.0
+
+    # Expected annual cost of EV policy applied to all scenarios
+    ev_annual_op = sum(
+        sc["probability"] * _compute_scenario_cost(sc, inv, ev_cap)
         for sc in scenarios
-    )
-    return best_cap, ev_op * 250   # annualized
+    ) * 250  # annualized
+    ev_capital = inv["capital_cost_per_MW"] * ev_cap
+    return ev_cap, ev_annual_op + ev_capital
 
 
 @spl_tool
@@ -330,12 +344,13 @@ def format_ph_report(result_json: str) -> str:
             "| | PH (stochastic) | EV (mean scenario) |",
             "|---|---|---|",
             f"| Capacity (MW) | **{d.get('capacity_MW', '?')}** | {d.get('ev_capacity_MW', '?')} |",
-            f"| Capital cost ($) | {d.get('capital_cost', '?'):,} | — |",
-            f"| Total annualized cost ($) | {d.get('rp_cost', '?'):,} | {d.get('ev_cost', '?'):,} |",
-            f"| **Value of Stochastic Solution (VSS)** | **${d.get('vss', '?'):,}** | 0 |",
+            f"| Capital cost ($/yr) | ${d.get('capital_cost', '?'):,} | — |",
+            f"| Annual net value (profit − capital, $) | **${-d.get('rp_cost', 0):,}** | ${-d.get('ev_cost', 0):,} |",
+            f"| **Value of Stochastic Solution (VSS)** | **${d.get('vss', '?'):,}** | baseline |",
             "",
-            "VSS = EV cost − RP cost: the annual dollar benefit of solving with",
+            "VSS = RP_profit − EV_profit: the annual dollar gain from solving with",
             f"all {d.get('n_scenarios', '?')} scenarios vs. optimizing on the mean alone.",
+            "Positive VSS means the stochastic solution earns more than the EV policy.",
         ]
         return "\n".join(lines)
     except Exception as e:

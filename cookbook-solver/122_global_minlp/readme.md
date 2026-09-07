@@ -42,11 +42,11 @@ leaving yield (and revenue) on the table without knowing it.
 ```bash
 # solver=ON: Couenne/Bonmin global MINLP
 spl3 run cookbook-solver/122_global_minlp/global_minlp.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF: LLM chemical engineering reasoning
 spl3 run cookbook-solver/122_global_minlp/global_minlp.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 ```
 
 If Couenne/Bonmin are not installed, the recipe falls back to a dense grid search
@@ -60,6 +60,10 @@ conda install -c conda-forge coinor-couenne pyomo
 
 # Option 2: Bonmin (COIN-OR, handles convex MINLP well)
 conda install -c conda-forge coinor-bonmin pyomo
+
+# PackagesNotFoundError: The following packages are not available from current channels:
+#  - coinor-bonmin
+
 
 # Option 3: BARON (commercial; gold standard for global MINLP)
 # License: https://minlp.com/baron-license

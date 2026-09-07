@@ -166,6 +166,18 @@ off during the regression batch.
 | r117 | 117_pyomo_stochastic          | Pyomo+GLPK (S021)          | ✓ | ✓ | ✅ | ✅ |
 | r118 | 118_trading_rule_z3           | Z3 (S014)                  | ✓ | ✓ | ✅ | ✅ |
 | r119 | 119_demand_forecast           | statsmodels (S029)         | ✓ | ✓ | ✅ | ✅ |
+| r120 | 120_insurance_policy_z3       | Z3 fixed-point (S014)      |   |   | ✅ | ✅ |
+| r121 | 121_platypus_moea             | platypus NSGA-II (S020)    |   |   | ✅ | ✅ |
+| r122 | 122_global_minlp              | global MINLP               |   |   | ✅ | ☐ |
+| r123 | 123_hard_milp_scip            | SCIP MILP                  |   |   | ✅ | ☐ |
+| r124 | 124_simpy_des                 | SimPy discrete-event sim   |   |   | ✅ | ☐ |
+| r125 | 125_progressive_hedging       | progressive hedging (SP)   |   |   | ✅ | ☐ |
+| r126 | 126_minizinc_cp               | MiniZinc CP                |   |   | ✅ | ☐ |
+
+Newer recipes r120–r126 were authored (or migrated) directly in the normalized
+convention — all already pass the audit (0 wrappers, `@spl_tool`, `normalize_bool`,
+`json_get`, no inline f-string reports). r120/r121 batch-green (2026-09-07);
+r122–r126 are catalog status `new` (conformant, not yet batch-run).
 
 **Order of attack:** T1 first (13, confirmed redundant) → then audit + refactor
 the remaining 26. Recipes with blank **OrigValid** (r76, r103, r104, r105, r106,

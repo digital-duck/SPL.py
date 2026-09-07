@@ -37,16 +37,47 @@ Schedule 5 generators to meet hourly electricity demand at minimum cost:
 coupling across periods; ramp limits mean you can't use a generator that wasn't running
 an hour ago.
 
+## Sample Results (2026-09-07, claude-sonnet-4-6)
+
+### solver=ON — SCIP branch-and-cut
+
+| Metric | Value |
+|---|---|
+| Total operating cost | **$150,550** |
+| Optimality gap | **0.0%** (proven optimal) |
+| Solve time | 1.2s |
+| Status | optimal |
+
+**Generator commitment:**
+
+| Generator | Hours ON (of 24) | Role |
+|---|---|---|
+| G1 Coal | 24 | Baseload — always on (cheapest variable cost) |
+| G4 Nuclear | 24 | Baseload — always on (lowest MC $12/MWh, but $5K startup means never cycle) |
+| G2 Gas CC | 12 | Mid-merit — covers daytime/evening peak |
+| G3 Gas CT | 0 | Not needed — G1+G4+G2 meet all demand |
+| G5 Peaker | 0 | Not needed |
+
+**Peak hour snapshot (hour 18, 360 MW demand):** G1=200 MW, G2=50 MW, G4=120 MW — 370 MW total, 10 MW headroom. SCIP optimally avoided starting G3 (saves $200 startup) by holding G2 online.
+
+### solver=OFF — LLM merit-order heuristic
+
+Notable finding: the LLM invented its own generator parameters and demand profile instead of using the actual problem data. It assumed Nuclear at 200–400 MW (vs actual 80–120 MW), fabricated 500–900 MW load blocks (vs actual 145–370 MW), and estimated a cost of **$328,500** — for a completely different problem.
+
+This reveals a key LLM failure mode: **hallucination of problem data** rather than reasoning on the given instance. The LLM did apply correct qualitative logic (cheapest-first, minimum up-time locking, ramp-rate lookahead) but it drifted from the actual inputs without a structured problem representation grounding it.
+
+**Gap vs SCIP:** not directly comparable (different problems), but the LLM's cost estimate was 2.2× higher even on an easier instance — consistent with the qualitative argument that heuristic approaches cannot certify the optimality gap.
+
 ## Run
 
 ```bash
 # solver=ON: SCIP branch-and-cut
 spl3 run cookbook-solver/123_hard_milp_scip/hard_milp_scip.spl \
-    --adapter claude_cli --param use_solver=true
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF: LLM merit-order heuristic
 spl3 run cookbook-solver/123_hard_milp_scip/hard_milp_scip.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
 ```
 
 ## Install

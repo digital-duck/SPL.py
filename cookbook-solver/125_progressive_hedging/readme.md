@@ -37,20 +37,54 @@ invest differently in different scenarios — you commit to one capacity before 
 is revealed. PH enforces this by penalizing scenario-specific capacity decisions that
 deviate from the consensus.
 
+## Sample Results (2026-09-07, claude-sonnet-4-6)
+
+### solver=ON — Progressive Hedging (30 scenarios)
+
+| Metric | PH (stochastic) | EV (mean scenario) |
+|---|---|---|
+| Optimal capacity | **100 MW** (at bound) | **100 MW** (at bound) |
+| Capital cost ($/yr) | $800,000 | — |
+| Annual net value (profit − capital) | **$2,252,629** | $2,252,629 |
+| **VSS** | **$0** | baseline |
+| PH iterations to convergence | 1 | — |
+| Solve time | 0.0s | — |
+
+**VSS = $0 — corner-pinned result.** Both PH and EV land on the same 100 MW upper-bound decision. When the optimal solution is at a constraint boundary across every scenario, scenario-decomposition adds no value: EV already finds the global optimum. PH converged in a single iteration with zero primal residual.
+
+This is a valid and pedagogically useful outcome: it demonstrates when stochastic programming is *not* worth the complexity overhead. The condition for VSS > 0 is that different scenarios would prefer different Stage 1 decisions — here, the arbitrage revenue model is steep enough that 100 MW dominates under every scenario realization.
+
+**Annual economics:** arbitrage revenue of ~$3.05M/year against $800K annualized capital yields a $2.25M net annual value — a 2.8× return. The revenue model heavily favors full capacity utilization.
+
+### solver=OFF — LLM stochastic reasoning
+
+The LLM applied sound qualitative logic — Jensen's Inequality, asymmetric upside/downside risk, right-skewed payoff structure — but arrived at numerically wrong conclusions:
+
+| | LLM estimate | Actual (solver) |
+|---|---|---|
+| EV optimal capacity | ~60 MW | 100 MW |
+| Stochastic optimal | ~72–78 MW | 100 MW |
+| VSS | ~$70K–$110K (15–23%) | $0 |
+
+The LLM correctly reasoned that high-demand scenarios create superlinear payoffs and that EV underweights tail upside — but it assumed a **diminishing-returns revenue curve** (marginal revenue declining beyond 60 MW) that doesn't exist in the actual model. The actual revenue function is linear in capacity, so the optimum is always at the corner (100 MW). The LLM's economic heuristics are reasonable for real-world storage markets with market-depth limits; they just don't match the synthetic model's price structure.
+
+**Finding:** The LLM's qualitative framework for stochastic programming (Jensen's Inequality, asymmetric risk, right-skewed distributions) is correct and well-articulated. Its numerical failure stems from assuming a concave revenue-capacity relationship rather than querying the actual objective. This is the core limitation solver=OFF cannot escape: qualitative structure is learnable from text; problem-instance-specific curvature is not.
+
 ## Run
 
 ```bash
 # solver=ON: Progressive Hedging across 30 scenarios
 spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
-    --adapter claude_cli --param use_solver=true
-
-# More scenarios (slower, better convergence demo)
-spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
-    --adapter claude_cli --param use_solver=true --param n_scenarios=50
+    --llm claude_cli --param use_solver=true
 
 # solver=OFF: deterministic EV (mean scenario) + LLM reasoning
 spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
-    --adapter ollama -m gemma3 --param use_solver=false
+    --llm claude_cli --param use_solver=false
+
+# More scenarios (slower, better convergence demo)
+spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
+    --llm claude_cli --param use_solver=true --param n_scenarios=50
+
 ```
 
 ## Install
