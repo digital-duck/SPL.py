@@ -1,0 +1,217 @@
+-- ============================================================
+-- Recipe 117: Two-Stage Stochastic Programming (Pyomo + GLPK)
+--
+-- PURPOSE: Solve a two-stage stochastic LP via Pyomo's
+-- Extensive Form (EF). Introduces the core SP pattern:
+--
+--   Stage 1 (HERE-AND-NOW): decide before uncertainty resolves
+--   Stage 2 (WAIT-AND-SEE): take recourse after observing scenario
+--
+-- KEY STORY: A retailer must order seasonal inventory NOW, before
+-- knowing demand. Demand follows three scenarios (p/n/o).
+--
+-- LLM baseline: "order the expected demand" → Q=190, E[cost]=$1,409.
+-- Pyomo optimum: Q=200, E[cost]=$1,360 — saves $49 (VSS).
+--
+-- WHY Q>E[D]?
+-- Shortage costs $15/unit >> holding costs $2/unit.
+-- The critical ratio (shortage-order)/(shortage+holding) = 0.833
+-- means order enough to cover demand in 83% of scenarios.
+-- Ordering the mean (50th percentile) systematically under-stocks.
+--
+-- WHAT IS THE VSS?
+-- Value of Stochastic Solution = EEV - RP = $1,409 - $1,360 = $49.
+-- EEV: cost when you ignore uncertainty and order the mean.
+-- RP: recourse problem — Pyomo's full stochastic optimum.
+--
+-- WHAT MAKES THIS DIFFERENT FROM S001 (PuLP)?
+-- PuLP (r78): single-scenario LP — one known demand, find optimum.
+-- Pyomo EF (r117): N-scenario LP — uncertainty is part of the model;
+-- Stage 1 decision is common to all scenarios, Stage 2 adapts per scenario.
+-- This structure is the foundation of energy dispatch, supply-chain
+-- planning under demand risk, and financial portfolio rebalancing.
+--
+-- solver=ON  : Pyomo + GLPK solves the Extensive Form
+-- solver=OFF : LLM reasons about stocking under uncertainty
+--
+-- Install:
+--   pip install pyomo
+--   conda install -c conda-forge glpk
+--
+-- Run:
+--   spl3 run cookbook/117_pyomo_stochastic/pyomo_stochastic.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/117_pyomo_stochastic/pyomo_stochastic.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_problem_setup()
+RETURNS TEXT AS PYTHON $$
+def get_problem_setup() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_problem_setup as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API solve_two_stage_sp(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_two_stage_sp(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import solve_two_stage_sp as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API compute_ev_baseline(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def compute_ev_baseline(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import compute_ev_baseline as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API sp_optimal(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def sp_optimal(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import sp_optimal as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_sp_report(result_json TEXT, baseline_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_sp_report(result_json: str, baseline_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_sp_report as _fn
+    return _fn(result_json, baseline_json)
+$$;
+
+CREATE TOOL_API solver_enabled(use_solver TEXT)
+RETURNS TEXT AS PYTHON $$
+def solver_enabled(use_solver: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import solver_enabled as _fn
+    return _fn(use_solver)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "117_pyomo_stochastic")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── Prompt templates ─────────────────────────────────────────
+
+CREATE FUNCTION reason_stochastic_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a supply chain consultant advising a retailer on how much seasonal inventory to order.
+
+SITUATION:
+{problem_description}
+
+Without solving a mathematical program, reason through the optimal order quantity:
+1. The expected demand is 0.3×100 + 0.5×200 + 0.2×300 = 190 units. Should you order exactly 190?
+2. Shortages cost $15/unit, overstock costs $2/unit. How does this asymmetry affect the decision?
+3. What is the downside risk of ordering too little vs too much?
+4. Give a concrete order quantity recommendation with your reasoning.
+
+Think step by step about uncertainty, costs, and risk.
+$$;
+
+CREATE FUNCTION explain_sp_result_prompt(sp_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are an operations research analyst explaining two-stage stochastic programming to a business audience.
+
+PROBLEM:
+{problem_description}
+
+SOLVER RESULT:
+{sp_report}
+
+Explain (≤200 words):
+1. What does "two-stage stochastic programming" mean in plain terms for this inventory problem?
+2. Why did the solver choose Q=200 rather than the expected demand of 190?
+   (Hint: explain the critical ratio and asymmetric costs.)
+3. What is the Value of the Stochastic Solution (VSS), and what does it tell managers?
+4. Where else does this "decide now, adapt later" pattern apply?
+   (e.g., energy dispatch, clinical trials, financial hedging)
+$$;
+
+-- ── Sub-workflows for clean branching ────────────────────────
+
+WORKFLOW solver_on_sp
+  INPUT @problem_json TEXT := "{}"
+  OUTPUT @report TEXT
+DO
+  CALL solve_two_stage_sp(@problem_json) INTO @result_json;
+  ASSERT sp_optimal(@result_json);
+  CALL compute_ev_baseline(@problem_json) INTO @baseline_json;
+  CALL format_sp_report(@result_json, @baseline_json) INTO @sp_report;
+  CALL json_get_field(@result_json, "order_qty") INTO @q_star;
+  CALL json_get_field(@result_json, "expected_cost") INTO @e_cost;
+  LOGGING f"[r117] SP optimal: Q*={@q_star}, E[cost]=${@e_cost}" LEVEL INFO;
+  CALL json_get_field(@problem_json, "description") INTO @problem_description;
+  GENERATE explain_sp_result_prompt(@sp_report, @problem_description) INTO @explanation;
+  @report := f"=== Two-Stage Stochastic Programming (r117) | solver=ON ===
+
+{@sp_report}
+
+── Operations Research Explanation ─────────────────────────
+{@explanation}";
+  RETURN @report WITH status = "complete";
+END;
+
+WORKFLOW solver_off_llm_sp
+  INPUT @problem_description TEXT := ""
+  OUTPUT @report TEXT
+DO
+  GENERATE reason_stochastic_prompt(@problem_description) INTO @llm_strategy;
+  @report := f"=== Two-Stage Stochastic Programming (r117) | solver=OFF ===
+
+── LLM Reasoning Under Uncertainty ─────────────────────────
+{@llm_strategy}
+
+Note: LLM applies intuition but typically defaults to ordering the expected
+demand (Q=190, cost=$1,409). Run --param use_solver=true to see Pyomo's
+stochastic optimum (Q=200, cost=$1,360 — VSS=$49 improvement).";
+  RETURN @report WITH status = "complete";
+END;
+
+-- ── Entry point ──────────────────────────────────────────────
+
+WORKFLOW pyomo_stochastic
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r117] pyomo_stochastic start" LEVEL INFO
+
+  CALL get_problem_setup() INTO @problem_json;
+  CALL json_get_field(@problem_json, "description") INTO @problem_description;
+  CALL solver_enabled(@use_solver) INTO @gate;
+
+  EVALUATE @gate
+    WHEN "run_solver" THEN
+      CALL solver_on_sp(@problem_json) INTO @report;
+    WHEN "run_llm" THEN
+      CALL solver_off_llm_sp(@problem_description) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

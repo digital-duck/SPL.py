@@ -1,0 +1,99 @@
+-- ============================================================
+-- Recipe 122: Global MINLP — Chemical Reactor Yield Optimization
+--
+-- PURPOSE: Demonstrate the difference between locally-optimal
+-- and globally-optimal solutions for non-convex MINLP problems.
+-- scipy.minimize returns "OPTIMAL" status but means only *locally*
+-- optimal. Couenne/Bonmin use spatial branch-and-bound with convex
+-- relaxations to certify the *global* optimum.
+--
+-- KEY STORY: Chemical reactor design — choose whether to add a
+-- catalyst (binary), operating temperature (300–750 K), and
+-- reactant concentration (0.1–2.0 mol/L). The yield surface is
+-- non-convex: local methods land at a low-yield local minimum;
+-- Couenne certifies the true global maximum.
+--
+-- solver=ON  : Pyomo + Couenne/Bonmin (global MINLP via spatial B&B)
+-- solver=OFF : LLM reasons from chemical engineering intuition
+--
+-- ASSERT: global solver found solution with certified optimality gap.
+--
+-- Install: conda install -c conda-forge coinor-couenne pyomo
+--      or: conda install -c conda-forge coinor-bonmin pyomo
+--
+-- Run:
+--   spl3 run cookbook-solver/122_global_minlp/global_minlp.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/122_global_minlp/global_minlp.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION reactor_design_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a chemical process engineer advising on reactor design.
+
+OPTIMIZATION PROBLEM:
+{problem_description}
+
+Without running any optimization algorithm:
+1. Should the catalyst be used? Why or why not (consider yield boost vs cost)?
+2. What temperature would you recommend (300–750 K)? Consider the Arrhenius tradeoff:
+   higher T increases reaction rate but also drives competing side reactions.
+3. What concentration would you choose (0.1–2.0 mol/L)?
+4. Estimate the net yield (reaction yield minus energy and catalyst cost) you expect.
+5. What makes this problem hard for local optimization methods?
+
+Be specific with parameter values and reasoning.
+$$;
+
+CREATE FUNCTION explain_global_result_prompt(result_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are an optimization analyst explaining global MINLP results.
+
+PROBLEM:
+{problem_description}
+
+GLOBAL SOLVER RESULT:
+{result_report}
+
+Explain (≤200 words):
+1. What is spatial branch-and-bound, and how does it certify a global optimum
+   (unlike scipy which only certifies a local one)?
+2. Why did the local solver (scipy) land at a suboptimal solution?
+   What made the yield surface non-convex?
+3. What is the "optimality gap" shown in the report, and when is it safe to stop?
+4. Name two real industrial processes where certifying the global optimum
+   (not just a local one) is worth the extra compute cost.
+$$;
+
+WORKFLOW global_minlp
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r122] global_minlp start" LEVEL INFO
+
+  CALL get_reactor_problem() INTO @problem_json;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL solve_global_minlp(@problem_json) INTO @result_json;
+      ASSERT minlp_certified(@result_json);
+      CALL format_minlp_report(@result_json) INTO @result_report;
+      CALL json_get(@result_json, "global_obj") INTO @global_obj;
+      CALL json_get(@result_json, "local_obj") INTO @local_obj;
+      LOGGING f"[r122] global={@global_obj}  local_only={@local_obj}" LEVEL INFO;
+      GENERATE explain_global_result_prompt(@result_report, @problem_description) INTO @explanation;
+      CALL format_report_solver_on(@result_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE reactor_design_prompt(@problem_description) INTO @llm_guess;
+      CALL format_report_solver_off(@llm_guess) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

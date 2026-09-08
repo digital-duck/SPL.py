@@ -1,0 +1,113 @@
+-- ============================================================
+-- Recipe 125: Progressive Hedging — Battery Storage Investment
+--
+-- PURPOSE: Extend r117 (3-scenario monolithic stochastic LP) to
+-- 30-scenario two-stage stochastic programming via Progressive
+-- Hedging (PH) decomposition. PH solves each scenario as an
+-- independent subproblem in parallel, coupling them through
+-- non-anticipativity via a penalty rho. This is how real stochastic
+-- programs (energy, agriculture, finance) scale to 100+ scenarios.
+--
+-- KEY STORY: Battery storage investment under 30 demand/price
+-- scenarios. Stage 1: capacity_MW to build now (commit). Stage 2:
+-- per-scenario hourly dispatch (recourse). 30×24=720 recourse
+-- decisions — monolithic EF is feasible but PH shows decomposition.
+--
+-- KEY CONTRAST WITH r117:
+--   r117: 3 scenarios, monolithic extensive form, Pyomo+HiGHS
+--   r125: 30 scenarios, PH decomposition, parallel subproblems
+--   Value of stochastic solution (VSS) = EEV - RP (reported here)
+--
+-- solver=ON  : Progressive Hedging (custom Python PH loop, Pyomo)
+-- solver=OFF : Deterministic EV (solve once with mean demand)
+--
+-- ASSERT: PH converged (primal residual < 1 MW) and found lower
+--         expected cost than deterministic EV policy.
+--
+-- Install: pip install pyomo highspy
+--
+-- Run:
+--   spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/125_progressive_hedging/progressive_hedging.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION ev_policy_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are an energy economist advising on battery storage investment.
+
+INVESTMENT PROBLEM:
+{problem_description}
+
+Using a deterministic "expected value" (EV) approach — assume all scenarios equal
+the mean demand/price trajectory and make one decision for all of them:
+1. How much battery capacity (MW) would you build, and why?
+   Consider: capital cost vs. peak-shaving savings vs. arbitrage revenue.
+2. What is the risk of under-investing? Over-investing?
+3. In low-demand scenarios, does excess capacity hurt you?
+   In high-demand scenarios, does insufficient capacity cost you?
+4. What is the "value of stochastic solution" (VSS) conceptually?
+   Why is solving with 30 scenarios better than solving with mean values?
+
+Be specific: estimate capacity in MW and expected annual savings.
+$$;
+
+CREATE FUNCTION explain_ph_result_prompt(ph_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are a stochastic optimization researcher explaining Progressive Hedging.
+
+PROBLEM:
+{problem_description}
+
+PH RESULT:
+{ph_report}
+
+Explain (≤200 words):
+1. What is non-anticipativity and why must a two-stage stochastic program enforce it?
+   (Stage 1 decisions must be made before observing which scenario occurs.)
+2. How does Progressive Hedging enforce non-anticipativity via a penalty term ρ?
+   What happens to individual scenario solutions as ρ → ∞?
+3. What is the Value of Stochastic Solution (VSS) shown in the report?
+   What does it mean economically for battery investment decisions?
+4. When would you use PH decomposition vs. solving the full extensive form directly?
+   (Hint: memory, parallelism, number of scenarios)
+$$;
+
+WORKFLOW progressive_hedging
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_scenarios TEXT := "30"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r125] progressive_hedging start" LEVEL INFO
+
+  CALL get_storage_problem(@n_scenarios) INTO @problem_json;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL solve_with_ph(@problem_json) INTO @result_json;
+      ASSERT ph_converged(@result_json);
+      CALL format_ph_report(@result_json) INTO @ph_report;
+      CALL json_get(@result_json, "rp_cost") INTO @rp_cost;
+      CALL json_get(@result_json, "ev_cost") INTO @ev_cost;
+      CALL json_get(@result_json, "vss") INTO @vss;
+      LOGGING f"[r125] RP={@rp_cost}  EV={@ev_cost}  VSS={@vss}" LEVEL INFO;
+      GENERATE explain_ph_result_prompt(@ph_report, @problem_description) INTO @explanation;
+      CALL format_report_solver_on(@ph_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      CALL solve_ev_deterministic(@problem_json) INTO @ev_json;
+      CALL format_ev_report(@ev_json) INTO @ev_report;
+      GENERATE ev_policy_prompt(@problem_description) INTO @llm_ev;
+      CALL format_report_solver_off(@llm_ev, @ev_report) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete",
+                      use_solver = @use_solver,
+                      n_scenarios = @n_scenarios;
+
+END;

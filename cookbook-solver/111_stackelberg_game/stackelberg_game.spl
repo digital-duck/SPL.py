@@ -1,0 +1,98 @@
+-- ============================================================
+-- Recipe 111: Stackelberg Sequential Game (Backward Induction)
+--
+-- PURPOSE: Solve an extensive-form Stackelberg leader-follower
+-- game by backward induction. The leader commits first; the
+-- follower observes and best-responds. Backward induction finds
+-- the subgame-perfect Nash equilibrium (SPNE) — the only
+-- strategy profile where no player regrets their choice at
+-- any point in the game tree.
+--
+-- KEY STORY: Market leader sets price FIRST. LLM says "price
+-- High to signal quality." Backward induction: follower always
+-- plays Low when leader plays High (earns $52K vs $38K), so
+-- the leader earns only $12K. Leader should price Low ($70)
+-- → follower best-responds Low → both earn $28K/$22K.
+-- The first-mover advantage is captured by rational anticipation,
+-- not by signaling — which the LLM misses.
+--
+-- solver=ON  : backward induction (pure Python, no install)
+-- solver=OFF : LLM strategic reasoning for sequential game
+--
+-- Run:
+--   spl3 run cookbook-solver/111_stackelberg_game/stackelberg_game.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/111_stackelberg_game/stackelberg_game.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION reason_sequential_prompt(game_description TEXT)
+RETURNS TEXT AS $$
+You are a business strategy consultant. A market leader must set its subscription price FIRST.
+The follower will observe that price and respond.
+
+GAME DESCRIPTION:
+{game_description}
+
+Payoff table (profits in $K/month):
+- Leader High + Follower High = Leader $38K, Follower $38K
+- Leader High + Follower Low  = Leader $12K, Follower $52K   ← follower undercuts
+- Leader Low  + Follower High = Leader $50K, Follower $14K
+- Leader Low  + Follower Low  = Leader $28K, Follower $22K
+
+Without solving formally:
+1. What price should the leader choose? Why?
+2. Given the leader's choice, what will the follower do?
+3. Is the leader's first-mover advantage helpful here?
+4. What is the final outcome and is it stable?
+
+Give specific recommendations with reasoning.
+$$;
+
+CREATE FUNCTION explain_spne_prompt(spne_report TEXT, game_description TEXT)
+RETURNS TEXT AS $$
+You are a game theory analyst. Backward induction just solved a Stackelberg pricing game.
+
+GAME DESCRIPTION:
+{game_description}
+
+BACKWARD INDUCTION RESULT:
+{spne_report}
+
+Explain (≤150 words):
+1. Why does the leader choose Low even though (High, High) gives both players more?
+2. Walk through the backward induction argument step by step.
+3. What is "first-mover advantage" in this game — and does the leader actually benefit from it?
+4. How does this differ from the simultaneous Nash equilibrium (r110)?
+$$;
+
+WORKFLOW stackelberg_game
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r111] stackelberg_game start" LEVEL INFO
+
+  CALL get_default_game() INTO @game_json;
+  CALL json_get(@game_json, "description") INTO @game_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL solve_stackelberg(@game_json) INTO @result_json;
+      ASSERT spne_solved(@result_json);
+      CALL format_stackelberg_report(@result_json) INTO @spne_report;
+      CALL json_get(@result_json, "spne_vs_llm") INTO @comparison;
+      LOGGING f"[r111] SPNE: {@comparison}" LEVEL INFO;
+      GENERATE explain_spne_prompt(@spne_report, @game_description) INTO @explanation;
+      CALL format_report_solver_on(@spne_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE reason_sequential_prompt(@game_description) INTO @llm_strategy;
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

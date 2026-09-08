@@ -35,7 +35,7 @@ class ClaudeCLIAdapter(LLMAdapter):
         self.cli_path = cli_path
         self.default_model = model or default_model
         # WebSearch and other tools add latency — use a larger default when tools are active
-        self.timeout = timeout if timeout is not None else (900 if allowed_tools else 600)
+        self.timeout = timeout if timeout is not None else (1200 if allowed_tools else 1200)  # 1200s default; override with --llm-timeout
         self.allowed_tools = allowed_tools or []
 
     async def generate(

@@ -1,0 +1,10 @@
+tier,backend,total_cells,passed_cells,pass_rate
+P1,lean,1,1,100.0
+T0,sympy,160,121,75.6
+T1,sage,14,11,78.6
+T1,sympy,348,278,79.9
+T2,sympy,320,251,78.4
+T3,sage,320,213,66.6
+T4,sage,320,152,47.5
+T5,sage,160,74,46.3
+T6,sage,1,1,100.0

@@ -1,0 +1,75 @@
+=== Nonlinear Optimization (scipy.optimize / pricing) ===
+
+── Problem Specification ────────────────────────────────────
+```json
+{
+  "type": "pricing",
+  "sense": "maximize",
+  "params": {
+    "demand_scale": 10000,
+    "elasticity": 1.5,
+    "unit_cost": 8,
+    "fixed_cost": 200,
+    "min_demand": 0
+  },
+  "bounds": {"x_min": 6, "x_max": 150}
+}
+```
+
+── Solver Result (solver=ON, method=SLSQP) ──────────────
+{"success": true, "method": "SLSQP", "problem_type": "pricing", "x_opt": 24.0, "objective": 1160.8276, "n_iterations": 13, "message": "Optimization terminated successfully"}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "PASS", "x_opt": 24.0, "recomputed_objective": 1160.8276, "reported_objective": 1160.8276, "delta": 0.0, "notes": "all checks passed"}
+
+── Business Interpretation ──────────────────────────────────
+## Pricing Optimization: Plain-English Interpretation
+
+---
+
+### 1. The Optimal Decision
+
+**Set price to $24.00 — this maximizes profit at $1,160.83 per period.**
+
+At $24, you sell approximately 85 units per period. Each unit costs $8 to produce, so you earn $16 margin per unit. The $200 fixed cost is covered, leaving $1,161 in profit.
+
+---
+
+### 2. Why $24 Is the Sweet Spot
+
+This result follows directly from how demand responds to price. With an elasticity of 1.5, every 1% price increase cuts demand by 1.5%. That makes customers moderately sensitive — not extremely so, but sensitive enough that you cannot keep pushing price up indefinitely.
+
+The math produces a clean rule: **optimal price = unit cost × elasticity / (elasticity − 1) = $8 × 1.5 / 0.5 = $24.00**.
+
+- **Below $24:** You sell more units, but you're leaving margin on the table. Worse, at $6 you're actually selling *below* your breakeven threshold, losing money on every unit.
+- **Above $24:** Demand shrinks faster than your margin grows. You end up with fewer customers and less total profit, even though each sale earns more per unit.
+
+---
+
+### 3. Payoff at Optimum vs. Boundaries
+
+| Price | Est. Units Sold | Profit |
+|-------|-----------------|--------|
+| $6 (floor) | ~681 | **−$1,561** (selling below cost) |
+| **$24 (optimum)** | **~85** | **+$1,161** |
+| $150 (ceiling) | ~5 | **+$573** |
+
+The low-price boundary is a disaster — high volume but negative margin. The high-price boundary is profitable but leaves 50% of optimal profit on the table because almost no one buys. The optimum sits well inside the bounds, meaning the constraints didn't force this answer — the model found the true interior maximum.
+
+---
+
+### 4. Verification
+
+**The solution passed verification with zero error (delta = 0.0000).**
+
+This means an independent calculation using the optimal price $24.00 reproduced the exact same profit figure ($1,160.83) as the solver reported. The result is not a numerical artifact or rounding quirk — it is the correct answer for this model.
+
+---
+
+### 5. One Sensitivity to Explore
+
+**What happens if customers become more price-sensitive — say, elasticity rises from 1.5 to 2.0?**
+
+The optimal price would drop to $16 (= $8 × 2.0 / 1.0), and although you'd sell more units, each unit earns only $8 margin instead of $16. Profit would fall significantly. This scenario is realistic if a competitor enters the market or if customers gain more options. Running the solver at elasticity = 2.0 would tell you exactly how much buffer you have before your current $24 pricing strategy needs to change.
+
+LLM calls: 2

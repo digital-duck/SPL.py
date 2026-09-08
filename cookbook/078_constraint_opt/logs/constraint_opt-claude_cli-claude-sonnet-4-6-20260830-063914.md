@@ -1,0 +1,91 @@
+# SPL Run: constraint_opt
+
+- **Adapter:** claude_cli
+- **Model:** claude-sonnet-4-6
+- **Tokens:** 541 in / 441 out
+- **Latency:** 23221ms
+- **Timestamp:** 2026-08-30 06:39:14
+
+## Output
+
+```output
+# Constraint Optimization Report
+
+**Problem:** A factory makes chairs (2h labor, 4kg wood, $20 profit) and tables (4h labor, 3kg wood, $30 profit). Available: 20h labor, 24kg wood. Maximize profit.
+
+**Solver status:** `Optimal`
+**Optimal objective value:** 168
+
+**Decision variables:**
+  - chairs = 3.6
+  - tables = 3.2
+
+## Interpretation
+
+The linear program recommends producing **3.6 chairs and 3.2 tables** (the LP relaxation allows fractional units; in practice, round to integers and re-check feasibility). At these quantities the factory earns a maximum profit of **$168**.
+
+Both constraints are **binding**: all 20 hours of labor and all 24 kg of wood are fully consumed — there is zero slack in either resource. This means profit cannot be increased without adding capacity.
+
+**Recommendation:** Acquire more labor hours or wood (whichever is cheaper per unit of profit gained) before trying to scale production, since both resources are simultaneously exhausted.
+
+---
+
+## Solution Verification
+
+**Labor constraint** (limit: 20h)
+
+2h × 3.6 chairs + 4h × 3.2 tables
+= 7.2 + 12.8
+= **20.0 h** ← equals the limit → **binding (tight)**
+
+**Wood constraint** (limit: 24 kg)
+
+4 kg × 3.6 chairs + 3 kg × 3.2 tables
+= 14.4 + 9.6
+= **24.0 kg** ← equals the limit → **binding (tight)**
+
+Both constraints are satisfied with equality, confirming the solution sits exactly at the corner of the feasible region where both resources run out simultaneously.
+
+**Objective value**
+
+3.6 × $20 + 3.2 × $30
+= $72 + $96
+= **$168**
+
+This matches the solver-reported objective of **$168.00** exactly. The solution is verified correct.
+
+## Solver Code (LLM-generated, PuLP)
+
+```python
+prob = pulp.LpProblem("factory_profit", pulp.LpMaximize)
+
+chairs = pulp.LpVariable("chairs", lowBound=0)
+tables = pulp.LpVariable("tables", lowBound=0)
+
+prob += 20 * chairs + 30 * tables
+
+prob += 2 * chairs + 4 * tables <= 20
+prob += 4 * chairs + 3 * tables <= 24
+
+prob.solve(pulp.PULP_CBC_CMD(msg=0))
+
+_result = {
+    "status": pulp.LpStatus[prob.status],
+    "objective": pulp.value(prob.objective),
+    "variables": {v.name: pulp.value(v) for v in prob.variables()}
+}
+```
+
+## Run Metrics
+
+| Metric | Value |
+|---|---|
+| Mode | solver=ON  (PuLP/CBC + ASSERT gate) |
+| LLM calls | 2 |
+| Stage 1 — formulation + solve (s) | 7.00 |
+| Stage 2 — interpretation (s) | 14.90 |
+| Total latency (s) | 22.60 |
+| Input tokens | 541 |
+| Output tokens | 441 |
+| Total tokens | 982 |
+```

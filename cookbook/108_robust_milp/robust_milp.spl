@@ -1,0 +1,268 @@
+-- ============================================================
+-- Recipe 108: Robust Supply Chain MILP — python-mip + scenarios
+--
+-- Two-stage stochastic MILP: commit to a capacity investment NOW,
+-- then observe which demand scenario materializes and respond.
+--
+-- Stage 1 (now):   binary build-vs-lease decision
+-- Stage 2 (later): produce + emergency sourcing per scenario
+--
+-- Key story: naive expected-demand heuristic says BUILD (E[D]=190 > 150).
+-- MILP prices all scenarios simultaneously and finds LEASE is cheaper.
+-- The solver catches what intuition misses.
+--
+-- use_solver="true"  → python-mip two-stage stochastic MILP
+-- use_solver="false" → naive expected-demand heuristic (often wrong)
+--
+-- Requires: pip install python-mip
+-- Run:
+--   spl3 run cookbook/108_robust_milp/robust_milp.spl \
+--       --adapter claude_cli --param use_solver=true
+--   spl3 run cookbook/108_robust_milp/robust_milp.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+-- ── Python tool wrappers ──────────────────────────────────────
+
+CREATE TOOL_API extract_robust_problem(problem TEXT)
+RETURNS TEXT AS PYTHON $$
+def extract_robust_problem(problem: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import extract_robust_problem as _fn
+    return _fn(problem)
+$$;
+
+CREATE TOOL_API solve_robust_milp(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_robust_milp(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import solve_robust_milp as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API is_optimal(solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def is_optimal(solution_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import is_optimal as _fn
+    return _fn(solution_json)
+$$;
+
+CREATE TOOL_API format_scenario_report(solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_scenario_report(solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import format_scenario_report as _fn
+    return _fn(solution_json)
+$$;
+
+CREATE TOOL_API solve_naive_heuristic(problem_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def solve_naive_heuristic(problem_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import solve_naive_heuristic as _fn
+    return _fn(problem_json)
+$$;
+
+CREATE TOOL_API verify_robust_off(problem_json TEXT, solution_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def verify_robust_off(problem_json: str, solution_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import verify_robust_off as _fn
+    return _fn(problem_json, solution_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "108_robust_milp")
+    if _dir not in sys.path:
+        sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION extract_problem_structure(problem TEXT)
+RETURNS TEXT AS $$
+Extract this stochastic capacity planning problem into JSON.
+Return ONLY a JSON object — no markdown, no prose:
+{{
+  "scenarios": [
+    {{"name": "Low", "probability": 0.30, "demand": 100}},
+    {{"name": "Normal", "probability": 0.50, "demand": 200}},
+    {{"name": "High", "probability": 0.20, "demand": 300}}
+  ],
+  "capacity_own": 300,
+  "capacity_lease": 150,
+  "cost_build": 4000,
+  "cost_produce": 8,
+  "cost_emergency": 60
+}}
+
+Rules:
+- scenarios: each scenario must have name, probability (decimal), and demand (units)
+- probabilities must sum to 1.0
+- capacity_own: capacity if factory is built; capacity_lease: capacity if leased
+- cost_build: one-time fixed cost to build the factory
+- cost_produce: variable cost per unit produced (own or leased)
+- cost_emergency: cost per unit sourced via emergency/spot market
+
+Problem: {problem}
+$$;
+
+CREATE FUNCTION interpret_milp_result(problem TEXT, solution_json TEXT, report_table TEXT)
+RETURNS TEXT AS $$
+Interpret this robust MILP capacity planning result for a business manager.
+
+Problem: {problem}
+
+Optimal solution (JSON): {solution_json}
+
+Scenario breakdown:
+{report_table}
+
+Your interpretation must cover:
+1. What is the optimal decision — build own factory or lease? Why?
+2. Which scenario drives the decision most (i.e. which scenario is most expensive to under-prepare for)?
+3. How much does the MILP save compared to the other option? Show the arithmetic.
+4. What is the role of emergency sourcing in each scenario?
+5. One-sentence strategic recommendation.
+
+Be concrete and quantitative. Show cost comparisons explicitly.
+$$;
+
+CREATE FUNCTION interpret_heuristic(problem TEXT, heuristic_json TEXT, milp_json TEXT)
+RETURNS TEXT AS $$
+Compare a naive expected-demand heuristic solution against the MILP optimum.
+
+Problem: {problem}
+
+Heuristic solution (naive, expected demand): {heuristic_json}
+MILP optimal solution: {milp_json}
+
+Explain:
+1. What decision did the heuristic make, and why (based on expected demand)?
+2. What decision did the MILP make?
+3. If they differ: how much does the heuristic cost more than the MILP optimum? Why?
+4. What does this illustrate about scenario-based optimization vs. expected-value reasoning?
+
+Be precise and show the cost gap in dollars.
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW robust_milp
+  -- Default B5: capacity planning under demand uncertainty.
+  -- Naive heuristic: E[D] = 0.3*100 + 0.5*200 + 0.2*300 = 190 > 150 (lease cap) → BUILD
+  -- MILP optimum: LEASE is cheaper — build cost $4,000 outweighs emergency savings.
+  -- The solver catches what expected-demand reasoning misses.
+  INPUT @problem TEXT := "A manufacturer must decide whether to build its own factory (capacity 300 units, one-time cost $4,000) or lease a smaller facility (capacity 150 units, no fixed cost) for Q2 production. Production cost from either: $8/unit. Emergency spot-market sourcing if demand exceeds capacity: $60/unit. Demand is uncertain: Low demand 100 units (30% probability), Normal demand 200 units (50% probability), High demand 300 units (20% probability). Find the capacity investment decision that minimizes expected total cost."
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  @solution_json  := "{}";
+  @heuristic_json := "{}";
+  @verify_status  := "N/A";
+  @obj_str        := "";
+  @llm_calls      := 0;
+
+  LOGGING f"[robust_milp] start  use_solver={@use_solver}" LEVEL INFO
+
+  -- Extract problem structure (both paths need it)
+  CALL extract_robust_problem(@problem) INTO @problem_json;
+  LOGGING f"[robust_milp] problem_json:\n{@problem_json}" LEVEL DEBUG
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- ── solver=ON: two-stage stochastic MILP ──────────────
+      LOGGING "[robust_milp] solver=ON — python-mip two-stage MILP" LEVEL INFO
+
+      CALL solve_robust_milp(@problem_json) INTO @solution_json;
+
+      ASSERT is_optimal(@solution_json);
+      LOGGING "[robust_milp] ASSERT passed — python-mip confirmed OPTIMAL" LEVEL INFO
+
+      CALL format_scenario_report(@solution_json) INTO @report_table;
+      CALL json_get_field(@solution_json, "expected_cost") INTO @obj_str;
+
+      GENERATE interpret_milp_result(@problem, @solution_json, @report_table)
+               INTO @interpretation;
+      @llm_calls := @llm_calls + 1;
+
+      @report := f"=== Robust Supply Chain MILP (solver=ON / python-mip) ===
+
+Problem:
+{@problem}
+
+MILP Solution:
+{@report_table}
+
+Interpretation:
+{@interpretation}
+
+LLM calls: {@llm_calls}";
+
+    ELSE
+      -- ── solver=OFF: naive expected-demand heuristic ───────
+      LOGGING "[robust_milp] solver=OFF — naive expected-demand heuristic" LEVEL INFO
+
+      CALL solve_naive_heuristic(@problem_json) INTO @heuristic_json;
+      CALL format_scenario_report(@heuristic_json) INTO @heuristic_table;
+      CALL verify_robust_off(@problem_json, @heuristic_json) INTO @verify_result;
+      CALL json_get_field(@verify_result, "verdict") INTO @verify_status;
+      CALL json_get_field(@heuristic_json, "expected_cost") INTO @obj_str;
+
+      -- Also run MILP silently for comparison (not shown as "the answer")
+      CALL solve_robust_milp(@problem_json) INTO @solution_json;
+
+      GENERATE interpret_heuristic(@problem, @heuristic_json, @solution_json)
+               INTO @comparison;
+      @llm_calls := @llm_calls + 1;
+
+      LOGGING f"[robust_milp] verify_off: verdict={@verify_status}" LEVEL INFO
+
+      @report := f"=== Robust Supply Chain MILP (solver=OFF / naive heuristic) ===
+
+Problem:
+{@problem}
+
+Naive Heuristic Solution:
+{@heuristic_table}
+
+Heuristic vs MILP Comparison:
+{@comparison}
+
+Verification: {@verify_status}
+LLM calls: {@llm_calls}";
+
+  END;
+
+  LOGGING f"[robust_milp] expected_cost={@obj_str}  verify={@verify_status}" LEVEL INFO
+
+  RETURN @report
+    WITH status = "complete",
+         objective = @obj_str,
+         verify = @verify_status;
+
+END;

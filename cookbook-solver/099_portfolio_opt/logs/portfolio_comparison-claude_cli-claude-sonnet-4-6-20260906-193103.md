@@ -1,0 +1,75 @@
+# SPL Run: portfolio_comparison
+
+- **Adapter:** claude_cli
+- **Model:** claude-sonnet-4-6
+- **Tokens:** 719 in / 857 out
+- **Latency:** 33797ms
+- **Timestamp:** 2026-09-06 19:31:03
+
+## Output
+
+```output
+=== Cross-Algorithm Portfolio Comparison ===
+
+Tickers: AAPL,MSFT,GOOGL,AMZN,NVDA  |  Period: 1y  |  Capital: $10000
+Target return: 0.12  |  Max position: 0.20
+
+Algorithm Summary (CSV):
+algorithm,status,expected_return,annual_volatility,sharpe_ratio,AAPL,MSFT,GOOGL,AMZN,NVDA
+markowitz,OPTIMAL,0.2724,0.2022,1.0998,0.2000,0.2000,0.2000,0.2000,0.2000
+min_variance,OPTIMAL,0.2724,0.2022,1.0998,0.2000,0.2000,0.2000,0.2000,0.2000
+max_sharpe,OPTIMAL,0.2724,0.2022,1.0998,0.2000,0.2000,0.2000,0.2000,0.2000
+risk_parity,OPTIMAL,0.2724,0.2022,1.0998,0.2000,0.2000,0.2000,0.2000,0.2000
+hrp,OPTIMAL,0.2706,0.1961,1.1245,0.2472,0.2387,0.1656,0.1390,0.2095
+cvar,OPTIMAL,0.2724,0.2022,1.0998,0.2000,0.2000,0.2000,0.2000,0.2000
+
+Portfolio Composition (CSV):
+ticker,markowitz_wt%,min_variance_wt%,max_sharpe_wt%,risk_parity_wt%,hrp_wt%,cvar_wt%,markowitz_$,min_variance_$,max_sharpe_$,risk_parity_$,hrp_$,cvar_$
+AAPL,20.00,20.00,20.00,20.00,24.72,20.00,2000,2000,2000,2000,2472,2000
+MSFT,20.00,20.00,20.00,20.00,23.87,20.00,2000,2000,2000,2000,2387,2000
+GOOGL,20.00,20.00,20.00,20.00,16.56,20.00,2000,2000,2000,2000,1656,2000
+AMZN,20.00,20.00,20.00,20.00,13.90,20.00,2000,2000,2000,2000,1390,2000
+NVDA,20.00,20.00,20.00,20.00,20.95,20.00,2000,2000,2000,2000,2095,2000
+
+LLM Synthesis & Recommendation:
+## Portfolio Optimization Comparison
+
+### 1. Comparison Table
+
+| Algorithm    | Ann. Return | Ann. Volatility | Sharpe Ratio | # Positions | Weights (AAPL/AMZN/GOOGL/MSFT/NVDA) |
+|--------------|-------------|-----------------|--------------|-------------|--------------------------------------|
+| Markowitz    | 27.24%      | 20.22%          | 1.0998       | 5           | 20 / 20 / 20 / 20 / 20              |
+| Min Variance | 27.24%      | 20.22%          | 1.0998       | 5           | 20 / 20 / 20 / 20 / 20              |
+| Max Sharpe   | 27.24%      | 20.22%          | 1.0998       | 5           | 20 / 20 / 20 / 20 / 20              |
+| Risk Parity  | 27.24%      | 20.22%          | 1.0998       | 5           | 20 / 20 / 20 / 20 / 20              |
+| **HRP**      | **27.06%**  | **19.61%**      | **1.1245**   | 5           | **24.7 / 13.9 / 16.6 / 23.9 / 20.9** |
+| CVaR         | 27.24%      | 20.22%          | 1.0998       | 5           | 20 / 20 / 20 / 20 / 20              |
+
+---
+
+### 2. Best Risk-Adjusted Return
+
+**HRP** wins with a Sharpe of **1.1245**, versus 1.0998 for every other algorithm. It also achieves lower volatility (19.61% vs 20.22%) at nearly the same return — the classic efficient frontier improvement.
+
+---
+
+### 3. Most Diversified Allocation
+
+**HRP** is the only algorithm that produced a non-uniform allocation, making it the only genuinely differentiated result. Its weights reflect the covariance structure: it underweights AMZN (13.9%) — the asset with high variance (σ² ≈ 0.119) and the lowest return (15%) — while overweighting AAPL and MSFT which are lower-correlation anchors.
+
+---
+
+### 4. Recommendation: **HRP (Hierarchical Risk Parity)**
+
+HRP is the clear choice for this personal investor portfolio. It is the only algorithm here that actually responded to the input data — producing a differentiated allocation that reduces volatility by ~30 bps while improving the Sharpe ratio. For a five-asset tech-heavy portfolio where returns are highly non-uniform (MSFT at 6.3% vs GOOGL at 42.4%), equal-weight is a poor default, and HRP's cluster-aware weighting naturally corrects for this without requiring a return forecast to be perfectly calibrated.
+
+---
+
+### 5. Degenerate Results — Important Flag
+
+**Five of six algorithms returned identical 20/20/20/20/20% equal-weight allocations.** This is almost certainly a solver or implementation issue, not a mathematical coincidence. With the given return vector (MSFT at 6.3%, GOOGL at 42.4%) and the covariance matrix, no properly-functioning Markowitz, Max Sharpe, or Min Variance solver should return equal weights — Max Sharpe in particular should concentrate heavily in GOOGL and AAPL. The CLARABEL solver logs show different objective values (Markowitz: 0.0409, Max Sharpe: 0.8267, CVaR: 0.137) confirming they ran distinct optimizations, yet all landed at the same boundary point. Likely cause: a binding constraint (e.g., a 20% position cap) that forced every optimizer to the same corner solution. **These five results should not be trusted as optimal.**
+
+---
+
+> **Disclaimer:** Past performance does not guarantee future results. These allocations are based on 1-year historical returns and covariances, which may not be representative of future market conditions. This analysis is for informational purposes only and does not constitute investment advice. All investing involves risk, including possible loss of principal.
+```

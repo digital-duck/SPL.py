@@ -65,6 +65,7 @@ python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --ca
 | 06 | `--claude-allowed-tools` wrong flag name | **Fixed ✓ 2026-04-18** — corrected to `--allowed-tools`; recipe enabled |
 | 17 | `COUNT()` not in Go stdlib + `qwen2.5` missing | **Fixed ✓ 2026-04-18** — `count` alias added; catalog overrides `models=["gemma3","phi4","llama3.2"]` |
 | 38, 39, 40 | Bedrock / Vertex / Azure adapters not in spl-go | Still blocked — port cloud-provider adapters |
+| 77 | Requires `--kernel` (SPL3 Jupyter kernel) | Disabled — kernel not available in spl-go |
 
 ### Using `--tools`
 
@@ -121,6 +122,31 @@ spl-go  run ./cookbook/01_hello_world/hello.spl --adapter ollama
 ls -lt ~/.spl/logs/hello-* | head -4
 ```
 
+
+## New recipes (90–96): computational science + reasoning
+
+These recipes use Python tool functions (`tools.py` or inline Python via `SOLVE`) for deterministic verification — the same `--tools` mechanism used for recipes 13, 36, 41.
+
+| ID | Name | Domain | Deterministic verifier |
+|---|---|---|---|
+| 90 | Physics Conservation Check | Physics | Momentum + energy conservation (NumPy) |
+| 91 | Chemical Equation Balancing | Chemistry | Mass-balance parser (stdlib re) |
+| 92 | Crystal Structure Check | Materials | Symmetry + density (stdlib math) |
+| 93 | Automated Planning (PDDL) | AI Planning | STRIPS precondition/effect replay |
+| 94 | Text-to-SQL + Data-Quality | Data Eng. | Referential integrity + dual-SQL cross-check |
+| 95 | Music Theory: Voice-Leading | Music | Parallel-motion + spacing checker |
+| 96 | Drug-Interaction Screening | Pharma | Synthetic RxNorm/DrugBank lookup |
+
+Run them:
+```bash
+spl-go run cookbook/90_compsci_physics/physics_conservation.spl --adapter claude_cli
+spl-go run cookbook/91_compsci_chemistry/chemistry_balance.spl --adapter claude_cli
+spl-go run cookbook/92_compsci_materials/materials_crystal.spl --adapter claude_cli
+spl-go run cookbook/93_auto_planning/auto_planning.spl --adapter claude_cli
+spl-go run cookbook/94_data_eng_text2spl/text2sql_quality.spl --adapter claude_cli
+spl-go run cookbook/95_music_theory/music_theory.spl --adapter claude_cli
+spl-go run cookbook/96_drug_sim/drug_sim.spl --adapter claude_cli
+```
 
 ## latest test results
 

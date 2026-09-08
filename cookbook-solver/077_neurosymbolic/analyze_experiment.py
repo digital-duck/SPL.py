@@ -1,0 +1,675 @@
+#!/usr/bin/env python3
+"""
+analyze_experiment.py — Generate paper-ready tables AND figures from the Recipe-77 DB.
+
+Works for any run count (-r 1, -r 3, -r 5): aggregates mean pass rate per
+(model × problem × solver) cell across repetitions, then builds all tables.
+
+Usage:
+  python cookbook/77_neurosymbolic/analyze_experiment.py
+  python cookbook/77_neurosymbolic/analyze_experiment.py --db path/to/db.sqlite
+  python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
+  python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md --source exp-20260615-073849
+  python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
+  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/
+  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/ --source exp-20260615-191224
+"""
+
+import argparse
+import sqlite3
+import sys
+from datetime import datetime
+from pathlib import Path
+
+DB_DEFAULT = Path("cookbook/77_neurosymbolic/experiment_results.db")
+
+TIER_ORDER  = ["T0", "T1", "T2", "T3", "T4", "T5", "T6", "P1", "P2"]
+BACKEND_MAP = {"sympy": "SymPy", "sage": "Sage", "lean": "Lean 4"}
+
+# ── DB helpers ────────────────────────────────────────────────────────────────
+
+def get_conn(db_path: Path) -> sqlite3.Connection:
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def list_sources(conn: sqlite3.Connection) -> list[dict]:
+    rows = conn.execute(
+        "SELECT source_file, rows_total, rows_inserted, log_path, imported_at "
+        "FROM imports ORDER BY imported_at DESC"
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def load_rows(conn: sqlite3.Connection, source: str) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM results WHERE source_file = ? ORDER BY mid, pid, solver, run",
+        (source,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def load_rows_pooled(conn: sqlite3.Connection, sources: list[str], *,
+                      backend: str | None = None,
+                      exclude_thinking: bool = True) -> list[dict]:
+    """
+    Load and concatenate rows from multiple source_files, for building a
+    pooled r=N dataset the way the paper's tables do it (e.g. repeated run +
+    a backend top-up + a model-specific re-run, all feeding the same
+    (mid, pid, solver) cells that aggregate() groups by).
+
+    exclude_thinking=True (default) drops rows tagged has_thinking='Y' ---
+    superseded thinking-enabled cells for a model that was later re-run with
+    thinking suppressed (see has_thinking column, added 2026-07-25). Rows
+    with has_thinking NULL (the default for every row not explicitly tagged)
+    are always included.
+
+    backend, if given ('sympy' or 'sage'), restricts to that backend's rows
+    --- use this to build the SymPy-only vs. Sage-only pools reported
+    separately in the paper (main text vs. Appendix K), since a single
+    session can contain both backends' problems.
+    """
+    q = ",".join("?" * len(sources))
+    sql = f"SELECT * FROM results WHERE source_file IN ({q})"
+    params: list = list(sources)
+    if backend:
+        sql += " AND backend = ?"
+        params.append(backend)
+    if exclude_thinking:
+        sql += " AND has_thinking IS NOT 'Y'"
+    sql += " ORDER BY mid, pid, solver, run"
+    rows = conn.execute(sql, params).fetchall()
+    return [dict(r) for r in rows]
+
+
+# ── Aggregation (handles -r 1 / -r 3 / -r 5) ─────────────────────────────────
+
+def aggregate(rows: list[dict]) -> dict:
+    """
+    Returns nested structure:
+      cells[(mid, pid, solver)] = {label, tier, backend, problem, mean_pass,
+                                   dominant_status, avg_lat_ms, avg_llm_calls,
+                                   avg_steps, n_runs}
+    """
+    from collections import defaultdict
+
+    buckets: dict = defaultdict(list)
+    for r in rows:
+        key = (r["mid"], r["pid"], r["solver"])
+        buckets[key].append(r)
+
+    cells = {}
+    for key, rlist in buckets.items():
+        r0 = rlist[0]
+        n_runs_k = len(rlist)
+        mean_pass = sum(r["pass"] for r in rlist) / n_runs_k
+        # dominant status = most common non-complete status if any failure, else complete
+        from collections import Counter
+        status_counts = Counter(r["status"] for r in rlist)
+        dominant = status_counts.most_common(1)[0][0]
+        lats   = [r["latency_ms"] for r in rlist if r["latency_ms"] is not None]
+        calls  = [r["llm_calls"]  for r in rlist if r["llm_calls"]  is not None]
+        steps  = [r["steps"]      for r in rlist if r["steps"]      is not None]
+        cells[key] = {
+            "mid": key[0], "pid": key[1], "solver": key[2],
+            "label":    r0["label"],
+            "tier":     r0["tier"],
+            "backend":  r0.get("backend") or "",
+            "problem":  r0["problem"],
+            "mean_pass": mean_pass,
+            "dominant_status": dominant,
+            "avg_lat_ms":    sum(lats)  / len(lats)  if lats  else None,
+            "avg_llm_calls": sum(calls) / len(calls) if calls else None,
+            "avg_steps":     sum(steps) / len(steps) if steps else None,
+            "n_runs": n_runs_k,
+        }
+
+        # per-status breakdown
+        for s, cnt in status_counts.items():
+            cells[key][f"n_{s}"] = cnt
+
+    return cells
+
+
+# ── Formatting helpers ────────────────────────────────────────────────────────
+
+def pct(v: float, *, denom: int = 1) -> str:
+    return f"{v / denom * 100:.0f}%"
+
+
+def lat_s(ms: float | None) -> str:
+    if ms is None:
+        return "?"
+    return f"{ms / 1000:.1f}s"
+
+
+def _sorted_models(cells: dict) -> list[tuple]:
+    """Model tuples sorted by solver pass rate desc."""
+    from collections import defaultdict
+    solver_pass: dict = defaultdict(list)
+    minfo: dict = {}
+    for c in cells.values():
+        if c["solver"] == "true":
+            solver_pass[c["mid"]].append(c["mean_pass"])
+        minfo[c["mid"]] = c["label"]
+    return sorted(
+        [(mid, minfo[mid]) for mid in solver_pass],
+        key=lambda t: -sum(solver_pass[t[0]]) / max(len(solver_pass[t[0]]), 1),
+    )
+
+
+def _tiers_present(cells: dict) -> list[str]:
+    found = {c["tier"] for c in cells.values()}
+    return [t for t in TIER_ORDER if t in found]
+
+
+# ── Table builders ────────────────────────────────────────────────────────────
+
+def table_pass_rates(cells: dict, models: list[tuple], n_runs: int) -> str:
+    """Overall pass rate by model and arm, sorted by solver desc."""
+    from collections import defaultdict
+    solver_pass: dict  = defaultdict(list)
+    llm_pass: dict     = defaultdict(list)
+    for c in cells.values():
+        if c["solver"] == "true":
+            solver_pass[c["mid"]].append(c["mean_pass"])
+        else:
+            llm_pass[c["mid"]].append(c["mean_pass"])
+
+    lines = [
+        "**Pass rates by model and arm**"
+        + (f" (mean over {n_runs} runs/cell)" if n_runs > 1 else "") + ":",
+        "",
+        "| Model | LLM-only | Solver | Δ |",
+        "|---|---|---|---|",
+    ]
+    for mid, label in models:
+        s = sum(solver_pass[mid]) / len(solver_pass[mid]) * 100 if solver_pass[mid] else 0
+        l = sum(llm_pass[mid])   / len(llm_pass[mid])   * 100 if llm_pass[mid]   else 0
+        delta = s - l
+        sign  = "+" if delta > 0 else ""
+        lines.append(f"| {label} | {l:.0f}% | {s:.0f}% | {sign}{delta:.0f} |")
+    return "\n".join(lines)
+
+
+def table_latency(cells: dict, models: list[tuple]) -> str:
+    from collections import defaultdict
+    lat_s_arm: dict = defaultdict(lambda: defaultdict(list))
+    for c in cells.values():
+        if c["avg_lat_ms"] is not None:
+            lat_s_arm[c["mid"]][c["solver"]].append(c["avg_lat_ms"])
+
+    lines = [
+        "**Average latency by model and arm:**",
+        "",
+        "| Model | LLM-only | Solver | Δ |",
+        "|---|---|---|---|",
+    ]
+    for mid, label in models:
+        t_lats = lat_s_arm[mid]["true"]
+        f_lats = lat_s_arm[mid]["false"]
+        t = sum(t_lats) / len(t_lats) if t_lats else None
+        f = sum(f_lats) / len(f_lats) if f_lats else None
+        if t is not None and f is not None and f > 0:
+            delta_pct = (t - f) / f * 100
+            sign = "+" if delta_pct > 0 else ""
+            delta_str = f"{sign}{delta_pct:.0f}%"
+        else:
+            delta_str = "?"
+        lines.append(f"| {label} | {lat_s(f)} | {lat_s(t)} | {delta_str} |")
+    return "\n".join(lines)
+
+
+def table_status_breakdown(cells: dict, models: list[tuple]) -> str:
+    all_statuses = set()
+    for c in cells.values():
+        for k in c:
+            if k.startswith("n_"):
+                all_statuses.add(k[2:])
+    # Only show solver arm
+    STATUS_COL_ORDER = ["complete", "solver_error", "plan_error",
+                        "plan_format_error", "plan_sanity_error",
+                        "silent_failure", "llm_error", "unknown"]
+    cols = [s for s in STATUS_COL_ORDER if s in all_statuses]
+    remaining = sorted(all_statuses - set(cols))
+    cols += remaining
+
+    from collections import defaultdict
+    totals: dict = defaultdict(lambda: defaultdict(float))
+    for c in cells.values():
+        if c["solver"] == "true":
+            for s in cols:
+                totals[c["mid"]][s] += c.get(f"n_{s}", 0)
+
+    header_cols = " | ".join(f"`{s}`" for s in cols)
+    sep_cols    = " | ".join("---" for _ in cols)
+    lines = [
+        "**Failure mode breakdown (solver arm, total across all runs):**",
+        "",
+        f"| Model | {header_cols} |",
+        f"|---| {sep_cols} |",
+    ]
+    for mid, label in models:
+        vals = " | ".join(f"{int(totals[mid].get(s, 0))}" for s in cols)
+        lines.append(f"| {label} | {vals} |")
+    return "\n".join(lines)
+
+
+def table_per_tier_solver(cells: dict, models: list[tuple], tiers: list[str]) -> str:
+    from collections import defaultdict
+    # tier_model_pass[mid][tier] = [mean_pass, ...]
+    data: dict = defaultdict(lambda: defaultdict(list))
+    for c in cells.values():
+        if c["solver"] == "true":
+            data[c["mid"]][c["tier"]].append(c["mean_pass"])
+
+    tier_totals: dict = defaultdict(list)
+    for mid in data:
+        for t in tiers:
+            if data[mid][t]:
+                tier_totals[t].extend(data[mid][t])
+
+    tier_header = " | ".join(tiers)
+    tier_sep    = " | ".join("---" for _ in tiers)
+    lines = [
+        "**Solver arm pass rate by model and tier (%):**",
+        "",
+        f"| Model | {tier_header} | Overall |",
+        f"|---| {tier_sep} |---|",
+    ]
+    for mid, label in models:
+        tier_vals = []
+        all_passes = []
+        for t in tiers:
+            ps = data[mid][t]
+            if ps:
+                v = sum(ps) / len(ps) * 100
+                tier_vals.append(f"{v:.0f}")
+                all_passes.extend(ps)
+            else:
+                tier_vals.append("—")
+        overall = f"{sum(all_passes)/len(all_passes)*100:.0f}" if all_passes else "—"
+        lines.append(f"| {label} | {' | '.join(tier_vals)} | {overall} |")
+
+    # Tier averages
+    avg_vals = []
+    for t in tiers:
+        ps = tier_totals[t]
+        avg_vals.append(f"**{sum(ps)/len(ps)*100:.0f}**" if ps else "—")
+    lines.append(f"| **Tier avg** | {' | '.join(avg_vals)} | — |")
+    return "\n".join(lines)
+
+
+def table_per_tier_llm(cells: dict, models: list[tuple], tiers: list[str]) -> str:
+    from collections import defaultdict
+    data: dict = defaultdict(lambda: defaultdict(list))
+    for c in cells.values():
+        if c["solver"] == "false":
+            data[c["mid"]][c["tier"]].append(c["mean_pass"])
+
+    tier_header = " | ".join(tiers)
+    tier_sep    = " | ".join("---" for _ in tiers)
+    lines = [
+        "**LLM-only arm pass rate by model and tier (%) — pass = non-empty response:**",
+        "",
+        f"| Model | {tier_header} | Overall |",
+        f"|---| {tier_sep} |---|",
+    ]
+    for mid, label in models:
+        tier_vals = []
+        all_passes = []
+        for t in tiers:
+            ps = data[mid][t]
+            if ps:
+                v = sum(ps) / len(ps) * 100
+                tier_vals.append(f"{v:.0f}")
+                all_passes.extend(ps)
+            else:
+                tier_vals.append("—")
+        overall = f"{sum(all_passes)/len(all_passes)*100:.0f}" if all_passes else "—"
+        lines.append(f"| {label} | {' | '.join(tier_vals)} | {overall} |")
+    return "\n".join(lines)
+
+
+def table_backend_comparison(cells: dict) -> str:
+    from collections import defaultdict
+    data: dict = defaultdict(lambda: {"solver": [], "llm": []})
+    for c in cells.values():
+        b = c.get("backend") or "unknown"
+        if c["solver"] == "true":
+            data[b]["solver"].append(c["mean_pass"])
+        else:
+            data[b]["llm"].append(c["mean_pass"])
+
+    lines = [
+        "**Pass rate by backend:**",
+        "",
+        "| Backend | LLM-only | Solver | N cells |",
+        "|---|---|---|---|",
+    ]
+    for backend in ["sympy", "sage", "lean"]:
+        d = data.get(backend)
+        if not d or not d["solver"]:
+            continue
+        s = sum(d["solver"]) / len(d["solver"]) * 100
+        l = sum(d["llm"])    / len(d["llm"])    * 100 if d["llm"] else 0
+        n = len(d["solver"])
+        lines.append(f"| {BACKEND_MAP.get(backend, backend)} | {l:.0f}% | {s:.0f}% | {n} |")
+    return "\n".join(lines)
+
+
+# ── Markdown document builder ─────────────────────────────────────────────────
+
+def build_markdown(source: str, rows: list[dict]) -> str:
+    cells   = aggregate(rows)
+    models  = _sorted_models(cells)
+    tiers   = _tiers_present(cells)
+    n_runs  = max((c["n_runs"] for c in cells.values()), default=1)
+    n_cells = len(rows)
+    n_models   = len({r["mid"] for r in rows})
+    n_problems = len({r["pid"] for r in rows})
+    backends = sorted({(c.get("backend") or "") for c in cells.values()} - {""})
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    sections = [
+        f"# Recipe-77 Experiment Results",
+        f"",
+        f"**Session:** `{source}`  ",
+        f"**Generated:** {now}  ",
+        f"**Cells:** {n_cells}  ({n_models} models × {n_problems} problems"
+        + (f" × 2 arms × {n_runs} runs" if n_runs > 1 else " × 2 arms")
+        + f")  ",
+        f"**Backends:** {', '.join(BACKEND_MAP.get(b, b) for b in backends)}  ",
+        f"",
+        "---",
+        "",
+        "## §6.2  Results",
+        "",
+        table_pass_rates(cells, models, n_runs),
+        "",
+        table_latency(cells, models),
+        "",
+        "---",
+        "",
+        "## Appendix E.3  Per-Tier Pass Rates",
+        "",
+        table_per_tier_solver(cells, models, tiers),
+        "",
+        table_per_tier_llm(cells, models, tiers),
+        "",
+        "---",
+        "",
+        "## Appendix E.4  Failure Mode Breakdown (Solver Arm)",
+        "",
+        table_status_breakdown(cells, models),
+        "",
+        "---",
+        "",
+        "## Backend Comparison",
+        "",
+        table_backend_comparison(cells),
+        "",
+    ]
+    return "\n".join(sections)
+
+
+# ── Figure generation ────────────────────────────────────────────────────────
+
+def _check_plot_deps():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import numpy as np
+        return plt, sns, np
+    except ImportError as e:
+        sys.exit(f"Missing plotting dependency: {e}\n"
+                 "Install: pip install matplotlib seaborn numpy")
+
+
+def fig_heatmap_solver(cells: dict, models: list[tuple], tiers: list[str],
+                       out_dir: Path, *, name: str = "recipe77-heatmap-latex") -> Path:
+    """Solver arm pass-rate heatmap: models (rows) × tiers (columns)."""
+    plt, sns, np = _check_plot_deps()
+    from collections import defaultdict
+
+    data: dict = defaultdict(lambda: defaultdict(list))
+    for c in cells.values():
+        if c["solver"] == "true":
+            data[c["mid"]][c["tier"]].append(c["mean_pass"])
+
+    labels = [label for _, label in models]
+    matrix = []
+    for mid, _ in models:
+        row = []
+        for t in tiers:
+            ps = data[mid][t]
+            row.append(sum(ps) / len(ps) * 100 if ps else 0)
+        matrix.append(row)
+
+    arr = np.array(matrix)
+    fig, ax = plt.subplots(figsize=(5.5, 5))
+    # annot=False + manual ax.text(): seaborn 0.12.2's built-in annotator
+    # desyncs against matplotlib>=3.8's QuadMesh.get_array() flattening
+    # change and silently drops most cell labels. Draw them ourselves.
+    sns.heatmap(arr, annot=False, cmap="YlGnBu",
+                xticklabels=tiers, yticklabels=labels,
+                vmin=0, vmax=100, linewidths=0.5,
+                cbar_kws={"label": "Pass rate (%)", "shrink": 0.8}, ax=ax)
+    cmap = plt.get_cmap("YlGnBu")
+    for i in range(arr.shape[0]):
+        for j in range(arr.shape[1]):
+            v = arr[i, j]
+            r, g, b, _ = cmap(v / 100.0)
+            luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            text_color = "black" if luminance > 0.408 else "white"
+            ax.text(j + 0.5, i + 0.5, f"{v:.0f}", ha="center", va="center",
+                    fontsize=9, color=text_color)
+    ax.set_title("Solver Arm Pass Rate: Model × Tier (%)", fontsize=11, pad=10)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(axis='x', labelsize=9)
+    ax.tick_params(axis='y', labelsize=9)
+
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        p = out_dir / f"{name}.{ext}"
+        fig.savefig(p, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] heatmap → {out_dir}/{name}.{{pdf,png}}")
+    return out_dir / f"{name}.pdf"
+
+
+def fig_bootstrap_ci(conn: sqlite3.Connection, sources: list[str],
+                     models: list[tuple], out_dir: Path, *,
+                     backend: str | None = None,
+                     exclude_thinking: bool = True) -> Path:
+    """Bootstrap 95% CI bar chart for solver arm pass rates."""
+    plt, sns, np = _check_plot_deps()
+
+    rng = np.random.default_rng(42)
+    labels_out, means, ci_lo, ci_hi = [], [], [], []
+
+    q = ",".join("?" * len(sources))
+    for mid, label in models:
+        sql = f"SELECT pass FROM results WHERE source_file IN ({q}) AND solver='true' AND mid=?"
+        params: list = list(sources) + [mid]
+        if backend:
+            sql += " AND backend = ?"
+            params.append(backend)
+        if exclude_thinking:
+            sql += " AND has_thinking IS NOT 'Y'"
+        rows = conn.execute(sql, params).fetchall()
+        passes = np.array([r[0] for r in rows])
+        n = len(passes)
+        obs = 100 * passes.mean()
+        boots = np.array([100 * rng.choice(passes, size=n, replace=True).mean()
+                          for _ in range(10_000)])
+        lo, hi = np.percentile(boots, [2.5, 97.5])
+        labels_out.append(label)
+        means.append(obs)
+        ci_lo.append(obs - lo)
+        ci_hi.append(hi - obs)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    y = range(len(labels_out))
+    ax.barh(y, means, xerr=[ci_lo, ci_hi], capsize=4,
+            color=sns.color_palette("YlGnBu", len(labels_out)),
+            edgecolor="grey", linewidth=0.5)
+    ax.set_yticks(list(y))
+    ax.set_yticklabels(labels_out)
+    ax.set_xlabel("Solver Arm Pass Rate (%)")
+    ax.set_title("Solver Arm Pass Rate with 95% Bootstrap CI", fontsize=13, pad=12)
+    ax.set_xlim(0, 105)
+    ax.invert_yaxis()
+    for i, m in enumerate(means):
+        ax.text(m + ci_hi[i] + 1.5, i, f"{m:.0f}%", va="center", fontsize=9)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(out_dir / f"recipe77-bootstrap-ci.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] bootstrap CI → {out_dir}/recipe77-bootstrap-ci.{{pdf,png}}")
+    return out_dir / "recipe77-bootstrap-ci.pdf"
+
+
+def fig_pass_comparison(cells: dict, models: list[tuple], out_dir: Path) -> Path:
+    """Side-by-side bar chart: solver verified% vs LLM-only output%."""
+    plt, _sns, np = _check_plot_deps()
+    from collections import defaultdict
+
+    solver_pass: dict = defaultdict(list)
+    llm_pass: dict = defaultdict(list)
+    for c in cells.values():
+        if c["solver"] == "true":
+            solver_pass[c["mid"]].append(c["mean_pass"])
+        else:
+            llm_pass[c["mid"]].append(c["mean_pass"])
+
+    labels_out = [label for _, label in models]
+    s_pcts = [100 * sum(solver_pass[mid]) / len(solver_pass[mid]) for mid, _ in models]
+    l_pcts = [100 * sum(llm_pass[mid]) / len(llm_pass[mid]) for mid, _ in models]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x = np.arange(len(labels_out))
+    w = 0.35
+    ax.bar(x - w/2, s_pcts, w, label="Solver (machine-verified)", color="#4c72b0")
+    ax.bar(x + w/2, l_pcts, w, label="LLM-only (output production)", color="#dd8452")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels_out, rotation=30, ha="right")
+    ax.set_ylabel("Pass rate (%)")
+    ax.set_title("Machine-Verified Correctness vs Unverified Output Production",
+                 fontsize=12, pad=12)
+    ax.legend()
+    ax.set_ylim(0, 110)
+    for i, (s, l) in enumerate(zip(s_pcts, l_pcts)):
+        ax.text(i - w/2, s + 1, f"{s:.0f}", ha="center", fontsize=8)
+        ax.text(i + w/2, l + 1, f"{l:.0f}", ha="center", fontsize=8)
+    fig.tight_layout()
+    for ext in ("pdf", "png"):
+        fig.savefig(out_dir / f"recipe77-pass-comparison.{ext}", dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  [fig] pass comparison → {out_dir}/recipe77-pass-comparison.{{pdf,png}}")
+    return out_dir / "recipe77-pass-comparison.pdf"
+
+
+def generate_figures(conn: sqlite3.Connection, sources: list[str], rows: list[dict],
+                     out_dir: Path, *, backend: str | None = None,
+                     exclude_thinking: bool = True,
+                     heatmap_name: str = "recipe77-heatmap-latex") -> str:
+    """Generate all figures and return summary markdown."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cells  = aggregate(rows)
+    models = _sorted_models(cells)
+    tiers  = _tiers_present(cells)
+
+    fig_heatmap_solver(cells, models, tiers, out_dir, name=heatmap_name)
+    fig_bootstrap_ci(conn, sources, models, out_dir, backend=backend,
+                      exclude_thinking=exclude_thinking)
+    fig_pass_comparison(cells, models, out_dir)
+    return ""
+
+
+# ── CLI ───────────────────────────────────────────────────────────────────────
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--db", default=str(DB_DEFAULT),
+                        help="Path to SQLite database (default: %(default)s)")
+    parser.add_argument("--source", default=None,
+                        help="Experiment source_file ID to analyze (default: latest)")
+    parser.add_argument("--sources", default=None,
+                        help="Comma-separated source_file IDs to pool (e.g. repeated run + "
+                             "a backend top-up + a model-specific re-run). Overrides --source. "
+                             "Rows tagged has_thinking='Y' are excluded from the pool by default "
+                             "(--include-thinking-tagged to keep them).")
+    parser.add_argument("--backend-filter", default=None, choices=["sympy", "sage", "lean"],
+                        help="Restrict pooled rows to one backend (for building the SymPy-only "
+                             "vs. Sage-only figure/CI pools reported separately in the paper).")
+    parser.add_argument("--include-thinking-tagged", action="store_true",
+                        help="Include has_thinking='Y' rows (superseded thinking-enabled cells) "
+                             "in the pool instead of excluding them.")
+    parser.add_argument("--heatmap-name", default="recipe77-heatmap-latex",
+                        help="Output filename stem for the heatmap figure (default: %(default)s)")
+    parser.add_argument("--out", default=None,
+                        help="Output .md path (default: stdout)")
+    parser.add_argument("--list-sources", action="store_true",
+                        help="List available experiment runs and exit")
+    parser.add_argument("--figures", default=None, metavar="DIR",
+                        help="Generate figures (heatmap, bootstrap CI, LLM accuracy) into DIR")
+    args = parser.parse_args()
+
+    db_path = Path(args.db)
+    if not db_path.exists():
+        sys.exit(f"DB not found: {db_path}")
+
+    conn = get_conn(db_path)
+    sources = list_sources(conn)
+
+    if args.list_sources or not sources:
+        if not sources:
+            print("No experiment runs in DB.")
+            return
+        print(f"{'Source':<32}  {'Total':>6}  {'Done':>6}  {'Imported'}")
+        for s in sources:
+            print(f"{s['source_file']:<32}  {s['rows_total'] or '?':>6}  "
+                  f"{s['rows_inserted'] or '?':>6}  {s['imported_at']}")
+        return
+
+    exclude_thinking = not args.include_thinking_tagged
+
+    if args.sources:
+        source_list = [s.strip() for s in args.sources.split(",") if s.strip()]
+        rows = load_rows_pooled(conn, source_list, backend=args.backend_filter,
+                                 exclude_thinking=exclude_thinking)
+        source = "+".join(source_list)
+    else:
+        source_list = [args.source or sources[0]["source_file"]]
+        source = source_list[0]
+        rows = load_rows_pooled(conn, source_list, backend=args.backend_filter,
+                                 exclude_thinking=exclude_thinking)
+    if not rows:
+        sys.exit(f"No rows found for source(s): {source}")
+
+    if args.figures:
+        fig_dir = Path(args.figures)
+        acc_md = generate_figures(conn, source_list, rows, fig_dir,
+                                   backend=args.backend_filter,
+                                   exclude_thinking=exclude_thinking,
+                                   heatmap_name=args.heatmap_name)
+        print(f"\n{acc_md}")
+
+    md = build_markdown(source, rows)
+
+    if args.out:
+        out_path = Path(args.out)
+        out_path.write_text(md)
+        print(f"Written: {out_path}  ({len(rows)} rows, {len(md)} chars)")
+    elif not args.figures:
+        print(md)
+
+
+if __name__ == "__main__":
+    main()

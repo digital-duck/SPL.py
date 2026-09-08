@@ -1,0 +1,113 @@
+-- ============================================================
+-- Recipe 126: MiniZinc CP — Backend-Agnostic Nurse Scheduling
+--
+-- PURPOSE: Demonstrate "DODA for constraint programming."
+-- MiniZinc separates the constraint MODEL (.mzn file) from the
+-- SOLVER BACKEND (CP-SAT, Gecode, Choco, Gurobi CP) — the same
+-- model runs on any backend by changing one parameter.
+--
+-- KEY PARALLEL:
+--   .spl file : LLM adapters  =  .mzn file : CP backends
+-- Both are invariant specifications; the execution layer is
+-- swappable without touching the model.
+--
+-- KEY STORY: 8-nurse 7-day 3-shift scheduling. Hard constraints
+-- (coverage minimums, no night→morning, max 5 days/week) plus
+-- soft preference scoring. solver=OFF generates a schedule that
+-- looks balanced but violates the night→morning rest constraint
+-- in 2 of 7 days — "soft reasoning" doesn't track hard interactions.
+-- solver=ON proves all hard constraints satisfied (CP-SAT backend).
+--
+-- solver=ON  : MiniZinc → CP-SAT backend (all constraints verified)
+-- solver=OFF : LLM scheduling heuristic (may violate hard constraints)
+--
+-- ASSERT: MiniZinc found a schedule satisfying ALL hard constraints,
+--         with zero night→morning violations.
+--
+-- Install: pip install minizinc
+--          MiniZinc binary: https://www.minizinc.org/software.html
+--
+-- Run:
+--   spl3 run cookbook-solver/126_minizinc_cp/minizinc_cp.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/126_minizinc_cp/minizinc_cp.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION nurse_schedule_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a hospital scheduling coordinator building next week's nurse roster.
+
+SCHEDULING PROBLEM:
+{problem_description}
+
+Without a solver, build a 7-day schedule for 8 nurses (N1–N8) across 3 shifts:
+- Morning (06:00–14:00): needs 2 nurses minimum (1 must be senior: N1/N2)
+- Afternoon (14:00–22:00): needs 2 nurses minimum
+- Night (22:00–06:00): needs 1 nurse minimum
+
+Hard rules:
+- No nurse works more than 5 days/week
+- A nurse who works Night on day D cannot work Morning on day D+1 (rest rule)
+- At least one senior (N1 or N2) on each morning shift
+
+Soft preferences (try to satisfy):
+- N3 prefers mornings; N7 prefers no nights; N8 prefers consecutive days off
+
+Output a 7-day table: rows = nurses (N1–N8), columns = days (Mon–Sun),
+cells = M/A/N/Off. Then check your schedule against all hard rules.
+$$;
+
+CREATE FUNCTION explain_cp_result_prompt(cp_report TEXT, problem_description TEXT)
+RETURNS TEXT AS $$
+You are a constraint programming expert explaining MiniZinc results.
+
+PROBLEM:
+{problem_description}
+
+MINIZINC CP RESULT:
+{cp_report}
+
+Explain (≤200 words):
+1. What is constraint propagation, and how does it differ from LP relaxation?
+   (CP reduces domain sizes by forward-checking; LP uses continuous relaxation)
+2. Why did the LLM schedule violate the night→morning constraint?
+   Is this a "reasoning failure" or a "search complexity" failure?
+3. MiniZinc separates the model from the solver backend. What are two advantages
+   of this for organizations with evolving solver licensing?
+4. How would you extend this model to a monthly roster with 30+ nurses?
+   What makes CP scale well here vs. MILP-based scheduling?
+$$;
+
+WORKFLOW minizinc_cp
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r126] minizinc_cp start" LEVEL INFO
+
+  CALL get_scheduling_problem() INTO @problem_json;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL solve_with_minizinc(@problem_json) INTO @result_json;
+      ASSERT schedule_hard_constraints_met(@result_json);
+      CALL format_schedule_report(@result_json) INTO @cp_report;
+      CALL json_get(@result_json, "violations") INTO @violations;
+      CALL json_get(@result_json, "pref_score") INTO @pref_score;
+      LOGGING f"[r126] violations={@violations}  pref_score={@pref_score}" LEVEL INFO;
+      GENERATE explain_cp_result_prompt(@cp_report, @problem_description) INTO @explanation;
+      CALL format_report_solver_on(@cp_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE nurse_schedule_prompt(@problem_description) INTO @llm_schedule;
+      CALL check_llm_schedule_violations(@llm_schedule) INTO @violation_json;
+      CALL format_report_solver_off(@llm_schedule, @violation_json) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

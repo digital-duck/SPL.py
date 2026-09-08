@@ -1,0 +1,109 @@
+-- ============================================================
+-- Recipe 124: Discrete-Event Simulation — Hospital ED (SimPy)
+--
+-- PURPOSE: Demonstrate a solver class entirely absent from the
+-- current catalog: Discrete-Event Simulation (DES). DES answers
+-- "what HAPPENS?" under stochastic dynamics — not "what is
+-- optimal?" like LP/MILP/NLP solvers.
+--
+-- KEY STORY: Hospital Emergency Department. Patients arrive
+-- in a non-Poisson, bursty process (shift handovers, accident
+-- spikes). solver=OFF applies M/M/c queuing theory (assumes
+-- Poisson arrivals, exponential service) — accurate for simple
+-- call centers, wrong for EDs. solver=ON runs 10,000-patient
+-- SimPy simulation capturing burstiness and lognormal service.
+-- The M/M/c formula underestimates 95th-percentile wait by ~60%.
+--
+-- solver=ON  : SimPy DES (10,000-patient stochastic simulation)
+-- solver=OFF : M/M/c analytic queuing formula (Poisson assumption)
+--
+-- ASSERT: simulation produced > 1,000 patient records with
+--         a strictly higher 95th-percentile wait than M/M/c predicts
+--         (showing the Poisson assumption is wrong for this ED).
+--
+-- Install: pip install simpy
+--
+-- Run:
+--   spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/124_simpy_des/simpy_des.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION mmc_queuing_prompt(problem_description TEXT)
+RETURNS TEXT AS $$
+You are a hospital operations analyst using classic queuing theory.
+
+ED PROBLEM:
+{problem_description}
+
+Using the M/M/c formula (Poisson arrivals, exponential service, c servers):
+1. Compute or estimate the mean wait time in queue (Wq) using the Erlang-C formula.
+   Show the formula: ρ = λ/(c·μ), then compute P0 (idle probability) and Wq.
+2. Estimate the 95th-percentile wait time (assume exponential tail: W_95 ≈ Wq × ln(20)).
+3. Compute triage nurse utilization (ρ_triage) and treatment bay utilization (ρ_bay).
+4. Under what conditions does M/M/c give accurate predictions?
+   Why might an ED violate the "Poisson arrivals" assumption?
+
+Show your calculations. Use: λ=3.2 patients/hour (mean), μ_triage=30/hr, μ_treat=1.5/hr.
+$$;
+
+CREATE FUNCTION explain_simulation_prompt(sim_report TEXT, mmc_report TEXT)
+RETURNS TEXT AS $$
+You are a healthcare operations researcher explaining simulation results.
+
+SIMULATION RESULT (SimPy DES):
+{sim_report}
+
+ANALYTIC BASELINE (M/M/c queuing):
+{mmc_report}
+
+Explain (≤200 words):
+1. Why does the simulation show a higher 95th-percentile wait than M/M/c predicts?
+   What does "bursty arrivals" mean mathematically (coefficient of variation > 1)?
+2. What is the "inspection paradox" in queuing — why does arriving during a busy period
+   feel different from the average utilization?
+3. What operational changes would reduce the 95th-percentile wait the most?
+   (Hint: look at which resource has the highest utilization in the simulation)
+4. Why can't you optimize the staffing level from simulation alone — what do you need
+   to add to turn a simulation into an optimization?
+$$;
+
+WORKFLOW simpy_des
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_patients TEXT := "10000"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r124] simpy_des start" LEVEL INFO
+
+  CALL get_ed_problem() INTO @problem_json;
+  CALL json_get(@problem_json, "description") INTO @problem_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  -- Always compute M/M/c baseline (fast, no dependency)
+  CALL compute_mmc_baseline(@problem_json) INTO @mmc_json;
+  CALL format_mmc_report(@mmc_json) INTO @mmc_report;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL run_ed_simulation(@problem_json, @n_patients) INTO @sim_json;
+      ASSERT simulation_valid(@sim_json, @mmc_json);
+      CALL format_sim_report(@sim_json) INTO @sim_report;
+      CALL json_get(@sim_json, "p95_wait_min") INTO @p95_wait;
+      CALL json_get(@mmc_json, "p95_wait_min") INTO @mmc_p95;
+      LOGGING f"[r124] p95_wait_sim={@p95_wait}min  mmc_estimate={@mmc_p95}min" LEVEL INFO;
+      GENERATE explain_simulation_prompt(@sim_report, @mmc_report) INTO @explanation;
+      CALL format_report_solver_on(@sim_report, @mmc_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE mmc_queuing_prompt(@problem_description) INTO @llm_mmc;
+      CALL format_report_solver_off(@llm_mmc, @mmc_report) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete",
+                      use_solver = @use_solver,
+                      n_patients = @n_patients;
+
+END;

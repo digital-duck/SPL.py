@@ -1,0 +1,7 @@
+status,count,percentage
+complete,1101,67.0
+solver_error,460,28.0
+plan_error,76,4.6
+unknown,3,0.2
+narration_error,3,0.2
+machine_proved,1,0.1

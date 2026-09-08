@@ -1,0 +1,61 @@
+% ============================================================================
+% LaTeX Tables for Recipe-77 Results Section
+% ============================================================================
+
+\begin{table}[t]
+\centering
+\caption{Pass rate (\%) and latency by model and arm (mean over all runs). Solver arm = machine-verified correctness via SymPy/Sage kernel. LLM-only arm = unverified output.}
+\label{tab:results-by-model}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+ & \multicolumn{3}{c}{Pass rate (\%)} & & \multicolumn{3}{c}{Latency (ms)} \\
+\cmidrule(lr){2-4} \cmidrule(l){6-8}
+Model & LLM-only & Solver & $\Delta$ & & LLM-only & Solver & $\Delta$ \\
+\midrule
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\centering
+\caption{Solver arm pass rate by tier and backend. T0--T2 (SymPy) = polynomial algebra, limits, series. T3--T5 (Sage) = integration, ODEs, transforms, summation. Pass = status \texttt{complete}.}
+\label{tab:results-by-tier}
+\begin{tabular}{@{}p{0.8cm}p{1.0cm}p{4.0cm}rrrr@{}}
+\toprule
+Tier & Backend & Category & Cells & Passed & Pass rate & Notes \\
+\midrule
+P1 & lean   & Lean proof                     &    1 &      1 & 100.0\% &  \\
+T0 & sympy  & Single-step                    &  160 &    121 &  75.6\% &  \\
+T1 & sage   & Multi-step chains              &   14 &     11 &  78.6\% &  \\
+T1 & sympy  & Multi-step chains              &  348 &    278 &  79.9\% &  \\
+T2 & sympy  & Transcendental/limits          &  320 &    251 &  78.4\% &  \\
+T3 & sage   & Integration/LA                 &  320 &    213 &  66.6\% &  \\
+T4 & sage   & Transforms/ODE                 &  320 &    152 &  47.5\% &  \\
+T5 & sage   & Expert ODE+verify              &  160 &     74 &  46.3\% &  \\
+T6 & sage   & Sage-only (T6)                 &    1 &      1 & 100.0\% &  \\
+\midrule
+T0--T2 & sympy & &  828 &    650 &  78.5\% & Avg \\
+T3--T5 & sage & &  815 &    451 &  55.3\% & Avg \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\centering
+\caption{Solver arm failure mode breakdown (all 1,643 solver-mode cells). \texttt{complete} = machine-verified success. \texttt{solver\_error} = kernel rejected the expression. \texttt{plan\_error} = invalid decomposition structure. Format compliance is not a bottleneck.}
+\label{tab:failure-modes}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Status & Count & Percentage \\
+\midrule
+\texttt{complete            } &   1101 &   67.0\% \\
+\texttt{solver_error        } &    460 &   28.0\% \\
+\texttt{plan_error          } &     76 &    4.6\% \\
+\texttt{unknown             } &      3 &    0.2\% \\
+\texttt{narration_error     } &      3 &    0.2\% \\
+\texttt{machine_proved      } &      1 &    0.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}

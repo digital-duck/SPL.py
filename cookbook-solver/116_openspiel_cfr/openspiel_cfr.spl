@@ -1,0 +1,110 @@
+-- ============================================================
+-- Recipe 116: OpenSpiel CFR — Imperfect Information Games
+--
+-- PURPOSE: Solve imperfect-information extensive-form games
+-- via Counterfactual Regret Minimization (CFR) using DeepMind
+-- OpenSpiel. Extends r111 (Stackelberg perfect-info backward
+-- induction) to games where neither player sees the other's
+-- private information.
+--
+-- KEY STORY: Kuhn Poker — the smallest non-trivial poker
+-- variant. Two players each hold one private card (J/Q/K).
+-- Player 1 acts first: bet or pass. Since cards are hidden,
+-- optimal play is a MIXED strategy (randomized bluffing).
+--
+-- LLM: "Bet with K, pass with J, mix with Q."  (~0.25 exploit)
+-- CFR: Finds the Nash equilibrium mixed strategy after ~1000
+--      iterations: bluff J at probability 1/3, always bet K.
+--      Exploitability converges below 0.05 (near-unexploitable).
+--
+-- ASSERT: exploitability < 0.05 after n_iterations.
+--   Exploitability = how much an optimal opponent can gain per
+--   game on average by best-responding to your policy.
+--   0.0 = perfect Nash; ~0.25 = naive LLM always-bet-K.
+--
+-- Why CFR over backward induction (r111)?
+--   Backward induction requires perfect information.
+--   CFR handles PRIVATE information (hidden cards, sealed bids)
+--   by minimizing regret across all possible information sets
+--   simultaneously. Scales to poker, negotiation, sealed auctions.
+--
+-- Install: pip install open_spiel
+--
+-- Run:
+--   spl3 run cookbook-solver/116_openspiel_cfr/openspiel_cfr.spl \
+--       --adapter claude_cli --param use_solver=true \
+--       --param n_iterations=1000
+--
+--   spl3 run cookbook-solver/116_openspiel_cfr/openspiel_cfr.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION reason_poker_strategy_prompt(game_description TEXT)
+RETURNS TEXT AS $$
+You are a poker strategist advising a player in Kuhn Poker.
+
+GAME RULES:
+{game_description}
+
+Without using game theory algorithms, reason through the optimal strategy:
+1. When should Player 1 bet vs pass? (Consider: bluffing with J, value-betting with K)
+2. When should Player 2 call vs fold? (Consider: pot odds, opponent's likely hand range)
+3. Is there a pure strategy (always bet K, always pass J) that an opponent cannot exploit?
+4. Why might randomizing (bluffing sometimes with J) be better than always playing the same way?
+
+Give concrete strategy recommendations. Focus on the hidden-information tension.
+$$;
+
+CREATE FUNCTION explain_cfr_result_prompt(cfr_report TEXT, game_description TEXT)
+RETURNS TEXT AS $$
+You are a game theory analyst explaining CFR results for Kuhn Poker.
+
+GAME RULES:
+{game_description}
+
+CFR RESULT:
+{cfr_report}
+
+Explain (≤200 words):
+1. What does exploitability measure, and why does a good player want it near zero?
+2. What is the Nash equilibrium mixed strategy CFR found, and why is bluffing optimal?
+3. Why can't a pure strategy (always bet with K, never bluff) achieve Nash equilibrium?
+4. How does CFR generalize beyond this toy game to real poker, sealed auctions, or
+   multi-round negotiation with private information?
+$$;
+
+WORKFLOW openspiel_cfr
+  INPUT @use_solver TEXT := "true"
+  INPUT @n_iterations TEXT := "1000"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r116] openspiel_cfr start" LEVEL INFO
+
+  CALL get_game_description() INTO @game_json;
+  CALL json_get(@game_json, "rules") INTO @game_description;
+
+  -- Normalize the ablation flag (true/1/yes/on → "true") then route deterministically
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      -- solver=ON: CFR (requires open_spiel)
+      CALL solve_with_cfr(@n_iterations) INTO @result_json;
+      ASSERT cfr_converged(@result_json);
+      CALL format_cfr_report(@result_json) INTO @cfr_report;
+      CALL json_get(@result_json, "exploitability") INTO @exploit;
+      LOGGING f"[r116] CFR exploitability={@exploit} after {@n_iterations} iterations" LEVEL INFO;
+      GENERATE explain_cfr_result_prompt(@cfr_report, @game_description) INTO @explanation;
+      CALL format_report_solver_on(@cfr_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      -- solver=OFF: LLM reasons about poker strategy directly (no solver dependency)
+      GENERATE reason_poker_strategy_prompt(@game_description) INTO @llm_strategy;
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete",
+                      use_solver = @use_solver,
+                      n_iterations = @n_iterations;
+
+END;

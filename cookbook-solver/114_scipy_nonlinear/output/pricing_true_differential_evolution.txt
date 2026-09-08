@@ -1,0 +1,73 @@
+=== Nonlinear Optimization (scipy.optimize / pricing) ===
+
+── Problem Specification ────────────────────────────────────
+```json
+{
+  "type": "pricing",
+  "sense": "maximize",
+  "params": {
+    "demand_scale": 10000,
+    "elasticity": 1.5,
+    "unit_cost": 8,
+    "fixed_cost": 200,
+    "min_demand": 0
+  },
+  "bounds": {"x_min": 6, "x_max": 150}
+}
+```
+
+── Solver Result (solver=ON, method=differential_evolution) ──────────────
+{"success": true, "method": "differential_evolution", "problem_type": "pricing", "x_opt": 24.0, "objective": 1160.8276, "n_iterations": 14, "message": "Optimization terminated successfully."}
+
+── Verification ─────────────────────────────────────────────
+{"verdict": "PASS", "x_opt": 24.0, "recomputed_objective": 1160.8276, "reported_objective": 1160.8276, "delta": 0.0, "notes": "all checks passed"}
+
+── Business Interpretation ──────────────────────────────────
+## Pricing Optimization Result
+
+### 1. Optimal Decision
+
+**Set price to $24.00 — this maximizes profit at $1,160.83 per period.**
+
+At this price, demand is approximately 85 units. The $16 margin over unit cost ($24 − $8) is wide enough to generate strong profit, while volume stays high enough to cover the $200 fixed cost with room to spare.
+
+---
+
+### 2. Why $24?
+
+This is the classic profit-maximizing price for a market with elasticity 1.5. Two competing forces pull in opposite directions:
+
+- **Raise price → more margin per unit, but fewer customers.**
+- **Lower price → more customers, but thinner margin.**
+
+With elasticity 1.5, each 1% price increase drives away 1.5% of demand. Below $24, the margin is too thin — even 680 units at $6 generates a **loss** because you're selling below cost. Above $24, volume collapses faster than margin grows — at $150 you're selling only ~5 units.
+
+The math says the sweet spot sits at exactly 3× the unit cost ($8 × 3 = $24), which is confirmed by the solver.
+
+---
+
+### 3. Payoff at Optimum vs. Boundaries
+
+| Price | Approx. Units | Profit/Period |
+|-------|--------------|---------------|
+| $6 (floor) | ~680 | **−$1,561** (loss — below cost) |
+| **$24 (optimal)** | **~85** | **+$1,161** |
+| $150 (ceiling) | ~5 | **+$573** |
+
+The boundary comparisons show the pricing corridor clearly: the floor destroys value, and the ceiling leaves $588 of profit on the table versus the optimum.
+
+---
+
+### 4. Verification
+
+**Status: PASS.** The solver's reported profit ($1,160.83) was independently recomputed from scratch using the same inputs, and the two numbers matched to the penny (delta = 0.0). This rules out numerical glitches or reporting errors — the answer is trustworthy.
+
+---
+
+### 5. One Sensitivity to Explore
+
+**What happens if customers become more price-sensitive (elasticity rises from 1.5 to 2.0)?**
+
+The optimal price would drop to $16 (not $24), and estimated profit would fall from ~$1,161 to roughly **$112 per period** — a 90% collapse. This matters because elasticity is rarely stable: competitive entrants, economic downturns, or substitute products can all shift it. A quick re-run with elasticity = 2.0 would tell you how much pricing headroom you'd lose and whether the business remains viable at that scenario.
+
+LLM calls: 2  (formulation + interpretation)

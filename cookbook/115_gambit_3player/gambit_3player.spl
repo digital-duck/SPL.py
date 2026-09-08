@@ -1,0 +1,158 @@
+-- ============================================================
+-- Recipe 115: Gambit 3-Player Game Theory
+--
+-- PURPOSE: Find Nash equilibria in a 3-player normal-form game
+-- using pygambit (or brute-force fallback). Extends r110's
+-- 2-player nashpy analysis to the 3-firm case.
+--
+-- KEY STORY: Three SaaS firms simultaneously choose Premium
+-- ($200/mo) or Standard ($120/mo). Premium is collectively
+-- optimal but individually unstable — Standard is a dominant
+-- strategy for every firm regardless of rivals' choices.
+-- Nash: (Standard, Standard, Standard) = $120K each.
+-- Cooperative: (Premium, Premium, Premium) = $200K each.
+-- Gap = $80K/firm — the 3-player Prisoner's Dilemma.
+--
+-- Why gambit over nashpy (r110)?
+--   nashpy handles 2-player normal-form only.
+--   gambit handles N-player games, extensive-form, and
+--   more equilibrium concepts (correlated, QRE, SPNE).
+--
+-- solver=ON  : pygambit ExternalEnumPureSolver (falls back
+--              to brute-force if not installed)
+-- solver=OFF : LLM reasons about 3-way competitive strategy
+--
+-- Install (optional — brute-force works without it):
+--   pip install pygambit
+--
+-- Run:
+--   spl3 run cookbook/115_gambit_3player/gambit_3player.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook/115_gambit_3player/gambit_3player.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE TOOL_API get_default_game()
+RETURNS TEXT AS PYTHON $$
+def get_default_game() -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_default_game as _fn
+    return _fn()
+$$;
+
+CREATE TOOL_API find_nash_equilibria_3p(game_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def find_nash_equilibria_3p(game_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import find_nash_equilibria_3p as _fn
+    return _fn(game_json)
+$$;
+
+CREATE TOOL_API nash_3p_found(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def nash_3p_found(result_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import nash_3p_found as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API format_gambit_report(result_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_gambit_report(result_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_gambit_report as _fn
+    return _fn(result_json)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "115_gambit_3player")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+CREATE FUNCTION reason_3player_prompt(game_description TEXT)
+RETURNS TEXT AS $$
+You are a business strategy consultant advising three competing SaaS companies.
+
+SITUATION:
+{game_description}
+
+Without computing Nash equilibria, reason through this 3-way competitive situation:
+1. What pricing tier should each firm choose, and why?
+2. Is there a stable outcome where no firm regrets their choice?
+3. What is the "cooperative" optimum — and why is it hard to maintain with 3 competitors?
+4. How does having a third competitor change the dynamics vs a head-to-head duopoly?
+
+Give concrete recommendations. Do not use game theory formulas — reason from business intuition.
+$$;
+
+CREATE FUNCTION explain_3p_nash_prompt(nash_report TEXT, game_description TEXT)
+RETURNS TEXT AS $$
+You are a game theory analyst. The solver just found Nash equilibria for a 3-firm pricing game.
+
+GAME DESCRIPTION:
+{game_description}
+
+NASH EQUILIBRIUM RESULT:
+{nash_report}
+
+Explain (≤200 words):
+1. What is the Nash equilibrium, and what does it mean in business terms?
+2. Why does Standard dominate Premium for every firm, regardless of competitors' choices?
+3. What is the Prisoner's Dilemma gap — the collective cost of rational self-interest?
+4. Why is the 3-player dilemma harder to escape than the 2-player version (r110)?
+5. What real-world mechanisms could sustain Premium pricing across three rivals?
+$$;
+
+WORKFLOW gambit_3player
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r115] gambit_3player start" LEVEL INFO
+
+  CALL get_default_game() INTO @game_json;
+  CALL json_get_field(@game_json, "description") INTO @game_description;
+
+  EVALUATE @use_solver
+    WHEN "true" THEN
+      CALL find_nash_equilibria_3p(@game_json) INTO @result_json;
+      ASSERT nash_3p_found(@result_json);
+      CALL format_gambit_report(@result_json) INTO @nash_report;
+      CALL json_get_field(@result_json, "n_equilibria") INTO @n_eq;
+      CALL json_get_field(@result_json, "solver_used") INTO @solver_used;
+      LOGGING f"[r115] found {@n_eq} Nash equilibria via {@solver_used}" LEVEL INFO;
+      GENERATE explain_3p_nash_prompt(@nash_report, @game_description) INTO @explanation;
+      @report := f"=== Gambit 3-Player Game Theory (r115) | solver=ON ===
+
+{@nash_report}
+
+── Business Explanation ────────────────────────────────────
+{@explanation}"
+
+    WHEN "false" THEN
+      GENERATE reason_3player_prompt(@game_description) INTO @llm_strategy;
+      @report := f"=== Gambit 3-Player Game Theory (r115) | solver=OFF ===
+
+── LLM Strategic Reasoning ─────────────────────────────────
+{@llm_strategy}
+
+Note: LLM reasons from intuition. Run --param use_solver=true to find
+Nash equilibria (Standard dominates regardless of rivals — 3-player PD)."
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

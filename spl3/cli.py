@@ -92,22 +92,40 @@ class _CapturingAdapter:
         return await self._inner.generate(prompt, model=model, **kwargs)
 
 
+def _resolve_log_dir(workflow_node, params: dict, spl_file_dir: Path) -> Path:
+    """Return the log directory: params['log_dir'] > workflow INPUT default > ~/.spl/logs/."""
+    if "log_dir" in params:
+        raw = params["log_dir"]
+    else:
+        raw = None
+        for inp in getattr(workflow_node, "inputs", []):
+            if inp.name == "log_dir" and inp.default_value is not None:
+                raw = getattr(inp.default_value, "value", None)
+                break
+    if raw:
+        p = Path(raw)
+        return p if p.is_absolute() else (spl_file_dir / p).resolve()
+    return _SPL_LOG_DIR
+
+
 def _write_run_log(
     stem: str,
     adapter_name: str,
     model_name: str,
     result,
     started_at: datetime,
+    log_dir: Path | None = None,
 ) -> Path:
     """Write a rich markdown run log matching spl-go / spl-ts format. Returns the log path."""
-    _SPL_LOG_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = log_dir if log_dir is not None else _SPL_LOG_DIR
+    out_dir.mkdir(parents=True, exist_ok=True)
     ts_file  = started_at.strftime("%Y%m%d-%H%M%S")
     ts_human = started_at.strftime("%Y-%m-%d %H:%M:%S")
 
     model_slug = model_name.replace(":", "-").replace(" ", "_") if model_name else ""
     filename = (f"{stem}-{adapter_name}-{model_slug}-{ts_file}.md" if model_slug
                 else f"{stem}-{adapter_name}-{ts_file}.md")
-    log_path = _SPL_LOG_DIR / filename
+    log_path = out_dir / filename
 
     # Support both WorkflowResult (spl3) and SPLResult / GenerationResult (spl2)
     in_tok  = (getattr(result, "total_input_tokens",  None)
@@ -137,7 +155,7 @@ def _write_run_log(
 
 @click.group(
     help=f"SPL 3.0 — Declarative Structured Prompt Language (v{_SPL_VERSION}).",
-    context_settings=dict(terminal_width=120),
+    context_settings=dict(terminal_width=120, help_option_names=["-h", "--help"]),
 )
 @click.version_option(_SPL_VERSION, "--version", "-V", prog_name="spl3")
 @click.option("--hub", default=None, envvar="SPL3_HUB", help="Momagrid Hub URL")
@@ -159,10 +177,28 @@ def cmd_help(ctx):
 
 
 # ------------------------------------------------------------------ #
-# spl3 install-skill                                                  #
+# spl3 util — format conversion, document tools, one-off helpers     #
 # ------------------------------------------------------------------ #
 
-@main.command("install-skill", short_help="Install the /spl3 Claude Code skill.")
+@main.group("util", short_help="Format conversion, document tools, and one-off helpers.")
+def cmd_util():
+    """Utility commands: format conversion, document generation, and helpers."""
+
+
+# ------------------------------------------------------------------ #
+# spl3 hub — Hub registry, peering, and workflow management          #
+# ------------------------------------------------------------------ #
+
+@main.group("hub", short_help="Hub registry, peering, and workflow management.")
+def cmd_hub():
+    """Manage the Momagrid Hub: registry, peering, and durable workflow runs."""
+
+
+# ------------------------------------------------------------------ #
+# spl3 util install-skill                                             #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("install-skill", short_help="Install the /spl3 Claude Code skill.")
 @click.option(
     "--global/--local", "global_", default=True,
     help="Install to ~/.claude (global, default) or ./.claude (project-local).",
@@ -681,10 +717,13 @@ def cmd_configure_import(file, dest, keys, dry_run):
                    "Auto-enabled at ~/.spl/workflows.db when --persistence is active.")
 @click.option("--llm-max-output-tokens", "llm_max_output_tokens", default=None, type=int, metavar="N",
               help="Default max output tokens per GENERATE call (overrides built-in default of 1000).")
+@click.option("--main", "main_workflow", default=None, metavar="NAME",
+              help="Workflow name to use as the entry point. Overrides the implicit "
+                   "selection (filename-match → last defined).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
         llm_timeout, kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
-        kernel_store_path, llm_max_output_tokens):
+        kernel_store_path, llm_max_output_tokens, main_workflow):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -743,7 +782,8 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
                               kernel_timeout=kernel_timeout, kernel_name=kernel_name,
                               persistence=persistence_backend, workflow_id=workflow_id,
                               kernel_store=kernel_store,
-                              llm_max_output_tokens=llm_max_output_tokens))
+                              llm_max_output_tokens=llm_max_output_tokens,
+                              main_workflow=main_workflow))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
@@ -752,7 +792,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                         kernel_name="python3",
                         persistence=None, workflow_id=None,
                         kernel_store=None,
-                        llm_max_output_tokens=None):
+                        llm_max_output_tokens=None,
+                        main_workflow=None):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -886,8 +927,21 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
     if defns:
         # ── SPL 3.0 WORKFLOW path ──────────────────────────────────────────
-        target = next((d for d in defns if d.name == stem), defns[-1])
+        if main_workflow:
+            target = next((d for d in defns if d.name == main_workflow), None)
+            if target is None:
+                available = ", ".join(d.name for d in defns)
+                raise click.BadParameter(
+                    f"Workflow '{main_workflow}' not found in {path.name}. "
+                    f"Available: {available}",
+                    param_hint="--main",
+                )
+        else:
+            target = next((d for d in defns if d.name == stem), defns[-1])
         click.echo(f"Running workflow: {target.name}({list(params)})")
+
+        log_stem = target.name
+        resolved_log_dir = _resolve_log_dir(target.ast_node, params, path.parent)
 
         result = await executor.execute_workflow(target.ast_node, params=params)
 
@@ -922,16 +976,19 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
             if toks_in:
                 click.echo(f"Tokens:     {toks_in} in / {toks_out} out")
 
+        log_stem = stem
+        resolved_log_dir = _SPL_LOG_DIR
         resolved_model = capturing.last_model or model or getattr(spl2_results[0], "model", "") if spl2_results else model or ""
         log_result = spl2_results[-1] if spl2_results else None
 
     if log_result is not None:
         log_path = _write_run_log(
-            stem=stem,
+            stem=log_stem,
             adapter_name=adapter_name,
             model_name=resolved_model,
             result=log_result,
             started_at=started_at,
+            log_dir=resolved_log_dir,
         )
         click.echo(f"Log:     {log_path}")
 
@@ -940,7 +997,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 # spl workflow — durable run management                               #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def workflow():
     """Manage durable workflow runs (persistence required)."""
 
@@ -1081,7 +1138,7 @@ def workflow_resume(ctx, spl_file, workflow_id, adapter, model, backend):
 # spl registry                                                        #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def registry():
     """Manage the workflow registry."""
 
@@ -1102,7 +1159,7 @@ def registry_list(ctx):
         click.echo("No --hub specified. Use --hub <url> to query Hub registry.")
 
 
-@main.command()
+@click.command()
 @click.argument("path")
 @click.pass_context
 def register(ctx, path):
@@ -1143,7 +1200,7 @@ def register(ctx, path):
 # spl peers                                                           #
 # ------------------------------------------------------------------ #
 
-@main.group()
+@click.group()
 def peers():
     """Manage Hub-to-Hub peering."""
 
@@ -1186,6 +1243,12 @@ def peers_add(ctx, peer_url):
         click.echo(f"Peering established: {hub_url} <-> {peer_url}")
     except Exception as e:
         raise click.ClickException(str(e))
+
+
+cmd_hub.add_command(workflow)
+cmd_hub.add_command(registry)
+cmd_hub.add_command(register)
+cmd_hub.add_command(peers)
 
 
 # ------------------------------------------------------------------ #
@@ -2007,7 +2070,7 @@ def _extract_mmd_sections(text: str, llm, model) -> str:
     return _extract_spec_intro(text, llm=llm, model=model)
 
 
-@main.command("text2mmd", short_help="Generate a Mermaid flowchart from natural language.")
+@cmd_util.command("text2mmd", short_help="Generate a Mermaid flowchart from natural language.")
 @click.argument("description", required=False, default=None)
 @click.option("--description", "-d", "description_opt", default=None, metavar="TEXT_OR_FILE",
               help="Natural language workflow description or file path.")
@@ -2254,7 +2317,7 @@ def _resolve_output_path(
     return None
 
 
-@main.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
+@cmd_util.command("img2mmd", short_help="Extract a Mermaid flowchart from an image.")
 @click.argument("image_path")
 @llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
@@ -2291,7 +2354,7 @@ def cmd_img2mmd(image_path, adapter, model, out, out_dir):
         raise click.ClickException(str(e))
 
 
-@main.command("img2text", short_help="Extract text and pseudo-code from an image.")
+@cmd_util.command("img2text", short_help="Extract text and pseudo-code from an image.")
 @click.argument("image_path")
 @llm_options(default_adapter="openrouter")
 @click.option("--out", "-o", default=None, metavar="FILE",
@@ -2332,7 +2395,7 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 # spl3 spl2mmd                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("spl2mmd", short_help="Generate a Mermaid flowchart for each .spl file.")
+@cmd_util.command("spl2mmd", short_help="Generate a Mermaid flowchart for each .spl file.")
 @click.argument("spl_files", nargs=-1, required=True, metavar="SPL_FILE...")
 @click.option("--out-dir", default=None, metavar="DIR",
               help="Output directory for all generated files (default: mermaid/ subdir of each input's parent).")
@@ -2651,7 +2714,7 @@ def cmd_spl2mmd(spl_files, out_dir, preview, save_html, save_markdown, save_svg,
 # spl3 mmd2spl                                                    #
 # ------------------------------------------------------------------ #
 
-@main.command("mmd2spl")
+@cmd_util.command("mmd2spl")
 @click.argument("mermaid_file")
 @click.option("--output", "-o", default=None, metavar="FILE",
               help="Write generated SPL to FILE (overrides --out-dir).")
@@ -2944,6 +3007,124 @@ def cmd_mmd2spl(mermaid_file, output, out_dir, adapter, model, validate, templat
 
 
 # ------------------------------------------------------------------ #
+# spl3 util mmd2img                                                   #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("mmd2img", short_help="Convert a .mmd Mermaid file to PNG/SVG/PDF/HTML.")
+@click.argument("mmd_files", nargs=-1, required=True, metavar="MMD_FILE...")
+@click.option("--format", "-f", "fmt",
+              default="png", show_default=True,
+              type=click.Choice(["png", "svg", "pdf", "html"], case_sensitive=False),
+              help="Output format.")
+@click.option("--out", "-o", default=None, metavar="FILE",
+              help="Output file path (single input only).")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory (default: same directory as each input file).")
+@click.option("--background", default="white", show_default=True,
+              help="Background colour for PNG/SVG (e.g. white, transparent).")
+@click.option("--theme", default="default", show_default=True,
+              type=click.Choice(["default", "forest", "dark", "neutral"]),
+              help="Mermaid theme.")
+@click.option("--width", "-w", default=None, type=int, metavar="PX",
+              help="Output width in pixels (PNG/SVG only). mmdc default: 800.")
+@click.option("--height", "-H", default=None, type=int, metavar="PX",
+              help="Output height in pixels (PNG/SVG only). mmdc default: auto.")
+def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme, width, height):
+    """Convert one or more Mermaid .mmd files to an image.
+
+    Uses mmdc (Mermaid CLI) if installed; otherwise falls back to
+    'npx --yes @mermaid-js/mermaid-cli' (requires Node.js).
+
+    HTML output uses the built-in renderer (no mmdc required).
+
+    \b
+    Install mmdc once:
+      npm install -g @mermaid-js/mermaid-cli
+
+    \b
+    Examples:
+      spl3 util mmd2img diagram.mmd                      # → diagram.png
+      spl3 util mmd2img diagram.mmd -f svg               # → diagram.svg
+      spl3 util mmd2img diagram.mmd -o /tmp/out.png      # explicit path
+      spl3 util mmd2img *.mmd --out-dir ./images         # batch convert
+      spl3 util mmd2img diagram.mmd -f pdf --theme dark
+      spl3 util mmd2img diagram.mmd -f html              # no mmdc needed
+      spl3 util mmd2img diagram.mmd -w 1800 -H 900       # custom dimensions
+    """
+    import shutil, subprocess, json, tempfile
+    from pathlib import Path
+
+    if out and len(mmd_files) > 1:
+        raise click.UsageError("--out/-o can only be used with a single input file.")
+
+    mmdc = shutil.which("mmdc")
+    mmdc_base = [mmdc] if mmdc else ["npx", "--yes", "@mermaid-js/mermaid-cli"]
+
+    puppet_cfg = Path(tempfile.mktemp(suffix=".json"))
+    puppet_cfg.write_text(json.dumps({"args": ["--no-sandbox"]}))
+
+    try:
+        for mmd_file in mmd_files:
+            mmd_path = Path(mmd_file)
+            if not mmd_path.exists():
+                click.echo(f"Warning: {mmd_file} not found — skipped", err=True)
+                continue
+
+            if fmt == "html":
+                mmd_text = mmd_path.read_text(encoding="utf-8")
+                if out:
+                    out_path = Path(out)
+                elif out_dir:
+                    out_path = Path(out_dir) / f"{mmd_path.stem}.html"
+                else:
+                    out_path = mmd_path.with_suffix(".html")
+                out_path.parent.mkdir(parents=True, exist_ok=True)
+                out_path.write_text(_mmd_single_html(mmd_text, mmd_path.stem), encoding="utf-8")
+                click.echo(f"HTML: {out_path}")
+                continue
+
+            # PNG / SVG / PDF — via mmdc
+            if out:
+                out_path = Path(out)
+            elif out_dir:
+                out_path = Path(out_dir) / f"{mmd_path.stem}.{fmt}"
+            else:
+                out_path = mmd_path.with_suffix(f".{fmt}")
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+
+            args = mmdc_base + [
+                "-i", str(mmd_path),
+                "-o", str(out_path),
+                "-p", str(puppet_cfg),
+                "--backgroundColor", background,
+                "--theme", theme,
+            ]
+            if width is not None and fmt in ("png", "svg"):
+                args += ["-w", str(width)]
+            if height is not None and fmt in ("png", "svg"):
+                args += ["-H", str(height)]
+            try:
+                r = subprocess.run(args, capture_output=True, timeout=60)
+                if r.returncode == 0:
+                    click.echo(f"{fmt.upper()}: {out_path}")
+                else:
+                    stderr = r.stderr.decode(errors="replace").strip()
+                    click.echo(f"Error rendering {mmd_path.name}:", err=True)
+                    if stderr:
+                        click.echo(f"  {stderr}", err=True)
+                    click.echo("  Install mmdc: npm install -g @mermaid-js/mermaid-cli", err=True)
+            except FileNotFoundError:
+                raise click.ClickException(
+                    "mmdc not found and npx is unavailable.\n"
+                    "Install: npm install -g @mermaid-js/mermaid-cli"
+                )
+            except subprocess.TimeoutExpired:
+                click.echo(f"Warning: mmdc timed out for {mmd_path.name}", err=True)
+    finally:
+        puppet_cfg.unlink(missing_ok=True)
+
+
+# ------------------------------------------------------------------ #
 # spl3 validate                                                       #
 # ------------------------------------------------------------------ #
 
@@ -3022,7 +3203,7 @@ def cmd_validate(spl_files, semantic, strict):
 # spl3 explain                                                        #
 # ------------------------------------------------------------------ #
 
-@main.command("explain")
+@cmd_util.command("explain")
 @click.argument("spl_file")
 def cmd_explain(spl_file):
     """Show execution plan for an .spl file (no LLM call)."""
@@ -3548,7 +3729,7 @@ Write the specification now.
 """
 
 
-@main.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
+@cmd_util.command("describe", short_help="Generate a plain-English spec for an .spl file or folder.")
 @click.argument("spl_path")
 @llm_options()
 @click.option("--out-dir", "spec_dir", default=None, metavar="DIR",
@@ -3625,6 +3806,168 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 
     spec_path.write_text(spec_text, encoding="utf-8")
     click.echo(f"Spec written to: {spec_path}")
+
+
+# ------------------------------------------------------------------ #
+# spl3 util md2pdf                                                    #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("md2pdf", short_help="Convert a Markdown file to PDF via pandoc + XeLaTeX.")
+@click.argument("md_file", metavar="MD_FILE")
+@click.option("--output", "-o", default=None, metavar="FILE",
+              help="Output PDF path (default: same directory as input, same stem).")
+@click.option("--font", default="DejaVu Serif", show_default=True,
+              help="Body font name (must be installed on the system).")
+@click.option("--mono-font", default="DejaVu Sans Mono", show_default=True,
+              help="Monospace font for code blocks.")
+@click.option("--font-size", default="11pt", show_default=True,
+              help="Base font size (e.g. 10pt, 12pt).")
+@click.option("--margin", default="0.75in", show_default=True,
+              help="Page margin (e.g. 1in, 2cm).")
+@click.option("--toc/--no-toc", default=True, show_default=True,
+              help="Include a table of contents.")
+@click.option("--toc-depth", default=2, show_default=True, type=int,
+              help="TOC depth (number of heading levels to include).")
+def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_depth):
+    """Convert a Markdown file to PDF using pandoc + XeLaTeX.
+
+    Handles Unicode, box-drawing characters, and local image paths.
+    Requires pandoc and a XeLaTeX installation (e.g. texlive-xetex).
+
+    \b
+    Examples:
+      spl3 util md2pdf docs/solver-guide.md
+      spl3 util md2pdf report.md -o /tmp/report.pdf --no-toc
+      spl3 util md2pdf spec.md --font "Liberation Serif" --font-size 12pt
+    """
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    md_path = Path(md_file).resolve()
+    if not md_path.exists():
+        raise click.ClickException(f"File not found: {md_path}")
+
+    if output:
+        out_path = Path(output).resolve()
+    else:
+        out_path = md_path.with_suffix(".pdf")
+
+    click.echo(f"Input:  {md_path}", err=True)
+    click.echo(f"Output: {out_path}", err=True)
+
+    # Lua filter: reassign table column widths from actual content length.
+    # Pandoc's default uses separator-dash counts (|:---:| = 5 dashes → ~45%
+    # for a 3-column table) which ignores content — short columns bloat,
+    # long-text columns overflow. This filter measures the longest cell text
+    # per column, distributes widths proportionally (clamped 4%–60%), then
+    # renormalises so the sum ≤ 0.98 — LaTeX wraps long columns instead of
+    # letting them run off the page.
+    _LUA_AUTO_TABLE_WIDTHS = """\
+local function col_len(cell)
+  -- cell.content is a list of Blocks; stringify handles it correctly
+  return #pandoc.utils.stringify(cell.content)
+end
+
+function Table(t)
+  local n = #t.colspecs
+  if n == 0 then return t end
+
+  local maxlen = {}
+  for i = 1, n do maxlen[i] = 4 end   -- floor so empty cols still get space
+
+  for _, row in ipairs(t.head.rows) do
+    for i, cell in ipairs(row.cells) do
+      if i <= n then
+        local l = col_len(cell)
+        if l > maxlen[i] then maxlen[i] = l end
+      end
+    end
+  end
+
+  for _, body in ipairs(t.bodies) do
+    for _, row in ipairs(body.body) do
+      for i, cell in ipairs(row.cells) do
+        if i <= n then
+          local l = col_len(cell)
+          if l > maxlen[i] then maxlen[i] = l end
+        end
+      end
+    end
+  end
+
+  local total = 0
+  for i = 1, n do total = total + maxlen[i] end
+
+  for i = 1, n do
+    local w = maxlen[i] / total
+    t.colspecs[i][2] = math.max(0.04, math.min(0.60, w))
+  end
+
+  local sum = 0
+  for i = 1, n do sum = sum + t.colspecs[i][2] end
+  if sum > 0.98 then
+    local scale = 0.98 / sum
+    for i = 1, n do t.colspecs[i][2] = t.colspecs[i][2] * scale end
+  end
+
+  return t
+end
+"""
+
+    cmd = [
+        "pandoc", str(md_path),
+        "--pdf-engine=xelatex",
+        "--resource-path=.",
+        f"-V", f"mainfont={font}",
+        f"-V", "sansfont=DejaVu Sans",
+        f"-V", f"monofont={mono_font}",
+        f"-V", "monofontoptions=Scale=0.88",
+        f"-V", f"geometry=margin={margin}",
+        f"-V", f"fontsize={font_size}",
+        f"-V", "colorlinks=true",
+        f"-V", "linkcolor=NavyBlue",
+        f"-V", "urlcolor=NavyBlue",
+        f"-V", "toccolor=black",
+        f"-V", "linestretch=1.15",
+        "--standalone",
+        "-f", "markdown+smart",
+        "-o", str(out_path),
+    ]
+    if toc:
+        cmd += ["--toc", f"--toc-depth={toc_depth}"]
+
+    lua_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".lua", delete=False) as lf:
+            lf.write(_LUA_AUTO_TABLE_WIDTHS)
+            lua_path = lf.name
+        cmd += [f"--lua-filter={lua_path}"]
+
+        result = subprocess.run(
+            cmd,
+            cwd=str(md_path.parent),   # resolve relative image paths correctly
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if result.stderr.strip():
+            click.echo(result.stderr.strip(), err=True)
+        click.echo(f"Done: {out_path}")
+    except FileNotFoundError:
+        raise click.ClickException(
+            "pandoc not found. Install with: sudo apt install pandoc texlive-xetex"
+        )
+    except subprocess.CalledProcessError as e:
+        click.echo(e.stderr, err=True)
+        raise click.ClickException("pandoc conversion failed (see errors above).")
+    finally:
+        import os
+        if lua_path:
+            try:
+                os.unlink(lua_path)
+            except Exception:
+                pass
 
 
 # ------------------------------------------------------------------ #

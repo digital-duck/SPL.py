@@ -1,0 +1,292 @@
+-- ============================================================
+-- Recipe 109: Synthetic Problem Generator
+--
+-- PURPOSE: Expand the test space for any solver recipe by
+-- generating N structural variants of a reference problem,
+-- solving each one deterministically, and saving a labeled
+-- test suite: (problem_text, formal_spec, optimal, status).
+--
+-- WHY: LLM problem decomposition (NL → solver formulation) is
+-- the ceiling on solver=ON correctness (F11, F12). A labeled
+-- dataset of (problem, known_optimal) pairs lets you measure
+-- that ceiling across models, scales, and domains — turning
+-- a single verified recipe into a repeatable benchmark.
+--
+-- WORKFLOW:
+--   1. LLM generates N variants as structured JSON
+--      (problem_text + formal spec in one shot)
+--   2. WHILE repair loop fixes malformed JSON (≤3 attempts)
+--   3. ASSERT: at least 1 valid variant before proceeding
+--   4. batch_solve routes each variant to the right solver
+--   5. format_test_suite + save_test_suite persist results
+--   6. LLM analyzes difficulty spread across the suite
+--
+-- Supported domains: LP, ILP, supply-sourcing
+-- Output: JSON test suite saved to output/{domain}_{timestamp}.json
+--
+-- Run:
+--   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--       --adapter ollama -m gemma3 \
+--       --param domain=LP --param n_variants=5 --param n_size=5
+--
+--   # Scale up like r78 ablation: n05 → n10 → n20
+--   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--       --adapter claude_cli \
+--       --param domain=LP --param n_variants=5 --param n_size=10
+--
+--   spl3 run cookbook/109_synthetic_problems/synthetic_problem_gen.spl \
+--       --adapter claude_cli \
+--       --param domain=supply-sourcing --param n_variants=5 --param n_size=20
+-- ============================================================
+
+-- ── Tool APIs ────────────────────────────────────────────────
+
+CREATE TOOL_API parse_variants(variants_raw TEXT, domain TEXT)
+RETURNS TEXT AS PYTHON $$
+def parse_variants(variants_raw: str, domain: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import parse_variants as _fn
+    return _fn(variants_raw, domain)
+$$;
+
+CREATE TOOL_API has_valid_variants(variants_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def has_valid_variants(variants_json: str) -> bool:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import has_valid_variants as _fn
+    return _fn(variants_json)
+$$;
+
+CREATE TOOL_API get_parse_errors(variants_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def get_parse_errors(variants_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import get_parse_errors as _fn
+    return _fn(variants_json)
+$$;
+
+CREATE TOOL_API batch_solve(variants_json TEXT, domain TEXT)
+RETURNS TEXT AS PYTHON $$
+def batch_solve(variants_json: str, domain: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import batch_solve as _fn
+    return _fn(variants_json, domain)
+$$;
+
+CREATE TOOL_API format_test_suite(results_json TEXT)
+RETURNS TEXT AS PYTHON $$
+def format_test_suite(results_json: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import format_test_suite as _fn
+    return _fn(results_json)
+$$;
+
+CREATE TOOL_API save_test_suite(results_json TEXT, domain TEXT)
+RETURNS TEXT AS PYTHON $$
+def save_test_suite(results_json: str, domain: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import save_test_suite as _fn
+    return _fn(results_json, domain)
+$$;
+
+CREATE TOOL_API json_get_field(data_json TEXT, field TEXT)
+RETURNS TEXT AS PYTHON $$
+def json_get_field(data_json: str, field: str) -> str:
+    import sys, os
+    _dir = os.path.join(os.getcwd(), "cookbook", "109_synthetic_problems")
+    if _dir not in sys.path: sys.path.insert(0, _dir)
+    from tools import json_get_field as _fn
+    return _fn(data_json, field)
+$$;
+
+-- ── LLM prompt templates ─────────────────────────────────────
+
+CREATE FUNCTION generate_variants_prompt(
+    sample_problem TEXT, domain TEXT, n_variants TEXT, n_size TEXT
+)
+RETURNS TEXT AS $$
+You are a problem-set designer for operations research benchmarks.
+
+TASK: Generate {n_variants} STRUCTURAL VARIANTS of the reference problem below.
+
+PROBLEM SIZE: n_size={n_size}
+- For LP/ILP: each variant must have exactly {n_size} decision variables
+  (e.g. n_size=5 → 5 products; n_size=10 → 10 products; n_size=20 → 20 products)
+- For supply-sourcing: each variant must have exactly {n_size} suppliers
+- This mirrors the r78 ablation scale levels: n05 (small), n10 (medium), n20 (large)
+- Larger n_size stresses LLM constraint-mapping and is where solver=OFF breaks down
+
+Each variant must:
+- Keep the same solver class ({domain}) and same decision-variable types
+- Have exactly {n_size} decision variables — no more, no fewer
+- Change the numbers (coefficients, resource limits, capacities) for variety
+- Cover a range of difficulty: some easy (large slack), some tight (near-binding constraints)
+
+REFERENCE PROBLEM:
+{sample_problem}
+
+OUTPUT FORMAT — return a JSON array, one object per variant.
+For LP/ILP domains each object must have ALL of these keys:
+
+[
+  {{
+    "id": "v001",
+    "domain": "{domain}",
+    "problem_text": "Plain English description a business user would read.",
+    "variables": [
+      {{"name": "x1", "type": "continuous", "lb": 0}},
+      {{"name": "x2", "type": "continuous", "lb": 0}}
+    ],
+    "objective": {{
+      "sense": "maximize",
+      "coefficients": {{"x1": 10, "x2": 6}}
+    }},
+    "constraints": [
+      {{"name": "labor",    "lhs": {{"x1": 2, "x2": 1}}, "op": "<=", "rhs": 20}},
+      {{"name": "material", "lhs": {{"x1": 3, "x2": 2}}, "op": "<=", "rhs": 30}}
+    ]
+  }},
+  ...
+]
+
+For supply-sourcing domains each object must have ALL of these keys:
+[
+  {{
+    "id": "v001",
+    "domain": "supply-sourcing",
+    "problem_text": "Plain English description.",
+    "suppliers": [
+      {{"name": "S1", "cost": 10, "fill_rate": 0.95, "capacity": 400}},
+      {{"name": "S2", "cost": 7,  "fill_rate": 0.80, "capacity": 500}}
+    ],
+    "total_demand": 1000
+  }},
+  ...
+]
+
+RULES:
+- Return ONLY the JSON array — no prose, no markdown headers
+- Ensure every constraint coefficient and objective coefficient is a number, not a string
+- For ILP: set "type": "integer" on integer variables
+- Make problem_text self-contained: a reader should be able to solve it from the text alone
+- Vary coefficients and resource limits across variants so optimal values differ meaningfully
+- For ILP: set "type": "integer" on integer variables; for LP leave as "continuous"
+$$;
+
+CREATE FUNCTION repair_variants_prompt(variants_raw TEXT, errors TEXT)
+RETURNS TEXT AS $$
+The previous JSON output had these validation errors:
+{errors}
+
+Here was your output:
+{variants_raw}
+
+Fix the JSON so every variant object has all required fields.
+Return ONLY the corrected JSON array — no prose.
+$$;
+
+CREATE FUNCTION analyze_difficulty(suite_table TEXT, domain TEXT, n_variants TEXT, n_size TEXT)
+RETURNS TEXT AS $$
+You are a benchmark analyst reviewing a synthetic test suite for {domain} problems.
+
+Test suite: {n_variants} variants at n_size={n_size} (each problem has {n_size} decision variables).
+This mirrors the r78 ablation scale levels — n05/n10/n20 stress-test LLM constraint-mapping.
+
+{suite_table}
+
+Write a concise analysis (≤200 words) covering:
+1. What fraction solved optimally — and what caused failures (infeasible formulation,
+   unbounded, solver error)?
+2. Difficulty at this size: is n_size={n_size} too easy (all trivial) or too hard
+   (many failures)? What does that predict about solver=OFF correctness at this scale?
+3. Which variant would best stress-test an LLM's NL→decomposition ability and why?
+4. Recommended next n_size: should the next batch go larger (scale up), smaller
+   (find the crossover), or stay here with varied constraint tightness?
+$$;
+
+-- ── WORKFLOW ─────────────────────────────────────────────────
+
+WORKFLOW synthetic_problem_gen
+  -- Default: B3 production sustainability problem (known optimal: profit=$100, n_size=2)
+  -- n_size mirrors r78 ablation levels: n05=5 vars (small), n10=10 (medium), n20=20 (large)
+  INPUT @sample_problem TEXT := "A factory produces two products. Product A yields $10 profit per unit, requires 2 labor-hours and 3 kg material. Product B yields $6 profit per unit, requires 1 labor-hour and 2 kg material. Available resources: 20 labor-hours and 30 kg material per day. All production quantities must be non-negative. Maximize total daily profit. Known optimal: 10 units of A, 0 units of B, profit = $100."
+  INPUT @domain     TEXT := "LP"
+  INPUT @n_variants TEXT := "5"
+  INPUT @n_size     TEXT := "5"
+  OUTPUT @report TEXT
+DO
+  @attempts    := 0;
+  @parse_error := "";
+
+  LOGGING f"[r109] start  domain={@domain}  n_variants={@n_variants}  n_size={@n_size}" LEVEL INFO
+
+  -- ── Step 1: LLM generates N variants as structured JSON ──
+  GENERATE generate_variants_prompt(@sample_problem, @domain, @n_variants, @n_size)
+           INTO @variants_raw;
+
+  CALL parse_variants(@variants_raw, @domain) INTO @variants_json;
+  LOGGING f"[r109] parse attempt 0: {@variants_json}" LEVEL DEBUG
+
+  -- ── Step 2: Repair loop — fix malformed JSON (≤ 3 tries) ─
+  WHILE NOT has_valid_variants(@variants_json) AND @attempts < 3 DO
+    CALL get_parse_errors(@variants_json) INTO @parse_error;
+    LOGGING f"[r109] parse errors (attempt {@attempts}): {@parse_error}" LEVEL WARNING
+    GENERATE repair_variants_prompt(@variants_raw, @parse_error) INTO @variants_raw;
+    CALL parse_variants(@variants_raw, @domain) INTO @variants_json;
+    @attempts := @attempts + 1;
+  END;
+
+  ASSERT has_valid_variants(@variants_json);
+  CALL json_get_field(@variants_json, "n_valid") INTO @n_valid;
+  LOGGING f"[r109] {@n_valid} valid variants after {@attempts} repair(s)" LEVEL INFO
+
+  -- ── Step 3: Batch solve all variants ─────────────────────
+  CALL batch_solve(@variants_json, @domain) INTO @results_json;
+
+  CALL json_get_field(@results_json, "n_optimal") INTO @n_ok;
+  CALL json_get_field(@results_json, "n_total")   INTO @n_total;
+  LOGGING f"[r109] solved {@n_ok}/{@n_total} optimally" LEVEL INFO
+
+  -- ── Step 4: Format + persist ──────────────────────────────
+  CALL format_test_suite(@results_json) INTO @suite_table;
+  CALL save_test_suite(@results_json, @domain) INTO @suite_path;
+
+  -- ── Step 5: LLM analyzes difficulty spread ────────────────
+  GENERATE analyze_difficulty(@suite_table, @domain, @n_variants, @n_size)
+           INTO @analysis;
+
+  @report := f"=== Synthetic Problem Generator (r109) ===
+
+Domain      : {@domain}
+n_size      : {@n_size} decision variables per problem
+Requested   : {@n_variants} variants
+Generated   : {@n_valid} valid variants
+Solved      : {@n_ok}/{@n_total} optimally
+Repair loops: {@attempts}
+Saved to    : {@suite_path}
+
+── Test Suite ──────────────────────────────────────────────
+{@suite_table}
+
+── Difficulty Analysis ─────────────────────────────────────
+{@analysis}";
+
+  RETURN @report
+    WITH status    = "complete",
+         n_optimal = @n_ok,
+         n_total   = @n_total,
+         saved_to  = @suite_path;
+
+END;

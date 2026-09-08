@@ -1,0 +1,99 @@
+-- ============================================================
+-- Recipe 115: Gambit 3-Player Game Theory
+--
+-- PURPOSE: Find Nash equilibria in a 3-player normal-form game
+-- using pygambit (or brute-force fallback). Extends r110's
+-- 2-player nashpy analysis to the 3-firm case.
+--
+-- KEY STORY: Three SaaS firms simultaneously choose Premium
+-- ($200/mo) or Standard ($120/mo). Premium is collectively
+-- optimal but individually unstable — Standard is a dominant
+-- strategy for every firm regardless of rivals' choices.
+-- Nash: (Standard, Standard, Standard) = $120K each.
+-- Cooperative: (Premium, Premium, Premium) = $200K each.
+-- Gap = $80K/firm — the 3-player Prisoner's Dilemma.
+--
+-- Why gambit over nashpy (r110)?
+--   nashpy handles 2-player normal-form only.
+--   gambit handles N-player games, extensive-form, and
+--   more equilibrium concepts (correlated, QRE, SPNE).
+--
+-- solver=ON  : pygambit ExternalEnumPureSolver (falls back
+--              to brute-force if not installed)
+-- solver=OFF : LLM reasons about 3-way competitive strategy
+--
+-- Install (optional — brute-force works without it):
+--   pip install pygambit
+--
+-- Run:
+--   spl3 run cookbook-solver/115_gambit_3player/gambit_3player.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/115_gambit_3player/gambit_3player.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION reason_3player_prompt(game_description TEXT)
+RETURNS TEXT AS $$
+You are a business strategy consultant advising three competing SaaS companies.
+
+SITUATION:
+{game_description}
+
+Without computing Nash equilibria, reason through this 3-way competitive situation:
+1. What pricing tier should each firm choose, and why?
+2. Is there a stable outcome where no firm regrets their choice?
+3. What is the "cooperative" optimum — and why is it hard to maintain with 3 competitors?
+4. How does having a third competitor change the dynamics vs a head-to-head duopoly?
+
+Give concrete recommendations. Do not use game theory formulas — reason from business intuition.
+$$;
+
+CREATE FUNCTION explain_3p_nash_prompt(nash_report TEXT, game_description TEXT)
+RETURNS TEXT AS $$
+You are a game theory analyst. The solver just found Nash equilibria for a 3-firm pricing game.
+
+GAME DESCRIPTION:
+{game_description}
+
+NASH EQUILIBRIUM RESULT:
+{nash_report}
+
+Explain (≤200 words):
+1. What is the Nash equilibrium, and what does it mean in business terms?
+2. Why does Standard dominate Premium for every firm, regardless of competitors' choices?
+3. What is the Prisoner's Dilemma gap — the collective cost of rational self-interest?
+4. Why is the 3-player dilemma harder to escape than the 2-player version (r110)?
+5. What real-world mechanisms could sustain Premium pricing across three rivals?
+$$;
+
+WORKFLOW gambit_3player
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r115] gambit_3player start" LEVEL INFO
+
+  CALL get_default_game() INTO @game_json;
+  CALL json_get(@game_json, "description") INTO @game_description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL find_nash_equilibria_3p(@game_json) INTO @result_json;
+      ASSERT nash_3p_found(@result_json);
+      CALL format_gambit_report(@result_json) INTO @nash_report;
+      CALL json_get(@result_json, "n_equilibria") INTO @n_eq;
+      CALL json_get(@result_json, "solver_used") INTO @solver_used;
+      LOGGING f"[r115] found {@n_eq} Nash equilibria via {@solver_used}" LEVEL INFO;
+      GENERATE explain_3p_nash_prompt(@nash_report, @game_description) INTO @explanation;
+      CALL format_report_solver_on(@nash_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE reason_3player_prompt(@game_description) INTO @llm_strategy;
+      CALL format_report_solver_off(@llm_strategy) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

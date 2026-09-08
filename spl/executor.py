@@ -964,6 +964,9 @@ class Executor:
             )
             state.record_llm_call(gen_result)
             last_content = gen_result.content
+            # Expose cumulative token counts as readable workflow variables
+            state.set_var("_total_input_tokens",  str(state.total_input_tokens))
+            state.set_var("_total_output_tokens", str(state.total_output_tokens))
 
             _log.info("GENERATE segment %d (%s) -> %d tokens, %.0fms",
                       segment_count, gen_function_name,

@@ -7,7 +7,7 @@ familiar names directly in CALL statements.
 
 Categories
 ----------
-  Type conversion   : to_int, to_float, to_text, to_bool
+  Type conversion   : to_int, to_float, to_text, to_bool, normalize_bool
   String            : upper, lower, trim, ltrim, rtrim, length,
                       substr, replace, concat, instr, lpad, rpad,
                       split_part, reverse
@@ -77,12 +77,35 @@ def to_text(value: Any) -> str:
     return str(value)
 
 
+def _coerce_bool(value: str) -> str:
+    s = str(value).strip()
+    if not s:
+        return "false"
+    try:
+        return "true" if float(s) != 0 else "false"
+    except ValueError:
+        pass
+    if s.lower() in ("false", "no", "off"):
+        return "false"
+    return "true"
+
+
 @spl_tool
 def to_bool(value: str) -> str:
-    """CAST(value AS BOOLEAN) — returns 'true' or 'false'.
-    Truthy: '1', 'true', 'yes', 'on', 't', 'y' (case-insensitive).
+    """CAST(value AS BOOLEAN) — returns 'true' or 'false' like Python's bool():
+    numeric non-zero → true, 0 → false; empty → false; 'false'/'no'/'off' → false;
+    any other non-empty string → true.
     """
-    return "true" if str(value).strip().lower() in {"1", "true", "yes", "on", "t", "y"} else "false"
+    return _coerce_bool(value)
+
+
+@spl_tool
+def normalize_bool(value: str) -> str:
+    """NORMALIZE_BOOL(value) — same logic as to_bool; purpose-named for --param flags.
+    Accepts any truthy/falsy representation: 'ON', 'YES', '1', '2', 'true' → 'true';
+    '0', 'OFF', 'NO', 'false', '' → 'false'.
+    """
+    return _coerce_bool(value)
 
 
 # ── String Functions ─────────────────────────────────────────────────────────
@@ -201,6 +224,31 @@ def split_part(value: str, delimiter: str, part: str, trim: str = "true") -> str
 def reverse(value: str) -> str:
     """REVERSE(value) — reverse a string."""
     return str(value)[::-1]
+
+
+@spl_tool
+def strip_fences(text: str) -> str:
+    """STRIP_FENCES(text) — remove Markdown code fences from LLM output before
+    JSON parsing. Handles ```json ... ``` and bare ``` ... ``` wrappers (with
+    optional surrounding whitespace and a language tag), returning the inner
+    content trimmed. A no-op when the text carries no fence.
+
+    Central helper for solver recipes: LLM-produced JSON frequently arrives
+    fenced, which is the recurring `json.loads` "Expecting value: line 1
+    column 1" PARSE_ERROR source. Importable in Python tools as
+    `from spl.stdlib import strip_fences`, or callable from SPL as
+    `CALL strip_fences(@x)`.
+    """
+    t = str(text).strip()
+    if not t.startswith("```"):
+        return t
+    nl = t.find("\n")
+    if nl == -1:                       # single-line ```...``` form
+        return t.strip("`").strip()
+    t = t[nl + 1:]                     # drop opening fence line (``` or ```json)
+    if t.rstrip().endswith("```"):     # drop closing fence
+        t = t.rstrip()[:-3]
+    return t.strip()
 
 
 # ── Pattern Matching ─────────────────────────────────────────────────────────

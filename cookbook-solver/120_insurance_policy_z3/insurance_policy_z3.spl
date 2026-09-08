@@ -1,0 +1,108 @@
+-- ============================================================
+-- Recipe 120: Insurance Policy Z3 Inference Engine
+--
+-- PURPOSE: Prove or disprove insurance eligibility claims using
+-- Z3's Fixedpoint (Datalog) engine over Horn clause rules.
+--
+-- KEY STORY: Same 3-customer policy as r105, but solved by a
+-- formal SMT solver instead of a custom Python backward-chainer.
+-- Z3 applies the closed-world assumption strictly: it cannot infer
+-- catastrophic_event implies emergency_event from semantics — it
+-- checks only what is stated in the KB.  This eliminates the
+-- semantic-drift failure observed in r105's LLM explanation phase.
+--
+-- solver=ON  : Z3 Fixedpoint proves/disproves per customer;
+--              abductive diagnosis names the blocking fact
+-- solver=OFF : LLM manual rule-tracing (reproduces r105 baseline)
+--
+-- Install: pip install z3-solver (already in spl123)
+--
+-- Run:
+--   spl3 run cookbook-solver/120_insurance_policy_z3/insurance_policy_z3.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/120_insurance_policy_z3/insurance_policy_z3.spl \
+--       --adapter claude_cli --param use_solver=false
+-- ============================================================
+
+-- ── Prompts ──────────────────────────────────────────────────
+
+CREATE FUNCTION explain_z3_findings_prompt(report TEXT)
+RETURNS TEXT AS $$
+You are an insurance auditor reviewing Z3 formal verification results.
+
+Z3 INFERENCE REPORT:
+{report}
+
+The verdicts above were computed by Z3's Fixedpoint (Datalog) engine — a sound
+formal reasoner that applies the closed-world assumption strictly.
+The "Z3 Proved" column lists predicates Z3 derived from stated facts and rules only.
+The "Missing / Blocking" column is machine-extracted: these are the exact predicates
+absent from the knowledge base that prevent the claim from being approved.
+
+CRITICAL: Do NOT infer that any missing fact is implied by another present fact.
+In particular, catastrophic_event does NOT imply emergency_event unless that rule
+is explicitly stated — it is not.
+
+Explain in ≤150 words:
+1. Why each NOT ELIGIBLE customer is denied — cite only the machine-listed missing facts
+2. Why the ELIGIBLE customer qualifies — follow the Z3-proved predicate chain
+3. What this reveals about formal verification vs. LLM rule-tracing for insurance policy
+$$;
+
+CREATE FUNCTION trace_policy_manually_prompt(description TEXT)
+RETURNS TEXT AS $$
+You are an insurance claims analyst performing manual rule tracing.
+
+POLICY DESCRIPTION:
+{description}
+
+Policy rules (ComprehensiveAuto_v3):
+  R1. eligible_claim(X)  :- has_comprehensive(X), policy_active(X), claim_covered(X)
+  R2. claim_covered(X)   :- deductible_met(X)
+  R3. claim_covered(X)   :- catastrophic_event(X)
+  R4. emergency_claim(X) :- eligible_claim(X), emergency_event(X)
+
+Customer facts in knowledge base:
+  alice: has_comprehensive, policy_active, deductible_met, emergency_event
+  bob:   (basic policy only — no comprehensive, no policy_active)
+  carol: has_comprehensive, policy_active, catastrophic_event
+
+For each customer, trace whether emergency_claim is provable step by step.
+Show which rules fire and which facts are used.
+Note: LLM traces rules sequentially. Run with --param use_solver=true
+to verify with Z3 Fixedpoint inference (catches all proof paths).
+$$;
+
+-- ── Workflow ──────────────────────────────────────────────────
+
+WORKFLOW insurance_policy_z3
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r120] insurance_policy_z3 start" LEVEL INFO
+
+  CALL get_default_policy() INTO @policy_json;
+  CALL json_get(@policy_json, "description") INTO @description;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL run_z3_inference(@policy_json) INTO @result_json;
+      ASSERT inference_verified(@result_json);
+      CALL format_z3_report(@result_json) INTO @z3_report;
+      CALL json_get(@result_json, "n_eligible") INTO @n_eligible;
+      CALL json_get(@result_json, "n_customers") INTO @n_customers;
+      LOGGING f"[r120] {@n_customers} customers, {@n_eligible} eligible" LEVEL INFO;
+      GENERATE explain_z3_findings_prompt(@z3_report) INTO @explanation;
+      CALL format_report_solver_on(@z3_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE trace_policy_manually_prompt(@description) INTO @llm_trace;
+      CALL format_report_solver_off(@llm_trace) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

@@ -1,0 +1,1 @@
+Portfolio solver did not reach Optimal after 3 attempts. Last status: Error

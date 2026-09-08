@@ -1,0 +1,91 @@
+-- ============================================================
+-- Recipe 104: pandera Schema Validator
+--
+-- PURPOSE: Enforce a schema contract on a pandas DataFrame —
+-- column types, value ranges, categorical checks, uniqueness,
+-- nullability — using pandera's DataFrameSchema API.
+--
+-- KEY STORY: Employee payroll CSV has salary=0 entries and
+-- department="Temp". pandera catches both in one validation
+-- pass. LLM eyeballs a sample and misses edge-case violations.
+--
+-- solver=ON  : pandera validates all rows against typed schema
+-- solver=OFF : LLM describes expected schema and spot-checks
+--
+-- Install: pip install pandera
+--
+-- Run:
+--   spl3 run cookbook-solver/104_pandera_schema/pandera_schema.spl \
+--       --adapter claude_cli --param use_solver=true
+--
+--   spl3 run cookbook-solver/104_pandera_schema/pandera_schema.spl \
+--       --adapter ollama -m gemma3 --param use_solver=false
+-- ============================================================
+
+CREATE FUNCTION describe_schema_prompt(schema_description TEXT)
+RETURNS TEXT AS $$
+You are a data engineer reviewing an employee payroll dataset.
+
+DATASET DESCRIPTION:
+{schema_description}
+
+Expected schema for the payroll DataFrame:
+- employee_id: integer, unique, >= 1000
+- name: string, not null
+- department: one of [Engineering, Sales, HR, Finance, Operations]
+- salary: float, > 0, < $500,000
+- hire_year: integer, between 2000 and 2026
+
+Task:
+1. Which columns are most likely to have quality issues, and why?
+2. Give 3 example records that would PASS this schema.
+3. Give 3 example records that would FAIL this schema (be specific about the violation).
+4. What downstream analysis would break if each violation type were left uncorrected?
+
+Be specific. Do not run any code — reason from the schema definition.
+$$;
+
+CREATE FUNCTION explain_violations_prompt(schema_report TEXT)
+RETURNS TEXT AS $$
+You are a data quality analyst. pandera just validated an employee payroll DataFrame.
+
+SCHEMA REPORT:
+{schema_report}
+
+Explain the violations in plain English (≤120 words):
+1. What specific data errors were found?
+2. What is the likely business cause of each error type?
+3. Which violation is highest priority to fix and why?
+4. What data pipeline fix would prevent this class of errors in future ingestion?
+$$;
+
+WORKFLOW pandera_schema
+  INPUT @schema_description TEXT := "Employee payroll CSV: 200 rows, columns employee_id (int), name (str), department (str), salary (float), hire_year (int). Imported from HR system monthly export."
+  INPUT @data_csv           TEXT := "demo"
+  INPUT @use_solver         TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r104] pandera_schema start" LEVEL INFO
+
+  CALL get_default_schema() INTO @schema_json;
+
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL validate_schema(@schema_json, @data_csv) INTO @result_json;
+      CALL format_schema_report(@result_json) INTO @schema_report;
+      CALL json_get(@result_json, "n_violations") INTO @n_violations;
+      CALL json_get(@result_json, "n_rows") INTO @n_rows;
+      LOGGING f"[r104] {@n_rows} rows, {@n_violations} violation groups" LEVEL INFO;
+      GENERATE explain_violations_prompt(@schema_report) INTO @explanation;
+      CALL format_report_solver_on(@schema_report, @explanation) INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE describe_schema_prompt(@schema_description) INTO @llm_analysis;
+      CALL format_report_solver_off(@llm_analysis) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

@@ -145,6 +145,7 @@ spl3 run <file.spl> [OPTIONS]
 | `--adapter NAME` | `ollama` | LLM adapter (`ollama`, `claude_cli`, `openrouter`, …) |
 | `--model MODEL` | adapter default | Model override |
 | `-p / --param key=val` | — | Workflow `INPUT` parameter. Repeatable. |
+| `--main NAME` | — | Entry-point workflow name (see §4.1.1) |
 | `--tools FILE` | auto-load `tools.py` | Python module providing `@spl_tool` functions for `CALL` |
 | `--log-prompts DIR` | off | Write each assembled prompt to `DIR/<fn>_NNN.md` before sending |
 | `--claude-allowed-tools` | — | Comma-separated tools for the `claude_cli` adapter |
@@ -167,6 +168,28 @@ spl3 run workflow.spl --adapter ollama --tools mytools.py
 
 # Log all LLM prompts for inspection
 spl3 run workflow.spl --adapter claude_cli --log-prompts ./prompts/
+```
+
+#### 4.1.1 Entry-point selection
+
+When a `.spl` file defines multiple workflows, `spl3 run` selects the entry point
+by the following priority (highest first):
+
+1. **`--main NAME`** — explicit override; errors with the list of available names if
+   the workflow is not found.
+2. **Filename match** — the workflow whose name equals the file stem
+   (e.g. `portfolio_opt.spl` → `portfolio_opt`).
+3. **Last declared** — the final `WORKFLOW` block in the file, matching Python's
+   convention of putting the top-level entry point at the bottom.
+
+```bash
+# file has two workflows: portfolio_optimization, portfolio_comparison
+# without --main, falls back to filename-match or last declared
+
+spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+  --adapter claude_cli \
+  --main portfolio_optimization \
+  -p tickers="AAPL,MSFT,GOOGL" -p capital=100000
 ```
 
 ---

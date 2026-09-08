@@ -1,0 +1,52 @@
+[persistence] workflow-id: 383a2362-2b82-410a-8706-9b89142a0ad4
+[persistence] backend=sqlite  workflow-id=383a2362-2b82-410a-8706-9b89142a0ad4
+[kernel-store] db=~/.spl/workflows.db
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook-solver/109_synthetic_problems/synthetic_problem_gen.spl
+Registry: ['synthetic_problem_gen']
+INFO:spl.executor:HITL tools registered: wait_for_approval / send_approval
+Auto-loaded 97 tool(s) from cookbook-solver/109_synthetic_problems/tools.py
+Running workflow: synthetic_problem_gen(['domain', 'n_variants', 'n_size', 'model'])
+[INFO] [r109] start  domain=LP  n_variants=5  n_size=5
+INFO:spl.executor:GENERATE segment 1 (generate_variants_prompt) -> 1724 tokens, 453694ms
+INFO:spl.executor:GENERATE chain done -> @variants_raw (6899 chars total)
+INFO:spl.executor:ASSERT (kernel-store) has_valid_variants('{"status": "OK", "n_valid": 5, "n_errors": 0, "errors": [], "variants": [{"id": "v001", "domain": "lp", "problem_text": "A toy factory produces five types of toys: cars (x1), trains (x2), planes (x3), boats (x4), and trucks (x5). Each car earns $15 profit and consumes 1 assembly-hour and 2 kg of plastic. Each train earns $20 and consumes 2 assembly-hours and 3 kg of plastic. Each plane earns $25 and consumes 3 assembly-hours and 4 kg of plastic. Each boat earns $10 and consumes 1 assembly-hour and 1 kg of plastic. Each truck earns $18 and consumes 2 assembly-hours and 3 kg of plastic. The factory has 300 assembly-hours and 500 kg of plastic available per day. All production quantities must be non-negative. Maximize total daily profit. (Hint: assembly capacity is generous; plastic is the binding constraint. Known optimal: x1=200, x4=100, profit=$4000.)", "variables": [{"name": "x1", "type": "continuous", "lb": 0}, {"name": "x2", "type": "continuous", "lb": 0}, {"name": "x3", "type": "continuous", "lb": 0}, {"name": "x4", "type": "continuous", "lb": 0}, {"name": "x5", "type": "continuous", "lb": 0}], "objective": {"sense": "maximize", "coefficients": {"x1": 15, "x2": 20, "x3": 25, "x4": 10, "x5": 18}}, "constraints": [{"name": "assembly", "lhs": {"x1": 1, "x2": 2, "x3": 3, "x4": 1, "x5": 2}, "op": "<=", "rhs": 300}, {"name": "plastic", "lhs": {"x1": 2, "x2": 3, "x3": 4, "x4": 1, "x5": 3}, "op": "<=", "rhs": 500}]}, {"id": "v002", "domain": "lp", "problem_text": "A paint company manufactures five specialty paints: White (x1), Ocean Blue (x2), Fire Red (x3), Sunshine Yellow (x4), and Forest Green (x5). Profit per liter is $6, $10, $9, $5, and $12 respectively. Mixing time in minutes per liter is 10, 15, 12, 8, and 20 respectively. Pigment usage in grams per liter is 30, 50, 45, 20, and 70 respectively. The plant has 900 mixing-minutes and 3000 g of pigment available per day. All production quantities must be non-negative. Maximize total daily profit. (Hint: both constraints bind at optimum; neither resource has meaningful slack. Known optimal: x3=50, x4=37.5, profit=$637.50.)", "variables": [{"name": "x1", "type": "continuous", "lb": 0}, {"name": "x2", "type": "continuous", "lb": 0}, {"name": "x3", "type": "continuous", "lb": 0}, {"name": "x4", "type": "continuous", "lb": 0}, {"name": "x5", "type": "continuous", "lb": 0}], "objective": {"sense": "maximize", "coefficients": {"x1": 6, "x2": 10, "x3": 9, "x4": 5, "x5": 12}}, "constraints": [{"name": "mixing", "lhs": {"x1": 10, "x2": 15, "x3": 12, "x4": 8, "x5": 20}, "op": "<=", "rhs": 900}, {"name": "pigment", "lhs": {"x1": 30, "x2": 50, "x3": 45, "x4": 20, "x5": 70}, "op": "<=", "rhs": 3000}]}, {"id": "v003", "domain": "lp", "problem_text": "A metallurgy plant smelts five metal products per shift: Premium steel (x1), Standard steel (x2), Aluminum alloy (x3), Copper rod (x4), and Titanium bar (x5). Profit per ton is $40, $25, $60, $15, and $80 respectively. Furnace hours required per ton are 2, 1, 3, 1, and 5. Power consumption in MWh per ton is 5, 3, 7, 2, and 12. Available resources are 30 furnace-hours and 72 MWh of power per shift. All production quantities must be non-negative. Maximize total profit per shift. (Hint: this is a tight instance \\u2014 both furnace and power are exactly consumed at optimum. Known optimal: x2=3 tons, x3=9 tons, profit=$615.)", "variables": [{"name": "x1", "type": "continuous", "lb": 0}, {"name": "x2", "type": "continuous", "lb": 0}, {"name": "x3", "type": "continuous", "lb": 0}, {"name": "x4", "type": "continuous", "lb": 0}, {"name": "x5", "type": "continuous", "lb": 0}], "objective": {"sense": "maximize", "coefficients": {"x1": 40, "x2": 25, "x3": 60, "x4": 15, "x5": 80}}, "constraints": [{"name": "furnace", "lhs": {"x1": 2, "x2": 1, "x3": 3, "x4": 1, "x5": 5}, "op": "<=", "rhs": 30}, {"name": "power", "lhs": {"x1": 5, "x2": 3, "x3": 7, "x4": 2, "x5": 12}, "op": "<=", "rhs": 72}]}, {"id": "v004", "domain": "lp", "problem_text": "A restaurant kitchen prepares five dishes per service: Steak (x1), Salmon (x2), Pasta (x3), Salad (x4), and Soup (x5). Profit per dish (revenue minus ingredient cost) is $25, $20, $12, $8, and $5 respectively. Chef time in minutes per dish is 15, 12, 8, 4, and 3. Ingredient cost in dollars per dish is $10, $8, $4, $2, and $1. The kitchen has 240 chef-minutes and a $100 ingredient budget per service. All quantities must be non-negative. Maximize total profit per service. (Hint: high-margin dishes are crowded out by resource intensity; cheaper dishes dominate at scale. Known optimal: x4=30, x5=40, profit=$440.)", "variables": [{"name": "x1", "type": "continuous", "lb": 0}, {"name": "x2", "type": "continuous", "lb": 0}, {"name": "x3", "type": "continuous", "lb": 0}, {"name": "x4", "type": "continuous", "lb": 0}, {"name": "x5", "type": "continuous", "lb": 0}], "objective": {"sense": "maximize", "coefficients": {"x1": 25, "x2": 20, "x3": 12, "x4": 8, "x5": 5}}, "constraints": [{"name": "chef_time", "lhs": {"x1": 15, "x2": 12, "x3": 8, "x4": 4, "x5": 3}, "op": "<=", "rhs": 240}, {"name": "ingredients", "lhs": {"x1": 10, "x2": 8, "x3": 4, "x4": 2, "x5": 1}, "op": "<=", "rhs": 100}]}, {"id": "v005", "domain": "lp", "problem_text": "A pharmaceutical lab synthesizes five drug compounds per batch run: Compound A (x1), B (x2), C (x3), D (x4), and E (x5). Profit per kg synthesized is $200, $300, $450, $150, and $250 respectively. Synthesis time in hours per kg is 2, 4, 6, 1, and 3 respectively. Raw material consumed in kg per kg of product is 5, 8, 12, 3, and 7 respectively. The lab has exactly 24 synthesis-hours and 60 kg of raw material per batch. All quantities must be non-negative. Maximize total profit per batch. (Hint: limits are very tight and both constraints bind simultaneously at a single-product corner. Known optimal: x1=12 kg, profit=$2400.)", "variables": [{"name": "x1", "type": "continuous", "lb": 0}, {"name": "x2", "type": "continuous", "lb": 0}, {"name": "x3", "type": "continuous", "lb": 0}, {"name": "x4", "type": "continuous", "lb": 0}, {"name": "x5", "type": "continuous", "lb": 0}], "objective": {"sense": "maximize", "coefficients": {"x1": 200, "x2": 300, "x3": 450, "x4": 150, "x5": 250}}, "constraints": [{"name": "synthesis_time", "lhs": {"x1": 2, "x2": 4, "x3": 6, "x4": 1, "x5": 3}, "op": "<=", "rhs": 24}, {"name": "raw_material", "lhs": {"x1": 5, "x2": 8, "x3": 12, "x4": 3, "x5": 7}, "op": "<=", "rhs": 60}]}]}') -> True
+[INFO] [r109] 5 valid variants after 0 repair(s)
+[INFO] [r109] solved 5/5 optimally
+INFO:spl.executor:GENERATE segment 1 (analyze_difficulty) -> 358 tokens, 13600ms
+INFO:spl.executor:GENERATE chain done -> @analysis (1434 chars total)
+INFO:spl.executor:RETURN: 2585 chars | status=complete, n_optimal=5, n_total=5, saved_to=/home/papagame/projects/digital-duck/SPL.py/cookbook/109_synthetic_problems/output/lp_2026-09-06_21-58-19.json
+
+Status:  complete
+Output:  === Synthetic Problem Generator (r109) ===
+
+Domain      : LP
+n_size      : 5 decision variables per problem
+Requested   : 5 variants
+Generated   : 5 valid variants
+Solved      : 5/5 optimally
+Repair loops: 0
+Saved to    : /home/papagame/projects/digital-duck/SPL.py/cookbook/109_synthetic_problems/output/lp_2026-09-06_21-58-19.json
+
+── Test Suite ──────────────────────────────────────────────
+**5/5 variants solved optimally**
+
+| ID | Domain | Status | Optimal | Problem (excerpt) |
+|---|---|---|---|---|
+| v001 | lp | OPTIMAL | 4000.0 | A toy factory produces five types of toys: cars (x1), trains (x2), planes (x3), … |
+| v002 | lp | OPTIMAL | 637.5 | A paint company manufactures five specialty paints: White (x1), Ocean Blue (x2),… |
+| v003 | lp | OPTIMAL | 615.0 | A metallurgy plant smelts five metal products per shift: Premium steel (x1), Sta… |
+| v004 | lp | OPTIMAL | 440.0 | A restaurant kitchen prepares five dishes per service: Steak (x1), Salmon (x2), … |
+| v005 | lp | OPTIMAL | 3000.0 | A pharmaceutical lab synthesizes five drug compounds per batch run: Compound A (… |
+
+── Difficulty Analysis ─────────────────────────────────────
+## n_size=5 LP Benchmark Analysis
+
+**1. Solution rate: 5/5 (100%) optimal.** No failures. At this scale, infeasibility and unboundedness are unlikely — five-variable LPs with domain-grounded constraints (capacity, ingredient, labor limits) almost always form a well-bounded feasible polytope. Solver errors are absent because the problems are small enough to avoid numerical conditioning issues.
+
+**2. Difficulty:** n_size=5 is trivially easy for any competent solver. All five problems are in a regime where a greedy heuristic could stumble upon the optimum. This predicts high solver=OFF correctness too — an LLM can often reason through 5-variable constraint systems by inspection, masking any decomposition weaknesses.
+
+**3. Best stress-test variant: v003 (metallurgy).** Metal-smelting introduces domain-specific coupling constraints (alloy ratios, furnace throughput dependencies) that resist a naive "maximize margin × volume" reading. The NL→variable mapping is less transparent than toys or dishes, forcing the LLM to parse material-science framing before formulating bounds.
+
+**4. Recommendation: scale up to n_size=10 with tighter constraint tightness.** n_size=5 reveals nothing about decomposition failure modes. Moving to n=10 with binding resource constraints (≥2 active at optimum) will expose whether LLMs correctly enumerate the constraint matrix — the crossover zone for solver=OFF degradation is typically n=10–20.
+LLM calls: 2  Latency: 468820ms
+Log:     /home/papagame/.spl/logs/synthetic_problem_gen-claude_cli-claude-sonnet-4-6-20260906-215044.md
