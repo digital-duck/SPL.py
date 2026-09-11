@@ -3859,61 +3859,145 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
     # Lua filter: reassign table column widths from actual content length.
     # Pandoc's default uses separator-dash counts (|:---:| = 5 dashes → ~45%
     # for a 3-column table) which ignores content — short columns bloat,
-    # long-text columns overflow. This filter measures the longest cell text
-    # per column, distributes widths proportionally (clamped 4%–60%), then
-    # renormalises so the sum ≤ 0.98 — LaTeX wraps long columns instead of
-    # letting them run off the page.
+    # long-text columns overflow. This filter measures each column's content
+    # two ways: total text length (for proportional distribution) and the
+    # longest single unbreakable "word" (for a hard minimum) — a column
+    # holding short terms like "ChromaDB" or "case_profile.json" has a tiny
+    # total length but still needs enough width to fit that one token,
+    # otherwise LaTeX can't hyphenate it and it overflows into the next
+    # column instead of wrapping. Widths are clamped 4%-60%, then
+    # renormalised so the sum <= 0.98.
+    #
+    # FULL_WIDTH_CHARS estimates how many characters fit across the full
+    # table width, derived from this document's margin/font-size, so the
+    # word-length minimum converts to a width fraction. The estimate is
+    # deliberately conservative (fewer chars per line than a typical serif
+    # font would fit) so narrow columns get a bit more room rather than less.
+    try:
+        _margin_in = float(margin.rstrip("in")) if margin.endswith("in") else \
+            float(margin.rstrip("cm")) / 2.54
+    except ValueError:
+        _margin_in = 0.75
+    try:
+        _font_pt = float(font_size.rstrip("pt"))
+    except ValueError:
+        _font_pt = 11.0
+    _text_width_in = max(3.0, 8.5 - 2 * _margin_in)
+    _chars_per_inch = 120.0 / _font_pt
+    _full_width_chars = max(40, round(_text_width_in * _chars_per_inch))
+
     _LUA_AUTO_TABLE_WIDTHS = """\
-local function col_len(cell)
-  -- cell.content is a list of Blocks; stringify handles it correctly
-  return #pandoc.utils.stringify(cell.content)
+local FULL_WIDTH_CHARS = __FULL_WIDTH_CHARS__
+
+-- blocks is a plain Lua list of Block elements (Cell.content on new-AST
+-- pandoc, or a table cell directly on pre-1.22 pandoc). stringify only
+-- accepts a single AST element, not a bare list, so process block by block.
+-- Returns total text length and the length of the longest whitespace-
+-- delimited token (an approximation of what LaTeX cannot hyphenate/wrap).
+local function col_stats(blocks)
+  local total = 0
+  local longest_word = 0
+  for _, block in ipairs(blocks) do
+    local text = pandoc.utils.stringify(block)
+    total = total + #text
+    for word in text:gmatch("%S+") do
+      if #word > longest_word then longest_word = #word end
+    end
+  end
+  return total, longest_word
 end
 
-function Table(t)
-  local n = #t.colspecs
-  if n == 0 then return t end
-
-  local maxlen = {}
-  for i = 1, n do maxlen[i] = 4 end   -- floor so empty cols still get space
-
-  for _, row in ipairs(t.head.rows) do
-    for i, cell in ipairs(row.cells) do
-      if i <= n then
-        local l = col_len(cell)
-        if l > maxlen[i] then maxlen[i] = l end
-      end
-    end
-  end
-
-  for _, body in ipairs(t.bodies) do
-    for _, row in ipairs(body.body) do
-      for i, cell in ipairs(row.cells) do
-        if i <= n then
-          local l = col_len(cell)
-          if l > maxlen[i] then maxlen[i] = l end
-        end
-      end
-    end
-  end
-
+local function compute_widths(n, totlen, maxword)
   local total = 0
-  for i = 1, n do total = total + maxlen[i] end
+  for i = 1, n do total = total + totlen[i] end
+  if total == 0 then total = 1 end
 
+  local widths = {}
   for i = 1, n do
-    local w = maxlen[i] / total
-    t.colspecs[i][2] = math.max(0.04, math.min(0.60, w))
+    local content_frac = totlen[i] / total
+    local word_frac = (maxword[i] + 2) / FULL_WIDTH_CHARS
+    widths[i] = math.max(0.04, math.min(0.60, math.max(content_frac, word_frac)))
   end
 
   local sum = 0
-  for i = 1, n do sum = sum + t.colspecs[i][2] end
+  for i = 1, n do sum = sum + widths[i] end
   if sum > 0.98 then
     local scale = 0.98 / sum
-    for i = 1, n do t.colspecs[i][2] = t.colspecs[i][2] * scale end
+    for i = 1, n do widths[i] = widths[i] * scale end
   end
 
+  return widths
+end
+
+-- pandoc >= 2.10 (pandoc-types >= 1.22): Table has colspecs/head/bodies.
+-- pandoc < 2.10 (pandoc-types < 1.22, e.g. 2.9.x): Table has widths/headers/rows,
+-- and each cell is a plain list of Blocks rather than a Cell object.
+function Table(t)
+  if t.colspecs then
+    local n = #t.colspecs
+    if n == 0 then return t end
+
+    local totlen, maxword = {}, {}
+    for i = 1, n do totlen[i], maxword[i] = 4, 0 end
+
+    for _, row in ipairs(t.head.rows) do
+      for i, cell in ipairs(row.cells) do
+        if i <= n then
+          local tl, mw = col_stats(cell.content)
+          if tl > totlen[i] then totlen[i] = tl end
+          if mw > maxword[i] then maxword[i] = mw end
+        end
+      end
+    end
+
+    for _, body in ipairs(t.bodies) do
+      for _, row in ipairs(body.body) do
+        for i, cell in ipairs(row.cells) do
+          if i <= n then
+            local tl, mw = col_stats(cell.content)
+            if tl > totlen[i] then totlen[i] = tl end
+            if mw > maxword[i] then maxword[i] = mw end
+          end
+        end
+      end
+    end
+
+    local widths = compute_widths(n, totlen, maxword)
+    for i = 1, n do t.colspecs[i][2] = widths[i] end
+
+    return t
+  end
+
+  -- Old-style Table (pandoc-types < 1.22)
+  local n = #t.headers
+  if n == 0 and t.rows[1] then n = #t.rows[1] end
+  if n == 0 then return t end
+
+  local totlen, maxword = {}, {}
+  for i = 1, n do totlen[i], maxword[i] = 4, 0 end
+
+  for i, cell in ipairs(t.headers) do
+    if i <= n then
+      local tl, mw = col_stats(cell)
+      if tl > totlen[i] then totlen[i] = tl end
+      if mw > maxword[i] then maxword[i] = mw end
+    end
+  end
+
+  for _, row in ipairs(t.rows) do
+    for i, cell in ipairs(row) do
+      if i <= n then
+        local tl, mw = col_stats(cell)
+        if tl > totlen[i] then totlen[i] = tl end
+        if mw > maxword[i] then maxword[i] = mw end
+      end
+    end
+  end
+
+  t.widths = compute_widths(n, totlen, maxword)
   return t
 end
-"""
+""".replace("__FULL_WIDTH_CHARS__", str(_full_width_chars))
 
     cmd = [
         "pandoc", str(md_path),
