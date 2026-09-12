@@ -3828,10 +3828,17 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
               help="Include a table of contents.")
 @click.option("--toc-depth", default=2, show_default=True, type=int,
               help="TOC depth (number of heading levels to include).")
-def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_depth):
+@click.option("--h-lines/--no-h-lines", default=True, show_default=True,
+              help="Draw horizontal grid lines between every table row.")
+@click.option("--v-lines/--no-v-lines", default=True, show_default=True,
+              help="Draw vertical grid lines between every table column.")
+def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_depth,
+               h_lines, v_lines):
     """Convert a Markdown file to PDF using pandoc + XeLaTeX.
 
     Handles Unicode, box-drawing characters, and local image paths.
+    Tables get full grid lines (horizontal + vertical) by default; use
+    --no-h-lines / --no-v-lines to drop either axis.
     Requires pandoc and a XeLaTeX installation (e.g. texlive-xetex).
 
     \b
@@ -3839,6 +3846,7 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
       spl3 util md2pdf docs/solver-guide.md
       spl3 util md2pdf report.md -o /tmp/report.pdf --no-toc
       spl3 util md2pdf spec.md --font "Liberation Serif" --font-size 12pt
+      spl3 util md2pdf big-table.md --no-v-lines
     """
     import subprocess
     import tempfile
@@ -3885,9 +3893,20 @@ def cmd_md2pdf(md_file, output, font, mono_font, font_size, margin, toc, toc_dep
     _text_width_in = max(3.0, 8.5 - 2 * _margin_in)
     _chars_per_inch = 120.0 / _font_pt
     _full_width_chars = max(40, round(_text_width_in * _chars_per_inch))
+    # Column widths are computed as fractions of \linewidth, but LaTeX also
+    # spends 2*tabcolsep of real width on EVERY column for its own left/right
+    # cell padding -- overhead the width algorithm must budget for or a
+    # many-column table silently overflows past the page's right margin.
+    # Reducing tabcolsep (default 6pt) claws back some of that budget too.
+    _tabcolsep_pt = 3.0
+    _tabcolsep_in = _tabcolsep_pt / 72.27
 
     _LUA_AUTO_TABLE_WIDTHS = """\
 local FULL_WIDTH_CHARS = __FULL_WIDTH_CHARS__
+local TEXT_WIDTH_IN = __TEXT_WIDTH_IN__
+local TABCOLSEP_IN = __TABCOLSEP_IN__
+local GRID_H = __GRID_H__
+local GRID_V = __GRID_V__
 
 -- blocks is a plain Lua list of Block elements (Cell.content on new-AST
 -- pandoc, or a table cell directly on pre-1.22 pandoc). stringify only
@@ -3908,25 +3927,172 @@ local function col_stats(blocks)
 end
 
 local function compute_widths(n, totlen, maxword)
+  -- Every column costs 2*tabcolsep of real width beyond its p{} content box
+  -- (its own left+right cell padding), so the fraction-of-\linewidth budget
+  -- has to shrink as column count grows, or wide tables overflow the page
+  -- margin regardless of how well the per-column widths below are chosen.
+  local overhead_frac = (2 * n * TABCOLSEP_IN) / TEXT_WIDTH_IN
+  local budget = math.max(0.5, 0.98 - overhead_frac)
+
   local total = 0
   for i = 1, n do total = total + totlen[i] end
   if total == 0 then total = 1 end
 
-  local widths = {}
+  -- minw is a hard floor: the width the column's single longest unbreakable
+  -- word needs. desired is what content volume would like to have. Below,
+  -- if the desireds don't all fit, only the slack ABOVE each column's floor
+  -- gets squeezed -- never the floor itself. A uniform scale-down here would
+  -- shrink already-minimal columns below their word-fit width, and since
+  -- LaTeX can't hyphenate a word it doesn't wrap it -- it silently overflows
+  -- the column box into whatever sits to the right instead of erroring.
+  local minw, desired = {}, {}
   for i = 1, n do
     local content_frac = totlen[i] / total
     local word_frac = (maxword[i] + 2) / FULL_WIDTH_CHARS
-    widths[i] = math.max(0.04, math.min(0.60, math.max(content_frac, word_frac)))
+    minw[i] = math.max(0.04, math.min(0.60, word_frac))
+    desired[i] = math.max(minw[i], math.min(0.60, content_frac))
   end
 
-  local sum = 0
-  for i = 1, n do sum = sum + widths[i] end
-  if sum > 0.98 then
-    local scale = 0.98 / sum
-    for i = 1, n do widths[i] = widths[i] * scale end
+  local sum_desired = 0
+  for i = 1, n do sum_desired = sum_desired + desired[i] end
+  if sum_desired <= budget then
+    return desired
   end
 
+  local sum_min = 0
+  for i = 1, n do sum_min = sum_min + minw[i] end
+  if sum_min >= budget then
+    -- Even every column's bare minimum doesn't fit the budget -- last
+    -- resort: scale the floors themselves (rare; many long-word columns).
+    local scale = budget / sum_min
+    local widths = {}
+    for i = 1, n do widths[i] = minw[i] * scale end
+    return widths
+  end
+
+  local slack_total = sum_desired - sum_min
+  local shrink_ratio = (sum_desired - budget) / slack_total
+  local widths = {}
+  for i = 1, n do
+    widths[i] = desired[i] - (desired[i] - minw[i]) * shrink_ratio
+  end
   return widths
+end
+
+-- Renders a table as a raw LaTeX longtable with explicit \\hline / "|" grid
+-- lines, since pandoc's own booktabs-style output only ever draws a rule
+-- above the header, below the header, and at the very end -- there is no
+-- built-in way to ask pandoc for a line after every body row or for vertical
+-- column rules. pandoc.write() isn't available in this pandoc's Lua API
+-- (pandoc-types 1.20 / pandoc 2.9), so cell content is converted to LaTeX by
+-- hand, covering the inline styles markdown tables actually use.
+local function align_cmd(a)
+  if a == "AlignRight" then return "\\\\raggedleft\\\\arraybackslash"
+  elseif a == "AlignCenter" then return "\\\\centering\\\\arraybackslash"
+  else return "\\\\raggedright\\\\arraybackslash" end
+end
+
+local function escape_latex(s)
+  s = s:gsub("\\\\", "\\\\textbackslash{}")
+  s = s:gsub("([%%$#&_{}])", "\\\\%1")
+  s = s:gsub("~", "\\\\textasciitilde{}")
+  s = s:gsub("%^", "\\\\textasciicircum{}")
+  return s
+end
+
+local function inlines_to_latex(inlines)
+  local parts = {}
+  for _, il in ipairs(inlines) do
+    local t = il.t
+    if t == "Str" then
+      table.insert(parts, escape_latex(il.text))
+    elseif t == "Space" or t == "SoftBreak" then
+      table.insert(parts, " ")
+    elseif t == "LineBreak" then
+      table.insert(parts, "\\\\\\\\ ")
+    elseif t == "Emph" then
+      table.insert(parts, "\\\\emph{" .. inlines_to_latex(il.content) .. "}")
+    elseif t == "Strong" then
+      table.insert(parts, "\\\\textbf{" .. inlines_to_latex(il.content) .. "}")
+    elseif t == "Code" then
+      table.insert(parts, "\\\\texttt{" .. escape_latex(il.text) .. "}")
+    elseif t == "Math" then
+      table.insert(parts, "$" .. il.text .. "$")
+    elseif t == "Link" then
+      table.insert(parts, "\\\\href{" .. il.target[1] .. "}{" .. inlines_to_latex(il.content) .. "}")
+    elseif il.content then
+      table.insert(parts, inlines_to_latex(il.content))
+    else
+      local ok, s = pcall(pandoc.utils.stringify, il)
+      table.insert(parts, ok and escape_latex(s) or "")
+    end
+  end
+  return table.concat(parts)
+end
+
+local function blocks_to_latex(blocks)
+  local parts = {}
+  for _, b in ipairs(blocks) do
+    if b.t == "Para" or b.t == "Plain" then
+      table.insert(parts, inlines_to_latex(b.content))
+    else
+      local ok, s = pcall(pandoc.utils.stringify, b)
+      table.insert(parts, ok and escape_latex(s) or "")
+    end
+  end
+  return table.concat(parts, " \\\\newline{} ")
+end
+
+local function cell_to_latex(blocks)
+  local ok, latex = pcall(blocks_to_latex, blocks)
+  if not ok or not latex then return "" end
+  return latex
+end
+
+local function render_grid_table(n, aligns, widths, header_cells, body_rows, caption_inlines)
+  local vbar = GRID_V and "|" or ""
+  local hline = GRID_H and "\\\\hline" or ""
+
+  local colspec_parts = {vbar}
+  for i = 1, n do
+    table.insert(colspec_parts,
+      string.format(">{%s}p{%.4f\\\\linewidth}", align_cmd(aligns[i]), widths[i]))
+    table.insert(colspec_parts, vbar)
+  end
+
+  local lines = {}
+  table.insert(lines, "\\\\begin{longtable}{" .. table.concat(colspec_parts) .. "}")
+
+  if caption_inlines and #caption_inlines > 0 then
+    local cap = cell_to_latex({pandoc.Para(caption_inlines)})
+    if cap ~= "" then
+      table.insert(lines, "\\\\caption{" .. cap .. "}\\\\\\\\")
+    end
+  end
+
+  if hline ~= "" then table.insert(lines, hline) end
+
+  if header_cells and #header_cells > 0 then
+    local hdr = {}
+    for i, cell in ipairs(header_cells) do
+      table.insert(hdr, "\\\\textbf{" .. cell_to_latex(cell) .. "}")
+    end
+    table.insert(lines, table.concat(hdr, " & ") .. " \\\\\\\\")
+    if hline ~= "" then table.insert(lines, hline) end
+    table.insert(lines, "\\\\endhead")
+  end
+
+  for _, row in ipairs(body_rows) do
+    local cells = {}
+    for i, cell in ipairs(row) do
+      if i <= n then table.insert(cells, cell_to_latex(cell)) end
+    end
+    table.insert(lines, table.concat(cells, " & ") .. " \\\\\\\\")
+    if hline ~= "" then table.insert(lines, hline) end
+  end
+
+  table.insert(lines, "\\\\end{longtable}")
+  return pandoc.RawBlock("latex", table.concat(lines, "\\n"))
 end
 
 -- pandoc >= 2.10 (pandoc-types >= 1.22): Table has colspecs/head/bodies.
@@ -3965,7 +4131,30 @@ function Table(t)
     local widths = compute_widths(n, totlen, maxword)
     for i = 1, n do t.colspecs[i][2] = widths[i] end
 
-    return t
+    if not (GRID_H or GRID_V) then return t end
+
+    local aligns = {}
+    for i = 1, n do aligns[i] = tostring(t.colspecs[i][1]) end
+
+    local header_cells = {}
+    if t.head.rows[1] then
+      for i, cell in ipairs(t.head.rows[1].cells) do
+        if i <= n then header_cells[i] = cell.content end
+      end
+    end
+
+    local body_rows = {}
+    for _, body in ipairs(t.bodies) do
+      for _, row in ipairs(body.body) do
+        local cells = {}
+        for i, cell in ipairs(row.cells) do
+          if i <= n then cells[i] = cell.content end
+        end
+        table.insert(body_rows, cells)
+      end
+    end
+
+    return render_grid_table(n, aligns, widths, header_cells, body_rows, nil)
   end
 
   -- Old-style Table (pandoc-types < 1.22)
@@ -3995,9 +4184,16 @@ function Table(t)
   end
 
   t.widths = compute_widths(n, totlen, maxword)
-  return t
+
+  if not (GRID_H or GRID_V) then return t end
+
+  return render_grid_table(n, t.aligns, t.widths, t.headers, t.rows, t.caption)
 end
-""".replace("__FULL_WIDTH_CHARS__", str(_full_width_chars))
+""".replace("__FULL_WIDTH_CHARS__", str(_full_width_chars)) \
+   .replace("__TEXT_WIDTH_IN__", str(_text_width_in)) \
+   .replace("__TABCOLSEP_IN__", str(_tabcolsep_in)) \
+   .replace("__GRID_H__", "true" if h_lines else "false") \
+   .replace("__GRID_V__", "true" if v_lines else "false")
 
     cmd = [
         "pandoc", str(md_path),
@@ -4020,6 +4216,18 @@ end
     ]
     if toc:
         cmd += ["--toc", f"--toc-depth={toc_depth}"]
+    # \tabcolsep is trimmed for every table (not just grid ones) since it
+    # trades directly against the column-width budget the lua filter above
+    # computes -- the default 6pt costs a many-column table real inches of
+    # page width it never gets to spend on content.
+    _header_includes = f"\\setlength{{\\tabcolsep}}{{{_tabcolsep_pt:g}pt}}"
+    if h_lines or v_lines:
+        # Grid-line tables are emitted as raw `longtable` LaTeX by the lua
+        # filter below, which bypasses pandoc's own table detection (the
+        # $tables$ template variable), so the packages it needs must be
+        # pulled in explicitly here.
+        _header_includes += "\\usepackage{longtable}\\usepackage{array}"
+    cmd += ["-V", f"header-includes={_header_includes}"]
 
     lua_path = None
     try:
