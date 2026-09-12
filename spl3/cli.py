@@ -3348,7 +3348,7 @@ def cmd_vibe(description, description_opt, spec_file, lang, adapter, model, outp
 
       # Spec-driven (ablation S7): full spec → code, bypassing .mmd and .spl IR
       spl3 vibe --spec S1-agent-spec.md --out-dir ./out \\
-        --adapter claude_cli --model claude-sonnet-4-6
+        --adapter claude_cli --model claude-sonnet-5
 
       # Preview prompt before sending
       spl3 vibe --spec S1-spec.md --adapter claude_cli --prompt
@@ -4701,7 +4701,7 @@ def _exp_dir_completed(base: Path, step: str, slug: str) -> "Path | None":
 @click.option("--adapters", "-a", multiple=True, required=True, metavar="ADAPTER",
               help="Adapter name(s). E.g. --adapters claude_cli openrouter")
 @click.option("--models", "-m", multiple=True, required=True, metavar="MODEL",
-              help="Model ID(s) matching --adapters order. E.g. --models claude-sonnet-4-6 google/gemini-3-flash-preview")
+              help="Model ID(s) matching --adapters order. E.g. --models claude-sonnet-5 google/gemini-3-flash-preview")
 @click.option("--pipeline", default="S1,S2,S3,S4,S5,S6", show_default=True, metavar="STEPS",
               help="Comma-separated pipeline steps to run. E.g. S1,S2,S3,S4,S5,S6 or S1,S2,S3,S4,S5,S6,S7,S8,S9,S10")
 @click.option("--judge-adapter", default="claude_cli", show_default=True,
@@ -4727,11 +4727,11 @@ def cmd_experiment_run(recipes, spl_paths, spl_root, adapters, models, pipeline,
       spl3 experiment run \\
         --recipes self_refine react \\
         --adapters claude_cli openrouter \\
-        --models claude-sonnet-4-6 google/gemini-3-flash-preview \\
+        --models claude-sonnet-5 google/gemini-3-flash-preview \\
         --pipeline S1,S2,S3,S4,S5,S6
 
       spl3 experiment run --recipes self_refine --adapters claude_cli \\
-        --models claude-sonnet-4-6 --pipeline S7,S8,S9,S10 --dry-run
+        --models claude-sonnet-5 --pipeline S7,S8,S9,S10 --dry-run
     """
     import subprocess
     from datetime import datetime as _dt
@@ -5098,7 +5098,7 @@ def cmd_migrate(source, target, adapter, model, judge_adapter, judge_model,
     Examples:
       # Migrate a PocketFlow recipe to LangGraph
       spl3 migrate cookbook/05_self_refine/ --target python/langgraph \\
-        --adapter claude_cli --model claude-sonnet-4-6 --out-dir ./migrate-self_refine/
+        --adapter claude_cli --model claude-sonnet-5 --out-dir ./migrate-self_refine/
 
       # Migrate single file, dry-run to preview commands
       spl3 migrate agent.py --target go --adapter claude_cli --dry-run

@@ -28,7 +28,7 @@ SUPPORTED_LANGS = {
 }
 
 SUPPORTED_MODELS = [
-    "claude-sonnet-4-6",
+    "claude-sonnet-5",
     "claude-opus-4-6",
 ]
 

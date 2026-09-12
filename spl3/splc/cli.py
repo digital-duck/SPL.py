@@ -119,7 +119,7 @@ SUPPORTED_LANGS: dict[str, dict] = {
 DETERMINISTIC_LANGS: set[str] = {"go", "ts", "python/langgraph", "python/pocketflow", "python/linalg", "python/intro_geometry", "python/domain_textbook"}
 
 SUPPORTED_MODELS = [
-    "claude-sonnet-4-6",
+    "claude-sonnet-5",
     "claude-opus-4-6",
 ]
 
@@ -182,7 +182,7 @@ def splc():
     "--llm", "llm_spec",
     default=None,
     metavar="ADAPTER:MODEL",
-    help="LLM spec as ADAPTER:MODEL (e.g. claude_cli:claude-sonnet-4-6). Wins over --adapter/--model.",
+    help="LLM spec as ADAPTER:MODEL (e.g. claude_cli:claude-sonnet-5). Wins over --adapter/--model.",
 )
 @click.option(
     "--adapter",

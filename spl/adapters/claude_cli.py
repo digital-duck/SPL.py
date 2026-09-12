@@ -22,7 +22,7 @@ class ClaudeCLIAdapter(LLMAdapter):
     Claude Code subscription (flat billing = zero marginal cost per call).
     """
 
-    DEFAULT_MODEL = "claude-sonnet-4-6"
+    DEFAULT_MODEL = "claude-sonnet-5"
 
     def __init__(
         self,
@@ -233,5 +233,5 @@ class ClaudeCLIAdapter(LLMAdapter):
         return [
             "claude-haiku-4-5-20251001",
             "claude-opus-4-6",
-            "claude-sonnet-4-6",
+            "claude-sonnet-5",
         ]

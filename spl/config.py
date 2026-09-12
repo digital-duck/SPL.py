@@ -27,12 +27,12 @@ DEFAULTS: dict = {
     "max_total_tokens": 100_000,  # max combined input+output tokens per workflow
     # ── text2spl compiler ─────────────────────────────────────────────────────
     # Separate adapter/model from the runtime adapter used by `spl run`.
-    # During development, claude_cli + claude-sonnet-4-6 is the recommended
+    # During development, claude_cli + claude-sonnet-5 is the recommended
     # compiler (subscription billing, zero VRAM, highest code quality).
     # Future options: ollama + qwen2.5-coder, or a fine-tuned SPL specialty model.
     "text2spl": {
         "adapter": "claude_cli",          # dedicated compiler adapter
-        "model":   "claude-sonnet-4-6",   # dedicated compiler model
+        "model":   "claude-sonnet-5",     # dedicated compiler model
         "mode":    "auto",
         "validate": True,
         "max_retries": 2,

@@ -48,10 +48,10 @@ ADAPTERS = [
 # Default model options per adapter (first entry = default)
 MODELS: dict[str, list[str]] = {
     "ollama":      ["gemma3", "llama3.2", "mistral", "phi3", "qwen2.5-coder", "deepseek-coder"],
-    "claude_cli":  ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
-    "anthropic":   ["claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
+    "claude_cli":  ["claude-sonnet-5", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
+    "anthropic":   ["claude-sonnet-5", "claude-opus-4-6", "claude-haiku-4-5-20251001"],
     "openai":      ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
-    "openrouter":  ["meta-llama/llama-3.3-70b-instruct", "google/gemini-2.0-flash-001", "anthropic/claude-sonnet-4-6"],
+    "openrouter":  ["meta-llama/llama-3.3-70b-instruct", "google/gemini-2.0-flash-001", "anthropic/claude-sonnet-5"],
     "google":      ["gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
     "deepseek":    ["deepseek-chat", "deepseek-coder"],
     "qwen":        ["qwen-max", "qwen-plus", "qwen-turbo"],
