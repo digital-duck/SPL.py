@@ -82,25 +82,61 @@ class ClaudeCLIAdapter(LLMAdapter):
 
         # Feed prompt via stdin using communicate(input=...) — avoids OS arg-length
         # limits and eliminates the file-handle race in the temp-file approach.
-        try:
-            proc = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=env,
-            )
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(input=full_prompt.encode("utf-8")),
-                timeout=self.timeout,
-            )
-        except FileNotFoundError:
+        #
+        # Self-healing retry: `create_subprocess_exec` can raise OSError
+        # (FileNotFoundError, PermissionError, "Text file busy", etc.) for
+        # reasons that have nothing to do with the LLM call itself — e.g.
+        # the Claude Code CLI's own auto-updater briefly rewriting the
+        # binary/symlink mid-run. Observed in practice: 20+ consecutive
+        # successful calls in one process, then one FileNotFoundError,
+        # then success again immediately after — the classic signature of
+        # a transient environment race, not a real "CLI missing" state.
+        # Retrying a couple of times with a short pause rides out that
+        # window; a genuinely missing/broken CLI still fails after that.
+        max_launch_attempts = 3  # 1 initial try + 2 retries
+        last_oserror: OSError | None = None
+        proc = None
+        stdout = stderr = b""
+        for attempt in range(1, max_launch_attempts + 1):
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                )
+                stdout, stderr = await asyncio.wait_for(
+                    proc.communicate(input=full_prompt.encode("utf-8")),
+                    timeout=self.timeout,
+                )
+                last_oserror = None
+                break
+            except asyncio.TimeoutError:
+                # NOTE: asyncio.TimeoutError is a OSError subclass (it's an
+                # alias for the builtin TimeoutError as of Python 3.11) —
+                # this branch must come before `except OSError` or a real
+                # hang would be silently retried as if it were a launch
+                # failure. A slow/stuck generation isn't the "environment
+                # hiccup" this retry loop targets, so it fails immediately.
+                raise RuntimeError(f"Claude CLI timed out after {self.timeout}s")
+            except OSError as e:
+                last_oserror = e
+                if attempt < max_launch_attempts:
+                    await asyncio.sleep(1.5 * attempt)
+                    continue
+
+        if last_oserror is not None:
+            if isinstance(last_oserror, FileNotFoundError):
+                raise RuntimeError(
+                    f"Claude CLI not found at '{self.cli_path}' "
+                    f"(after {max_launch_attempts} attempts). "
+                    "Install Claude Code: https://docs.anthropic.com/en/docs/claude-code"
+                )
             raise RuntimeError(
-                f"Claude CLI not found at '{self.cli_path}'. "
-                "Install Claude Code: https://docs.anthropic.com/en/docs/claude-code"
+                f"Claude CLI failed to launch after {max_launch_attempts} attempts: {last_oserror}"
             )
-        except asyncio.TimeoutError:
-            raise RuntimeError(f"Claude CLI timed out after {self.timeout}s")
+        assert proc is not None
 
         stderr_text = stderr.decode('utf-8', errors='replace').strip()
         stdout_text = stdout.decode('utf-8', errors='replace').strip()
