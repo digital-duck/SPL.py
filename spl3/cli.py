@@ -4827,6 +4827,106 @@ def cmd_show(adapter, model, tool):
 
 
 # ------------------------------------------------------------------ #
+# spl3 util clean-port                                                 #
+# ------------------------------------------------------------------ #
+
+def _parse_port_spec(spec: str) -> list[int]:
+    """Parse a comma-separated port/range spec into a sorted list of ports.
+
+    Accepts individual ports and inclusive ranges, freely mixed and spaced,
+    e.g. "8000, 8001, 8010 - 8020". Raises ValueError on anything that
+    doesn't parse as an int (or int-int) after stripping whitespace.
+    """
+    ports: set[int] = set()
+    for raw in spec.split(","):
+        token = raw.strip()
+        if not token:
+            continue
+        if "-" in token:
+            lo_s, hi_s = (t.strip() for t in token.split("-", 1))
+            lo, hi = int(lo_s), int(hi_s)
+            if lo > hi:
+                lo, hi = hi, lo
+            ports.update(range(lo, hi + 1))
+        else:
+            ports.add(int(token))
+    return sorted(ports)
+
+
+def _pids_on_port(port: int) -> list[int]:
+    """Return PIDs of processes with a listening socket on `port` (Linux/macOS)."""
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["lsof", "-ti", f":{port}"],
+            capture_output=True, text=True, timeout=5,
+        )
+    except FileNotFoundError:
+        raise click.ClickException(
+            "clean-port requires 'lsof' on PATH (present by default on macOS "
+            "and most Linux distros)."
+        )
+    return [int(p) for p in result.stdout.split() if p.strip()]
+
+
+@cmd_util.command("clean-port", short_help="Kill whatever process is listening on given ports.")
+@click.argument("ports")
+@click.option("--force", "-9", is_flag=True, default=False,
+              help="Send SIGKILL instead of SIGTERM.")
+@click.option("--dry-run", is_flag=True, default=False,
+              help="Show what would be killed without killing anything.")
+def cmd_clean_port(ports: str, force: bool, dry_run: bool) -> None:
+    """Kill whatever process is listening on each given port.
+
+    PORTS is a comma-separated list of ports and/or inclusive ranges:
+
+    \b
+        spl3 util clean-port "8319"
+        spl3 util clean-port "8319, 8219"
+        spl3 util clean-port "8319, 8219, 9000-9010"
+
+    Stray dev servers (vite, uvicorn --reload, ...) are the usual target —
+    this is a plain "whatever owns this port, kill it" hammer, not aware of
+    what the process actually is.
+    """
+    import os
+    import signal
+
+    try:
+        port_list = _parse_port_spec(ports)
+    except ValueError:
+        raise click.ClickException(f"Could not parse port spec: {ports!r}")
+    if not port_list:
+        click.echo("No ports given.")
+        return
+
+    sig = signal.SIGKILL if force else signal.SIGTERM
+    any_killed = False
+    for port in port_list:
+        pids = _pids_on_port(port)
+        if not pids:
+            click.echo(f"  port {port}: nothing listening")
+            continue
+        for pid in pids:
+            if dry_run:
+                click.echo(f"  port {port}: would kill PID {pid} ({sig.name})")
+                continue
+            try:
+                os.kill(pid, sig)
+                click.echo(f"  port {port}: killed PID {pid} ({sig.name})")
+                any_killed = True
+            except ProcessLookupError:
+                click.echo(f"  port {port}: PID {pid} already gone")
+            except PermissionError:
+                click.echo(f"  port {port}: no permission to kill PID {pid} (try sudo)")
+
+    if dry_run:
+        click.echo("(dry run — nothing was actually killed)")
+    elif not any_killed:
+        click.echo("Nothing was killed.")
+
+
+# ------------------------------------------------------------------ #
 # spl3 splc                                                           #
 # ------------------------------------------------------------------ #
 
