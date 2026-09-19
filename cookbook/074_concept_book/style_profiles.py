@@ -58,7 +58,8 @@ STYLE_PROFILES: dict[str, dict[str, str]] = {
         "depth": "full proof, connection to standard references, remarks on generality",
         "audience": "graduate student or researcher who needs a precise, citable statement",
         "length": "200–300 words per section",
-        "structure": "Definition → Theorem → Proof → Remark (connections / generalisations)",
+        "structure": "Definition → Theorem → Proof → Remark (connections / generalisations) → "
+                     "References (see RESEARCH_REFERENCE_RULE below)",
     },
     "middle_school": {
         "label": "Middle school (grades 6–8)",
@@ -77,6 +78,29 @@ STYLE_PROFILES: dict[str, dict[str, str]] = {
         "structure": "Real-world hook → Definition → Worked example → Why it's true → Practice problem",
     },
 }
+
+
+# Appended only for the "research" profile (style_instruction below) — a
+# "References" section makes sense for dense, citation-ready writing but
+# not for this recipe's other, shorter profiles. The "never fabricate"
+# clause exists because an LLM asked for citations will otherwise invent
+# plausible-looking but nonexistent URLs; capping at 5 keeps the section a
+# pointer list, not a bibliography dump. Ported from
+# conceptbook-app/spl/style_profiles.py's RESEARCH_REFERENCE_RULE (that
+# fork's `research`/`research_applied` profiles and richer subject-rigor
+# machinery have otherwise diverged too far from this recipe's simpler
+# shape to port wholesale — this is the one self-contained piece that
+# still applies here as-is).
+RESEARCH_REFERENCE_RULE = (
+    "Reference-link rule: end the section with a 'References' list of up to "
+    "5 real, verifiable URLs (survey papers, standard references, "
+    "documentation, or well-known textbooks) directly relevant to this "
+    "concept — each as a Markdown link with a real title, e.g. "
+    "[Author, Title (Year)](https://...). Only include a URL you are "
+    "confident actually exists and is correct; never invent or guess one. "
+    "If you cannot name any with confidence, omit the References section "
+    "entirely rather than fabricate a link."
+)
 
 
 def get_style_profile(style: str) -> dict[str, str]:
@@ -99,7 +123,7 @@ def style_instruction(style: str) -> str:
     GENERATE prompt template so the LLM writes in the chosen style.
     """
     p = get_style_profile(style)
-    return (
+    guide = (
         f"STYLE GUIDE — {p['label']}\n"
         f"Tone      : {p['tone']}\n"
         f"Depth     : {p['depth']}\n"
@@ -107,6 +131,9 @@ def style_instruction(style: str) -> str:
         f"Length    : {p['length']}\n"
         f"Structure : {p['structure']}"
     )
+    if style == "research":
+        guide += f"\n{RESEARCH_REFERENCE_RULE}"
+    return guide
 
 
 def available_styles() -> list[str]:

@@ -35,6 +35,19 @@ def _cb_module(name: str):
     return _MODULE_CACHE[name]
 
 
+# NOT `from spl.content_safety import ...` — this file is loaded by SPL.py's
+# spl3 CLI via importlib.spec_from_file_location("_spl_tools", <this path>),
+# with no package context and no sys.path entry for this recipe's own
+# directory, so a bare `spl.*` absolute import resolves to SPL.py's own
+# installed `spl` framework package (which has `spl.tools`, hence the
+# `spl_tool` import above working — but has no `content_safety` module,
+# which would raise ModuleNotFoundError). Load it the same file-path-based
+# way `_cb_module` already loads graph_lib/style_profiles.
+_content_safety = _cb_module("content_safety")
+_esc = _content_safety.esc
+find_malformed_latex = _content_safety.find_malformed_latex
+
+
 def _domain(domain_yaml: str) -> dict:
     """Return cached domain entry; raises KeyError if setup_domain not called yet."""
     return _DOMAIN_CACHE[domain_yaml]
@@ -319,20 +332,58 @@ def build_book_index(domain_yaml: str, target: str, language: str, output_dir: s
 
 # ── internal helpers ──────────────────────────────────────────────────────────
 
-def _esc(text: str) -> str:
-    return text.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
-
-
 def _inline_md(text: str) -> str:
-    """Bold, italic, backtick-code.  Leaves $ LaTeX delimiters untouched."""
+    """Bold, italic, backtick-code — HTML-escapes the raw text first, then
+    layers markdown formatting on top of the escaped result.
+
+    Escaping first matters because `text` here is LLM-generated content
+    ultimately sourced from a third-party PDF (see write_section's prompt
+    context) — untrusted in the sense that a stray '<script>'-looking
+    string in a textbook's extracted text (or an LLM echoing it verbatim)
+    would otherwise render as live markup in the generated concept_*.html/
+    book_*.html static files this writes, rather than as visible text.
+    Escaping first, not after, also avoids double-escaping the content of
+    a backtick code span below (its content is already escaped by this
+    same upfront pass, so it must NOT be re-escaped there). Safe for $
+    LaTeX delimiters too — MathJax reads the browser's already-decoded
+    text content, so an escaped '<'/'>' inside $...$ still displays
+    correctly.
+    """
+    text = _esc(text)
     text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
     text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
-    text = re.sub(r'`([^`]+)`', lambda m: f'<code>{_esc(m.group(1))}</code>', text)
+    text = re.sub(r'`([^`]+)`', r'<code>\1</code>', text)
+    text = re.sub(r'\[([^\]]+)\]\((https?://[^\s")]+)\)', _md_link, text)
     return text
+
+
+def _md_link(m: re.Match) -> str:
+    """Renders a `[label](url)` reference link (see
+    style_profiles.py's RESEARCH_REFERENCE_RULE) as a real anchor tag
+    instead of leaving the raw markdown-bracket syntax visible in the
+    generated page. `label` is already HTML-escaped by _inline_md's
+    upfront _esc() pass; the scheme is restricted to http(s) by the regex
+    above (no javascript:/data: URIs), and the URL itself still needs its
+    own quote-escaping here since _esc() only covers &/</>, not '"' —
+    otherwise an embedded '"' could break out of the href attribute.
+    """
+    label, url = m.group(1), m.group(2)
+    safe_url = url.replace('"', '&quot;')
+    return f'<a href="{safe_url}" target="_blank" rel="noopener noreferrer">{label}</a>'
 
 
 def _md_to_html(md: str) -> str:
     """Minimal Markdown → HTML.  Preserves $...$ and $$...$$ for MathJax."""
+    # Quality check, not a security one (unlike the escaping below, which
+    # every caller gets regardless) — surfaces a mismatched-$ typo in the
+    # LLM's own output at generation time, in the same [INFO]-style log a
+    # pipeline run already prints to, rather than only via a later
+    # standalone scan. See content_safety.py's find_malformed_latex
+    # docstring for why this shape matters beyond just broken MathJax
+    # rendering.
+    for finding in find_malformed_latex(md):
+        print(f"  [WARN] malformed LaTeX delimiter ({finding['kind']}): {finding['snippet']!r}")
+
     lines = md.split('\n')
     out: list[str] = []
     in_code = False
@@ -369,11 +420,11 @@ def _md_to_html(md: str) -> str:
             # Self-contained: $$ ... $$ on one line (content between the delimiters)
             if stripped != '$$' and stripped.endswith('$$') and len(stripped) > 4:
                 flush_para()
-                out.append(line)
+                out.append(_esc(line))
                 continue
             # Toggle multi-line block
             if in_dmath:
-                out.append('$$\n' + '\n'.join(math_buf) + '\n$$')
+                out.append('$$\n' + '\n'.join(_esc(l) for l in math_buf) + '\n$$')
                 math_buf.clear()
                 in_dmath = False
             else:
