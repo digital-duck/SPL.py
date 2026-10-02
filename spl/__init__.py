@@ -9,7 +9,11 @@ optimization, built-in RAG, persistent memory, and now full procedural
 control flow for multi-step agentic patterns.
 """
 
-__version__ = "2.0.0"
+try:                                      # one source of truth: the version in pyproject.toml, as installed
+    from importlib.metadata import PackageNotFoundError, version as _dist_version
+    __version__ = _dist_version("spl-llm")
+except Exception:                         # running from a checkout that is not installed
+    __version__ = "unknown"
 
 from spl.lexer import Lexer
 from spl.parser import Parser
