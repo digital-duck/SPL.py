@@ -2418,6 +2418,142 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 
 
 # ------------------------------------------------------------------ #
+# spl3 spl2graph                                                      #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("spl2graph", short_help="Lift each .spl workflow into a GraphLang *.graph.yaml.")
+@click.argument("spl_files", nargs=-1, required=True, metavar="SPL_FILE...")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory (default: next to each input).")
+@click.option("--workflow", default=None, metavar="NAME",
+              help="Workflow to lift (default: the last one defined in the file).")
+@click.option("--stdout", "to_stdout", is_flag=True, help="Print the YAML instead of writing a file.")
+def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout):
+    """Lift each .spl workflow into a GraphLang graph (AST-direct, no LLM).
+
+    Writes <name>.graph.yaml: INPUT/OUTPUT nodes, one typed node per statement
+    (GENERATE, SOLVE, ASSERT, EVALUATE, LOOP, FORK/JOIN, ...), explicit `triggers`
+    edges for control flow and `binds` edges for @var data flow.  Statements with
+    no GraphLang equivalent are skipped and reported as warnings.
+
+    \b
+    Examples:
+      spl3 spl2graph cookbook/005_self_refine/self_refine.spl
+      spl3 spl2graph workflow.spl --workflow main --out-dir graphs/
+      spl3 spl2graph workflow.spl --stdout
+    """
+    from pathlib import Path
+    from spl3.spl2graph import NoWorkflowError, graph_to_yaml, spl_to_graph
+
+    errors = 0
+    for spl_file in spl_files:
+        path = Path(spl_file).resolve()
+        if not path.exists():
+            click.echo(f"MISSING: {spl_file}", err=True)
+            errors += 1
+            continue
+        try:
+            graph, warnings = spl_to_graph(path.read_text(encoding="utf-8"), workflow,
+                                           source_name=path.name, source_dir=path.parent)
+        except NoWorkflowError as exc:
+            click.echo(f"WARN: {path.name} — {exc}", err=True)
+            continue
+        except Exception as exc:
+            click.echo(f"FAILED: {spl_file} — {exc}", err=True)
+            errors += 1
+            continue
+        for w in warnings:
+            click.echo(f"WARN: {path.name} — {w}", err=True)
+        text = graph_to_yaml(graph)
+        if to_stdout:
+            click.echo(text)
+            continue
+        dest_dir = Path(out_dir).resolve() if out_dir else path.parent
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / f"{path.stem}.graph.yaml"
+        dest.write_text(text, encoding="utf-8")
+        click.echo(f"{dest}  ({len(graph['nodes'])} nodes, {len(graph['edges'])} edges)")
+    if errors:
+        raise SystemExit(1)
+
+
+# ------------------------------------------------------------------ #
+# spl3 graph2spl                                                      #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("graph2spl", short_help="Rebuild SPL source from a GraphLang *.graph.yaml.")
+@click.argument("graph_files", nargs=-1, required=True, metavar="GRAPH_FILE...")
+@click.option("--out-dir", default=None, metavar="DIR",
+              help="Output directory (default: next to each input).")
+@click.option("--stdout", "to_stdout", is_flag=True, help="Print the SPL instead of writing a file.")
+@click.option("--check", is_flag=True,
+              help="Round-trip test: convert the generated SPL back with spl2graph and require the "
+                   "same graph (exit 1 on any difference).")
+def cmd_graph2spl(graph_files, out_dir, to_stdout, check):
+    """Rebuild a .spl workflow from a GraphLang graph (structured, no LLM).
+
+    Inverse of `spl3 util spl2graph`: control edges become statement order,
+    EVALUATE/ASSERT branches become EVALUATE..WHEN / ASSERT..OTHERWISE, LOOP
+    becomes WHILE, FORK..JOIN becomes CALL PARALLEL.  LOGGING, EXCEPTION
+    handlers and CREATE FUNCTION bodies are not in the graph, so they are not
+    restored; the header comment lists the functions and tools to define.
+
+    \b
+    Examples:
+      spl3 graph2spl workflow.graph.yaml
+      spl3 graph2spl workflow.graph.yaml --check          # graph -> SPL -> graph must match
+      spl3 spl2graph w.spl && spl3 graph2spl w.graph.yaml --check
+    """
+    from pathlib import Path
+    import yaml
+    from spl3.graph2spl import GraphToSPLError, graph_to_spl, roundtrip_diff
+
+    errors = 0
+    for graph_file in graph_files:
+        path = Path(graph_file).resolve()
+        if not path.exists():
+            click.echo(f"MISSING: {graph_file}", err=True)
+            errors += 1
+            continue
+        try:
+            graph = yaml.safe_load(path.read_text(encoding="utf-8"))
+            text, warnings = graph_to_spl(graph)
+            stem = path.name.removesuffix(".graph.yaml").removesuffix(".yaml")
+            diffs = roundtrip_diff(graph, source_name=f"{stem}.spl", source_dir=path.parent) if check else []
+        except GraphToSPLError as exc:
+            click.echo(f"WARN: {path.name} — {exc}", err=True)
+            continue
+        except Exception as exc:
+            click.echo(f"FAILED: {graph_file} — {type(exc).__name__}: {exc}", err=True)
+            errors += 1
+            continue
+        for w in warnings:
+            click.echo(f"WARN: {path.name} — {w}", err=True)
+        if check:
+            if diffs:
+                click.echo(f"ROUNDTRIP DIFF: {path.name} ({len(diffs)} differences)", err=True)
+                for d in diffs[:10]:
+                    click.echo(f"  {d}", err=True)
+                errors += 1
+            else:
+                click.echo(f"roundtrip OK: {path.name}", err=True)
+        if to_stdout:
+            click.echo(text)
+            continue
+        dest_dir = Path(out_dir).resolve() if out_dir else path.parent
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest = dest_dir / f"{stem}.spl"
+        if dest == path:
+            click.echo(f"SKIPPED: {dest} would overwrite the input", err=True)
+            errors += 1
+            continue
+        dest.write_text(text, encoding="utf-8")
+        click.echo(str(dest))
+    if errors:
+        raise SystemExit(1)
+
+
+# ------------------------------------------------------------------ #
 # spl3 spl2mmd                                                        #
 # ------------------------------------------------------------------ #
 
