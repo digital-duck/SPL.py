@@ -1,0 +1,81 @@
+-- ============================================================
+-- Recipe 127: PII data-flow compliance with three engines
+--
+-- PURPOSE: An LLM finds the personal data in a document (a PII
+-- map); deterministic rules then decide whether the document may
+-- go to the destination. The rule check is done by one of three
+-- engines that must agree: plain (standard library), sympy, z3.
+--
+-- solver=ON  : rules checked by the chosen engine
+-- solver=OFF : the LLM judges compliance itself (the ablation)
+--
+-- The default rules are an ILLUSTRATION, not legal advice or a
+-- real GDPR / PCI rule set.
+--
+-- Install (optional engines): pip install sympy z3-solver
+--
+-- Run:
+--   spl3 run cookbook-solver/127_pii_compliance/pii_compliance.spl \
+--       --adapter claude_cli --param engine=plain --param destination=external_api
+--   spl3 run cookbook-solver/127_pii_compliance/pii_compliance.spl \
+--       --adapter claude_cli --param use_solver=false
+-- ============================================================
+
+
+CREATE FUNCTION extract_pii_prompt(document TEXT)
+RETURNS TEXT AS $$
+You are a data-protection analyst. List the kinds of personal data in the document below.
+
+Rules for your answer:
+- Output JSON only, no explanation, no markdown fences.
+- Do NOT copy any sensitive value into your answer. Report the TYPE only.
+- Use these types: SSN, CCN, EMAIL, PHONE, ADDRESS, NAME, DOB, OTHER.
+- "masked" is true only if the value in the document is already replaced by a mask such as [REDACTED] or ***.
+
+Schema: {"entities": [{"type": "<TYPE>", "masked": <true|false>}]}
+
+DOCUMENT:
+{document}
+$$;
+
+CREATE FUNCTION judge_compliance_prompt(pii_map TEXT, destination TEXT)
+RETURNS TEXT AS $$
+You are a compliance officer. A document contains the personal data described by this PII map:
+{pii_map}
+
+It is about to be sent to: {destination}  (external_api and third_party_vendor are external; anything else is internal).
+
+Policy: (1) PII sent externally must be masked. (2) A social security number never leaves externally, even masked.
+(3) Card numbers must always be masked.
+
+Answer with one line: COMPLIANT or NOT COMPLIANT, then the rule numbers that are violated.
+$$;
+
+WORKFLOW pii_compliance
+  INPUT @document TEXT := "Customer John Doe, SSN 123-45-6789, asks to update his address."
+  INPUT @destination TEXT := "external_api"
+  INPUT @engine TEXT := "plain"
+  INPUT @use_solver TEXT := "true"
+  OUTPUT @report TEXT
+DO
+  LOGGING "[r127] pii_compliance start" LEVEL INFO;
+
+  GENERATE extract_pii_prompt(@document) INTO @pii_raw;
+  CALL parse_pii_map(@pii_raw) INTO @pii_map;
+  CALL normalize_bool(@use_solver) INTO @use_solver;
+  CALL normalize_engine(@engine) INTO @engine;
+
+  EVALUATE @use_solver
+    WHEN = "true" THEN
+      CALL check_compliance(@pii_map, @destination, @engine, "") INTO @verdict;
+      ASSERT check_succeeded(@verdict);
+      CALL format_report(@verdict, @destination, "") INTO @report;
+
+    WHEN = "false" THEN
+      GENERATE judge_compliance_prompt(@pii_map, @destination) INTO @llm_verdict;
+      CALL format_llm_report(@llm_verdict, @destination) INTO @report;
+  END;
+
+  RETURN @report WITH status = "complete", use_solver = @use_solver;
+
+END;

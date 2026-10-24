@@ -1093,6 +1093,28 @@
         "minizinc"
       ],
       "excluded_adapters": []
+    },
+    {
+      "id": "127",
+      "name": "PII Data-Flow Compliance — Three Engines",
+      "description": "An LLM extracts a PII map (types only); Boolean rules decide whether the document may go to a destination. Checked by three engines that must agree: plain (standard library), SymPy logic, Z3. Search question: are the rules consistent. Fails closed on an unreadable PII map. ASSERT: check_succeeded. Optional: pip install sympy z3-solver. Default rules are illustrative, not legal advice.",
+      "args": [
+        "spl3",
+        "run",
+        "cookbook-solver/127_pii_compliance/pii_compliance.spl",
+        "--adapter",
+        "claude_cli",
+        "--param",
+        "engine=plain"
+      ],
+      "dir": "127_pii_compliance",
+      "log": "pii_compliance",
+      "is_active": false,
+      "approval_status": "new",
+      "category": "reasoning",
+      "tier": 2,
+      "requires": [],
+      "excluded_adapters": []
     }
   ]
 }
