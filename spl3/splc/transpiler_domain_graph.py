@@ -259,7 +259,7 @@ def _spl_config(key: str, default: str) -> str:
 
 # ── LLM helper (configure SPL_MODEL / SPL_LLM_TIMEOUT / SPL_OLLAMA_URL, or
 # replace with your adapter) — calls Ollama's OpenAI-compatible HTTP endpoint
-# directly (stream=False), the same way spl/adapters/ollama.py's OllamaAdapter
+# directly (stream=False), the same way dd-llm's ollama adapter (dd_llm/adapters/)
 # does. Earlier this shelled out to the interactive `ollama run <model>` CLI —
 # but that CLI streams a live "Thinking..." status line to stdout using raw
 # ANSI cursor-control escapes (`\\x1b[9D\\x1b[K`, ...) to overwrite it in place,

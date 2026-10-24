@@ -38,7 +38,7 @@ References
 When implementing
 -----------------
   1. Replace the `raise NotImplementedError` bodies with real httpx calls.
-  2. Mirror OllamaAdapter (spl/adapters/ollama.py) — same OpenAI-compat pattern.
+  2. Mirror dd-llm's ollama adapter (dd_llm.adapters) — same OpenAI-compat pattern.
   3. Add "snap" to _bootstrap() in spl/adapters/__init__.py.
   4. Add "snap" to SUPPORTED_MODELS in spl/splc/cli.py.
   5. Update spl/splc/README.md supported targets table.

@@ -15,7 +15,7 @@ __version__ = "3.0.0-alpha"
 # SPL30's spl/ adds v3.0 modules (registry, composer, executor, …).
 # SPL20's spl/ provides adapters, storage, lexer, ast_nodes, config, …
 # Modules present in SPL30 shadow SPL20; modules absent in SPL30 fall through
-# to SPL20 transparently — so `from spl3.adapters.claude_cli import …` works.
+# to SPL20 transparently — so e.g. `from spl3.adapters.echo import …` works.
 from pathlib import Path as _Path
 _spl20_spl = _Path(__file__).parent.parent.parent / "SPL20" / "spl"
 if _spl20_spl.exists():

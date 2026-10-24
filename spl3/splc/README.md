@@ -306,12 +306,10 @@ to know how the `.spl` was generated.
 
 ### LLM adapter
 
-`splc` uses the `claude_cli` adapter from the SPL v2.0 runtime
-(`spl.adapters.claude_cli`). This requires SPL20 on `PYTHONPATH`:
-
-```bash
-export PYTHONPATH=/path/to/SPL20:$PYTHONPATH
-```
+`splc` uses the `claude_cli` adapter, implemented in
+[dd-llm](https://github.com/digital-duck/dd-llm) (`dd_llm.adapters.claude_cli`)
+and reached through SPL's `DDLLMBridge`. `pip install dd-llm` (a core SPL.py
+dependency) is all that is needed.
 
 The adapter calls `claude` CLI under the hood (Claude Code / Sonnet 4.6 or
 Opus 4.6). No API key management needed beyond the existing Claude Code session.

@@ -197,10 +197,10 @@ from spl._loader import load_workflows_from_file
 from spl.registry import LocalRegistry
 from spl.composer import WorkflowComposer
 from spl.executor import SPL3Executor
-from spl.adapters.anthropic import AnthropicAdapter
+from spl.adapters import get_adapter
 import tools  # registers @spl_tool functions
 
-adapter  = AnthropicAdapter()
+adapter  = get_adapter("anthropic")
 executor = SPL3Executor(adapter=adapter)
 registry = LocalRegistry()
 for defn in load_workflows_from_file('arxiv_morning_brief.spl'):

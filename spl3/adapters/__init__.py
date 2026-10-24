@@ -140,8 +140,8 @@ def _bootstrap() -> None:
 
     # 2. SPL30 new adapters
     for _name, _mod, _cls in [
-        ("liquid", "spl.adapters.liquid",  "LiquidAdapter"),
-        ("snap",   "spl.adapters.snap",    "SnapAdapter"),    # placeholder — Ubuntu 26.04
+        ("liquid", "spl3.adapters.liquid", "LiquidAdapter"),
+        ("snap",   "spl3.adapters.snap",   "SnapAdapter"),    # placeholder — Ubuntu 26.04
     ]:
         try:
             register_adapter(_name, getattr(_importlib.import_module(_mod), _cls))
