@@ -14,7 +14,9 @@ If the context doesn""t contain relevant information, acknowledge this clearly r
 $$;
 
 WORKFLOW RAGPipeline
-  INPUT @documents LIST, @query TEXT, @output_path TEXT := ""
+  INPUT @documents LIST := ["cookbook-pocketflow/005_rag/data/doc1.txt", "cookbook-pocketflow/005_rag/data/doc2.txt", "cookbook-pocketflow/005_rag/data/doc3.txt"]
+  INPUT @query TEXT := "What is retrieval-augmented generation and when should I use it?"
+  INPUT @output_path TEXT := ""
   OUTPUT @generated_answer TEXT
 DO
   CALL chunk_documents(@documents) INTO @texts;

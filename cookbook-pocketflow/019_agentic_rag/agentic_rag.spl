@@ -91,8 +91,8 @@ Provide a clear, well-structured answer using only the information from the cont
 $$;
 
 WORKFLOW agentic_rag
-  INPUT @question TEXT
-  INPUT @store_path TEXT := "documents.json"
+  INPUT @question TEXT := "What is retrieval-augmented generation and when should I use it?"
+  INPUT @store_path TEXT := "cookbook-pocketflow/019_agentic_rag/data/documents.json"
   INPUT @max_iterations INTEGER := 10
   OUTPUT @answer TEXT
 DO

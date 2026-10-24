@@ -40,8 +40,7 @@ cd ~/projects/digital-duck/SPL.py
 
 export SERPAPI_KEY=your_serpapi_key
 spl3 run cookbook-pocketflow/062_tool_search/tool_search.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "query=recent advances in quantum computing"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it

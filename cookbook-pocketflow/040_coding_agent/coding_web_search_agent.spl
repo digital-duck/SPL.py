@@ -147,10 +147,20 @@ Write a concise failure report covering: what was attempted, what remains unimpl
 $$;
 
 WORKFLOW coding_agent
-  INPUT @project_dir TEXT := "."
-  INPUT @test_dir TEXT := "tests"
-  INPUT @test_suite TEXT
-  INPUT @skeleton_file TEXT := "src/solution.py"
+  INPUT @project_dir TEXT := "cookbook-pocketflow/040_coding_agent"
+  INPUT @test_dir TEXT := "cookbook-pocketflow/040_coding_agent/tests"
+  INPUT @test_suite TEXT := "def test_basic():
+    from src.solution import two_sum
+    assert two_sum([2, 7, 11, 15], 9) == [0, 1]
+
+def test_middle():
+    from src.solution import two_sum
+    assert two_sum([3, 2, 4], 6) == [1, 2]
+
+def test_duplicate():
+    from src.solution import two_sum
+    assert two_sum([3, 3], 6) == [0, 1]"
+  INPUT @skeleton_file TEXT := "cookbook-pocketflow/040_coding_agent/src/solution.py"
   INPUT @max_iterations INTEGER := 10
   OUTPUT @final_report TEXT
 DO

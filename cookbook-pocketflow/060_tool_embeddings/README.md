@@ -40,8 +40,7 @@ cd ~/projects/digital-duck/SPL.py
 
 export OPENAI_API_KEY=sk-...
 spl3 run cookbook-pocketflow/060_tool_embeddings/tool_embeddings.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "text=The quick brown fox jumps over the lazy dog"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it

@@ -73,8 +73,8 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW skill_dispatcher
-  INPUT @task TEXT
-  INPUT @skills_dir TEXT := "./skills"
+  INPUT @task TEXT := "Write an executive brief summarizing the key advantages of retrieval-augmented generation for enterprise AI"
+  INPUT @skills_dir TEXT := "cookbook-pocketflow/041_agent_skills/skills"
   INPUT @default_skill TEXT := "default.md"
   OUTPUT @response TEXT
 DO

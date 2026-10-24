@@ -103,7 +103,7 @@ This will be passed as context into the next review round.
 $$;
 
 WORKFLOW debate
-  INPUT @claim TEXT
+  INPUT @claim TEXT := "Artificial intelligence will create more jobs than it eliminates"
   INPUT @max_iterations INTEGER := 5
   OUTPUT @result TEXT
 DO

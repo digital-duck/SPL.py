@@ -113,7 +113,7 @@ def build_order_status(payment_result: str, inventory_result: str, shipping_resu
 $$;
 
 WORKFLOW payment_workflow
-  INPUT @order_data TEXT
+  INPUT @order_data TEXT := "{\"payment\":{\"card_number\":\"4111111111111111\",\"expiry\":\"12/26\",\"cvv\":\"123\",\"amount\":99.99},\"items\":[{\"name\":\"SPL Book\",\"sku\":\"SPL-001\",\"qty\":1,\"available\":true}],\"shipping_address\":\"123 Main St, San Francisco, CA 94105\"}"
   INPUT @max_retries INTEGER := 3
   OUTPUT @payment_status TEXT
 DO
@@ -134,7 +134,7 @@ DO
 END;
 
 WORKFLOW inventory_workflow
-  INPUT @order_data TEXT
+  INPUT @order_data TEXT := "{\"payment\":{\"card_number\":\"4111111111111111\",\"expiry\":\"12/26\",\"cvv\":\"123\",\"amount\":99.99},\"items\":[{\"name\":\"SPL Book\",\"sku\":\"SPL-001\",\"qty\":1,\"available\":true}],\"shipping_address\":\"123 Main St, San Francisco, CA 94105\"}"
   OUTPUT @inventory_status TEXT
 DO
   CALL check_stock(@order_data) INTO @stock_result;
@@ -145,8 +145,8 @@ DO
 END;
 
 WORKFLOW shipping_workflow
-  INPUT @order_data TEXT
-  INPUT @reservation_id TEXT
+  INPUT @order_data TEXT := "{\"payment\":{\"card_number\":\"4111111111111111\",\"expiry\":\"12/26\",\"cvv\":\"123\",\"amount\":99.99},\"items\":[{\"name\":\"SPL Book\",\"sku\":\"SPL-001\",\"qty\":1,\"available\":true}],\"shipping_address\":\"123 Main St, San Francisco, CA 94105\"}"
+  INPUT @reservation_id TEXT := "RES-00000001"
   OUTPUT @shipping_status TEXT
 DO
   CALL create_shipment(@order_data, @reservation_id) INTO @shipment;
@@ -157,7 +157,7 @@ DO
 END;
 
 WORKFLOW order_fulfillment
-  INPUT @order_data TEXT
+  INPUT @order_data TEXT := "{\"payment\":{\"card_number\":\"4111111111111111\",\"expiry\":\"12/26\",\"cvv\":\"123\",\"amount\":99.99},\"items\":[{\"name\":\"SPL Book\",\"sku\":\"SPL-001\",\"qty\":1,\"available\":true}],\"shipping_address\":\"123 Main St, San Francisco, CA 94105\"}"
   INPUT @max_payment_retries INTEGER := 3
   OUTPUT @order_status TEXT
 DO

@@ -150,7 +150,7 @@ Summarize: how many tests passed vs failed, what the remaining failures reveal, 
 $$;
 
 WORKFLOW coding_agent
-  INPUT @problem TEXT
+  INPUT @problem TEXT := "Write a Python function that finds the two numbers in a list that sum to a target value, returning their indices"
   INPUT @max_iterations INTEGER := 5
   OUTPUT @result TEXT
 DO

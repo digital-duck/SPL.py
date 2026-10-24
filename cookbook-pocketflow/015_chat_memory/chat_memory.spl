@@ -148,7 +148,9 @@ to maintain continuity and contextual awareness across the conversation.
 $$;
 
 WORKFLOW chat_memory
-  INPUT @user_queries TEXT
+  INPUT @user_queries TEXT := "What is machine learning?
+How does gradient descent work?
+What is overfitting and how do you prevent it?"
   INPUT @window_max_size TEXT := "3"
   INPUT @max_turns INTEGER := 10
   OUTPUT @conversation TEXT

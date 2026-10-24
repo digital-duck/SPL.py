@@ -52,9 +52,9 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW translate_and_save
-  INPUT @content TEXT
-  INPUT @target_language TEXT
-  INPUT @output_dir TEXT
+  INPUT @content TEXT := "Machine learning is transforming every industry. Models trained on large datasets can now perform tasks that once required human expertise, from image recognition to natural language understanding."
+  INPUT @target_language TEXT := "French"
+  INPUT @output_dir TEXT := "cookbook-pocketflow/052_batch/output"
   INPUT @max_iterations INTEGER := 3
   OUTPUT @result TEXT
 DO
@@ -78,8 +78,8 @@ DO
 END;
 
 WORKFLOW markdown_translator
-  INPUT @input_file TEXT := "document.md"
-  INPUT @output_dir TEXT := "translations"
+  INPUT @input_file TEXT := "cookbook-pocketflow/052_batch/document.md"
+  INPUT @output_dir TEXT := "cookbook-pocketflow/052_batch/translations"
   INPUT @languages TEXT := ""
   INPUT @max_iterations INTEGER := 3
   OUTPUT @report TEXT

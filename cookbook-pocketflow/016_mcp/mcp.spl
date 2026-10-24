@@ -94,7 +94,7 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW mcp_math_agent
-  INPUT @question TEXT
+  INPUT @question TEXT := "What is the square root of 144?"
   INPUT @mcp_mode TEXT := "false"
   INPUT @mcp_server_url TEXT := ""
   OUTPUT @answer TEXT

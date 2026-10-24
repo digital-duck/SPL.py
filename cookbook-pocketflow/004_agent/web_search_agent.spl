@@ -27,7 +27,7 @@ Context: {context}
 $$;
 
 WORKFLOW web_search_agent
-  INPUT @question TEXT
+  INPUT @question TEXT := "What are the latest breakthroughs in fusion energy research?"
   OUTPUT @answer TEXT
 DO
   @context := 'No previous search';

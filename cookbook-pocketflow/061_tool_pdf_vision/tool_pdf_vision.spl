@@ -37,8 +37,8 @@ RETURNS TEXT AS $$
 $$;
 
 WORKFLOW pdf_ocr_pipeline
-  INPUT @input_dir TEXT := "./pdfs"
-  INPUT @output_file TEXT := "./output.md"
+  INPUT @input_dir TEXT := "cookbook-pocketflow/061_tool_pdf_vision/data"
+  INPUT @output_file TEXT := "cookbook-pocketflow/061_tool_pdf_vision/output/pocket-flow.md"
   INPUT @work_dir TEXT := "/tmp/pdf_ocr_work"
   INPUT @max_pdfs INTEGER := 100
   INPUT @max_pages INTEGER := 1000

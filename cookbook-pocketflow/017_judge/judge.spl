@@ -16,7 +16,7 @@ If the score is below 7, respond with: VERDICT: FAIL, Score: [score], Feedback: 
 $$;
 
 WORKFLOW judge_workflow
-  INPUT @task TEXT
+  INPUT @task TEXT := "Write a haiku about artificial intelligence"
   OUTPUT @final_description TEXT
 DO
   @feedback := "";

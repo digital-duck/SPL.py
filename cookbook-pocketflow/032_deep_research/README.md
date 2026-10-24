@@ -43,9 +43,7 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 spl3 run cookbook-pocketflow/032_deep_research/deep_research.spl \
-    --llm claude_cli:claude-sonnet-4-6 \
-    --param "topic=Recent advances in quantum error correction" \
-    --param "out=report.txt"
+    --llm claude_cli:claude-sonnet-4-6
 ```
 
 ## Extend it
