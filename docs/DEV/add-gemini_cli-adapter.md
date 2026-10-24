@@ -4,7 +4,7 @@ This document outlines the implementation of the `gemini_cli` adapter, designed 
 
 ## Implementation Details
 
-The adapter is implemented in `spl/adapters/gemini_cli.py`. It wraps the `gemini` command-line tool, which provides an interactive-first but scriptable interface to Gemini models.
+The adapter is implemented in dd-llm (`dd_llm/adapters/gemini_cli.py`) and reached from SPL.py via `DDLLMBridge` (it was moved out of `spl/adapters/gemini_cli.py`). It wraps the `gemini` command-line tool, which provides an interactive-first but scriptable interface to Gemini models.
 
 ### CLI Invocation Strategy
 

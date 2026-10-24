@@ -3,7 +3,7 @@
 ## Issue: Silent `Claude CLI error (exit 1):` with no detail
 
 **Status:** Fixed  
-**File:** `spl/adapters/claude_cli.py`  
+**File:** `dd_llm/adapters/claude_cli.py` (moved from `spl/adapters/claude_cli.py`)  
 **Reported:** 2026-05-24
 
 ### Symptom
