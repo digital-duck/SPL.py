@@ -1097,7 +1097,7 @@
     {
       "id": "127",
       "name": "PII Data-Flow Compliance — Three Engines",
-      "description": "An LLM extracts a PII map (types only); Boolean rules decide whether the document may go to a destination. Checked by three engines that must agree: plain (standard library), SymPy logic, Z3. Search question: are the rules consistent. Fails closed on an unreadable PII map. ASSERT: check_succeeded. Optional: pip install sympy z3-solver. Default rules are illustrative, not legal advice.",
+      "description": "An LLM extracts a PII map (types only); Boolean rules decide whether the document may go to a destination. Checked by three engines that must agree: stdlib (Python standard library), SymPy logic, Z3. Search question: are the rules consistent. Fails closed on an unreadable PII map. ASSERT: check_succeeded. Optional: pip install sympy z3-solver. Default rules are illustrative, not legal advice.",
       "args": [
         "spl3",
         "run",
@@ -1105,7 +1105,7 @@
         "--adapter",
         "claude_cli",
         "--param",
-        "engine=plain"
+        "engine=stdlib"
       ],
       "dir": "127_pii_compliance",
       "log": "pii_compliance",

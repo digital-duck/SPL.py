@@ -4,7 +4,7 @@ An LLM reads a document and reports which kinds of personal data it contains (a 
 derived from that map and the destination, and a set of Boolean rules decides whether the document may be sent.
 The rules are checked by one of three engines that must agree:
 
-  plain   a small evaluator in the standard library (the baseline: with concrete facts nothing needs solving)
+  stdlib  a small evaluator in the Python standard library (deterministic, no solver: with concrete facts nothing needs solving)
   sympy   sympy.logic `satisfiable`
   z3      the Z3 SMT solver
 
@@ -18,25 +18,18 @@ Rule format (JSON). A rule is {"id", "desc", "expr"}; an expression is one of
 import itertools
 import json
 import re
+import sys
+from pathlib import Path
 
 from spl.tools import spl_tool
 
-EXTERNAL_DESTINATIONS = {"external_api", "third_party_vendor"}
-ENGINES = ("plain", "sympy", "z3")
+EXTERNAL_DESTINATIONS = ("external_api", "third_party_vendor")      # used when the rules file does not list its own
+ENGINES = ("stdlib", "sympy", "z3")
 MAX_ENUMERATED_VARIABLES = 16
-
-DEFAULT_RULES = {
-    "name": "Illustrative PII data-flow policy (not legal advice)",
-    "variables": ["has_ssn", "has_ccn", "is_masked", "is_external"],
-    "rules": [
-        {"id": "R1", "desc": "PII sent to an external destination must be masked",
-         "expr": {"implies": [{"var": "is_external"}, {"var": "is_masked"}]}},
-        {"id": "R2", "desc": "A social security number never leaves externally, even masked",
-         "expr": {"not": {"and": [{"var": "has_ssn"}, {"var": "is_external"}]}}},
-        {"id": "R3", "desc": "Card numbers must always be masked",
-         "expr": {"implies": [{"var": "has_ccn"}, {"var": "is_masked"}]}},
-    ],
-}
+DATA_TYPES = ("ssn", "ccn", "email", "phone", "address", "name", "dob", "other")
+TYPE_ALIASES = {"credit_card": "ccn", "card": "ccn", "social_security": "ssn", "date_of_birth": "dob"}
+KNOWN_FACTS = tuple(f"has_{t}" for t in DATA_TYPES) + ("has_pii", "is_masked", "is_external")
+RULES_FILE = Path(__file__).with_name("rules.json")
 
 
 # ── expressions ──────────────────────────────────────────────────────────────
@@ -56,7 +49,7 @@ def expr_variables(expr: dict) -> set:
 
 
 def eval_expr(expr: dict, facts: dict) -> bool:
-    """Evaluate an expression under a complete assignment (the plain engine)."""
+    """Evaluate an expression under a complete assignment (the stdlib engine)."""
     if "var" in expr:
         return bool(facts[expr["var"]])
     if "const" in expr:
@@ -91,11 +84,30 @@ def validate_rules(rules: dict) -> list:
     return out
 
 
+def load_rules_file(path: str = "") -> dict:
+    """The rules in a JSON file (default: rules.json next to this file), checked. Raises ValueError with the reason."""
+    target = Path(str(path).strip()) if str(path).strip() else RULES_FILE
+    try:
+        rules = json.loads(target.read_text(encoding="utf-8"))
+    except OSError as e:
+        raise ValueError(f"cannot read rules file {target}: {e.strerror or e}") from None
+    except ValueError as e:
+        raise ValueError(f"rules file {target} is not valid JSON: {e}") from None
+    validate_rules(rules)
+    unknown = sorted(set(rules.get("variables", [])) - set(KNOWN_FACTS))
+    if unknown:
+        raise ValueError(f"rules file {target} uses variables that are not facts: {unknown}; known facts: {list(KNOWN_FACTS)}")
+    return rules
+
+
+DEFAULT_RULES = load_rules_file()
+
+
 # ── engines ──────────────────────────────────────────────────────────────────
 
 def engine_available(engine: str) -> tuple:
     """(True, "") or (False, why)."""
-    if engine == "plain":
+    if engine == "stdlib":
         return True, ""
     try:
         if engine == "sympy":
@@ -142,7 +154,7 @@ def _z3_expr(expr: dict, bools: dict):
     return z3.Implies(_z3_expr(a, bools), _z3_expr(b, bools))
 
 
-def _check_plain(facts: dict, rules: list) -> dict:
+def _check_stdlib(facts: dict, rules: list) -> dict:
     return {"violated": [r["id"] for r in rules if not eval_expr(r["expr"], facts)]}
 
 
@@ -181,10 +193,10 @@ def _check_z3(facts: dict, rules: list) -> dict:
     return {"violated": violated, "core": core}
 
 
-_CHECKERS = {"plain": _check_plain, "sympy": _check_sympy, "z3": _check_z3}
+_CHECKERS = {"stdlib": _check_stdlib, "sympy": _check_sympy, "z3": _check_z3}
 
 
-def check(facts: dict, rules: dict, engine: str = "plain") -> dict:
+def check(facts: dict, rules: dict, engine: str = "stdlib") -> dict:
     """Do the facts satisfy every rule? {"status": "OK", "compliant": bool, "violated": [rule ids], ...}."""
     ok, why = engine_available(engine)
     if not ok:
@@ -200,7 +212,7 @@ def check(facts: dict, rules: dict, engine: str = "plain") -> dict:
     return {"status": "OK", "engine": engine, "compliant": not found["violated"], **found}
 
 
-def consistent(rules: dict, engine: str = "plain") -> dict:
+def consistent(rules: dict, engine: str = "stdlib") -> dict:
     """Search question: is there any assignment that satisfies all the rules? Returns an example if so."""
     ok, why = engine_available(engine)
     if not ok:
@@ -210,10 +222,10 @@ def consistent(rules: dict, engine: str = "plain") -> dict:
     except ValueError as e:
         return {"status": "ERROR", "engine": engine, "error": str(e)}
     names = list(rules["variables"])
-    if engine == "plain":
+    if engine == "stdlib":
         if len(names) > MAX_ENUMERATED_VARIABLES:
             return {"status": "ERROR", "engine": engine,
-                    "error": f"the plain engine enumerates assignments and handles up to {MAX_ENUMERATED_VARIABLES} variables"}
+                    "error": f"the stdlib engine enumerates assignments and handles up to {MAX_ENUMERATED_VARIABLES} variables"}
         for values in itertools.product([False, True], repeat=len(names)):
             assignment = dict(zip(names, values))
             if all(eval_expr(r["expr"], assignment) for r in rule_list):
@@ -250,6 +262,8 @@ def parse_pii_map_text(raw: str) -> dict:
         text = fenced.group(1).strip()
     try:
         data = json.loads(text)
+        if isinstance(data, dict) and data.get("parse_error"):          # already marked unreadable: stay unreadable
+            return {"entities": [], "parse_error": str(data["parse_error"])}
         entities = data["entities"]
         if not isinstance(entities, list) or not all(isinstance(e, dict) and "type" in e for e in entities):
             raise ValueError("entities must be a list of objects with a type")
@@ -258,23 +272,25 @@ def parse_pii_map_text(raw: str) -> dict:
         return {"entities": [], "parse_error": f"{type(e).__name__}: {e}"}
 
 
-def derive_facts_from(pii_map: dict, destination: str) -> dict:
+def derive_facts_from(pii_map: dict, destination: str, external_destinations=EXTERNAL_DESTINATIONS) -> dict:
+    """Boolean facts from the PII map and the destination (see KNOWN_FACTS)."""
     entities = pii_map.get("entities", [])
-    return {
-        "has_ssn": any(e["type"] == "SSN" for e in entities),
-        "has_ccn": any(e["type"] in ("CCN", "CREDIT_CARD") for e in entities),
-        "is_masked": all(e.get("masked", False) for e in entities),     # no entities: nothing to mask
-        "is_external": str(destination).strip().lower() in EXTERNAL_DESTINATIONS,
-    }
+    kinds = {TYPE_ALIASES.get(str(e["type"]).lower(), str(e["type"]).lower()) for e in entities}
+    facts = {f"has_{t}": t in kinds for t in DATA_TYPES}
+    facts["has_pii"] = bool(entities)
+    facts["is_masked"] = all(e.get("masked", False) for e in entities)         # no entities: nothing to mask
+    facts["is_external"] = str(destination).strip().lower() in {d.lower() for d in external_destinations}
+    return facts
 
 
-def check_pii_map(pii_map: dict, destination: str, engine: str = "plain", rules: "dict | None" = None) -> dict:
+def check_pii_map(pii_map: dict, destination: str, engine: str = "stdlib", rules: "dict | None" = None) -> dict:
     """Facts from the PII map and destination, then `check`. A map that could not be read is NOT compliant."""
     if pii_map.get("parse_error"):
         return {"status": "OK", "engine": engine, "compliant": False, "violated": ["UNREADABLE_PII_MAP"],
                 "error": pii_map["parse_error"], "facts": {}}
-    facts = derive_facts_from(pii_map, destination)
-    result = check(facts, rules or DEFAULT_RULES, engine)
+    rules = rules or DEFAULT_RULES
+    facts = derive_facts_from(pii_map, destination, rules.get("external_destinations", EXTERNAL_DESTINATIONS))
+    result = check(facts, rules, engine)
     result["facts"] = facts
     return result
 
@@ -283,15 +299,25 @@ def check_pii_map(pii_map: dict, destination: str, engine: str = "plain", rules:
 
 @spl_tool
 def default_rules() -> str:
-    """The illustrative default rules as JSON."""
+    """The default rules (rules.json next to this file) as JSON."""
     return json.dumps(DEFAULT_RULES)
 
 
 @spl_tool
+def load_rules(rules_file: str) -> str:
+    """The rules from a JSON file as JSON text ("" means the default rules.json). A bad file gives {"error": ...},
+    which the check reports, so a mistake in your rules is shown instead of silently falling back to the defaults."""
+    try:
+        return json.dumps(load_rules_file(rules_file))
+    except ValueError as e:
+        return json.dumps({"error": str(e)})
+
+
+@spl_tool
 def normalize_engine(engine: str) -> str:
-    """plain | sympy | z3 (case-insensitive); anything else falls back to plain."""
-    e = str(engine).strip().lower()
-    return e if e in ENGINES else "plain"
+    """The engine name, lower-cased and trimmed: stdlib | sympy | z3. An unknown name is reported by the check as an
+    error (there is no silent fallback; the LLM-only ablation is `use_solver=false`, not an engine)."""
+    return str(engine).strip().lower() or "stdlib"
 
 
 @spl_tool
@@ -306,7 +332,10 @@ def check_compliance(pii_map_json: str, destination: str, engine: str, rules_jso
     {"status": "OK"|"ERROR", "engine", "compliant", "violated": [rule ids], "facts": {...}}."""
     try:
         rules = json.loads(rules_json) if str(rules_json).strip() else None
-        result = check_pii_map(json.loads(pii_map_json), destination, normalize_engine(engine), rules)
+        if isinstance(rules, dict) and rules.get("error"):               # load_rules reported a bad rules file
+            return json.dumps({"status": "ERROR", "error": rules["error"]})
+        # the PII map may be the model's raw reply: parse it here, so an unreadable one fails closed instead of erroring
+        result = check_pii_map(parse_pii_map_text(pii_map_json), destination, normalize_engine(engine), rules)
     except (ValueError, TypeError) as e:
         result = {"status": "ERROR", "error": f"{type(e).__name__}: {e}"}
     return json.dumps(result)
@@ -356,3 +385,20 @@ def format_llm_report(llm_verdict: str, destination: str) -> str:
     return (f"## Compliance check (LLM judgement, unverified)\n\n**Destination:** {destination}  \n"
             f"**LLM verdict:** {str(llm_verdict).strip()}\n\n"
             "Run with --param use_solver=true to check the rules deterministically.")
+
+
+if __name__ == "__main__":
+    # Check a rules file you edited:  python tools.py [rules.json]
+    try:
+        loaded = load_rules_file(sys.argv[1] if len(sys.argv) > 1 else "")
+    except ValueError as err:
+        print(f"INVALID: {err}")
+        sys.exit(1)
+    print(f"{loaded.get('name', '(unnamed)')}: {len(loaded['rules'])} rules over {loaded['variables']}")
+    for rule in loaded["rules"]:
+        print(f"  {rule['id']}: {rule.get('desc', '')}")
+    for name in ENGINES:
+        found = consistent(loaded, name)
+        verdict = found.get("error") or ("consistent, e.g. " + json.dumps(found["example"]) if found["consistent"]
+                                         else "CONTRADICTORY: no assignment satisfies every rule")
+        print(f"  [{name}] {verdict}")

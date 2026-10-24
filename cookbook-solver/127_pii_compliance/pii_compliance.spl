@@ -4,7 +4,7 @@
 -- PURPOSE: An LLM finds the personal data in a document (a PII
 -- map); deterministic rules then decide whether the document may
 -- go to the destination. The rule check is done by one of three
--- engines that must agree: plain (standard library), sympy, z3.
+-- engines that must agree: stdlib (Python standard library), sympy, z3.
 --
 -- solver=ON  : rules checked by the chosen engine
 -- solver=OFF : the LLM judges compliance itself (the ablation)
@@ -12,11 +12,13 @@
 -- The default rules are an ILLUSTRATION, not legal advice or a
 -- real GDPR / PCI rule set.
 --
+-- Your own rules: --param rules_file=path/to/rules.json   (default: rules.json next to this file)
+--
 -- Install (optional engines): pip install sympy z3-solver
 --
 -- Run:
 --   spl3 run cookbook-solver/127_pii_compliance/pii_compliance.spl \
---       --adapter claude_cli --param engine=plain --param destination=external_api
+--       --adapter claude_cli --param engine=stdlib --param destination=external_api
 --   spl3 run cookbook-solver/127_pii_compliance/pii_compliance.spl \
 --       --adapter claude_cli --param use_solver=false
 -- ============================================================
@@ -54,7 +56,8 @@ $$;
 WORKFLOW pii_compliance
   INPUT @document TEXT := "Customer John Doe, SSN 123-45-6789, asks to update his address."
   INPUT @destination TEXT := "external_api"
-  INPUT @engine TEXT := "plain"
+  INPUT @engine TEXT := "stdlib"
+  INPUT @rules_file TEXT := ""
   INPUT @use_solver TEXT := "true"
   OUTPUT @report TEXT
 DO
@@ -67,9 +70,10 @@ DO
 
   EVALUATE @use_solver
     WHEN = "true" THEN
-      CALL check_compliance(@pii_map, @destination, @engine, "") INTO @verdict;
+      CALL load_rules(@rules_file) INTO @rules;
+      CALL check_compliance(@pii_map, @destination, @engine, @rules) INTO @verdict;
       ASSERT check_succeeded(@verdict);
-      CALL format_report(@verdict, @destination, "") INTO @report;
+      CALL format_report(@verdict, @destination, @rules) INTO @report;
 
     WHEN = "false" THEN
       GENERATE judge_compliance_prompt(@pii_map, @destination) INTO @llm_verdict;

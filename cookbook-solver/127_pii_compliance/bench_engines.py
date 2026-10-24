@@ -20,11 +20,11 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 IMPORTS = {
-    "plain": "pass",
+    "stdlib": "pass",
     "sympy": "from sympy import And, Not, Symbol; from sympy.logic.inference import satisfiable",
     "z3": "import z3; z3.Solver()",
 }
-PACKAGES = {"plain": [], "sympy": ["sympy", "mpmath"], "z3": ["z3-solver"]}
+PACKAGES = {"stdlib": [], "sympy": ["sympy", "mpmath"], "z3": ["z3-solver"]}
 
 
 def load_tools():

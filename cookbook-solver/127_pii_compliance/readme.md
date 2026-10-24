@@ -4,7 +4,7 @@
 
 | Engine | What it is | Needs |
 |---|---|---|
-| `plain` | a small evaluator in the standard library (the baseline) | nothing |
+| `stdlib` | a small evaluator in the standard library (the baseline) | nothing |
 | `sympy` | `sympy.logic` `satisfiable` | `pip install sympy` |
 | `z3` | the Z3 SMT solver | `pip install z3-solver` |
 
@@ -16,7 +16,18 @@ The default rules are an **illustration, not legal advice or a real GDPR / PCI r
 | R2 | A social security number never leaves externally, even masked |
 | R3 | Card numbers must always be masked |
 
-Replace them by passing your own rules (JSON, see `tools.py` for the format) to `check_compliance`.
+## Customize the rules
+
+The rules live in [`rules.json`](rules.json), which you can edit: `external_destinations` (which destinations count as external), `variables` (the facts the rules may use) and `rules` (each one `id`, `desc`, `expr`). An `expr` is built from `{"var": ...}`, `not`, `and`, `or`, `implies` and `const`. The facts available are `has_ssn`, `has_ccn`, `has_email`, `has_name`, `has_address`, `has_dob`, `has_phone`, `has_pii`, `is_masked`, `is_external` (the full list is `KNOWN_FACTS` in `tools.py`).
+
+```bash
+python cookbook-solver/127_pii_compliance/tools.py my_rules.json    # validates the file and checks the rules are consistent
+spl3 run cookbook-solver/127_pii_compliance/compliance_check.spl --adapter echo \
+    --param rules_file=my_rules.json --param destination=external_api \
+    --param 'pii_map={"entities":[{"type":"SSN","masked":false}]}'
+```
+
+With no `rules_file` the workflows use `rules.json`. A file that is missing, not JSON, or uses an undeclared fact is reported as an `ERROR` verdict and the workflow fails; it is never silently replaced by the defaults.
 
 ## What it demonstrates
 
@@ -35,19 +46,19 @@ Python 3.11.5 on Linux-6.8.0-138-generic-x86_64-with-glibc2.35
 
 | Engine | Packages | Import (ms) | Installed (MB) | One check (ms, median) | Consistency search (ms) |
 |---|---|---|---|---|---|
-| plain | standard library | 0 | 0 | 0.005 | 0.01 |
+| stdlib | standard library | 0 | 0 | 0.005 | 0.01 |
 | sympy | sympy 1.14.0, mpmath 1.3.0 | 194 | 81 | 0.714 | 0.28 |
 | z3 | z3-solver 5.3.1.0 | 33 | 86 | 1.265 | 1.00 |
 ```
 
-Read it with care: it is one machine, one Python, one run, and only three Boolean rules. On this run SymPy is **not** lighter than Z3 (similar install size, and about six times slower to import), and for a plain check of concrete facts both solvers are two orders of magnitude slower than the standard-library evaluator. That is the honest reason to keep `plain` as the default and to reach for a solver when you ask search questions or the rules include arithmetic (which SymPy's Boolean logic does not handle, and Z3 does).
+Read it with care: it is one machine, one Python, one run, and only three Boolean rules. On this run SymPy is **not** lighter than Z3 (similar install size, and about six times slower to import), and for a plain check of concrete facts both solvers are two orders of magnitude slower than the standard-library evaluator. That is the honest reason to keep `stdlib` as the default and to reach for a solver when you ask search questions or the rules include arithmetic (which SymPy's Boolean logic does not handle, and Z3 does).
 
 ## Run
 
 ```bash
 # the LLM extracts the PII map, the chosen engine checks the rules
 spl3 run cookbook-solver/127_pii_compliance/pii_compliance.spl --adapter claude_cli \
-    --param engine=plain --param destination=external_api
+    --param engine=stdlib --param destination=external_api
 
 # no LLM: check a PII map directly (this is also what GraphLang calls as a procedure)
 spl3 run cookbook-solver/127_pii_compliance/compliance_check.spl --adapter echo \

@@ -266,7 +266,7 @@ These 5 recipes cover solver classes flagged as missing from the current catalog
 | r124 | Discrete-Event Simulation — Queue System | SimPy | "What **happens**?" class — missing entirely; not an optimizer | `simpy` |
 | r125 | Parallel Stochastic Programming — Energy Storage | mpi-sppy (progressive hedging) | Many-scenario two-stage SP; r117 handles 3 scenarios, this handles 100+ | `mpi4py`, `mpi-sppy` |
 | r126 | MiniZinc CP — Backend-Agnostic Scheduling | MiniZinc (dispatches to CP-SAT / Gecode) | "DODA for CP" — model once, solve with any backend | `minizinc` (Python) + MiniZinc binary |
-| r127 | PII Data-Flow Compliance — Three Engines | plain evaluator, SymPy logic, Z3 | Boolean rules over LLM-extracted facts; when does a solver beat a plain evaluator? (not a reviewer suggestion: added 2026-10-24) | none (optional `sympy`, `z3-solver`) |
+| r127 | PII Data-Flow Compliance — Three Engines | stdlib evaluator, SymPy logic, Z3 | Boolean rules over LLM-extracted facts; when does a solver beat a plain evaluator? (not a reviewer suggestion: added 2026-10-24) | none (optional `sympy`, `z3-solver`) |
 
 ### r122 — Global MINLP: Process Optimization
 
