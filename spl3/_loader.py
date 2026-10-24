@@ -14,10 +14,10 @@ IMPORT resolution:
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 from pathlib import Path
 
-_log = logging.getLogger("spl.loader")
+_log = get_logger("loader")
 
 
 def load_workflows_from_file(

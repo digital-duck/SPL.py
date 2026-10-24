@@ -14,14 +14,14 @@ Adapter notes
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 import re
 from typing import Optional
 
 from spl3.adapters import get_adapter
 from spl3.codecs.image_codec import encode_image
 
-_log = logging.getLogger("spl.image_ops")
+_log = get_logger("image_ops")
 
 _MMD_SYNTAX_RULES = """\
 MANDATORY Mermaid syntax rules:

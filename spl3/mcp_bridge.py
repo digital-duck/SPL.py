@@ -14,12 +14,12 @@ Requires: ``pip install mcp`` (optional dependency).
 from __future__ import annotations
 
 import asyncio
-import logging
+from spl3.logging_config import get_logger
 import shlex
 from dataclasses import dataclass, field
 from typing import Any
 
-_log = logging.getLogger("spl3.mcp_bridge")
+_log = get_logger("mcp_bridge")
 
 try:
     from mcp import ClientSession

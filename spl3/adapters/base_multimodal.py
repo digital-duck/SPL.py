@@ -108,8 +108,8 @@ class MultiModalMixin:
         ]
         non_text = [p for p in content if p.get("type") != "text"]
         if non_text:
-            import logging
-            logging.getLogger(__name__).warning(
+            from spl3.logging_config import get_logger
+            get_logger("adapters.base_multimodal").warning(
                 "%s does not implement native multi-modal generation; "
                 "%d non-text part(s) will be ignored.",
                 self.__class__.__name__, len(non_text),

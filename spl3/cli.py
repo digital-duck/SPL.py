@@ -10,19 +10,21 @@ Commands:
 """
 
 import asyncio
-import logging
+import os
 from datetime import datetime
 from importlib.metadata import version as _pkg_version
 from pathlib import Path
 
 import click
 
+from spl3.logging_config import get_logger, setup_console_logging, setup_logging
+
 try:
     _SPL_VERSION = _pkg_version("spl-llm")
 except Exception:
     _SPL_VERSION = "unknown"
 
-_log = logging.getLogger("spl.cli")
+_log = get_logger("cli")
 
 _SPL_LOG_DIR = Path.home() / ".spl" / "logs"
 
@@ -32,9 +34,12 @@ _SPL_LOG_DIR = Path.home() / ".spl" / "logs"
 # ------------------------------------------------------------------ #
 
 def _parse_llm_spec(spec: str) -> tuple[str, str | None]:
-    """Parse 'ADAPTER:MODEL' → (adapter, model). MODEL may contain '/'."""
-    a, sep, m = spec.partition(":")
-    return (a.strip(), m.strip() if sep else None)
+    """Parse 'ADAPTER[:MODEL]' → (adapter, model) via dd-llm. MODEL may contain '/' or ':'."""
+    from dd_llm import parse_llm_spec
+    try:
+        return parse_llm_spec(spec)
+    except ValueError as e:
+        raise click.BadParameter(str(e), param_hint="--llm")
 
 
 def llm_options(default_adapter: str = "ollama"):
@@ -153,6 +158,16 @@ def _write_run_log(
     return log_path
 
 
+def _start_run_log(stem: str, adapter_name: str, log_dir: Path, log_format: str | None,
+                   no_log: bool) -> Path | None:
+    """Write this run's log (text and/or JSONL, via dd-logging) beside the markdown run report."""
+    if no_log:
+        return None
+    return setup_logging(stem, adapter=adapter_name, log_dir=log_dir,
+                         log_format=log_format or os.environ.get("DD_LOG_FORMAT") or "text",
+                         console=True)
+
+
 @click.group(
     help=f"SPL 3.0 — Declarative Structured Prompt Language (v{_SPL_VERSION}).",
     context_settings=dict(terminal_width=120, help_option_names=["-h", "--help"]),
@@ -164,7 +179,7 @@ def _write_run_log(
 def main(ctx, hub, verbose):
     """SPL 3.0 — Declarative Structured Prompt Language."""
     _load_spl_config_into_env()
-    logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO)
+    setup_console_logging("debug" if verbose else None)    # warnings/info on stderr; `run` adds a log file
     ctx.ensure_object(dict)
     ctx.obj["hub"] = hub
 
@@ -720,10 +735,15 @@ def cmd_configure_import(file, dest, keys, dry_run):
 @click.option("--main", "main_workflow", default=None, metavar="NAME",
               help="Workflow name to use as the entry point. Overrides the implicit "
                    "selection (filename-match → last defined).")
+@click.option("--log-format", default=None, type=click.Choice(["text", "jsonl", "both"]),
+              help="Format of the run's log file(s) next to the markdown run report "
+                   "(default text, or $DD_LOG_FORMAT): .log for people, .jsonl for tools.")
+@click.option("--no-log", is_flag=True, default=False,
+              help="Do not write a .log/.jsonl file (the markdown run report is still written).")
 @click.pass_context
 def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed_tools,
         llm_timeout, kernel, kernel_scope, kernel_timeout, kernel_name, persistence, workflow_id,
-        kernel_store_path, llm_max_output_tokens, main_workflow):
+        kernel_store_path, llm_max_output_tokens, main_workflow, log_format, no_log):
     """Run an orchestrator .spl workflow with workflow composition."""
     from pathlib import Path
     from spl3.registry import LocalRegistry
@@ -783,7 +803,8 @@ def run(ctx, spl_file, adapter, model, param, log_prompts, tools_module, allowed
                               persistence=persistence_backend, workflow_id=workflow_id,
                               kernel_store=kernel_store,
                               llm_max_output_tokens=llm_max_output_tokens,
-                              main_workflow=main_workflow))
+                              main_workflow=main_workflow,
+                              log_format=log_format, no_log=no_log))
 
 
 async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=None,
@@ -793,7 +814,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
                         persistence=None, workflow_id=None,
                         kernel_store=None,
                         llm_max_output_tokens=None,
-                        main_workflow=None):
+                        main_workflow=None,
+                        log_format=None, no_log=False):
     from spl3.registry import LocalRegistry, FederatedRegistry
     from spl3.composer import WorkflowComposer
 
@@ -942,6 +964,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
         log_stem = target.name
         resolved_log_dir = _resolve_log_dir(target.ast_node, params, path.parent)
+        run_log = _start_run_log(log_stem, adapter_name, resolved_log_dir, log_format, no_log)
 
         result = await executor.execute_workflow(target.ast_node, params=params)
 
@@ -978,6 +1001,7 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
 
         log_stem = stem
         resolved_log_dir = _SPL_LOG_DIR
+        run_log = _start_run_log(log_stem, adapter_name, resolved_log_dir, log_format, no_log)
         resolved_model = capturing.last_model or model or getattr(spl2_results[0], "model", "") if spl2_results else model or ""
         log_result = spl2_results[-1] if spl2_results else None
 
@@ -991,6 +1015,8 @@ async def _run_workflow(path, adapter_name, model, params, hub_url, log_prompts=
             log_dir=resolved_log_dir,
         )
         click.echo(f"Log:     {log_path}")
+    if run_log:
+        click.echo(f"Trace:   {run_log}")
 
 
 # ------------------------------------------------------------------ #
@@ -4539,8 +4565,7 @@ def _resolve_llm(llm_specs: tuple[str, ...], adapter: str, model: str | None):
     if llm_specs:
         pairs = []
         for spec in llm_specs:
-            a, sep, m = spec.partition(":")
-            pairs.append((a.strip(), m.strip() if sep else None))
+            pairs.append(_parse_llm_spec(spec))
         return pairs
     return [(adapter, model or None)]
 

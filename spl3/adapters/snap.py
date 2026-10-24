@@ -47,12 +47,12 @@ When implementing
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 import os
 
 from spl3.adapters.base import LLMAdapter, GenerationResult
 
-logger = logging.getLogger(__name__)
+logger = get_logger("adapters.snap")
 
 # ── Known model snaps (placeholder — update when Ubuntu 26.04 ships) ──────────
 _KNOWN_MODEL_SNAPS: list[str] = [

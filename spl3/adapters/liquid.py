@@ -24,7 +24,7 @@ Usage:
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 import os
 
 from spl3.adapters.base import GenerationResult
@@ -35,7 +35,7 @@ try:
 except ImportError:
     httpx = None  # type: ignore[assignment]
 
-logger = logging.getLogger(__name__)
+logger = get_logger("adapters.liquid")
 
 # ── Model catalogue ────────────────────────────────────────────────────────────
 

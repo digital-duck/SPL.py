@@ -36,14 +36,14 @@ Hub-to-Hub Peering (WAN):
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 from dataclasses import dataclass, field
 
 import httpx
 
 from spl3.registry import WorkflowDefinition, RegistryError
 
-_log = logging.getLogger("spl.hub_registry")
+_log = get_logger("hub_registry")
 
 
 @dataclass

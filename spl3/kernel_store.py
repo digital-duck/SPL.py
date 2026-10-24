@@ -8,13 +8,13 @@ cache, not the source of truth.  Survives kernel crashes and subprocess restarts
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 import pickle
 import sqlite3
 import time
 from pathlib import Path
 
-_log = logging.getLogger("spl.kernel_store")
+_log = get_logger("kernel_store")
 
 _DDL = """
 CREATE TABLE IF NOT EXISTS kernel_vars (

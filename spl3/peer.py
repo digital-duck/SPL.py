@@ -27,13 +27,13 @@ POST /tasks payload.
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 import time
 from dataclasses import dataclass, field
 
 import httpx
 
-_log = logging.getLogger("spl.peer")
+_log = get_logger("peer")
 
 
 @dataclass

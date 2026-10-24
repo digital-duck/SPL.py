@@ -6,14 +6,14 @@ into valid SPL source code.
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 
 from spl.adapters.base import LLMAdapter
 from spl.lexer import Lexer, LexerError
 from spl.analyzer import Analyzer, AnalysisError
 from spl3.parser import SPL3Parser
 
-_log = logging.getLogger("spl3.text2spl")
+_log = get_logger("text2spl")
 
 
 SPL2_SYSTEM_PROMPT = """\

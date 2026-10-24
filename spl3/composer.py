@@ -23,13 +23,13 @@ as existing multi-node task dispatch.
 from __future__ import annotations
 
 import asyncio
-import logging
+from spl3.logging_config import get_logger
 import time
 from dataclasses import dataclass, field
 
 from spl3.status import raise_if_failed
 
-_log = logging.getLogger("spl.composer")
+_log = get_logger("composer")
 
 
 @dataclass

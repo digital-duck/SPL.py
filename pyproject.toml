@@ -40,7 +40,7 @@ dependencies = [
     "dd-config>=0.1.0",
     "dd-extract>=0.1.0",
     "dd-db>=0.1.0",
-    "dd-logging>=0.1.2",
+    "dd-logging>=0.2.0",
     # LLM provider SDKs
     "anthropic>=0.25.0",
     # Jupyter kernel management (required by spl3 run for kernelspec detection)

@@ -11,12 +11,12 @@ existing dd-llm ``call(messages=…)`` path — no new provider code needed.
 from __future__ import annotations
 
 import asyncio
-import logging
+from spl3.logging_config import get_logger
 
 from spl.adapters.dd_llm_bridge import DDLLMBridge
 from spl.adapters.base import GenerationResult
 
-_log = logging.getLogger("spl.adapters.bridge")
+_log = get_logger("adapters.bridge")
 
 
 def _to_wav_base64(b64_data: str, src_fmt: str) -> tuple[str, str]:

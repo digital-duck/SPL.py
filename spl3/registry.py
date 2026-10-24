@@ -21,11 +21,11 @@ Usage:
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 from dataclasses import dataclass, field
 from pathlib import Path
 
-_log = logging.getLogger("spl.registry")
+_log = get_logger("registry")
 
 
 @dataclass

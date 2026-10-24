@@ -42,7 +42,7 @@ This means an inline definition always overrides a library definition — local 
 
 from __future__ import annotations
 
-import logging
+from spl3.logging_config import get_logger
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -50,7 +50,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     pass   # avoid circular imports; executor type hint omitted
 
-_log = logging.getLogger("spl3.tool_api_registry")
+_log = get_logger("tool_api_registry")
 
 # Default library directory
 _REGISTRY_DIR = Path.home() / ".spl" / "tool_apis"

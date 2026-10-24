@@ -31,10 +31,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 import pickle
 import re
 
-_log = logging.getLogger("spl.executor")
+from spl3.logging_config import get_logger, log_event
+
+_log = get_logger("executor")
 
 from spl.executor import Executor as SPL2Executor, SPLWorkflowError
 
@@ -838,6 +841,24 @@ class SPL3Executor(SPL2Executor):
     # ------------------------------------------------------------------ #
 
     async def execute_workflow(self, stmt, params=None):
+        """Run a WORKFLOW statement (see `_execute_workflow`), logging workflow.start / .end / .fail."""
+        name = getattr(stmt, "name", "workflow")
+        log_event(_log, "workflow.start", workflow=name, params=sorted(params or {}))
+        started = time.perf_counter()
+        try:
+            result = await self._execute_workflow(stmt, params)
+        except Exception as exc:
+            log_event(_log, "workflow.fail", level=logging.ERROR, workflow=name,
+                      error=f"{type(exc).__name__}: {exc}", ms=round((time.perf_counter() - started) * 1000))
+            raise
+        log_event(_log, "workflow.end", workflow=name, status=getattr(result, "status", None),
+                  llm_calls=getattr(result, "total_llm_calls", None),
+                  input_tokens=getattr(result, "total_input_tokens", None),
+                  output_tokens=getattr(result, "total_output_tokens", None),
+                  ms=round((time.perf_counter() - started) * 1000))
+        return result
+
+    async def _execute_workflow(self, stmt, params=None):
         """Execute a WORKFLOW statement with SPL 3.0 type coercion and optional
         persistence lifecycle.
 

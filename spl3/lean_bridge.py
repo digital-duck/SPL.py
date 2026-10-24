@@ -46,7 +46,7 @@ toolchain doesn't provide.  This module stays cache-agnostic: badge writes
 from __future__ import annotations
 
 import json
-import logging
+from spl3.logging_config import get_logger
 import os
 import queue
 import re
@@ -55,7 +55,7 @@ import threading
 from pathlib import Path
 from typing import Any, Optional
 
-_log = logging.getLogger("spl.lean")
+_log = get_logger("lean")
 
 #: Pinned leanprover-community/repl revision (D2).  The Lean toolchain is
 #: pinned transitively by the ``lean-toolchain`` file inside the repl checkout

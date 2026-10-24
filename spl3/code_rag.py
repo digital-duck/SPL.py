@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
+from spl3.logging_config import get_logger
 from pathlib import Path
 
-_log = logging.getLogger("spl.code_rag")
+_log = get_logger("code_rag")
 
 _EMBED_PROVIDER = "sentence_transformers"
 _EMBED_MODEL    = "all-MiniLM-L6-v2"

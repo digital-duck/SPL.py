@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import importlib as _importlib
 import inspect as _inspect
-import logging as _logging
+from spl3.logging_config import get_logger
 from pathlib import Path as _Path
 
 # ── Extend __path__ to include spl/adapters/ ─────────────────────────────────
@@ -30,7 +30,7 @@ else:
 # spl.adapters.base is always available — spl/ is co-installed with spl3/
 from spl.adapters.base import LLMAdapter, GenerationResult  # noqa: F401
 
-_log = _logging.getLogger("spl.adapters")
+_log = get_logger("adapters")
 _ADAPTER_REGISTRY: dict[str, type] = {}
 
 # SPL adapter name -> dd-llm provider name ("google" maps to dd-llm's "gemini").

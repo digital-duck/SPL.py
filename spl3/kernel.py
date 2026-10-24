@@ -46,7 +46,7 @@ from __future__ import annotations
 import asyncio
 import importlib
 import io
-import logging
+from spl3.logging_config import get_logger
 import queue
 import re
 import subprocess
@@ -55,7 +55,7 @@ import threading
 from contextlib import redirect_stdout
 from typing import Any, Optional
 
-_log = logging.getLogger("spl.kernel")
+_log = get_logger("kernel")
 
 _ANSI_RE = re.compile(r'\x1b\[[0-9;]*m')
 

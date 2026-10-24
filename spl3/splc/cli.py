@@ -298,10 +298,10 @@ def cmd_compile(
     """splc — SPL Compiler: translate a .spl logical view into a physical implementation."""
 
     if llm_spec:
-        a, sep, m = llm_spec.partition(":")
-        adapter = a.strip()
-        if sep:
-            model = m.strip()
+        from spl3.cli import _parse_llm_spec
+        adapter, spec_model = _parse_llm_spec(llm_spec)
+        if spec_model is not None:
+            model = spec_model
 
     lang_meta = SUPPORTED_LANGS[lang]
 
@@ -1185,10 +1185,10 @@ def cmd_describe(impl_path: Path, lang_label: str | None, llm_spec: str | None, 
     import asyncio
 
     if llm_spec:
-        a, sep, m = llm_spec.partition(":")
-        adapter = a.strip()
-        if sep:
-            model = m.strip()
+        from spl3.cli import _parse_llm_spec
+        adapter, spec_model = _parse_llm_spec(llm_spec)
+        if spec_model is not None:
+            model = spec_model
 
     if impl_path.is_dir():
         impl_files = sorted(
