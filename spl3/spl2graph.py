@@ -25,7 +25,7 @@ import re
 from dataclasses import dataclass, field
 
 from spl.ast_nodes import (
-    AssignmentStatement, CallStatement, CompoundCondition as CompoundConditionV2, Condition, CommitStatement, DoBlock, EvaluateStatement, FStringLiteral,
+    AssignmentStatement, CallStatement, CreateFunctionStatement, CompoundCondition as CompoundConditionV2, Condition, CommitStatement, DoBlock, EvaluateStatement, FStringLiteral,
     GenerateIntoStatement, ListLiteral, Literal, LoggingStatement, MapLiteral, ParamRef, ProcedureStatement, RaiseStatement,
     RetryStatement, SemanticCondition, StorageSubscript, WhileStatement, WorkflowStatement,
 )
@@ -33,7 +33,13 @@ from spl3.ast_nodes import (
     AssertStatement, CallParallelStatement, CompoundCondition, NoneLiteral, SetLiteral, SolveStatement, UnaryOp,
 )
 
+# The functions a GraphLang condition may call (graphlang/grafr/expr.py FUNCS). Any other call in an ASSERT condition is a
+# Python tool and is lifted into its own SOLVE node. Kept as a copy so SPL.py does not import graflang.
+_CONDITION_FUNCS = {"abs", "bool", "contains", "endswith", "float", "int", "is_empty", "json_get", "len", "lower", "max",
+                    "min", "startswith", "str", "strip", "upper"}
+
 GRAPH_VERSION = "1.0-graph"
+_CALL = re.compile(r"\b([A-Za-z_]\w*)\(")
 _SOLVE_MARK = re.compile(r"@@(\w+)@@")
 _FSTR_VAR = re.compile(r"\{@(\w+)\}")
 
@@ -178,8 +184,9 @@ class SPLToGraphConverter:
     """Convert one ``WorkflowStatement`` to a GraphLang graph dict."""
 
     def __init__(self, workflows: set[str] | None = None, source_name: str = "", source_dir=None,
-                 procedures: dict[str, str] | None = None):
+                 procedures: dict[str, str] | None = None, functions: dict | None = None):
         self._workflows = workflows or set()   # workflows defined in the same .spl file
+        self._functions = functions or {}      # name -> CREATE FUNCTION in the same file: its body is the prompt
         self._source_name = source_name
         self._known = procedures or {}         # name -> path, for callees that live outside this text
         self._source_dir = source_dir          # sibling <name>.spl files count as procedures too
@@ -286,7 +293,8 @@ class SPLToGraphConverter:
     def _param(p) -> dict:
         d = {"name": p.name.lstrip("@"), "type": p.param_type or "TEXT"}
         if p.default_value is not None:
-            d["default"] = render(p.default_value)
+            dv = p.default_value
+            d["default"] = dv.value if isinstance(dv, Literal) and dv.literal_type != "bool" else (bool(dv.value) if isinstance(dv, Literal) else render(dv))
         return d
 
     # -- statements ---------------------------------------------------------
@@ -345,26 +353,72 @@ class SPLToGraphConverter:
 
     def _generate(self, s: GenerateIntoStatement) -> None:
         gc = s.generate_clause
-        args = ", ".join(render(a) for a in gc.arguments)
-        cfg: dict = {"function": gc.function_name, "prompt_inline": f"{gc.function_name}({args})"}
-        if gc.arguments:
-            cfg["arguments"] = [render(a) for a in gc.arguments]
-        if gc.model:
-            cfg["model"] = gc.model
-        if gc.output_budget is not None:
-            cfg["output_budget"] = gc.output_budget
-        if gc.temperature is not None:
-            cfg["temperature"] = gc.temperature
-        nid = self._add(self._id("gen"), "GENERATE", ["trigger", "complete"], cfg)
-        self._bind_inputs(nid, expr_vars([gc.arguments, gc.model, gc.output_budget]))
-        self._produce(nid, s.target_variable.lstrip("@"))
+        nid = self._generate_node(gc.function_name, gc.arguments, s.target_variable, gc.model, gc.output_budget, gc.temperature)
         self._step(nid)
+
+    def _generate_node(self, function: str, arguments: list, target: str, model=None, output_budget=None,
+                       temperature=None) -> str:
+        """GENERATE node for `function(args)`. A function defined in this file gives its body as the prompt, each
+        `{param}` becoming the port `in_param`, fed by the argument (a plain @var is bound; a literal is written into
+        the prompt; anything else is computed by a SOLVE node first). Else the call text itself is the prompt."""
+        fn = self._functions.get(function)
+        bindings: list[tuple[str, str]] = []                   # (variable, parameter) to bind once the node exists
+        defaults: dict[str, object] = {}                       # parameter -> literal argument
+        if fn is None:
+            args = ", ".join(render(a) for a in arguments)
+            cfg: dict = {"function": function, "prompt_inline": f"{function}({args})"}
+            self._warn(f"function {function!r} is not defined in this file: its call text is used as the prompt")
+        else:
+            prompt = fn.body.strip()
+            for param, arg in zip(fn.parameters, arguments):
+                prompt = prompt.replace("{" + param.name + "}", "{{in_" + param.name + "}}")
+                if isinstance(arg, ParamRef):
+                    bindings.append((arg.name.lstrip("@"), param.name))
+                elif isinstance(arg, Literal):
+                    defaults[param.name] = arg.value
+                else:
+                    bindings.append((self._compute(render(arg), arg), param.name))
+            cfg = {"function": function, "params": [p.name for p in fn.parameters], "prompt_inline": prompt}
+        if arguments:
+            cfg["arguments"] = [render(a) for a in arguments]
+        if defaults:
+            cfg["phases"] = {"pre": {"defaults": {f"in_{k}": v for k, v in defaults.items()}}}
+        if model:
+            cfg["model"] = model
+        if output_budget is not None:
+            cfg["output_budget"] = output_budget
+        if temperature is not None:
+            cfg["temperature"] = temperature
+        nid = self._add(self._id("gen"), "GENERATE", ["trigger", "complete"], cfg)
+        if fn is None:
+            self._bind_inputs(nid, expr_vars([arguments, model, output_budget]))
+        else:
+            node = next(n for n in self._scope.nodes if n["id"] == nid)
+            for param in defaults:
+                node["ports"].append(f"in_{param}")
+            for var, param in bindings:
+                self._bind_inputs(nid, [var], {var: param})
+            self._bind_inputs(nid, expr_vars([model, output_budget]))
+        if target:
+            self._produce(nid, target.lstrip("@"))
+        return nid
+
+    def _compute(self, expression: str, source) -> str:
+        """A SOLVE node that evaluates `expression` first; returns the variable holding the result."""
+        nid = self._add(self._id("calc"), "SOLVE", ["trigger", "complete"], {"expression": re.sub(r"@(\w+)", r"@in_\1", expression)})
+        self._bind_inputs(nid, expr_vars(source))
+        self._produce(nid, nid)
+        self._step(nid)
+        return nid
+
+    def _is_procedure(self, name: str) -> bool:
+        sibling = self._source_dir is not None and (self._source_dir / f"{name}.spl").exists()
+        return name in self._workflows or sibling or name in self._known
 
     def _call(self, s: CallStatement, *, trigger=True, workflow=False) -> str:
         name = s.procedure_name
         args = [render(a) for a in s.arguments]
-        sibling = self._source_dir is not None and (self._source_dir / f"{name}.spl").exists()
-        if workflow or name in self._workflows or sibling or name in self._known:
+        if workflow or self._is_procedure(name):
             default = f"./{self._source_name}" if name in self._workflows else f"./{name}.spl"
             self._procedures.setdefault(name, self._known.get(name, default))
             nid = self._add(self._id("call"), "GENERATE", ["trigger", "complete"],
@@ -388,16 +442,44 @@ class SPLToGraphConverter:
         for b in s.branches:
             sc.frontier = [(fork, f"branch_{len(branch_ids) + 1}")]
             next(n for n in sc.nodes if n["id"] == fork)["ports"].append(f"branch_{len(branch_ids) + 1}")
-            branch_ids.append(self._call(CallStatement(b.workflow_name, b.arguments, b.target_var or None),
-                                         workflow=True))
+            if b.workflow_name in self._functions and b.workflow_name not in self._workflows:
+                branch_ids.append(self._generate_node(b.workflow_name, b.arguments, b.target_var))
+            else:
+                branch_ids.append(self._call(CallStatement(b.workflow_name, b.arguments, b.target_var or None),
+                                             workflow=self._is_procedure(b.workflow_name) or any(type(a).__name__ == "NamedArg" for a in b.arguments)))
         sc.frontier = [(i, "complete") for i in branch_ids]
         self._add(join, "JOIN", ["trigger", "complete"])
         self._step(join)
 
+    def _hoist_tool_calls(self, text: str) -> str:
+        """A condition may only call the built-in functions. A call to anything else (a Python tool) becomes a SOLVE node
+        that runs first; the condition reads its result instead."""
+        out, pos = [], 0
+        while True:
+            m = next((m for m in _CALL.finditer(text, pos) if m.group(1) not in _CONDITION_FUNCS), None)
+            if m is None:
+                break
+            depth, i = 0, m.end() - 1
+            while i < len(text):
+                depth += (text[i] == "(") - (text[i] == ")")
+                i += 1
+                if depth == 0:
+                    break
+            call = text[m.start():i]
+            nid = self._add(self._id("tool"), "SOLVE", ["trigger", "complete"], {"expression": call, "tool": m.group(1)})
+            self._bind_inputs(nid, list(dict.fromkeys(re.findall(r"@in_(\w+)", call))))
+            self._produce(nid, nid)
+            self._step(nid)
+            out.append(text[pos:m.start()] + f"@in_{nid}")
+            pos = i
+            self._hoisted.append(nid)
+        return "".join(out) + text[pos:]
+
     def _assert(self, s: AssertStatement) -> None:
-        nid = self._add(self._id("assert"), "ASSERT", ["trigger", "pass", "fail"],
-                        {"condition": template(s.python_template)})
-        self._bind_inputs(nid, expr_vars(s.python_template))
+        self._hoisted: list[str] = []
+        cond = self._hoist_tool_calls(template(s.python_template))
+        nid = self._add(self._id("assert"), "ASSERT", ["trigger", "pass", "fail"], {"condition": cond})
+        self._bind_inputs(nid, [*expr_vars(s.python_template), *self._hoisted])
         ends: list = [(nid, "pass")]
         if s.otherwise_body:
             before = {k: list(v) for k, v in self._scope.producers.items()}
@@ -510,22 +592,21 @@ class SPLToGraphConverter:
 
 # --------------------------------------------------------------------------- public API
 
-def _workflows(source: str) -> list[WorkflowStatement]:
+def _parse(source: str):
     from spl.lexer import Lexer
     from spl3.parser import SPL3Parser
 
-    ast = SPL3Parser(Lexer(source).tokenize()).parse()
-    wfs = [s for s in ast.statements if isinstance(s, WorkflowStatement)]
-    if not wfs:
-        raise NoWorkflowError("no WORKFLOW found — spl2graph lifts agentic workflows only")
-    return wfs
+    return SPL3Parser(Lexer(source).tokenize()).parse().statements
 
 
 def spl_to_graph(source: str, workflow: str | None = None, source_name: str = "", source_dir=None,
                  procedures: dict[str, str] | None = None) -> tuple[dict, list[str]]:
     """Parse SPL source; return (graph dict, warnings).  Default workflow: the last one defined
     (the entry point by SPL convention, callees come first)."""
-    wfs = _workflows(source)
+    statements = _parse(source)
+    wfs = [s for s in statements if isinstance(s, WorkflowStatement)]
+    if not wfs:
+        raise NoWorkflowError("no WORKFLOW found - spl2graph lifts agentic workflows only")
     if workflow:
         match = [w for w in wfs if w.name == workflow]
         if not match:
@@ -533,7 +614,8 @@ def spl_to_graph(source: str, workflow: str | None = None, source_name: str = ""
         wf = match[0]
     else:
         wf = wfs[-1]
-    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures)
+    functions = {s.name: s for s in statements if isinstance(s, CreateFunctionStatement)}
+    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures, functions)
     return conv.convert_workflow(wf), conv.warnings
 
 

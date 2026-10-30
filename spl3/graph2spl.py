@@ -114,6 +114,7 @@ class GraphToSPL:
         self.graph = graph
         self.warnings: list[str] = []
         self.functions: list[str] = []
+        self.defs: dict[str, str] = {}           # function name -> its CREATE FUNCTION text
         self._joined = None
         self.tools: list[str] = []
         self.procedures = set((graph.get("resources") or {}).get("procedures", {}))
@@ -142,7 +143,7 @@ class GraphToSPL:
             lines.append("-- define before running: CREATE FUNCTION " + ", ".join(dict.fromkeys(self.functions)))
         if self.tools:
             lines.append("-- tools used (@spl_tool): " + ", ".join(dict.fromkeys(self.tools)))
-        lines += head + body + ["END", ""]
+        lines += [""] + [d for d in self.defs.values()] + head + body + ["END", ""]
         return "\n".join(lines)
 
     # -- pieces -------------------------------------------------------------
@@ -150,7 +151,11 @@ class GraphToSPL:
     def _param(p: dict) -> str:
         out = f"@{p['name']} {p.get('type', 'TEXT')}"
         if "default" in p:
-            d = '""' if p["default"] == "''" else p["default"]
+            d = p["default"]
+            if isinstance(d, bool):
+                d = "TRUE" if d else "FALSE"
+            elif isinstance(d, str):
+                d = "''" if d == "" else "'" + d.replace("\\", "\\\\").replace("'", "\\'") + "'"
             out += f" := {d}"
         return out
 
@@ -223,7 +228,7 @@ class GraphToSPL:
         ref = cfg.get("procedure_ref")
         if ref:
             return f"CALL {ref.split('.', 1)[-1]}({args}) INTO {'@' + var if var else 'NONE'}"
-        self.functions.append(cfg["function"])
+        self._define(cfg)
         s = f"GENERATE {cfg['function']}({args})"
         if cfg.get("output_budget") is not None:
             s += f" WITH OUTPUT BUDGET {cfg['output_budget']} TOKENS"
@@ -231,6 +236,18 @@ class GraphToSPL:
             m = cfg["model"]
             s += f" USING MODEL {m if m.startswith('@') else repr(m)}"
         return s + f" INTO @{var}"
+
+    def _define(self, cfg: dict) -> None:
+        """A function the graph carries a prompt for gets its CREATE FUNCTION back; else it is only named in a comment."""
+        name = cfg["function"]
+        if "params" not in cfg:
+            self.functions.append(name)
+            return
+        body = re.sub(r"\{\{in_(\w+)\}\}", r"{\1}", cfg["prompt_inline"])
+        params = ", ".join(f"{p} TEXT" for p in cfg["params"])
+        text = f"CREATE FUNCTION {name}({params})\nRETURNS TEXT AS $$\n{body}\n$$;\n"
+        if self.defs.setdefault(name, text) != text:
+            self.warnings.append(f"function {name!r} is used with different prompts; the first one is kept")
 
     def _assert(self, sc, n, out, depth):
         ind = _IND * depth

@@ -70,3 +70,85 @@ def test_graph2spl_rejects_non_workflow():
     from spl3.graph2spl import GraphToSPLError
     with pytest.raises(GraphToSPLError):
         graph_to_spl({"workflow": {"name": "x"}, "nodes": [], "edges": []})
+
+
+# --- function bodies become prompts, tool calls in conditions, IN, parallel branches ---------------------------------
+
+CHAIN = """
+CREATE FUNCTION research(topic TEXT)
+RETURNS TEXT
+AS $$
+Research {topic}.
+$$;
+
+CREATE FUNCTION analyze(research TEXT, depth TEXT)
+RETURNS TEXT
+AS $$
+Analyze at {depth} depth: {research}
+$$;
+
+WORKFLOW chain
+    INPUT: @topic TEXT DEFAULT 'sails'
+    OUTPUT: @out TEXT
+DO
+    GENERATE research(@topic) INTO @research
+    GENERATE analyze(@research, 'shallow') INTO @out
+    RETURN @out
+END
+"""
+
+
+def _node(g, nid):
+    return next(n for n in g["nodes"] if n["id"] == nid)
+
+
+def test_a_function_body_is_the_prompt_and_a_literal_argument_is_a_port_default():
+    g, warnings = spl_to_graph(CHAIN)
+    assert warnings == []
+    assert _node(g, "gen_1")["config"]["prompt_inline"] == "Research {{in_topic}}."
+    gen2 = _node(g, "gen_2")
+    assert gen2["config"]["prompt_inline"] == "Analyze at {{in_depth}} depth: {{in_research}}"
+    assert gen2["config"]["phases"] == {"pre": {"defaults": {"in_depth": "shallow"}}}
+    assert "in_depth" in gen2["ports"] and "in_research" in gen2["ports"]
+    assert g["workflow"]["inputs"][0]["default"] == "sails"           # the value, not the quoted text
+
+
+def test_chain_roundtrips_with_its_function_definitions():
+    g, _ = spl_to_graph(CHAIN)
+    text, _ = graph_to_spl(g)
+    assert "CREATE FUNCTION analyze(research TEXT, depth TEXT)" in text and "Analyze at {depth} depth: {research}" in text
+    assert roundtrip_diff(g) == []
+
+
+def test_a_tool_call_in_an_assert_becomes_a_solve_that_runs_first():
+    g, _ = spl_to_graph("""
+WORKFLOW w
+    INPUT: @x TEXT
+    OUTPUT: @x TEXT
+DO
+    ASSERT known(@x);
+    RETURN @x
+END
+""")
+    tool = _node(g, "tool_1")
+    assert tool["type"] == "SOLVE" and tool["config"]["expression"] == "known(@in_x)"
+    assert _node(g, "assert_1")["config"]["condition"] == "@in_tool_1"
+
+
+def test_parallel_branches_can_be_functions():
+    g, _ = spl_to_graph("""
+CREATE FUNCTION pro(claim TEXT) RETURNS TEXT AS $$ For: {claim} $$;
+CREATE FUNCTION con(claim TEXT) RETURNS TEXT AS $$ Against: {claim} $$;
+
+WORKFLOW w
+    INPUT: @claim TEXT
+    OUTPUT: @a TEXT
+DO
+    CALL PARALLEL
+        pro(@claim) INTO @a,
+        con(@claim) INTO @b
+    END
+    RETURN @a
+END
+""")
+    assert {n["config"]["function"] for n in g["nodes"] if n["type"] == "GENERATE"} == {"pro", "con"}
