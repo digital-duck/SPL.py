@@ -204,3 +204,48 @@ END
     g, warnings = spl_to_graph(TOOLED.replace("return text.strip().upper() + suffix", "return ''x''"))
     cfg = _node(g, "tool_1")["config"]
     assert "backend" not in cfg and cfg["expression"] == "shout(@word, '!')" and "does not compile" in warnings[0]
+
+
+# --- WHILE: a counter reads its first value as an input and later ones as state; a tool call in the condition runs twice ----
+
+COUNTER = """
+WORKFLOW counter
+    INPUT: @x TEXT DEFAULT 'a'
+    OUTPUT: @n INTEGER
+DO
+    @n := 0;
+    WHILE @n < 3 DO
+        @n := @n + 1;
+    END;
+    COMMIT @n
+END
+"""
+
+
+def test_a_loop_variable_is_read_as_input_on_the_first_check_and_as_state_after():
+    g, warnings = spl_to_graph(COUNTER)
+    loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
+    assert warnings == [] and "in_n" in loop["ports"]
+    assert loop["config"]["condition"] == "((@cycle == 0 AND @in_n) OR (@cycle > 0 AND @n)) < 3"
+    assert loop["config"]["subgraph"]["nodes"][0]["config"]["expression"] == "@in_n + 1"      # assignments read their ports as @in_x
+    assert roundtrip_diff(g) == []
+
+
+def test_a_tool_call_in_a_while_condition_runs_before_the_loop_and_again_at_the_end_of_the_body():
+    g, _ = spl_to_graph("""
+WORKFLOW w
+    INPUT: @x TEXT
+    OUTPUT: @x TEXT
+DO
+    WHILE NOT done(@x) DO
+        @x := 'y';
+    END;
+    RETURN @x
+END
+""")
+    loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
+    assert [n["id"] for n in g["nodes"] if n["id"].startswith("tool_")] == ["tool_1"]            # before the loop
+    body = [n["id"] for n in loop["config"]["subgraph"]["nodes"]]
+    assert "tool_2" in body and body[-1] == "tool_2"                                             # the last body step
+    assert loop["config"]["condition"] == "NOT ((@cycle == 0 AND @in_tool_1) OR (@cycle > 0 AND @tool_2))"
+    assert "in_tool_1" in loop["ports"] and loop["config"]["outputs"]["tool_2"]["from"] == "tool_2.out_tool_2"

@@ -45,8 +45,13 @@ def _solve_template(expr: str) -> str:
     return "".join(out)
 
 
+_FIRST_OR_LATER = re.compile(r"\(\(@cycle == 0 AND @in_(\w+)\) OR \(@cycle > 0 AND @(\w+)\)\)")
+
+
 def _spl_condition(cond: str) -> str:
-    """GraphLang condition (``@in_x``, ``==``) -> SPL WHILE condition (``@x``, ``=``)."""
+    """GraphLang condition (``@in_x``, ``==``) -> SPL WHILE condition (``@x``, ``=``). A variable the loop both reads and
+    produces is written `((@cycle == 0 AND @in_x) OR (@cycle > 0 AND @x))` (first check, later checks); in SPL that is `@x`."""
+    cond = _FIRST_OR_LATER.sub(lambda m: f"@{m.group(1)}" if m.group(1) == m.group(2) else m.group(0), cond)
     return _IN_PORT.sub(r"@\1", cond).replace(" == ", " = ").replace(" != ", " != ")
 
 
@@ -217,7 +222,8 @@ class GraphToSPL:
         cfg, t = n.get("config", {}), n["type"]
         var = sc.out_var(n["id"])
         if t == "CONTEXT":
-            return f"@{var} := {cfg['expression']}"
+            expression = re.sub(r"@in_(\w+)", r"@\1", cfg["expression"])      # ports are read as @in_x; SPL writes @x
+            return f"@{var} := {expression}"
         if t == "SOLVE" and "tool" in cfg:
             self.tools.append(cfg["tool"])
             call = cfg["expression"] if "expression" in cfg else f"{cfg['tool']}({', '.join(cfg.get('arguments', []))})"

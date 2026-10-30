@@ -334,7 +334,7 @@ class SPLToGraphConverter:
             self._while(s)
         elif isinstance(s, AssignmentStatement):
             nid = self._add(self._id("set"), "CONTEXT", ["trigger", "complete"],
-                            {"action": "set", "expression": render(s.expression)})
+                            {"action": "set", "expression": render(s.expression, True)})
             self._bind_inputs(nid, expr_vars(s.expression))
             self._produce(nid, s.variable.lstrip("@"))
             self._step(nid)
@@ -581,11 +581,27 @@ class SPLToGraphConverter:
 
         cond_vars = expr_vars(s.condition)
         produced = list(body.producers)
-        reads = [v for v in dict.fromkeys(body.used + [v for v in cond_vars if v not in produced]) if v != "cycle"]
-        lid = self._id("loop")
         cond = render(s.condition)
-        for v in reads:  # LOOP inputs are read as @in_<var>; loop state (outputs, @cycle) stays bare
-            cond = re.sub(rf"@{v}\b", f"@in_{v}", cond)
+        first: list[str] = []
+        state_ids: list[str] = []
+        if any(m.group(1) not in _CONDITION_FUNCS for m in _CALL.finditer(cond)):
+            cond, first, state_ids = self._loop_condition_calls(cond, body, outer)
+            produced = list(body.producers)                        # now includes the results of the calls at the end of the body
+        # A variable the body also produces has two values: the one it had before the loop (a LOOP input, read on the first
+        # check) and the latest one (loop state, read on every later check). One only the body produces is state alone.
+        initial = [v for v in cond_vars if v in produced and v in outer.producers and v != "cycle"]
+        reads = [v for v in dict.fromkeys(body.used + first + initial + [v for v in cond_vars if v not in produced]) if v != "cycle"]
+        lid = self._id("loop")
+
+        def read(m: re.Match) -> str:
+            v = m.group(1)
+            if v == "cycle" or v.startswith("in_") or v in state_ids:
+                return m.group(0)
+            if v in initial:
+                return f"((@cycle == 0 AND @in_{v}) OR (@cycle > 0 AND @{v}))"
+            return m.group(0) if v in produced else f"@in_{v}"          # state stays bare, a plain input is read as @in_<var>
+
+        cond = re.sub(r"@(\w+)", read, cond)
         cfg: dict = {"condition": cond}
         if s.max_iterations is not None:
             cfg["max_iterations"] = s.max_iterations
@@ -597,6 +613,25 @@ class SPLToGraphConverter:
             self._produce(lid, v)
         self._step(lid, "exit")
 
+    def _loop_condition_calls(self, cond: str, body: "_Scope", outer: "_Scope") -> tuple[str, list[str], list[str]]:
+        """A WHILE condition that calls a Python tool. The condition is checked before every iteration, so the call runs
+        twice as SOLVE nodes: once before the loop (its result enters the LOOP as an input, read on the first check) and
+        once at the end of the body (its result is loop state, read on every later check). Returns the condition with each
+        call replaced by that choice, the names of the loop inputs it reads, and the names of the loop-state results."""
+        text = re.sub(r"@(\w+)", lambda m: m.group(0) if m.group(1) == "cycle" else f"@in_{m.group(1)}", cond)
+        self._scope, self._hoisted = outer, []
+        before_text = self._hoist_tool_calls(text)                 # in the outer scope, before the LOOP node
+        before_ids = list(self._hoisted)
+        self._scope, self._hoisted = body, []
+        self._hoist_tool_calls(text)                               # again at the end of the body
+        after_ids = list(self._hoisted)
+        self._scope = outer
+        for first, again in zip(before_ids, after_ids):
+            before_text = before_text.replace(f"@in_{first}", f"((@cycle == 0 AND @in_{first}) OR (@cycle > 0 AND @{again}))")
+        keep = set(before_ids)                                     # the pair stays in loop form; every other @in_x is a plain variable again
+        before_text = re.sub(r"@in_(\w+)", lambda m: m.group(0) if m.group(1) in keep else f"@{m.group(1)}", before_text)
+        return before_text, before_ids, after_ids
+
     def _commit(self, s: CommitStatement) -> None:
         sc = self._scope
         if self._depth:
@@ -606,7 +641,7 @@ class SPLToGraphConverter:
             # a computed / literal value: build it in a node so wf_exit has one clear source
             out_name = self._exit_ports[0].removeprefix("in_")
             nid = self._add(self._id("set"), "CONTEXT", ["trigger", "complete"],
-                            {"action": "set", "expression": render(s.expression)})
+                            {"action": "set", "expression": render(s.expression, True)})
             self._bind_inputs(nid, expr_vars(s.expression))
             self._produce(nid, out_name)
             self._step(nid)
