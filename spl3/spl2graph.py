@@ -590,7 +590,8 @@ class SPLToGraphConverter:
         # A variable the body also produces has two values: the one it had before the loop (a LOOP input, read on the first
         # check) and the latest one (loop state, read on every later check). One only the body produces is state alone.
         initial = [v for v in cond_vars if v in produced and v in outer.producers and v != "cycle"]
-        reads = [v for v in dict.fromkeys(body.used + first + initial + [v for v in cond_vars if v not in produced]) if v != "cycle"]
+        keeps = [v for v in produced if v in outer.producers]       # written in the body: its value before the loop is where it starts
+        reads = [v for v in dict.fromkeys(body.used + first + initial + keeps + [v for v in cond_vars if v not in produced]) if v != "cycle"]
         lid = self._id("loop")
 
         def read(m: re.Match) -> str:
@@ -598,14 +599,14 @@ class SPLToGraphConverter:
             if v == "cycle" or v.startswith("in_") or v in state_ids:
                 return m.group(0)
             if v in initial:
-                return f"((@cycle == 0 AND @in_{v}) OR (@cycle > 0 AND @{v}))"
+                return f"latest(@in_{v}, @{v})"
             return m.group(0) if v in produced else f"@in_{v}"          # state stays bare, a plain input is read as @in_<var>
 
         cond = re.sub(r"@(\w+)", read, cond)
         cfg: dict = {"condition": cond}
         if s.max_iterations is not None:
             cfg["max_iterations"] = s.max_iterations
-        cfg["outputs"] = {v: {"from": srcs[-1]} for v, srcs in body.producers.items()}
+        cfg["outputs"] = {v: {"from": srcs[0] if len(srcs) == 1 else list(srcs)} for v, srcs in body.producers.items()}
         cfg["subgraph"] = {"nodes": body.nodes, "edges": body.edges}
         self._add(lid, "LOOP", ["trigger", "loop", "exit"], cfg)
         self._bind_inputs(lid, reads)
@@ -627,7 +628,7 @@ class SPLToGraphConverter:
         after_ids = list(self._hoisted)
         self._scope = outer
         for first, again in zip(before_ids, after_ids):
-            before_text = before_text.replace(f"@in_{first}", f"((@cycle == 0 AND @in_{first}) OR (@cycle > 0 AND @{again}))")
+            before_text = before_text.replace(f"@in_{first}", f"latest(@in_{first}, @{again})")
         keep = set(before_ids)                                     # the pair stays in loop form; every other @in_x is a plain variable again
         before_text = re.sub(r"@in_(\w+)", lambda m: m.group(0) if m.group(1) in keep else f"@{m.group(1)}", before_text)
         return before_text, before_ids, after_ids

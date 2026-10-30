@@ -45,12 +45,12 @@ def _solve_template(expr: str) -> str:
     return "".join(out)
 
 
-_FIRST_OR_LATER = re.compile(r"\(\(@cycle == 0 AND @in_(\w+)\) OR \(@cycle > 0 AND @(\w+)\)\)")
+_FIRST_OR_LATER = re.compile(r"latest\(@in_(\w+), @(\w+)\)")
 
 
 def _spl_condition(cond: str) -> str:
     """GraphLang condition (``@in_x``, ``==``) -> SPL WHILE condition (``@x``, ``=``). A variable the loop both reads and
-    produces is written `((@cycle == 0 AND @in_x) OR (@cycle > 0 AND @x))` (first check, later checks); in SPL that is `@x`."""
+    produces is written `latest(@in_x, @x)` (the value before the loop until an iteration sets it); in SPL that is `@x`."""
     cond = _FIRST_OR_LATER.sub(lambda m: f"@{m.group(1)}" if m.group(1) == m.group(2) else m.group(0), cond)
     return _IN_PORT.sub(r"@\1", cond).replace(" == ", " = ").replace(" != ", " != ")
 
