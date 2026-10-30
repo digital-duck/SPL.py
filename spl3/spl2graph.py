@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import dataclasses
 import re
+from pathlib import Path
 from dataclasses import dataclass, field
 
 from spl.ast_nodes import (
@@ -30,7 +31,7 @@ from spl.ast_nodes import (
     RetryStatement, SemanticCondition, StorageSubscript, WhileStatement, WorkflowStatement,
 )
 from spl3.ast_nodes import (
-    AssertStatement, CallParallelStatement, CompoundCondition, NoneLiteral, SetLiteral, SolveStatement, UnaryOp,
+    AssertStatement, CallParallelStatement, ImportStatement, ToolAPINode, CompoundCondition, NoneLiteral, SetLiteral, SolveStatement, UnaryOp,
 )
 
 # The functions a GraphLang condition may call (graphlang/grafr/expr.py FUNCS). Any other call in an ASSERT condition is a
@@ -39,6 +40,8 @@ _CONDITION_FUNCS = {"abs", "bool", "contains", "endswith", "float", "int", "is_e
                     "min", "startswith", "str", "strip", "upper"}
 
 GRAPH_VERSION = "1.0-graph"
+_OUT_TYPES = {"TEXT": "TEXT", "STRING": "TEXT", "INTEGER": "INTEGER", "INT": "INTEGER", "NUMBER": "REAL", "FLOAT": "REAL",
+              "REAL": "REAL", "BOOL": "BOOL", "BOOLEAN": "BOOL"}
 _CALL = re.compile(r"\b([A-Za-z_]\w*)\(")
 _SOLVE_MARK = re.compile(r"@@(\w+)@@")
 _FSTR_VAR = re.compile(r"\{@(\w+)\}")
@@ -184,8 +187,11 @@ class SPLToGraphConverter:
     """Convert one ``WorkflowStatement`` to a GraphLang graph dict."""
 
     def __init__(self, workflows: set[str] | None = None, source_name: str = "", source_dir=None,
-                 procedures: dict[str, str] | None = None, functions: dict | None = None):
+                 procedures: dict[str, str] | None = None, functions: dict | None = None,
+                 tools: dict | None = None):
         self._workflows = workflows or set()   # workflows defined in the same .spl file
+        self._warned_tools: set[str] = set()
+        self._tools = tools or {}              # name -> CREATE TOOL_API in this file or an IMPORTed one
         self._functions = functions or {}      # name -> CREATE FUNCTION in the same file: its body is the prompt
         self._source_name = source_name
         self._known = procedures or {}         # name -> path, for callees that live outside this text
@@ -411,6 +417,33 @@ class SPLToGraphConverter:
         self._step(nid)
         return nid
 
+    def _tool_node(self, name: str, spl_args: list[str], py_args: list[str], trigger: bool, expression: str | None = None) -> str:
+        """A call to a Python tool. If the tool's source is in the SPL (CREATE TOOL_API, here or in an IMPORTed file) the node
+        is a `kernel` SOLVE that carries it, so the graph runs without SPL.py; else the call stays an `expression` SOLVE
+        that only names the tool (it validates but cannot run: the source is registered elsewhere, e.g. a tools.py)."""
+        local = Path(self._source_dir) / "tools.py" if self._source_dir is not None else None
+        tool = (self._tools.get(name) or (local is not None and local.is_file() and _module_tool(name, local)) or _module_tool(name) or None)
+        problem = "has no Python source in the SPL" if tool is None or tool.runtime != "PYTHON" else None
+        if problem is None:
+            try:
+                compile(tool.python_body, f"<tool {name}>", "exec")
+            except SyntaxError as e:
+                problem = f"has Python source that does not compile ({e.msg}, line {e.lineno})"
+        if problem:
+            if name not in self._warned_tools:
+                self._warned_tools.add(name)
+                self._warn(f"tool {name!r} {problem}: the node names it but cannot run it")
+            return self._add(self._id("tool"), "SOLVE", ["trigger", "complete"],
+                             {"expression": expression or f"{name}({', '.join(spl_args)})", "tool": name}, trigger=trigger)
+        call = f"{name}({', '.join(py_args)})"
+        cfg = {"tool": name, "backend": "kernel", "arguments": spl_args,
+               "code": tool.python_body.strip("\n") + f"\n_spl_result = {call}\n", "result": "_spl_result",
+               "out_type": _OUT_TYPES.get(str(tool.return_type).upper(), "JSON"),
+               "tool_params": [p.name for p in tool.parameters], "tool_returns": str(tool.return_type)}
+        if getattr(tool, "builtin", False):
+            cfg["tool_builtin"] = True
+        return self._add(self._id("tool"), "SOLVE", ["trigger", "complete"], cfg, trigger=trigger)
+
     def _is_procedure(self, name: str) -> bool:
         sibling = self._source_dir is not None and (self._source_dir / f"{name}.spl").exists()
         return name in self._workflows or sibling or name in self._known
@@ -425,11 +458,12 @@ class SPLToGraphConverter:
                             {"procedure_ref": f"procedures.{name}", **({"arguments": args} if args else {})},
                             trigger=trigger)
         else:  # a Python tool (@spl_tool): deterministic, so SOLVE rather than GENERATE
-            nid = self._add(self._id("tool"), "SOLVE", ["trigger", "complete"],
-                            {"expression": f"{name}({', '.join(args)})", "tool": name}, trigger=trigger)
+            nid = self._tool_node(name, args, [re.sub(r"@(\w+)", r"\1", a) for a in args], trigger)
         self._bind_inputs(nid, expr_vars(s.arguments))
         if s.target_variable:
             self._produce(nid, s.target_variable.lstrip("@"))
+        elif next(n for n in self._scope.nodes if n["id"] == nid).get("config", {}).get("backend"):
+            self._produce(nid, name)                       # a kernel SOLVE must have exactly one result port
         if trigger:
             self._step(nid)
         return nid
@@ -466,7 +500,9 @@ class SPLToGraphConverter:
                 if depth == 0:
                     break
             call = text[m.start():i]
-            nid = self._add(self._id("tool"), "SOLVE", ["trigger", "complete"], {"expression": call, "tool": m.group(1)})
+            inner = call[call.index("(") + 1:-1]
+            nid = self._tool_node(m.group(1), [re.sub(r"@in_(\w+)", r"@\1", inner)], [re.sub(r"@in_(\w+)", r"\1", inner)],
+                                  True, expression=call)
             self._bind_inputs(nid, list(dict.fromkeys(re.findall(r"@in_(\w+)", call))))
             self._produce(nid, nid)
             self._step(nid)
@@ -599,6 +635,71 @@ def _parse(source: str):
     return SPL3Parser(Lexer(source).tokenize()).parse().statements
 
 
+def _module_tool(name: str, path=None):
+    """A Python @spl_tool as a ToolAPINode: its source plus the imports and helpers it needs from the same module, so a
+    graph that calls it runs without SPL.py. `path` is a tools.py next to the .spl; none means the built-in tools
+    (spl/stdlib.py: write_file, ...)."""
+    import ast
+
+    try:
+        from spl.ast_nodes import Parameter
+
+        if path is None:
+            import spl.stdlib as module
+            path = module.__file__
+        tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    top: dict[str, ast.stmt] = {}
+    for node in tree.body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.ImportFrom) and node.module in ("__future__", "spl.tools"):
+                continue
+            for a in node.names:
+                top[(a.asname or a.name).split(".")[0]] = node
+        elif isinstance(node, (ast.FunctionDef, ast.ClassDef)):
+            top[node.name] = node
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name):
+                    top[t.id] = node
+    fn = top.get(name)
+    if not isinstance(fn, ast.FunctionDef):
+        return None
+    needed, todo = {id(fn): fn}, [fn]
+    while todo:
+        for sub in ast.walk(todo.pop()):
+            ident = sub.id if isinstance(sub, ast.Name) else None
+            if ident in top and id(top[ident]) not in needed:
+                needed[id(top[ident])] = top[ident]
+                todo.append(top[ident])
+    ordered = [n for n in tree.body if id(n) in needed]
+    for n in ordered:
+        if isinstance(n, ast.FunctionDef):
+            n.decorator_list = []
+    tool = ToolAPINode(name=name, parameters=[Parameter(name=a.arg) for a in fn.args.args], return_type="TEXT",
+                       runtime="PYTHON", python_body="\n\n".join(ast.unparse(n) for n in ordered))
+    tool.builtin = path is None or Path(path).name == "stdlib.py"
+    return tool
+
+
+def _definitions(statements, source_dir, seen=None) -> list:
+    """The functions and tools of this file and of the files it IMPORTs (`IMPORT 'tools'` means tools.spl next to it)."""
+    seen = seen if seen is not None else set()
+    out = list(statements)
+    for st in statements:
+        if isinstance(st, ImportStatement) and source_dir is not None:
+            base = Path(source_dir) / st.path
+            path = next((c for c in (base, base.with_suffix(".spl"), Path(str(base) + ".spl")) if c.is_file()), None)
+            if path is not None and path.resolve() not in seen:
+                seen.add(path.resolve())
+                try:
+                    out += _definitions(_parse(path.read_text(encoding="utf-8")), path.parent, seen)
+                except Exception:                                  # an unreadable import only costs its definitions
+                    pass
+    return out
+
+
 def spl_to_graph(source: str, workflow: str | None = None, source_name: str = "", source_dir=None,
                  procedures: dict[str, str] | None = None) -> tuple[dict, list[str]]:
     """Parse SPL source; return (graph dict, warnings).  Default workflow: the last one defined
@@ -614,8 +715,10 @@ def spl_to_graph(source: str, workflow: str | None = None, source_name: str = ""
         wf = match[0]
     else:
         wf = wfs[-1]
-    functions = {s.name: s for s in statements if isinstance(s, CreateFunctionStatement)}
-    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures, functions)
+    definitions = _definitions(statements, source_dir)
+    functions = {s.name: s for s in definitions if isinstance(s, CreateFunctionStatement)}
+    tools = {s.name: s for s in definitions if isinstance(s, ToolAPINode)}
+    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures, functions, tools)
     return conv.convert_workflow(wf), conv.warnings
 
 

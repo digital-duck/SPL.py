@@ -220,7 +220,10 @@ class GraphToSPL:
             return f"@{var} := {cfg['expression']}"
         if t == "SOLVE" and "tool" in cfg:
             self.tools.append(cfg["tool"])
-            return f"CALL {cfg['expression']} INTO {'@' + var if var else 'NONE'}"
+            call = cfg["expression"] if "expression" in cfg else f"{cfg['tool']}({', '.join(cfg.get('arguments', []))})"
+            if "tool_params" in cfg and not cfg.get("tool_builtin"):
+                self._define_tool(cfg)
+            return f"CALL {call} INTO {'@' + var if var else 'NONE'}"
         if t == "SOLVE":
             ty = f" {cfg['type']}" if cfg.get("type") else ""
             return f"SOLVE @{var}{ty} := {_solve_template(cfg['expression'])};"
@@ -236,6 +239,13 @@ class GraphToSPL:
             m = cfg["model"]
             s += f" USING MODEL {m if m.startswith('@') else repr(m)}"
         return s + f" INTO @{var}"
+
+    def _define_tool(self, cfg: dict) -> None:
+        """The tool's Python source is in the node's code, ahead of the line that calls it."""
+        name = cfg["tool"]
+        body = cfg["code"].rsplit(f"_spl_result = {name}(", 1)[0].strip("\n")
+        params = ", ".join(f"{p} TEXT" for p in cfg["tool_params"])
+        self.defs.setdefault(f"tool:{name}", f"CREATE TOOL_API {name}({params})\nRETURNS {cfg.get('tool_returns', 'TEXT')} AS PYTHON $$\n{body}\n$$;\n")
 
     def _define(self, cfg: dict) -> None:
         """A function the graph carries a prompt for gets its CREATE FUNCTION back; else it is only named in a comment."""

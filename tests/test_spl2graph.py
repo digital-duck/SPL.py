@@ -152,3 +152,55 @@ DO
 END
 """)
     assert {n["config"]["function"] for n in g["nodes"] if n["type"] == "GENERATE"} == {"pro", "con"}
+
+
+# --- Python tools become kernel SOLVE nodes that carry their source ----------------------------------------------------
+
+TOOLED = """
+CREATE TOOL_API shout(text TEXT, suffix TEXT) RETURNS TEXT AS PYTHON $$
+def shout(text: str, suffix: str) -> str:
+    return text.strip().upper() + suffix
+$$;
+
+WORKFLOW w
+    INPUT: @word TEXT DEFAULT 'hi'
+    OUTPUT: @loud TEXT
+DO
+    CALL shout(@word, '!') INTO @loud
+    RETURN @loud
+END
+"""
+
+
+def test_a_tool_call_becomes_a_kernel_solve_with_the_tool_source():
+    g, warnings = spl_to_graph(TOOLED)
+    assert warnings == []
+    cfg = _node(g, "tool_1")["config"]
+    assert cfg["backend"] == "kernel" and cfg["tool"] == "shout" and cfg["result"] == "_spl_result"
+    assert cfg["code"].rstrip().endswith("_spl_result = shout(word, '!')") and "def shout(text: str" in cfg["code"]
+    assert cfg["out_type"] == "TEXT" and cfg["arguments"] == ["@word", "'!'"]
+    assert _node(g, "tool_1")["ports"] == ["trigger", "complete", "in_word", "out_loud"]
+
+
+def test_a_tool_roundtrips_with_its_definition():
+    g, _ = spl_to_graph(TOOLED)
+    text, _ = graph_to_spl(g)
+    assert "CREATE TOOL_API shout(text TEXT, suffix TEXT)" in text and "CALL shout(@word, '!') INTO @loud" in text
+    assert roundtrip_diff(g) == []
+
+
+def test_a_builtin_tool_brings_its_source_and_a_broken_one_only_a_warning():
+    g, warnings = spl_to_graph("""
+WORKFLOW w
+    INPUT: @p TEXT
+    OUTPUT: @p TEXT
+DO
+    CALL write_file(@p, 'x') INTO NONE
+    RETURN @p
+END
+""")
+    cfg = _node(g, "tool_1")["config"]
+    assert cfg["backend"] == "kernel" and cfg["tool_builtin"] and "def write_file" in cfg["code"] and "import pathlib" in cfg["code"]
+    g, warnings = spl_to_graph(TOOLED.replace("return text.strip().upper() + suffix", "return ''x''"))
+    cfg = _node(g, "tool_1")["config"]
+    assert "backend" not in cfg and cfg["expression"] == "shout(@word, '!')" and "does not compile" in warnings[0]
