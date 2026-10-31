@@ -390,7 +390,7 @@ class SPLToGraphConverter:
         if defaults:
             cfg["phases"] = {"pre": {"defaults": {f"in_{k}": v for k, v in defaults.items()}}}
         if model:
-            cfg["model"] = model
+            cfg["llm"] = f":{model}"                         # graflang's `llm:` is adapter[:model]; SPL names a model only
         if output_budget is not None:
             cfg["output_budget"] = output_budget
         if temperature is not None:
