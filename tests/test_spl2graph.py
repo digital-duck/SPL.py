@@ -38,6 +38,15 @@ def test_yaml_roundtrip():
     assert yaml.safe_load(graph_to_yaml(g)) == g
 
 
+def test_yaml_writes_multiline_text_as_a_block():
+    import yaml
+    code = "def shout(text):\n    return text.upper() + '!'\n"
+    odd = "trailing space \nsecond line"                         # a block cannot hold this exactly: it falls back to a quoted string
+    text = graph_to_yaml({"config": {"code": code, "odd": odd, "one": "single line"}})
+    assert "code: |\n    def shout(text):\n        return text.upper() + '!'\n" in text
+    assert yaml.safe_load(text) == {"config": {"code": code, "odd": odd, "one": "single line"}}
+
+
 # --- graph2spl / round trip -------------------------------------------------
 
 from spl3.graph2spl import graph_to_spl, roundtrip_diff  # noqa: E402

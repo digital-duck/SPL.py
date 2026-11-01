@@ -759,5 +759,16 @@ def spl_to_graph(source: str, workflow: str | None = None, source_name: str = ""
 
 
 def graph_to_yaml(graph: dict) -> str:
+    """The graph as YAML. A string with line breaks (a tool's Python source, a prompt) is written as a `|` block, so it
+    reads as it is, instead of one quoted line full of `\\n` escapes. PyYAML falls back to a quoted string where a block
+    cannot represent the text (for example trailing spaces)."""
     import yaml
-    return yaml.safe_dump(graph, sort_keys=False, default_flow_style=False, allow_unicode=True)
+
+    class _Dumper(yaml.SafeDumper):
+        pass
+
+    def _text(dumper, value):
+        return dumper.represent_scalar("tag:yaml.org,2002:str", value, style="|" if "\n" in value else None)
+
+    _Dumper.add_representer(str, _text)
+    return yaml.dump(graph, Dumper=_Dumper, sort_keys=False, default_flow_style=False, allow_unicode=True)
