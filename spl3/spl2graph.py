@@ -20,6 +20,7 @@ produced @var.  Anything the converter cannot map is skipped and reported in ``w
 """
 from __future__ import annotations
 
+import builtins
 import dataclasses
 import re
 from pathlib import Path
@@ -40,8 +41,23 @@ _CONDITION_FUNCS = {"abs", "bool", "contains", "endswith", "float", "int", "is_e
                     "min", "startswith", "str", "strip", "upper"}
 
 GRAPH_VERSION = "1.0-graph"
-_OUT_TYPES = {"TEXT": "TEXT", "STRING": "TEXT", "INTEGER": "INTEGER", "INT": "INTEGER", "NUMBER": "REAL", "FLOAT": "REAL",
+_OUT_TYPES = {"JSON": "JSON", "TEXT": "TEXT", "STRING": "TEXT", "INTEGER": "INTEGER", "INT": "INTEGER", "NUMBER": "REAL", "FLOAT": "REAL",
               "REAL": "REAL", "BOOL": "BOOL", "BOOLEAN": "BOOL"}
+_ANNOTATED = {"str": "TEXT", "bool": "BOOL", "int": "INTEGER", "float": "REAL", "dict": "JSON", "list": "JSON", "tuple": "JSON"}
+_SOLVE_BUILTIN = re.compile(r"@?(_spl_solve_result)\b")      # the kernel variable holding the latest SOLVE result; the parser adds no @@ marker to it
+_RUNTIME_COUNTERS = re.compile(r"@(_total_(?:input|output)_tokens)\b")      # SPL runtime counters: not variables of a graph
+_IN_KERNEL_RUN_PYTHON = '''def run_python(code: str, timeout: str='30') -> str:
+    """Run Python code in this kernel session and return what it prints. SPL's run_python executes in the persistent kernel
+    session, so state (a Lean REPL started by one call) is still there for the next call; a subprocess would lose it."""
+    import contextlib, io
+    out = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(out):
+            exec(str(code), globals())
+        return out.getvalue().strip()
+    except Exception as e:
+        return f'Error: {type(e).__name__}: {e}'
+'''
 _CALL = re.compile(r"\b([A-Za-z_]\w*)\(")
 _SOLVE_MARK = re.compile(r"@@(\w+)@@")
 _FSTR_VAR = re.compile(r"\{@(\w+)\}")
@@ -121,7 +137,7 @@ def render(e, inport: bool = False) -> str:
             return "TRUE" if e.value else "FALSE"
         return str(e.value)
     if isinstance(e, FStringLiteral):
-        return "f" + _quote(e.template)
+        return "f" + _quote(re.sub(r"@(\w+)", r"@in_\1", e.template) if inport else e.template)     # {@x} reads the node's port in_x
     if isinstance(e, NoneLiteral):
         return "NONE"
     if isinstance(e, StorageSubscript):
@@ -188,9 +204,11 @@ class SPLToGraphConverter:
 
     def __init__(self, workflows: set[str] | None = None, source_name: str = "", source_dir=None,
                  procedures: dict[str, str] | None = None, functions: dict | None = None,
-                 tools: dict | None = None):
+                 tools: dict | None = None, kernel_name: str | None = None):
+        self._kernel_name = kernel_name        # the Jupyter kernel of SOLVE statements (SPL's --kernel-name), e.g. sagemath
         self._workflows = workflows or set()   # workflows defined in the same .spl file
         self._warned_tools: set[str] = set()
+        self._text_vars: set[str] = set()      # variables a model step or a called workflow wrote: text, though SPL compares them as numbers
         self._tools = tools or {}              # name -> CREATE TOOL_API in this file or an IMPORTed one
         self._functions = functions or {}      # name -> CREATE FUNCTION in the same file: its body is the prompt
         self._source_name = source_name
@@ -321,10 +339,17 @@ class SPLToGraphConverter:
         elif isinstance(s, CallParallelStatement):
             self._call_parallel(s)
         elif isinstance(s, SolveStatement):
-            nid = self._add(self._id("solve"), "SOLVE", ["trigger", "complete"],
-                            {"expression": template(s.python_template), **({"type": s.target_type} if s.target_type else {})})
-            self._bind_inputs(nid, expr_vars(s.python_template))
-            self._produce(nid, s.target_variable.lstrip("@"))
+            text = _SOLVE_BUILTIN.sub(r"@@\1@@", s.python_template)
+            # The statement is Python run in the kernel, so it is a kernel SOLVE (an `expression` SOLVE has nothing to run it).
+            cfg = {"backend": "kernel", "code": "", "result": re.sub(r"@@(\w+)@@", r"\1", re.sub(r"(['\"])@@(\w+)@@\1", r"str(\2)", text)),
+                   "out_type": _OUT_TYPES.get(str(s.target_type).upper(), "JSON") if s.target_type else "JSON"}
+            if self._kernel_name:
+                cfg["kernel_name"] = self._kernel_name
+            nid = self._add(self._id("solve"), "SOLVE", ["trigger", "complete"], cfg)
+            self._bind_inputs(nid, expr_vars(text))
+            target = s.target_variable.lstrip("@")
+            self._produce(nid, target)
+            self._scope.producers["_spl_solve_result"] = list(self._scope.producers[target])
             self._step(nid)
         elif isinstance(s, AssertStatement):
             self._assert(s)
@@ -376,15 +401,26 @@ class SPLToGraphConverter:
             self._warn(f"function {function!r} is not defined in this file: its call text is used as the prompt")
         else:
             prompt = fn.body.strip()
+            # The port and its `{{in_x}}` placeholder are named after the variable passed in, not the parameter: inside a LOOP
+            # body an outer variable reaches a node by its own name, and a prompt whose placeholder no port fills goes to the
+            # model unfilled. (`graf validate` now reports such a prompt as an error.)
+            names: dict[str, str] = {}                         # parameter -> port name (without in_)
             for param, arg in zip(fn.parameters, arguments):
-                prompt = prompt.replace("{" + param.name + "}", "{{in_" + param.name + "}}")
                 if isinstance(arg, ParamRef):
-                    bindings.append((arg.name.lstrip("@"), param.name))
+                    names[param.name] = arg.name.lstrip("@")
+                    bindings.append((names[param.name], names[param.name]))
                 elif isinstance(arg, Literal):
+                    names[param.name] = param.name
                     defaults[param.name] = arg.value
                 else:
+                    names[param.name] = param.name
                     bindings.append((self._compute(render(arg), arg), param.name))
-            cfg = {"function": function, "params": [p.name for p in fn.parameters], "prompt_inline": prompt}
+            for name in dict.fromkeys(re.findall(r"(?<!\{)\{(\w+)\}(?!\})", prompt)):
+                if name not in names and name in self._scope.producers:
+                    self._warn(f"function {function!r}: the prompt uses {{{name}}}, which is not a parameter but is a workflow variable; "
+                               f"it was left as text (pass it as an argument)")
+            prompt = re.sub(r"(?<!\{)\{(\w+)\}(?!\})", lambda m: "{{in_" + names[m[1]] + "}}" if m[1] in names else m[0], prompt)
+            cfg = {"function": function, "params": list(dict.fromkeys(names.values())), "prompt_inline": prompt}
         if arguments:
             cfg["arguments"] = [render(a) for a in arguments]
         if defaults:
@@ -407,6 +443,7 @@ class SPLToGraphConverter:
             self._bind_inputs(nid, expr_vars([model, output_budget]))
         if target:
             self._produce(nid, target.lstrip("@"))
+            self._text_vars.add(target.lstrip("@"))
         return nid
 
     def _compute(self, expression: str, source) -> str:
@@ -429,20 +466,47 @@ class SPLToGraphConverter:
                 compile(tool.python_body, f"<tool {name}>", "exec")
             except SyntaxError as e:
                 problem = f"has Python source that does not compile ({e.msg}, line {e.lineno})"
+        if problem and (self._kernel_name or hasattr(builtins, name)):
+            # No source to carry, but the kernel has the name (a Python builtin, or Sage's namespace under --kernel-name): the
+            # call is what the kernel runs, as SPL runs it.
+            cfg = {"tool": name, "backend": "kernel", "code": "", "result": f"{name}({', '.join(py_args)})", "out_type": "JSON"}
+            if self._kernel_name:
+                cfg["kernel_name"] = self._kernel_name
+            return self._add(self._id("tool"), "SOLVE", ["trigger", "complete"], cfg, trigger=trigger)
         if problem:
             if name not in self._warned_tools:
                 self._warned_tools.add(name)
                 self._warn(f"tool {name!r} {problem}: the node names it but cannot run it")
             return self._add(self._id("tool"), "SOLVE", ["trigger", "complete"],
                              {"expression": expression or f"{name}({', '.join(spl_args)})", "tool": name}, trigger=trigger)
+        body = _IN_KERNEL_RUN_PYTHON if name == "run_python" and getattr(tool, "builtin", False) else tool.python_body
+        self._warn_local_modules(name, body)
         call = f"{name}({', '.join(py_args)})"
+        out_type = _annotated_type(body, name) or _OUT_TYPES.get(str(tool.return_type).upper(), "JSON")      # the annotation says more than RETURNS TEXT
         cfg = {"tool": name, "backend": "kernel", "arguments": spl_args,
-               "code": tool.python_body.strip("\n") + f"\n_spl_result = {call}\n", "result": "_spl_result",
-               "out_type": _OUT_TYPES.get(str(tool.return_type).upper(), "JSON"),
+               "code": body.strip("\n") + f"\n_spl_result = {call}\n", "result": "_spl_result",
+               "out_type": out_type,
                "tool_params": [p.name for p in tool.parameters], "tool_returns": str(tool.return_type)}
         if getattr(tool, "builtin", False):
             cfg["tool_builtin"] = True
         return self._add(self._id("tool"), "SOLVE", ["trigger", "complete"], cfg, trigger=trigger)
+
+    def _warn_local_modules(self, name: str, body: str) -> None:
+        """A tool that imports a module living next to the .spl needs that file next to the graph: it is not copied."""
+        if self._source_dir is None:
+            return
+        import ast
+        try:
+            tree = ast.parse(body)
+        except SyntaxError:
+            return
+        for node in ast.walk(tree):
+            mods = [node.module] if isinstance(node, ast.ImportFrom) and node.module else [a.name for a in getattr(node, "names", [])] if isinstance(node, ast.Import) else []
+            for mod in mods:
+                local = Path(self._source_dir) / f"{mod.split('.')[0]}.py"
+                if local.is_file() and local.name not in self._warned_tools:
+                    self._warned_tools.add(local.name)
+                    self._warn(f"tool {name!r} imports {local.name}, which is not copied: put it next to the graph (and on the tool's path)")
 
     def _is_procedure(self, name: str) -> bool:
         sibling = self._source_dir is not None and (self._source_dir / f"{name}.spl").exists()
@@ -458,10 +522,14 @@ class SPLToGraphConverter:
                             {"procedure_ref": f"procedures.{name}", **({"arguments": args} if args else {})},
                             trigger=trigger)
         else:  # a Python tool (@spl_tool): deterministic, so SOLVE rather than GENERATE
-            nid = self._tool_node(name, args, [re.sub(r"@(\w+)", r"\1", a) for a in args], trigger)
-        self._bind_inputs(nid, expr_vars(s.arguments))
+            py = [re.sub(r"@(\w+)", r"\1", _RUNTIME_COUNTERS.sub(lambda m: f"globals().get('{m[1]}', 0)", a)) for a in args]
+            nid = self._tool_node(name, args, py, trigger)
+        self._bind_inputs(nid, [v for v in expr_vars(s.arguments) if not _RUNTIME_COUNTERS.fullmatch("@" + v)])
         if s.target_variable:
             self._produce(nid, s.target_variable.lstrip("@"))
+            cfg = next(n for n in self._scope.nodes if n["id"] == nid).get("config", {})
+            if "procedure_ref" in cfg or cfg.get("out_type") == "TEXT":
+                self._text_vars.add(s.target_variable.lstrip("@"))
         elif next(n for n in self._scope.nodes if n["id"] == nid).get("config", {}).get("backend"):
             self._produce(nid, name)                       # a kernel SOLVE must have exactly one result port
         if trigger:
@@ -513,9 +581,10 @@ class SPLToGraphConverter:
 
     def _assert(self, s: AssertStatement) -> None:
         self._hoisted: list[str] = []
-        cond = self._hoist_tool_calls(template(s.python_template))
+        text = _SOLVE_BUILTIN.sub(r"@@\1@@", s.python_template)
+        cond = self._hoist_tool_calls(template(text))
         nid = self._add(self._id("assert"), "ASSERT", ["trigger", "pass", "fail"], {"condition": cond})
-        self._bind_inputs(nid, [*expr_vars(s.python_template), *self._hoisted])
+        self._bind_inputs(nid, [*expr_vars(text), *self._hoisted])
         ends: list = [(nid, "pass")]
         if s.otherwise_body:
             before = {k: list(v) for k, v in self._scope.producers.items()}
@@ -570,6 +639,13 @@ class SPLToGraphConverter:
         sc.frontier = ends + sc.frontier
         self._join_producers(before, outcomes)
 
+    def _numeric(self, cond: str) -> str:
+        """SPL compares the text a model or a called workflow returned with a number (`@i < @n_steps`); graflang's comparison
+        is strict, so such an operand is read as a number."""
+        for v in self._text_vars:
+            cond = re.sub(rf"(?<=[<>] )@{v}\b|(?<=[<>]= )@{v}\b|@{v}\b(?= [<>])", f"float(@{v})", cond)
+        return cond
+
     def _while(self, s: WhileStatement) -> None:
         outer = self._scope
         body = self._scope = _Scope()
@@ -581,7 +657,7 @@ class SPLToGraphConverter:
 
         cond_vars = expr_vars(s.condition)
         produced = list(body.producers)
-        cond = render(s.condition)
+        cond = self._numeric(render(s.condition))
         first: list[str] = []
         state_ids: list[str] = []
         if any(m.group(1) not in _CONDITION_FUNCS for m in _CALL.finditer(cond)):
@@ -671,6 +747,16 @@ def _parse(source: str):
     return SPL3Parser(Lexer(source).tokenize()).parse().statements
 
 
+def _annotated_type(body: str, name: str) -> str | None:
+    """The type a tool's Python return annotation names (`-> bool` is BOOL, `-> list[dict]` JSON), or None."""
+    import ast
+    try:
+        fn = next((n for n in ast.walk(ast.parse(body)) if isinstance(n, ast.FunctionDef) and n.name == name), None)
+    except SyntaxError:
+        return None
+    return _ANNOTATED.get(ast.unparse(fn.returns).split("[")[0]) if fn is not None and fn.returns is not None else None
+
+
 def _module_tool(name: str, path=None):
     """A Python @spl_tool as a ToolAPINode: its source plus the imports and helpers it needs from the same module, so a
     graph that calls it runs without SPL.py. `path` is a tools.py next to the .spl; none means the built-in tools
@@ -713,7 +799,8 @@ def _module_tool(name: str, path=None):
     for n in ordered:
         if isinstance(n, ast.FunctionDef):
             n.decorator_list = []
-    tool = ToolAPINode(name=name, parameters=[Parameter(name=a.arg) for a in fn.args.args], return_type="TEXT",
+    returns = ast.unparse(fn.returns).split("[")[0] if fn.returns is not None else ""      # `-> bool`, `-> list[dict]`
+    tool = ToolAPINode(name=name, parameters=[Parameter(name=a.arg) for a in fn.args.args], return_type=_ANNOTATED.get(returns, "TEXT"),
                        runtime="PYTHON", python_body="\n\n".join(ast.unparse(n) for n in ordered))
     tool.builtin = path is None or Path(path).name == "stdlib.py"
     return tool
@@ -737,7 +824,7 @@ def _definitions(statements, source_dir, seen=None) -> list:
 
 
 def spl_to_graph(source: str, workflow: str | None = None, source_name: str = "", source_dir=None,
-                 procedures: dict[str, str] | None = None) -> tuple[dict, list[str]]:
+                 procedures: dict[str, str] | None = None, kernel_name: str | None = None) -> tuple[dict, list[str]]:
     """Parse SPL source; return (graph dict, warnings).  Default workflow: the last one defined
     (the entry point by SPL convention, callees come first)."""
     statements = _parse(source)
@@ -754,8 +841,43 @@ def spl_to_graph(source: str, workflow: str | None = None, source_name: str = ""
     definitions = _definitions(statements, source_dir)
     functions = {s.name: s for s in definitions if isinstance(s, CreateFunctionStatement)}
     tools = {s.name: s for s in definitions if isinstance(s, ToolAPINode)}
-    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures, functions, tools)
-    return conv.convert_workflow(wf), conv.warnings
+    conv = SPLToGraphConverter({w.name for w in wfs}, source_name, source_dir, procedures, functions, tools, kernel_name)
+    graph = conv.convert_workflow(wf)
+    conv.warnings += _needed_files(statements, graph, source_dir, source_name)
+    return graph, conv.warnings
+
+
+def _needed_files(statements, graph: dict, source_dir, source_name: str = "") -> list[str]:
+    """Warnings naming the .spl files a graph's `procedure_ref` nodes (and the IMPORTs inside them) need next to it.
+    They are not copied: without them a `procedure_ref` fails at run time with 'Procedure ... not found'."""
+    if source_dir is None or not graph.get("resources", {}).get("procedures"):
+        return []
+    base, seen, notes = Path(source_dir), set(), []
+
+    def visit(stmts, folder: Path) -> None:
+        for st in stmts:
+            if isinstance(st, ImportStatement):
+                cand = folder / st.path
+                path = next((c for c in (cand, cand.with_suffix(".spl"), Path(str(cand) + ".spl")) if c.is_file()), None)
+                if path is not None and path.resolve() not in seen:
+                    seen.add(path.resolve())
+                    notes.append(f"IMPORT {st.path!r} is {path.name}: copy it next to the graph (the procedures need it)")
+                    try:
+                        visit(_parse(path.read_text(encoding="utf-8")), path.parent)
+                    except Exception:
+                        pass
+
+    visit(statements, base)
+    for name, ref in graph["resources"]["procedures"].items():
+        path = (base / ref).resolve()
+        if path.is_file() and path not in seen and path.name != source_name:       # the graph's own file is the source
+            seen.add(path)
+            notes.append(f"procedure {name!r} runs {path.name}: copy it next to the graph")
+            try:
+                visit(_parse(path.read_text(encoding="utf-8")), path.parent)
+            except Exception:
+                pass
+    return notes
 
 
 def graph_to_yaml(graph: dict) -> str:

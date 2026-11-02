@@ -2428,7 +2428,9 @@ def cmd_img2text(image_path, adapter, model, out, out_dir):
 @click.option("--workflow", default=None, metavar="NAME",
               help="Workflow to lift (default: the last one defined in the file).")
 @click.option("--stdout", "to_stdout", is_flag=True, help="Print the YAML instead of writing a file.")
-def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout):
+@click.option("--kernel-name", default=None, metavar="NAME",
+              help="Jupyter kernel for SOLVE statements (as `spl3 run --kernel-name`), e.g. sagemath; written as kernel_name on those nodes.")
+def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout, kernel_name):
     """Lift each .spl workflow into a GraphLang graph (AST-direct, no LLM).
 
     Writes <name>.graph.yaml: INPUT/OUTPUT nodes, one typed node per statement
@@ -2454,7 +2456,7 @@ def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout):
             continue
         try:
             graph, warnings = spl_to_graph(path.read_text(encoding="utf-8"), workflow,
-                                           source_name=path.name, source_dir=path.parent)
+                                           source_name=path.name, source_dir=path.parent, kernel_name=kernel_name)
         except NoWorkflowError as exc:
             click.echo(f"WARN: {path.name} — {exc}", err=True)
             continue
@@ -2470,7 +2472,7 @@ def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout):
             continue
         dest_dir = Path(out_dir).resolve() if out_dir else path.parent
         dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / f"{path.stem}.graph.yaml"
+        dest = dest_dir / f"{workflow if workflow else path.stem}.graph.yaml"     # --workflow NAME: one file per workflow, none overwrites another
         dest.write_text(text, encoding="utf-8")
         click.echo(f"{dest}  ({len(graph['nodes'])} nodes, {len(graph['edges'])} edges)")
     if errors:

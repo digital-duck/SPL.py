@@ -258,3 +258,144 @@ END
     assert "tool_2" in body and body[-1] == "tool_2"                                             # the last body step
     assert loop["config"]["condition"] == "NOT latest(@in_tool_1, @tool_2)"
     assert "in_tool_1" in loop["ports"] and loop["config"]["outputs"]["tool_2"]["from"] == "tool_2.out_tool_2"
+
+
+# -- lessons from lifting the 47 cookbook-solver recipes -------------------------------------------------
+
+_LOOP_SPL = '''
+CREATE FUNCTION ask(problem TEXT, hint TEXT)
+RETURNS TEXT AS $$
+Solve: {problem}
+Hint: {hint}
+Return {{"answer": 1}}
+$$;
+
+WORKFLOW w
+  INPUT: @problem_text TEXT, @n INTEGER := 1
+  OUTPUT: @out TEXT
+DO
+  @i := 0;
+  @out := '';
+  WHILE @i < @n DO
+    GENERATE ask(@problem_text, 'be brief') INTO @out;
+    @i := @i + 1;
+  END
+  COMMIT @out WITH status = 'complete';
+END
+'''
+
+
+def _gens(nodes):
+    for n in nodes:
+        if n["type"] == "GENERATE":
+            yield n
+        sub = n.get("config", {}).get("subgraph")
+        if sub:
+            yield from _gens(sub["nodes"])
+
+
+def test_a_prompt_placeholder_and_its_port_are_named_after_the_variable_passed():
+    """Inside a LOOP body an outer variable reaches a node by its own name; a port named after the parameter was never fed."""
+    g, _ = spl_to_graph(_LOOP_SPL)
+    (gen,) = list(_gens(g["nodes"]))
+    assert "in_problem_text" in gen["ports"] and "in_problem" not in gen["ports"]
+    assert "{{in_problem_text}}" in gen["config"]["prompt_inline"]
+    assert '{{"answer": 1}}' in gen["config"]["prompt_inline"]                 # an escaped brace is not a placeholder
+    assert gen["config"]["params"] == ["problem_text", "hint"]
+    assert gen["config"]["phases"]["pre"]["defaults"] == {"in_hint": "be brief"}
+
+
+def test_a_swap_of_parameter_and_variable_names_is_not_mixed_up():
+    g, _ = spl_to_graph('''
+CREATE FUNCTION f(a TEXT, b TEXT)
+RETURNS TEXT AS $$
+{a} then {b}
+$$;
+WORKFLOW w
+  INPUT: @a TEXT, @b TEXT
+  OUTPUT: @r TEXT
+DO
+  GENERATE f(@b, @a) INTO @r;
+  COMMIT @r WITH status = 'complete';
+END
+''')
+    (gen,) = list(_gens(g["nodes"]))
+    assert gen["config"]["prompt_inline"] == "{{in_b}} then {{in_a}}"
+    bound = {e["target"]: e["source"] for e in g["edges"] if e["type"] == "binds" and e["target"].startswith(gen["id"])}
+    assert bound[f"{gen['id']}.in_b"] == "wf_entry.out_b" and bound[f"{gen['id']}.in_a"] == "wf_entry.out_a"
+
+
+def test_a_tool_returns_what_its_annotation_says(tmp_path):
+    from spl3.spl2graph import _module_tool
+
+    (tmp_path / "tools.py").write_text("def ok(x) -> bool:\n    return True\n\ndef rows(x) -> list[dict]:\n    return []\n\ndef text(x):\n    return ''\n")
+    got = {n: _module_tool(n, tmp_path / "tools.py").return_type for n in ("ok", "rows", "text")}
+    assert got == {"ok": "BOOL", "rows": "JSON", "text": "TEXT"}
+
+
+def test_a_solve_statement_is_a_kernel_node_in_the_named_kernel():
+    src = '''
+WORKFLOW w
+  INPUT: @expr TEXT
+  OUTPUT: @r TEXT
+DO
+  SOLVE @r TEXT := str(factor(QQ['x'](@expr)));
+  ASSERT len(str(_spl_solve_result)) > 0;
+  COMMIT @r WITH status = 'complete';
+END
+'''
+    g, _ = spl_to_graph(src, kernel_name="sagemath")
+    solve = next(n for n in g["nodes"] if n["type"] == "SOLVE")
+    assert solve["config"] == {"backend": "kernel", "code": "", "result": "str(factor(QQ['x'](expr)))", "out_type": "TEXT", "kernel_name": "sagemath"}
+    assert "in_expr" in solve["ports"]
+    assert_ = next(n for n in g["nodes"] if n["type"] == "ASSERT")
+    assert "@in__spl_solve_result" in assert_["config"]["condition"]
+    assert any(e["target"] == f"{assert_['id']}.in__spl_solve_result" for e in g["edges"])
+
+
+def test_files_the_graph_needs_are_reported(tmp_path):
+    (tmp_path / "helper.spl").write_text("CREATE FUNCTION h(x TEXT)\nRETURNS TEXT AS $$\n{x}\n$$;\n\nWORKFLOW helper\n  INPUT: @x TEXT\n  OUTPUT: @y TEXT\nDO\n  GENERATE h(@x) INTO @y;\n  COMMIT @y WITH status = 'complete';\nEND\n")
+    (tmp_path / "tools.spl").write_text("")
+    main = "IMPORT 'tools';\n\nWORKFLOW main\n  INPUT: @x TEXT\n  OUTPUT: @y TEXT\nDO\n  CALL helper(@x) INTO @y;\n  COMMIT @y WITH status = 'complete';\nEND\n"
+    _, warnings = spl_to_graph(main, source_name="main.spl", source_dir=tmp_path)
+    assert any("helper.spl" in w and "next to the graph" in w for w in warnings)
+    assert any("tools.spl" in w for w in warnings)
+
+
+def test_tool_types_come_from_the_annotation_run_python_stays_in_the_kernel_and_runtime_counters_are_not_inputs():
+    src = '''
+CREATE TOOL_API ok(x TEXT)
+RETURNS TEXT AS PYTHON $$
+def ok(x: str) -> bool:
+    return True
+$$;
+
+CREATE TOOL_API metrics(a TEXT, b TEXT, c TEXT)
+RETURNS TEXT AS PYTHON $$
+def metrics(a, b, c) -> str:
+    return a
+$$;
+
+WORKFLOW w
+  INPUT: @x TEXT
+  OUTPUT: @r TEXT
+DO
+  CALL ok(@x) INTO @good;
+  CALL metrics(@x, @_total_input_tokens, @_total_output_tokens) INTO @r;
+  CALL run_python('print(1)') INTO @out;
+  COMMIT @r WITH status = 'complete';
+END
+'''
+    g, _ = spl_to_graph(src)
+    tools = {n["config"]["tool"]: n for n in g["nodes"] if n["type"] == "SOLVE"}
+    assert tools["ok"]["config"]["out_type"] == "BOOL"
+    m = tools["metrics"]
+    assert "globals().get('_total_input_tokens', 0)" in m["config"]["code"]
+    assert not any("_total" in p for p in m["ports"]) and not any("_total" in e["source"] for e in g["edges"])
+    assert "exec(str(code), globals())" in tools["run_python"]["config"]["code"]
+
+
+def test_a_text_result_compared_with_a_number_is_read_as_a_number():
+    g, _ = spl_to_graph(_LOOP_SPL.replace("WHILE @i < @n DO", "WHILE @i < @limit DO").replace("  @i := 0;", "  GENERATE ask(@problem_text, 'x') INTO @limit;\n  @i := 0;"))
+    loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
+    assert "float(" in loop["config"]["condition"] and "limit" in loop["config"]["condition"]
