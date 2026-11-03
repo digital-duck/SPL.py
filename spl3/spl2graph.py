@@ -220,6 +220,7 @@ class SPLToGraphConverter:
         self._wf: WorkflowStatement | None = None
         self._scope = _Scope()
         self._depth = 0                        # > 0 inside a LOOP body
+        self._returns: list = []               # per open WHILE: None, or the (flag, value) variables its RETURN statements set
 
     # -- helpers ------------------------------------------------------------
     def _id(self, prefix: str) -> str:
@@ -649,15 +650,38 @@ class SPLToGraphConverter:
     def _while(self, s: WhileStatement) -> None:
         outer = self._scope
         body = self._scope = _Scope()
+        if _has_return(s.body):
+            # A RETURN in the body ends the workflow, which a LOOP body cannot do. It sets a flag and a value instead; the
+            # loop stops when the flag is set, and the code after the loop returns the value (or goes on). The two
+            # variables start before the loop, as the same code written by hand would.
+            self._scope = outer
+            flag, value = self._id("early_exit"), self._id("early_value")
+            for var, init in ((flag, "FALSE"), (value, "''")):
+                nid = self._add(self._id("set"), "CONTEXT", ["trigger", "complete"], {"action": "set", "expression": init})
+                self._produce(nid, var)
+                self._step(nid)
+            self._scope = body
+            self._returns.append((flag, value, {}))
+        else:
+            self._returns.append(None)
         self._depth += 1
         # Empty frontier: the body's first node has no trigger edge (LOOP starts nodes nothing triggers).
         self._block(s.body)
+        early = self._returns.pop()
         self._scope = outer
         self._depth -= 1
 
         cond_vars = expr_vars(s.condition)
-        produced = list(body.producers)
         cond = self._numeric(render(s.condition))
+        if early:
+            flag, value, written = early
+            for var, srcs in written.items():
+                body.producers.setdefault(var, [])
+                body.producers[var] += [s for s in srcs if s not in body.producers[var]]
+            # a comparison, not `NOT @flag`: SPL's WHILE condition takes only comparisons after AND / OR, and drops anything else
+            cond = f"({cond}) AND @{flag} == FALSE" if " OR " in cond else f"{cond} AND @{flag} == FALSE"
+            cond_vars = [*cond_vars, flag]
+        produced = list(body.producers)
         first: list[str] = []
         state_ids: list[str] = []
         if any(m.group(1) not in _CONDITION_FUNCS for m in _CALL.finditer(cond)):
@@ -689,6 +713,21 @@ class SPLToGraphConverter:
         for v in produced:
             self._produce(lid, v)
         self._step(lid, "exit")
+        if early:
+            ev = self._add(self._id("eval"), "EVALUATE", ["trigger", "pass", "fail"], {"condition": f"@in_{early[0]} == TRUE", "branch": 1})
+            self._bind_inputs(ev, [early[0]])
+            self._scope.frontier = [(ev, "pass")]
+            returned = early[1]
+            if not self._depth:
+                # at the top level the value goes to the workflow's output through a node on this branch only, so that the
+                # output has no second source on the path where the loop ended without a RETURN
+                returned = self._exit_ports[0].removeprefix("in_")
+                nid = self._add(self._id("set"), "CONTEXT", ["trigger", "complete"], {"action": "set", "expression": f"@in_{early[1]}"})
+                self._bind_inputs(nid, [early[1]])
+                self._produce(nid, returned)
+                self._step(nid)
+            self._commit(CommitStatement(ParamRef("@" + returned)))       # again a RETURN, in the enclosing loop if there is one
+            self._scope.frontier += [(ev, "fail")]
 
     def _loop_condition_calls(self, cond: str, body: "_Scope", outer: "_Scope") -> tuple[str, list[str], list[str]]:
         """A WHILE condition that calls a Python tool. The condition is checked before every iteration, so the call runs
@@ -712,7 +751,16 @@ class SPLToGraphConverter:
     def _commit(self, s: CommitStatement) -> None:
         sc = self._scope
         if self._depth:
-            self._warn("COMMIT inside a WHILE body was skipped (a LOOP body cannot reach wf_exit)")
+            flag, value, written = self._returns[-1]
+            for var, expression in ((flag, None), (value, s.expression)):
+                text = "TRUE" if expression is None else render(expression, True)
+                nid = self._add(self._id("set"), "CONTEXT", ["trigger", "complete"], {"action": "set", "expression": text})
+                if expression is not None:
+                    self._bind_inputs(nid, expr_vars(expression))
+                self._produce(nid, var)
+                written.setdefault(var, []).append(f"{nid}.out_{var}")      # the branch ends, so its producers are not merged back
+                self._step(nid)
+            sc.frontier = []                                # this path ends here; the loop sees the flag and stops
             return
         if not isinstance(s.expression, ParamRef):
             # a computed / literal value: build it in a node so wf_exit has one clear source
@@ -736,6 +784,19 @@ class SPLToGraphConverter:
         for src, port in sc.frontier:
             sc.edges.append({"source": f"{src}.{port}", "target": "wf_exit.trigger", "type": "triggers"})
         sc.frontier = []
+
+
+def _has_return(statements) -> bool:
+    """Does a RETURN occur anywhere inside these statements (in a branch, a DO block, or a nested WHILE)?"""
+    def walk(o) -> bool:
+        if isinstance(o, CommitStatement):
+            return True
+        if isinstance(o, (list, tuple)):
+            return any(walk(x) for x in o)
+        if dataclasses.is_dataclass(o) and not isinstance(o, type):
+            return any(walk(getattr(o, f.name)) for f in dataclasses.fields(o))
+        return False
+    return walk(statements)
 
 
 # --------------------------------------------------------------------------- public API

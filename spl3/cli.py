@@ -2480,6 +2480,39 @@ def cmd_spl2graph(spl_files, out_dir, workflow, to_stdout, kernel_name):
 
 
 # ------------------------------------------------------------------ #
+# spl3 util html2pdf                                                  #
+# ------------------------------------------------------------------ #
+
+@cmd_util.command("html2pdf", short_help="Convert an .html slide deck (or page) to .pdf with headless Chromium.")
+@click.argument("html_file", metavar="HTML_FILE")
+@click.option("-o", "--output", default=None, metavar="PDF",
+              help="Output file (default: next to the input, same name, .pdf).")
+@click.option("--browser", default=None, metavar="NAME",
+              help="Chromium or Chrome to use: a name on PATH or a path (default: $CHROME, else the first found).")
+@click.option("--timeout", default=120, show_default=True, help="Seconds to wait for the browser.")
+def cmd_html2pdf(html_file, output, browser, timeout):
+    """Convert an .html slide deck to a .pdf (no LLM).
+
+    Uses the page's own print stylesheet (@page size, one slide per page, backgrounds kept), so the
+    result matches the deck's browser Print > Save as PDF with Background graphics on.
+
+    \b
+    Examples:
+      spl3 util html2pdf docs/DEMO/graflang-intro.html
+      spl3 util html2pdf deck.html -o deck-20261103.pdf
+    """
+    from pathlib import Path
+    from spl3.html2pdf import Html2PdfError, count_pages, html_to_pdf
+
+    try:
+        out = html_to_pdf(Path(html_file), Path(output) if output else None, browser=browser, timeout=timeout)
+    except Html2PdfError as exc:
+        click.echo(f"FAILED: {exc}", err=True)
+        raise SystemExit(1)
+    click.echo(f"{out.resolve()}  ({count_pages(out)} pages)")
+
+
+# ------------------------------------------------------------------ #
 # spl3 graph2spl                                                      #
 # ------------------------------------------------------------------ #
 

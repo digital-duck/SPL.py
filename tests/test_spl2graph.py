@@ -23,8 +23,8 @@ def test_structure_and_wiring():
             assert port in ids[node]["ports"], end
     assert any(e["type"] == "triggers" and e["source"] == "wf_entry.entry" for e in g["edges"])
     assert any(n["type"] == "LOOP" for n in g["nodes"])
-    # self_refine commits from inside its WHILE body (early exit), which a LOOP body cannot express yet
-    assert all(w.startswith("COMMIT inside a WHILE body") for w in warnings)
+    # self_refine returns from inside its WHILE body (early exit): a flag and a value stand in for it, with no warning
+    assert warnings == []
 
 
 def test_unknown_workflow_name():
@@ -61,7 +61,8 @@ def _recipes():
     return [COOKBOOK / n for n in names if (COOKBOOK / n).exists()]
 
 
-@pytest.mark.parametrize("path", _recipes(), ids=lambda p: p.name)
+# a RETURN inside a WHILE is rewritten as a flag and a value, so its round trip is equivalent, not identical (next test)
+@pytest.mark.parametrize("path", [p for p in _recipes() if p.name != "self_refine.spl"], ids=lambda p: p.name)
 def test_roundtrip_fixed_point(path):
     g, _ = spl_to_graph(path.read_text(), source_name=path.name, source_dir=path.parent)
     assert roundtrip_diff(g, path.name, path.parent) == []
@@ -70,7 +71,7 @@ def test_roundtrip_fixed_point(path):
 def test_graph2spl_emits_parseable_structure():
     g, _ = _graph()
     text, _ = graph_to_spl(g)
-    assert "WHILE @iteration < @max_iterations DO" in text
+    assert "WHILE @iteration < @max_iterations AND @early_exit_1 = FALSE DO" in text
     assert "EVALUATE @feedback" in text and "WHEN contains('[APPROVED]') THEN" in text
     assert text.rstrip().endswith("END")
 
@@ -399,3 +400,54 @@ def test_a_text_result_compared_with_a_number_is_read_as_a_number():
     g, _ = spl_to_graph(_LOOP_SPL.replace("WHILE @i < @n DO", "WHILE @i < @limit DO").replace("  @i := 0;", "  GENERATE ask(@problem_text, 'x') INTO @limit;\n  @i := 0;"))
     loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
     assert "float(" in loop["config"]["condition"] and "limit" in loop["config"]["condition"]
+
+
+def test_a_return_inside_a_while_stops_the_loop_and_returns_after_it():
+    """self_refine: `[APPROVED]` returns from the loop body. The graph sets a flag and a value there, the loop condition
+    reads the flag, and a node after the loop returns the value; falling out of the loop returns `current` as before."""
+    g, warnings = _graph()
+    assert warnings == []
+    loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
+    assert "@early_exit_1) == FALSE" in loop["config"]["condition"]
+    assert {"early_exit_1", "early_value_1"} <= set(loop["config"]["outputs"])
+    after = next(n for n in g["nodes"] if n["type"] == "EVALUATE")
+    assert after["config"]["condition"] == "@in_early_exit_1 == TRUE"
+    exits = [e["source"] for e in g["edges"] if e["target"] == "wf_exit.in_result"]
+    assert sorted(exits) == ["loop_1.out_current", "set_7.out_result"]         # one source per path
+    text, _ = graph_to_spl(g)
+    assert "@early_exit_1 := FALSE" in text and "@result := @early_value_1" in text and text.count("RETURN @current") == 1
+    again, _ = spl_to_graph(text, source_name=RECIPE.name, source_dir=RECIPE.parent)       # the generated SPL parses and lifts
+    kinds = lambda gr: sorted(n["type"] for n in gr["nodes"])
+    assert kinds(again) == kinds(g)
+
+
+def test_a_return_in_a_nested_while_leaves_both_loops():
+    src = '''
+WORKFLOW w
+  INPUT: @n INTEGER := 3
+  OUTPUT: @r TEXT
+DO
+  @i := 0
+  WHILE @i < @n DO
+    @j := 0
+    WHILE @j < @n DO
+      EVALUATE @j
+        WHEN = 2 THEN
+          RETURN 'found'
+        ELSE
+          @j := @j + 1
+      END
+    END
+    @i := @i + 1
+  END
+  RETURN 'none'
+END
+'''
+    g, warnings = spl_to_graph(src)
+    assert warnings == []
+    loops = [n for n in g["nodes"] if n["type"] == "LOOP"]
+    assert len(loops) == 1 and "early_exit" in loops[0]["config"]["condition"]
+    inner = [n for n in loops[0]["config"]["subgraph"]["nodes"] if n["type"] == "LOOP"]
+    assert len(inner) == 1 and "early_exit" in inner[0]["config"]["condition"]       # the inner loop stops on its own flag
+    text, _ = graph_to_spl(g)
+    assert text.count("RETURN") == 2 and "@early_exit_1 := TRUE" in text         # the outer loop returns once, after both loops
