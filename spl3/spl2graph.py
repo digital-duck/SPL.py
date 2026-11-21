@@ -706,7 +706,7 @@ class SPLToGraphConverter:
         cfg: dict = {"condition": cond}
         if s.max_iterations is not None:
             cfg["max_iterations"] = s.max_iterations
-        cfg["outputs"] = {v: {"from": srcs[0] if len(srcs) == 1 else list(srcs)} for v, srcs in body.producers.items()}
+        cfg["state"] = {v: {"from": srcs[0] if len(srcs) == 1 else list(srcs)} for v, srcs in body.producers.items()}
         cfg["subgraph"] = {"nodes": body.nodes, "edges": body.edges}
         self._add(lid, "LOOP", ["trigger", "loop", "exit"], cfg)
         self._bind_inputs(lid, reads)

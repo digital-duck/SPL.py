@@ -258,7 +258,7 @@ END
     body = [n["id"] for n in loop["config"]["subgraph"]["nodes"]]
     assert "tool_2" in body and body[-1] == "tool_2"                                             # the last body step
     assert loop["config"]["condition"] == "NOT latest(@in_tool_1, @tool_2)"
-    assert "in_tool_1" in loop["ports"] and loop["config"]["outputs"]["tool_2"]["from"] == "tool_2.out_tool_2"
+    assert "in_tool_1" in loop["ports"] and loop["config"]["state"]["tool_2"]["from"] == "tool_2.out_tool_2"
 
 
 # -- lessons from lifting the 47 cookbook-solver recipes -------------------------------------------------
@@ -409,7 +409,7 @@ def test_a_return_inside_a_while_stops_the_loop_and_returns_after_it():
     assert warnings == []
     loop = next(n for n in g["nodes"] if n["type"] == "LOOP")
     assert "@early_exit_1) == FALSE" in loop["config"]["condition"]
-    assert {"early_exit_1", "early_value_1"} <= set(loop["config"]["outputs"])
+    assert {"early_exit_1", "early_value_1"} <= set(loop["config"]["state"])
     after = next(n for n in g["nodes"] if n["type"] == "EVALUATE")
     assert after["config"]["condition"] == "@in_early_exit_1 == TRUE"
     exits = [e["source"] for e in g["edges"] if e["target"] == "wf_exit.in_result"]
