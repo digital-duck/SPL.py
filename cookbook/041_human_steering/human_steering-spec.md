@@ -15,7 +15,7 @@ Produce a short, polished tech article on a given topic by pausing mid-workflow 
 | Parameter | Default | Description |
 |---|---|---|
 | `@topic` | `'The future of decentralized AI inference'` | The subject the article should be written about. |
-| `@log_dir` | `'cookbook/41_human_steering/logs-spl'` | Directory path where intermediate and final artifacts are written. |
+| `@log_dir` | `'cookbook/041_human_steering/logs-spl'` | Directory path where intermediate and final artifacts are written. |
 
 ---
 

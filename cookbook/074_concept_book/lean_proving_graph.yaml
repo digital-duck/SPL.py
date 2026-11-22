@@ -221,7 +221,7 @@ concepts:
     defines: the informal↔formal correspondence — the one link no kernel checks; a statement can typecheck,
       prove cleanly, and still not say what the prose claims (flipped quantifier, vacuous hypothesis)
     verifier: lean|sympy
-    lab: side-by-side prose/Lean review (see cookbook/76_lean_proof report format)
+    lab: side-by-side prose/Lean review (see cookbook/076_lean_proof report format)
     play: "formalize 'every positive number has a square root' two ways — over Nat and over Real — and
       explain why one is false and the other true"
     tier: 8
@@ -234,7 +234,7 @@ concepts:
       messages feed the repair loop; mathematics with AI on a foundation that cannot silently be wrong
       (the workflow Terence Tao advocates)
     verifier: lean|sympy
-    lab: SPL recipe 76 (cookbook/76_lean_proof) — generate-then-verify at proof grade
+    lab: SPL recipe 76 (cookbook/076_lean_proof) — generate-then-verify at proof grade
     play: give an LLM a claim you know, check its formalization for faithfulness, run its proof through
       the kernel, and feed the errors back once
     tier: 9

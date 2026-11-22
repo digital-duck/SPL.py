@@ -22,13 +22,13 @@ solve(problem) → @answer
 ## Usage
 
 ```bash
-spl3 run cookbook/16_reflection/reflection.spl --adapter ollama \
+spl3 run cookbook/016_reflection/reflection.spl --adapter ollama \
     problem="What are the trade-offs of microservices vs monoliths?"
 
-spl3 run cookbook/16_reflection/reflection.spl --adapter ollama \
+spl3 run cookbook/016_reflection/reflection.spl --adapter ollama \
     problem="Design a URL shortener system"
 
-spl3 run cookbook/16_reflection/reflection.spl --adapter ollama --model llama3.2 \
+spl3 run cookbook/016_reflection/reflection.spl --adapter ollama --model llama3.2 \
     problem="Explain why bubble sort is O(n^2)"
 ```
 

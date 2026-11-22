@@ -6,17 +6,17 @@
 -- reads the config, and map_merge() annotates the output with run metadata.
 --
 -- Usage:
---   spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama --model gemma3
+--   spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama --model gemma3
 --
---   spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama \
+--   spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama \
 --       format="invoice" \
 --       text="Invoice #INV-042 from Acme Corp, USD 3,750.00 due 2024-04-15, PO: PO-9901."
 --
---   spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter claude_cli \
+--   spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter claude_cli \
 --       format="contract" \
 --       text="$(cat contract.txt)" \
 --       model="claude-sonnet-4-6" \
---       log_dir="cookbook/27_data_extraction/logs-map"
+--       log_dir="cookbook/027_data_extraction/logs-map"
 
 CREATE FUNCTION extract_fields(text TEXT, fields TEXT) RETURN TEXT
 AS $$
@@ -38,7 +38,7 @@ WORKFLOW data_extraction_map
     @text    TEXT    DEFAULT 'Invoice #INV-2024-0042 from Acme Corp for USD 3,750.00, due 2024-04-15. PO reference: PO-9901.',
     @format  TEXT    DEFAULT 'invoice',
     @model   TEXT    DEFAULT 'gemma3',
-    @log_dir TEXT    DEFAULT 'cookbook/27_data_extraction/logs-map'
+    @log_dir TEXT    DEFAULT 'cookbook/027_data_extraction/logs-map'
   OUTPUT: @result TEXT
 DO
   -- Configuration MAP: format → comma-separated fields to extract.

@@ -68,25 +68,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/21_multi_model_pipeline/multi_model.spl \
+spl3 run cookbook/021_multi_model_pipeline/multi_model.spl \
     --adapter ollama --model gemma3 \
     topic="climate change"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/21_multi_model_pipeline/langgraph/multi_model_langgraph.py \
+python cookbook/021_multi_model_pipeline/langgraph/multi_model_langgraph.py \
     --topic "climate change"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/21_multi_model_pipeline/autogen/multi_model_autogen.py \
+python cookbook/021_multi_model_pipeline/autogen/multi_model_autogen.py \
     --topic "climate change"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/21_multi_model_pipeline/crewai/multi_model_crewai.py \
+python cookbook/021_multi_model_pipeline/crewai/multi_model_crewai.py \
     --topic "climate change"
 ```

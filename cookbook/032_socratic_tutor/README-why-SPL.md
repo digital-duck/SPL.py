@@ -65,25 +65,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/32_socratic_tutor/socratic_tutor.spl \
-    --adapter ollama --model gemma3 --tools cookbook/32_socratic_tutor/tools.py \
+spl3 run cookbook/032_socratic_tutor/socratic_tutor.spl \
+    --adapter ollama --model gemma3 --tools cookbook/032_socratic_tutor/tools.py \
     topic_id="recursion" subject="programming"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/32_socratic_tutor/langgraph/socratic_langgraph.py \
+python cookbook/032_socratic_tutor/langgraph/socratic_langgraph.py \
     --topic_id "recursion" --subject "programming"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/32_socratic_tutor/autogen/socratic_autogen.py \
+python cookbook/032_socratic_tutor/autogen/socratic_autogen.py \
     --topic_id "recursion" --subject "programming"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/32_socratic_tutor/crewai/socratic_crewai.py \
+python cookbook/032_socratic_tutor/crewai/socratic_crewai.py \
     --topic_id "recursion" --subject "programming"
 ```

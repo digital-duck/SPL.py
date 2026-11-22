@@ -89,7 +89,7 @@ Test the .spl
 ```bash
 spl3 run $OUT/S3-$RECIPE-$ADAPTER-$MODEL.spl \
   --adapter $ADAPTER --model $MODEL_ID \
-  --claude-allowed-tools WebSearch --tools cookbook/06_react_agent/tools.py country="China" \
+  --claude-allowed-tools WebSearch --tools cookbook/006_react_agent/tools.py country="China" \
     2>&1 | tee cookbook/out/06_react_agent-$(date +%Y%m%d_%H%M%S).md 
 
 ```

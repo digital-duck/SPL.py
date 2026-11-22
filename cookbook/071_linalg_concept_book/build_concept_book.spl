@@ -121,7 +121,7 @@ DO
         --     because what's cached here was already verified before being
         --     stored (see cache_put below — only post-ASSERT/verify_math/
         --     shape_check content ever reaches the cache). Mirrors the
-        --     pattern proven in cookbook/70_linalg_core_concepts/.
+        --     pattern proven in cookbook/070_linalg_core_concepts/.
         CALL cache_get(@concept) INTO @section
         EVALUATE @section
             WHEN = "miss" THEN

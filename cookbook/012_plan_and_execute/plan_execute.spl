@@ -3,11 +3,11 @@
 -- When output_dir is set, generated code files are written to disk one-by-one.
 --
 -- Usage:
---   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+--   spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama \
 --       task="Build a REST API for a todo app" \
---       output_dir="cookbook/12_plan_and_execute/output"
+--       output_dir="cookbook/012_plan_and_execute/output"
 --
---   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+--   spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama \
 --       task="Set up a CI/CD pipeline for a Python project"
 
 CREATE TOOL_API write_code_files(content TEXT, output_dir TEXT)
@@ -222,7 +222,7 @@ WORKFLOW plan_and_execute
         @output_dir TEXT DEFAULT "",
         @max_steps INTEGER DEFAULT 5,
         @max_replans INTEGER DEFAULT 3,
-        @log_dir TEXT DEFAULT 'cookbook/12_plan_and_execute/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/012_plan_and_execute/logs-spl'
     OUTPUT: @final_report TEXT
 DO
     @step_index := 0

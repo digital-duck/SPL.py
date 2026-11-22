@@ -4,15 +4,15 @@
 -- Demonstrates meta-cognitive loops and self-assessment patterns.
 --
 -- Usage:
---   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama --model gemma3 problem="What are the trade-offs of microservices vs monoliths?"
---   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama problem="Design a URL shortener system"
---   spl3 run cookbook/16_reflection/reflection.spl --adapter ollama problem="Explain why bubble sort is O(n^2)"
+--   spl3 run cookbook/016_reflection/reflection.spl --adapter ollama --model gemma3 problem="What are the trade-offs of microservices vs monoliths?"
+--   spl3 run cookbook/016_reflection/reflection.spl --adapter ollama problem="Design a URL shortener system"
+--   spl3 run cookbook/016_reflection/reflection.spl --adapter ollama problem="Explain why bubble sort is O(n^2)"
 
 WORKFLOW reflection_agent
     INPUT:
         @problem TEXT,
         @max_reflections Number DEFAULT 3,
-        @log_dir TEXT DEFAULT 'cookbook/16_reflection/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/016_reflection/logs-spl'
     OUTPUT: @answer TEXT
 DO
     @iteration := 0

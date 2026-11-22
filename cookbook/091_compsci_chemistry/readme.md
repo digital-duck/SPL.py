@@ -32,15 +32,15 @@ No new dependency — the formula parser and balance checker are pure stdlib Pyt
 
 ```bash
 # Default problem (combustion of methane: 1 CH4 + 2 O2 -> 1 CO2 + 2 H2O)
-spl3 run cookbook/91_compsci_chemistry/chemistry_balance.spl --llm claude_cli
+spl3 run cookbook/091_compsci_chemistry/chemistry_balance.spl --llm claude_cli
 
 # Custom problem (parenthesized formula)
-spl3 run cookbook/91_compsci_chemistry/chemistry_balance.spl \
+spl3 run cookbook/091_compsci_chemistry/chemistry_balance.spl \
     --llm ollama:gemma3 \
     --param problem="Neutralization: Ca(OH)2 + HCl -> CaCl2 + H2O"
 
 # Unaided baseline arm
-spl3 run cookbook/91_compsci_chemistry/chemistry_balance.spl \
+spl3 run cookbook/091_compsci_chemistry/chemistry_balance.spl \
     --llm claude_cli --param enable_solver=false
 ```
 

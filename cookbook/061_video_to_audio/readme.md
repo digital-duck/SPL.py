@@ -48,27 +48,27 @@ ffmpeg -version              # verify
 
 ```bash
 # Default — extract as MP3 at 192k
-python cookbook/61_video_to_audio/run.py \
-    --video cookbook/61_video_to_audio/sample/clip.mp4
+python cookbook/061_video_to_audio/run.py \
+    --video cookbook/061_video_to_audio/sample/clip.mp4
 
 # Extract as WAV (lossless, large)
-python cookbook/61_video_to_audio/run.py \
-    --video cookbook/61_video_to_audio/sample/clip.mp4 \
+python cookbook/061_video_to_audio/run.py \
+    --video cookbook/061_video_to_audio/sample/clip.mp4 \
     --target-format wav --sample-rate 48000
 
 # Extract as FLAC (lossless compressed, archival)
-python cookbook/61_video_to_audio/run.py \
-    --video cookbook/61_video_to_audio/sample/clip.mp4 \
+python cookbook/061_video_to_audio/run.py \
+    --video cookbook/061_video_to_audio/sample/clip.mp4 \
     --target-format flac
 
 # High-quality MP3
-python cookbook/61_video_to_audio/run.py \
-    --video cookbook/61_video_to_audio/sample/clip.mp4 \
+python cookbook/061_video_to_audio/run.py \
+    --video cookbook/061_video_to_audio/sample/clip.mp4 \
     --target-format mp3 --bitrate 320k
 
 # Custom output directory
-python cookbook/61_video_to_audio/run.py \
-    --video cookbook/61_video_to_audio/sample/clip.mp4 \
+python cookbook/061_video_to_audio/run.py \
+    --video cookbook/061_video_to_audio/sample/clip.mp4 \
     --output-dir /tmp/audio
 ```
 
@@ -78,12 +78,12 @@ python cookbook/61_video_to_audio/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@video` | VIDEO | `cookbook/61_video_to_audio/sample/clip.mp4` | Source video file path |
+| `@video` | VIDEO | `cookbook/061_video_to_audio/sample/clip.mp4` | Source video file path |
 | `@target_format` | TEXT | `mp3` | Output audio format: `mp3`, `wav`, `flac`, `ogg`, `m4a` |
 | `@bitrate` | TEXT | `192k` | Bitrate for lossy formats (e.g. `128k`, `192k`, `320k`) |
 | `@sample_rate` | INT | `44100` | Output sample rate in Hz |
-| `@output_dir` | TEXT | `cookbook/61_video_to_audio/outputs` | Directory to write extracted audio |
-| `@log_dir` | TEXT | `cookbook/61_video_to_audio/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/061_video_to_audio/outputs` | Directory to write extracted audio |
+| `@log_dir` | TEXT | `cookbook/061_video_to_audio/logs-spl` | Directory for log output |
 
 ---
 

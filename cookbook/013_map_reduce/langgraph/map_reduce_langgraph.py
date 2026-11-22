@@ -5,8 +5,8 @@ Pattern: chunk_plan → [summarize_chunk] → reduce_summaries → (quality_scor
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/13_map_reduce/langgraph/map_reduce_langgraph.py \\
-        --document "$(cat cookbook/13_map_reduce/large_doc.txt)" \\
+    python cookbook/013_map_reduce/langgraph/map_reduce_langgraph.py \\
+        --document "$(cat cookbook/013_map_reduce/large_doc.txt)" \\
         --style "bullet points"
 """
 
@@ -200,7 +200,7 @@ def build_graph():
 @click.option("--document", required=True, help="Document text to summarize")
 @click.option("--style", default="bullet points", help="Output style")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/13_map_reduce/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/013_map_reduce/logs-langgraph", help="Log directory")
 def main(document, style, model, log_dir):
     """Map-Reduce Summarizer — LangGraph edition"""
     build_graph().invoke({

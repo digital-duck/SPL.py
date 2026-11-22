@@ -5,7 +5,7 @@ Pattern: Fan-out prompt to multiple agents.
 
 Usage:
     pip install pyautogen
-    python cookbook/38_bedrock_quickstart/autogen/bedrock_autogen.py \\
+    python cookbook/038_bedrock_quickstart/autogen/bedrock_autogen.py \\
         --prompt "Explain the CAP theorem in two sentences."
 """
 
@@ -81,7 +81,7 @@ Evaluation: Accuracy, Conciseness, Recommendation."""
 @click.option("--model_2", default="anthropic.claude-haiku-4-5")
 @click.option("--model_3", default="amazon.nova-pro")
 @click.option("--judge_model", default="gemma3")
-@click.option("--log-dir", default="cookbook/38_bedrock_quickstart/logs-autogen")
+@click.option("--log-dir", default="cookbook/038_bedrock_quickstart/logs-autogen")
 def main(prompt, model_1, model_2, model_3, judge_model, log_dir):
     """Bedrock Quickstart — AutoGen edition"""
     run(prompt, model_1, model_2, model_3, judge_model, log_dir)

@@ -19,14 +19,14 @@ CALL researcher(@topic)            → @research
 ## Usage
 
 ```bash
-spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama \
+spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama \
     topic="Future of renewable energy" \
     2>&1 | tee cookbook/out/14_multi_agent-$(date +%Y%m%d_%H%M%S).md
 
-spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama \
+spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama \
     topic="Impact of AI on healthcare"
 
-spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama --model llama3.2 \
+spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama --model llama3.2 \
     topic="State of quantum computing in 2025"
 ```
 

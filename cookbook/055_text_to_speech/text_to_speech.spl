@@ -42,9 +42,9 @@ WORKFLOW text_to_speech
         @tone         TEXT   DEFAULT 'neutral',
         @model        TEXT   DEFAULT 'tts-1',
         @prep         BOOL   DEFAULT FALSE,
-        @output_dir   TEXT   DEFAULT 'cookbook/55_text_to_speech/outputs',
+        @output_dir   TEXT   DEFAULT 'cookbook/055_text_to_speech/outputs',
         @llm_model    TEXT   DEFAULT 'gemma4:e4b',
-        @log_dir      TEXT   DEFAULT 'cookbook/55_text_to_speech/logs-spl'
+        @log_dir      TEXT   DEFAULT 'cookbook/055_text_to_speech/logs-spl'
     OUTPUT: @audio_path AUDIO
 DO
     LOGGING f'[text_to_speech] voice={@voice} model={@model} chars={len(@text)}' LEVEL INFO

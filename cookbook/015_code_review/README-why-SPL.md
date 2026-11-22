@@ -65,25 +65,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/15_code_review/code_review.spl \
+spl3 run cookbook/015_code_review/code_review.spl \
     --adapter ollama --model gemma3 \
     code="def foo(x): return eval(x)"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/15_code_review/langgraph/code_review_langgraph.py \
+python cookbook/015_code_review/langgraph/code_review_langgraph.py \
     --code "def foo(x): return eval(x)"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/15_code_review/autogen/code_review_autogen.py \
+python cookbook/015_code_review/autogen/code_review_autogen.py \
     --code "def foo(x): return eval(x)"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/15_code_review/crewai/code_review_crewai.py \
+python cookbook/015_code_review/crewai/code_review_crewai.py \
     --code "def foo(x): return eval(x)"
 ```

@@ -52,7 +52,7 @@ what no existing ed-tech stack can deliver.
 
 ### 3.1 Concept Graphs (YAML — first-class format)
 
-Located in `cookbook/74_concept_book/`. Each `*_graph.yaml` is a self-contained
+Located in `cookbook/074_concept_book/`. Each `*_graph.yaml` is a self-contained
 domain definition with nodes typed as `primitive | concept | application`, prereq
 edges via `composed_of`/`needs`, and optional `verifier`, `lab`, `play` metadata.
 
@@ -105,7 +105,7 @@ productivity order (topological + reach-weighted).
 
 ### 3.4 Content Generator (recipe 74)
 
-`cookbook/74_concept_book/build_concept_book.spl` generates one verified section
+`cookbook/074_concept_book/build_concept_book.spl` generates one verified section
 per concept node: SymPy/Sage computes the math, LLM writes the narrative.
 The `.spl` workflow is domain-agnostic — `@domain_yaml` selects the graph at runtime.
 
@@ -202,7 +202,7 @@ Architecture options:
 
 SPL backend call (option B):
 ```bash
-spl3 run cookbook/74_concept_book/build_concept_book.spl \
+spl3 run cookbook/074_concept_book/build_concept_book.spl \
     --llm claude_cli \
     --param domain_yaml=linalg_graph.yaml \
     --param target_node=eigenpair
@@ -466,9 +466,9 @@ node navigates directly to its generated section and back.
 | Path | Role |
 |---|---|
 | `scripts/concept_graph.py` | Graph toolkit CLI (import/export/convert/visualize) |
-| `cookbook/74_concept_book/` | Domain graphs + concept-book generator workflow |
-| `cookbook/74_concept_book/graph_lib.py` | Shared graph algorithms (verify, teaching order) |
-| `cookbook/74_concept_book/build_concept_book.spl` | Content generator (to rename Phase 1) |
+| `cookbook/074_concept_book/` | Domain graphs + concept-book generator workflow |
+| `cookbook/074_concept_book/graph_lib.py` | Shared graph algorithms (verify, teaching order) |
+| `cookbook/074_concept_book/build_concept_book.spl` | Content generator (to rename Phase 1) |
 | `spl3/splc/transpiler_domain_textbook.py` | Jupyter notebook transpiler |
 | `docs/DEV/sage_lean_integration_plan.md` | Verifier ladder design |
 | `docs/DEV/ROADMAP.md` | Overall SPL roadmap |

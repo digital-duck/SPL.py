@@ -12,7 +12,7 @@ Automatically improve a failing LLM prompt by generating two targeted variants v
 |---|---|---|
 | `@baseline_prompt` | `'Summarize this technical document.'` | The original prompt to be improved |
 | `@failed_case` | `'The document describes a complex quantum algorithm.'` | The specific input on which the baseline prompt underperforms |
-| `@log_dir` | `'cookbook/43_prompt_self_tuning/logs-spl'` | Directory path where the winning prompt file is written |
+| `@log_dir` | `'cookbook/043_prompt_self_tuning/logs-spl'` | Directory path where the winning prompt file is written |
 
 ## 3. Process
 

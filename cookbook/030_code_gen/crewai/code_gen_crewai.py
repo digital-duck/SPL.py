@@ -5,7 +5,7 @@ Pattern: Spec → Implement → Review → (fix if needed) → Test → Assemble
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/30_code_gen/crewai/code_gen_crewai.py \\
+    python cookbook/030_code_gen/crewai/code_gen_crewai.py \\
         --spec "A function that validates an email address"
 """
 
@@ -98,7 +98,7 @@ def run(spec_input: str, language: str, framework: str, model: str, log_dir: str
 @click.option("--language", default="Python", help="Programming language")
 @click.option("--framework", default="pytest", help="Test framework")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/30_code_gen/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/030_code_gen/logs-crewai", help="Log directory")
 def main(spec, language, framework, model, log_dir):
     """Code Generator + Tests — CrewAI edition"""
     run(spec, language, framework, model, log_dir)

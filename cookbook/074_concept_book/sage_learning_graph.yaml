@@ -196,7 +196,7 @@ concepts:
     defines: SageManifolds — charts, metrics, connections, curvature; differential geometry as executable
       mathematics
     verifier: sage
-    lab: classical_mechanics_seed.sphere_scalar_curvature (SageManifolds; see cookbook/74_concept_book/classical_mechanics_seed.py)
+    lab: classical_mechanics_seed.sphere_scalar_curvature (SageManifolds; see cookbook/074_concept_book/classical_mechanics_seed.py)
     play: build the round 2-sphere and compute its Ricci scalar — exactly 2/r^2, symbolically
     tier: 5
   conjecture_loop:

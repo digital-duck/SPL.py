@@ -58,36 +58,36 @@ plan(task) → @plan
 
 ```bash
 # Basic planning only (no code output)
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama \
     task="Build a REST API for a todo app"
 
 # Generate and write code to disk (one file per LLM call — reliable for any model)
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl \
     --adapter ollama --model "qwen2.5-coder" \
-    --tools cookbook/12_plan_and_execute/tools.py \
+    --tools cookbook/012_plan_and_execute/tools.py \
     task="Build a REST API for a todo app" \
-    output_dir="cookbook/12_plan_and_execute/output" \
+    output_dir="cookbook/012_plan_and_execute/output" \
     max_steps=4 \
     2>&1 | tee cookbook/out/12_plan_and_execute-ollama-qwen2.5-$(date +%Y%m%d_%H%M%S).md
 
 # code quality is bad, use Claude Code
 
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl \
     --adapter claude_cli --model claude-sonnet-4-6 \
-    --tools cookbook/12_plan_and_execute/tools.py \
+    --tools cookbook/012_plan_and_execute/tools.py \
     task="Build a REST API for a todo app" \
-    output_dir="cookbook/12_plan_and_execute/output" \
+    output_dir="cookbook/012_plan_and_execute/output" \
     max_steps=4 \
     2>&1 | tee cookbook/out/12_plan_and_execute-claude-sonnet-$(date +%Y%m%d_%H%M%S).md
 # see log
 # /home/gongai/projects/digital-duck/SPL20/cookbook/out/12_plan_and_execute-claude-sonnet4.6-20260321_025923.md
 
-# see /home/gongai/projects/digital-duck/SPL20/cookbook/12_plan_and_execute/output-claude-sonnet4-6/README.md
+# see /home/gongai/projects/digital-duck/SPL20/cookbook/012_plan_and_execute/output-claude-sonnet4-6/README.md
 
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama \
     task="Set up a CI/CD pipeline for a Python project"
 
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama \
     task="Migrate a MySQL database to PostgreSQL"
 ```
 
@@ -213,11 +213,11 @@ Running with `qwen2.5-coder` produced 4 files but they were **not runnable toget
 ### Recommended command (sonnet 4.6)
 
 ```bash
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl \
     --adapter claude_cli --model claude-sonnet-4-6 \
-    --tools cookbook/12_plan_and_execute/tools.py \
+    --tools cookbook/012_plan_and_execute/tools.py \
     task="Build a REST API for a todo app" \
-    output_dir="cookbook/12_plan_and_execute/output" \
+    output_dir="cookbook/012_plan_and_execute/output" \
     max_steps=4 \
     2>&1 | tee cookbook/out/12_plan_and_execute-claude-$(date +%Y%m%d_%H%M%S).md
 ```
@@ -229,7 +229,7 @@ After the SPL recipe generates and fixes the backend, two frontend apps were han
 ### Step 1 — start the backend
 
 ```bash
-cd cookbook/12_plan_and_execute/output-claude-sonnet4-6
+cd cookbook/012_plan_and_execute/output-claude-sonnet4-6
 pip install -r requirements.txt
 uvicorn main:app --reload
 # API running at http://localhost:8000
@@ -246,7 +246,7 @@ uvicorn main:app --reload
 conda activate spl
 cd ~/projects/digital-duck/SPL20
 python3 -m http.server 3001 \
-    --directory cookbook/12_plan_and_execute/front-end-simple
+    --directory cookbook/012_plan_and_execute/front-end-simple
 # open http://localhost:3001
 ```
 
@@ -269,7 +269,7 @@ Good starting point — all logic in one file, readable top to bottom.
 **Requires Node.js.** Uses Vite as the dev server; no CORS config needed (Vite proxies `/api` → `http://localhost:8000`).
 
 ```bash
-cd cookbook/12_plan_and_execute/front-end-vuejs
+cd cookbook/012_plan_and_execute/front-end-vuejs
 npm install
 npm run dev
 # open http://localhost:5173
@@ -315,4 +315,4 @@ State lives in one place; children only display and report user actions.
 
 ## Tools
 
-`tools.py` provides `write_code_files(content, output_dir)` — parses fenced code blocks with `# filename: path` as the first line and writes each to `output_dir`. Loaded with `--tools cookbook/12_plan_and_execute/tools.py`.
+`tools.py` provides `write_code_files(content, output_dir)` — parses fenced code blocks with `# filename: path` as the first line and writes each to `output_dir`. Loaded with `--tools cookbook/012_plan_and_execute/tools.py`.

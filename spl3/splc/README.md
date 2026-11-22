@@ -20,18 +20,18 @@ The `.spl` file never changes when you retarget. Only the compiled output change
 ```bash
 # Compile to Go (uses LLM pretrained knowledge)
 python spl/splc/cli.py \
-    --spl cookbook/05_self_refine/self_refine.spl \
+    --spl cookbook/005_self_refine/self_refine.spl \
     --lang go
 
 # Compile to LangGraph Python with a reference codebase
 python spl/splc/cli.py \
-    --spl cookbook/05_self_refine/self_refine.spl \
+    --spl cookbook/005_self_refine/self_refine.spl \
     --lang python/langgraph \
     --references https://github.com/langchain-ai/langgraph
 
 # Preview the prompt without calling the LLM
 python spl/splc/cli.py \
-    --spl cookbook/05_self_refine/self_refine.spl \
+    --spl cookbook/005_self_refine/self_refine.spl \
     --lang python/crewai \
     --dry-run --verbose
 ```
@@ -261,11 +261,11 @@ back to its logical source.
 
 ## Existing compiled targets
 
-`cookbook/05_self_refine/` serves as the reference recipe. It has been compiled
+`cookbook/005_self_refine/` serves as the reference recipe. It has been compiled
 to all currently supported targets:
 
 ```
-cookbook/05_self_refine/
+cookbook/005_self_refine/
 ├── self_refine.spl                         ← logical view (source of truth)
 └── targets/
     ├── go/

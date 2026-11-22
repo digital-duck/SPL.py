@@ -23,7 +23,7 @@ ollama pull qwen2.5
 
 ```bash
 # From SPL20/ root
-python cookbook/17_tree_of_thought/autogen/tree_of_thought_autogen.py \
+python cookbook/017_tree_of_thought/autogen/tree_of_thought_autogen.py \
     --problem "How can we reduce microplastic pollution in oceans?"
 ```
 
@@ -42,12 +42,12 @@ FINAL SOLUTION:
 <solution text>
 ```
 
-Check logs in `cookbook/17_tree_of_thought/autogen/logs-autogen`.
+Check logs in `cookbook/017_tree_of_thought/autogen/logs-autogen`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/17_tree_of_thought/tree_of_thought.spl \
+spl3 run cookbook/017_tree_of_thought/tree_of_thought.spl \
     --adapter ollama \
     problem="How can we reduce microplastic pollution in oceans?"
 ```

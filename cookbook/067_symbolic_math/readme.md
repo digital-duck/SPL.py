@@ -48,16 +48,16 @@ pip install sympy
 ## Run
 
 ```bash
-spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3
 
 # Custom problem
-spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3 \
     --param problem="differentiate 3x cubed plus 2x"
 
 # With self-healing (auto-installs sympy if missing)
-spl3 run cookbook/67_symbolic_math/hello_symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/hello_symbolic_math.spl \
     --adapter ollama --model gemma3 --self-healing \
     --param problem="integrate sine of x"
 ```
@@ -148,21 +148,21 @@ GENERATE explain_chain()             → probabilistic: plain-English walkthroug
 
 `solve_one_step` is a `WORKFLOW` `CALL`ed from another `WORKFLOW` — the same
 "`CALL <workflow>` step-by-step" composition `self_refine.spl` uses for
-`critique_workflow` (see `cookbook/05_self_refine/self_refine.spl`).
+`critique_workflow` (see `cookbook/005_self_refine/self_refine.spl`).
 
 ## Run
 
 ```bash
-spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl \
+spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl \
     --adapter ollama --model gemma3
 
 # Custom multi-step problem
-spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl \
+spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl \
     --adapter ollama --model gemma3 \
     --param problem="expand (x+1) squared, then factor the expanded form"
 
 # With self-healing (auto-installs sympy if missing)
-spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl \
+spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl \
     --adapter ollama --model gemma3 --self-healing \
     --param problem="differentiate e**x and then simplify the result"
 ```
@@ -193,7 +193,7 @@ chain — `decompose_problem` (planning) and `explain_chain` (narration):
 | `gemma4:12b` (ollama) | 389 tokens, 19.3s → `3*x**3-x\|diff` / `PREV\|factor` (eventually correct, ~20-65x the cost) | same | **1000 tokens, 39.7s → empty.** `WARNING: GENERATE chain returned empty content for @explanation` — `Output: (no COMMIT)` | ❌ fails |
 
 ```
-spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
+spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ...
 Output:  We're asked to find the derivative of 3x³ - x and then factor the result if
@@ -204,7 +204,7 @@ LLM calls: 2  Latency: 6500ms
 ```
 
 ```
-$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma4:12b \
+$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma4:12b \
       --param problem="differentiate 3*x**3-x, then factor if needed"
 ...
 GENERATE segment 1 (explain_chain) -> 1000 tokens, 39730ms
@@ -280,7 +280,7 @@ the chain, at a fraction of the token cost.
 5. **Deterministic helpers mirror recipe 13's map-reduce pattern.** `step_count`
    and `extract_step` are zero-token `CREATE TOOL_API` functions — the same
    "count, then index" shape as `chunk_plan` / `extract_chunk` in
-   `cookbook/13_map_reduce/tools.py` — used here to drive the `WHILE` loop over
+   `cookbook/013_map_reduce/tools.py` — used here to drive the `WHILE` loop over
    the LLM-decomposed step list without any further LLM calls.
 
 ---

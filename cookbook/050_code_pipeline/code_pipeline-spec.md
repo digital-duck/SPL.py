@@ -20,7 +20,7 @@ Transforms a plain-text specification into reviewed, tested, documented source c
 | `@task_models` | `{}` | Map of per-task model overrides; keys: `analyze`, `generate`, `review`, `improve`, `test`, `document`, `extract`, `judge` |
 | `@max_cycles` | `3` | Maximum generate→review→improve→test retry iterations before proceeding regardless of test outcome |
 | `@check_closure` | `TRUE` | Whether to run the spec-vs-derived-spec closure check at the end |
-| `@log_dir` | `'cookbook/50_code_pipeline/logs-spl'` | Root directory for all file artifacts written during the run |
+| `@log_dir` | `'cookbook/050_code_pipeline/logs-spl'` | Root directory for all file artifacts written during the run |
 
 ---
 

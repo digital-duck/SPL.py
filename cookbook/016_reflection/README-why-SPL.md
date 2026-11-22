@@ -67,25 +67,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/16_reflection/reflection.spl \
+spl3 run cookbook/016_reflection/reflection.spl \
     --adapter ollama --model gemma3 \
     problem="What are the trade-offs of microservices vs monoliths?"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/16_reflection/langgraph/reflection_langgraph.py \
+python cookbook/016_reflection/langgraph/reflection_langgraph.py \
     --problem "What are the trade-offs of microservices vs monoliths?"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/16_reflection/autogen/reflection_autogen.py \
+python cookbook/016_reflection/autogen/reflection_autogen.py \
     --problem "What are the trade-offs of microservices vs monoliths?"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/16_reflection/crewai/reflection_crewai.py \
+python cookbook/016_reflection/crewai/reflection_crewai.py \
     --problem "What are the trade-offs of microservices vs monoliths?"
 ```

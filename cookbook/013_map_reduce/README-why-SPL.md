@@ -89,32 +89,32 @@ pip install -r requirements-cookbook.txt
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/13_map_reduce/map_reduce.spl \
-    --adapter ollama --model gemma3 --tools cookbook/13_map_reduce/tools.py \
-    document="$(cat cookbook/13_map_reduce/data/large_doc.txt)" \
+spl3 run cookbook/013_map_reduce/map_reduce.spl \
+    --adapter ollama --model gemma3 --tools cookbook/013_map_reduce/tools.py \
+    document="$(cat cookbook/013_map_reduce/data/large_doc.txt)" \
     style="bullet points"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/13_map_reduce/langgraph/map_reduce_langgraph.py \
-    --document "$(cat cookbook/13_map_reduce/data/large_doc.txt)" \
+python cookbook/013_map_reduce/langgraph/map_reduce_langgraph.py \
+    --document "$(cat cookbook/013_map_reduce/data/large_doc.txt)" \
     --model "gemma3" \
     --style "bullet points"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/13_map_reduce/autogen/map_reduce_autogen.py \
-    --document "$(cat cookbook/13_map_reduce/data/large_doc.txt)" \
+python cookbook/013_map_reduce/autogen/map_reduce_autogen.py \
+    --document "$(cat cookbook/013_map_reduce/data/large_doc.txt)" \
     --model "gemma3" \
     --style "bullet points"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/13_map_reduce/crewai/map_reduce_crewai.py \
-    --document "$(cat cookbook/13_map_reduce/data/large_doc.txt)" \
+python cookbook/013_map_reduce/crewai/map_reduce_crewai.py \
+    --document "$(cat cookbook/013_map_reduce/data/large_doc.txt)" \
     --model "gemma3" \
     --style "bullet points"
 ```

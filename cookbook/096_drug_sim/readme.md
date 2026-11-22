@@ -43,14 +43,14 @@ Interactions (severity, illustrative only):
 
 ```bash
 # Default: a well-known contraindicated pair (sildenafil + nitroglycerin)
-spl3 run cookbook/96_drug_sim/drug_sim.spl --llm claude_cli
+spl3 run cookbook/096_drug_sim/drug_sim.spl --llm claude_cli
 
 # Moderate-severity repair-loop path
-spl3 run cookbook/96_drug_sim/drug_sim.spl --llm ollama:gemma4 \
+spl3 run cookbook/096_drug_sim/drug_sim.spl --llm ollama:gemma4 \
     --param clinical_note="Patient is on lisinopril 10mg daily for hypertension and spironolactone 25mg daily for heart failure."
 
 # Unaided baseline arm
-spl3 run cookbook/96_drug_sim/drug_sim.spl --llm claude_cli --param enable_solver=false
+spl3 run cookbook/096_drug_sim/drug_sim.spl --llm claude_cli --param enable_solver=false
 ```
 
 ## Verified (2026-07-26, `--llm ollama:gemma4`)

@@ -2,10 +2,10 @@
 -- Demonstrates: WHILE loops, CREATE FUNCTION (persona injection), iterative logging
 --
 -- Usage:
---   spl3 run cookbook/49_regulatory_news_audit/audit_news.spl \
+--   spl3 run cookbook/049_regulatory_news_audit/audit_news.spl \
 --       --adapter ollama \
---       --tools cookbook/49_regulatory_news_audit/tools.py \
---       news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt
+--       --tools cookbook/049_regulatory_news_audit/tools.py \
+--       news_batch_path=cookbook/049_regulatory_news_audit/data/news_feed.txt
 
 -- Compliance persona + audit instruction combined in one function.
 -- (regulatory_auditor() persona is inlined here so GENERATE receives it
@@ -27,8 +27,8 @@ $$;
 
 WORKFLOW news_sentiment_monitor
 INPUT:
-  @news_batch_path TEXT DEFAULT 'cookbook/49_regulatory_news_audit/data/news_feed.txt',
-  @log_dir TEXT DEFAULT 'cookbook/49_regulatory_news_audit/logs-spl'
+  @news_batch_path TEXT DEFAULT 'cookbook/049_regulatory_news_audit/data/news_feed.txt',
+  @log_dir TEXT DEFAULT 'cookbook/049_regulatory_news_audit/logs-spl'
 OUTPUT: @compliance_report TEXT
 DO
   LOGGING f'Starting compliance feed from "{@news_batch_path}" ...' LEVEL INFO

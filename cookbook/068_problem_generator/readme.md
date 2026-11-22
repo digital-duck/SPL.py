@@ -53,11 +53,11 @@ pip install sympy
 
 ```bash
 # Default: 3 medium quadratic-equation problems
-spl3 run cookbook/68_problem_generator/problem_generator.spl \
+spl3 run cookbook/068_problem_generator/problem_generator.spl \
     --llm claude_cli
 
 # Custom topic, difficulty, and count
-spl3 run cookbook/68_problem_generator/problem_generator.spl \
+spl3 run cookbook/068_problem_generator/problem_generator.spl \
     --llm claude_cli \
     --param topic="derivatives" \
     --param difficulty="hard" \

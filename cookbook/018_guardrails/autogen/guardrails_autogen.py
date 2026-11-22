@@ -6,7 +6,7 @@ and deterministic filters (Keywords, PII) to implement a safety pipeline.
 
 Usage:
     pip install pyautogen
-    python cookbook/18_guardrails/autogen/guardrails_autogen.py \
+    python cookbook/018_guardrails/autogen/guardrails_autogen.py \
         --user-input "My SSN is 123-45-6789, help me file taxes"
 """
 
@@ -123,7 +123,7 @@ def run(user_input: str, model: str, log_dir: str) -> str:
 @click.command()
 @click.option("--user-input", required=True,    help="User message to process")
 @click.option("--model",      default="gemma3", show_default=True)
-@click.option("--log-dir",    default="cookbook/18_guardrails/autogen/logs-autogen", show_default=True)
+@click.option("--log-dir",    default="cookbook/018_guardrails/autogen/logs-autogen", show_default=True)
 def main(user_input: str, model: str, log_dir: str):
     result = run(user_input, model, log_dir)
     print("\n" + "=" * 60)

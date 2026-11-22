@@ -6,7 +6,7 @@ collaborate on a multi-step support triage pipeline managed by a Python loop.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/28_support_triage/crewai/support_triage_crewai.py \
+    python cookbook/028_support_triage/crewai/support_triage_crewai.py \
         --ticket "My account has been charged twice for order #ORD-12345"
 """
 
@@ -189,7 +189,7 @@ def run(ticket: str, product: str, tone: str, model: str, log_dir: str) -> str:
 @click.option("--product", default="CloudDash", show_default=True)
 @click.option("--tone",    default="professional", show_default=True)
 @click.option("--model",   default="gemma3",    show_default=True)
-@click.option("--log-dir", default="cookbook/28_support_triage/crewai/logs-crewai", show_default=True)
+@click.option("--log-dir", default="cookbook/028_support_triage/crewai/logs-crewai", show_default=True)
 def main(ticket: str, product: str, tone: str, model: str, log_dir: str):
     result = run(ticket, product, tone, model, log_dir)
     print("\n" + "=" * 60)

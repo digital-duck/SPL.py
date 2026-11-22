@@ -12,7 +12,7 @@ Summarize an arbitrarily large document by splitting it into manageable chunks, 
 |---|---|---|
 | `@document` | *(required)* | Full text of the document to summarize |
 | `@style` | *(required)* | Desired output style for the final summary (e.g. `"bullet points"`, `"executive brief"`) |
-| `@log_dir` | `cookbook/13_map_reduce/logs-spl` | Directory path where chunk files, per-chunk summaries, and the final summary are written |
+| `@log_dir` | `cookbook/013_map_reduce/logs-spl` | Directory path where chunk files, per-chunk summaries, and the final summary are written |
 
 ## 3. Process
 

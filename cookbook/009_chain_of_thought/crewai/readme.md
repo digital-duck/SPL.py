@@ -23,14 +23,14 @@ ollama pull gemma3   # or any model you prefer
 
 ```bash
 # From SPL20/ root
-python cookbook/09_chain_of_thought/crewai/chain_crewai.py \
+python cookbook/009_chain_of_thought/crewai/chain_crewai.py \
     --topic "distributed AI inference"
 
 # Custom model
-python cookbook/09_chain_of_thought/crewai/chain_crewai.py \
+python cookbook/009_chain_of_thought/crewai/chain_crewai.py \
     --topic "quantum computing" \
     --model llama3.2 \
-    --log-dir cookbook/09_chain_of_thought/crewai/logs
+    --log-dir cookbook/009_chain_of_thought/crewai/logs
 ```
 
 ## Validate
@@ -54,7 +54,7 @@ logs/final.md      ← committed output
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/09_chain_of_thought/chain.spl \
+spl3 run cookbook/009_chain_of_thought/chain.spl \
     --adapter ollama --model gemma3 \
     topic="distributed AI inference"
 ```

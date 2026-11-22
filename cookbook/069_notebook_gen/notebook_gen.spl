@@ -19,11 +19,11 @@
 --   assemble_notebook    — tools.spl (CREATE TOOL_API): builds the .ipynb safely
 --
 -- Run:
---   spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+--   spl3 run cookbook/069_notebook_gen/notebook_gen.spl \
 --       --kernel --adapter ollama
 --
 -- With custom topic:
---   spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+--   spl3 run cookbook/069_notebook_gen/notebook_gen.spl \
 --       --kernel --adapter ollama \
 --       -p topic="dot products and orthogonality" \
 --       -p matrix_a="[[1, 0], [0, -1]]"
@@ -65,8 +65,8 @@ WORKFLOW notebook_gen
     INPUT:
         @topic       TEXT DEFAULT 'eigenvalues and eigenvectors',
         @matrix_a    TEXT DEFAULT '[[4, 1], [2, 3]]',
-        @output_path TEXT DEFAULT 'cookbook/69_notebook_gen/output/eigenvalues.ipynb',
-        @log_dir     TEXT DEFAULT 'cookbook/69_notebook_gen/logs-spl'
+        @output_path TEXT DEFAULT 'cookbook/069_notebook_gen/output/eigenvalues.ipynb',
+        @log_dir     TEXT DEFAULT 'cookbook/069_notebook_gen/logs-spl'
     OUTPUT: @notebook_path TEXT
 DO
     CALL now_iso() INTO @run_ts;

@@ -5,7 +5,7 @@ Pattern: Researcher → Analyst → Writer (Sequential chat)
 
 Usage:
     pip install pyautogen
-    python cookbook/14_multi_agent/autogen/multi_agent_autogen.py \\
+    python cookbook/014_multi_agent/autogen/multi_agent_autogen.py \\
         --topic "Impact of AI on healthcare"
 """
 
@@ -63,7 +63,7 @@ def run(topic: str, model: str, log_dir: str):
 @click.command()
 @click.option("--topic", required=True, help="Topic for the report")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/14_multi_agent/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/014_multi_agent/logs-autogen", help="Log directory")
 def main(topic, model, log_dir):
     """Multi-Agent Collaboration — AutoGen edition"""
     run(topic, model, log_dir)

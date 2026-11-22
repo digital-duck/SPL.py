@@ -2,7 +2,7 @@
 -- Compares multiple models using a WHILE loop and a results MAP.
 --
 -- Usage:
---   spl3 run cookbook/04_model_showdown/showdown_map.spl --adapter ollama \
+--   spl3 run cookbook/004_model_showdown/showdown_map.spl --adapter ollama \
 --       prompt="What is the meaning of life?"
 
 CREATE FUNCTION compare_all(
@@ -29,7 +29,7 @@ WORKFLOW model_showdown_map
     INPUT:
         @prompt TEXT DEFAULT 'What is the meaning of life?',
         @models LIST DEFAULT ['gemma3', 'phi4', 'qwen2.5'],
-        @log_dir TEXT DEFAULT 'cookbook/04_model_showdown/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/004_model_showdown/logs-spl'
     OUTPUT: @comparison TEXT
 DO
     @results := {}

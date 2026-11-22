@@ -5,17 +5,17 @@
 -- Supports pre-built experiments from experiments.json or ad-hoc task + prompt_a + prompt_b.
 --
 -- Usage (from catalog):
---   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
---       --tools cookbook/26_ab_test/tools.py \
+--   spl3 run cookbook/026_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/026_ab_test/tools.py \
 --       experiment_id=neural_networks
 --
---   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
---       --tools cookbook/26_ab_test/tools.py \
+--   spl3 run cookbook/026_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/026_ab_test/tools.py \
 --       experiment_id=standing_desk winner_threshold=2.0
 --
 -- Usage (ad-hoc — no catalog):
---   spl3 run cookbook/26_ab_test/ab_test.spl --adapter ollama --model gemma3 \
---       --tools cookbook/26_ab_test/tools.py \
+--   spl3 run cookbook/026_ab_test/ab_test.spl --adapter ollama --model gemma3 \
+--       --tools cookbook/026_ab_test/tools.py \
 --       task="Explain neural networks" \
 --       prompt_a="Explain like I'm 5" \
 --       prompt_b="Give a technical explanation with analogies"

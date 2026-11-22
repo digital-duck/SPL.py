@@ -2,13 +2,13 @@
   "splc_version": "0.1.0",
   "generated_at": "2026-06-07T13:54:08.492390+00:00",
   "source": {
-    "spl_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
+    "spl_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
     "spl_sha256": "3f299bd04fa1f23a"
   },
   "target": {
     "lang": "python/linalg",
     "label": "Python \u2014 linalg concept-book (.ipynb via linalg_graph)",
-    "output_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/70_linalg_core_concepts/targets/python_linalg/chapter-1-vector-spaces-1A-real-complex_python_linalg.ipynb"
+    "output_file": "/home/gongai/projects/digital-duck/SPL.py/cookbook/070_linalg_core_concepts/targets/python_linalg/chapter-1-vector-spaces-1A-real-complex_python_linalg.ipynb"
   },
   "compilation": {
     "adapter": "claude_cli",

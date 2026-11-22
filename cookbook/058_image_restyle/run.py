@@ -17,21 +17,21 @@ Both the original analysis (TEXT) and the new image (IMAGE) are produced.
 Usage
 -----
   # Default style (watercolor)
-  python cookbook/58_image_restyle/run.py --image path/to/photo.jpg
+  python cookbook/058_image_restyle/run.py --image path/to/photo.jpg
 
   # Custom style
-  python cookbook/58_image_restyle/run.py \\
+  python cookbook/058_image_restyle/run.py \\
       --image photo.jpg \\
       --style "Studio Ghibli anime, soft illustration, warm colors"
 
   # Oil painting, preserve composition
-  python cookbook/58_image_restyle/run.py \\
+  python cookbook/058_image_restyle/run.py \\
       --image photo.jpg \\
       --style "oil painting, impressionist, thick brushstrokes" \\
       --preserve "composition, lighting, main subject"
 
   # Landscape, high quality
-  python cookbook/58_image_restyle/run.py \\
+  python cookbook/058_image_restyle/run.py \\
       --image photo.jpg --style "cyberpunk neon" \\
       --aspect landscape --quality high
 """
@@ -223,7 +223,7 @@ async def run(
 @click.option("--vision-model", default="gemma4:12b", show_default=True,
               help="Ollama vision model for image analysis")
 @click.option("--max-dim",      default=1024, show_default=True, type=int)
-@click.option("--output-dir",   default="cookbook/58_image_restyle/outputs", show_default=True)
+@click.option("--output-dir",   default="cookbook/058_image_restyle/outputs", show_default=True)
 def main(image, style, preserve, aspect, quality, vision_model, max_dim, output_dir) -> None:
     """Recipe 54 — Image Restyle (IMAGE+TEXT → TEXT+IMAGE)."""
     out_dir = Path(output_dir)

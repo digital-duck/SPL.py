@@ -88,7 +88,7 @@ Run a recipe against the grid:
 ```bash
 export MOMAGRID_HUB_URL=http://192.168.x.x:9000
 
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
      --adapter momagrid -m llama3.2 \
      --param topic="Why is the sky blue?"
 ```

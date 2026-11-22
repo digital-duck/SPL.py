@@ -24,9 +24,9 @@ Two-part output from a review session, to be implemented in a follow-up chat:
 
 ### 3. Real code duplication in media recipes
 
-The same `convert_audio()` ffmpeg logic is implemented **three times**: `cookbook/tools/audio_tools.py`, `cookbook/tools/stdlib_media.spl` (inline Python), and `cookbook/59_audio_convert/run.py` (reimplements it standalone instead of calling the shared tool). Only 5 of ~79 `.spl` files actually import from `cookbook/tools/` at all.
+The same `convert_audio()` ffmpeg logic is implemented **three times**: `cookbook/tools/audio_tools.py`, `cookbook/tools/stdlib_media.spl` (inline Python), and `cookbook/059_audio_convert/run.py` (reimplements it standalone instead of calling the shared tool). Only 5 of ~79 `.spl` files actually import from `cookbook/tools/` at all.
 
-**Near-free fix**: `cookbook/61_video_to_audio/` is marked `wip` only because it has no `run.py`/`sample/` dir — but `cookbook/tools/video_tools.py::extract_audio()` already implements exactly what it needs. Likely completable in minutes by wrapping the existing shared tool.
+**Near-free fix**: `cookbook/061_video_to_audio/` is marked `wip` only because it has no `run.py`/`sample/` dir — but `cookbook/tools/video_tools.py::extract_audio()` already implements exactly what it needs. Likely completable in minutes by wrapping the existing shared tool.
 
 **Action**: consolidate the 3x-duplicated `convert_audio()` into the shared `tools/audio_tools.py` version everywhere; build out `61_video_to_audio/run.py` around the existing `extract_audio()` helper.
 

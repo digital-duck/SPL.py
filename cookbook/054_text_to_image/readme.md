@@ -61,7 +61,7 @@ export OPENAI_API_KEY=sk-...
 export OPENAI_BASE_URL="https://api.openai.com/v1"
 
 # Basic prompt
-python cookbook/54_text_to_image/run.py \
+python cookbook/054_text_to_image/run.py \
     --prompt "A duck writing code at sunrise"
 
 [text_to_image] → DALL-E dall-e-3 (1024x1024, quality=standard) ...
@@ -69,26 +69,26 @@ python cookbook/54_text_to_image/run.py \
 [text_to_image] ✓ saved generated_1776561500.png (1335 KB, 16561 ms)
 
 ── Output ───────────────────────────────────────────────────────────
-Image saved: cookbook/54_text_to_image/outputs/generated_1776561500.png
+Image saved: cookbook/054_text_to_image/outputs/generated_1776561500.png
 
 
 # Landscape HD with vivid style
-python cookbook/54_text_to_image/run.py \
+python cookbook/054_text_to_image/run.py \
     --prompt "NYC skyline at night" \
     --aspect landscape --quality hd --dalle-style vivid
 
 # With gemma4 prompt enhancement
-python cookbook/54_text_to_image/run.py \
+python cookbook/054_text_to_image/run.py \
     --prompt "A fox in a forest" \
     --enhance --style "oil painting, impressionist"
 
 # No enhancement (send raw prompt directly to DALL-E 3)
-python cookbook/54_text_to_image/run.py \
+python cookbook/054_text_to_image/run.py \
     --prompt "A serene mountain lake" \
     --enhance false
 
 # Custom output directory
-python cookbook/54_text_to_image/run.py \
+python cookbook/054_text_to_image/run.py \
     --prompt "A futuristic city" \
     --output-dir /tmp/images
 ```
@@ -108,9 +108,9 @@ python cookbook/54_text_to_image/run.py \
 | `@dalle_style` | TEXT | `natural` | `natural` (realistic) \| `vivid` (dramatic) |
 | `@enhance` | BOOL | `TRUE` | Run gemma4 prompt enhancement before generation |
 | `@model` | TEXT | `dall-e-3` | Image generation model |
-| `@output_dir` | TEXT | `cookbook/54_text_to_image/outputs` | Directory to write generated image |
+| `@output_dir` | TEXT | `cookbook/054_text_to_image/outputs` | Directory to write generated image |
 | `@llm_model` | TEXT | `gemma4:e4b` | Local LLM for prompt enhancement |
-| `@log_dir` | TEXT | `cookbook/54_text_to_image/logs-spl` | Directory for log output |
+| `@log_dir` | TEXT | `cookbook/054_text_to_image/logs-spl` | Directory for log output |
 
 ### CLI flags (run.py)
 
@@ -124,7 +124,7 @@ python cookbook/54_text_to_image/run.py \
 | `--enhance` | off | Run prompt through Gemma4 before DALL-E |
 | `--model` | `dall-e-3` | `dall-e-3` \| `dall-e-2` |
 | `--llm-model` | `gemma4:e4b` | Ollama model for enhancement |
-| `--output-dir` | `cookbook/54_text_to_image/outputs` | Directory to write generated image |
+| `--output-dir` | `cookbook/054_text_to_image/outputs` | Directory to write generated image |
 
 ---
 

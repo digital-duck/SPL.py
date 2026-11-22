@@ -57,25 +57,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/25_nested_procs/nested_procs.spl \
+spl3 run cookbook/025_nested_procs/nested_procs.spl \
     --adapter ollama --model gemma3 \
     topic="quantum computing" audience="high school students"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/25_nested_procs/langgraph/nested_procs_langgraph.py \
+python cookbook/025_nested_procs/langgraph/nested_procs_langgraph.py \
     --topic "quantum computing" --audience "high school students"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/25_nested_procs/autogen/nested_procs_autogen.py \
+python cookbook/025_nested_procs/autogen/nested_procs_autogen.py \
     --topic "quantum computing" --audience "high school students"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/25_nested_procs/crewai/nested_procs_crewai.py \
+python cookbook/025_nested_procs/crewai/nested_procs_crewai.py \
     --topic "quantum computing" --audience "high school students"
 ```

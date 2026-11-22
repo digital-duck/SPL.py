@@ -5,7 +5,7 @@ Pattern: Sequential orchestration of specialized prompts.
 
 Usage:
     pip install pyautogen
-    python cookbook/32_socratic_tutor/autogen/socratic_autogen.py \\
+    python cookbook/032_socratic_tutor/autogen/socratic_autogen.py \\
         --topic_id "recursion" --subject "programming"
 """
 
@@ -105,7 +105,7 @@ def run(topic: str, topic_id: str, subject: str, student_level: str, model: str,
 @click.option("--subject", default="programming", help="Subject")
 @click.option("--student_level", default="high school", help="Student level")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/32_socratic_tutor/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/032_socratic_tutor/logs-autogen", help="Log directory")
 def main(topic, topic_id, subject, student_level, model, log_dir):
     """Socratic Tutor — AutoGen edition"""
     run(topic, topic_id, subject, student_level, model, log_dir)

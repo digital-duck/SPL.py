@@ -35,22 +35,22 @@ If you ever want to run the code strictly from the current directory without rel
 
 ```bash
 # Echo adapter (no LLM needed — mirrors prompt back)
-spl3 run  cookbook/01_hello_world/hello.spl
+spl3 run  cookbook/001_hello_world/hello.spl
 
 # Local Ollama (default model)
-spl3 run  cookbook/01_hello_world/hello.spl --adapter ollama
+spl3 run  cookbook/001_hello_world/hello.spl --adapter ollama
 
 # With parameters (translated greeting)
-spl3 run  cookbook/01_hello_world/hello.spl --adapter ollama \
+spl3 run  cookbook/001_hello_world/hello.spl --adapter ollama \
     --param user_input="hello wen" \
     --param lang="Chinese"
 
 # Specific model
-spl3 run  cookbook/01_hello_world/hello.spl --adapter ollama --model llama3.2
+spl3 run  cookbook/001_hello_world/hello.spl --adapter ollama --model llama3.2
 ```
 
 ```bash
-export FILE_SPL="$HOME/projects/digital-duck/SPL20/cookbook/01_hello_world/hello.spl"
+export FILE_SPL="$HOME/projects/digital-duck/SPL20/cookbook/001_hello_world/hello.spl"
 
 ## different commands
 # python

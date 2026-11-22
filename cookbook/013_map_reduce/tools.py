@@ -1,7 +1,7 @@
 """Python tools for recipe 13: Map-Reduce Summarizer.
 
 Loaded with:
-    spl3 run cookbook/13_map_reduce/map_reduce.spl --tools cookbook/13_map_reduce/tools.py
+    spl3 run cookbook/013_map_reduce/map_reduce.spl --tools cookbook/013_map_reduce/tools.py
 
 Deterministic tools (CALL, zero tokens):
     CALL chunk_plan(@document) INTO @chunk_count

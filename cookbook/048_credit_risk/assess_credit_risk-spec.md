@@ -12,7 +12,7 @@ Automatically approve, reject, or flag for manual review a credit applicant by f
 |---|---|---|
 | `@applicant_data` | *(required)* | Full applicant profile as raw text (e.g., JSON blob) passed to the LLM risk analysis function |
 | `@credit_score` | *(required)* | Numeric credit score used for deterministic threshold routing before any LLM call |
-| `@log_dir` | `cookbook/48_credit_risk/logs-spl` | Directory path where intermediate artefacts (`risk_report.md`, `risk_rating.md`) are written |
+| `@log_dir` | `cookbook/048_credit_risk/logs-spl` | Directory path where intermediate artefacts (`risk_report.md`, `risk_rating.md`) are written |
 
 ## 3. Process
 

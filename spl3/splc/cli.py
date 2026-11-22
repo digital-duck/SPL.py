@@ -10,10 +10,10 @@ Design principle (DODA):
 
 Usage examples:
   # Compile to Go (LLM's pretrained knowledge only)
-  splc --spl cookbook/05_self_refine/self_refine.spl --lang go
+  splc --spl cookbook/005_self_refine/self_refine.spl --lang go
 
   # Compile to LangGraph Python with a reference codebase
-  splc --spl cookbook/05_self_refine/self_refine.spl --lang python/langgraph \\
+  splc --spl cookbook/005_self_refine/self_refine.spl --lang python/langgraph \\
        --references https://github.com/langchain-ai/langgraph
 
   # Compile with multiple references, custom output dir, stronger model
@@ -1176,7 +1176,7 @@ def cmd_describe(impl_path: Path, lang_label: str | None, llm_spec: str | None, 
 
     \b
     Examples:
-      spl3 splc describe cookbook/05_self_refine/self_refine.spl
+      spl3 splc describe cookbook/005_self_refine/self_refine.spl
       spl3 splc describe targets/python_pocketflow/self_refine_python_pocketflow.py
       spl3 splc describe targets/python_pocketflow/  --lang "Python — PocketFlow"
       spl3 splc describe langgraph/self_refine_langgraph.py --adapter claude_cli

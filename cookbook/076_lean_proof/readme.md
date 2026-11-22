@@ -97,13 +97,13 @@ bash cookbook/tools/lean/setup_lean.sh   # elan + pinned repl v4.30.0, built wit
 
 ```bash
 # Default claim: "addition of natural numbers is commutative"
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli
+spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel --llm claude_cli
 
 # Local model
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3
+spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3
 
 # Your own claim
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli \
+spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel --llm claude_cli \
     --param claim="for any natural number n, n^2 >= n" \
     --param max_tries=3
 

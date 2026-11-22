@@ -13,12 +13,12 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 # Local-only mode (no MCP server required)
-spl3 run cookbook/46_mcp/mcp.spl \
+spl3 run cookbook/046_mcp/mcp.spl \
     --adapter ollama -m gemma3 \
     --param question="what is 7 factorial"
 
 # With an MCP server
-spl3 run cookbook/46_mcp/mcp.spl \
+spl3 run cookbook/046_mcp/mcp.spl \
     --adapter ollama -m gemma3 \
     --param question="what is sqrt(144)" \
     --param mcp_mode=true \

@@ -40,9 +40,9 @@
 --
 -- Requires: numpy only (already a project dependency) — no new pip install
 -- Run:
---   spl3 run cookbook/92_compsci_materials/materials_crystal.spl \
+--   spl3 run cookbook/092_compsci_materials/materials_crystal.spl \
 --       --llm claude_cli
---   spl3 run cookbook/92_compsci_materials/materials_crystal.spl \
+--   spl3 run cookbook/092_compsci_materials/materials_crystal.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -336,7 +336,7 @@ WORKFLOW materials_crystal
   INPUT @problem TEXT := "NaCl crystallizes in a cubic (rock-salt) structure with lattice parameter a = 5.640 Angstrom, all angles 90 degrees, Z = 4 formula units per unit cell, and molar mass 58.44 g/mol. What is its theoretical density, in g/cm^3?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/92_compsci_materials/output"
+  INPUT @out_dir TEXT := "./cookbook/092_compsci_materials/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

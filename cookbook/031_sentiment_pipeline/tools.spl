@@ -3,7 +3,7 @@
 CREATE TOOL_API load_items(filename TEXT) RETURNS TEXT AS PYTHON $$
 import os
 
-_REVIEWS_DIR = "cookbook/31_sentiment_pipeline/reviews"
+_REVIEWS_DIR = "cookbook/031_sentiment_pipeline/reviews"
 
 def load_items(filename):
     filename = filename.strip()

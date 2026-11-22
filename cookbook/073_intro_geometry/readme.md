@@ -179,14 +179,14 @@ structure, function signatures, and control flow are sound — *before* any
 compile target exists for it:
 
 ```bash
-spl3 validate cookbook/73_intro_geometry/build_concept_book.spl
-spl3 validate cookbook/73_intro_geometry/answer_on_demand.spl
+spl3 validate cookbook/073_intro_geometry/build_concept_book.spl
+spl3 validate cookbook/073_intro_geometry/answer_on_demand.spl
 ```
 
 Both currently report `OK` with only the same class of flow-analysis warnings
 (`@var used before assignment`, `WHILE … no max_iterations`, `CALL target …
 not found in CREATE FUNCTION declarations`) that `spl3 validate` *also* raises
-against the upstream, working `cookbook/71_linalg_concept_book/*.spl` files —
+against the upstream, working `cookbook/071_linalg_concept_book/*.spl` files —
 i.e. these are pre-existing validator quirks (its flow analyzer doesn't yet
 trace `EVALUATE`/`WHILE` bindings or recognize domain-target setup-cell
 helpers), not defects introduced here.
@@ -199,15 +199,15 @@ conda activate spl123
 pip install ipykernel
 python -m ipykernel install --user --name spl123 --display-name "Python (spl123)"
 
-spl3 splc compile cookbook/73_intro_geometry/build_concept_book.spl \
+spl3 splc compile cookbook/073_intro_geometry/build_concept_book.spl \
     --lang python/intro_geometry      # ← target doesn't exist yet
 
-spl3 splc compile cookbook/73_intro_geometry/answer_on_demand.spl \
+spl3 splc compile cookbook/073_intro_geometry/answer_on_demand.spl \
     --lang python/intro_geometry      # ← target doesn't exist yet
 
 
 # run notebook
-jupyter notebook cookbook/73_intro_geometry/targets/python_intro_geometry/answer_on_demand_python_intro_geometry.ipynb
+jupyter notebook cookbook/073_intro_geometry/targets/python_intro_geometry/answer_on_demand_python_intro_geometry.ipynb
 # select spl123 kernel
 
 
@@ -252,7 +252,7 @@ against, instead of a hypothetical one.
 Not runnable yet — see "The transpiler gap" above. Once
 `python/intro_geometry` exists, this section will mirror recipe 71's://
 `pip install networkx jupyter sympy`, then `jupyter nbconvert --to notebook
---execute cookbook/73_intro_geometry/build_concept_book_python_intro_geometry.ipynb`,
+--execute cookbook/073_intro_geometry/build_concept_book_python_intro_geometry.ipynb`,
 with `GEOMETRY_GRAPH_DIR` / `SPL_MODEL` env-var overrides for locating
 `geometry_graph.py` / `style_profiles.py` and choosing the LLM.
 

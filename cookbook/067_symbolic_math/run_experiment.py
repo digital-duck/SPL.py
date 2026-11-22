@@ -8,19 +8,19 @@ Must be run from the SPL.py repo root:
 Requires: conda activate spl123   (spl3 must be on PATH)
 
 Quick start:
-  python cookbook/67_symbolic_math/run_experiment.py --list
-  python cookbook/67_symbolic_math/run_experiment.py -m m001 -p p003          # smoke test
-  python cookbook/67_symbolic_math/run_experiment.py -m "m006,m007" -p "p003 p005" --dry-run
-  python cookbook/67_symbolic_math/run_experiment.py -m m001 -m m007 -p p003  # repeated flags
-  python cookbook/67_symbolic_math/run_experiment.py                           # all 9 models
-  python cookbook/67_symbolic_math/run_experiment.py -s true -s false -r 3    # both solver arms
+  python cookbook/067_symbolic_math/run_experiment.py --list
+  python cookbook/067_symbolic_math/run_experiment.py -m m001 -p p003          # smoke test
+  python cookbook/067_symbolic_math/run_experiment.py -m "m006,m007" -p "p003 p005" --dry-run
+  python cookbook/067_symbolic_math/run_experiment.py -m m001 -m m007 -p p003  # repeated flags
+  python cookbook/067_symbolic_math/run_experiment.py                           # all 9 models
+  python cookbook/067_symbolic_math/run_experiment.py -s true -s false -r 3    # both solver arms
 
-  python cookbook/67_symbolic_math/run_experiment.py -m m010 --dry-run
-  python cookbook/67_symbolic_math/run_experiment.py -m m010 
+  python cookbook/067_symbolic_math/run_experiment.py -m m010 --dry-run
+  python cookbook/067_symbolic_math/run_experiment.py -m m010 
 
-  python cookbook/67_symbolic_math/run_experiment.py -m "m001,m002,m010" 
+  python cookbook/067_symbolic_math/run_experiment.py -m "m001,m002,m010" 
 
- python cookbook/67_symbolic_math/run_experiment.py -m "m010" -p "p003" -s true -r 1
+ python cookbook/067_symbolic_math/run_experiment.py -m "m010" -p "p003" -s true -r 1
   
 """
 
@@ -34,7 +34,7 @@ from pathlib import Path
 import click
 
 # ── SQLite persistence ────────────────────────────────────────────────────────
-DB_PATH_DEFAULT = "cookbook/67_symbolic_math/experiment_results.db"
+DB_PATH_DEFAULT = "cookbook/067_symbolic_math/experiment_results.db"
 
 # Pass criteria — mirrored in run_analysis.py and app_experiment.py
 PASS_STATUSES_SOLVER   = {"complete"}
@@ -208,9 +208,9 @@ PROBLEMS = {
     "p020": ("T5", "compute the inverse Laplace transform of s / (s**2 + 4), then verify by taking the Laplace transform of the result"),
 }
 
-# SCRIPT_DEFAULT = "cookbook/67_symbolic_math/sympy_llm.spl"
-SCRIPT_DEFAULT = "cookbook/67_symbolic_math/sympy_llm_v2.spl"
-LOG_DIR_DEFAULT = "cookbook/67_symbolic_math/logs-spl"
+# SCRIPT_DEFAULT = "cookbook/067_symbolic_math/sympy_llm.spl"
+SCRIPT_DEFAULT = "cookbook/067_symbolic_math/sympy_llm_v2.spl"
+LOG_DIR_DEFAULT = "cookbook/067_symbolic_math/logs-spl"
 
 
 def stream_run(cmd: list, log_file) -> tuple:

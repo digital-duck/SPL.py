@@ -50,8 +50,8 @@ pip install Pillow
 
 ```bash
 # Reuse the image from recipe 50 (no download needed)
-cp cookbook/51_image_caption/sample/photo.jpg \
-   cookbook/57_image_convert/sample/photo.jpg
+cp cookbook/051_image_caption/sample/photo.jpg \
+   cookbook/057_image_convert/sample/photo.jpg
 ```
 
 ---
@@ -62,23 +62,23 @@ cp cookbook/51_image_caption/sample/photo.jpg \
 
 ```bash
 # JPEG → PNG
-python cookbook/57_image_convert/run.py \
-    --image cookbook/57_image_convert/sample/photo.jpg \
+python cookbook/057_image_convert/run.py \
+    --image cookbook/057_image_convert/sample/photo.jpg \
     --target-format png
 
 # JPEG → WebP (quality 90)
-python cookbook/57_image_convert/run.py \
-    --image cookbook/57_image_convert/sample/photo.jpg \
+python cookbook/057_image_convert/run.py \
+    --image cookbook/057_image_convert/sample/photo.jpg \
     --target-format webp --quality 90
 
 # JPEG → BMP
-python cookbook/57_image_convert/run.py \
-    --image cookbook/57_image_convert/sample/photo.jpg \
+python cookbook/057_image_convert/run.py \
+    --image cookbook/057_image_convert/sample/photo.jpg \
     --target-format bmp
 
 # Custom output directory
-python cookbook/57_image_convert/run.py \
-    --image cookbook/57_image_convert/sample/photo.jpg \
+python cookbook/057_image_convert/run.py \
+    --image cookbook/057_image_convert/sample/photo.jpg \
     --target-format webp --output-dir /tmp/converted
 ```
 
@@ -91,20 +91,20 @@ The `convert_image` tool must be loaded from `cookbook/tools/registry.py`.
 
 ```bash
 # Default params (JPEG → JPEG, quality 85)
-spl3 run cookbook/57_image_convert/image_convert.spl \
+spl3 run cookbook/057_image_convert/image_convert.spl \
     --tools cookbook/tools/registry.py
 
 # JPEG → WebP
-spl3 run cookbook/57_image_convert/image_convert.spl \
+spl3 run cookbook/057_image_convert/image_convert.spl \
     --tools cookbook/tools/registry.py \
-    -p image=cookbook/57_image_convert/sample/photo.jpg \
+    -p image=cookbook/057_image_convert/sample/photo.jpg \
     -p target_format=webp \
     -p quality=90
 
 # JPEG → PNG, custom output dir
-spl3 run cookbook/57_image_convert/image_convert.spl \
+spl3 run cookbook/057_image_convert/image_convert.spl \
     --tools cookbook/tools/registry.py \
-    -p image=cookbook/57_image_convert/sample/photo.jpg \
+    -p image=cookbook/057_image_convert/sample/photo.jpg \
     -p target_format=png \
     -p output_dir=/tmp/converted
 ```
@@ -117,11 +117,11 @@ spl3 run cookbook/57_image_convert/image_convert.spl \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@image` | IMAGE | `cookbook/57_image_convert/sample/photo.png` | Source image file path |
+| `@image` | IMAGE | `cookbook/057_image_convert/sample/photo.png` | Source image file path |
 | `@target_format` | TEXT | `jpeg` | Target format: `jpeg`, `png`, `webp`, `bmp`, `gif` |
 | `@quality` | INT | `85` | Compression quality for lossy formats (1–95); ignored for lossless |
-| `@output_dir` | TEXT | `cookbook/57_image_convert/outputs` | Directory to write converted file |
-| `@log_dir` | TEXT | `cookbook/57_image_convert/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/057_image_convert/outputs` | Directory to write converted file |
+| `@log_dir` | TEXT | `cookbook/057_image_convert/logs-spl` | Directory for log output |
 
 ---
 

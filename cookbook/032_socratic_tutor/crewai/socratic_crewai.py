@@ -5,7 +5,7 @@ Pattern: Task sequence with manual orchestration for loops/conditions.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/32_socratic_tutor/crewai/socratic_crewai.py \\
+    python cookbook/032_socratic_tutor/crewai/socratic_crewai.py \\
         --topic_id "recursion" --subject "programming"
 """
 
@@ -118,7 +118,7 @@ def run(topic: str, topic_id: str, subject: str, student_level: str, model: str,
 @click.option("--subject", default="programming", help="Subject")
 @click.option("--student_level", default="high school", help="Student level")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/32_socratic_tutor/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/032_socratic_tutor/logs-crewai", help="Log directory")
 def main(topic, topic_id, subject, student_level, model, log_dir):
     """Socratic Tutor — CrewAI edition"""
     run(topic, topic_id, subject, student_level, model, log_dir)

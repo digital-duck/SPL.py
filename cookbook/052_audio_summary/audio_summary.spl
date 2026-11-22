@@ -52,12 +52,12 @@ $$;
 
 WORKFLOW audio_summary
     INPUT:
-        @clip         AUDIO  DEFAULT 'cookbook/52_audio_summary/sample/clip.wav',
+        @clip         AUDIO  DEFAULT 'cookbook/052_audio_summary/sample/clip.wav',
         @mode         TEXT   DEFAULT 'summary',
         @style        TEXT   DEFAULT 'concise paragraph',
         @model        TEXT   DEFAULT 'liquid/lfm-2.5-1.2b-instruct:free',
         @output_budget INT   DEFAULT 2048,
-        @log_dir       TEXT  DEFAULT 'cookbook/52_audio_summary/logs-spl'
+        @log_dir       TEXT  DEFAULT 'cookbook/052_audio_summary/logs-spl'
     OUTPUT: @result TEXT
 DO
     LOGGING f'[audio_summary] clip={@clip} mode={@mode} model={@model}' LEVEL INFO

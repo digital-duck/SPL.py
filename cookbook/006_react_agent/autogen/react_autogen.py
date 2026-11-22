@@ -10,9 +10,9 @@ this discipline manually.
 
 Usage:
     pip install pyautogen
-    python cookbook/06_react_agent/autogen/react_autogen.py \\
+    python cookbook/006_react_agent/autogen/react_autogen.py \\
         --country France --year 2023
-    python cookbook/06_react_agent/autogen/react_autogen.py \\
+    python cookbook/006_react_agent/autogen/react_autogen.py \\
         --country India --year 2023 --model llama3.2
 """
 
@@ -132,7 +132,7 @@ def run(country: str, year_curr: int, model: str, log_dir: str) -> str:
 @click.option("--country", default="China", help="Country to analyze")
 @click.option("--year", type=int, default=2023, help="Year to analyze")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/06_react_agent/autogen/logs", help="Log directory")
+@click.option("--log-dir", default="cookbook/006_react_agent/autogen/logs", help="Log directory")
 def main(country, year, model, log_dir):
     """ReAct Agent — AutoGen edition"""
     result = run(country, year, model, log_dir)

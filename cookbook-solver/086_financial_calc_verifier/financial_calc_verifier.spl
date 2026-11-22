@@ -31,9 +31,9 @@
 --
 -- Requires: stdlib `decimal` only — no new pip dependency
 -- Run:
---   spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl \
+--   spl3 run cookbook/086_financial_calc_verifier/financial_calc_verifier.spl \
 --       --llm claude_cli
---   spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl \
+--   spl3 run cookbook/086_financial_calc_verifier/financial_calc_verifier.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -241,7 +241,7 @@ WORKFLOW financial_calc_verifier
   INPUT @problem TEXT := "A $10,000 loan has a 6% annual interest rate, compounded monthly, and is paid off in equal monthly installments over 5 years (60 months). What is the fixed monthly payment?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/86_financial_calc_verifier/output"
+  INPUT @out_dir TEXT := "./cookbook/086_financial_calc_verifier/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

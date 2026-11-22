@@ -8,8 +8,8 @@ Must be run from the SPL.py repo root:
 Requires: conda activate spl123
 
 Usage:
-  python cookbook/67_symbolic_math/run_analysis.py                  # most recent log
-  python cookbook/67_symbolic_math/run_analysis.py --log <path.md>  # specific log
+  python cookbook/067_symbolic_math/run_analysis.py                  # most recent log
+  python cookbook/067_symbolic_math/run_analysis.py --log <path.md>  # specific log
 
 Output:
   - Terminal report: results table, per-model summary, per-tier summary, failures
@@ -28,7 +28,7 @@ import pandas as pd
 # Import registries so the CSV includes human-readable problem text
 from run_experiment import MODELS, PROBLEMS
 
-LOG_DIR_DEFAULT = "cookbook/67_symbolic_math/logs-spl"
+LOG_DIR_DEFAULT = "cookbook/067_symbolic_math/logs-spl"
 
 RESULT_RE = re.compile(
     r"<!-- RESULT\s+"

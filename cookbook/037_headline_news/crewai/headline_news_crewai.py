@@ -5,7 +5,7 @@ Pattern: headlines → expand → evaluate → (pass? format : fill_gaps → for
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/37_headline_news/crewai/headline_news_crewai.py \\
+    python cookbook/037_headline_news/crewai/headline_news_crewai.py \\
         --topic "artificial intelligence"
 """
 
@@ -106,7 +106,7 @@ def run(topic: str, date: str, max_headlines: int, style: str, perspective: str,
 @click.option("--style", default="structured", help="Output style")
 @click.option("--perspective", default="balanced", help="Coverage perspective")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/37_headline_news/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/037_headline_news/logs-crewai", help="Log directory")
 def main(topic, date, max_headlines, style, perspective, model, log_dir):
     """Headline News Aggregator — CrewAI edition"""
     run(topic, date, max_headlines, style, perspective, model, log_dir)

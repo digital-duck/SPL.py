@@ -44,8 +44,8 @@ to the `spl3` CLI using the Bash tool.
 
 Examples:
 
-    User types:  /spl3 run cookbook/01_hello_world/hello.spl
-    You run:     spl3 run cookbook/01_hello_world/hello.spl
+    User types:  /spl3 run cookbook/001_hello_world/hello.spl
+    You run:     spl3 run cookbook/001_hello_world/hello.spl
 
     User types:  /spl3 text2spl "summarise a list of URLs in parallel"
     You run:     spl3 text2spl --description "summarise a list of URLs in parallel"

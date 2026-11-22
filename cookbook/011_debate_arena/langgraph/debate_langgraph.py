@@ -5,7 +5,7 @@ Pattern: pro_opening → con_opening → (pro_rebuttal → con_rebuttal) x N rou
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/11_debate_arena/langgraph/debate_langgraph.py --topic "AI should be open-sourced"
+    python cookbook/011_debate_arena/langgraph/debate_langgraph.py --topic "AI should be open-sourced"
 """
 
 import click
@@ -173,7 +173,7 @@ def build_graph():
 @click.option("--topic",      required=True,    help="Debate topic")
 @click.option("--max-rounds", default=3,        show_default=True, type=int)
 @click.option("--model",      default="gemma3", show_default=True)
-@click.option("--log-dir",    default="cookbook/11_debate_arena/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir",    default="cookbook/011_debate_arena/langgraph/logs-langgraph", show_default=True)
 def main(topic: str, max_rounds: int, model: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

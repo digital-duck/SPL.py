@@ -28,12 +28,12 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/06_react_agent/crewai/react_crewai.py \
+python cookbook/006_react_agent/crewai/react_crewai.py \
     --country France --year 2023
 
-python cookbook/06_react_agent/crewai/react_crewai.py \
+python cookbook/006_react_agent/crewai/react_crewai.py \
     --country India --year 2023 --model llama3.2 \
-    --log-dir cookbook/06_react_agent/crewai/logs
+    --log-dir cookbook/006_react_agent/crewai/logs
 ```
 
 Supported countries: China, France, USA, India, Germany, Brazil
@@ -51,10 +51,10 @@ Committed | status=complete
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/06_react_agent/react_agent.spl \
+spl3 run cookbook/006_react_agent/react_agent.spl \
     --adapter claude_cli --model claude-sonnet-4-6 \
     --allowed-tools WebSearch \
-    --tools cookbook/06_react_agent/tools.py \
+    --tools cookbook/006_react_agent/tools.py \
     country="France"
 ```
 

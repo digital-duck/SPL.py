@@ -165,9 +165,9 @@ In `spl/adapters/gemini_cli.py`:
 
 The following SPL30 artifacts are logs, benchmark results, and generated files
 with no code value:
-- `cookbook/05_self_refine/logging/` — execution logs
-- `cookbook/05_self_refine/targets/` and `targets-ref/` — generated transpiler outputs
-- `cookbook/05_self_refine/benchmark-*.{sh,md}` — benchmark scripts and results
+- `cookbook/005_self_refine/logging/` — execution logs
+- `cookbook/005_self_refine/targets/` and `targets-ref/` — generated transpiler outputs
+- `cookbook/005_self_refine/benchmark-*.{sh,md}` — benchmark scripts and results
 - `review.spl` — scratch file in repo root
 - `approval-fixed.{html,mmd}` — scratch diagram exports
 

@@ -62,7 +62,7 @@ WORKFLOW parallel_code_review
         @code    TEXT,
         @lang    TEXT    DEFAULT 'python',
         @review_model   TEXT    DEFAULT 'gemma4',
-        @log_dir TEXT    DEFAULT 'cookbook/63_parallel_code_review/logs-spl'
+        @log_dir TEXT    DEFAULT 'cookbook/063_parallel_code_review/logs-spl'
     OUTPUT: @report TEXT
 DO
     LOGGING f'[parallel_code_review] starting 3-way parallel review | lang={@lang} review_model={@review_model}' LEVEL INFO

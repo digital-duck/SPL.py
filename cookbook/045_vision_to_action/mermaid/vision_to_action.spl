@@ -6,7 +6,7 @@
 -- Note: uses TEXT as a stand-in for the IMAGE type coming in SPL v3.0.
 --
 -- Usage:
---   spl3 run cookbook/45_vision_to_action/vision_to_action.spl \
+--   spl3 run cookbook/045_vision_to_action/vision_to_action.spl \
 --       --adapter ollama \
 --       image_description="Image shows a package being delivered to the front door."
 

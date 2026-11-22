@@ -18,7 +18,7 @@ Given a plain-English software task, automatically produce a validated implement
 | `@output_dir` | `''` (empty) | Filesystem path where generated source files are written; if empty, files are not written to disk |
 | `@max_steps` | `5` | Upper bound on the number of plan steps the LLM may produce |
 | `@max_replans` | `3` | Maximum number of times a failed step may trigger a full replan before being accepted as-is |
-| `@log_dir` | `'cookbook/12_plan_and_execute/logs-spl'` | Directory where intermediate artefacts (plan, step notes, final report) are logged as Markdown files |
+| `@log_dir` | `'cookbook/012_plan_and_execute/logs-spl'` | Directory where intermediate artefacts (plan, step notes, final report) are logged as Markdown files |
 
 ---
 

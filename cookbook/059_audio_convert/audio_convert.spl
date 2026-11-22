@@ -14,12 +14,12 @@
 
 WORKFLOW audio_convert
     INPUT:
-        @audio         AUDIO  DEFAULT 'cookbook/59_audio_convert/sample/clip.wav',
+        @audio         AUDIO  DEFAULT 'cookbook/059_audio_convert/sample/clip.wav',
         @target_format TEXT   DEFAULT 'mp3',
         @bitrate       TEXT   DEFAULT '192k',
         @sample_rate   INT    DEFAULT 44100,
-        @output_dir    TEXT   DEFAULT 'cookbook/59_audio_convert/outputs',
-        @log_dir       TEXT   DEFAULT 'cookbook/59_audio_convert/logs-spl'
+        @output_dir    TEXT   DEFAULT 'cookbook/059_audio_convert/outputs',
+        @log_dir       TEXT   DEFAULT 'cookbook/059_audio_convert/logs-spl'
     OUTPUT: @converted AUDIO
 DO
     LOGGING f'[audio_convert] {@audio} → {@target_format} (bitrate={@bitrate} sample_rate={@sample_rate})' LEVEL INFO

@@ -65,28 +65,28 @@ export OPENAI_API_KEY=sk-...
 export OPENAI_BASE_URL="https://api.openai.com/v1"
 
 # Default — watercolor style
-python cookbook/58_image_restyle/run.py \
-    --image cookbook/58_image_restyle/sample/photo.jpg
+python cookbook/058_image_restyle/run.py \
+    --image cookbook/058_image_restyle/sample/photo.jpg
 
 # Studio Ghibli anime
-python cookbook/58_image_restyle/run.py \
-    --image cookbook/58_image_restyle/sample/photo.jpg \
+python cookbook/058_image_restyle/run.py \
+    --image cookbook/058_image_restyle/sample/photo.jpg \
     --style "Studio Ghibli anime, soft illustration, warm colors"
 
 # Oil painting, landscape HD
-python cookbook/58_image_restyle/run.py \
-    --image cookbook/58_image_restyle/sample/photo.jpg \
+python cookbook/058_image_restyle/run.py \
+    --image cookbook/058_image_restyle/sample/photo.jpg \
     --style "oil painting, impressionist, thick brushstrokes" \
     --aspect landscape --quality hd
 
 # Cyberpunk neon, vivid mode
-python cookbook/58_image_restyle/run.py \
-    --image cookbook/58_image_restyle/sample/photo.jpg \
+python cookbook/058_image_restyle/run.py \
+    --image cookbook/058_image_restyle/sample/photo.jpg \
     --style "cyberpunk neon city, rain-slicked streets" --dalle-style vivid
 
 # Preserve specific elements explicitly
-python cookbook/58_image_restyle/run.py \
-    --image cookbook/58_image_restyle/sample/photo.jpg \
+python cookbook/058_image_restyle/run.py \
+    --image cookbook/058_image_restyle/sample/photo.jpg \
     --style "pencil sketch, black and white" \
     --preserve "main subject, facial expression, proportions"
 ```
@@ -94,8 +94,8 @@ python cookbook/58_image_restyle/run.py \
 ### Generate a test image
 
 ```bash
-cp cookbook/51_image_caption/sample/photo.jpg \
-   cookbook/58_image_restyle/sample/photo.jpg
+cp cookbook/051_image_caption/sample/photo.jpg \
+   cookbook/058_image_restyle/sample/photo.jpg
 ```
 
 ---
@@ -106,14 +106,14 @@ cp cookbook/51_image_caption/sample/photo.jpg \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@photo` | IMAGE | `cookbook/58_image_restyle/sample/photo.jpg` | Source image file path |
+| `@photo` | IMAGE | `cookbook/058_image_restyle/sample/photo.jpg` | Source image file path |
 | `@style` | TEXT | `watercolor painting, soft edges, pastel tones` | Style transformation to apply |
 | `@preserve` | TEXT | `composition, main subject, mood` | Elements to preserve from the original |
 | `@quality` | TEXT | `hd` | DALL-E 3 quality: `standard` or `hd` |
 | `@dalle_style` | TEXT | `natural` | DALL-E 3 rendering style: `natural` or `vivid` |
 | `@vision_model` | TEXT | `gemma4:e4b` | Local vision model for image analysis |
-| `@output_dir` | TEXT | `cookbook/58_image_restyle/outputs` | Directory to write restyled image |
-| `@log_dir` | TEXT | `cookbook/58_image_restyle/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/058_image_restyle/outputs` | Directory to write restyled image |
+| `@log_dir` | TEXT | `cookbook/058_image_restyle/logs-spl` | Directory for log output |
 
 ### CLI flags (run.py)
 
@@ -127,7 +127,7 @@ cp cookbook/51_image_caption/sample/photo.jpg \
 | `--dalle-style` | `natural` | `natural` \| `vivid` |
 | `--vision-model` | `gemma4:e4b` | Ollama vision model |
 | `--max-dim` | `1024` | Max image dimension before encoding |
-| `--output-dir` | `cookbook/58_image_restyle/outputs` | Directory to write restyled image |
+| `--output-dir` | `cookbook/058_image_restyle/outputs` | Directory to write restyled image |
 
 ---
 

@@ -5,7 +5,7 @@ Pattern: Detect Lang → [Security, Performance, Style, Bug Analysis] → Synthe
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/15_code_review/langgraph/code_review_langgraph.py \\
+    python cookbook/015_code_review/langgraph/code_review_langgraph.py \\
         --code "def foo(x): return eval(x)"
 """
 
@@ -127,7 +127,7 @@ def build_graph():
 @click.command()
 @click.option("--code", required=True, help="Code to review or path to file")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/15_code_review/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/015_code_review/logs-langgraph", help="Log directory")
 def main(code, model, log_dir):
     """Automated Code Review — LangGraph edition"""
     build_graph().invoke({

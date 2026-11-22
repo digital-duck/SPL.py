@@ -66,7 +66,7 @@ python -c "
 import pathlib
 from openai import OpenAI
 client = OpenAI()
-out = pathlib.Path('cookbook/60_voice_dialogue/sample/question.mp3')
+out = pathlib.Path('cookbook/060_voice_dialogue/sample/question.mp3')
 out.parent.mkdir(parents=True, exist_ok=True)
 response = client.audio.speech.create(
     model='tts-1', voice='alloy',
@@ -77,14 +77,14 @@ print(f'audio saved: {out}')
 "
 
 # Option B — macOS say + ffmpeg
-say -o cookbook/60_voice_dialogue/sample/question.aiff \
+say -o cookbook/060_voice_dialogue/sample/question.aiff \
     "What is SPL 3.0 and why does it matter?"
-ffmpeg -i cookbook/60_voice_dialogue/sample/question.aiff \
-       cookbook/60_voice_dialogue/sample/question.wav
+ffmpeg -i cookbook/060_voice_dialogue/sample/question.aiff \
+       cookbook/060_voice_dialogue/sample/question.wav
 
 # Option C — espeak (Linux)
 espeak "What are the main features of SPL 3.0?" \
-    -w cookbook/60_voice_dialogue/sample/question.wav
+    -w cookbook/060_voice_dialogue/sample/question.wav
 ```
 
 ---
@@ -96,33 +96,33 @@ export OPENROUTER_API_KEY=sk-or-...
 export OPENAI_API_KEY=sk-...
 
 # Minimal
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3
 
 # Custom persona + context
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3 \
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3 \
     --persona "a cheerful science teacher" \
     --context "SPL 3.0 is a multimodal agentic workflow language."
 
 # HD voice response
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3 \
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3 \
     --tts-voice nova --tts-model tts-1-hd
 
 # Skip OpenAI TTS — use system espeak / say instead
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3 \
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3 \
     --tts-backend system
 
 # Different response model
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3 \
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3 \
     --llm-model phi4:latest
 
 # Custom output directory
-python cookbook/60_voice_dialogue/run.py \
-    --audio cookbook/60_voice_dialogue/sample/question.mp3 \
+python cookbook/060_voice_dialogue/run.py \
+    --audio cookbook/060_voice_dialogue/sample/question.mp3 \
     --output-dir /tmp/voice_responses
 ```
 
@@ -134,7 +134,7 @@ python cookbook/60_voice_dialogue/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@audio_in` | AUDIO | `cookbook/60_voice_dialogue/sample/question.wav` | Source audio question file |
+| `@audio_in` | AUDIO | `cookbook/060_voice_dialogue/sample/question.wav` | Source audio question file |
 | `@context` | TEXT | `''` | Optional context provided to the LLM responder |
 | `@persona` | TEXT | `a helpful assistant` | Persona description for the LLM |
 | `@asr_model` | TEXT | `liquid/lfm-2.5-1.2b-instruct:free` | Transcription model |
@@ -142,8 +142,8 @@ python cookbook/60_voice_dialogue/run.py \
 | `@llm_model` | TEXT | `gemma4:e4b` | Ollama model for generating the text response |
 | `@tts_voice` | TEXT | `alloy` | OpenAI TTS voice |
 | `@tts_model` | TEXT | `tts-1` | OpenAI TTS model: `tts-1` or `tts-1-hd` |
-| `@output_dir` | TEXT | `cookbook/60_voice_dialogue/outputs` | Directory to write response audio |
-| `@log_dir` | TEXT | `cookbook/60_voice_dialogue/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/060_voice_dialogue/outputs` | Directory to write response audio |
+| `@log_dir` | TEXT | `cookbook/060_voice_dialogue/logs-spl` | Directory for log output |
 
 ### CLI flags (run.py)
 
@@ -158,7 +158,7 @@ python cookbook/60_voice_dialogue/run.py \
 | `--tts-voice` | `alloy` | OpenAI TTS voice |
 | `--tts-model` | `tts-1` | `tts-1` \| `tts-1-hd` \| `gpt-4o-mini-tts` |
 | `--tts-backend` | `openai` | `openai` \| `system` (`say` / `espeak`) |
-| `--output-dir` | `cookbook/60_voice_dialogue/outputs` | Directory to write response audio |
+| `--output-dir` | `cookbook/060_voice_dialogue/outputs` | Directory to write response audio |
 
 ---
 

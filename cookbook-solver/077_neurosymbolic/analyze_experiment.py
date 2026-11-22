@@ -6,13 +6,13 @@ Works for any run count (-r 1, -r 3, -r 5): aggregates mean pass rate per
 (model × problem × solver) cell across repetitions, then builds all tables.
 
 Usage:
-  python cookbook/77_neurosymbolic/analyze_experiment.py
-  python cookbook/77_neurosymbolic/analyze_experiment.py --db path/to/db.sqlite
-  python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
-  python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md --source exp-20260615-073849
-  python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
-  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/
-  python cookbook/77_neurosymbolic/analyze_experiment.py --figures output_dir/ --source exp-20260615-191224
+  python cookbook/077_neurosymbolic/analyze_experiment.py
+  python cookbook/077_neurosymbolic/analyze_experiment.py --db path/to/db.sqlite
+  python cookbook/077_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
+  python cookbook/077_neurosymbolic/analyze_experiment.py --out results.md --source exp-20260615-073849
+  python cookbook/077_neurosymbolic/analyze_experiment.py --list-sources
+  python cookbook/077_neurosymbolic/analyze_experiment.py --figures output_dir/
+  python cookbook/077_neurosymbolic/analyze_experiment.py --figures output_dir/ --source exp-20260615-191224
 """
 
 import argparse
@@ -21,7 +21,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-DB_DEFAULT = Path("cookbook/77_neurosymbolic/experiment_results.db")
+DB_DEFAULT = Path("cookbook/077_neurosymbolic/experiment_results.db")
 
 TIER_ORDER  = ["T0", "T1", "T2", "T3", "T4", "T5", "T6", "P1", "P2"]
 BACKEND_MAP = {"sympy": "SymPy", "sage": "Sage", "lean": "Lean 4"}

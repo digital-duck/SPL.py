@@ -77,8 +77,8 @@ Group A and Group B land together, in one pass.
 
 | File | Current name | Proposed name | CALL sites (.spl, excl. self) | Shadow exceptions (leave alone — local recipe tool of the same name) |
 |---|---|---|---|---|
-| stdlib_io | `load_file` | `spl_io_load_file` | 2 | `cookbook/65_llm_splc/llm_splc.spl` |
-| stdlib_io | `write_file` | `spl_io_write_file` | 74 | `cookbook/65_llm_splc/llm_splc.spl` |
+| stdlib_io | `load_file` | `spl_io_load_file` | 2 | `cookbook/065_llm_splc/llm_splc.spl` |
+| stdlib_io | `write_file` | `spl_io_write_file` | 74 | `cookbook/065_llm_splc/llm_splc.spl` |
 | stdlib_list | `get_item` | `spl_list_get_item` | ~11 | `72_verify_arxiv_references`, `22_text2spl_demo/.../review_agent.spl`, `pocketflow/042_nodejs_upgrade_agent/tools.spl` |
 | stdlib_list | `get_list_length` | `spl_list_length` | 3 | — |
 | stdlib_list | `list_append` | `spl_list_append` | 9 | — |
@@ -126,9 +126,9 @@ Since TOOL_API resolution is per-file (no cross-file namespace collision),
 these are unrelated to the stdlib versions and must not be touched by the
 rename:
 
-- `load_file`, `write_file` — locally redefined in `cookbook/65_llm_splc/llm_splc.spl`
-- `get_item` — locally redefined in `cookbook/72_verify_arxiv_references/verify_arxiv_references.spl`, `cookbook/22_text2spl_demo/generated-20260527_222233/review_agent.spl`, `cookbook-pocketflow/042_nodejs_upgrade_agent/tools.spl`
-- `list_count` — locally redefined in `cookbook/72_verify_arxiv_references/verify_arxiv_references.spl`, `cookbook/47_arxiv_morning_brief/tools.spl`, `cookbook-pocketflow/042_nodejs_upgrade_agent/tools.spl`
+- `load_file`, `write_file` — locally redefined in `cookbook/065_llm_splc/llm_splc.spl`
+- `get_item` — locally redefined in `cookbook/072_verify_arxiv_references/verify_arxiv_references.spl`, `cookbook/022_text2spl_demo/generated-20260527_222233/review_agent.spl`, `cookbook-pocketflow/042_nodejs_upgrade_agent/tools.spl`
+- `list_count` — locally redefined in `cookbook/072_verify_arxiv_references/verify_arxiv_references.spl`, `cookbook/047_arxiv_morning_brief/tools.spl`, `cookbook-pocketflow/042_nodejs_upgrade_agent/tools.spl`
 
 [WEN] we will deal with this categoy of refactoring later at lower priority
 

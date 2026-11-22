@@ -5,7 +5,7 @@ Pattern: solve → reflect → score → (confident? commit : correct → loop)
 
 Usage:
     pip install pyautogen
-    python cookbook/16_reflection/autogen/reflection_autogen.py \\
+    python cookbook/016_reflection/autogen/reflection_autogen.py \\
         --problem "What are the trade-offs of microservices vs monoliths?"
 """
 
@@ -79,7 +79,7 @@ def run(problem: str, max_refs: int, model: str, log_dir: str):
 @click.option("--problem", required=True, help="Problem to solve")
 @click.option("--max-reflections", default=3, help="Max reflection cycles")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/16_reflection/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/016_reflection/logs-autogen", help="Log directory")
 def main(problem, max_reflections, model, log_dir):
     """Reflection Agent — AutoGen edition"""
     run(problem, max_reflections, model, log_dir)

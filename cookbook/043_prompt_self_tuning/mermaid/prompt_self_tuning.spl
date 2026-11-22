@@ -4,8 +4,8 @@
 -- then each is tested against that failure case and the winner is selected.
 --
 -- Usage:
---   spl3 run cookbook/43_prompt_self_tuning/prompt_self_tuning.spl \
---       --tools cookbook/43_prompt_self_tuning/tools.py \
+--   spl3 run cookbook/043_prompt_self_tuning/prompt_self_tuning.spl \
+--       --tools cookbook/043_prompt_self_tuning/tools.py \
 --       --adapter ollama \
 --       baseline_prompt="Summarize this technical document." \
 --       failed_case="The document describes a complex quantum algorithm."
@@ -35,7 +35,7 @@ WORKFLOW prompt_self_tuning
     INPUT:
         @baseline_prompt TEXT DEFAULT 'Summarize this technical document.',
         @failed_case     TEXT DEFAULT 'The document describes a complex quantum algorithm.',
-        @log_dir TEXT DEFAULT 'cookbook/43_prompt_self_tuning/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/043_prompt_self_tuning/logs-spl'
     OUTPUT: @winning_prompt TEXT
 DO
     LOGGING f'Generating prompt variations for failed case: {@failed_case}' LEVEL INFO

@@ -25,8 +25,8 @@
 -- use_solver="false" → LLM-only baseline for ablation comparison
 --
 -- Run:
---   spl3 run cookbook/78_constraint_opt/staff_scheduling.spl --llm claude_cli
---   spl3 run cookbook/78_constraint_opt/staff_scheduling.spl --llm claude_cli \
+--   spl3 run cookbook/078_constraint_opt/staff_scheduling.spl --llm claude_cli
+--   spl3 run cookbook/078_constraint_opt/staff_scheduling.spl --llm claude_cli \
 --       --param use_solver=false
 -- ============================================================
 
@@ -412,7 +412,7 @@ WORKFLOW staff_scheduling
   INPUT @use_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
   INPUT @lang TEXT := "English"
-  INPUT @out_dir TEXT := "./cookbook/78_constraint_opt/output"
+  INPUT @out_dir TEXT := "./cookbook/078_constraint_opt/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

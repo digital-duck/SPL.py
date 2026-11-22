@@ -4,8 +4,8 @@
 -- refines its output based on what the human said.
 --
 -- Usage:
---   spl3 run cookbook/41_human_steering/human_steering.spl \
---       --tools cookbook/41_human_steering/tools.py \
+--   spl3 run cookbook/041_human_steering/human_steering.spl \
+--       --tools cookbook/041_human_steering/tools.py \
 --       --adapter ollama \
 --       topic="The future of agentic AI"
 
@@ -34,7 +34,7 @@ $$;
 WORKFLOW human_steering
     INPUT: 
         @topic TEXT DEFAULT 'The future of decentralized AI inference',
-        @log_dir TEXT DEFAULT 'cookbook/41_human_steering/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/041_human_steering/logs-spl'
     OUTPUT: @final_article TEXT
 DO
     LOGGING f'Drafting article on topic:\n {@topic}' LEVEL INFO

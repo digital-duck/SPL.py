@@ -5,7 +5,7 @@ Pattern: Spec → Implement → Review → (fix if needed) → Test → Assemble
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/30_code_gen/langgraph/code_gen_langgraph.py \\
+    python cookbook/030_code_gen/langgraph/code_gen_langgraph.py \\
         --spec "A function that validates an email address"
 """
 
@@ -117,7 +117,7 @@ def build_graph():
 @click.option("--language", default="Python", help="Programming language")
 @click.option("--framework", default="pytest", help="Test framework")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/30_code_gen/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/030_code_gen/logs-langgraph", help="Log directory")
 def main(spec, language, framework, model, log_dir):
     """Code Generator + Tests — LangGraph edition"""
     build_graph().invoke({

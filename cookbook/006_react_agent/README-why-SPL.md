@@ -58,22 +58,22 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/06_react_agent/react_agent.spl \
-    --adapter ollama --model gemma3 --tools cookbook/06_react_agent/tools.py \
+spl3 run cookbook/006_react_agent/react_agent.spl \
+    --adapter ollama --model gemma3 --tools cookbook/006_react_agent/tools.py \
     country="France"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/06_react_agent/langgraph/react_langgraph.py --country France
+python cookbook/006_react_agent/langgraph/react_langgraph.py --country France
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/06_react_agent/autogen/react_autogen.py --country France
+python cookbook/006_react_agent/autogen/react_autogen.py --country France
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/06_react_agent/crewai/react_crewai.py --country France
+python cookbook/006_react_agent/crewai/react_crewai.py --country France
 ```

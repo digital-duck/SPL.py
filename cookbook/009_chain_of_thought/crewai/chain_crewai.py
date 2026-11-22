@@ -8,9 +8,9 @@ requires a new Agent + Task + Crew instantiation.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/09_chain_of_thought/crewai/chain_crewai.py \\
+    python cookbook/009_chain_of_thought/crewai/chain_crewai.py \\
         --topic "distributed AI inference"
-    python cookbook/09_chain_of_thought/crewai/chain_crewai.py \\
+    python cookbook/009_chain_of_thought/crewai/chain_crewai.py \\
         --topic "quantum computing" --model llama3.2
 """
 
@@ -109,7 +109,7 @@ def run(topic: str, model: str, log_dir: str) -> str:
 @click.command()
 @click.option("--topic",   required=True,    help="Topic to analyze")
 @click.option("--model",   default="gemma3", show_default=True)
-@click.option("--log-dir", default="cookbook/09_chain_of_thought/crewai/logs", show_default=True)
+@click.option("--log-dir", default="cookbook/009_chain_of_thought/crewai/logs", show_default=True)
 def main(topic: str, model: str, log_dir: str):
     result = run(topic, model, log_dir)
     print("\n" + "=" * 60)

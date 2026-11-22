@@ -21,7 +21,7 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..",
-                                "cookbook", "71_linalg_concept_book"))
+                                "cookbook", "071_linalg_concept_book"))
 
 from style_profiles import (
     STYLE_PROFILES,
@@ -34,7 +34,7 @@ from spl3.parser import SPL3Parser
 from spl3.splc.transpiler_linalg import LinalgTranspiler
 from pathlib import Path
 
-_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "71_linalg_concept_book"
+_COOKBOOK = Path(__file__).parent.parent / "cookbook" / "071_linalg_concept_book"
 _STYLES = ["textbook", "feynman", "flashcard", "instructor", "research"]
 
 

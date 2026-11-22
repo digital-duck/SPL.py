@@ -9,9 +9,9 @@ terms. AutoGen has no language-level distinction between the two.
 
 Usage:
     pip install pyautogen langchain-ollama langchain-community faiss-cpu
-    python cookbook/08_rag_query/autogen/rag_autogen.py \\
+    python cookbook/008_rag_query/autogen/rag_autogen.py \\
         --doc /path/to/doc.md --question "Who is Wen?"
-    python cookbook/08_rag_query/autogen/rag_autogen.py \\
+    python cookbook/008_rag_query/autogen/rag_autogen.py \\
         --doc /path/to/doc.md --question "What is Momagrid?" \\
         --model llama3.2 --embed-model nomic-embed-text
 """
@@ -97,7 +97,7 @@ def run(doc: str, question: str, model: str, embed_model: str, log_dir: str) -> 
 @click.option("--question", required=True, help="Question to answer")
 @click.option("--model", default="gemma3", help="Ollama chat model")
 @click.option("--embed-model", default="nomic-embed-text", help="Ollama embedding model")
-@click.option("--log-dir", default="cookbook/08_rag_query/autogen/logs", help="Log directory")
+@click.option("--log-dir", default="cookbook/008_rag_query/autogen/logs", help="Log directory")
 def main(doc, question, model, embed_model, log_dir):
     """RAG Query — AutoGen edition"""
     result = run(doc, question, model, embed_model, log_dir)

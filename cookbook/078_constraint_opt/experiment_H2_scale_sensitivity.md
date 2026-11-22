@@ -34,12 +34,12 @@
 export PROBLEM_R1_N10="A furniture factory produces 10 product lines. Each unit requires labor (hours), lumber (kg), upholstery fabric (m²), and steel (kg), and earns a fixed profit. Product specifications per unit: Dining Chair needs 2.0h labor, 3.0kg lumber, 0.8m² fabric, 0.0kg steel, profit \$25. Dining Table needs 4.0h labor, 8.0kg lumber, 0.0m² fabric, 0.0kg steel, profit \$55. Office Desk needs 3.5h labor, 5.0kg lumber, 0.0m² fabric, 1.5kg steel, profit \$45. Bookcase needs 5.0h labor, 9.0kg lumber, 0.0m² fabric, 0.5kg steel, profit \$58. Wardrobe needs 7.0h labor, 14.0kg lumber, 0.0m² fabric, 0.5kg steel, profit \$85. Armchair needs 3.0h labor, 2.0kg lumber, 1.5m² fabric, 0.0kg steel, profit \$48. Bed Frame needs 5.0h labor, 10.0kg lumber, 0.0m² fabric, 2.0kg steel, profit \$72. Coffee Table needs 2.0h labor, 4.0kg lumber, 0.0m² fabric, 0.0kg steel, profit \$28. Storage Cabinet needs 4.0h labor, 7.0kg lumber, 0.0m² fabric, 1.0kg steel, profit \$52. Lounge Sofa needs 4.0h labor, 3.0kg lumber, 2.5m² fabric, 0.0kg steel, profit \$68. Available daily: 120 labor hours, 150 kg lumber, 15 m² upholstery fabric, 12 kg steel. Production quantities are continuous (fractional units allowed). Maximize total daily profit."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R1_N10"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R1_N10"
 ```
@@ -56,12 +56,12 @@ spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
 export PROBLEM_R1_N20="A furniture factory produces 20 product lines. Each unit requires labor (hours), lumber (kg), upholstery fabric (m²), steel (kg), and finishing time (hours), and earns a fixed profit. Product specifications per unit — Dining Chair: 2.0h labor, 3.0kg lumber, 0.8m² fabric, 0.0kg steel, 0.5h finish, \$25 profit. Dining Table: 4.0h labor, 8.0kg lumber, 0.0m² fabric, 0.0kg steel, 1.0h finish, \$55 profit. Office Desk: 3.5h labor, 5.0kg lumber, 0.0m² fabric, 1.5kg steel, 0.8h finish, \$45 profit. Bookcase: 5.0h labor, 9.0kg lumber, 0.0m² fabric, 0.5kg steel, 1.0h finish, \$58 profit. Wardrobe: 7.0h labor, 14.0kg lumber, 0.0m² fabric, 0.5kg steel, 1.5h finish, \$85 profit. Armchair: 3.0h labor, 2.0kg lumber, 1.5m² fabric, 0.0kg steel, 0.5h finish, \$48 profit. Bed Frame: 5.0h labor, 10.0kg lumber, 0.0m² fabric, 2.0kg steel, 1.2h finish, \$72 profit. Coffee Table: 2.0h labor, 4.0kg lumber, 0.0m² fabric, 0.0kg steel, 0.4h finish, \$28 profit. Storage Cabinet: 4.0h labor, 7.0kg lumber, 0.0m² fabric, 1.0kg steel, 0.8h finish, \$52 profit. Lounge Sofa: 4.0h labor, 3.0kg lumber, 2.5m² fabric, 0.0kg steel, 0.6h finish, \$68 profit. Nightstand: 1.5h labor, 2.5kg lumber, 0.0m² fabric, 0.0kg steel, 0.3h finish, \$20 profit. Dresser: 4.5h labor, 8.0kg lumber, 0.0m² fabric, 0.5kg steel, 1.0h finish, \$62 profit. Vanity Table: 3.0h labor, 4.5kg lumber, 0.0m² fabric, 1.0kg steel, 0.7h finish, \$42 profit. Ottoman: 2.0h labor, 1.0kg lumber, 1.2m² fabric, 0.0kg steel, 0.3h finish, \$35 profit. Side Table: 1.5h labor, 2.0kg lumber, 0.0m² fabric, 0.0kg steel, 0.3h finish, \$18 profit. Media Console: 3.5h labor, 6.0kg lumber, 0.0m² fabric, 0.5kg steel, 0.7h finish, \$48 profit. Hall Tree: 3.0h labor, 5.0kg lumber, 0.0m² fabric, 1.0kg steel, 0.6h finish, \$40 profit. Shoe Rack: 2.0h labor, 3.5kg lumber, 0.0m² fabric, 0.5kg steel, 0.4h finish, \$24 profit. Bar Cart: 2.5h labor, 1.5kg lumber, 0.0m² fabric, 2.5kg steel, 0.5h finish, \$38 profit. Rocking Chair: 3.5h labor, 4.0kg lumber, 0.5m² fabric, 0.0kg steel, 0.7h finish, \$44 profit. Available daily: 200 labor hours, 250 kg lumber, 20 m² upholstery fabric, 18 kg steel, 30 finishing hours. Production quantities are continuous (fractional units allowed). Maximize total daily profit."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R1_N20"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R1_N20"
 ```
@@ -78,12 +78,12 @@ spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
 export PROBLEM_R2_N20="A regional distributor has 4 warehouses and 5 retail stores. Warehouse W1 holds 90 units, W2 holds 70 units, W3 holds 80 units, W4 holds 60 units (total supply 300). Store S1 needs 60 units, S2 needs 55 units, S3 needs 70 units, S4 needs 50 units, S5 needs 65 units (total demand 300). Shipping cost per unit: W1 to S1 \$3, W1 to S2 \$2, W1 to S3 \$5, W1 to S4 \$8, W1 to S5 \$4. W2 to S1 \$6, W2 to S2 \$4, W2 to S3 \$3, W2 to S4 \$5, W2 to S5 \$7. W3 to S1 \$4, W3 to S2 \$7, W3 to S3 \$2, W3 to S4 \$6, W3 to S5 \$3. W4 to S1 \$8, W4 to S2 \$5, W4 to S3 \$6, W4 to S4 \$2, W4 to S5 \$9. All store demand must be exactly met. Minimize total shipping cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R2_N20"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R2_N20"
 ```
@@ -102,12 +102,12 @@ spl3 run cookbook/78_constraint_opt/supply_chain.spl \
 export PROBLEM_R2_N40="A national distributor operates 8 warehouses and 5 regional distribution centers. Warehouse capacities: W1=100 units, W2=80 units, W3=90 units, W4=70 units, W5=60 units, W6=85 units, W7=75 units, W8=65 units (total supply 625). Distribution center requirements: D1=120 units, D2=110 units, D3=130 units, D4=140 units, D5=125 units (total demand 625). Shipping cost per unit — W1: to D1 \$4, D2 \$2, D3 \$6, D4 \$9, D5 \$5. W2: to D1 \$7, D2 \$5, D3 \$3, D4 \$6, D5 \$8. W3: to D1 \$3, D2 \$8, D3 \$2, D4 \$7, D5 \$4. W4: to D1 \$9, D2 \$4, D3 \$7, D4 \$2, D5 \$10. W5: to D1 \$5, D2 \$3, D3 \$8, D4 \$4, D5 \$6. W6: to D1 \$6, D2 \$7, D3 \$4, D4 \$5, D5 \$2. W7: to D1 \$8, D2 \$6, D3 \$5, D4 \$3, D5 \$7. W8: to D1 \$2, D2 \$9, D3 \$7, D4 \$8, D5 \$3. All distribution center demand must be exactly met. Minimize total shipping cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R2_N40"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R2_N40"
 ```
@@ -124,12 +124,12 @@ spl3 run cookbook/78_constraint_opt/supply_chain.spl \
 export PROBLEM_R3_N10="A hospital clinic needs to staff one day with 4 shifts: Early Morning (5am–1pm), Day (9am–5pm), Evening (1pm–9pm), and Night (9pm–5am). Minimum nurse coverage: Early Morning needs at least 2 nurses, Day needs at least 3 nurses, Evening needs at least 3 nurses, Night needs at least 2 nurses (total minimum 10 slots). Ten nurses are available: Nurse1 through Nurse10. Each nurse can work at most 1 shift today. Wage per nurse-shift: Early Morning costs \$280, Day costs \$220, Evening costs \$240, Night costs \$350. Assign nurses to shifts to meet all minimum coverage requirements at minimum total wage cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R3_N10"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R3_N10"
 ```
@@ -148,12 +148,12 @@ spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
 export PROBLEM_R3_N20="A regional hospital needs to staff one day with 5 shifts: Night (11pm–7am), Early Morning (6am–2pm), Day (10am–6pm), Evening (2pm–10pm), and Late Night (8pm–4am). Minimum nurse coverage requirements: Night needs at least 3 nurses, Early Morning needs at least 4 nurses, Day needs at least 5 nurses, Evening needs at least 4 nurses, Late Night needs at least 3 nurses (total minimum coverage 19 slots). Twenty nurses are available: Nurse1 through Nurse20. Each nurse can work at most 1 shift today. Wage per nurse-shift: Night costs \$380, Early Morning costs \$260, Day costs \$200, Evening costs \$230, Late Night costs \$310. Assign nurses to shifts to meet all minimum coverage requirements at minimum total wage cost. Note: total nurse capacity (20) exceeds minimum demand (19), so exactly one nurse will not be assigned to any shift — the solver must choose which nurse to leave unassigned to minimize cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R3_N20"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R3_N20"
 ```
@@ -176,12 +176,12 @@ spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
 export PROBLEM_R4_N10="An IT department must select a portfolio of projects for next quarter. Ten candidate projects are available. Project P1 costs \$80K and requires 2 developer-months, delivering strategic value 6. Project P2 costs \$120K and requires 3 developer-months, delivering value 9. Project P3 costs \$60K and requires 2 developer-months, delivering value 5. Project P4 costs \$150K and requires 4 developer-months, delivering value 11. Project P5 costs \$200K and requires 5 developer-months, delivering value 12. Project P6 costs \$90K and requires 2 developer-months, delivering value 7. Project P7 costs \$110K and requires 3 developer-months, delivering value 8. Project P8 costs \$70K and requires 2 developer-months, delivering value 5. Project P9 costs \$180K and requires 4 developer-months, delivering value 13. Project P10 costs \$100K and requires 3 developer-months, delivering value 6. The total budget is \$600K and the team has 15 developer-months available. Each project is either fully funded or not — no partial investment. Select which projects to fund to maximize total strategic value."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R4_N10"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R4_N10"
 ```
@@ -210,12 +210,12 @@ Verified by enumeration of high-value candidate subsets:
 export PROBLEM_R4_N20="An IT department must select a portfolio of projects for next year. Twenty candidate projects are available. Project P1 costs \$80K and requires 2 developer-months, delivering value 6. Project P2 costs \$120K and requires 3 developer-months, delivering value 9. Project P3 costs \$60K and requires 2 developer-months, delivering value 5. Project P4 costs \$150K and requires 4 developer-months, delivering value 11. Project P5 costs \$200K and requires 5 developer-months, delivering value 12. Project P6 costs \$90K and requires 2 developer-months, delivering value 7. Project P7 costs \$110K and requires 3 developer-months, delivering value 8. Project P8 costs \$70K and requires 2 developer-months, delivering value 5. Project P9 costs \$180K and requires 4 developer-months, delivering value 13. Project P10 costs \$100K and requires 3 developer-months, delivering value 6. Project P11 costs \$130K and requires 3 developer-months, delivering value 10. Project P12 costs \$85K and requires 2 developer-months, delivering value 6. Project P13 costs \$160K and requires 4 developer-months, delivering value 12. Project P14 costs \$75K and requires 2 developer-months, delivering value 5. Project P15 costs \$220K and requires 5 developer-months, delivering value 14. Project P16 costs \$95K and requires 3 developer-months, delivering value 7. Project P17 costs \$140K and requires 4 developer-months, delivering value 10. Project P18 costs \$65K and requires 2 developer-months, delivering value 5. Project P19 costs \$170K and requires 4 developer-months, delivering value 12. Project P20 costs \$115K and requires 3 developer-months, delivering value 8. The total budget is \$1,000K and the team has 25 developer-months available. Each project is either fully funded or not — no partial investment. Select which projects to fund to maximize total strategic value."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM_R4_N20"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM_R4_N20"
 ```

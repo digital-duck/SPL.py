@@ -7,7 +7,7 @@ structure — without changing WHAT is true.  The symbolic check
 A profile is resolved to a style_guide string by style_instruction(), which is
 called via SOLVE in the SPL workflow and injected into every GENERATE prompt.
 
-Identical copy of cookbook/73_intro_geometry/style_profiles.py's seven
+Identical copy of cookbook/073_intro_geometry/style_profiles.py's seven
 profiles — the superset that adds ``middle_school``/``high_school`` to the
 five recipe 71 originals. Recipe 74 compiles ONE source against whichever
 @domain_yaml is resolved at runtime, so its style menu can't be tailored to

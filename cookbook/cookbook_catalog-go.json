@@ -1,5 +1,5 @@
 {
-  "_comment": "SPL.go Cookbook Catalog — mirrors cookbook_catalog.json (Python) but uses the 'spl-go' binary. Synced 2026-07-14, re-synced 2026-07-15 after adding SOLVE/ASSERT/CREATE TOOL_API lexer+parser support and WORKFLOW INPUT/OUTPUT ':=' default-value + repeated-keyword-per-line parsing; SOLVE/ASSERT/CREATE TOOL_API kernel dispatch (both subprocess-REPL and real Jupyter/ZMQ backends) confirmed wired and cross-validated against spl3 as of 2026-07-15. Re-synced 2026-07-17: added recipe 80 (new in main since last sync); fixed recipe 04 (missing model_1/model_2, wrong model_3) and recipes 01/05/09/11/18/75 (simplified back to '--llm ADAPTER:MODEL' passthrough, matching main almost verbatim, now that spl-go accepts --llm directly instead of requiring separate --adapter/--model); recipe 77 (neurosymbolic) is not in this catalog at all — it has its own driver, cookbook/77_neurosymbolic/run_experiment.py --runtime go, exercised directly, not via run_all.py. Same day, two real spl-go runtime bugs were found and fixed while validating recipe 77 end-to-end: EVALUATE...WHEN IN (...) always evaluated false, and ExecuteProgram ran every top-level WORKFLOW in a file instead of just the entry one (see internal/executor/executor.go and cmd/run.go) — both could affect other recipes in this catalog that use WHEN IN or define a helper workflow, so a fresh 'approved' status here should not be read as re-verified against those fixes until actually re-run. Recipes marked 'new' or carrying a stale 'wip'/'not yet supported' note may already work (--tools external Python file loading, e.g., IS implemented in spl-go's internal/tools/loader.go) — verify each with a live run rather than trusting the annotation, especially anything not re-run since 2026-07-15.",
+  "_comment": "SPL.go Cookbook Catalog — mirrors cookbook_catalog.json (Python) but uses the 'spl-go' binary. Synced 2026-07-14, re-synced 2026-07-15 after adding SOLVE/ASSERT/CREATE TOOL_API lexer+parser support and WORKFLOW INPUT/OUTPUT ':=' default-value + repeated-keyword-per-line parsing; SOLVE/ASSERT/CREATE TOOL_API kernel dispatch (both subprocess-REPL and real Jupyter/ZMQ backends) confirmed wired and cross-validated against spl3 as of 2026-07-15. Re-synced 2026-07-17: added recipe 80 (new in main since last sync); fixed recipe 04 (missing model_1/model_2, wrong model_3) and recipes 01/05/09/11/18/75 (simplified back to '--llm ADAPTER:MODEL' passthrough, matching main almost verbatim, now that spl-go accepts --llm directly instead of requiring separate --adapter/--model); recipe 77 (neurosymbolic) is not in this catalog at all — it has its own driver, cookbook/077_neurosymbolic/run_experiment.py --runtime go, exercised directly, not via run_all.py. Same day, two real spl-go runtime bugs were found and fixed while validating recipe 77 end-to-end: EVALUATE...WHEN IN (...) always evaluated false, and ExecuteProgram ran every top-level WORKFLOW in a file instead of just the entry one (see internal/executor/executor.go and cmd/run.go) — both could affect other recipes in this catalog that use WHEN IN or define a helper workflow, so a fresh 'approved' status here should not be read as re-verified against those fixes until actually re-run. Recipes marked 'new' or carrying a stale 'wip'/'not yet supported' note may already work (--tools external Python file loading, e.g., IS implemented in spl-go's internal/tools/loader.go) — verify each with a live run rather than trusting the annotation, especially anything not re-run since 2026-07-15.",
   "_schema": {
     "is_active": "bool   — included in default batch run (python run_all.py --catalog-file cookbook/cookbook_catalog_go.json)",
     "approval_status": "string — new | approved | wip | disabled | rejected"
@@ -12,7 +12,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/01_hello_world/hello.spl",
+        "./cookbook/001_hello_world/hello.spl",
         "--llm",
         "ollama:gemma3"
       ],
@@ -29,7 +29,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/02_ollama_proxy/proxy.spl",
+        "./cookbook/002_ollama_proxy/proxy.spl",
         "--adapter",
         "ollama",
         "prompt=Explain quantum computing in one sentence"
@@ -47,7 +47,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/03_multilingual/multilingual.spl",
+        "./cookbook/003_multilingual/multilingual.spl",
         "--adapter",
         "ollama",
         "user_input=Hello Wen-Guang",
@@ -66,7 +66,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/04_model_showdown/showdown.spl",
+        "./cookbook/004_model_showdown/showdown.spl",
         "--adapter",
         "ollama",
         "prompt=Write a poem about Spring season",
@@ -87,7 +87,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/05_self_refine/self_refine.spl",
+        "./cookbook/005_self_refine/self_refine.spl",
         "--llm",
         "ollama:gemma3",
         "task=Write a haiku about coding"
@@ -105,7 +105,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/06_react_agent/react_agent.spl",
+        "./cookbook/006_react_agent/react_agent.spl",
         "--adapter",
         "claude_cli",
         "--model",
@@ -113,7 +113,7 @@
         "--allowed-tools",
         "WebSearch",
         "--tools",
-        "./cookbook/06_react_agent/tools.py",
+        "./cookbook/006_react_agent/tools.py",
         "country=France"
       ],
       "dir": "06_react_agent",
@@ -129,7 +129,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/07_safe_generation/safe_generation.spl",
+        "./cookbook/007_safe_generation/safe_generation.spl",
         "--adapter",
         "ollama",
         "prompt=Explain how encryption works"
@@ -147,7 +147,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/08_rag_query/rag_query.spl",
+        "./cookbook/008_rag_query/rag_query.spl",
         "--adapter",
         "ollama",
         "question=Who is Wen?"
@@ -165,7 +165,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/09_chain_of_thought/chain.spl",
+        "./cookbook/009_chain_of_thought/chain.spl",
         "--llm",
         "ollama:gemma3",
         "topic=distributed AI inference"
@@ -183,7 +183,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/10_batch_test/batch_test.spl",
+        "./cookbook/010_batch_test/batch_test.spl",
         "--adapter",
         "ollama"
       ],
@@ -200,7 +200,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/11_debate_arena/debate.spl",
+        "./cookbook/011_debate_arena/debate.spl",
         "--llm",
         "ollama:gemma3",
         "topic=AI should be open-sourced"
@@ -218,7 +218,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/12_plan_and_execute/plan_execute.spl",
+        "./cookbook/012_plan_and_execute/plan_execute.spl",
         "--adapter",
         "ollama",
         "task=Build a REST API for a todo app"
@@ -236,9 +236,9 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/13_map_reduce/map_reduce.spl",
+        "./cookbook/013_map_reduce/map_reduce.spl",
         "--tools",
-        "./cookbook/13_map_reduce/tools.py",
+        "./cookbook/013_map_reduce/tools.py",
         "--adapter",
         "ollama",
         "document=The quick brown fox jumps over the lazy dog. This is a test document for map-reduce summarization.",
@@ -257,7 +257,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/14_multi_agent/multi_agent.spl",
+        "./cookbook/014_multi_agent/multi_agent.spl",
         "--adapter",
         "ollama",
         "topic=Impact of AI on healthcare"
@@ -275,10 +275,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/15_code_review/code_review.spl",
+        "./cookbook/015_code_review/code_review.spl",
         "--adapter",
         "ollama",
-        "code=./cookbook/15_code_review/code_review.spl"
+        "code=./cookbook/015_code_review/code_review.spl"
       ],
       "dir": "15_code_review",
       "log": "code_review",
@@ -293,7 +293,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/16_reflection/reflection.spl",
+        "./cookbook/016_reflection/reflection.spl",
         "--adapter",
         "ollama",
         "problem=Design a URL shortener system"
@@ -311,7 +311,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/17_tree_of_thought/tree_of_thought.spl",
+        "./cookbook/017_tree_of_thought/tree_of_thought.spl",
         "--adapter",
         "ollama",
         "problem=Should we rewrite the legacy system or incrementally refactor?",
@@ -330,7 +330,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/18_guardrails/guardrails.spl",
+        "./cookbook/018_guardrails/guardrails.spl",
         "--llm",
         "ollama:gemma3",
         "user_input=Explain how encryption works"
@@ -348,7 +348,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/19_memory_conversation/memory_chat.spl",
+        "./cookbook/019_memory_conversation/memory_chat.spl",
         "--adapter",
         "ollama",
         "user_input=My name is Alice and I am a data scientist"
@@ -366,7 +366,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/20_ensemble_voting/ensemble.spl",
+        "./cookbook/020_ensemble_voting/ensemble.spl",
         "--adapter",
         "ollama",
         "question=What causes inflation?"
@@ -384,7 +384,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/21_multi_model_pipeline/multi_model.spl",
+        "./cookbook/021_multi_model_pipeline/multi_model.spl",
         "--adapter",
         "ollama",
         "topic=climate change"
@@ -401,7 +401,7 @@
       "description": "Natural language → SPL compiler demo via spl-go text2spl",
       "args": [
         "bash",
-        "./cookbook/22_text2spl_demo/text2spl_demo.sh",
+        "./cookbook/022_text2spl_demo/text2spl_demo.sh",
         "--spl-bin",
         "spl-go"
       ],
@@ -418,7 +418,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/23_structured_output/structured_output.spl",
+        "./cookbook/023_structured_output/structured_output.spl",
         "--adapter",
         "ollama",
         "text=John Smith, 42, joined Acme Corp in March 2021 earning $95,000/year"
@@ -436,7 +436,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/24_few_shot/few_shot.spl",
+        "./cookbook/024_few_shot/few_shot.spl",
         "--adapter",
         "ollama",
         "text=The quarterly results exceeded all analyst forecasts by a significant margin",
@@ -455,7 +455,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/25_nested_procs/nested_procs.spl",
+        "./cookbook/025_nested_procs/nested_procs.spl",
         "--adapter",
         "ollama",
         "topic=quantum computing",
@@ -474,7 +474,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/26_ab_test/ab_test.spl",
+        "./cookbook/026_ab_test/ab_test.spl",
         "--adapter",
         "ollama",
         "task=Explain neural networks",
@@ -494,7 +494,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/27_data_extraction/data_extraction.spl",
+        "./cookbook/027_data_extraction/data_extraction.spl",
         "--adapter",
         "ollama",
         "text=Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March.",
@@ -513,7 +513,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/28_support_triage/support_triage.spl",
+        "./cookbook/028_support_triage/support_triage.spl",
         "--adapter",
         "ollama",
         "ticket=My account has been charged twice for the same order #12345"
@@ -531,7 +531,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/29_meeting_actions/meeting_actions.spl",
+        "./cookbook/029_meeting_actions/meeting_actions.spl",
         "--adapter",
         "ollama",
         "transcript=Alice: we need to fix the login bug before Friday. Bob: I'll handle it. Alice: also need to update the docs",
@@ -550,7 +550,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/30_code_gen/code_gen.spl",
+        "./cookbook/030_code_gen/code_gen.spl",
         "--adapter",
         "ollama",
         "spec=A function that validates an email address",
@@ -569,7 +569,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/31_sentiment_pipeline/sentiment.spl",
+        "./cookbook/031_sentiment_pipeline/sentiment.spl",
         "--adapter",
         "ollama",
         "items=Great product, love it! | Terrible experience, never again | It was okay I guess",
@@ -588,7 +588,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/32_socratic_tutor/socratic_tutor.spl",
+        "./cookbook/032_socratic_tutor/socratic_tutor.spl",
         "--adapter",
         "ollama",
         "topic=Why does the sky appear blue?",
@@ -607,7 +607,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/33_interview_sim/interview_sim.spl",
+        "./cookbook/033_interview_sim/interview_sim.spl",
         "--adapter",
         "ollama",
         "role=Senior Software Engineer",
@@ -626,7 +626,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/34_progressive_summary/progressive_summary.spl",
+        "./cookbook/034_progressive_summary/progressive_summary.spl",
         "--adapter",
         "ollama",
         "text=Artificial intelligence has transformed industries from healthcare to finance, enabling automation of complex tasks that previously required human expertise. Machine learning models can now diagnose diseases from medical images, detect fraud in financial transactions, and generate human-like text. However, these advances raise important questions about bias, accountability, and the future of work.",
@@ -645,7 +645,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/35_hypothesis_tester/hypothesis.spl",
+        "./cookbook/035_hypothesis_tester/hypothesis.spl",
         "--adapter",
         "ollama",
         "observation=Remote teams show lower productivity in the first month after joining",
@@ -664,11 +664,11 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/36_tool_use/tool_use.spl",
+        "./cookbook/036_tool_use/tool_use.spl",
         "--adapter",
         "ollama",
         "--tools",
-        "./cookbook/36_tool_use/tools.py",
+        "./cookbook/036_tool_use/tools.py",
         "sales=1200,1450,1380,1600,1750,1900",
         "prev_total=7800",
         "period=H1 2025"
@@ -686,7 +686,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/37_headline_news/headline_news.spl",
+        "./cookbook/037_headline_news/headline_news.spl",
         "--adapter",
         "claude_cli",
         "--model",
@@ -706,7 +706,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/38_bedrock_quickstart/bedrock_quickstart.spl",
+        "./cookbook/038_bedrock_quickstart/bedrock_quickstart.spl",
         "--adapter",
         "bedrock",
         "prompt=Explain the CAP theorem in two sentences."
@@ -724,7 +724,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/39_vertex_quickstart/vertex_quickstart.spl",
+        "./cookbook/039_vertex_quickstart/vertex_quickstart.spl",
         "--adapter",
         "vertex",
         "prompt=Explain the CAP theorem in two sentences."
@@ -742,7 +742,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl",
+        "./cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl",
         "--adapter",
         "azure_openai",
         "prompt=Explain the CAP theorem in two sentences."
@@ -760,7 +760,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/41_human_steering/human_steering.spl",
+        "./cookbook/041_human_steering/human_steering.spl",
         "--adapter",
         "ollama",
         "topic=The future of agentic AI"
@@ -778,7 +778,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/42_knowledge_synthesis/knowledge_synthesis.spl",
+        "./cookbook/042_knowledge_synthesis/knowledge_synthesis.spl",
         "--adapter",
         "ollama",
         "raw_text=Recent advances in sparse attention mechanisms dramatically reduce transformer memory footprint while preserving model quality on long-context tasks."
@@ -796,7 +796,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/43_prompt_self_tuning/prompt_self_tuning.spl",
+        "./cookbook/043_prompt_self_tuning/prompt_self_tuning.spl",
         "--adapter",
         "ollama",
         "baseline_prompt=Summarize this technical document.",
@@ -815,7 +815,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/44_adaptive_failover/adaptive_failover.spl",
+        "./cookbook/044_adaptive_failover/adaptive_failover.spl",
         "--adapter",
         "ollama",
         "query=Explain quantum entanglement for a technical audience.",
@@ -835,7 +835,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/45_vision_to_action/vision_to_action.spl",
+        "./cookbook/045_vision_to_action/vision_to_action.spl",
         "--adapter",
         "ollama",
         "image_description=Image shows a package being delivered to the front door."
@@ -853,10 +853,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl",
+        "./cookbook/047_arxiv_morning_brief/arxiv_morning_brief.spl",
         "--adapter",
         "ollama",
-        "urls=cookbook/47_arxiv_morning_brief/arxiv-papers.txt"
+        "urls=cookbook/047_arxiv_morning_brief/arxiv-papers.txt"
       ],
       "dir": "47_arxiv_morning_brief",
       "log": "arxiv_morning_brief",
@@ -871,7 +871,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/48_credit_risk/assess_credit_risk.spl",
+        "./cookbook/048_credit_risk/assess_credit_risk.spl",
         "--adapter",
         "ollama",
         "applicant_data=Applicant: Jane Doe | Income: $72,000 | Debt: $18,000 | Employment: 5 years | Prior defaults: none",
@@ -890,10 +890,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/49_regulatory_news_audit/audit_news.spl",
+        "./cookbook/049_regulatory_news_audit/audit_news.spl",
         "--adapter",
         "ollama",
-        "news_batch_path=cookbook/49_regulatory_news_audit/data/news_feed.txt"
+        "news_batch_path=cookbook/049_regulatory_news_audit/data/news_feed.txt"
       ],
       "dir": "49_regulatory_news_audit",
       "log": "audit_news",
@@ -908,7 +908,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/05_self_refine/self_refine.spl",
+        "./cookbook/005_self_refine/self_refine.spl",
         "--adapter",
         "ollama",
         "task=Write a haiku about the joy of coding"
@@ -926,7 +926,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/50_code_pipeline/code_pipeline.spl",
+        "./cookbook/050_code_pipeline/code_pipeline.spl",
         "--adapter",
         "ollama",
         "spec=Write a binary search function that returns the index or -1",
@@ -945,10 +945,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/51_image_caption/image_caption.spl",
+        "./cookbook/051_image_caption/image_caption.spl",
         "--adapter",
         "ollama",
-        "photo=cookbook/51_image_caption/sample/photo.jpg",
+        "photo=cookbook/051_image_caption/sample/photo.jpg",
         "model=gemma4:e4b"
       ],
       "dir": "51_image_caption",
@@ -964,10 +964,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/52_audio_summary/audio_summary.spl",
+        "./cookbook/052_audio_summary/audio_summary.spl",
         "--adapter",
         "ollama",
-        "clip=cookbook/52_audio_summary/sample/clip.wav",
+        "clip=cookbook/052_audio_summary/sample/clip.wav",
         "model=gemma4:e4b"
       ],
       "dir": "52_audio_summary",
@@ -983,10 +983,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/53_video_summary/video_summary.spl",
+        "./cookbook/053_video_summary/video_summary.spl",
         "--adapter",
         "ollama",
-        "video=cookbook/53_video_summary/sample/clip.mp4",
+        "video=cookbook/053_video_summary/sample/clip.mp4",
         "model=gemma4"
       ],
       "dir": "53_video_summary",
@@ -1002,7 +1002,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/54_text_to_image/text_to_image.spl",
+        "./cookbook/054_text_to_image/text_to_image.spl",
         "--adapter",
         "openai",
         "prompt=A serene mountain lake at golden hour, photorealistic"
@@ -1020,7 +1020,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/55_text_to_speech/text_to_speech.spl",
+        "./cookbook/055_text_to_speech/text_to_speech.spl",
         "--adapter",
         "openai",
         "text=Welcome to SPL 3.0 multimodal support."
@@ -1038,7 +1038,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/56_text_to_video/text_to_video.spl",
+        "./cookbook/056_text_to_video/text_to_video.spl",
         "--adapter",
         "openai",
         "prompt=A duck walking through a quiet forest at dawn"
@@ -1056,10 +1056,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/57_image_convert/image_convert.spl",
+        "./cookbook/057_image_convert/image_convert.spl",
         "--adapter",
         "ollama",
-        "image=cookbook/57_image_convert/sample/photo.png",
+        "image=cookbook/057_image_convert/sample/photo.png",
         "target_format=jpeg"
       ],
       "dir": "57_image_convert",
@@ -1075,10 +1075,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/58_image_restyle/image_restyle.spl",
+        "./cookbook/058_image_restyle/image_restyle.spl",
         "--adapter",
         "openai",
-        "image=cookbook/58_image_restyle/sample/photo.jpg",
+        "image=cookbook/058_image_restyle/sample/photo.jpg",
         "style=watercolor painting, soft edges, pastel tones"
       ],
       "dir": "58_image_restyle",
@@ -1094,10 +1094,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/59_audio_convert/audio_convert.spl",
+        "./cookbook/059_audio_convert/audio_convert.spl",
         "--adapter",
         "ollama",
-        "audio=cookbook/59_audio_convert/sample/clip.wav",
+        "audio=cookbook/059_audio_convert/sample/clip.wav",
         "target_format=mp3"
       ],
       "dir": "59_audio_convert",
@@ -1113,10 +1113,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/60_voice_dialogue/voice_dialogue.spl",
+        "./cookbook/060_voice_dialogue/voice_dialogue.spl",
         "--adapter",
         "openrouter",
-        "audio=cookbook/60_voice_dialogue/sample/question.mp3"
+        "audio=cookbook/060_voice_dialogue/sample/question.mp3"
       ],
       "dir": "60_voice_dialogue",
       "log": "voice_dialogue",
@@ -1131,10 +1131,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/61_video_to_audio/video_to_audio.spl",
+        "./cookbook/061_video_to_audio/video_to_audio.spl",
         "--adapter",
         "ollama",
-        "video=cookbook/61_video_to_audio/sample/clip.mp4"
+        "video=cookbook/061_video_to_audio/sample/clip.mp4"
       ],
       "dir": "61_video_to_audio",
       "log": "video_to_audio",
@@ -1149,10 +1149,10 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/62_video_to_image/video_to_image.spl",
+        "./cookbook/062_video_to_image/video_to_image.spl",
         "--adapter",
         "ollama",
-        "video=cookbook/62_video_to_image/sample/clip.mp4"
+        "video=cookbook/062_video_to_image/sample/clip.mp4"
       ],
       "dir": "62_video_to_image",
       "log": "video_to_image",
@@ -1167,7 +1167,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/63_parallel_code_review/parallel_code_review.spl",
+        "./cookbook/063_parallel_code_review/parallel_code_review.spl",
         "--adapter",
         "ollama",
         "code=def add(a, b): return a - b",
@@ -1186,7 +1186,7 @@
       "args": [
         "spl-go",
         "run",
-        "./cookbook/64_parallel_news_digest/parallel_news_digest.spl",
+        "./cookbook/064_parallel_news_digest/parallel_news_digest.spl",
         "--adapter",
         "ollama"
       ],
@@ -1203,7 +1203,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/46_mcp/mcp.spl",
+        "cookbook/046_mcp/mcp.spl",
         "--adapter",
         "ollama",
         "--param",
@@ -1225,9 +1225,9 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/65_llm_splc/llm_splc.spl",
+        "cookbook/065_llm_splc/llm_splc.spl",
         "--param",
-        "spl_file=cookbook/05_self_refine/self_refine.spl",
+        "spl_file=cookbook/005_self_refine/self_refine.spl",
         "--param",
         "target=langgraph"
       ],
@@ -1250,7 +1250,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/66_stock_analysis/stock_analysis.spl"
+        "cookbook/066_stock_analysis/stock_analysis.spl"
       ],
       "dir": "66_stock_analysis",
       "log": "stock_analysis",
@@ -1260,7 +1260,7 @@
       "tier": 2,
       "requires": [],
       "excluded_adapters": [],
-      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/66_stock_analysis/stock_analysis.spl: Parse error at 112:17: Expected 52, got 13 (\"IN\")"
+      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/066_stock_analysis/stock_analysis.spl: Parse error at 112:17: Expected 52, got 13 (\"IN\")"
     },
     {
       "id": "67",
@@ -1269,7 +1269,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/67_symbolic_math/hello_symbolic_math.spl",
+        "cookbook/067_symbolic_math/hello_symbolic_math.spl",
         "--kernel"
       ],
       "dir": "67_symbolic_math",
@@ -1291,7 +1291,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/68_problem_generator/problem_generator.spl"
+        "cookbook/068_problem_generator/problem_generator.spl"
       ],
       "dir": "68_problem_generator",
       "log": "problem_generator",
@@ -1303,7 +1303,7 @@
         "sympy"
       ],
       "excluded_adapters": [],
-      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/68_problem_generator/problem_generator.spl: Parse error at 201:12: Expected 52, got 13 (\"IN\")"
+      "disabled_reason": "spl-go parse error (re-validated 2026-07-15): ✗ Parse error in cookbook/068_problem_generator/problem_generator.spl: Parse error at 201:12: Expected 52, got 13 (\"IN\")"
     },
     {
       "id": "69",
@@ -1312,7 +1312,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/69_notebook_gen/notebook_gen.spl",
+        "cookbook/069_notebook_gen/notebook_gen.spl",
         "--kernel",
         "--adapter",
         "ollama"
@@ -1336,7 +1336,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
+        "cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl",
         "--adapter",
         "ollama",
         "--model",
@@ -1362,7 +1362,7 @@
         "spl3",
         "splc",
         "compile",
-        "cookbook/71_linalg_concept_book/build_concept_book.spl",
+        "cookbook/071_linalg_concept_book/build_concept_book.spl",
         "--lang",
         "python/linalg",
         "--overwrite"
@@ -1387,13 +1387,13 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/72_verify_arxiv_references/verify_arxiv_references.spl",
+        "cookbook/072_verify_arxiv_references/verify_arxiv_references.spl",
         "--adapter",
         "ollama",
         "--model",
         "phi3",
         "in_refs=Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948.",
-        "out_dir=cookbook/72_verify_arxiv_references/output"
+        "out_dir=cookbook/072_verify_arxiv_references/output"
       ],
       "dir": "72_verify_arxiv_references",
       "log": "verify_arxiv_references",
@@ -1414,7 +1414,7 @@
       "args": [
         "spl-go",
         "validate",
-        "cookbook/73_intro_geometry/build_concept_book.spl"
+        "cookbook/073_intro_geometry/build_concept_book.spl"
       ],
       "dir": "73_intro_geometry",
       "log": "intro_geometry",
@@ -1436,7 +1436,7 @@
       "args": [
         "spl-go",
         "validate",
-        "cookbook/74_concept_book/build_concept_book.spl"
+        "cookbook/074_concept_book/build_concept_book.spl"
       ],
       "dir": "74_concept_book",
       "log": "concept_book",
@@ -1458,7 +1458,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/75_sage_math/basic_sagemath.spl",
+        "cookbook/075_sage_math/basic_sagemath.spl",
         "--llm",
         "ollama:gemma3",
         "--kernel-name",
@@ -1483,7 +1483,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/76_lean_proof/lean_proof.spl",
+        "cookbook/076_lean_proof/lean_proof.spl",
         "--kernel",
         "--llm",
         "claude_cli"
@@ -1507,7 +1507,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/77_neurosymbolic/symbolic_math.spl",
+        "cookbook/077_neurosymbolic/symbolic_math.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1529,7 +1529,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/78_constraint_opt/constraint_opt.spl",
+        "cookbook/078_constraint_opt/constraint_opt.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1552,7 +1552,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/79_code_pytest/code_pytest.spl",
+        "cookbook/079_code_pytest/code_pytest.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1575,7 +1575,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/80_opencv_5/opencv5_scene_triage.spl",
+        "cookbook/080_opencv_5/opencv5_scene_triage.spl",
         "--llm",
         "ollama:gemma4"
       ],
@@ -1598,7 +1598,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/81_graph_reasoning/graph_reasoning.spl",
+        "cookbook/081_graph_reasoning/graph_reasoning.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1620,7 +1620,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl",
+        "cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1642,7 +1642,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/83_unit_dimensional_check/unit_dimensional_check.spl",
+        "cookbook/083_unit_dimensional_check/unit_dimensional_check.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1664,7 +1664,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/84_sql_verifier/sql_verifier.spl",
+        "cookbook/084_sql_verifier/sql_verifier.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1686,7 +1686,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/85_property_based_code_verify/property_based_code_verify.spl",
+        "cookbook/085_property_based_code_verify/property_based_code_verify.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1709,7 +1709,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/86_financial_calc_verifier/financial_calc_verifier.spl",
+        "cookbook/086_financial_calc_verifier/financial_calc_verifier.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1731,7 +1731,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/87_route_optimization/route_optimization.spl",
+        "cookbook/087_route_optimization/route_optimization.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1753,7 +1753,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/90_compsci_physics/physics_conservation.spl",
+        "cookbook/090_compsci_physics/physics_conservation.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1773,7 +1773,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/91_compsci_chemistry/chemistry_balance.spl",
+        "cookbook/091_compsci_chemistry/chemistry_balance.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1791,7 +1791,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/92_compsci_materials/materials_crystal.spl",
+        "cookbook/092_compsci_materials/materials_crystal.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1809,7 +1809,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/93_auto_planning/auto_planning.spl",
+        "cookbook/093_auto_planning/auto_planning.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1827,7 +1827,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/94_data_eng_text2spl/text2sql_quality.spl",
+        "cookbook/094_data_eng_text2spl/text2sql_quality.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1845,7 +1845,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/95_music_theory/music_theory.spl",
+        "cookbook/095_music_theory/music_theory.spl",
         "--llm",
         "claude_cli"
       ],
@@ -1863,7 +1863,7 @@
       "args": [
         "spl-go",
         "run",
-        "cookbook/96_drug_sim/drug_sim.spl",
+        "cookbook/096_drug_sim/drug_sim.spl",
         "--llm",
         "claude_cli"
       ],

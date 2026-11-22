@@ -6,7 +6,7 @@ Reads from the SQLite database written by run_experiment.py.
 Adds backend (sympy / sage / lean) dimension on top of Recipe-67's structure.
 
   conda activate spl123
-  streamlit run cookbook/77_neurosymbolic/app_experiment.py
+  streamlit run cookbook/077_neurosymbolic/app_experiment.py
 """
 
 import json

@@ -4,11 +4,11 @@
 -- Demonstrates procedural decomposition, CALL-based delegation, and role specialization.
 --
 -- Usage:
---   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama --model gemma3 topic="Impact of AI on healthcare"
---   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama topic="Future of renewable energy"
---   spl3 run cookbook/14_multi_agent/multi_agent.spl --adapter ollama topic="State of quantum computing in 2025"
+--   spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama --model gemma3 topic="Impact of AI on healthcare"
+--   spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama topic="Future of renewable energy"
+--   spl3 run cookbook/014_multi_agent/multi_agent.spl --adapter ollama topic="State of quantum computing in 2025"
 --
--- Logs written to @log_dir (default: cookbook/14_multi_agent/logs):
+-- Logs written to @log_dir (default: cookbook/014_multi_agent/logs):
 --   research.md   — facts and key themes from Researcher agent
 --   analysis.md   — trends, risks, and opportunities from Analyst agent
 --   report.md     — final polished report from Writer agent
@@ -45,7 +45,7 @@ END
 WORKFLOW multi_agent_report
     INPUT: 
         @topic TEXT,
-        @log_dir TEXT DEFAULT 'cookbook/14_multi_agent/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/014_multi_agent/logs-spl'
     OUTPUT: @report TEXT
 DO
     LOGGING f'Multi-agent report | topic={@topic}' LEVEL INFO

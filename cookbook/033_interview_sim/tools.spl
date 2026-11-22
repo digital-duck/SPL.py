@@ -4,7 +4,7 @@ CREATE TOOL_API load_role(role_key TEXT, focus_area TEXT) RETURNS TEXT AS PYTHON
 import json
 import os
 
-_DATA_DIR = "cookbook/33_interview_sim/data"
+_DATA_DIR = "cookbook/033_interview_sim/data"
 
 def _load_json(filename):
     with open(os.path.join(_DATA_DIR, filename), encoding="utf-8") as fh:
@@ -73,7 +73,7 @@ import json
 import os
 import textwrap
 
-_DATA_DIR = "cookbook/33_interview_sim/data"
+_DATA_DIR = "cookbook/033_interview_sim/data"
 
 def _load_json(filename):
     with open(os.path.join(_DATA_DIR, filename), encoding="utf-8") as fh:
@@ -140,7 +140,7 @@ CREATE TOOL_API list_roles() RETURNS TEXT AS PYTHON $$
 import json
 import os
 
-_DATA_DIR = "cookbook/33_interview_sim/data"
+_DATA_DIR = "cookbook/033_interview_sim/data"
 
 def _load_json(filename):
     with open(os.path.join(_DATA_DIR, filename), encoding="utf-8") as fh:

@@ -59,7 +59,7 @@ WORKFLOW analyze_spec
     INPUT:
         @spec    TEXT,
         @analyze_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @analysis TEXT
 DO
     LOGGING f'[00_analyze_spec] evaluating spec clarity | spec="{@spec}"' LEVEL INFO

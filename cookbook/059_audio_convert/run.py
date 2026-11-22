@@ -9,28 +9,28 @@ cookbook/tools/audio_tools.py::convert_audio() helper). No LLM is required
 Usage
 -----
   # MP3 → WAV
-  python cookbook/59_audio_convert/run.py \\
-      --audio cookbook/59_audio_convert/sample/clip.mp3 \\
+  python cookbook/059_audio_convert/run.py \\
+      --audio cookbook/059_audio_convert/sample/clip.mp3 \\
       --target-format wav
 
   # MP3 → OGG (128k bitrate)
-  python cookbook/59_audio_convert/run.py \\
-      --audio cookbook/59_audio_convert/sample/clip.mp3 \\
+  python cookbook/059_audio_convert/run.py \\
+      --audio cookbook/059_audio_convert/sample/clip.mp3 \\
       --target-format ogg --bitrate 128k
 
   # MP3 → FLAC (lossless)
-  python cookbook/59_audio_convert/run.py \\
-      --audio cookbook/59_audio_convert/sample/clip.mp3 \\
+  python cookbook/059_audio_convert/run.py \\
+      --audio cookbook/059_audio_convert/sample/clip.mp3 \\
       --target-format flac
 
   # WAV → MP3 with high quality
-  python cookbook/59_audio_convert/run.py \\
-      --audio cookbook/59_audio_convert/sample/clip.wav \\
+  python cookbook/059_audio_convert/run.py \\
+      --audio cookbook/059_audio_convert/sample/clip.wav \\
       --target-format mp3 --bitrate 320k --sample-rate 48000
 
   # Custom output directory
-  python cookbook/59_audio_convert/run.py \\
-      --audio cookbook/59_audio_convert/sample/clip.mp3 \\
+  python cookbook/059_audio_convert/run.py \\
+      --audio cookbook/059_audio_convert/sample/clip.mp3 \\
       --target-format wav --output-dir /tmp/converted
 """
 
@@ -107,7 +107,7 @@ def convert_audio(
               help="Bitrate for lossy formats, e.g. 128k, 192k, 320k")
 @click.option("--sample-rate",   default=44100, show_default=True, type=int,
               help="Output sample rate in Hz")
-@click.option("--output-dir",    default="cookbook/59_audio_convert/outputs", show_default=True)
+@click.option("--output-dir",    default="cookbook/059_audio_convert/outputs", show_default=True)
 def main(audio, target_format, bitrate, sample_rate, output_dir) -> None:
     """Recipe 59 — Audio Format Conversion (SPL 3.0)."""
     dst = convert_audio(

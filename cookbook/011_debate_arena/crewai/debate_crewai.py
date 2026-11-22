@@ -6,7 +6,7 @@ CrewAI tasks are used for each stage of the debate.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/11_debate_arena/crewai/debate_crewai.py --topic "AI should be open-sourced"
+    python cookbook/011_debate_arena/crewai/debate_crewai.py --topic "AI should be open-sourced"
 """
 
 import click
@@ -122,7 +122,7 @@ def run(topic: str, max_rounds: int, model: str, log_dir: str) -> str:
 @click.option("--topic",      required=True,    help="Debate topic")
 @click.option("--max-rounds", default=3,        show_default=True, type=int)
 @click.option("--model",      default="gemma3", show_default=True)
-@click.option("--log-dir",    default="cookbook/11_debate_arena/crewai/logs-crewai", show_default=True)
+@click.option("--log-dir",    default="cookbook/011_debate_arena/crewai/logs-crewai", show_default=True)
 def main(topic: str, max_rounds: int, model: str, log_dir: str):
     result = run(topic, max_rounds, model, log_dir)
     print("\n" + "=" * 60)

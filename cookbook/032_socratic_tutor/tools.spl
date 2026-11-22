@@ -4,7 +4,7 @@ CREATE TOOL_API load_topic(topic_id TEXT, subject TEXT) RETURNS TEXT AS PYTHON $
 import json
 import os
 
-_TOPICS_DIR = "cookbook/32_socratic_tutor/topics"
+_TOPICS_DIR = "cookbook/032_socratic_tutor/topics"
 
 def _load_subject(subject):
     path = os.path.join(_TOPICS_DIR, f"{subject.strip().lower()}.json")
@@ -83,7 +83,7 @@ CREATE TOOL_API list_topics(subject TEXT) RETURNS TEXT AS PYTHON $$
 import json
 import os
 
-_TOPICS_DIR = "cookbook/32_socratic_tutor/topics"
+_TOPICS_DIR = "cookbook/032_socratic_tutor/topics"
 
 def _load_subject(subject):
     path = os.path.join(_TOPICS_DIR, f"{subject.strip().lower()}.json")

@@ -25,7 +25,7 @@ CREATE TOOL_API lookup_order(order_numbers TEXT) RETURNS TEXT AS PYTHON $$
 import json
 import os
 
-_ORDERS_FILE = "cookbook/28_support_triage/orders.json"
+_ORDERS_FILE = "cookbook/028_support_triage/orders.json"
 
 def _load_orders():
     with open(_ORDERS_FILE, encoding="utf-8") as fh:

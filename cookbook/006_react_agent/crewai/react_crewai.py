@@ -7,9 +7,9 @@ both tool calls and LLM invocations are handled by the same Agent.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/06_react_agent/crewai/react_crewai.py \\
+    python cookbook/006_react_agent/crewai/react_crewai.py \\
         --country France --year 2023
-    python cookbook/06_react_agent/crewai/react_crewai.py \\
+    python cookbook/006_react_agent/crewai/react_crewai.py \\
         --country India --year 2023 --model llama3.2
 """
 
@@ -133,7 +133,7 @@ def run(country: str, year_curr: int, model: str, log_dir: str) -> str:
 @click.option("--country", default="China", help="Country to analyze")
 @click.option("--year", type=int, default=2023, help="Year to analyze")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/06_react_agent/crewai/logs", help="Log directory")
+@click.option("--log-dir", default="cookbook/006_react_agent/crewai/logs", help="Log directory")
 def main(country, year, model, log_dir):
     """ReAct Agent — CrewAI edition"""
     result = run(country, year, model, log_dir)

@@ -183,7 +183,7 @@ WORKFLOW problem_generator
   INPUT @topic      TEXT := 'quadratic equations'
   INPUT @difficulty TEXT := 'medium'
   INPUT @numbers    TEXT := '1,2,3'
-  INPUT @log_dir    TEXT := 'cookbook/68_problem_generator/logs-spl'
+  INPUT @log_dir    TEXT := 'cookbook/068_problem_generator/logs-spl'
   OUTPUT @lesson    TEXT
 DO
   -- Build lesson header with LLM-written intro

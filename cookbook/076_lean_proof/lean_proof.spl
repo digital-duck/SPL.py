@@ -21,7 +21,7 @@
 --                             lemma? (mathlib citation mode, B-5 seed)
 --
 -- Requires: bash cookbook/tools/lean/setup_lean.sh   (one-time)
--- Run:      spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel
+-- Run:      spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel
 --           (any Python kernel; Lean runs behind it via spl3.lean_bridge)
 -- ============================================================
 

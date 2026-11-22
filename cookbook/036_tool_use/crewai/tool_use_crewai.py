@@ -5,7 +5,7 @@ Pattern: Task-based orchestration with tool-assisted analysis.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/36_tool_use/crewai/tool_use_crewai.py \\
+    python cookbook/036_tool_use/crewai/tool_use_crewai.py \\
         --sales "1200,1450,1380,1600,1750,1900" --prev_total "7800"
 """
 
@@ -89,7 +89,7 @@ Write a concise narrative analysis for the board of directors.""",
 @click.option("--prev_total", default="7800", help="Previous period total")
 @click.option("--period", default="H1 2025", help="Reporting period")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/36_tool_use/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/036_tool_use/logs-crewai", help="Log directory")
 def main(sales, prev_total, period, model, log_dir):
     """Tool Use — CrewAI edition"""
     run(sales, prev_total, period, model, log_dir)

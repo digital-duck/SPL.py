@@ -22,15 +22,15 @@ ollama pull gemma3   # or any model you prefer
 
 ```bash
 # From SPL20/ root
-python cookbook/05_self_refine/langgraph/self_refine_langgraph.py \
+python cookbook/005_self_refine/langgraph/self_refine_langgraph.py \
     --task "Write a haiku about coding"
 
 # Custom model and iteration limit
-python cookbook/05_self_refine/langgraph/self_refine_langgraph.py \
+python cookbook/005_self_refine/langgraph/self_refine_langgraph.py \
     --task "Explain recursion in one paragraph" \
     --max-iterations 3 \
     --model llama3.2 \
-    --log-dir cookbook/05_self_refine/langgraph/logs
+    --log-dir cookbook/005_self_refine/langgraph/logs
 ```
 
 ## Validate
@@ -57,7 +57,7 @@ logs/final.md         ← committed output
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter ollama --model gemma3 \
     task="Write a haiku about coding"
 ```

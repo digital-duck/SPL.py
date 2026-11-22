@@ -5,7 +5,7 @@ Pattern: Sequential orchestration of specialized prompts.
 
 Usage:
     pip install pyautogen
-    python cookbook/25_nested_procs/autogen/nested_procs_autogen.py \\
+    python cookbook/025_nested_procs/autogen/nested_procs_autogen.py \\
         --topic "quantum computing" --audience "high school students"
 """
 
@@ -70,7 +70,7 @@ def run(topic: str, audience: str, depth: str, model: str, log_dir: str):
 @click.option("--audience", required=True, help="Target audience")
 @click.option("--depth", default="standard", help="Article depth")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/25_nested_procs/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/025_nested_procs/logs-autogen", help="Log directory")
 def main(topic, audience, depth, model, log_dir):
     """Nested Procedures — AutoGen edition"""
     run(topic, audience, depth, model, log_dir)

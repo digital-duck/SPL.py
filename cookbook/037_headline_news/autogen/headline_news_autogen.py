@@ -5,7 +5,7 @@ Pattern: headlines → expand → evaluate → (pass? format : fill_gaps → for
 
 Usage:
     pip install pyautogen
-    python cookbook/37_headline_news/autogen/headline_news_autogen.py \\
+    python cookbook/037_headline_news/autogen/headline_news_autogen.py \\
         --topic "artificial intelligence"
 """
 
@@ -80,7 +80,7 @@ def run(topic: str, date: str, max_headlines: int, style: str, perspective: str,
 @click.option("--style", default="structured", help="Output style")
 @click.option("--perspective", default="balanced", help="Coverage perspective")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/37_headline_news/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/037_headline_news/logs-autogen", help="Log directory")
 def main(topic, date, max_headlines, style, perspective, model, log_dir):
     """Headline News Aggregator — AutoGen edition"""
     run(topic, date, max_headlines, style, perspective, model, log_dir)

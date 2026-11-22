@@ -33,9 +33,9 @@
 --
 -- Requires: numpy only (already a project dependency) — no new pip install
 -- Run:
---   spl3 run cookbook/90_compsci_physics/physics_conservation.spl \
+--   spl3 run cookbook/090_compsci_physics/physics_conservation.spl \
 --       --llm claude_cli
---   spl3 run cookbook/90_compsci_physics/physics_conservation.spl \
+--   spl3 run cookbook/090_compsci_physics/physics_conservation.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -286,7 +286,7 @@ WORKFLOW physics_conservation
   INPUT @problem TEXT := "A 2 kg ball moving at 5 m/s strikes a stationary 2 kg ball head-on in a perfectly elastic collision. What is the final velocity of the first ball, in m/s?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/90_compsci_physics/output"
+  INPUT @out_dir TEXT := "./cookbook/090_compsci_physics/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

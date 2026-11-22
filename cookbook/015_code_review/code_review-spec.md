@@ -15,7 +15,7 @@ Automatically review a code snippet or file through four specialist LLM passes (
 | Parameter | Default | Description |
 |---|---|---|
 | `@code` | *(required)* | Either raw source code text or a file path to be read from disk |
-| `@log_dir` | `cookbook/15_code_review/logs` | Directory where per-pass Markdown log files and the final report are written |
+| `@log_dir` | `cookbook/015_code_review/logs` | Directory where per-pass Markdown log files and the final report are written |
 
 ---
 

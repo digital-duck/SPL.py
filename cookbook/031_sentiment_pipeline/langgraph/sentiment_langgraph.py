@@ -5,7 +5,7 @@ Pattern: load_split → batch_sentiment → compute_stats → find_extremes → 
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/31_sentiment_pipeline/langgraph/sentiment_langgraph.py \
+    python cookbook/031_sentiment_pipeline/langgraph/sentiment_langgraph.py \
         --items "Great product! | Terrible experience" --delimiter "|"
 """
 
@@ -243,7 +243,7 @@ def build_graph():
 @click.option("--delimiter", default="\\n",     show_default=True)
 @click.option("--domain",    default="general", show_default=True)
 @click.option("--model",     default="gemma3",  show_default=True)
-@click.option("--log-dir",   default="cookbook/31_sentiment_pipeline/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir",   default="cookbook/031_sentiment_pipeline/langgraph/logs-langgraph", show_default=True)
 def main(filename: str, items: str, delimiter: str, domain: str, model: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

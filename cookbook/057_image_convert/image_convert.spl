@@ -14,11 +14,11 @@
 
 WORKFLOW image_convert
     INPUT:
-        @image         IMAGE  DEFAULT 'cookbook/57_image_convert/sample/photo.png',
+        @image         IMAGE  DEFAULT 'cookbook/057_image_convert/sample/photo.png',
         @target_format TEXT   DEFAULT 'jpeg',
         @quality       INT    DEFAULT 85,
-        @output_dir    TEXT   DEFAULT 'cookbook/57_image_convert/outputs',
-        @log_dir       TEXT   DEFAULT 'cookbook/57_image_convert/logs-spl'
+        @output_dir    TEXT   DEFAULT 'cookbook/057_image_convert/outputs',
+        @log_dir       TEXT   DEFAULT 'cookbook/057_image_convert/logs-spl'
     OUTPUT: @converted IMAGE
 DO
     LOGGING f'[image_convert] {@image} → {@target_format} (quality={@quality})' LEVEL INFO

@@ -17,7 +17,7 @@ Converts a meeting transcript (from a file or inline text) into a validated, str
 | `@filename` | `''` (empty) | Path to a transcript file on disk; if empty, file loading is a no-op |
 | `@transcript` | `''` (empty) | Inline transcript text passed directly on the command line |
 | `@output_format` | `'json'` | Desired output format: `json`, `markdown`, or `email` |
-| `@log_dir` | `'cookbook/04_model_showdown/logs-spl'` | Directory where intermediate and final artifacts are written by `write_file` calls |
+| `@log_dir` | `'cookbook/004_model_showdown/logs-spl'` | Directory where intermediate and final artifacts are written by `write_file` calls |
 
 ---
 

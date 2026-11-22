@@ -2,7 +2,7 @@
 """
 run_experiment.py — CLI for the Recipe-77 neurosymbolic experiment.
 
-Cloned from cookbook/67_symbolic_math/run_experiment.py and widened to the
+Cloned from cookbook/067_symbolic_math/run_experiment.py and widened to the
 full verifier ladder: every problem carries a default deterministic backend
 (sympy | sage | lean) and the harness passes it through as
 --param backend=...; the --backend flag overrides it for a whole run, so the
@@ -16,14 +16,14 @@ Requires: conda activate spl123   (spl3 must be on PATH)
   Lean problems:  bash cookbook/tools/lean/setup_lean.sh --with-mathlib
 
 Quick start:
-  python cookbook/77_neurosymbolic/run_experiment.py --list
-  python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p021          # smoke: Galois (sage)
-  python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p025          # smoke: Lean citation
-  python cookbook/77_neurosymbolic/run_experiment.py -m "m006,m007" -p "p003 p005" --dry-run
-  python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p003 --backend sympy
-  python cookbook/77_neurosymbolic/run_experiment.py                           # all models, all problems
-  python cookbook/77_neurosymbolic/run_experiment.py -s true -s false -r 3    # both solver arms
-  python cookbook/77_neurosymbolic/run_experiment.py -p p003 --backend sympy -s true -r 1    # test a single cell with the solver arm and sympy backend
+  python cookbook/077_neurosymbolic/run_experiment.py --list
+  python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p021          # smoke: Galois (sage)
+  python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p025          # smoke: Lean citation
+  python cookbook/077_neurosymbolic/run_experiment.py -m "m006,m007" -p "p003 p005" --dry-run
+  python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p003 --backend sympy
+  python cookbook/077_neurosymbolic/run_experiment.py                           # all models, all problems
+  python cookbook/077_neurosymbolic/run_experiment.py -s true -s false -r 3    # both solver arms
+  python cookbook/077_neurosymbolic/run_experiment.py -p p003 --backend sympy -s true -r 1    # test a single cell with the solver arm and sympy backend
 """
 
 import json
@@ -37,7 +37,7 @@ from pathlib import Path
 import click
 
 # ── SQLite persistence ────────────────────────────────────────────────────────
-DB_PATH_DEFAULT = "cookbook/77_neurosymbolic/experiment_results.db"
+DB_PATH_DEFAULT = "cookbook/077_neurosymbolic/experiment_results.db"
 
 # Pass criteria, per arm and rung:
 #   solver + sympy/sage — the chain verified end-to-end
@@ -300,9 +300,9 @@ DISABLED_PROBLEMS: set[str] = {
 }
 
 BACKENDS = ("sympy", "sage", "lean")
-SCRIPT_DEFAULT = "cookbook/77_neurosymbolic/symbolic_math.spl"
-LOG_DIR_DEFAULT = "cookbook/77_neurosymbolic/logs-spl"
-LOG_DIR_GO_DEFAULT = "cookbook/77_neurosymbolic/logs-spl-go"
+SCRIPT_DEFAULT = "cookbook/077_neurosymbolic/symbolic_math.spl"
+LOG_DIR_DEFAULT = "cookbook/077_neurosymbolic/logs-spl"
+LOG_DIR_GO_DEFAULT = "cookbook/077_neurosymbolic/logs-spl-go"
 
 
 def stream_run(cmd: list, log_file) -> tuple:

@@ -18,7 +18,7 @@ def run_single_task(agent: Agent, description: str, expected_output: str) -> str
 
 def debate_arena(topic: str = 'AI should be open-sourced', 
                 max_rounds: int = 3, 
-                log_dir: str = 'cookbook/11_debate_arena/logs-spl',
+                log_dir: str = 'cookbook/011_debate_arena/logs-spl',
                 model: str = 'gemma3') -> Dict[str, Any]:
     """
     CrewAI implementation of the SPL debate_arena workflow.
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     result = debate_arena(
         topic='AI should be open-sourced',
         max_rounds=3,
-        log_dir='cookbook/11_debate_arena/logs-spl',
+        log_dir='cookbook/011_debate_arena/logs-spl',
         model='gemma3'
     )
     

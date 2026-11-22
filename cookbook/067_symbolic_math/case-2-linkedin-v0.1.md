@@ -170,8 +170,8 @@ That is not a minor efficiency gain. That is the goal.
 The full transcripts — every prompt, every token count, every log line — are
 public. Clone the repo and run it yourself:
 
-- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl)
-- [case-2-log-rerun-20260609-011821.md](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-20260609-011821.md)
+- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/067_symbolic_math/sympy_llm.spl)
+- [case-2-log-rerun-20260609-011821.md](https://github.com/digital-duck/SPL.py/blob/main/cookbook/067_symbolic_math/logs-spl/case-2-log-rerun-20260609-011821.md)
 
 To run the local models (`gemma3`, `qwen2.5`, `phi3`, `phi4`, etc.), install
 [Ollama](https://ollama.ai) — a one-command local model server that runs on
@@ -192,7 +192,7 @@ git clone https://github.com/digital-duck/SPL.py.git
 cd SPL.py
 conda create -n spl123 python=3.11 -y && conda activate spl123
 pip install -e .
-python cookbook/67_symbolic_math/run_experiment.py -p p003 && python cookbook/67_symbolic_math/run_analysis.py
+python cookbook/067_symbolic_math/run_experiment.py -p p003 && python cookbook/067_symbolic_math/run_analysis.py
 ```
 
 ## Our next expedition

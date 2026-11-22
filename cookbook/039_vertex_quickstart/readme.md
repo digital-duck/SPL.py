@@ -38,11 +38,11 @@ gcloud services enable aiplatform.googleapis.com --project=$GOOGLE_CLOUD_PROJECT
 
 ```bash
 # Default — Gemini 2.5 Pro vs Flash vs 2.0 Flash Lite
-spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
+spl3 run cookbook/039_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
     prompt="Explain the CAP theorem in two sentences."
 
 # Custom models
-spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
+spl3 run cookbook/039_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
     prompt="What are the trade-offs between REST and GraphQL?" \
     model_pro="gemini-2.5-pro" \
     model_flash="gemini-2.5-flash" \
@@ -50,7 +50,7 @@ spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
 
 # Different region
 GOOGLE_CLOUD_LOCATION=europe-west4 \
-spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
+spl3 run cookbook/039_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
     prompt="Summarise the benefits of serverless architectures."
 ```
 

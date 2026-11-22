@@ -20,7 +20,7 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/27_data_extraction/crewai/data_extraction_crewai.py \
+python cookbook/027_data_extraction/crewai/data_extraction_crewai.py \
     --text "Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 ```
 
@@ -41,12 +41,12 @@ EXTRACTED DATA:
 }
 ```
 
-Check logs in `cookbook/27_data_extraction/crewai/logs-crewai`.
+Check logs in `cookbook/027_data_extraction/crewai/logs-crewai`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/27_data_extraction/data_extraction.spl \
+spl3 run cookbook/027_data_extraction/data_extraction.spl \
     --adapter ollama --model gemma3 \
     text="Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 ```

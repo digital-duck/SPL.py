@@ -36,7 +36,7 @@ $$;
 
 WORKFLOW video_to_image
     INPUT:
-        @video         VIDEO  DEFAULT 'cookbook/62_video_to_image/sample/clip.mp4',
+        @video         VIDEO  DEFAULT 'cookbook/062_video_to_image/sample/clip.mp4',
         @mode          TEXT   DEFAULT 'middle',
         @timestamp     TEXT   DEFAULT '00:00:05',
         @fps           FLOAT  DEFAULT 1.0,
@@ -44,8 +44,8 @@ WORKFLOW video_to_image
         @caption       BOOL   DEFAULT FALSE,
         @context       TEXT   DEFAULT "",
         @model         TEXT   DEFAULT 'gemma4',
-        @output_dir    TEXT   DEFAULT 'cookbook/62_video_to_image/outputs',
-        @log_dir       TEXT   DEFAULT 'cookbook/62_video_to_image/logs-spl'
+        @output_dir    TEXT   DEFAULT 'cookbook/062_video_to_image/outputs',
+        @log_dir       TEXT   DEFAULT 'cookbook/062_video_to_image/logs-spl'
     OUTPUT: @frame IMAGE
 DO
     LOGGING f'[video_to_image] {@video} mode={@mode}' LEVEL INFO

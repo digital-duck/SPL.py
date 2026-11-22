@@ -202,12 +202,12 @@ python -m sage.repl.ipython_kernel.install --user    # register the 'sagemath' k
 cookbook/tools/lean/setup_lean.sh --with-mathlib     # elan + pinned Lean REPL (optional, ~5 GB oleans)
 
 # Rung 2+: exact number theory under the Sage kernel
-spl3 run cookbook/75_sage_math/basic_sagemath.spl \
+spl3 run cookbook/075_sage_math/basic_sagemath.spl \
     --adapter ollama --model gemma3 --kernel-name sagemath \
     --param problem="does x^2 + y^2 = 3*z^2 have a rational solution?"
 
 # Rung 3: formalize → faithfulness gate → citation-first proof
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm claude_cli \
+spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel --llm claude_cli \
     --param claim="for any natural number n, n^2 >= n"
 
 # Inspect the badge set and the prose ↔ formal statement side by side

@@ -31,15 +31,15 @@ No installation needed — `decimal` is part of the Python standard library.
 
 ```bash
 # Default problem (5-year loan amortization)
-spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl --llm claude_cli
+spl3 run cookbook/086_financial_calc_verifier/financial_calc_verifier.spl --llm claude_cli
 
 # Custom problem
-spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl \
+spl3 run cookbook/086_financial_calc_verifier/financial_calc_verifier.spl \
     --llm ollama:gemma4 \
     --param problem="If you invest \$5,000 at 4% annual interest, compounded quarterly, what is it worth after 10 years?"
 
 # Unaided baseline arm
-spl3 run cookbook/86_financial_calc_verifier/financial_calc_verifier.spl \
+spl3 run cookbook/086_financial_calc_verifier/financial_calc_verifier.spl \
     --llm claude_cli --param enable_solver=false
 ```
 

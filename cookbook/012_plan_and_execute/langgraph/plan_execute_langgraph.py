@@ -5,9 +5,9 @@ Pattern: plan → (execute_step → validate_step → (replan? → plan)) → ou
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/12_plan_and_execute/langgraph/plan_execute_langgraph.py \
+    python cookbook/012_plan_and_execute/langgraph/plan_execute_langgraph.py \
         --task "Build a REST API for a todo app" \
-        --output-dir "cookbook/12_plan_and_execute/langgraph/output"
+        --output-dir "cookbook/012_plan_and_execute/langgraph/output"
 """
 
 import click
@@ -357,8 +357,8 @@ def build_graph():
 @click.option("--max-steps",   default=5, show_default=True, type=int)
 @click.option("--max-replans", default=3, show_default=True, type=int)
 @click.option("--model",       default="gemma3", show_default=True)
-@click.option("--output-dir",  default="cookbook/12_plan_and_execute/langgraph/output", show_default=True)
-@click.option("--log-dir",     default="cookbook/12_plan_and_execute/langgraph/logs-langgraph", show_default=True)
+@click.option("--output-dir",  default="cookbook/012_plan_and_execute/langgraph/output", show_default=True)
+@click.option("--log-dir",     default="cookbook/012_plan_and_execute/langgraph/logs-langgraph", show_default=True)
 def main(task: str, max_steps: int, max_replans: int, model: str, output_dir: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

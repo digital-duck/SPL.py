@@ -6,9 +6,9 @@ The Critic's termination condition mirrors SPL's EVALUATE ... WHEN 'satisfactory
 
 Usage:
     pip install pyautogen
-    python cookbook/05_self_refine/self_refine_autogen.py \\
+    python cookbook/005_self_refine/self_refine_autogen.py \\
         --task "Write a haiku about coding"
-    python cookbook/05_self_refine/self_refine_autogen.py \\
+    python cookbook/005_self_refine/self_refine_autogen.py \\
         --task "Explain recursion in one paragraph" --max-iterations 3 --model llama3.2
 """
 
@@ -108,7 +108,7 @@ def run(task: str, max_iterations: int, model: str, log_dir: str) -> str:
 @click.option("--task",           required=True,    help="Task for the writer")
 @click.option("--max-iterations", default=5,        show_default=True, type=int)
 @click.option("--model",          default="gemma3", show_default=True)
-@click.option("--log-dir",        default="cookbook/05_self_refine/logs", show_default=True)
+@click.option("--log-dir",        default="cookbook/005_self_refine/logs", show_default=True)
 def main(task: str, max_iterations: int, model: str, log_dir: str):
     result = run(task, max_iterations, model, log_dir)
     print("\n" + "=" * 60)

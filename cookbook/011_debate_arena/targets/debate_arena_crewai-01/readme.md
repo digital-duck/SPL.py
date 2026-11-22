@@ -50,7 +50,7 @@ ROUNDS : 3
 The pro side demonstrated consistently stronger argumentation ...
 ```
 
-Log files are written to `--log-dir` (default `cookbook/11_debate_arena/logs-crewai/`):
+Log files are written to `--log-dir` (default `cookbook/011_debate_arena/logs-crewai/`):
 
 | File | Contents |
 |---|---|

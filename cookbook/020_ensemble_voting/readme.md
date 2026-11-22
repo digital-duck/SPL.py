@@ -65,7 +65,7 @@ Key improvements over v1:
 | `random_selection` | BOOL | `TRUE` | `TRUE` = random draw each iteration; `FALSE` = rotate positionally through list |
 | `consensus_model` | TEXT | `'qwen2.5'` | Model used for consensus step (separate from generators) |
 | `polish_model` | TEXT | `'deepseek-r1'` | Model used for final polish pass |
-| `log_dir` | TEXT | `'cookbook/20_ensemble_voting/logs'` | Directory for per-step log files |
+| `log_dir` | TEXT | `'cookbook/020_ensemble_voting/logs'` | Directory for per-step log files |
 
 ---
 
@@ -74,7 +74,7 @@ Key improvements over v1:
 ### v1
 
 ```bash
-spl3 run cookbook/20_ensemble_voting/ensemble.spl --adapter ollama \
+spl3 run cookbook/020_ensemble_voting/ensemble.spl --adapter ollama \
     question="What causes inflation?"
 ```
 
@@ -82,31 +82,31 @@ spl3 run cookbook/20_ensemble_voting/ensemble.spl --adapter ollama \
 
 ```bash
 # Minimal — uses all defaults
-spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
     --adapter ollama \
-    --tools cookbook/20_ensemble_voting/tools.py \
+    --tools cookbook/020_ensemble_voting/tools.py \
     question="What causes inflation?"
 
 # Custom pool, more candidates, random mode (default)
-spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
     --adapter ollama \
-    --tools cookbook/20_ensemble_voting/tools.py \
+    --tools cookbook/020_ensemble_voting/tools.py \
     question="Is Rust faster than C++?" \
     models="llama3.2,qwen2.5,gemma3,mistral" \
     n_candidates=7 \
     polish_model="deepseek-r1"
 
 # Positional mode — each model gets exactly one turn, fully reproducible
-spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
     --adapter ollama \
-    --tools cookbook/20_ensemble_voting/tools.py \
+    --tools cookbook/020_ensemble_voting/tools.py \
     question="What is the best database for time-series data?" \
     random_selection=false
 
 # Lean 3-model positional run
-spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
     --adapter ollama \
-    --tools cookbook/20_ensemble_voting/tools.py \
+    --tools cookbook/020_ensemble_voting/tools.py \
     question="What is the best database for time-series data?" \
     models="gemma3,mistral,deepseek-r1" \
     n_candidates=3 \
@@ -119,7 +119,7 @@ spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
 
 ## Log files (v2)
 
-All written to `@log_dir` (default: `cookbook/20_ensemble_voting/logs/`):
+All written to `@log_dir` (default: `cookbook/020_ensemble_voting/logs/`):
 
 | File | Contents |
 |---|---|

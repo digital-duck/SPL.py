@@ -2,7 +2,7 @@
 
 **SPL** is a declarative language for agentic AI workflows — SQL for LLMs.
 
-Where SQL abstracts over databases, SPL abstracts over language models: the same `.spl` file runs on Ollama, Claude, OpenAI, Gemini, or a Momagrid compute grid without changing a single line of workflow code. Below is a condensed version of `self_refine` [workflow](./cookbook/05_self_refine/self_refine.spl)
+Where SQL abstracts over databases, SPL abstracts over language models: the same `.spl` file runs on Ollama, Claude, OpenAI, Gemini, or a Momagrid compute grid without changing a single line of workflow code. Below is a condensed version of `self_refine` [workflow](./cookbook/005_self_refine/self_refine.spl)
 
 
 ```sql
@@ -18,7 +18,7 @@ END
 ```
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --param topic="What is vibe coding?"
+spl3 run cookbook/005_self_refine/self_refine.spl --llm ollama:gemma3 --param task="What is vibe coding?"
 ```
 
 ## Quick Start
@@ -36,16 +36,16 @@ pip install -e ".[dev]"      # install from this repo
 spl3 --help
 
 # Run hello world (Ollama)
-spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
+spl3 run cookbook/001_hello_world/hello.spl --adapter ollama
 
 # Run self-refine with local models and input parameters explicitly specified
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter ollama \
     --param task="Explain vibe coding" \
     --param writer_model="gemma3" \
     --param critic_model="llama3.2" \
     --param max_iterations=3 \
-    --param log_dir="$HOME/.spl/logs/05_self_refine/output"
+    --param log_dir="$HOME/.spl/logs/005_self_refine/output"
 
 # Run all active recipes
 python cookbook/run_all.py
@@ -84,19 +84,23 @@ SPL synthesizes three programming paradigms:
 ## CLI Reference
 
 ```bash
-spl3 run      <file.spl> [--adapter NAME] [--model MODEL] [--param KEY=VALUE ...]
+spl3 run      <file.spl> [--llm ADAPTER:MODEL] [--param KEY=VALUE ...]   # or --adapter NAME --model MODEL
 spl3 validate <file.spl>
-spl3 explain  <file.spl>
+spl3 util explain <file.spl>
 
 # Natural language → workflow pipeline
 spl3 text2spl  "natural language description" [--mode prompt|workflow|auto] [-o FILE]
-spl3 text2mmd  "description" [--adapter NAME] [-m MODEL] [-o FILE]   # → Mermaid diagram
-spl3 mmd2spl   <file.mmd>   [--adapter NAME] [-m MODEL] [-o FILE]   # → SPL workflow
+spl3 util text2mmd  "description" [--llm ADAPTER:MODEL] [-o FILE]  # → Mermaid diagram
+spl3 util mmd2spl   <file.mmd>    [--llm ADAPTER:MODEL] [-o FILE]  # → SPL workflow
+
+# SPL <-> GraphLang graph IR (AST-direct, no LLM)
+spl3 util spl2graph <file.spl>
+spl3 util graph2spl <file.graph.yaml>
 
 # Introspection
 spl3 show --adapter                        # list all adapters
 spl3 show --adapter <name> --model         # list models for an adapter
-spl3 show --tool                           # list all 68 stdlib tools by category
+spl3 show --tool                           # list all 90 stdlib tools by category
 spl3 show --tool <name>                    # show tool detail (usage, args, deps)
 
 # Code intelligence
@@ -110,15 +114,17 @@ spl3 run <file.spl> --kernel --kernel-name sagemath   # SymPy/SageMath/Lean back
 spl3 tool-api promote <file.spl> --name <lib_name>
 spl3 tool-api list
 
-# Compile a .spl logical view to a physical target (Go, TS, LangGraph, notebook, ...)
-spl3 splc compile <file.spl> --target <name>
+# Compile a .spl logical view to a physical target
+#   --lang: go, ts, python, python/langgraph, python/crewai, python/autogen,
+#           python/pocketflow, python/liquid, python/linalg, python/intro_geometry, python/domain_textbook
+spl3 splc compile <file.spl> --lang <target>
 
 spl3 judge <file> --criteria <name>                    # LLM-as-judge against a rubric
 spl3 vibe "description"                                # one-shot NL → code + README
-spl3 workflow list                                      # durable workflow runs (persistence)
+spl3 hub workflow list                                  # durable workflow runs (persistence)
 
 spl3 --hub http://localhost:8080 run <file.spl>       # Hub-backed registry
-spl3 --hub http://localhost:8080 register <dir/>       # register workflows on Hub
+spl3 --hub http://localhost:8080 hub register <dir/>   # register workflows on Hub
 ```
 
 ## Adapters
@@ -132,7 +138,7 @@ Four adapters form the **mandatory baseline** that every SPL runtime must suppor
 | `openrouter` | 200+ models | Broad model coverage | Single key unlocks frontier + open-source models for cross-model testing |
 | `momagrid` | Decentralized GPU grid | Production grid | SPL workflows as system calls dispatched across owned GPU hardware |
 
-Additional adapters available in the Python (`spl3`) runtime:
+All providers are implemented in the [dd-llm](https://pypi.org/project/dd-llm/) package and reached through SPL's dd-llm bridge; SPL itself only implements the `echo` test double plus the `liquid` and `snap` adapters. Additional adapters available in the Python (`spl3`) runtime:
 
 | Adapter | Provider | Notes |
 |---|---|---|
@@ -152,7 +158,7 @@ Additional adapters available in the Python (`spl3`) runtime:
 ## Codebase Layout
 
 ```
-spl/              SPL 2.0 runtime (lexer, parser, executor, 15 adapters)
+spl/              SPL 2.0 runtime (lexer, parser, executor, adapter registry)
   lexer.py          tokenization
   parser.py         recursive-descent parser → AST
   ast_nodes.py      30+ dataclass node types
@@ -163,8 +169,8 @@ spl/              SPL 2.0 runtime (lexer, parser, executor, 15 adapters)
   ir.py             JSON AST serialization
   text2spl.py       natural language → SPL compiler
   config.py         ~/.spl/config.yaml load/save (adapter, storage_dir, text2spl defaults)
-  adapters/         LLM backend plugins
-  stdlib.py         68 built-in tools (web_search, http_get, run_python, file I/O, string, JSON, …)
+  adapters/         adapter registry → dd-llm bridge (+ echo test double)
+  stdlib.py         90 built-in tools (web_search, http_get, run_python, file I/O, string, JSON, …)
   storage/          SQLite memory + vector store (RAG)
 
 spl3/             SPL 3.0 extension layer (inherits from spl/)
@@ -183,30 +189,38 @@ spl3/             SPL 3.0 extension layer (inherits from spl/)
   cache/            content-addressed generation cache (Layer 2)
   rag/              recipe/code retrieval (Chroma-backed)
   codecs/           image / audio / video codec layer
-  splc/             transpilers: Go, TypeScript, LangGraph, PocketFlow, python/<domain> (concept-book / textbook)
+  splc/             transpilers: Go, TypeScript, LangGraph, PocketFlow, CrewAI, AutoGen, python/<domain> (concept-book / textbook)
+  spl2graph.py      SPL → GraphLang graph IR (*.graph.yaml); graph2spl.py is the reverse
+  spl2mmd.py        SPL → Mermaid diagram
   text2spl/         SPL 3.0 text2spl (extends spl/text2spl.py)
-  adapters/         SPL 3.0 adapters: multimodal, Liquid, Snap
+  adapters/         SPL 3.0 adapters: multimodal dd-llm bridge, Liquid, Snap
 
-cookbook/         74 recipes (SPL 2.0: 01–49, SPL 3.0 multimodal: 50–64, neurosymbolic verifier ladder: 65–87)
+cookbook/         113 catalogued recipes, ids 001–121 (SPL 2.0: 001–049, SPL 3.0 multimodal: 050–064,
+                  neurosymbolic verifier ladder: 065–087, applied solvers: 089–121)
+cookbook-solver/  47 deterministic-solver recipes (deps: pip install -e ".[solver]")
+cookbook-langgraph/, cookbook-pocketflow/   framework-comparison ports
 tests/            unified test suite (900+ tests)
 ```
 
 ## Cookbook
 
-Working examples are provided as 74 recipes spanning beginner to advanced:
+Working examples are provided as 113 catalogued recipes (ids `001`–`121`) spanning beginner to advanced:
 
 | Range | Theme |
 |---|---|
-| `01–09` | Basics: hello world, proxy, multilingual, model showdown, self-refine, ReAct |
-| `10–19` | Patterns: batch test, debate, plan-execute, map-reduce, multi-agent, reflection, tree-of-thought |
-| `20–29` | Applied: text2SPL, structured output, few-shot, nested procs, A/B test, data extraction |
-| `30–39` | Applications: code gen, sentiment, Socratic tutor, interview sim, hypothesis tester, tool use |
-| `40–49` | Advanced: human steering, knowledge synthesis, prompt tuning, adaptive failover, vision, finance |
-| `50–64` | SPL 3.0: code pipeline, multimodal (image/audio/video), parallel code review, voice dialogue |
-| `65–87` | Neurosymbolic verifier ladder: `CREATE TOOL_API`, `SOLVE`/`ASSERT` against SymPy/SageMath/Lean 4, concept-book compiler, CSP/LP/SQL/unit/property-based verifiers |
+| `001–009` | Basics: hello world, proxy, multilingual, model showdown, self-refine, ReAct |
+| `010–019` | Patterns: batch test, debate, plan-execute, map-reduce, multi-agent, reflection, tree-of-thought |
+| `020–029` | Applied: text2SPL, structured output, few-shot, nested procs, A/B test, data extraction |
+| `030–039` | Applications: code gen, sentiment, Socratic tutor, interview sim, hypothesis tester, tool use |
+| `040–049` | Advanced: human steering, knowledge synthesis, prompt tuning, adaptive failover, vision, finance |
+| `050–064` | SPL 3.0: code pipeline, multimodal (image/audio/video), parallel code review, voice dialogue |
+| `065–087` | Neurosymbolic verifier ladder: `CREATE TOOL_API`, `SOLVE`/`ASSERT` against SymPy/SageMath/Lean 4, concept-book compiler, CSP/LP/SQL/unit/property-based verifiers |
+| `089–121` | Applied solvers: LP/MILP, CP-SAT scheduling, Z3 compliance, game theory, Bayesian / black-box / multi-objective optimization, forecasting |
+
+Solver-backed recipes are also collected in `cookbook-solver/` (47 recipes, through r127); see [cookbook-solver/README.md](cookbook-solver/README.md) for system-binary dependencies.
 
 ```bash
-python cookbook/run_all.py --list           # all 74 recipes
+python cookbook/run_all.py --list           # all catalogued recipes
 python cookbook/run_all.py --catalog        # full table with tier + category
 python cookbook/run_all.py --check          # verify env vars + Ollama models
 ```
@@ -219,7 +233,7 @@ The `momagrid` adapter routes SPL inference tasks to a [Momagrid Hub](https://gi
 export MOMAGRID_HUB_URL=http://192.168.1.10:9000
 
 # Single recipe on the grid
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter momagrid -m llama3.2
+spl3 run cookbook/005_self_refine/self_refine.spl --llm momagrid:llama3.2
 
 # Full cookbook in parallel (fills the task queue so all nodes get work)
 python cookbook/run_all.py --adapter momagrid --workers 5

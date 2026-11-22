@@ -6,7 +6,7 @@ safety pipeline managed by a Python-orchestrated workflow.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/18_guardrails/crewai/guardrails_crewai.py \
+    python cookbook/018_guardrails/crewai/guardrails_crewai.py \
         --user-input "My SSN is 123-45-6789, help me file taxes"
 """
 
@@ -129,7 +129,7 @@ def run(user_input: str, model: str, log_dir: str) -> str:
 @click.command()
 @click.option("--user-input", required=True,    help="User message to process")
 @click.option("--model",      default="gemma3", show_default=True)
-@click.option("--log-dir",    default="cookbook/18_guardrails/crewai/logs-crewai", show_default=True)
+@click.option("--log-dir",    default="cookbook/018_guardrails/crewai/logs-crewai", show_default=True)
 def main(user_input: str, model: str, log_dir: str):
     result = run(user_input, model, log_dir)
     print("\n" + "=" * 60)

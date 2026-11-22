@@ -68,25 +68,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/30_code_gen/code_gen.spl \
-    --adapter ollama --model gemma3 --tools cookbook/30_code_gen/tools.py \
+spl3 run cookbook/030_code_gen/code_gen.spl \
+    --adapter ollama --model gemma3 --tools cookbook/030_code_gen/tools.py \
     spec="A function that validates an email address"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/30_code_gen/langgraph/code_gen_langgraph.py \
+python cookbook/030_code_gen/langgraph/code_gen_langgraph.py \
     --spec "A function that validates an email address"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/30_code_gen/autogen/code_gen_autogen.py \
+python cookbook/030_code_gen/autogen/code_gen_autogen.py \
     --spec "A function that validates an email address"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/30_code_gen/crewai/code_gen_crewai.py \
+python cookbook/030_code_gen/crewai/code_gen_crewai.py \
     --spec "A function that validates an email address"
 ```

@@ -134,7 +134,7 @@ the first **two-axis badge sets**.
 
 ```bash
 bash cookbook/tools/lean/setup_lean.sh --with-mathlib   # one-time, ~5 GB olean cache
-spl3 run cookbook/71_linalg_concept_book/lean_payoffs.spl --kernel --llm claude_cli
+spl3 run cookbook/071_linalg_concept_book/lean_payoffs.spl --kernel --llm claude_cli
 spl3 cache list    # rank_nullity, diagonalization → machine_verified,machine_proved
 ```
 
@@ -151,10 +151,10 @@ transpiler — *no LLM call is needed to compile the structure*; only the
 generated notebook's `GENERATE` cells call an LLM at run time:
 
 ```bash
-spl3 splc compile cookbook/71_linalg_concept_book/build_concept_book.spl \
+spl3 splc compile cookbook/071_linalg_concept_book/build_concept_book.spl \
     --lang python/linalg
 
-spl3 splc compile cookbook/71_linalg_concept_book/answer_on_demand.spl \
+spl3 splc compile cookbook/071_linalg_concept_book/answer_on_demand.spl \
     --lang python/linalg
 ```
 
@@ -182,10 +182,10 @@ retargets to any domain that ships an equivalent concept-graph library.
 pip install networkx jupyter sympy
 
 jupyter nbconvert --to notebook --execute \
-    cookbook/71_linalg_concept_book/build_concept_book_python_linalg.ipynb
+    cookbook/071_linalg_concept_book/build_concept_book_python_linalg.ipynb
 ```
 
-Set `LINALG_GRAPH_DIR=cookbook/71_linalg_concept_book` if the notebook can't
+Set `LINALG_GRAPH_DIR=cookbook/071_linalg_concept_book` if the notebook can't
 locate `linalg_graph.py` / `style_profiles.py` automatically, and `SPL_MODEL`
 to choose the Ollama model used by the generated `_llm_call` helper.
 
@@ -204,10 +204,10 @@ The compiled notebook reads every workflow `INPUT` scalar through
 `@payoff_weight`) can be overridden **without recompiling**:
 
 ```bash
-cd cookbook/71_linalg_concept_book/targets/python_linalg
+cd cookbook/071_linalg_concept_book/targets/python_linalg
 
 TARGET=linear_independence SPL_MODEL=gemma4:12b \
-LINALG_GRAPH_DIR=/path/to/cookbook/71_linalg_concept_book \
+LINALG_GRAPH_DIR=/path/to/cookbook/071_linalg_concept_book \
 jupyter nbconvert --to notebook --execute \
     --ExecutePreprocessor.kernel_name=spl123 \
     --ExecutePreprocessor.timeout=1800 \

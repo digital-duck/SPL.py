@@ -7,19 +7,19 @@
 -- Recommended adapter: claude_cli (top-tier reasoning, best for code generation)
 --
 -- Usage:
---   spl3 run cookbook/65_llm_splc/llm_splc.spl \
+--   spl3 run cookbook/065_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --param spl_file="cookbook/05_self_refine/self_refine.spl" \
+--       --param spl_file="cookbook/005_self_refine/self_refine.spl" \
 --       --param target="langgraph"
 --
---   spl3 run cookbook/65_llm_splc/llm_splc.spl \
+--   spl3 run cookbook/065_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --param spl_file="cookbook/11_debate_arena/debate_arena.spl" \
+--       --param spl_file="cookbook/011_debate_arena/debate_arena.spl" \
 --       --param target="crewai"
 --
---   spl3 run cookbook/65_llm_splc/llm_splc.spl \
+--   spl3 run cookbook/065_llm_splc/llm_splc.spl \
 --       --adapter claude_cli \
---       --param spl_file="cookbook/63_parallel_code_review/parallel_code_review.spl" \
+--       --param spl_file="cookbook/063_parallel_code_review/parallel_code_review.spl" \
 --       --param target="autogen"
 
 -- load_file: reads a file from disk (stdlib passthrough)
@@ -160,7 +160,7 @@ WORKFLOW llm_splc
         @target         TEXT DEFAULT 'langgraph',
         @model          TEXT DEFAULT 'claude-cli',
         @output_file    TEXT DEFAULT "",
-        @log_dir        TEXT DEFAULT 'cookbook/65_llm_splc/logs'
+        @log_dir        TEXT DEFAULT 'cookbook/065_llm_splc/logs'
     OUTPUT: @implementation TEXT
 DO
     LOGGING f'llm_splc start | file={@spl_file} target={@target} model={@model}' LEVEL INFO

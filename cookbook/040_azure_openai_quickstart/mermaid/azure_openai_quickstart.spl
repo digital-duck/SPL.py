@@ -10,11 +10,11 @@
 --   Deployments created in Azure AI Studio / Azure OpenAI Studio
 --
 -- Usage:
---   spl3 run cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
+--   spl3 run cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
 --       prompt="Explain the CAP theorem in two sentences."
 --
 --   # Custom deployments (match names you created in Azure)
---   spl3 run cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
+--   spl3 run cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
 --       prompt="Summarise the key benefits of microservices." \
 --       deployment_1="gpt-4o" \
 --       deployment_2="gpt-4o-mini" \

@@ -77,32 +77,32 @@ export KLING_API_KEY=...
 
 ```bash
 # Default — 5 second cinematic landscape, prompt enhanced
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "A duck walking through a quiet forest at dawn, soft morning light"
 
 # No prompt enhancement (send raw prompt to video model)
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "A mountain lake at sunset" \
     --enhance false
 
 # Custom style and duration
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "City traffic at night, neon reflections on wet pavement" \
     --style "cinematic, drone shot, slow motion" \
     --duration 8
 
 # Portrait aspect (vertical video)
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "A candle flickering in the wind" \
     --aspect portrait --duration 6
 
 # Use RunwayML instead of Veo 2
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "Ocean waves at golden hour" \
     --video-model runwayml/gen-3-alpha
 
 # Custom output directory
-python cookbook/56_text_to_video/run.py \
+python cookbook/056_text_to_video/run.py \
     --prompt "Snow falling on a quiet street" \
     --output-dir /tmp/videos
 ```
@@ -120,8 +120,8 @@ python cookbook/56_text_to_video/run.py \
 | `@enhance` | BOOL | `TRUE` | Run gemma4 prompt enhancement before generation |
 | `@video_model` | TEXT | `google/veo-2` | Video generation model |
 | `@llm_model` | TEXT | `gemma4` | Local LLM for prompt enhancement |
-| `@output_dir` | TEXT | `cookbook/56_text_to_video/outputs` | Directory to write generated video |
-| `@log_dir` | TEXT | `cookbook/56_text_to_video/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/056_text_to_video/outputs` | Directory to write generated video |
+| `@log_dir` | TEXT | `cookbook/056_text_to_video/logs-spl` | Directory for log output |
 
 ---
 

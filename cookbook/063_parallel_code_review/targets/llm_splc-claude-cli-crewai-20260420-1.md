@@ -1,9 +1,9 @@
-(spl123) papagame@papa-game:~/projects/digital-duck/SPL.py$ spl3 run cookbook/65_llm_splc/llm_splc.spl     --adapter claude_cli     --tools cookbook/65_llm_splc/tools.py     --param spl_file="$(pwd)/cookbook/63_parallel_code_review/parallel_code_review.spl"     --param target="crewai"     --param output_file="$(pwd)/cookbook/65_llm_splc/targets/crewai/parallel_code_review.py"
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/65_llm_splc/llm_splc.spl
+(spl123) papagame@papa-game:~/projects/digital-duck/SPL.py$ spl3 run cookbook/065_llm_splc/llm_splc.spl     --adapter claude_cli     --tools cookbook/065_llm_splc/tools.py     --param spl_file="$(pwd)/cookbook/063_parallel_code_review/parallel_code_review.spl"     --param target="crewai"     --param output_file="$(pwd)/cookbook/065_llm_splc/targets/crewai/parallel_code_review.py"
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/065_llm_splc/llm_splc.spl
 Registry: ['llm_splc']
-Loaded 62 tool(s) from cookbook/65_llm_splc/tools.py
+Loaded 62 tool(s) from cookbook/065_llm_splc/tools.py
 Running workflow: llm_splc(['spl_file', 'target', 'output_file'])
-[INFO] llm_splc start | file=/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/parallel_code_review.spl target=crewai model=claude-cli
+[INFO] llm_splc start | file=/home/papagame/projects/digital-duck/SPL.py/cookbook/063_parallel_code_review/parallel_code_review.spl target=crewai model=claude-cli
 [INFO] Generating {target} implementation ...
 INFO:spl.executor:GENERATE segment 1 (compile_prompt) -> 1915 tokens, 80409ms
 INFO:spl.executor:GENERATE chain done -> @implementation (7661 chars total)
@@ -14,9 +14,9 @@ INFO:spl.executor:GENERATE chain done -> @review (893 chars total)
 INFO:spl.executor:GENERATE segment 1 (fix_prompt) -> 2278 tokens, 150705ms
 INFO:spl.executor:GENERATE chain done -> @implementation (9115 chars total)
 [INFO] Fixed implementation generated
-[INFO] Output written to /home/papagame/projects/digital-duck/SPL.py/cookbook/65_llm_splc/targets/crewai/parallel_code_review.py
+[INFO] Output written to /home/papagame/projects/digital-duck/SPL.py/cookbook/065_llm_splc/targets/crewai/parallel_code_review.py
 [INFO] llm_splc complete | target=crewai
-INFO:spl.executor:RETURN: 9115 chars | status=complete, target=crewai, spl_file=/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/parallel_code_review.spl
+INFO:spl.executor:RETURN: 9115 chars | status=complete, target=crewai, spl_file=/home/papagame/projects/digital-duck/SPL.py/cookbook/063_parallel_code_review/parallel_code_review.spl
 
 Status:  complete
 Output:  ```python
@@ -214,7 +214,7 @@ class ParallelCodeReview:
         result = crew.kickoff()
         return str(result)
 
-    def run_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+    def run_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
         """Run the parallel code review - simulates CALL PARALLEL"""
 
         try:
@@ -252,7 +252,7 @@ class ParallelCodeReview:
                 logger.error(f"[parallel_code_review] unexpected error: {e}")
                 return f"[ERROR] {str(e)}"
 
-def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
     """Main entry point for parallel code review"""
     reviewer = ParallelCodeReview(review_model=review_model)
     return reviewer.run_review(code, lang, log_dir)
@@ -265,7 +265,7 @@ if __name__ == "__main__":
         code=sample_code,
         lang="python",
         review_model="gemma4",
-        log_dir="cookbook/63_parallel_code_review/logs-spl"
+        log_dir="cookbook/063_parallel_code_review/logs-spl"
     )
 
     print("=== PARALLEL CODE REVIEW RESULT ===")

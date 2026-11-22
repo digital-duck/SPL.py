@@ -17,7 +17,7 @@ Runs style, security, and test-generation reviews of a code snippet in parallel,
 | `@code` | *(required)* | The source code snippet to review |
 | `@lang` | `'python'` | Programming language of the snippet, passed to all sub-workflows |
 | `@review_model` | `'gemma4'` | LLM model identifier used by all sub-workflows and the merge step |
-| `@log_dir` | `'cookbook/63_parallel_code_review/logs-spl'` | Directory path forwarded to sub-workflows for log output |
+| `@log_dir` | `'cookbook/063_parallel_code_review/logs-spl'` | Directory path forwarded to sub-workflows for log output |
 
 ---
 

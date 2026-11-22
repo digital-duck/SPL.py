@@ -5,7 +5,7 @@ Pattern: headlines → expand → evaluate → (pass? format : fill_gaps → for
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/37_headline_news/langgraph/headline_news_langgraph.py \\
+    python cookbook/037_headline_news/langgraph/headline_news_langgraph.py \\
         --topic "artificial intelligence"
 """
 
@@ -122,7 +122,7 @@ def build_graph():
 @click.option("--style", default="structured", help="Output style")
 @click.option("--perspective", default="balanced", help="Coverage perspective")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/37_headline_news/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/037_headline_news/logs-langgraph", help="Log directory")
 def main(topic, date, max_headlines, style, perspective, model, log_dir):
     """Headline News Aggregator — LangGraph edition"""
     build_graph().invoke({

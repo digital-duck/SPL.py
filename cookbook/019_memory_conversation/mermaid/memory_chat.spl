@@ -3,9 +3,9 @@
 -- Demonstrates STORAGE-typed workflow inputs, context accumulation, and stateful interactions.
 --
 -- Usage:
---   spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+--   spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
 --       'user_input=My name is Alice and I am a data scientist'
---   spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+--   spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
 --       'user_input=What is my name?'
 --
 -- Memory is a first-class INPUT parameter — declared, injected, portable.

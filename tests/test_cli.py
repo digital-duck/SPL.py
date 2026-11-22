@@ -4,6 +4,7 @@ import os
 import tempfile
 import pytest
 from click.testing import CliRunner
+from spl import __version__ as spl_version
 from spl.cli import cli, _parse_params
 
 
@@ -231,12 +232,12 @@ class TestCLIVersion:
     def test_version_command(self, runner):
         result = runner.invoke(cli, ["version"])
         assert result.exit_code == 0
-        assert "spl 2.0.0" in result.output
+        assert f"spl {spl_version}" in result.output
 
     def test_version_flag(self, runner):
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "2.0.0" in result.output
+        assert spl_version in result.output
 
 
 class TestCLIEdgeCases:

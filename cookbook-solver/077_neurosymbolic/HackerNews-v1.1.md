@@ -104,7 +104,7 @@ The hardware is already there. An office with developer MacBooks sitting idle ov
 
 ## Case study: Recipe 77 (one SPL pill, three pains killed)
 
-To demonstrate how it all works together, we use a specific [math workflow](https://github.com/digital-duck/SPL.py/blob/main/cookbook/77_neurosymbolic/symbolic_math.spl) that touches all three points: the same `.spl` file runs on Ollama, Claude, or Momagrid (pain 1 gone); a SymPy/SageMath kernel verifies every math step the LLM produces (pain 2 gone); the grid runs on idle consumer GPUs with zero data egress (pain 3 gone).
+To demonstrate how it all works together, we use a specific [math workflow](https://github.com/digital-duck/SPL.py/blob/main/cookbook/077_neurosymbolic/symbolic_math.spl) that touches all three points: the same `.spl` file runs on Ollama, Claude, or Momagrid (pain 1 gone); a SymPy/SageMath kernel verifies every math step the LLM produces (pain 2 gone); the grid runs on idle consumer GPUs with zero data egress (pain 3 gone).
 
 ### The Math problem
 
@@ -184,7 +184,7 @@ Both [SPL](https://github.com/digital-duck/SPL.py) and [Momagrid](https://github
 pip install spl-llm
 
 # your first SPL workflow
-spl3 run cookbook/05_self_refine/self_refine.spl --llm ollama:gemma3 \
+spl3 run cookbook/005_self_refine/self_refine.spl --llm ollama:gemma3 \
     --param task="explain linear algebra"
 ```
 
@@ -201,11 +201,11 @@ mg join http://<HUB-IP>:9000      # workers join from any machine on the same ne
 
 ```bash
 # Run Recipe 77 locally (needs Ollama + a model pulled)
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --llm ollama:gemma3 \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --llm ollama:gemma3 \
     --param problem="differentiate 3*x**3 - x, then solve for x"
 
 # Or run the full experiment grid on Momagrid
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 6
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 6
 ```
 
 No API key required to start. Ollama runs free, local models. SPL ships 14 adapters — when you want to compare against cloud models, add `--adapter openrouter` or `--adapter claude_cli` and the workflow stays the same. *Note:* `--llm ollama:gemma3` is shorthand for `--adapter ollama --model gemma3`

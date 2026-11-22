@@ -113,7 +113,7 @@ WORKFLOW build_concept_book
         @language TEXT DEFAULT 'en',
         @output_html TEXT DEFAULT "",
         @output_dir TEXT DEFAULT "",
-        @log_dir TEXT DEFAULT 'cookbook/74_concept_book/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/074_concept_book/logs-spl'
     OUTPUT:
         @textbook TEXT
 DO

@@ -18,24 +18,24 @@ Audio backend notes
 Usage
 -----
   # Summarise a WAV file via OpenRouter (default)
-  python cookbook/52_audio_summary/run.py --audio path/to/clip.wav
+  python cookbook/052_audio_summary/run.py --audio path/to/clip.wav
 
   # Transcribe only
-  python cookbook/52_audio_summary/run.py --audio clip.wav --mode transcribe
+  python cookbook/052_audio_summary/run.py --audio clip.wav --mode transcribe
 
   # Extract key points (meeting notes style)
-  python cookbook/52_audio_summary/run.py --audio meeting.wav --mode key_points
+  python cookbook/052_audio_summary/run.py --audio meeting.wav --mode key_points
 
   # Custom summary style
-  python cookbook/52_audio_summary/run.py \\
+  python cookbook/052_audio_summary/run.py \\
       --audio clip.wav --style "three bullet points"
 
   # Convert MP3 to WAV before sending (requires pydub + ffmpeg)
-  python cookbook/52_audio_summary/run.py \\
+  python cookbook/052_audio_summary/run.py \\
       --audio clip.mp3 --to-wav
 
   # Via Ollama (experimental — audio support not yet confirmed)
-  python cookbook/52_audio_summary/run.py \\
+  python cookbook/052_audio_summary/run.py \\
       --audio clip.wav --backend ollama --model lfm-2.5
 """
 

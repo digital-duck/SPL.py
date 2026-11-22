@@ -160,7 +160,7 @@ compiled notebook, no code changes.
 
 ## What stays in `spl3/splc/` vs. what lives in the recipe
 
-| Belongs in `spl3/splc/` | Belongs in `cookbook/74_concept_book/` |
+| Belongs in `spl3/splc/` | Belongs in `cookbook/074_concept_book/` |
 |---|---|
 | `transpiler_domain_graph.py` — generic SOLVE/ASSERT/CALL/GENERATE → cell mapping | `graph_lib.py` — domain-agnostic graph algorithms |
 | `transpiler_domain_textbook.py` — the `python/domain_textbook` preset (thin, 2-line wrapper) | `{domain}_graph.yaml` — per-domain data |

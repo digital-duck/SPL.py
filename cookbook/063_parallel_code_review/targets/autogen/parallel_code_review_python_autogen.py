@@ -151,7 +151,7 @@ async def parallel_code_review(
     code: str,
     lang: str = "python",                                         # SPL INPUT: @lang TEXT DEFAULT 'python'
     review_model: str = "gemma3",                                 # SPL INPUT: @review_model TEXT DEFAULT 'gemma3'
-    log_dir: str = "cookbook/63_parallel_code_review/logs-spl",   # SPL INPUT: @log_dir TEXT DEFAULT '...'
+    log_dir: str = "cookbook/063_parallel_code_review/logs-spl",   # SPL INPUT: @log_dir TEXT DEFAULT '...'
 ) -> str:
     """
     SPL: WORKFLOW parallel_code_review
@@ -235,7 +235,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--log-dir",
-        default="cookbook/63_parallel_code_review/logs-spl",
+        default="cookbook/063_parallel_code_review/logs-spl",
         dest="log_dir",
         help="Log directory (unused by this adapter; kept for SPL INPUT parity)",
     )

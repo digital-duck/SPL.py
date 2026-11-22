@@ -12,10 +12,10 @@
 --   gcloud services enable aiplatform.googleapis.com
 --
 -- Usage:
---   spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
+--   spl3 run cookbook/039_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
 --       prompt="Explain the CAP theorem in two sentences."
 --
---   spl3 run cookbook/39_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
+--   spl3 run cookbook/039_vertex_quickstart/vertex_quickstart.spl --adapter vertex \
 --       prompt="What are the trade-offs between REST and GraphQL?" \
 --       model_pro="gemini-2.5-pro" \
 --       model_flash="gemini-2.5-flash" \

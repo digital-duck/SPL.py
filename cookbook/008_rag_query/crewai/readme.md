@@ -28,15 +28,15 @@ ollama pull nomic-embed-text
 
 ```bash
 # From SPL20/ root
-python cookbook/08_rag_query/crewai/rag_crewai.py \
+python cookbook/008_rag_query/crewai/rag_crewai.py \
     --doc /path/to/doc.md \
     --question "Who is Wen?"
 
-python cookbook/08_rag_query/crewai/rag_crewai.py \
+python cookbook/008_rag_query/crewai/rag_crewai.py \
     --doc /path/to/doc.md \
     --question "What is Momagrid and why was it built?" \
     --model llama3.2 \
-    --log-dir cookbook/08_rag_query/crewai/logs
+    --log-dir cookbook/008_rag_query/crewai/logs
 ```
 
 ## Validate
@@ -54,7 +54,7 @@ Committed | status=complete
 
 ```bash
 spl doc-rag add /path/to/doc.md
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="Who is Wen?"
 ```
 

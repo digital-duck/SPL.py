@@ -5,7 +5,7 @@ Pattern: Detect Lang → [Security, Performance, Style, Bug Analysis] → Synthe
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/15_code_review/crewai/code_review_autogen.py \\
+    python cookbook/015_code_review/crewai/code_review_autogen.py \\
         --code "def foo(x): return eval(x)"
 """
 
@@ -109,7 +109,7 @@ def run(code_input: str, model: str, log_dir: str):
 @click.command()
 @click.option("--code", required=True, help="Code to review or path to file")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/15_code_review/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/015_code_review/logs-crewai", help="Log directory")
 def main(code, model, log_dir):
     """Automated Code Review — CrewAI edition"""
     run(code, model, log_dir)

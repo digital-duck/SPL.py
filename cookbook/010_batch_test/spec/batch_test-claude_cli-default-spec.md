@@ -82,7 +82,7 @@ spl3 splc compile batch_test.spl --lang python/langgraph
 spl3 splc compile batch_test.spl --lang go
 
 # Step 3 — run directly
-spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama
-spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama \
+spl3 run cookbook/010_batch_test/batch_test.spl --adapter ollama
+spl3 run cookbook/010_batch_test/batch_test.spl --adapter ollama \
     model_1=gemma3 model_2=mistral
 ```

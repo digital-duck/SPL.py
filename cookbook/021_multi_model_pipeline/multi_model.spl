@@ -4,7 +4,7 @@
 --
 -- Each step can target a different model — the right model for each task.
 -- Usage:
---   spl3 run cookbook/21_multi_model_pipeline/multi_model.spl --adapter ollama topic="climate change"
+--   spl3 run cookbook/021_multi_model_pipeline/multi_model.spl --adapter ollama topic="climate change"
 
 CREATE FUNCTION research(topic TEXT) 
 RETURN TEXT 
@@ -59,7 +59,7 @@ WORKFLOW multi_model_pipeline
   INPUT:
     @topic TEXT,
     @max_iterations INT DEFAULT 3,
-    @log_dir TEXT DEFAULT 'cookbook/21_multi_model_pipeline/logs-spl'
+    @log_dir TEXT DEFAULT 'cookbook/021_multi_model_pipeline/logs-spl'
   OUTPUT: @final TEXT
 DO
   LOGGING f'Multi-model pipeline | topic={@topic}' LEVEL INFO

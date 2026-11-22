@@ -22,7 +22,7 @@ WORKFLOW generate_code
         @spec    TEXT,
         @lang    TEXT DEFAULT 'python',
         @generate_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @code TEXT
 DO
     LOGGING f'[01_generate_code] started | lang={@lang} spec="{@spec}"' LEVEL INFO

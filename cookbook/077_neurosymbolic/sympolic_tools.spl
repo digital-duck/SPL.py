@@ -2,7 +2,7 @@
 -- sympolic_tools.spl — shared TOOL_API + FUNCTION definitions
 -- for Recipe-77 neurosymbolic scripts.
 --
--- Cloned from cookbook/67_symbolic_math/sympy_tools.spl and widened
+-- Cloned from cookbook/067_symbolic_math/sympy_tools.spl and widened
 -- to the full verifier ladder: the SAME declarative chain protocol
 -- ('<expression>|<operation>' steps, '<bare_result>|<readable_line>'
 -- results) now dispatches to THREE deterministic backends:

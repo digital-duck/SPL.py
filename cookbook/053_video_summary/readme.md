@@ -49,32 +49,32 @@ sudo apt install ffmpeg      # frame and audio extraction
 
 ```bash
 # Default — concise paragraph summary
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4
 
 # Verbatim transcript with timestamps
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4 \
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4 \
     --mode transcript
 
 # Structured key moments list
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4 \
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4 \
     --mode key_moments
 
 # Chapter-style breakdown with titles
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4 \
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4 \
     --mode chapters
 
 # Custom summary style
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4 \
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4 \
     --mode summary --style "three bullet points, executive style"
 
 # Larger output budget for long videos
-python cookbook/53_video_summary/run.py \
-    --video cookbook/53_video_summary/sample/clip.mp4 \
+python cookbook/053_video_summary/run.py \
+    --video cookbook/053_video_summary/sample/clip.mp4 \
     --mode transcript --output-budget 4096
 ```
 
@@ -84,12 +84,12 @@ python cookbook/53_video_summary/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@clip` | VIDEO | `cookbook/53_video_summary/sample/clip.mp4` | Source video file path |
+| `@clip` | VIDEO | `cookbook/053_video_summary/sample/clip.mp4` | Source video file path |
 | `@mode` | TEXT | `summary` | Output mode: `summary`, `transcript`, `key_moments`, `chapters` |
 | `@style` | TEXT | `concise paragraph` | Prose style for `summary` mode |
 | `@model` | TEXT | `gemma4` | Multimodal LLM for video understanding |
 | `@output_budget` | INT | `2048` | Max output tokens |
-| `@log_dir` | TEXT | `cookbook/53_video_summary/logs-spl` | Directory for log output |
+| `@log_dir` | TEXT | `cookbook/053_video_summary/logs-spl` | Directory for log output |
 
 ---
 

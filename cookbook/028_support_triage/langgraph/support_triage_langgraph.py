@@ -5,7 +5,7 @@ Pattern: extract_order → lookup_order → classify_ticket → extract_details 
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/28_support_triage/langgraph/support_triage_langgraph.py \
+    python cookbook/028_support_triage/langgraph/support_triage_langgraph.py \
         --ticket "My account has been charged twice for order #ORD-12345"
 """
 
@@ -316,7 +316,7 @@ def build_graph():
 @click.option("--product", default="CloudDash", show_default=True)
 @click.option("--tone",    default="professional", show_default=True)
 @click.option("--model",   default="gemma3",    show_default=True)
-@click.option("--log-dir", default="cookbook/28_support_triage/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir", default="cookbook/028_support_triage/langgraph/logs-langgraph", show_default=True)
 def main(ticket: str, product: str, tone: str, model: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

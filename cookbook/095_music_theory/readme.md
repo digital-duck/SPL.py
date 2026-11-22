@@ -28,14 +28,14 @@ Suggested by Qwen (2026-07-25, see `docs/publication/TMLR/SPL-for-Agentic-Workfl
 
 ```bash
 # Default melody: C5 D5 E5 F5 G5 F5 E5 C5 (MIDI: 72,74,76,77,79,77,76,72)
-spl3 run cookbook/95_music_theory/music_theory.spl --llm claude_cli
+spl3 run cookbook/095_music_theory/music_theory.spl --llm claude_cli
 
 # Custom melody
-spl3 run cookbook/95_music_theory/music_theory.spl --llm claude_cli \
+spl3 run cookbook/095_music_theory/music_theory.spl --llm claude_cli \
     --param melody="60,62,64,65,67,65,64,60"
 
 # Unaided baseline arm
-spl3 run cookbook/95_music_theory/music_theory.spl --llm claude_cli --param enable_solver=false
+spl3 run cookbook/095_music_theory/music_theory.spl --llm claude_cli --param enable_solver=false
 ```
 
 ## Verified (2026-07-26)

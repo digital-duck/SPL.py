@@ -5,7 +5,7 @@ Pattern: research → explain_layer → make_example → calibrate_complexity �
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/25_nested_procs/langgraph/nested_procs_langgraph.py \\
+    python cookbook/025_nested_procs/langgraph/nested_procs_langgraph.py \\
         --topic "quantum computing" --audience "high school students"
 """
 
@@ -108,7 +108,7 @@ def build_graph():
 @click.option("--audience", required=True, help="Target audience")
 @click.option("--depth", default="standard", help="Article depth")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/25_nested_procs/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/025_nested_procs/logs-langgraph", help="Log directory")
 def main(topic, audience, depth, model, log_dir):
     """Nested Procedures — LangGraph edition"""
     build_graph().invoke({

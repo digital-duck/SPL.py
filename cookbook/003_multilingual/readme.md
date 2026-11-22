@@ -12,7 +12,7 @@ Greet in any language — demonstrates parametric context passing via `user_inpu
 ## Usage
 
 ```bash
-spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama --model phi4 \
+spl3 run cookbook/003_multilingual/multilingual.spl --adapter ollama --model phi4 \
     --param user_input="What is Python"
 
 

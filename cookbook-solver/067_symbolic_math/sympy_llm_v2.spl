@@ -55,7 +55,7 @@ END;
 
 WORKFLOW math_solver_ab_v2
   INPUT @problem TEXT := 'differentiate 3*x**3 - x, then factor if needed, finally solve for x'
-  INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
+  INPUT @log_dir TEXT := 'cookbook/067_symbolic_math/logs-spl'
   INPUT @enable_solver TEXT := 'true'
   OUTPUT @explanation TEXT
 DO

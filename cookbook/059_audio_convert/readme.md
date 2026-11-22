@@ -57,17 +57,17 @@ ffmpeg -version              # verify
 
 ```bash
 # Option A — reuse clip from recipe 52 (if already present)
-cp cookbook/52_audio_summary/sample/clip.mp3 \
-   cookbook/59_audio_convert/sample/clip.mp3
+cp cookbook/052_audio_summary/sample/clip.mp3 \
+   cookbook/059_audio_convert/sample/clip.mp3
 
 # Option B — generate one with espeak (Linux)
 espeak "Audio format conversion test for SPL 3.0." \
-    -w cookbook/59_audio_convert/sample/clip.wav
+    -w cookbook/059_audio_convert/sample/clip.wav
 
 # Option C — generate one with OpenAI TTS
 python -c "
 from openai import OpenAI; import pathlib
-out = pathlib.Path('cookbook/59_audio_convert/sample/clip.mp3')
+out = pathlib.Path('cookbook/059_audio_convert/sample/clip.mp3')
 out.parent.mkdir(parents=True, exist_ok=True)
 r = OpenAI().audio.speech.create(model='tts-1', voice='alloy',
     input='Audio format conversion test for SPL 3.0.')
@@ -83,28 +83,28 @@ out.write_bytes(r.content); print('saved:', out)
 
 ```bash
 # MP3 → WAV
-python cookbook/59_audio_convert/run.py \
-    --audio cookbook/59_audio_convert/sample/clip.mp3 \
+python cookbook/059_audio_convert/run.py \
+    --audio cookbook/059_audio_convert/sample/clip.mp3 \
     --target-format wav
 
 # MP3 → OGG (128k bitrate)
-python cookbook/59_audio_convert/run.py \
-    --audio cookbook/59_audio_convert/sample/clip.mp3 \
+python cookbook/059_audio_convert/run.py \
+    --audio cookbook/059_audio_convert/sample/clip.mp3 \
     --target-format ogg --bitrate 128k
 
 # MP3 → FLAC (lossless archival)
-python cookbook/59_audio_convert/run.py \
-    --audio cookbook/59_audio_convert/sample/clip.mp3 \
+python cookbook/059_audio_convert/run.py \
+    --audio cookbook/059_audio_convert/sample/clip.mp3 \
     --target-format flac
 
 # WAV → MP3 (high quality)
-python cookbook/59_audio_convert/run.py \
-    --audio cookbook/59_audio_convert/sample/clip.wav \
+python cookbook/059_audio_convert/run.py \
+    --audio cookbook/059_audio_convert/sample/clip.wav \
     --target-format mp3 --bitrate 320k --sample-rate 48000
 
 # Custom output directory
-python cookbook/59_audio_convert/run.py \
-    --audio cookbook/59_audio_convert/sample/clip.mp3 \
+python cookbook/059_audio_convert/run.py \
+    --audio cookbook/059_audio_convert/sample/clip.mp3 \
     --target-format wav --output-dir /tmp/converted
 ```
 
@@ -117,20 +117,20 @@ The `convert_audio` tool must be loaded from `cookbook/tools/registry.py`.
 
 ```bash
 # Default params (WAV → MP3, 192k)
-spl3 run cookbook/59_audio_convert/audio_convert.spl \
+spl3 run cookbook/059_audio_convert/audio_convert.spl \
     --tools cookbook/tools/registry.py
 
 # MP3 → OGG
-spl3 run cookbook/59_audio_convert/audio_convert.spl \
+spl3 run cookbook/059_audio_convert/audio_convert.spl \
     --tools cookbook/tools/registry.py \
-    -p audio=cookbook/59_audio_convert/sample/clip.mp3 \
+    -p audio=cookbook/059_audio_convert/sample/clip.mp3 \
     -p target_format=ogg \
     -p bitrate=128k
 
 # MP3 → FLAC, custom output dir
-spl3 run cookbook/59_audio_convert/audio_convert.spl \
+spl3 run cookbook/059_audio_convert/audio_convert.spl \
     --tools cookbook/tools/registry.py \
-    -p audio=cookbook/59_audio_convert/sample/clip.mp3 \
+    -p audio=cookbook/059_audio_convert/sample/clip.mp3 \
     -p target_format=flac \
     -p output_dir=/tmp/converted
 ```
@@ -143,12 +143,12 @@ spl3 run cookbook/59_audio_convert/audio_convert.spl \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@audio` | AUDIO | `cookbook/59_audio_convert/sample/clip.wav` | Source audio file path |
+| `@audio` | AUDIO | `cookbook/059_audio_convert/sample/clip.wav` | Source audio file path |
 | `@target_format` | TEXT | `mp3` | Target format: `mp3`, `wav`, `ogg`, `flac`, `m4a` |
 | `@bitrate` | TEXT | `192k` | Bitrate for lossy formats (e.g. `128k`, `192k`, `320k`) |
 | `@sample_rate` | INT | `44100` | Output sample rate in Hz (e.g. `44100`, `48000`) |
-| `@output_dir` | TEXT | `cookbook/59_audio_convert/outputs` | Directory to write converted file |
-| `@log_dir` | TEXT | `cookbook/59_audio_convert/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/059_audio_convert/outputs` | Directory to write converted file |
+| `@log_dir` | TEXT | `cookbook/059_audio_convert/logs-spl` | Directory for log output |
 
 ---
 

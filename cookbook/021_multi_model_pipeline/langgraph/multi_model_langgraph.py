@@ -5,7 +5,7 @@ Pattern: research → analyze → write → score → (pass? commit : refine →
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/21_multi_model_pipeline/langgraph/multi_model_langgraph.py \\
+    python cookbook/021_multi_model_pipeline/langgraph/multi_model_langgraph.py \\
         --topic "climate change"
 """
 
@@ -118,7 +118,7 @@ def build_graph():
 @click.option("--topic", required=True, help="Topic for the pipeline")
 @click.option("--max-iterations", default=3, help="Max quality cycles")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/21_multi_model_pipeline/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/021_multi_model_pipeline/logs-langgraph", help="Log directory")
 def main(topic, max_iterations, model, log_dir):
     """Multi-Model Pipeline — LangGraph edition"""
     build_graph().invoke({

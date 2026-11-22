@@ -10,9 +10,9 @@ Key contrast with SPL:
 
 Usage:
     pip install langgraph langchain-ollama langchain-community faiss-cpu
-    python cookbook/08_rag_query/langgraph/rag_langgraph.py \\
+    python cookbook/008_rag_query/langgraph/rag_langgraph.py \\
         --doc /path/to/doc.md --question "Who is Wen?"
-    python cookbook/08_rag_query/langgraph/rag_langgraph.py \\
+    python cookbook/008_rag_query/langgraph/rag_langgraph.py \\
         --doc /path/to/doc.md --question "What is Momagrid?" \\
         --model llama3.2 --embed-model nomic-embed-text
 """
@@ -105,7 +105,7 @@ def build_graph():
 @click.option("--question", required=True, help="Question to answer")
 @click.option("--model", default="gemma3", help="Ollama chat model")
 @click.option("--embed-model", default="nomic-embed-text", help="Ollama embedding model")
-@click.option("--log-dir", default="cookbook/08_rag_query/langgraph/logs", help="Log directory")
+@click.option("--log-dir", default="cookbook/008_rag_query/langgraph/logs", help="Log directory")
 def main(doc, question, model, embed_model, log_dir):
     """RAG Query — LangGraph edition"""
     result = build_graph().invoke({

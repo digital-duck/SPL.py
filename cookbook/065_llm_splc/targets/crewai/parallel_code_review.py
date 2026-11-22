@@ -192,7 +192,7 @@ class ParallelCodeReview:
         result = crew.kickoff()
         return str(result)
 
-    def run_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+    def run_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
         """Run the parallel code review - simulates CALL PARALLEL"""
 
         try:
@@ -230,7 +230,7 @@ class ParallelCodeReview:
                 logger.error(f"[parallel_code_review] unexpected error: {e}")
                 return f"[ERROR] {str(e)}"
 
-def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
     """Main entry point for parallel code review"""
     reviewer = ParallelCodeReview(review_model=review_model)
     return reviewer.run_review(code, lang, log_dir)
@@ -243,7 +243,7 @@ if __name__ == "__main__":
         code=sample_code,
         lang="python",
         review_model="gemma4",
-        log_dir="cookbook/63_parallel_code_review/logs-spl"
+        log_dir="cookbook/063_parallel_code_review/logs-spl"
     )
 
     print("=== PARALLEL CODE REVIEW RESULT ===")

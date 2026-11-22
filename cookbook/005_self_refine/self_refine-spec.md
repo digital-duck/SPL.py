@@ -19,7 +19,7 @@ Automatically refines a written response to a user-supplied task by alternating 
 | `@max_iterations` | `3` | Maximum number of critique–refine cycles before halting |
 | `@writer_model` | `'gemma3'` | Model used for `draft` and `refine` GENERATE calls |
 | `@critic_model` | `'llama3.2'` | Model used for `critique` GENERATE calls |
-| `@log_dir` | `'cookbook/05_self_refine/logs-spl'` | Directory path where intermediate and final files are written |
+| `@log_dir` | `'cookbook/005_self_refine/logs-spl'` | Directory path where intermediate and final files are written |
 
 ---
 

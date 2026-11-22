@@ -24,7 +24,7 @@ That contract — *terse, single-line, no reasoning preamble* — is the whole t
 ### Run 1 — `gemma3`, compound prompt
 
 ```
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/symbolic_math.spl \
     --adapter ollama --model gemma3 \
     --param problem="differentiate e**x and simplify it if necessary"
 ```
@@ -45,7 +45,7 @@ LLM calls: 2  Latency: 3304ms
 ### Run 2 — `gemma4:12b`, same compound prompt
 
 ```
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/symbolic_math.spl \
     --adapter ollama --model gemma4:12b \
     --param problem="differentiate e**x and simplify it if necessary"
 ```
@@ -73,7 +73,7 @@ there was no expression to feed it).
 ### Run 3 — `gemma4:12b`, simpler prompt (no compound clause)
 
 ```
-spl3 run cookbook/67_symbolic_math/symbolic_math.spl \
+spl3 run cookbook/067_symbolic_math/symbolic_math.spl \
     --adapter ollama --model gemma4:12b \
     --param problem="differentiate e**x"
 ```

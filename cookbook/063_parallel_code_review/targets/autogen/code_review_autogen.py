@@ -155,7 +155,7 @@ async def parallel_code_review(
     code: str,
     lang: str = "python",                                         # SPL INPUT: @lang TEXT DEFAULT 'python'
     review_model: str = "gemma3",                                 # SPL INPUT: @review_model TEXT DEFAULT 'gemma3'
-    log_dir: str = "cookbook/63_parallel_code_review/logs-spl",   # SPL INPUT: @log_dir TEXT DEFAULT '...'
+    log_dir: str = "cookbook/063_parallel_code_review/logs-spl",   # SPL INPUT: @log_dir TEXT DEFAULT '...'
 ) -> str:
     """
     SPL: WORKFLOW parallel_code_review
@@ -239,7 +239,7 @@ import click
 @click.option("--code", required=True, help="Source code to review, or a file path to read from")
 @click.option("--lang", default="python", show_default=True, help="Programming language")
 @click.option("--review-model", default="gemma3", show_default=True, help="LLM model name served by Ollama")
-@click.option("--log-dir", default="cookbook/63_parallel_code_review/logs-spl", show_default=True, help="Log directory (kept for SPL INPUT parity)")
+@click.option("--log-dir", default="cookbook/063_parallel_code_review/logs-spl", show_default=True, help="Log directory (kept for SPL INPUT parity)")
 @click.option("--report", default="review.md", show_default=True, help="Output file for the review report")
 def main(code: str, lang: str, review_model: str, log_dir: str, report: str):
     """Parallel Code Review — AutoGen implementation of parallel_code_review.spl"""

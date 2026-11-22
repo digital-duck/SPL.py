@@ -164,12 +164,12 @@
       "description": "CALL PARALLEL opening statements + WHILE rebuttals — structured adversarial discourse",
       "args": [
         "spl-ts", "run",
-        "~/projects/digital-duck/SPL.ts/cookbook/11_debate_arena/debate_arena.spl",
+        "~/projects/digital-duck/SPL.ts/cookbook/011_debate_arena/debate_arena.spl",
         "--adapter", "ollama",
         "--param", "topic=Artificial intelligence will eliminate more jobs than it creates",
         "--param", "max_rounds=2"
       ],
-      "dir": "~/projects/digital-duck/SPL.ts/cookbook/11_debate_arena",
+      "dir": "~/projects/digital-duck/SPL.ts/cookbook/011_debate_arena",
       "log": "debate_arena",
       "is_active": true,
       "approval_status": "verified",

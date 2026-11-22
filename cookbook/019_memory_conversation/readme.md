@@ -16,19 +16,19 @@ No setup required — the memory store is created automatically under `cookbook/
 
 ```bash
 # Turn 1: introduce yourself
-spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
     user_input="My name is Alice and I'm a data scientist"
 
 # Turn 2: test recall
-spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
     user_input="What's my name?"
 
 # Turn 3: add more facts
-spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
     user_input="I prefer Python over R"
 
 # Turn 4: review stored profile
-spl3 run cookbook/19_memory_conversation/memory_chat.spl --adapter ollama \
+spl3 run cookbook/019_memory_conversation/memory_chat.spl --adapter ollama \
     user_input="What do you know about me?"
 ```
 

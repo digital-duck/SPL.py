@@ -16,7 +16,7 @@ Given a problem statement and a list of LLMs, explore one reasoning path per mod
 |---|---|---|
 | `@problem` | `'Design a sustainable urban transport system.'` | The problem statement to solve |
 | `@models` | `['gemma3', 'phi4-mini']` | Ordered list of model identifiers; one reasoning path is generated per entry |
-| `@log_dir` | `'cookbook/17_tree_of_thought/logs-spl'` | Directory where per-model path files and the final solution are written |
+| `@log_dir` | `'cookbook/017_tree_of_thought/logs-spl'` | Directory where per-model path files and the final solution are written |
 
 ---
 

@@ -35,9 +35,9 @@
 --
 -- Requires: stdlib re only — no new pip dependency
 -- Run:
---   spl3 run cookbook/91_compsci_chemistry/chemistry_balance.spl \
+--   spl3 run cookbook/091_compsci_chemistry/chemistry_balance.spl \
 --       --llm claude_cli
---   spl3 run cookbook/91_compsci_chemistry/chemistry_balance.spl \
+--   spl3 run cookbook/091_compsci_chemistry/chemistry_balance.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -310,7 +310,7 @@ WORKFLOW chemistry_balance
   INPUT @problem TEXT := "Combustion of methane: CH4 + O2 -> CO2 + H2O"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/91_compsci_chemistry/output"
+  INPUT @out_dir TEXT := "./cookbook/091_compsci_chemistry/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

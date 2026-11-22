@@ -20,7 +20,7 @@ ollama pull gemma3   # or any model you prefer
 
 ```bash
 # From SPL20/ root
-python cookbook/11_debate_arena/crewai/debate_crewai.py --topic "AI should be open-sourced"
+python cookbook/011_debate_arena/crewai/debate_crewai.py --topic "AI should be open-sourced"
 ```
 
 ## Validate
@@ -39,7 +39,7 @@ VERDICT:
 <judge verdict text>
 ```
 
-Check log files written to `cookbook/11_debate_arena/crewai/logs-crewai`:
+Check log files written to `cookbook/011_debate_arena/crewai/logs-crewai`:
 ```
 opening_pro.md
 opening_con.md
@@ -52,7 +52,7 @@ verdict.md
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/11_debate_arena/debate.spl \
+spl3 run cookbook/011_debate_arena/debate.spl \
     --adapter ollama --model gemma3 \
     topic="AI should be open-sourced"
 ```

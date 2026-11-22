@@ -41,16 +41,16 @@ orders(id, customer_id, amount, order_date)
 
 ```bash
 # Default question (average Enterprise-segment order amount; known ground truth: $6,000.00)
-spl3 run cookbook/94_data_eng_text2spl/text2sql_quality.spl \
+spl3 run cookbook/094_data_eng_text2spl/text2sql_quality.spl \
     --llm claude_cli
 
 # Unaided baseline arm
-spl3 run cookbook/94_data_eng_text2spl/text2sql_quality.spl \
+spl3 run cookbook/094_data_eng_text2spl/text2sql_quality.spl \
     --llm claude_cli \
     --param enable_solver=false
 
 # Custom question (must also update ground_truth_sql / stat_sql_a / stat_sql_b to match)
-spl3 run cookbook/94_data_eng_text2spl/text2sql_quality.spl \
+spl3 run cookbook/094_data_eng_text2spl/text2sql_quality.spl \
     --llm ollama:gemma3 \
     --param question="What is the total order amount for the SMB segment?" \
     --param ground_truth_sql="SELECT SUM(o.amount) FROM orders o JOIN customers c ON o.customer_id=c.id WHERE c.segment='SMB'" \

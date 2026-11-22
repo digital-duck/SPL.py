@@ -41,9 +41,9 @@ WORKFLOW text_to_image
         @quality      TEXT   DEFAULT 'hd',
         @enhance      BOOL   DEFAULT TRUE,
         @model        TEXT   DEFAULT 'dall-e-3',
-        @output_dir   TEXT   DEFAULT 'cookbook/54_text_to_image/outputs',
+        @output_dir   TEXT   DEFAULT 'cookbook/054_text_to_image/outputs',
         @llm_model    TEXT   DEFAULT 'gemma4:e4b',
-        @log_dir      TEXT   DEFAULT 'cookbook/54_text_to_image/logs-spl'
+        @log_dir      TEXT   DEFAULT 'cookbook/054_text_to_image/logs-spl'
     OUTPUT: @image_path IMAGE
 DO
     LOGGING f'[text_to_image] prompt="{@prompt}" style={@style}' LEVEL INFO

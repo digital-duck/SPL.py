@@ -12,7 +12,7 @@ Produce a high-quality, reviewed written summary of any topic by chaining resear
 |---|---|---|
 | `@topic` | *(required)* | The subject to research, analyze, and summarize |
 | `@max_iterations` | `3` | Maximum number of quality-check / rewrite cycles before fallback |
-| `@log_dir` | `cookbook/21_multi_model_pipeline/logs-spl` | Directory path where intermediate and final markdown files are written |
+| `@log_dir` | `cookbook/021_multi_model_pipeline/logs-spl` | Directory path where intermediate and final markdown files are written |
 
 ## 3. Process
 

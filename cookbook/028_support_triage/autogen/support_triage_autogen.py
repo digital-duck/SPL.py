@@ -6,7 +6,7 @@ to implement a multi-step support triage pipeline.
 
 Usage:
     pip install pyautogen
-    python cookbook/28_support_triage/autogen/support_triage_autogen.py \
+    python cookbook/028_support_triage/autogen/support_triage_autogen.py \
         --ticket "My account has been charged twice for order #ORD-12345"
 """
 
@@ -169,7 +169,7 @@ def run(ticket: str, product: str, tone: str, model: str, log_dir: str) -> str:
 @click.option("--product", default="CloudDash", show_default=True)
 @click.option("--tone",    default="professional", show_default=True)
 @click.option("--model",   default="gemma3",    show_default=True)
-@click.option("--log-dir", default="cookbook/28_support_triage/autogen/logs-autogen", show_default=True)
+@click.option("--log-dir", default="cookbook/028_support_triage/autogen/logs-autogen", show_default=True)
 def main(ticket: str, product: str, tone: str, model: str, log_dir: str):
     result = run(ticket, product, tone, model, log_dir)
     print("\n" + "=" * 60)

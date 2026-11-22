@@ -4,7 +4,7 @@
 -- the quality gate, the workflow transparently retries on the fallback model.
 --
 -- Usage (ollama / Momagrid):
---   spl3 run cookbook/44_adaptive_failover/adaptive_failover.spl \
+--   spl3 run cookbook/044_adaptive_failover/adaptive_failover.spl \
 --       --adapter ollama \
 --       query="Explain quantum entanglement for a technical audience." \
 --       primary_model=phi4 \
@@ -59,7 +59,7 @@ WORKFLOW adaptive_failover
         @query          TEXT DEFAULT 'Write a detailed technical summary of quantum entanglement.',
         @primary_model  TEXT DEFAULT 'phi4',
         @fallback_model TEXT DEFAULT 'gemma3',
-        @log_dir TEXT DEFAULT 'cookbook/44_adaptive_failover/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/044_adaptive_failover/logs-spl'
     OUTPUT: @final_response TEXT
 DO
     LOGGING f'Attempting generation with primary model: {@primary_model}' LEVEL INFO

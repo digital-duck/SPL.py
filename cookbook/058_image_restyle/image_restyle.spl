@@ -47,14 +47,14 @@ $$;
 
 WORKFLOW image_restyle
     INPUT:
-        @photo        IMAGE  DEFAULT 'cookbook/58_image_restyle/sample/photo.jpg',
+        @photo        IMAGE  DEFAULT 'cookbook/058_image_restyle/sample/photo.jpg',
         @style        TEXT   DEFAULT 'watercolor painting, soft edges, pastel tones',
         @preserve     TEXT   DEFAULT 'composition, main subject, mood',
         @quality      TEXT   DEFAULT 'hd',
         @dalle_style  TEXT   DEFAULT 'natural',
         @vision_model TEXT   DEFAULT 'gemma4:12b',
-        @output_dir   TEXT   DEFAULT 'cookbook/58_image_restyle/outputs',
-        @log_dir      TEXT   DEFAULT 'cookbook/58_image_restyle/logs-spl'
+        @output_dir   TEXT   DEFAULT 'cookbook/058_image_restyle/outputs',
+        @log_dir      TEXT   DEFAULT 'cookbook/058_image_restyle/logs-spl'
     OUTPUT: @result TEXT
 DO
     LOGGING f'[image_restyle] photo={@photo} style="{@style}"' LEVEL INFO

@@ -3,9 +3,9 @@
 -- Demonstrates agentic planning, sequential execution, and progress tracking.
 --
 -- Usage:
---   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama --model gemma3 task="Build a REST API for a todo app"
---   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama task="Set up a CI/CD pipeline for a Python project"
---   spl3 run cookbook/12_plan_and_execute/plan_execute.spl --adapter ollama task="Migrate a MySQL database to PostgreSQL"
+--   spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama --model gemma3 task="Build a REST API for a todo app"
+--   spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama task="Set up a CI/CD pipeline for a Python project"
+--   spl3 run cookbook/012_plan_and_execute/plan_execute.spl --adapter ollama task="Migrate a MySQL database to PostgreSQL"
 
 WORKFLOW plan_and_execute
     INPUT: @task TEXT

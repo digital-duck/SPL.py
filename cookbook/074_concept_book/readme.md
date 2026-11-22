@@ -194,7 +194,7 @@ correctly dispatching to `sympy.geometry` vs. plain `sympy` per
 
 ```bash
 # Compile (already checked in under targets/, but to regenerate):
-splc compile cookbook/74_concept_book/build_concept_book.spl --lang python/domain_textbook
+splc compile cookbook/074_concept_book/build_concept_book.spl --lang python/domain_textbook
 
 # Run against either domain — only the env var changes:
 DOMAIN_YAML=linalg_graph.yaml \
@@ -209,7 +209,7 @@ DOMAIN_YAML=geometry_graph.yaml TARGET=trigonometric_ratios \
 All generated artifacts land under `output/` inside this recipe directory:
 
 ```
-cookbook/74_concept_book/
+cookbook/074_concept_book/
   output/
     html/        ← interactive concept-graph navigator  +  concept-book HTML
     pdf/         ← PDF rendered from notebook via webpdf
@@ -230,7 +230,7 @@ Three artifact types per domain, one output tree:
 Every `{domain}_graph.yaml` below runs through the **same** checked-in
 notebook (`targets/python_domain_textbook/build_concept_book_python_domain_textbook.ipynb`);
 only the env vars change.  The three-artifact generation pipeline, run from
-`cookbook/74_concept_book/`:
+`cookbook/074_concept_book/`:
 
 ```bash
 # ── 0. Interactive concept-graph navigator (no LLM — instant) ──────────────
@@ -273,14 +273,14 @@ regression oracle for everything else here. 5 primitives / 25 concepts /
 
 ```bash
 # 0. concept-graph navigator (instant)
-python scripts/concept_graph.py --domain cookbook/74_concept_book/linalg_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/linalg_graph.yaml \
   visualize --format html
 # → output/html/linalg_graph.html
 
 # 1. concept-book HTML
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=linalg_graph.yaml --param target=spectral_theorem \
-  --param output_html=cookbook/74_concept_book/output/html/linalg_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/linalg_concept_book.html
 
 # 2+3. notebook → PDF  (from targets/python_domain_textbook/)
 DOMAIN_YAML=linalg_graph.yaml TARGET=spectral_theorem \
@@ -299,13 +299,13 @@ distance-formula, and shoelace-area worked examples recomputed over ℚ
 50 edges. Capstone: `trigonometric_ratios`.
 
 ```bash
-python scripts/concept_graph.py --domain cookbook/74_concept_book/geometry_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/geometry_graph.yaml \
   visualize --format html
 # → output/html/geometry_graph.html
 
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=geometry_graph.yaml --param target=trigonometric_ratios \
-  --param output_html=cookbook/74_concept_book/output/html/geometry_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/geometry_concept_book.html
 
 DOMAIN_YAML=geometry_graph.yaml TARGET=trigonometric_ratios \
   jupyter nbconvert --to notebook --execute \
@@ -325,13 +325,13 @@ alone. 4 / 19 / 5 — 28 nodes, 49 edges. Capstone: `normal_modes`.
 Tests: `tests/test_mechanics_domain.py`.
 
 ```bash
-python scripts/concept_graph.py --domain cookbook/74_concept_book/mechanics_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/mechanics_graph.yaml \
   visualize --format html
 # → output/html/mechanics_graph.html
 
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=mechanics_graph.yaml --param target=normal_modes \
-  --param output_html=cookbook/74_concept_book/output/html/mechanics_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/mechanics_concept_book.html
 
 DOMAIN_YAML=mechanics_graph.yaml TARGET=normal_modes \
   jupyter nbconvert --to notebook --execute \
@@ -348,13 +348,13 @@ on a CAS anyone can install for $0. 4 / 18 / 5 — 27 nodes, 43 edges.
 Capstone: `experimental_mathematics`. Tests: `tests/test_tool_domains.py`.
 
 ```bash
-python scripts/concept_graph.py --domain cookbook/74_concept_book/sage_learning_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/sage_learning_graph.yaml \
   visualize --format html
 # → output/html/sage_learning_graph.html
 
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=sage_learning_graph.yaml --param target=experimental_mathematics \
-  --param output_html=cookbook/74_concept_book/output/html/sage_learning_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/sage_learning_concept_book.html
 
 DOMAIN_YAML=sage_learning_graph.yaml TARGET=experimental_mathematics \
   jupyter nbconvert --to notebook --execute \
@@ -371,13 +371,13 @@ doing mathematics with AI. 4 / 19 / 5 — 28 nodes, 45 edges. Capstone:
 `ai_assisted_proving`. Tests: `tests/test_tool_domains.py`.
 
 ```bash
-python scripts/concept_graph.py --domain cookbook/74_concept_book/lean_proving_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/lean_proving_graph.yaml \
   visualize --format html
 # → output/html/lean_proving_graph.html
 
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=lean_proving_graph.yaml --param target=ai_assisted_proving \
-  --param output_html=cookbook/74_concept_book/output/html/lean_proving_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/lean_proving_concept_book.html
 
 DOMAIN_YAML=lean_proving_graph.yaml TARGET=ai_assisted_proving \
   jupyter nbconvert --to notebook --execute \
@@ -396,13 +396,13 @@ scikit-learn, matplotlib — ending at the reproducible scientific pipeline.
 Tests: `tests/test_tool_domains.py`.
 
 ```bash
-python scripts/concept_graph.py --domain cookbook/74_concept_book/python_science_graph.yaml \
+python scripts/concept_graph.py --domain cookbook/074_concept_book/python_science_graph.yaml \
   visualize --format html
 # → output/html/python_science_graph.html
 
-spl3 run cookbook/74_concept_book/build_concept_book.spl --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=python_science_graph.yaml --param target=reproducible_science \
-  --param output_html=cookbook/74_concept_book/output/html/python_science_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/python_science_concept_book.html
 
 DOMAIN_YAML=python_science_graph.yaml TARGET=reproducible_science \
   jupyter nbconvert --to notebook --execute \
@@ -427,19 +427,19 @@ Tests: `tests/test_chinese_characters_domain.py`.
 ```bash
 # 0. concept-graph navigator — click any character to see what you must learn first
 python scripts/concept_graph.py \
-  --domain cookbook/74_concept_book/chinese_characters_graph.yaml \
+  --domain cookbook/074_concept_book/chinese_characters_graph.yaml \
   visualize --format html
-# → cookbook/74_concept_book/output/html/chinese_characters_graph.html
+# → cookbook/074_concept_book/output/html/chinese_characters_graph.html
 #   Open in browser: primitives (pictograms) at top, phono_semantic_principle at bottom.
 #   Click 马 → see that it is an irreducible primitive (no prerequisites).
 #   Click 形声字 → 11-step learning path through both FORM and SOUND radicals.
 
 # 1. concept-book HTML — full text, MathJax, TOC sidebar
-spl3 run cookbook/74_concept_book/build_concept_book.spl \
-  --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl \
+  --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=chinese_characters_graph.yaml \
   --param target=phono_semantic_principle \
-  --param output_html=cookbook/74_concept_book/output/html/chinese_characters_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/chinese_characters_concept_book.html
 # → output/html/chinese_characters_concept_book.html
 #   Self-contained: open directly in any browser, no server needed.
 #   Sections generated by LLM, structural facts verified by verify_character_lego.
@@ -474,16 +474,16 @@ Tests: `tests/test_english_morphology_domain.py`.
 
 ```bash
 python scripts/concept_graph.py \
-  --domain cookbook/74_concept_book/english_morphology_graph.yaml \
+  --domain cookbook/074_concept_book/english_morphology_graph.yaml \
   visualize --format html
 # → output/html/english_morphology_graph.html
 
 export SPL_WHILE_MAX_ITER=50  # adjust for big concept-book
-spl3 run cookbook/74_concept_book/build_concept_book.spl \
-  --tools cookbook/74_concept_book/tools.py \
+spl3 run cookbook/074_concept_book/build_concept_book.spl \
+  --tools cookbook/074_concept_book/tools.py \
   --param domain_yaml=english_morphology_graph.yaml \
   --param target=morphological_decoding_principle \
-  --param output_html=cookbook/74_concept_book/output/html/english_morphology_concept_book.html
+  --param output_html=cookbook/074_concept_book/output/html/english_morphology_concept_book.html
 
 cd targets/python_domain_textbook
 DOMAIN_YAML=english_morphology_graph.yaml TARGET=morphological_decoding_principle \
@@ -582,8 +582,8 @@ on record.
 
 ## Relationship to recipes 71 / 73
 
-**Nothing in `cookbook/71_linalg_concept_book/` or
-`cookbook/73_intro_geometry/` was modified.** `linalg_graph.py` remains
+**Nothing in `cookbook/071_linalg_concept_book/` or
+`cookbook/073_intro_geometry/` was modified.** `linalg_graph.py` remains
 "fully vested" and frozen — it is now *also* this recipe's regression oracle.
 Recipe 74 doesn't replace 71/73; it's the proof that their shared shape can
 collapse into one generic engine, with 71's already-validated behavior as the

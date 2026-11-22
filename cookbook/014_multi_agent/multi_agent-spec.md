@@ -15,7 +15,7 @@ Orchestrate three specialized LLM agents — Researcher, Analyst, and Writer —
 | Parameter | Default | Description |
 |---|---|---|
 | `@topic` | *(required)* | The subject on which the report will be generated (e.g. "Impact of AI on healthcare"). |
-| `@log_dir` | `cookbook/14_multi_agent/logs-spl` | Directory path where intermediate and final artifacts are written as Markdown files. |
+| `@log_dir` | `cookbook/014_multi_agent/logs-spl` | Directory path where intermediate and final artifacts are written as Markdown files. |
 
 ---
 

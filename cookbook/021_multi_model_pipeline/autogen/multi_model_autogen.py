@@ -5,7 +5,7 @@ Pattern: research → analyze → write → score → (pass? commit : refine →
 
 Usage:
     pip install pyautogen
-    python cookbook/21_multi_model_pipeline/autogen/multi_model_autogen.py \\
+    python cookbook/021_multi_model_pipeline/autogen/multi_model_autogen.py \\
         --topic "climate change"
 """
 
@@ -82,7 +82,7 @@ def run(topic: str, max_iterations: int, model: str, log_dir: str):
 @click.option("--topic", required=True, help="Topic for the pipeline")
 @click.option("--max-iterations", default=3, help="Max quality cycles")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/21_multi_model_pipeline/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/021_multi_model_pipeline/logs-autogen", help="Log directory")
 def main(topic, max_iterations, model, log_dir):
     """Multi-Model Pipeline — AutoGen edition"""
     run(topic, max_iterations, model, log_dir)

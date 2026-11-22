@@ -85,7 +85,7 @@ WORKFLOW parallel_news_digest
         @topic_business TEXT    DEFAULT 'global markets and energy transition',
         @digest_model   TEXT    DEFAULT 'gemma3',
         @output_budget  INTEGER DEFAULT 512,
-        @log_dir        TEXT    DEFAULT 'cookbook/64_parallel_news_digest/logs-spl'
+        @log_dir        TEXT    DEFAULT 'cookbook/064_parallel_news_digest/logs-spl'
     OUTPUT: @digest TEXT
 DO
     LOGGING f'[parallel_news_digest] digest_model={@digest_model}' LEVEL INFO

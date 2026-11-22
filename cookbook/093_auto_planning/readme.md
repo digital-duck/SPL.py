@@ -44,12 +44,12 @@ Actions:
 
 ```bash
 # Default problem (deliver p1 from A and p2 from B to C; known minimal plan: 6 steps)
-spl3 run cookbook/93_auto_planning/auto_planning.spl \
+spl3 run cookbook/093_auto_planning/auto_planning.spl \
     --llm claude_cli \
     --param enable_solver=true
 
 # Unaided baseline arm
-spl3 run cookbook/93_auto_planning/auto_planning.spl \
+spl3 run cookbook/093_auto_planning/auto_planning.spl \
     --llm claude_cli \
     --param enable_solver=false
 ```

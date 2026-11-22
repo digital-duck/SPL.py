@@ -57,24 +57,24 @@ No API keys, no external services beyond Ollama.
 
 ```bash
 # Default topics, default model (gemma3)
-spl3 run cookbook/64_parallel_news_digest/parallel_news_digest.spl
+spl3 run cookbook/064_parallel_news_digest/parallel_news_digest.spl
 
 # Custom topics
-spl3 run cookbook/64_parallel_news_digest/parallel_news_digest.spl \
+spl3 run cookbook/064_parallel_news_digest/parallel_news_digest.spl \
     --param topic_tech="quantum computing and post-silicon chips" \
     --param topic_science="CRISPR gene editing clinical trials" \
     --param topic_business="electric vehicle market slowdown"
 
 # Different model
-spl3 run cookbook/64_parallel_news_digest/parallel_news_digest.spl \
+spl3 run cookbook/064_parallel_news_digest/parallel_news_digest.spl \
     --param digest_model=llama3.2
 
 # With spl-go
-spl-go run cookbook/64_parallel_news_digest/parallel_news_digest.spl \
+spl-go run cookbook/064_parallel_news_digest/parallel_news_digest.spl \
     --adapter ollama --param digest_model=gemma3
 
 # Dry-run (no LLM calls — inspect prompt assembly)
-spl-go run cookbook/64_parallel_news_digest/parallel_news_digest.spl \
+spl-go run cookbook/064_parallel_news_digest/parallel_news_digest.spl \
     --adapter echo
 ```
 

@@ -19,28 +19,28 @@ gpt-4o-mini-tts voices (expressive, instruction-driven)
 Usage
 -----
   # Minimal — OpenAI TTS, alloy voice
-  python cookbook/55_text_to_speech/run.py \\
+  python cookbook/055_text_to_speech/run.py \\
       --text "Hello from SPL 3.0 multimodal support."
 
   # High-definition audio
-  python cookbook/55_text_to_speech/run.py \\
+  python cookbook/055_text_to_speech/run.py \\
       --text "This is a detailed narration." --model tts-1-hd --voice nova
 
   # Read from a text file
-  python cookbook/55_text_to_speech/run.py --file path/to/article.txt
+  python cookbook/055_text_to_speech/run.py --file path/to/article.txt
 
   # Clean/prep script before TTS (remove markdown, expand abbreviations)
-  python cookbook/55_text_to_speech/run.py \\
+  python cookbook/055_text_to_speech/run.py \\
       --file article.md --prep --tone "professional"
 
   # Expressive TTS with instruction (gpt-4o-mini-tts)
-  python cookbook/55_text_to_speech/run.py \\
+  python cookbook/055_text_to_speech/run.py \\
       --text "Breaking news: SPL 3.0 ships multimodal support!" \\
       --model gpt-4o-mini-tts --voice coral \\
       --instructions "Speak like an excited news anchor."
 
   # Local system TTS (no API key needed)
-  python cookbook/55_text_to_speech/run.py \\
+  python cookbook/055_text_to_speech/run.py \\
       --text "Hello world." --backend system
 """
 
@@ -214,7 +214,7 @@ async def run(
               help="openai | system (say/espeak, no API key)")
 @click.option("--llm-model",    default="gemma4:e4b", show_default=True,
               help="Ollama model for script prep")
-@click.option("--output-dir",   default="cookbook/55_text_to_speech/outputs", show_default=True)
+@click.option("--output-dir",   default="cookbook/055_text_to_speech/outputs", show_default=True)
 def main(text, file, voice, tone, model, instructions, prep, backend, llm_model, output_dir) -> None:
     """Recipe 53 — Text to Speech (SPL 3.0 multimodal output)."""
     if not text and not file:

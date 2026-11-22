@@ -25,7 +25,7 @@
 --
 -- Requires: pytest (pip install pytest) — stdlib only, no extras needed
 -- Run:
---   spl3 run cookbook/79_code_pytest/code_pytest.spl \
+--   spl3 run cookbook/079_code_pytest/code_pytest.spl \
 --       --llm claude_cli \
 --       --param spec="Write a Python function merge_sorted(a, b) that merges two sorted lists into one sorted list."
 -- ============================================================
@@ -271,7 +271,7 @@ END
 WORKFLOW code_pytest
   INPUT @spec TEXT := "Write a Python function merge_sorted(a, b) that merges two sorted lists into one sorted list without using sorted() or list.sort(). Both input lists contain integers and are already sorted ascending. The function must run in O(n+m) time."
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/79_code_pytest/output"
+  INPUT @out_dir TEXT := "./cookbook/079_code_pytest/output"
   OUTPUT @report TEXT
 DO
   -- 0. Timing + run-id

@@ -7,9 +7,9 @@ SPL is implemented explicitly in Python.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/05_self_refine/self_refine_crewai.py \\
+    python cookbook/005_self_refine/self_refine_crewai.py \\
         --task "Write a haiku about coding"
-    python cookbook/05_self_refine/self_refine_crewai.py \\
+    python cookbook/005_self_refine/self_refine_crewai.py \\
         --task "Explain recursion in one paragraph" --max-iterations 3 --model llama3.2
 """
 
@@ -115,7 +115,7 @@ def run(task: str, max_iterations: int, model: str, log_dir: str) -> str:
 @click.option("--task",           required=True,    help="Task for the writer")
 @click.option("--max-iterations", default=5,        show_default=True, type=int)
 @click.option("--model",          default="gemma3", show_default=True)
-@click.option("--log-dir",        default="cookbook/05_self_refine/logs", show_default=True)
+@click.option("--log-dir",        default="cookbook/005_self_refine/logs", show_default=True)
 def main(task: str, max_iterations: int, model: str, log_dir: str):
     result = run(task, max_iterations, model, log_dir)
     print("\n" + "=" * 60)

@@ -2,7 +2,7 @@
 
 A standalone command-line tool that inspects, visualizes, shares, and
 composes *any* concept graph produced for the concept-book framework
-(see [cookbook recipe 71](../cookbook/71_linalg_concept_book/readme.md)) —
+(see [cookbook recipe 71](../cookbook/071_linalg_concept_book/readme.md)) —
 without the domain graph's module needing to import or know about this tool.
 
 ## The contract
@@ -16,13 +16,13 @@ build() -> networkx.DiGraph
 
 whose nodes carry at least `kind` (`"primitive" | "concept" | "application"`),
 `tier`, `defines`, and `composed_of`, and whose edges `u → v` mean "u is a
-prerequisite of v". `cookbook/71_linalg_concept_book/linalg_graph.py` and
-`cookbook/73_intro_geometry/geometry_graph.py` are worked examples.
+prerequisite of v". `cookbook/071_linalg_concept_book/linalg_graph.py` and
+`cookbook/073_intro_geometry/geometry_graph.py` are worked examples.
 
 Domain modules stay **fully self-contained** by design — each owns its own
 copy of the graph algorithms (`ancestors`, `reducible`, `productivity_order`,
 …) so that two domains' notions of e.g. "ancestors" can never silently
-diverge (see `cookbook/70_linalg_core_concepts/readme.md` for the rationale).
+diverge (see `cookbook/070_linalg_core_concepts/readme.md` for the rationale).
 `concept_graph.py` is the deliberate exception: a pure *reporting and
 sharing* layer every domain gets "mixed in" for free, purely by exposing
 `build()` — no import, no coupling, no per-domain CLI to write or maintain.
@@ -34,7 +34,7 @@ sharing* layer every domain gets "mixed in" for free, purely by exposing
 | Form | Example |
 |---|---|
 | Importable module name (resolved on `sys.path` / cwd) | `--domain linalg_graph` |
-| Path to a `.py` file | `--domain ../cookbook/73_intro_geometry/geometry_graph.py` |
+| Path to a `.py` file | `--domain ../cookbook/073_intro_geometry/geometry_graph.py` |
 | Path to a `.json` graph from `export`/`compose` | `--domain hybrid.json` |
 
 ## Commands

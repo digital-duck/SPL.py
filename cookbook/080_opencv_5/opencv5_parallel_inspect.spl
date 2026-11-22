@@ -9,10 +9,10 @@
 -- three reports into one human-readable note.
 --
 -- Usage:
---   spl3 run cookbook/80_opencv_5/opencv5_parallel_inspect.spl \
+--   spl3 run cookbook/080_opencv_5/opencv5_parallel_inspect.spl \
 --       --adapter ollama --model gemma4 \
---       --tools cookbook/80_opencv_5/tools.py \
---       image="cookbook/80_opencv_5/sample/current.jpg"
+--       --tools cookbook/080_opencv_5/tools.py \
+--       image="cookbook/080_opencv_5/sample/current.jpg"
 
 IMPORT 'tools'
 
@@ -62,8 +62,8 @@ DO
 END
 
 WORKFLOW opencv5_parallel_inspect
-    INPUT:  @image   TEXT DEFAULT 'cookbook/80_opencv_5/sample/current.jpg',
-            @log_dir TEXT DEFAULT 'cookbook/80_opencv_5/logs-spl'
+    INPUT:  @image   TEXT DEFAULT 'cookbook/080_opencv_5/sample/current.jpg',
+            @log_dir TEXT DEFAULT 'cookbook/080_opencv_5/logs-spl'
     OUTPUT: @note TEXT
 DO
     LOGGING f'[opencv5_parallel_inspect] image={@image}' LEVEL INFO

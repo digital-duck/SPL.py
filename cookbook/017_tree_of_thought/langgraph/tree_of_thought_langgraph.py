@@ -5,7 +5,7 @@ Pattern: initial_approach + develop → evaluate_path → (repeat for N models) 
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/17_tree_of_thought/langgraph/tree_of_thought_langgraph.py \
+    python cookbook/017_tree_of_thought/langgraph/tree_of_thought_langgraph.py \
         --problem "Design a sustainable urban transport system."
 """
 
@@ -211,7 +211,7 @@ def build_graph():
 @click.command()
 @click.option("--problem", default="Design a sustainable urban transport system.", show_default=True)
 @click.option("--models",  multiple=True, default=["gemma3", "phi4", "qwen2.5"], show_default=True)
-@click.option("--log-dir", default="cookbook/17_tree_of_thought/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir", default="cookbook/017_tree_of_thought/langgraph/logs-langgraph", show_default=True)
 def main(problem: str, models: tuple, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

@@ -63,7 +63,7 @@ Sharpe ratio is the headline quality metric. Higher is better; >1.0 is good, >2.
 
 ```bash
 # solver=ON, Markowitz — live data + deterministic optimization
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --llm claude_cli \
   --main portfolio_optimization \
   --param use_solver=true \
@@ -79,7 +79,7 @@ spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
 
 
 # solver=OFF — LLM heuristic allocation (back-checked by verify_portfolio)
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --llm claude_cli \
   --main portfolio_optimization \
   --param use_solver=false \
@@ -167,7 +167,7 @@ Instead of hardcoding an algorithm, the workflow lets the LLM read the market da
 ```
 
 ```bash
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --adapter claude_cli \
   --param use_solver=true \
   --param algorithm=auto \
@@ -190,7 +190,7 @@ The `portfolio_comparison` workflow runs **all 6 algorithms on the same data**, 
 This is the **SPL synthesis pattern**: N independent deterministic computations feed a single LLM synthesis step that reasons holistically across all results. The math is exact; the synthesis is intelligent.
 
 ```bash
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --workflow portfolio_comparison \
   --adapter claude_cli \
   --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA,META,TSLA,BRK-B" \
@@ -239,7 +239,7 @@ Run the comparison workflow monthly. Fresh μ and Σ mean the algorithm recommen
 
 ```bash
 # Monthly rebalancing signal — let the data and LLM decide the method
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --llm claude_cli \
   --main portfolio_comparison \
   --param tickers="AAPL,MSFT,GOOGL,AMZN,NVDA,GDX,SILJ,WEAT,DBA,XLE" \

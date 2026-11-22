@@ -19,27 +19,27 @@ Via OpenRouter:
 Usage
 -----
   # Minimal — caption a local image (Gemma 4 via Ollama)
-  python cookbook/51_image_caption/run.py --image path/to/photo.jpg
+  python cookbook/051_image_caption/run.py --image path/to/photo.jpg
 
   # Custom question
-  python cookbook/51_image_caption/run.py \\
+  python cookbook/051_image_caption/run.py \\
       --image path/to/photo.jpg \\
       --question "What text is visible in this image?"
 
   # OCR mode
-  python cookbook/51_image_caption/run.py \\
+  python cookbook/051_image_caption/run.py \\
       --image path/to/screenshot.png --mode ocr
 
   # Detailed description
-  python cookbook/51_image_caption/run.py \\
+  python cookbook/051_image_caption/run.py \\
       --image path/to/photo.jpg --mode detailed
 
   # Public URL (no encoding needed)
-  python cookbook/51_image_caption/run.py \\
+  python cookbook/051_image_caption/run.py \\
       --image "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png"
 
   # Via OpenRouter (LFM-2.5)
-  python cookbook/51_image_caption/run.py \\
+  python cookbook/051_image_caption/run.py \\
       --image path/to/photo.jpg \\
       --backend openrouter \\
       --model liquid/lfm-2.5-1.2b-instruct:free

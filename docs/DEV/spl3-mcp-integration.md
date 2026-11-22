@@ -261,7 +261,7 @@ an MCP tool schema needs. Exposing workflows as MCP tools means:
 spl3 serve --mcp
 
 # Serve a specific .spl file
-spl3 serve --mcp cookbook/05_self_refine/self_refine.spl
+spl3 serve --mcp cookbook/005_self_refine/self_refine.spl
 
 # Serve with a specific adapter for GENERATE steps
 spl3 serve --mcp --adapter ollama -m gemma3

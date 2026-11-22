@@ -1,7 +1,7 @@
 # Neurosymbolic SPL: SymPy, SageMath, and Lean 4 Behind Two Keywords
 
 *Repo: https://github.com/digital-duck/SPL.py — this document lives at
-`cookbook/77_neurosymbolic/`, next to the workflow it describes. Lineage:
+`cookbook/077_neurosymbolic/`, next to the workflow it describes. Lineage:
 [`hackernews-v0.1.md`](hackernews-v0.1.md) is the pre-registered,
 SymPy-only benchmark design (it still stands and will still be run); this
 v0.2 is the full-ladder announcement, revised per the critique in
@@ -370,15 +370,15 @@ python -m sage.repl.ipython_kernel.install --user    # register the 'sagemath' k
 cookbook/tools/lean/setup_lean.sh --with-mathlib     # elan + pinned Lean REPL (optional, ~5 GB oleans)
 
 # Rung 2+ (default backend): math SymPy cannot do
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param problem="find the Galois group of x**5 - x - 1 over the rationals"
 
 # Rung 3: a CLAIM, kernel-checked against mathlib, citation-first
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param problem="the square of any real number is nonnegative"
 
 # Baseline arm: same problem, no verifier (the A/B from the benchmark design)
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param enable_solver=false \
     --param problem="the square of any real number is nonnegative"
 

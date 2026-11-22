@@ -53,7 +53,7 @@ WORKFLOW spec_judge
         @spec     TEXT,
         @out_spec TEXT,
         @judge_model    TEXT DEFAULT 'gemma4',
-        @log_dir  TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir  TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @closure_report TEXT
 DO
     LOGGING '[07_spec_judge] comparing original spec vs derived spec ...' LEVEL INFO

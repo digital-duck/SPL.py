@@ -51,8 +51,8 @@ WORKFLOW text_to_video
         @enhance     BOOL    DEFAULT TRUE,
         @video_model TEXT    DEFAULT 'google/veo-2',
         @llm_model   TEXT    DEFAULT 'gemma4',
-        @output_dir  TEXT    DEFAULT 'cookbook/56_text_to_video/outputs',
-        @log_dir     TEXT    DEFAULT 'cookbook/56_text_to_video/logs-spl'
+        @output_dir  TEXT    DEFAULT 'cookbook/056_text_to_video/outputs',
+        @log_dir     TEXT    DEFAULT 'cookbook/056_text_to_video/logs-spl'
     OUTPUT: @video_path VIDEO
 DO
     LOGGING f'[text_to_video] prompt="{@prompt}" style={@style} duration={@duration}s' LEVEL INFO

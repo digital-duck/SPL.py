@@ -39,15 +39,15 @@ pip install hypothesis pytest
 
 ```bash
 # Default spec (merge two sorted lists)
-spl3 run cookbook/85_property_based_code_verify/property_based_code_verify.spl --llm claude_cli
+spl3 run cookbook/085_property_based_code_verify/property_based_code_verify.spl --llm claude_cli
 
 # Custom spec
-spl3 run cookbook/85_property_based_code_verify/property_based_code_verify.spl \
+spl3 run cookbook/085_property_based_code_verify/property_based_code_verify.spl \
     --llm ollama:gemma3 \
     --param spec="Write a function is_palindrome(s: str) -> bool that ignores case and non-alphanumeric characters."
 
 # Unaided baseline arm
-spl3 run cookbook/85_property_based_code_verify/property_based_code_verify.spl \
+spl3 run cookbook/085_property_based_code_verify/property_based_code_verify.spl \
     --llm claude_cli --param enable_solver=false
 ```
 

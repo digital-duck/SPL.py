@@ -17,7 +17,7 @@ Answers a user query by attempting a fast, low-cost model first and automaticall
 | `@query` | `'Write a detailed technical summary of quantum entanglement.'` | The question or topic to summarise |
 | `@primary_model` | `'phi4-mini'` | Name of the cheap/fast model tried first |
 | `@fallback_model` | `'gemma3'` | Name of the higher-quality model used if the primary fails the quality gate |
-| `@log_dir` | `'cookbook/44_adaptive_failover/logs-spl'` | Directory path for writing query and response log files |
+| `@log_dir` | `'cookbook/044_adaptive_failover/logs-spl'` | Directory path for writing query and response log files |
 
 ---
 

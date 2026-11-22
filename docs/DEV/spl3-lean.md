@@ -69,7 +69,7 @@ its pinned `[[require]]` block and pulls the olean cache
 
 ## 3. What shipped (B-2/B-3) — recipe 76 `lean_proof`
 
-`cookbook/76_lean_proof/lean_proof.spl` — the generate-then-verify spine at
+`cookbook/076_lean_proof/lean_proof.spl` — the generate-then-verify spine at
 proof grade, alternating regimes:
 
 | Stage | Regime | What |
@@ -148,7 +148,7 @@ advertised `verifier='sage'` since A-3, but nothing had exercised it.
 
 ## 6. What shipped (B-2/B-5 remainders) — recipe 71 `lean_payoffs`
 
-`cookbook/71_linalg_concept_book/lean_payoffs.spl` — the B-2 post-pass:
+`cookbook/071_linalg_concept_book/lean_payoffs.spl` — the B-2 post-pass:
 statement-level Lean checking for the concept-book's payoff concepts,
 run *after* a `build_concept_book` run so Lean stays off the default
 pipeline path (§B.4 scope discipline). Same stage spine as recipe 76, with

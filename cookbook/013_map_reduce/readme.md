@@ -29,20 +29,20 @@ chunk_plan(document) → N chunks
 
 ```bash
 # Long document — exercises chunking across multiple sections
-spl3 run cookbook/13_map_reduce/map_reduce.spl --adapter ollama \
-    --model gemma3 --tools cookbook/13_map_reduce/tools.py \
-    document="$(cat cookbook/13_map_reduce/large_doc.txt)" \
+spl3 run cookbook/013_map_reduce/map_reduce.spl --adapter ollama \
+    --model gemma3 --tools cookbook/013_map_reduce/tools.py \
+    document="$(cat cookbook/013_map_reduce/large_doc.txt)" \
     style="bullet points" \
     2>&1 | tee cookbook/out/13_map_reduce-long-$(date +%Y%m%d_%H%M%S).md
 
 # Medium document — Markdown format, tests section boundary handling
-spl3 run cookbook/13_map_reduce/map_reduce.spl --adapter ollama \
-    document="$(cat cookbook/13_map_reduce/sample.md)" \
+spl3 run cookbook/013_map_reduce/map_reduce.spl --adapter ollama \
+    document="$(cat cookbook/013_map_reduce/sample.md)" \
     style="executive brief" \
     2>&1 | tee cookbook/out/13_map_reduce-medium-$(date +%Y%m%d_%H%M%S).md
 
 # Short inline text — single-chunk path
-spl3 run cookbook/13_map_reduce/map_reduce.spl --adapter ollama \
+spl3 run cookbook/013_map_reduce/map_reduce.spl --adapter ollama \
     document="Artificial intelligence has transformed how organizations process and analyze large volumes of unstructured data. Key applications include document summarization, sentiment analysis, and automated report generation." \
     style="narrative" \
     2>&1 | tee cookbook/out/13_map_reduce-short-$(date +%Y%m%d_%H%M%S).md

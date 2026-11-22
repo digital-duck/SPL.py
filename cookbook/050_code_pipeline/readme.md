@@ -114,7 +114,7 @@ The closure report is appended to `@docs` as a final section.
 ### Basic run (closure check enabled by default)
 
 ```bash
-spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
+spl3 run cookbook/050_code_pipeline/code_pipeline.spl \
     --adapter ollama \
     --param pipeline_model=gemma3 \
     --param spec="Write a binary search function that returns the index or -1" \
@@ -126,7 +126,7 @@ spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
 ### Skip the closure check
 
 ```bash
-spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
+spl3 run cookbook/050_code_pipeline/code_pipeline.spl \
     --param spec="Write a binary search function" \
     --param check_closure=FALSE
 ```
@@ -134,7 +134,7 @@ spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
 ### Custom model and cycle limit
 
 ```bash
-spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
+spl3 run cookbook/050_code_pipeline/code_pipeline.spl \
     --param spec="Write a function to parse ISO 8601 dates" \
     --param model="llama3.2" \
     --param max_cycles=5
@@ -143,7 +143,7 @@ spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
 ### Run on Momagrid (Hub dispatch)
 
 ```bash
-spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
+spl3 run cookbook/050_code_pipeline/code_pipeline.spl \
     --adapter momagrid \
     --hub http://localhost:8080 \
     --param spec="Write a function to flatten a nested list"
@@ -159,7 +159,7 @@ spl3 run cookbook/50_code_pipeline/code_pipeline.spl \
 | `@model` | TEXT | `gemma4` | LLM model used across all sub-workflows |
 | `@max_cycles` | INTEGER | `3` | Maximum generate→test retry cycles before proceeding |
 | `@check_closure` | BOOL | `TRUE` | Enable spec closure check in Step 3 |
-| `@log_dir` | TEXT | `cookbook/50_code_pipeline/logs-spl` | Directory for log output |
+| `@log_dir` | TEXT | `cookbook/050_code_pipeline/logs-spl` | Directory for log output |
 
 ---
 

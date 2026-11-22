@@ -28,9 +28,9 @@
 --
 -- Requires: pip install pint
 -- Run:
---   spl3 run cookbook/83_unit_dimensional_check/unit_dimensional_check.spl \
+--   spl3 run cookbook/083_unit_dimensional_check/unit_dimensional_check.spl \
 --       --llm claude_cli
---   spl3 run cookbook/83_unit_dimensional_check/unit_dimensional_check.spl \
+--   spl3 run cookbook/083_unit_dimensional_check/unit_dimensional_check.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -231,7 +231,7 @@ WORKFLOW unit_dimensional_check
   INPUT @problem TEXT := "A car accelerates from rest at 2.5 m/s^2 for 12 seconds. What is its final speed, in km/h?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/83_unit_dimensional_check/output"
+  INPUT @out_dir TEXT := "./cookbook/083_unit_dimensional_check/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

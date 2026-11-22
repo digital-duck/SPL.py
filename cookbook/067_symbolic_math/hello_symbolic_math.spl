@@ -98,7 +98,7 @@ $$;
 
 WORKFLOW math_solver
   INPUT @problem TEXT := 'find the roots of x squared minus 5x plus 6'
-  INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
+  INPUT @log_dir TEXT := 'cookbook/067_symbolic_math/logs-spl'
   OUTPUT @explanation TEXT
 DO
   -- Step 1 (probabilistic): LLM parses NL problem → SymPy expression|operation

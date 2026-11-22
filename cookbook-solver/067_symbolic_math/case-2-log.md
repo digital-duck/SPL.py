@@ -3,14 +3,14 @@
 ## sonnet-4-6 (claude_cli)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm claude_cli \
    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:spl.executor:GENERATE segment 1 (decompose_problem) -> 9 tokens, 3061ms
@@ -48,12 +48,12 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-claude_cli-20260608-063623
 ## gemma3 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -97,12 +97,12 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-063721.md
 ## gemma4:12b (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma4:12b    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:gemma4:12b    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -127,12 +127,12 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-063817.md
 ## qwen2.5 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:qwen2.5    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:qwen2.5    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -178,12 +178,12 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-064624.md
 ## qwen3 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:qwen3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:qwen3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -222,13 +222,13 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-064125.md
 ## phi3 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:phi3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:phi3    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -283,13 +283,13 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-064214.md
 ## phi4 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:phi4    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:phi4    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -346,12 +346,12 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-064243.md
 ## deepseek-r1  (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:deepseek-r1    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:deepseek-r1    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"
@@ -376,13 +376,13 @@ Log:     /home/gongai/.spl/logs/sympy_math_multi_step-ollama-20260608-064657.md
 ## lfm2.5 (ollama)
 
 ```bash
-(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/67_symbolic_math/sympy_math_multi_step.spl --llm ollama:lfm2.5    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
+(spl123) gongai@ducklover1:~/projects/digital-duck/SPL.py$ spl3 run cookbook/067_symbolic_math/sympy_math_multi_step.spl --llm ollama:lfm2.5    --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 ```
 
 
 ```output
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/67_symbolic_math/symbolic_math.spl
-INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/67_symbolic_math/sympy_math_multi_step.spl
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/067_symbolic_math/symbolic_math.spl
+INFO:spl.registry:Registry: loaded 2 workflow(s) from cookbook/067_symbolic_math/sympy_math_multi_step.spl
 Registry: ['math_solver', 'math_solver_multi_step', 'solve_one_step']
 Running workflow: math_solver_multi_step(['problem', 'model'])
 INFO:httpx:HTTP Request: POST http://localhost:11434/v1/chat/completions "HTTP/1.1 200 OK"

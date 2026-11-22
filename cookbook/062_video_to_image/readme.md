@@ -59,39 +59,39 @@ ollama pull gemma4
 
 ```bash
 # Extract middle frame (default)
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4
 
 # First frame
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --mode first
 
 # Last frame
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --mode last
 
 # Specific timestamp (HH:MM:SS)
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --mode timestamp --timestamp 00:00:05
 
 # Extract + caption with gemma4 vision
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --caption
 
 # Extract + caption with context hint
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --mode timestamp --timestamp 00:00:10 \
     --caption \
     --context "This is a wildlife documentary about migratory birds"
 
 # Custom output directory
-python cookbook/62_video_to_image/run.py \
-    --video cookbook/62_video_to_image/sample/clip.mp4 \
+python cookbook/062_video_to_image/run.py \
+    --video cookbook/062_video_to_image/sample/clip.mp4 \
     --output-dir /tmp/frames
 ```
 
@@ -101,7 +101,7 @@ python cookbook/62_video_to_image/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@video` | VIDEO | `cookbook/62_video_to_image/sample/clip.mp4` | Source video file path |
+| `@video` | VIDEO | `cookbook/062_video_to_image/sample/clip.mp4` | Source video file path |
 | `@mode` | TEXT | `middle` | Extraction mode: `first`, `middle`, `last`, `timestamp` |
 | `@timestamp` | TEXT | `00:00:05` | Timestamp for `timestamp` mode (format `HH:MM:SS`) |
 | `@fps` | FLOAT | `1.0` | Frame rate for `sample` mode (frames per second) |
@@ -109,8 +109,8 @@ python cookbook/62_video_to_image/run.py \
 | `@caption` | BOOL | `FALSE` | Run gemma4 vision captioning on the extracted frame |
 | `@context` | TEXT | `''` | Optional context hint passed to the caption model |
 | `@model` | TEXT | `gemma4` | Vision model for captioning (Ollama) |
-| `@output_dir` | TEXT | `cookbook/62_video_to_image/outputs` | Directory to write extracted frame(s) |
-| `@log_dir` | TEXT | `cookbook/62_video_to_image/logs-spl` | Directory for log output |
+| `@output_dir` | TEXT | `cookbook/062_video_to_image/outputs` | Directory to write extracted frame(s) |
+| `@log_dir` | TEXT | `cookbook/062_video_to_image/logs-spl` | Directory for log output |
 
 ---
 

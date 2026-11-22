@@ -5,7 +5,7 @@ Pattern: solve → reflect → score → (confident? commit : correct → loop)
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/16_reflection/langgraph/reflection_langgraph.py \\
+    python cookbook/016_reflection/langgraph/reflection_langgraph.py \\
         --problem "What are the trade-offs of microservices vs monoliths?"
 """
 
@@ -112,7 +112,7 @@ def build_graph():
 @click.option("--problem", required=True, help="Problem to solve")
 @click.option("--max-reflections", default=3, help="Max reflection cycles")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/16_reflection/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/016_reflection/logs-langgraph", help="Log directory")
 def main(problem, max_reflections, model, log_dir):
     """Reflection Agent — LangGraph edition"""
     build_graph().invoke({

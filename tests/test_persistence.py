@@ -28,7 +28,7 @@ def backend(tmp_db):
 
 
 def run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    return asyncio.run(coro)
 
 
 # ── start_workflow ─────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ def test_send_then_wait_concurrent(backend):
         val = await backend.wait_for_event("wf-002", "gate", timeout_seconds=1.0)
         assert val == "go"
 
-    asyncio.get_event_loop().run_until_complete(_test())
+    asyncio.run(_test())
 
 
 def test_concurrent_wait_and_send(backend):
@@ -156,7 +156,7 @@ def test_concurrent_wait_and_send(backend):
         await send_task
         assert result == "approved"
 
-    asyncio.get_event_loop().run_until_complete(_test())
+    asyncio.run(_test())
 
 
 # ── factory ───────────────────────────────────────────────────────────────────

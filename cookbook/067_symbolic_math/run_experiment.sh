@@ -2,7 +2,7 @@
 # Runs the symbolic-math experiment across the 4 axes defined in
 # case-2-hackernews.md.  Run from the repo root:
 #
-#   bash cookbook/67_symbolic_math/run_experiment.sh
+#   bash cookbook/067_symbolic_math/run_experiment.sh
 #
 # Selective run — override any axis at the command line:
 #   MODELS="sonnet-4-6 phi4" bash .../run_experiment.sh
@@ -10,7 +10,7 @@
 #   SOLVER_MODES="true"      bash .../run_experiment.sh
 #   N_RUNS=3                 bash .../run_experiment.sh
 #
-# Output: cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-<timestamp>.md
+# Output: cookbook/067_symbolic_math/logs-spl/case-2-log-rerun-<timestamp>.md
 
 set -uo pipefail
 
@@ -63,8 +63,8 @@ N_RUNS="${N_RUNS:-$ALL_N_RUNS}"
 # ── Script + log setup ───────────────────────────────────────────────────────
 # Switch to sympy_llm.spl to activate the solver toggle (Axis 3).
 # Use sympy_math_multi_step.spl for a plain rerun without the toggle.
-SCRIPT="cookbook/67_symbolic_math/sympy_math_multi_step.spl"
-LOG_DIR="cookbook/67_symbolic_math/logs-spl"
+SCRIPT="cookbook/067_symbolic_math/sympy_math_multi_step.spl"
+LOG_DIR="cookbook/067_symbolic_math/logs-spl"
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 LOG_FILE="${LOG_DIR}/case-2-log-rerun-${TIMESTAMP}.md"
 

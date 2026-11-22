@@ -24,9 +24,9 @@
 --
 -- Requires: networkx (already installed — no pip install needed)
 -- Run:
---   spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
+--   spl3 run cookbook/081_graph_reasoning/graph_reasoning.spl \
 --       --llm claude_cli
---   spl3 run cookbook/81_graph_reasoning/graph_reasoning.spl \
+--   spl3 run cookbook/081_graph_reasoning/graph_reasoning.spl \
 --       --llm ollama:gemma3 \
 --       --param problem="..." --param enable_solver=false
 -- ============================================================
@@ -219,7 +219,7 @@ WORKFLOW graph_reasoning
   INPUT @problem TEXT := "A logistics network connects 6 warehouses (A, B, C, D, E, F) by roads with these distances in miles: A-B:4, A-C:2, B-C:1, B-D:5, C-D:8, C-E:10, D-E:2, D-F:6, E-F:3. What is the shortest route from warehouse A to warehouse F, and what is its total distance?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/81_graph_reasoning/output"
+  INPUT @out_dir TEXT := "./cookbook/081_graph_reasoning/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

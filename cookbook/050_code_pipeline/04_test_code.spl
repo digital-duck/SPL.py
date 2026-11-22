@@ -38,7 +38,7 @@ WORKFLOW test_code
         @spec    TEXT DEFAULT "",
         @lang    TEXT DEFAULT 'python',
         @test_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @test_result TEXT
 DO
     LOGGING f'[04_test_code] started | lang={@lang}' LEVEL INFO

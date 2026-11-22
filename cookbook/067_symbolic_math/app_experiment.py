@@ -5,7 +5,7 @@ app_experiment.py — Streamlit UI for Recipe-67 experiment results.
 Reads from the SQLite database written by run_experiment.py.
 
   conda activate spl123
-  streamlit run cookbook/67_symbolic_math/app_experiment.py
+  streamlit run cookbook/067_symbolic_math/app_experiment.py
 """
 
 import json

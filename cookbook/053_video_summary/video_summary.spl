@@ -72,12 +72,12 @@ $$;
 
 WORKFLOW video_summary
     INPUT:
-        @clip          VIDEO  DEFAULT 'cookbook/53_video_summary/sample/clip.mp4',
+        @clip          VIDEO  DEFAULT 'cookbook/053_video_summary/sample/clip.mp4',
         @mode          TEXT   DEFAULT 'summary',
         @style         TEXT   DEFAULT 'concise paragraph',
         @model         TEXT   DEFAULT 'gemma4:e4b',
         @output_budget INT    DEFAULT 2048,
-        @log_dir       TEXT   DEFAULT 'cookbook/53_video_summary/logs-spl'
+        @log_dir       TEXT   DEFAULT 'cookbook/053_video_summary/logs-spl'
     OUTPUT: @result TEXT
 DO
     LOGGING f'[video_summary] clip={@clip} mode={@mode} model={@model}' LEVEL INFO

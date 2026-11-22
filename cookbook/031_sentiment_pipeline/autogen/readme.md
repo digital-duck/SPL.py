@@ -21,7 +21,7 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/31_sentiment_pipeline/autogen/sentiment_autogen.py \
+python cookbook/031_sentiment_pipeline/autogen/sentiment_autogen.py \
     --items "Great product, love it! | Terrible experience, never again | It was okay" \
     --delimiter "|"
 ```
@@ -41,14 +41,14 @@ Assembling full report ...
 ...
 ```
 
-Check logs in `cookbook/31_sentiment_pipeline/autogen/logs-autogen`.
+Check logs in `cookbook/031_sentiment_pipeline/autogen/logs-autogen`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/31_sentiment_pipeline/sentiment.spl \
+spl3 run cookbook/031_sentiment_pipeline/sentiment.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/31_sentiment_pipeline/tools.py \
+    --tools cookbook/031_sentiment_pipeline/tools.py \
     items="Great product, love it! | Terrible experience, never again | It was okay" \
     delimiter="|"
 ```

@@ -14,8 +14,8 @@ whose nodes carry at least:
     composed_of : list[str] (direct prerequisites; empty for primitives)
 
 and whose edges u → v mean "u is a prerequisite of v".  ``linalg_graph.py``
-(cookbook/71_linalg_concept_book) and ``geometry_graph.py``
-(cookbook/73_intro_geometry) are worked examples — each is fully
+(cookbook/071_linalg_concept_book) and ``geometry_graph.py``
+(cookbook/073_intro_geometry) are worked examples — each is fully
 self-contained (by design: see cookbook/70's readme on why domain libraries
 duplicate their graph algorithms rather than share an implementation that
 two domains' notions of e.g. "ancestors" could silently diverge from). This

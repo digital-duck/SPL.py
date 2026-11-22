@@ -94,13 +94,13 @@ pip install Pillow           # image encoding (strongly recommended)
 python -c "
 from PIL import Image, ImageDraw
 import pathlib
-pathlib.Path('cookbook/51_image_caption/sample').mkdir(parents=True, exist_ok=True)
+pathlib.Path('cookbook/051_image_caption/sample').mkdir(parents=True, exist_ok=True)
 img = Image.new('RGB', (800, 600), (70, 130, 180))
 draw = ImageDraw.Draw(img)
 draw.polygon([(0,600),(200,250),(400,600)], fill=(90,90,90))
 draw.polygon([(150,600),(380,200),(600,600)], fill=(110,110,110))
 draw.ellipse([600,50,720,170], fill=(255,220,50))
-img.save('cookbook/51_image_caption/sample/photo.jpg', 'JPEG')
+img.save('cookbook/051_image_caption/sample/photo.jpg', 'JPEG')
 print('test image created')
 "
 ```
@@ -111,58 +111,58 @@ print('test image created')
 
 ```bash
 # Default — caption mode, default question
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg
 
 # Detailed description
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --mode detailed
 
 # OCR — extract visible text
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --mode ocr
 
 # Ask a specific question
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --question "What colours are dominant in this scene?"
 
 # Caption a public URL (no local encoding)
-python cookbook/51_image_caption/run.py \
+python cookbook/051_image_caption/run.py \
     --image "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/280px-PNG_transparency_demonstration_1.png"
 
 # Larger model for higher accuracy
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --model gemma4:e2b --max-dim 1568
 
 # Larger output budget
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --mode detailed --max-tokens 2048
 ```
 
 ### Via `spl3 run` (native SPL executor)
 
 ```bash
-spl3 run cookbook/51_image_caption/image_caption.spl \
+spl3 run cookbook/051_image_caption/image_caption.spl \
     --adapter ollama \
-    --param photo="cookbook/51_image_caption/sample/photo.jpg" \
+    --param photo="cookbook/051_image_caption/sample/photo.jpg" \
     --param model="gemma4:e4b"
 
 # Detailed mode
-spl3 run cookbook/51_image_caption/image_caption.spl \
+spl3 run cookbook/051_image_caption/image_caption.spl \
     --adapter ollama \
-    --param photo="cookbook/51_image_caption/sample/asian-boy-and-girl-standing.png" \
+    --param photo="cookbook/051_image_caption/sample/asian-boy-and-girl-standing.png" \
     --param mode="detailed" \
     --param model="gemma4:e4b"
 
 # OCR
-spl3 run cookbook/51_image_caption/image_caption.spl \
+spl3 run cookbook/051_image_caption/image_caption.spl \
     --adapter ollama \
-    --param photo="cookbook/51_image_caption/sample/photo.jpg" \
+    --param photo="cookbook/051_image_caption/sample/photo.jpg" \
     --param mode="ocr" \
     --param model="gemma4:e4b"
 ```
@@ -171,8 +171,8 @@ spl3 run cookbook/51_image_caption/image_caption.spl \
 
 ```bash
 export OPENROUTER_API_KEY=sk-...
-python cookbook/51_image_caption/run.py \
-    --image cookbook/51_image_caption/sample/photo.jpg \
+python cookbook/051_image_caption/run.py \
+    --image cookbook/051_image_caption/sample/photo.jpg \
     --backend openrouter \
     --model liquid/lfm-2.5-1.2b-instruct:free
 ```
@@ -197,12 +197,12 @@ python cookbook/51_image_caption/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@photo` | IMAGE | `cookbook/51_image_caption/sample/photo.jpg` | Source image file path |
+| `@photo` | IMAGE | `cookbook/051_image_caption/sample/photo.jpg` | Source image file path |
 | `@question` | TEXT | `What is in this image? Describe it in detail.` | Question for `caption` mode |
 | `@mode` | TEXT | `caption` | Output mode: `caption`, `detailed`, `ocr` |
 | `@model` | TEXT | `gemma4:e4b` | Vision model (Ollama) |
 | `@output_budget` | INT | `1024` | Max output tokens |
-| `@log_dir` | TEXT | `cookbook/51_image_caption/logs-spl` | Directory for log output |
+| `@log_dir` | TEXT | `cookbook/051_image_caption/logs-spl` | Directory for log output |
 
 ---
 

@@ -5,8 +5,8 @@ Pattern: chunk_plan → [Summarizer Agent] → Aggregator Agent → (Critic Agen
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/13_map_reduce/crewai/map_reduce_crewai.py \\
-        --document "$(cat cookbook/13_map_reduce/large_doc.txt)" \\
+    python cookbook/013_map_reduce/crewai/map_reduce_crewai.py \\
+        --document "$(cat cookbook/013_map_reduce/large_doc.txt)" \\
         --style "bullet points"
 """
 
@@ -142,7 +142,7 @@ def run(document: str, style: str, model: str, log_dir: str):
 @click.option("--document", required=True, help="Document text to summarize")
 @click.option("--style", default="bullet points", help="Output style")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/13_map_reduce/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/013_map_reduce/logs-crewai", help="Log directory")
 def main(document, style, model, log_dir):
     """Map-Reduce Summarizer — CrewAI edition"""
     run(document, style, model, log_dir)

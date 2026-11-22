@@ -142,22 +142,22 @@ export OPENROUTER_API_KEY=sk-or-...
 
 ```bash
 # SPL workflows (recipes 05, 50, 63, 64)
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama
+spl3 run cookbook/005_self_refine/self_refine.spl --adapter ollama
 
 # Multimodal — native spl3 run (recipes 51–53)
-spl3 run cookbook/51_image_caption/image_caption.spl \
+spl3 run cookbook/051_image_caption/image_caption.spl \
     --adapter ollama \
-    --param photo="cookbook/51_image_caption/sample/photo.jpg" \
+    --param photo="cookbook/051_image_caption/sample/photo.jpg" \
     --param model="gemma4:e4b"
 
-spl3 run cookbook/52_audio_summary/audio_summary.spl \
+spl3 run cookbook/052_audio_summary/audio_summary.spl \
     --adapter ollama \
-    --param clip="cookbook/52_audio_summary/sample/clip.wav" \
+    --param clip="cookbook/052_audio_summary/sample/clip.wav" \
     --param model="gemma4:e4b"
 
 # Physical runners (run.py) for recipes with extra options
-python cookbook/51_image_caption/run.py --image path/to/photo.jpg
-python cookbook/52_audio_summary/run.py --audio path/to/clip.wav
+python cookbook/051_image_caption/run.py --image path/to/photo.jpg
+python cookbook/052_audio_summary/run.py --audio path/to/clip.wav
 
 # Batch run (reads cookbook_catalog.json)
 python cookbook/run_all.py              # tier-1 active recipes
@@ -460,7 +460,7 @@ python cookbook/run_all.py --adapter momagrid --ids "01-05" --workers 4
 
 Or target a single recipe:
 ```bash
-spl3 run cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl \
+spl3 run cookbook/047_arxiv_morning_brief/arxiv_morning_brief.spl \
     --adapter momagrid \
     --param urls='["https://arxiv.org/pdf/2501.12948"]'
 ```
@@ -679,10 +679,10 @@ spl3 run script.spl --connector transcribe=assemblyai
 for f in cookbook/*/*.spl; do spl validate "$f"; done
 
 # Run hello world with echo adapter (no Ollama needed)
-spl3 run cookbook/01_hello_world/hello.spl
+spl3 run cookbook/001_hello_world/hello.spl
 
 # Run with Ollama
-spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
+spl3 run cookbook/001_hello_world/hello.spl --adapter ollama
 
 
 ```
@@ -691,7 +691,7 @@ spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
 ### Test — Hello World
 
 ```bash
-spl3 run cookbook/01_hello_world/hello.spl --adapter ollama
+spl3 run cookbook/001_hello_world/hello.spl --adapter ollama
 ```
 
 ```
@@ -709,7 +709,7 @@ is a declarative language for orchestrating LLM workflows — think SQL for AI.
 ### Test — Ollama Proxy (any model, any prompt)
 
 ```bash
-spl3 run cookbook/02_ollama_proxy/proxy.spl --adapter ollama --model gemma3 prompt="Explain quantum computing"
+spl3 run cookbook/002_ollama_proxy/proxy.spl --adapter ollama --model gemma3 prompt="Explain quantum computing"
 ```
 
 ```
@@ -726,7 +726,7 @@ Okay, let's break down quantum computing...
 ### Test — Multilingual Greeting
 
 ```bash
-spl3 run cookbook/03_multilingual/multilingual.spl --adapter ollama user_input="hello wen" lang="Chinese"
+spl3 run cookbook/003_multilingual/multilingual.spl --adapter ollama user_input="hello wen" lang="Chinese"
 ```
 
 ```
@@ -745,21 +745,21 @@ Latency: 440ms
 ### Test — Model Showdown (compare models)
 
 ```bash
-bash cookbook/04_model_showdown/showdown.sh "What is the meaning of life?"
+bash cookbook/004_model_showdown/showdown.sh "What is the meaning of life?"
 ```
 
 
 ### Test — Self-Refining Agent
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3 task="Write a haiku about coding"
+spl3 run cookbook/005_self_refine/self_refine.spl --adapter ollama --model gemma3 task="Write a haiku about coding"
 ```
 
 
 ### Test — Multi-Model Pipeline (per-step model selection)
 
 ```bash
-spl3 run cookbook/21_multi_model_pipeline/multi_model.spl --adapter ollama topic="climate change"
+spl3 run cookbook/021_multi_model_pipeline/multi_model.spl --adapter ollama topic="climate change"
 ```
 
 This recipe showcases `GENERATE ... USING MODEL` — each step can target a different model within the same workflow.
@@ -768,7 +768,7 @@ This recipe showcases `GENERATE ... USING MODEL` — each step can target a diff
 ### Test — Text2SPL Demo (NL → SPL compiler)
 
 ```bash
-bash cookbook/22_text2spl_demo/text2spl_demo.sh
+bash cookbook/022_text2spl_demo/text2spl_demo.sh
 ```
 
 Demonstrates the `spl text2spl` / `spl text2spl` command: natural language descriptions compiled into valid SPL 3.0 code with automatic validation.
@@ -777,7 +777,7 @@ Demonstrates the `spl text2spl` / `spl text2spl` command: natural language descr
 ### Test — Batch Test (all models x all recipes)
 
 ```bash
-bash cookbook/10_batch_test/batch_test.sh
+bash cookbook/010_batch_test/batch_test.sh
 ```
 
 ### Fixes

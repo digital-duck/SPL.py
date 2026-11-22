@@ -43,12 +43,12 @@ $$;
 
 WORKFLOW image_caption
     INPUT:
-        @photo    IMAGE  DEFAULT 'cookbook/51_image_caption/sample/photo.jpg',
+        @photo    IMAGE  DEFAULT 'cookbook/051_image_caption/sample/photo.jpg',
         @question TEXT   DEFAULT 'What is in this image? Describe it in detail.',
         @mode     TEXT   DEFAULT 'caption',
         @model    TEXT   DEFAULT 'gemma4:12b',
         @output_budget INT DEFAULT 1024,
-        @log_dir TEXT DEFAULT 'cookbook/51_image_caption/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/051_image_caption/logs-spl'
     OUTPUT: @result TEXT
 DO
     LOGGING f'[image_caption] photo={@photo} mode={@mode} model={@model}' LEVEL INFO

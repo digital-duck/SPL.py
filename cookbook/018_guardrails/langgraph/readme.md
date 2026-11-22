@@ -21,7 +21,7 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/18_guardrails/langgraph/guardrails_langgraph.py \
+python cookbook/018_guardrails/langgraph/guardrails_langgraph.py \
     --user-input "My SSN is 123-45-6789, help me file taxes"
 ```
 
@@ -41,14 +41,14 @@ RESPONSE:
 [REDACTED-SSN] ...
 ```
 
-Check logs in `cookbook/18_guardrails/langgraph/logs-langgraph`.
+Check logs in `cookbook/018_guardrails/langgraph/logs-langgraph`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/18_guardrails/guardrails.spl \
+spl3 run cookbook/018_guardrails/guardrails.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/18_guardrails/tools.py \
+    --tools cookbook/018_guardrails/tools.py \
     user_input="My SSN is 123-45-6789, help me file taxes"
 ```
 

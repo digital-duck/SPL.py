@@ -37,25 +37,25 @@ Navigate to **Amazon Bedrock → Model access** and enable the models you want:
 
 ```bash
 # Default — Claude Sonnet 4 vs Claude Haiku 4.5 vs Amazon Nova Pro
-spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
+spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
     prompt="Explain the CAP theorem in two sentences."
 
 # Custom models
-spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
+spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
     prompt="What are the trade-offs between SQL and NoSQL?" \
     model_1="anthropic.claude-opus-4-0-20250514-v1:0" \
     model_2="anthropic.claude-3-5-haiku-20241022-v1:0" \
     model_3="amazon.nova-lite-v1:0"
 
 # Override region without changing env
-spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl \
+spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl \
     --adapter bedrock \
     --adapter-region us-west-2 \
     prompt="Summarise the key benefits of serverless architectures."
 
 # Use a named AWS profile
 AWS_PROFILE=my-work-profile \
-spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
+spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
     prompt="What is eventual consistency?"
 ```
 

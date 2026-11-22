@@ -32,9 +32,9 @@
 --
 -- Requires: pip install hypothesis pytest
 -- Run:
---   spl3 run cookbook/85_property_based_code_verify/property_based_code_verify.spl \
+--   spl3 run cookbook/085_property_based_code_verify/property_based_code_verify.spl \
 --       --llm claude_cli
---   spl3 run cookbook/85_property_based_code_verify/property_based_code_verify.spl \
+--   spl3 run cookbook/085_property_based_code_verify/property_based_code_verify.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -282,7 +282,7 @@ WORKFLOW property_based_code_verify
   INPUT @spec TEXT := "Write a function merge_sorted(a: list[int], b: list[int]) -> list[int] that takes two ALREADY-SORTED lists of integers and returns a single sorted list containing all elements of both (duplicates included)."
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/85_property_based_code_verify/output"
+  INPUT @out_dir TEXT := "./cookbook/085_property_based_code_verify/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

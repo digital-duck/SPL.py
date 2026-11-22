@@ -16,15 +16,15 @@ Two deterministic tools — zero LLM calls, zero hallucination risk:
       Candidates are ||| -separated; scores are comma-separated floats.
 
 Load with:
-    spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \\
+    spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \\
         --adapter ollama \\
-        --tools cookbook/20_ensemble_voting/tools.py \\
+        --tools cookbook/020_ensemble_voting/tools.py \\
         question="What causes inflation?"
 
     # Positional / reproducible mode
-    spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \\
+    spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \\
         --adapter ollama \\
-        --tools cookbook/20_ensemble_voting/tools.py \\
+        --tools cookbook/020_ensemble_voting/tools.py \\
         question="What causes inflation?" \\
         random_selection=false
 """

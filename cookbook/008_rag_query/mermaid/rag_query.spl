@@ -3,10 +3,10 @@
 --
 -- Setup:
 --   pip install "dd-vectordb[faiss]" "dd-embed[sentence-transformers]"
---   spl doc-rag add cookbook/08_rag_query/data/who-is-wen.md
+--   spl doc-rag add cookbook/008_rag_query/data/who-is-wen.md
 --
 -- Usage:
---   spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama question="Where did Wen grow up?"
+--   spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama question="Where did Wen grow up?"
 
 CREATE FUNCTION answer(question TEXT)
 RETURNS TEXT

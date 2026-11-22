@@ -3,8 +3,8 @@
 **Source:** `exp-20260613-050401`  
 **Date:** 2026-06-13  
 **Runs:** 400 (10 models × 20 problems × 2 arms)  
-**DB:** `cookbook/67_symbolic_math/experiment_results.db`  
-**Log:** `cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-20260613-050401.md`
+**DB:** `cookbook/067_symbolic_math/experiment_results.db`  
+**Log:** `cookbook/067_symbolic_math/logs-spl/case-2-log-rerun-20260613-050401.md`
 
 ---
 

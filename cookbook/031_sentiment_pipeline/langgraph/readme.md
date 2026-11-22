@@ -21,7 +21,7 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/31_sentiment_pipeline/langgraph/sentiment_langgraph.py \
+python cookbook/031_sentiment_pipeline/langgraph/sentiment_langgraph.py \
     --items "Great product, love it! | Terrible experience, never again | It was okay" \
     --delimiter "|"
 ```
@@ -43,14 +43,14 @@ FINAL REPORT:
 ...
 ```
 
-Check logs in `cookbook/31_sentiment_pipeline/langgraph/logs-langgraph`.
+Check logs in `cookbook/031_sentiment_pipeline/langgraph/logs-langgraph`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/31_sentiment_pipeline/sentiment.spl \
+spl3 run cookbook/031_sentiment_pipeline/sentiment.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/31_sentiment_pipeline/tools.py \
+    --tools cookbook/031_sentiment_pipeline/tools.py \
     items="Great product, love it! | Terrible experience, never again | It was okay" \
     delimiter="|"
 ```

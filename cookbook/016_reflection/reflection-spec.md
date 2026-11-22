@@ -12,7 +12,7 @@ Given an open-ended problem, produce a well-reasoned written answer by having th
 |---|---|---|
 | `@problem` | *(required)* | The question, design challenge, or explanation task to be solved |
 | `@max_reflections` | `3` | Maximum number of reflect-and-correct cycles before committing best effort |
-| `@log_dir` | `cookbook/16_reflection/logs-spl` | Directory path where intermediate and final answer files are written |
+| `@log_dir` | `cookbook/016_reflection/logs-spl` | Directory path where intermediate and final answer files are written |
 
 ## 3. Process
 

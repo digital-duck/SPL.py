@@ -56,13 +56,13 @@ and the toolchain runs it, compiles it, describes it, or generates it from plain
 
 ```bash
 # Validate a .spl file
-spl3 validate cookbook/05_self_refine/self_refine.spl
+spl3 validate cookbook/005_self_refine/self_refine.spl
 
 # Run it with different adapters
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
+spl3 run cookbook/005_self_refine/self_refine.spl --adapter ollama --model gemma3
 
 # Visualise a .spl file as a Mermaid diagram (no LLM needed)
-spl3 spl2mmd cookbook/05_self_refine/self_refine.spl --out-dir diagrams/
+spl3 spl2mmd cookbook/005_self_refine/self_refine.spl --out-dir diagrams/
 
 # Extract Mermaid logic from an image
 spl3 img2mmd diagram.png --adapter openrouter --model google/gemini-2.0-flash-001 -o logic.mmd
@@ -71,7 +71,7 @@ spl3 img2mmd diagram.png --adapter openrouter --model google/gemini-2.0-flash-00
 spl3 compare orig.mmd roundtrip.mmd --adapter claude_cli --format html -o report.html
 
 # Compile to Python/PocketFlow (deterministic — no LLM needed)
-spl3 splc compile cookbook/05_self_refine/self_refine.spl --lang python/pocketflow
+spl3 splc compile cookbook/005_self_refine/self_refine.spl --lang python/pocketflow
 
 # Vibe-code directly from a description (bypass IR steps)
 spl3 vibe "self-refine agent that iterates until quality > 0.8" \
@@ -158,7 +158,7 @@ spl3 run <file.spl> [OPTIONS]
 
 ```bash
 # Basic run
-spl3 run cookbook/05_self_refine/self_refine.spl --adapter ollama --model gemma3
+spl3 run cookbook/005_self_refine/self_refine.spl --adapter ollama --model gemma3
 
 # Pass workflow INPUT parameters
 spl3 run workflow.spl --adapter ollama -p topic="linear algebra" -p depth=3
@@ -186,7 +186,7 @@ by the following priority (highest first):
 # file has two workflows: portfolio_optimization, portfolio_comparison
 # without --main, falls back to filename-match or last declared
 
-spl3 run cookbook/99_portfolio_opt/portfolio_opt.spl \
+spl3 run cookbook/099_portfolio_opt/portfolio_opt.spl \
   --adapter claude_cli \
   --main portfolio_optimization \
   -p tickers="AAPL,MSFT,GOOGL" -p capital=100000
@@ -213,9 +213,9 @@ this kernel instead of spawning a new Python subprocess.
 
 ```bash
 # Run recipe 69 — eigenvalue notebook generator
-spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+spl3 run cookbook/069_notebook_gen/notebook_gen.spl \
     --kernel --adapter ollama \
-    --tools cookbook/69_notebook_gen/tools.py
+    --tools cookbook/069_notebook_gen/tools.py
 ```
 
 **Alternate kernel specs (`--kernel-name`):** any installed Jupyter kernel spec can
@@ -268,10 +268,10 @@ the same two SPL constructs (`SOLVE`/`ASSERT`) at every rung. Worked recipes:
 
 | Recipe | Demonstrates |
 |--------|--------------|
-| `cookbook/75_sage_math` | Sage kernel: Galois groups, conics over ℚ, elliptic-curve rank |
-| `cookbook/76_lean_proof` | Lean proof checking + LLM repair loop + mathlib citation path |
-| `cookbook/71_linalg_concept_book/lean_payoffs.spl` | Post-pass promoting real textbook entries to `machine_proved` |
-| `cookbook/77_neurosymbolic` | Capstone: SymPy + SageMath + Lean behind ONE workflow — the backend is a `--param backend=` flip; 29-problem battery + A/B experiment harness |
+| `cookbook/075_sage_math` | Sage kernel: Galois groups, conics over ℚ, elliptic-curve rank |
+| `cookbook/076_lean_proof` | Lean proof checking + LLM repair loop + mathlib citation path |
+| `cookbook/071_linalg_concept_book/lean_payoffs.spl` | Post-pass promoting real textbook entries to `machine_proved` |
+| `cookbook/077_neurosymbolic` | Capstone: SymPy + SageMath + Lean behind ONE workflow — the backend is a `--param backend=` flip; 29-problem battery + A/B experiment harness |
 
 Design background: `docs/DEV/sage_lean_integration_plan.md` (fully implemented).
 
@@ -953,7 +953,7 @@ package instead of defined per-recipe.
 Generates a plain-English functional specification from `.spl` source.
 
 ```bash
-spl3 describe cookbook/05_self_refine/self_refine.spl --adapter claude_cli
+spl3 describe cookbook/005_self_refine/self_refine.spl --adapter claude_cli
 ```
 
 ---
@@ -1590,7 +1590,7 @@ spl3 splc compile build_concept_book.spl --lang python/domain_textbook --kernel-
 |----------|-----------|-------|
 | `python/pocketflow` | Deterministic | Default for NDD experiments |
 | `python/langgraph` | Deterministic | |
-| `python/linalg` | Deterministic | Domain target — compiles `SOLVE`/`ASSERT` graph + verification workflows to a runnable Jupyter notebook (DODA: no LLM call needed to compile). See [recipe 71](../../cookbook/71_linalg_concept_book/readme.md) and **Style profiles** below |
+| `python/linalg` | Deterministic | Domain target — compiles `SOLVE`/`ASSERT` graph + verification workflows to a runnable Jupyter notebook (DODA: no LLM call needed to compile). See [recipe 71](../../cookbook/071_linalg_concept_book/readme.md) and **Style profiles** below |
 | `go` | Deterministic | |
 | `ts` | Deterministic | |
 | `python/crewai` | LLM only | Requires `--llm` |
@@ -1609,7 +1609,7 @@ profile to an instruction block once, and that block is threaded into every
 verdict because of it — **style is orthogonal to truth**: one verified body of
 mathematics, five very different reading experiences.
 
-`cookbook/71_linalg_concept_book/style_profiles.py` ships five profiles:
+`cookbook/071_linalg_concept_book/style_profiles.py` ships five profiles:
 
 | Style | Audience | Tone | Structure |
 |---|---|---|---|
@@ -1630,12 +1630,12 @@ identical regardless of which style is selected; only the generated prose
 differs:
 
 ```bash
-spl3 run cookbook/71_linalg_concept_book/build_concept_book.spl \
+spl3 run cookbook/071_linalg_concept_book/build_concept_book.spl \
     --kernel --adapter ollama --model gemma3 \
     -p style=feynman -p target=spectral_theorem
 ```
 
-See [cookbook recipe 71](../../cookbook/71_linalg_concept_book/readme.md)
+See [cookbook recipe 71](../../cookbook/071_linalg_concept_book/readme.md)
 for the full pipeline: concept graph → productivity-ordered curriculum →
 style-guided generation → symbolic verification (SymPy) → notebook
 compilation.
@@ -1650,7 +1650,7 @@ is a generic CLI that works against *any* such module purely through that
 `build()` contract — no domain module imports it or knows it exists, so two
 domains' notions of e.g. "ancestors" can never silently diverge (each domain
 keeps its own copy of the graph algorithms; see
-[cookbook/70's readme](../../cookbook/70_linalg_core_concepts/readme.md) for
+[cookbook/70's readme](../../cookbook/070_linalg_core_concepts/readme.md) for
 why that duplication is intentional). It is the one *reporting and sharing*
 layer every domain gets "mixed in" for free:
 
@@ -2111,7 +2111,7 @@ with human checkpoints at the two IR stages (`.mmd` and `.spl`).
 on any supported runtime (LangGraph, Go, TypeScript, etc.).
 
 ```bash
-spl3 migrate ./cookbook/05_self_refine/ \
+spl3 migrate ./cookbook/005_self_refine/ \
   --target python/langgraph \
   --name self_refine \
   --adapter claude_cli
@@ -2160,7 +2160,7 @@ Use `--auto` to skip both checkpoints for automated pipelines. Use `--dry-run` t
 ### Example: dry run
 
 ```bash
-spl3 migrate cookbook/05_self_refine/ \
+spl3 migrate cookbook/005_self_refine/ \
   --target python/langgraph \
   --name self_refine \
   --dry-run

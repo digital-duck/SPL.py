@@ -5,9 +5,9 @@ Pattern: research → analyze → summarize (3-step sequential GENERATE pipeline
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/09_chain_of_thought/langgraph/chain_langgraph.py \\
+    python cookbook/009_chain_of_thought/langgraph/chain_langgraph.py \\
         --topic "distributed AI inference"
-    python cookbook/09_chain_of_thought/langgraph/chain_langgraph.py \\
+    python cookbook/009_chain_of_thought/langgraph/chain_langgraph.py \\
         --topic "quantum computing" --model llama3.2
 """
 
@@ -119,7 +119,7 @@ def build_graph():
 @click.command()
 @click.option("--topic",   required=True,    help="Topic to analyze")
 @click.option("--model",   default="gemma3", show_default=True)
-@click.option("--log-dir", default="cookbook/09_chain_of_thought/langgraph/logs", show_default=True)
+@click.option("--log-dir", default="cookbook/009_chain_of_thought/langgraph/logs", show_default=True)
 def main(topic: str, model: str, log_dir: str):
     result = build_graph().invoke({
         "topic":    topic,

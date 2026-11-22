@@ -79,20 +79,20 @@ sudo apt install ffmpeg      # Ubuntu / Debian
 ```bash
 # Linux — espeak-ng (no API key needed)
 espeak-ng "Welcome to the SPL 3.0 multimodal demo. Today we test audio summarisation." \
-    -w cookbook/52_audio_summary/sample/clip.wav
+    -w cookbook/052_audio_summary/sample/clip.wav
 
 # macOS — say + ffmpeg
-say -o cookbook/52_audio_summary/sample/clip.aiff \
+say -o cookbook/052_audio_summary/sample/clip.aiff \
     "Welcome to the SPL 3.0 multimodal demo."
-ffmpeg -i cookbook/52_audio_summary/sample/clip.aiff \
-       cookbook/52_audio_summary/sample/clip.wav
+ffmpeg -i cookbook/052_audio_summary/sample/clip.aiff \
+       cookbook/052_audio_summary/sample/clip.wav
 
 # OpenAI TTS (requires OPENAI_API_KEY)
 python -c "
 import pathlib
 from openai import OpenAI
 client = OpenAI()
-out = pathlib.Path('cookbook/52_audio_summary/sample/clip.mp3')
+out = pathlib.Path('cookbook/052_audio_summary/sample/clip.mp3')
 out.parent.mkdir(parents=True, exist_ok=True)
 response = client.audio.speech.create(
     model='tts-1', voice='alloy',
@@ -113,29 +113,29 @@ print(f'audio saved: {out}')
 export OPENROUTER_API_KEY=sk-or-...
 
 # Default — summary mode
-spl3 run cookbook/52_audio_summary/audio_summary.spl \
+spl3 run cookbook/052_audio_summary/audio_summary.spl \
     --adapter ollama \
-    --param clip="cookbook/52_audio_summary/sample/harvard.wav" \
+    --param clip="cookbook/052_audio_summary/sample/harvard.wav" \
     --param model="gemma4:e4b"
 
 # Verbatim transcript
-spl3 run cookbook/52_audio_summary/audio_summary.spl \
+spl3 run cookbook/052_audio_summary/audio_summary.spl \
     --adapter ollama \
     --param model="gemma4:e4b" \
-    --param clip="cookbook/52_audio_summary/sample/short-conversation.mp3" \
+    --param clip="cookbook/052_audio_summary/sample/short-conversation.mp3" \
     --param mode="transcribe"
 
 
 # Key points (meeting notes style)
-spl3 run cookbook/52_audio_summary/audio_summary.spl \
+spl3 run cookbook/052_audio_summary/audio_summary.spl \
     --adapter openrouter \
-    --param clip="cookbook/52_audio_summary/sample/harvard.wav" \
+    --param clip="cookbook/052_audio_summary/sample/harvard.wav" \
     --param mode="key_points"
 
 # Custom summary style
-spl3 run cookbook/52_audio_summary/audio_summary.spl \
+spl3 run cookbook/052_audio_summary/audio_summary.spl \
     --adapter openrouter \
-    --param clip="cookbook/52_audio_summary/sample/harvard.wav" \
+    --param clip="cookbook/052_audio_summary/sample/harvard.wav" \
     --param style="three bullet points, executive summary"
 ```
 
@@ -145,30 +145,30 @@ spl3 run cookbook/52_audio_summary/audio_summary.spl \
 export OPENROUTER_API_KEY=sk-or-...
 
 # Summary (default)
-python cookbook/52_audio_summary/run.py \
-    --audio cookbook/52_audio_summary/sample/clip.wav
+python cookbook/052_audio_summary/run.py \
+    --audio cookbook/052_audio_summary/sample/clip.wav
 
 # Transcribe
-python cookbook/52_audio_summary/run.py \
-    --audio cookbook/52_audio_summary/sample/clip.wav \
+python cookbook/052_audio_summary/run.py \
+    --audio cookbook/052_audio_summary/sample/clip.wav \
     --mode transcribe
 
 # Key points
-python cookbook/52_audio_summary/run.py \
-    --audio cookbook/52_audio_summary/sample/clip.wav \
+python cookbook/052_audio_summary/run.py \
+    --audio cookbook/052_audio_summary/sample/clip.wav \
     --mode key_points
 
 # Custom style
-python cookbook/52_audio_summary/run.py \
-    --audio cookbook/52_audio_summary/sample/clip.wav \
+python cookbook/052_audio_summary/run.py \
+    --audio cookbook/052_audio_summary/sample/clip.wav \
     --style "three bullet points, executive summary"
 
 # Convert MP3 to WAV before sending
-python cookbook/52_audio_summary/run.py \
+python cookbook/052_audio_summary/run.py \
     --audio podcast.mp3 --to-wav
 
 # Larger output budget for long recordings
-python cookbook/52_audio_summary/run.py \
+python cookbook/052_audio_summary/run.py \
     --audio meeting.wav --mode transcribe --max-tokens 4096
 ```
 
@@ -182,12 +182,12 @@ python cookbook/52_audio_summary/run.py \
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `@clip` | AUDIO | `cookbook/52_audio_summary/sample/clip.wav` | Source audio file path |
+| `@clip` | AUDIO | `cookbook/052_audio_summary/sample/clip.wav` | Source audio file path |
 | `@mode` | TEXT | `summary` | Output mode: `summary`, `transcribe`, `key_points` |
 | `@style` | TEXT | `concise paragraph` | Prose style for `summary` mode |
 | `@model` | TEXT | `liquid/lfm-2.5-1.2b-instruct:free` | Speech-capable model (OpenRouter) |
 | `@output_budget` | INT | `2048` | Max output tokens |
-| `@log_dir` | TEXT | `cookbook/52_audio_summary/logs-spl` | Log directory |
+| `@log_dir` | TEXT | `cookbook/052_audio_summary/logs-spl` | Log directory |
 
 ### `run.py` flags
 
@@ -261,5 +261,5 @@ Then generate a test clip:
 
 ```bash
 espeak-ng "Welcome to the SPL 3.0 multimodal demo. Today we test audio summarisation." \
-    -w cookbook/52_audio_summary/sample/clip.wav
+    -w cookbook/052_audio_summary/sample/clip.wav
 ```

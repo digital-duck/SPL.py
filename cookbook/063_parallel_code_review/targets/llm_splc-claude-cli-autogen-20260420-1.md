@@ -1,9 +1,9 @@
-(spl123) papagame@papa-game:~/projects/digital-duck/SPL.py$ spl3 run cookbook/65_llm_splc/llm_splc.spl     --adapter claude_cli     --tools cookbook/65_llm_splc/tools.py     --param spl_file="$(pwd)/cookbook/63_parallel_code_review/parallel_code_review.spl"     --param target="autogen"     --param output_file="$(pwd)/cookbook/65_llm_splc/targets/autogen/parallel_code_review.py"
-INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/65_llm_splc/llm_splc.spl
+(spl123) papagame@papa-game:~/projects/digital-duck/SPL.py$ spl3 run cookbook/065_llm_splc/llm_splc.spl     --adapter claude_cli     --tools cookbook/065_llm_splc/tools.py     --param spl_file="$(pwd)/cookbook/063_parallel_code_review/parallel_code_review.spl"     --param target="autogen"     --param output_file="$(pwd)/cookbook/065_llm_splc/targets/autogen/parallel_code_review.py"
+INFO:spl.registry:Registry: loaded 1 workflow(s) from cookbook/065_llm_splc/llm_splc.spl
 Registry: ['llm_splc']
-Loaded 62 tool(s) from cookbook/65_llm_splc/tools.py
+Loaded 62 tool(s) from cookbook/065_llm_splc/tools.py
 Running workflow: llm_splc(['spl_file', 'target', 'output_file'])
-[INFO] llm_splc start | file=/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/parallel_code_review.spl target=autogen model=claude-cli
+[INFO] llm_splc start | file=/home/papagame/projects/digital-duck/SPL.py/cookbook/063_parallel_code_review/parallel_code_review.spl target=autogen model=claude-cli
 [INFO] Generating {target} implementation ...
 INFO:spl.executor:GENERATE segment 1 (compile_prompt) -> 2090 tokens, 139142ms
 INFO:spl.executor:GENERATE chain done -> @implementation (8360 chars total)
@@ -14,9 +14,9 @@ INFO:spl.executor:GENERATE chain done -> @review (1101 chars total)
 INFO:spl.executor:GENERATE segment 1 (fix_prompt) -> 2402 tokens, 65199ms
 INFO:spl.executor:GENERATE chain done -> @implementation (9610 chars total)
 [INFO] Fixed implementation generated
-[INFO] Output written to /home/papagame/projects/digital-duck/SPL.py/cookbook/65_llm_splc/targets/autogen/parallel_code_review.py
+[INFO] Output written to /home/papagame/projects/digital-duck/SPL.py/cookbook/065_llm_splc/targets/autogen/parallel_code_review.py
 [INFO] llm_splc complete | target=autogen
-INFO:spl.executor:RETURN: 9610 chars | status=complete, target=autogen, spl_file=/home/papagame/projects/digital-duck/SPL.py/cookbook/63_parallel_code_review/parallel_code_review.spl
+INFO:spl.executor:RETURN: 9610 chars | status=complete, target=autogen, spl_file=/home/papagame/projects/digital-duck/SPL.py/cookbook/063_parallel_code_review/parallel_code_review.spl
 
 Status:  complete
 Output:  ```python
@@ -216,7 +216,7 @@ Keep the Action Items section under 150 words."""
             logger.error(f"Error getting response from {agent.name}: {str(e)}")
             return f"[ERROR] Agent {agent.name} failed: {str(e)}"
 
-    async def run_parallel_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+    async def run_parallel_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
         """Run parallel code review workflow - main entry point"""
         try:
             logger.info(f"[parallel_code_review] starting 3-way parallel review | lang={lang} review_model={self.review_model}")
@@ -256,7 +256,7 @@ Keep the Action Items section under 150 words."""
             else:
                 raise
 
-def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
     """Main function equivalent to SPL workflow parallel_code_review"""
     reviewer = ParallelCodeReview(review_model)
     return asyncio.run(reviewer.run_parallel_review(code, lang, log_dir))

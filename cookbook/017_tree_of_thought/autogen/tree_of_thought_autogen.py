@@ -6,7 +6,7 @@ reasoning paths and select/synthesize a final solution.
 
 Usage:
     pip install pyautogen
-    python cookbook/17_tree_of_thought/autogen/tree_of_thought_autogen.py \
+    python cookbook/017_tree_of_thought/autogen/tree_of_thought_autogen.py \
         --problem "Design a sustainable urban transport system."
 """
 
@@ -129,7 +129,7 @@ def run(problem: str, models: list, log_dir: str) -> str:
 @click.command()
 @click.option("--problem", default="Design a sustainable urban transport system.", show_default=True)
 @click.option("--models",  multiple=True, default=["gemma3", "phi4", "qwen2.5"], show_default=True)
-@click.option("--log-dir", default="cookbook/17_tree_of_thought/autogen/logs-autogen", show_default=True)
+@click.option("--log-dir", default="cookbook/017_tree_of_thought/autogen/logs-autogen", show_default=True)
 def main(problem: str, models: tuple, log_dir: str):
     result = run(problem, list(models), log_dir)
     print("\n" + "=" * 60)

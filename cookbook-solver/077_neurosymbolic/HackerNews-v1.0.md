@@ -279,7 +279,7 @@ Both [SPL](https://github.com/digital-duck/SPL.py) and [Momagrid](https://github
 pip install spl-llm                      
 
 # your first SPL workflow
-spl3 run cookbook/05_self_refine/self_refine.spl --llm ollama:gemma3 \
+spl3 run cookbook/005_self_refine/self_refine.spl --llm ollama:gemma3 \
     --param task="explain linear algebra"       
 ```
 
@@ -298,11 +298,11 @@ mg join http://<HUB-IP>:9000      # workers join from any machine on the same ne
 
 ```bash
 # Run Recipe 77 locally (needs Ollama + a model pulled)
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --llm ollama:gemma3 \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --llm ollama:gemma3 \
     --param problem="differentiate 3*x**3 - x, then solve for x"
 
 # Or run the full experiment grid on Momagrid
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 6
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 6
 ```
 
 No API key required to start. Ollama runs free, local models. SPL ships

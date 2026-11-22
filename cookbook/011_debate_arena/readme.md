@@ -21,13 +21,13 @@ con_argument(topic, opening)  ──┘
 ## Usage
 
 ```bash
-spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama \
+spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama \
     topic="AI should be open-sourced"
 
-spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama --model llama3.2 \
+spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama --model llama3.2 \
     topic="Remote work is better than office work"
 
-spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama \
+spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama \
     topic="Tabs are better than spaces"
 ```
 

@@ -29,8 +29,8 @@
 --
 -- Requires: stdlib sqlite3 only — no new pip dependency
 -- Run:
---   spl3 run cookbook/84_sql_verifier/sql_verifier.spl --llm claude_cli
---   spl3 run cookbook/84_sql_verifier/sql_verifier.spl \
+--   spl3 run cookbook/084_sql_verifier/sql_verifier.spl --llm claude_cli
+--   spl3 run cookbook/084_sql_verifier/sql_verifier.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -278,7 +278,7 @@ WORKFLOW sql_verifier
   INPUT @ground_truth_sql TEXT := "SELECT AVG(salary) AS avg_salary FROM employees WHERE department = 'Engineering';"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/84_sql_verifier/output"
+  INPUT @out_dir TEXT := "./cookbook/084_sql_verifier/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

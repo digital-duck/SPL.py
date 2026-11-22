@@ -3945,8 +3945,8 @@ def cmd_describe(spl_path, adapter, model, spec_dir, prompt_debug):
 
     \b
     Examples:
-      spl3 describe cookbook/05_self_refine/self_refine.spl
-      spl3 describe cookbook/63_parallel_code_review/
+      spl3 describe cookbook/005_self_refine/self_refine.spl
+      spl3 describe cookbook/063_parallel_code_review/
       spl3 describe my_workflow.spl --adapter claude_cli --out-dir docs/specs
     """
     path = Path(spl_path)
@@ -5601,7 +5601,7 @@ def cmd_migrate(source, target, adapter, model, judge_adapter, judge_model,
     \b
     Examples:
       # Migrate a PocketFlow recipe to LangGraph
-      spl3 migrate cookbook/05_self_refine/ --target python/langgraph \\
+      spl3 migrate cookbook/005_self_refine/ --target python/langgraph \\
         --adapter claude_cli --model claude-sonnet-5 --out-dir ./migrate-self_refine/
 
       # Migrate single file, dry-run to preview commands

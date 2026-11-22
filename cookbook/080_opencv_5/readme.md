@@ -44,7 +44,7 @@ Sources: [opencv.org/opencv-5](https://opencv.org/opencv-5/), [Phoronix](https:/
 conda activate spl123
 
 # 1. Install OpenCV 5 (and Pillow, only needed to regenerate sample images)
-pip install -r cookbook/80_opencv_5/requirements.txt
+pip install -r cookbook/080_opencv_5/requirements.txt
 
 # 2. Verify the install and the specific 5.0 features this recipe uses
 python -c "
@@ -65,7 +65,7 @@ python3 - << 'EOF'
 from PIL import Image, ImageDraw
 import pathlib
 
-out = pathlib.Path("cookbook/80_opencv_5/sample")
+out = pathlib.Path("cookbook/080_opencv_5/sample")
 out.mkdir(parents=True, exist_ok=True)
 
 # background.jpg — static reference scene
@@ -92,10 +92,10 @@ EOF
 Compares a background reference frame against a current frame, reports what changed, then has the LLM turn the structured report into a plain-language assessment.
 
 ```bash
-spl3 run cookbook/80_opencv_5/opencv5_scene_triage.spl \
+spl3 run cookbook/080_opencv_5/opencv5_scene_triage.spl \
     --llm ollama:gemma4 \
-    --param background=cookbook/80_opencv_5/sample/background.jpg \
-    --param current=cookbook/80_opencv_5/sample/current.jpg
+    --param background=cookbook/080_opencv_5/sample/background.jpg \
+    --param current=cookbook/080_opencv_5/sample/current.jpg
 ```
 
 **Pipeline:**
@@ -122,9 +122,9 @@ Verified output on the committed sample images:
 `CALL PARALLEL` is usually shown fanning out across concurrent *LLM* calls (see `64_parallel_news_digest`). This recipe fans it out across three independent, deterministic OpenCV 5 analyses on the *same* image instead, then synthesizes all three with a single `GENERATE` call.
 
 ```bash
-spl3 run cookbook/80_opencv_5/opencv5_parallel_inspect.spl \
+spl3 run cookbook/080_opencv_5/opencv5_parallel_inspect.spl \
     --llm ollama:gemma4 \
-    --param image=cookbook/80_opencv_5/sample/current.jpg
+    --param image=cookbook/080_opencv_5/sample/current.jpg
 ```
 
 **Pipeline:**

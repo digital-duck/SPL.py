@@ -3,9 +3,9 @@
 -- Demonstrates multi-perspective reasoning, adversarial generation, and semantic evaluation.
 --
 -- Usage:
---   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama --model gemma3 topic="AI should be open-sourced"
---   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama --model llama3.2 topic="Remote work is better than office work"
---   spl3 run cookbook/11_debate_arena/debate.spl --adapter ollama topic="Tabs are better than spaces"
+--   spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama --model gemma3 topic="AI should be open-sourced"
+--   spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama --model llama3.2 topic="Remote work is better than office work"
+--   spl3 run cookbook/011_debate_arena/debate.spl --adapter ollama topic="Tabs are better than spaces"
 
 CREATE FUNCTION pro_argument(topic TEXT, previous TEXT) 
 RETURNS TEXT
@@ -62,7 +62,7 @@ WORKFLOW debate_arena
     INPUT:
         @topic TEXT DEFAULT 'AI should be open-sourced',
         @max_rounds INTEGER DEFAULT 3,
-        @log_dir TEXT DEFAULT 'cookbook/11_debate_arena/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/011_debate_arena/logs-spl'
     OUTPUT: @verdict TEXT
 DO
     @round := 0

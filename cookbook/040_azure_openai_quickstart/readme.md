@@ -30,18 +30,18 @@ export AZURE_OPENAI_API_VERSION=2024-12-01-preview
 
 ```bash
 # Default — gpt-4o vs gpt-4o-mini vs gpt-35-turbo deployments
-spl3 run cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
+spl3 run cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
     prompt="Explain the CAP theorem in two sentences."
 
 # Custom deployment names (must match what you created in Azure)
-spl3 run cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
+spl3 run cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
     prompt="What are the trade-offs between microservices and monoliths?" \
     deployment_1="gpt-4o" \
     deployment_2="gpt-4o-mini" \
     deployment_3="gpt-35-turbo"
 
 # Single deployment (set all three to the same name)
-spl3 run cookbook/40_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
+spl3 run cookbook/040_azure_openai_quickstart/azure_openai_quickstart.spl --adapter azure_openai \
     prompt="Summarise the SOLID principles." \
     deployment_1="gpt-4o" \
     deployment_2="gpt-4o" \

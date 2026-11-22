@@ -25,15 +25,15 @@ formulate_hypotheses(observation) → @hypotheses
 ## Usage
 
 ```bash
-spl3 run cookbook/35_hypothesis_tester/hypothesis.spl --adapter ollama \
+spl3 run cookbook/035_hypothesis_tester/hypothesis.spl --adapter ollama \
     observation="Remote teams show lower productivity in the first month after joining"
 
-spl3 run cookbook/35_hypothesis_tester/hypothesis.spl --adapter ollama \
+spl3 run cookbook/035_hypothesis_tester/hypothesis.spl --adapter ollama \
     observation="Users who receive onboarding emails churn 30% less" \
     domain="product" \
     confidence_threshold=0.75
 
-spl3 run cookbook/35_hypothesis_tester/hypothesis.spl --adapter ollama --model llama3.2 \
+spl3 run cookbook/035_hypothesis_tester/hypothesis.spl --adapter ollama --model llama3.2 \
     observation="Daily standups reduce sprint velocity by 10%" \
     domain="management"
 ```

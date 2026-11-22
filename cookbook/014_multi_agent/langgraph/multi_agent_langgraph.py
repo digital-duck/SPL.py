@@ -5,7 +5,7 @@ Pattern: Researcher → Analyst → Writer
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/14_multi_agent/langgraph/multi_agent_langgraph.py \\
+    python cookbook/014_multi_agent/langgraph/multi_agent_langgraph.py \\
         --topic "Impact of AI on healthcare"
 """
 
@@ -94,7 +94,7 @@ def build_graph():
 @click.command()
 @click.option("--topic", required=True, help="Topic for the report")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/14_multi_agent/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/014_multi_agent/logs-langgraph", help="Log directory")
 def main(topic, model, log_dir):
     """Multi-Agent Collaboration — LangGraph edition"""
     build_graph().invoke({

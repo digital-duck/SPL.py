@@ -20,16 +20,16 @@
 -- de-duplicated body of verified content.
 --
 -- Run:
---   spl3 run cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
+--   spl3 run cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
 --       --adapter ollama --model gemma3
 --
 -- Run again to see the cache hit on THIS section too:
---   spl3 run cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
+--   spl3 run cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
 --       --adapter ollama --model gemma3
 -- ============================================================
 
 -- ── Deterministic regime: trimmed domain data (concept → context) ────────────
--- A miniature stand-in for cookbook/71_linalg_concept_book/linalg_graph.py:
+-- A miniature stand-in for cookbook/071_linalg_concept_book/linalg_graph.py:
 -- just enough structure (concept id → book context, concept id → required
 -- terms) to drive generation and verification without a full concept graph.
 -- Both chapter-1 scripts ship an identical copy so each runs standalone —

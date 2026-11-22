@@ -9,10 +9,10 @@
 --     https://console.aws.amazon.com/bedrock/home#/modelaccess
 --
 -- Usage:
---   spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
+--   spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
 --       prompt="Explain the CAP theorem in two sentences."
 --
---   spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
+--   spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl --adapter bedrock \
 --       prompt="What are the main trade-offs between SQL and NoSQL databases?" \
 --       model_1="anthropic.claude-opus-4-0-20250514-v1:0" \
 --       model_2="anthropic.claude-3-5-haiku-20241022-v1:0" \

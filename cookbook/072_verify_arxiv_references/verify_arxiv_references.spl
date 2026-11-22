@@ -28,7 +28,7 @@
 --   8. Writes all log messages to both console and a timestamped
 --      log file under ~/.spl/logs/ via the log TOOL_API.
 --
--- Reuses the download/cache shape of cookbook/47_arxiv_morning_brief
+-- Reuses the download/cache shape of cookbook/047_arxiv_morning_brief
 -- (download_arxiv_pdf -> download_pdf_to: rate-limited GET, write
 -- to disk, skip if already cached) and its DO/EXCEPTION-per-item
 -- loop structure, generalised from "list of URLs" to "parsed
@@ -45,10 +45,10 @@
 -- arXiv-sourced metadata) for each entry it could resolve.
 --
 -- Run:
---   spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
+--   spl3 run cookbook/072_verify_arxiv_references/verify_arxiv_references.spl \
 --       --llm ollama:gemma3 \
 --       in_refs="$(cat references.md)" \
---       out_dir="cookbook/72_verify_arxiv_references/output"
+--       out_dir="cookbook/072_verify_arxiv_references/output"
 -- ============================================================
 
 -- ── TOOL_API: deterministic helpers ───────────────────────────
@@ -188,7 +188,7 @@ CREATE TOOL_API download_pdf_to(pdf_url TEXT, out_dir TEXT, arxiv_id TEXT)
 RETURNS TEXT AS PYTHON $$
 def download_pdf_to(pdf_url: str, out_dir: str, arxiv_id: str) -> str:
     """Download pdf_url into out_dir as '<arxiv_id>.pdf' (cached, rate-limited).
-    Same shape as cookbook/47_arxiv_morning_brief's download_arxiv_pdf, but
+    Same shape as cookbook/047_arxiv_morning_brief's download_arxiv_pdf, but
     writes to a caller-supplied directory under an arXiv-id-based filename."""
     import time
     from pathlib import Path
@@ -322,7 +322,7 @@ $$;
 WORKFLOW verify_arxiv_references
     INPUT:
         @in_refs TEXT,
-        @out_dir TEXT DEFAULT 'cookbook/72_verify_arxiv_references/output'
+        @out_dir TEXT DEFAULT 'cookbook/072_verify_arxiv_references/output'
     OUTPUT: @summary_csv TEXT
 DO
     CALL log_init('verify_arxiv_references') INTO @log_file

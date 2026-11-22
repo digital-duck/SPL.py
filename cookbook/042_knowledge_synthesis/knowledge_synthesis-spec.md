@@ -11,7 +11,7 @@ Given a raw text passage, extract three structured insights from it using an LLM
 | Parameter | Default | Description |
 |---|---|---|
 | `@raw_text` | *(required)* | The raw text passage from which insights are to be extracted and synthesized. |
-| `@log_dir` | `cookbook/42_knowledge_synthesis/logs-spl` | Directory path where the extracted insights Markdown file will be written. |
+| `@log_dir` | `cookbook/042_knowledge_synthesis/logs-spl` | Directory path where the extracted insights Markdown file will be written. |
 
 ## 3. Process
 

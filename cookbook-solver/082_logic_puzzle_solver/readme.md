@@ -44,10 +44,10 @@ The README findings session that proposed this recipe flagged the choice between
 
 ```bash
 # Default puzzle (3-house zebra-lite: who drinks Coffee?)
-spl3 run cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl --llm claude_cli
+spl3 run cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl --llm claude_cli
 
 # Unaided baseline arm
-spl3 run cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl \
+spl3 run cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl \
     --llm claude_cli --param enable_solver=false
 ```
 

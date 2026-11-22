@@ -23,17 +23,17 @@ bug_detection   ──┘                  ├─ > 8 → block
 ## Usage
 
 ```bash
-spl3 run cookbook/15_code_review/code_review.spl --adapter ollama \
+spl3 run cookbook/015_code_review/code_review.spl --adapter ollama \
     code="$(cat digest.go)" \
     language="Go" \
     2>&1 | tee cookbook/out/15_code_review-$(date +%Y%m%d_%H%M%S).md
 
 
-spl3 run cookbook/15_code_review/code_review.spl --adapter ollama \
+spl3 run cookbook/015_code_review/code_review.spl --adapter ollama \
     code="def foo(x): return eval(x)" \
     language="Python"
 
-spl3 run cookbook/15_code_review/code_review.spl --adapter ollama \
+spl3 run cookbook/015_code_review/code_review.spl --adapter ollama \
     code="$(cat main.py)" \
     language="Python" \
     2>&1 | tee cookbook/out/15_code_review-python-$(date +%Y%m%d_%H%M%S).md

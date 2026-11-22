@@ -12,13 +12,13 @@
 #   nohup setsid systemd-inhibit --what=sleep:idle \
 #       --who="SPL-experiment" --why="Long-running unattended experiment batch" \
 #       --mode=block \
-#       bash cookbook/77_neurosymbolic/run_extra_backend_split.sh \
-#       > cookbook/77_neurosymbolic/logs-spl/extra-backend-split-driver.log 2>&1 < /dev/null &
+#       bash cookbook/077_neurosymbolic/run_extra_backend_split.sh \
+#       > cookbook/077_neurosymbolic/logs-spl/extra-backend-split-driver.log 2>&1 < /dev/null &
 #   disown
 #
 # Progress/results land in the normal places:
-#   - per-cell markdown logs: cookbook/77_neurosymbolic/logs-spl/recipe-77-log-<ts>.md
-#   - DB rows: cookbook/77_neurosymbolic/experiment_results.db (new source_file per phase)
+#   - per-cell markdown logs: cookbook/077_neurosymbolic/logs-spl/recipe-77-log-<ts>.md
+#   - DB rows: cookbook/077_neurosymbolic/experiment_results.db (new source_file per phase)
 #   - this driver's own stdout/stderr: whatever path you redirect to above
 
 set -uo pipefail
@@ -42,14 +42,14 @@ echo "Extra runs/cell: ${N_RUNS} (existing r=3 + this batch => r=6 total)"
 echo
 echo "--- Phase 1/2: SymPy backend (T0-T2), problems: ${SYMPY_PROBLEMS} ---"
 MODELS="${MODELS}" PROBLEMS="${SYMPY_PROBLEMS}" N_RUNS="${N_RUNS}" \
-    bash cookbook/77_neurosymbolic/run_experiment.sh
+    bash cookbook/077_neurosymbolic/run_experiment.sh
 SYMPY_STATUS=$?
 echo "--- Phase 1/2 (SymPy) exit code: ${SYMPY_STATUS} ---"
 
 echo
 echo "--- Phase 2/2: Sage backend (T3-T5), problems: ${SAGE_PROBLEMS} ---"
 MODELS="${MODELS}" PROBLEMS="${SAGE_PROBLEMS}" N_RUNS="${N_RUNS}" \
-    bash cookbook/77_neurosymbolic/run_experiment.sh
+    bash cookbook/077_neurosymbolic/run_experiment.sh
 SAGE_STATUS=$?
 echo "--- Phase 2/2 (Sage) exit code: ${SAGE_STATUS} ---"
 

@@ -7,21 +7,21 @@
 -- a thin frontend to render directly (no backend translation layer needed —
 -- see docs/conference/EAAI-2027/submission/.../handout.md, "Capstone Demo").
 --
--- Adapted from cookbook/47_arxiv_morning_brief (download/chunk/map/reduce
--- shape) and cookbook/72_verify_arxiv_references (ground-truth metadata
+-- Adapted from cookbook/047_arxiv_morning_brief (download/chunk/map/reduce
+-- shape) and cookbook/072_verify_arxiv_references (ground-truth metadata
 -- lookup, per-item error isolation) — see tools.spl for attribution.
 --
 -- Usage (tools.spl's TOOL_API defs load via IMPORT 'tools' — no --tools flag
 -- needed; that flag is for external @spl_tool Python modules, a different
--- mechanism used by e.g. cookbook/13_map_reduce/tools.py). Params go through
+-- mechanism used by e.g. cookbook/013_map_reduce/tools.py). Params go through
 -- spl3's -p/--param KEY=VALUE flag (spl3, unlike the older `spl` CLI, does
 -- NOT accept bare positional key=value args):
---   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+--   spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
 --       --adapter ollama --model gemma3 \
 --       -p urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/2501.09732"]'
 --
---   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
---       -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt"
+--   spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
+--       -p urls="cookbook/089_arxiv_digest_eaai27/arxiv-papers.txt"
 --
 -- Workshop-grid dispatch (the capstone demo path). The hub never runs SPL —
 -- something has to actually drive this .spl workflow (parse, chunk, loop,
@@ -30,13 +30,13 @@
 -- or, for the web form, a thin backend process that shells out to the same
 -- command on the attendee's behalf (see arxiv-digest-eaai27 repo's
 -- api/app.py):
---   spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+--   spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
 --       --adapter momagrid --hub https://hub.WORKSHOP_DOMAIN \
 --       -p urls='["https://arxiv.org/abs/2501.12948"]'
 --
 -- Note on parallelism: today's SPL (3.0) dispatches sub-workflow CALLs
 -- sequentially within one script run (CALL PARALLEL fan-out is flagged for
--- a future SPL version — see cookbook/47_arxiv_morning_brief/readme.md).
+-- a future SPL version — see cookbook/047_arxiv_morning_brief/readme.md).
 -- The "several papers' worth of jobs in flight simultaneously" the EAAI-27
 -- capstone demo describes comes from concurrent attendee submissions each
 -- becoming their own script run against the shared hub, not from a single

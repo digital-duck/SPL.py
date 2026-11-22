@@ -26,7 +26,7 @@
 -- or in what order, asked for it.
 --
 -- Run:
---   spl3 run cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
+--   spl3 run cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
 --       --adapter ollama --model gemma3
 -- ============================================================
 

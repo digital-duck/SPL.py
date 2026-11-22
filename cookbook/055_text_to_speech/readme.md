@@ -65,37 +65,37 @@ export OPENAI_API_KEY=sk-...
 export OPENAI_BASE_URL="https://api.openai.com/v1"
 
 # Basic TTS
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "SPL 3.0 multimodal support is ready for testing."
 
 # Different voice
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "Welcome to the future of agentic workflows." \
     --voice nova
 
 # HD quality
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "Natural language driven development is here." \
     --model tts-1-hd --voice alloy
 
 # Expressive TTS with acting instructions (gpt-4o-mini-tts)
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "Breaking news: SPL 3.0 ships!" \
     --model gpt-4o-mini-tts --voice coral \
     --instructions "Speak like an excited news anchor."
 
 # With script prep (cleans markdown, expands abbreviations)
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "**SPL v3.0** introduces e.g. IMAGE, AUDIO types. See https://example.com." \
     --prep --tone "professional"
 
 # Read from file
-python cookbook/55_text_to_speech/run.py \
-    --file cookbook/50_code_pipeline/README.md \
+python cookbook/055_text_to_speech/run.py \
+    --file cookbook/050_code_pipeline/README.md \
     --prep --tone "conversational"
 
 # System TTS (no API key needed)
-python cookbook/55_text_to_speech/run.py \
+python cookbook/055_text_to_speech/run.py \
     --text "Hello from SPL 3.0." \
     --backend system
 ```
@@ -113,9 +113,9 @@ python cookbook/55_text_to_speech/run.py \
 | `@tone` | TEXT | `neutral` | Tone for script prep: `neutral`, `professional`, `conversational` |
 | `@model` | TEXT | `tts-1` | TTS model: `tts-1` (fast) or `tts-1-hd` (higher quality) |
 | `@prep` | BOOL | `FALSE` | Run gemma4 script prep before TTS |
-| `@output_dir` | TEXT | `cookbook/55_text_to_speech/outputs` | Directory to write audio file |
+| `@output_dir` | TEXT | `cookbook/055_text_to_speech/outputs` | Directory to write audio file |
 | `@llm_model` | TEXT | `gemma4:e4b` | Local LLM for script prep |
-| `@log_dir` | TEXT | `cookbook/55_text_to_speech/logs-spl` | Directory for log output |
+| `@log_dir` | TEXT | `cookbook/055_text_to_speech/logs-spl` | Directory for log output |
 
 ### CLI flags (run.py)
 
@@ -129,7 +129,7 @@ python cookbook/55_text_to_speech/run.py \
 | `--prep` | off | Clean script via Gemma4 before TTS |
 | `--tone` | `neutral` | Tone hint for script prep |
 | `--backend` | `openai` | `openai` \| `system` (`say` / `espeak`) |
-| `--output-dir` | `cookbook/55_text_to_speech/outputs` | Directory to write audio file |
+| `--output-dir` | `cookbook/055_text_to_speech/outputs` | Directory to write audio file |
 
 ---
 

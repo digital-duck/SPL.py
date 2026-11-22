@@ -1,5 +1,5 @@
 """
-LangGraph equivalent of cookbook/20_ensemble_voting/ensemble_v2.spl
+LangGraph equivalent of cookbook/020_ensemble_voting/ensemble_v2.spl
 
 Implements the same ensemble voting pipeline:
   pick_model → generate_candidate → score_candidate (different model)
@@ -9,17 +9,17 @@ Implements the same ensemble voting pipeline:
 Usage:
     pip install langgraph langchain-ollama
 
-    python cookbook/20_ensemble_voting/ensemble_langgraph.py \\
+    python cookbook/020_ensemble_voting/ensemble_langgraph.py \\
         --question "What causes inflation?"
 
-    python cookbook/20_ensemble_voting/ensemble_langgraph.py \\
+    python cookbook/020_ensemble_voting/ensemble_langgraph.py \\
         --question "Is Rust faster than C++?" \\
         --models llama3.2 qwen2.5 gemma3 mistral deepseek-r1 \\
         --n-candidates 7 \\
         --polish-model deepseek-r1
 
     # Positional / reproducible mode
-    python cookbook/20_ensemble_voting/ensemble_langgraph.py \\
+    python cookbook/020_ensemble_voting/ensemble_langgraph.py \\
         --question "What is the best database for time-series data?" \\
         --random-selection false
 """
@@ -275,7 +275,7 @@ def build_graph():
 @click.option("--random-selection/--no-random-selection", default=True, show_default=True)
 @click.option("--consensus-model",  default="qwen2.5",    show_default=True)
 @click.option("--polish-model",     default="deepseek-r1",show_default=True)
-@click.option("--log-dir",          default="cookbook/20_ensemble_voting/logs", show_default=True)
+@click.option("--log-dir",          default="cookbook/020_ensemble_voting/logs", show_default=True)
 def main(question: str, models: tuple, n_candidates: int, random_selection: bool,
          consensus_model: str, polish_model: str, log_dir: str):
     result = build_graph().invoke({

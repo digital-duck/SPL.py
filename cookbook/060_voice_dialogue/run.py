@@ -18,28 +18,28 @@ AUDIO-in / AUDIO-out multi-modal pipeline.
 Usage
 -----
   # Minimal — transcribe + respond + speak
-  python cookbook/60_voice_dialogue/run.py --audio question.wav
+  python cookbook/060_voice_dialogue/run.py --audio question.wav
 
   # With context (e.g. feed a document as background knowledge)
-  python cookbook/60_voice_dialogue/run.py \\
+  python cookbook/060_voice_dialogue/run.py \\
       --audio question.wav \\
       --context "We are discussing SPL 3.0 multimodal capabilities."
 
   # Custom persona
-  python cookbook/60_voice_dialogue/run.py \\
+  python cookbook/060_voice_dialogue/run.py \\
       --audio question.wav \\
       --persona "a cheerful science teacher explaining to a 10-year-old"
 
   # Use a different response model
-  python cookbook/60_voice_dialogue/run.py \\
+  python cookbook/060_voice_dialogue/run.py \\
       --audio question.wav --llm-model phi4:latest
 
   # Nova voice, HD TTS
-  python cookbook/60_voice_dialogue/run.py \\
+  python cookbook/060_voice_dialogue/run.py \\
       --audio question.wav --tts-voice nova --tts-model tts-1-hd
 
   # System TTS (no OpenAI key needed for TTS step)
-  python cookbook/60_voice_dialogue/run.py \\
+  python cookbook/060_voice_dialogue/run.py \\
       --audio question.wav --tts-backend system
 """
 
@@ -245,7 +245,7 @@ async def run(
 @click.option("--tts-backend", default="openai", show_default=True,
               type=click.Choice(["openai", "system"]))
 @click.option("--to-wav",      is_flag=True, help="Convert audio to WAV before ASR (requires ffmpeg)")
-@click.option("--output-dir",  default="cookbook/60_voice_dialogue/outputs", show_default=True)
+@click.option("--output-dir",  default="cookbook/060_voice_dialogue/outputs", show_default=True)
 def main(audio, context, persona, asr_model, asr_backend, llm_model,
          tts_voice, tts_model, tts_backend, to_wav, output_dir) -> None:
     """Recipe 55 — Voice Dialogue (AUDIO+TEXT → TEXT+AUDIO)."""

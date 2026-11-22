@@ -4,20 +4,20 @@
 -- order lookup, and LLM generation grounded in real order data.
 --
 -- Usage:
---   spl3 run cookbook/28_support_triage/support_triage.spl \
+--   spl3 run cookbook/028_support_triage/support_triage.spl \
 --       --adapter ollama --model gemma3 \
---       --tools cookbook/28_support_triage/tools.py \
+--       --tools cookbook/028_support_triage/tools.py \
 --       ticket="My account has been charged twice for the same order #ORD-12345"
 --
---   spl3 run cookbook/28_support_triage/support_triage.spl \
+--   spl3 run cookbook/028_support_triage/support_triage.spl \
 --       --adapter ollama --model gemma3 \
---       --tools cookbook/28_support_triage/tools.py \
+--       --tools cookbook/028_support_triage/tools.py \
 --       ticket="Package for order ORD-67890 hasn't arrived, it's been 10 days" \
 --       product="CloudDash" tone="empathetic"
 --
---   spl3 run cookbook/28_support_triage/support_triage.spl \
+--   spl3 run cookbook/028_support_triage/support_triage.spl \
 --       --adapter ollama --model gemma3 \
---       --tools cookbook/28_support_triage/tools.py \
+--       --tools cookbook/028_support_triage/tools.py \
 --       ticket="I can't log in, password reset email never arrives" \
 --       tone="friendly"
 

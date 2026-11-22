@@ -36,7 +36,7 @@ mg join http://192.168.0.1   # any machine with a GPU joins the grid
 
 **Benchmark — 10 models × 20 math problems, solver ON vs OFF:**
 
-To demonstrate how it all works together, we use a specific [math workflow](https://github.com/digital-duck/SPL.py/blob/main/cookbook/77_neurosymbolic/symbolic_math.spl) that touches all three pain-points, below is a short summary of benchmark results
+To demonstrate how it all works together, we use a specific [math workflow](https://github.com/digital-duck/SPL.py/blob/main/cookbook/077_neurosymbolic/symbolic_math.spl) that touches all three pain-points, below is a short summary of benchmark results
 
 | Model | Verified | Unverified |
 |---|---|---|
@@ -53,7 +53,7 @@ To demonstrate how it all works together, we use a specific [math workflow](http
 
 ```bash
 pip install spl-llm
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl \
     --llm ollama:gemma3 \
     --param problem="differentiate 3*x**3 - x, then solve for x"
 ```

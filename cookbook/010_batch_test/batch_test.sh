@@ -4,9 +4,9 @@
 # Perfect for CI/CD, model benchmarking, and regression testing.
 #
 # Usage:
-#   bash cookbook/10_batch_test/batch_test.sh                    # all recipes, default models
-#   MODELS="gemma3" bash cookbook/10_batch_test/batch_test.sh    # single model
-#   ADAPTER=echo bash cookbook/10_batch_test/batch_test.sh       # dry run with echo
+#   bash cookbook/010_batch_test/batch_test.sh                    # all recipes, default models
+#   MODELS="gemma3" bash cookbook/010_batch_test/batch_test.sh    # single model
+#   ADAPTER=echo bash cookbook/010_batch_test/batch_test.sh       # dry run with echo
 
 ADAPTER="${ADAPTER:-ollama}"
 MODELS="${MODELS:-gemma3 llama3.2}"

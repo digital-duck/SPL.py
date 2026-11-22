@@ -70,7 +70,7 @@ $$;
 
 WORKFLOW sage_solver
   INPUT @problem TEXT := 'what is the Galois group of x^5 - x - 1 over the rationals?'
-  INPUT @log_dir TEXT := 'cookbook/75_sage_math/logs-spl'
+  INPUT @log_dir TEXT := 'cookbook/075_sage_math/logs-spl'
   OUTPUT @explanation TEXT
 DO
   -- Step 0 (deterministic): preflight — prove we are on the Sage rung.

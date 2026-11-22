@@ -48,7 +48,7 @@ The winner is: PRO / CON
 ...
 ```
 
-Log files are written to `cookbook/11_debate_arena/logs-crewai/`:
+Log files are written to `cookbook/011_debate_arena/logs-crewai/`:
 
 ```
 opening_pro.md

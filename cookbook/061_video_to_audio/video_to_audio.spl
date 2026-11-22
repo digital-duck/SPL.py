@@ -15,12 +15,12 @@
 
 WORKFLOW video_to_audio
     INPUT:
-        @video         VIDEO  DEFAULT 'cookbook/61_video_to_audio/sample/clip.mp4',
+        @video         VIDEO  DEFAULT 'cookbook/061_video_to_audio/sample/clip.mp4',
         @target_format TEXT   DEFAULT 'mp3',
         @bitrate       TEXT   DEFAULT '192k',
         @sample_rate   INT    DEFAULT 44100,
-        @output_dir    TEXT   DEFAULT 'cookbook/61_video_to_audio/outputs',
-        @log_dir       TEXT   DEFAULT 'cookbook/61_video_to_audio/logs-spl'
+        @output_dir    TEXT   DEFAULT 'cookbook/061_video_to_audio/outputs',
+        @log_dir       TEXT   DEFAULT 'cookbook/061_video_to_audio/logs-spl'
     OUTPUT: @audio AUDIO
 DO
     LOGGING f'[video_to_audio] {@video} → {@target_format} (bitrate={@bitrate})' LEVEL INFO

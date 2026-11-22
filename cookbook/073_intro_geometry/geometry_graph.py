@@ -1,11 +1,11 @@
 """Intro Geometry concept graph — python/intro_geometry domain library.
 
 Part of the ``python/intro_geometry`` splc target (Layer 2 of the
-neurosymbolic SPL roadmap — see cookbook/71_linalg_concept_book for the
+neurosymbolic SPL roadmap — see cookbook/071_linalg_concept_book for the
 first instance of this pattern, ``linalg_graph.py``).  Loaded into the
 IPython kernel at workflow start:
 
-    CALL run_python('import sys; sys.path.insert(0, "/path/to/cookbook/73_intro_geometry")') INTO @_
+    CALL run_python('import sys; sys.path.insert(0, "/path/to/cookbook/073_intro_geometry")') INTO @_
     CALL run_python('import geometry_graph; graph = geometry_graph.build()') INTO @_
 
 Public API

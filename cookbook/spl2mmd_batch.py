@@ -8,7 +8,7 @@ The generated artifacts are ground-truth label data for seeding the Code RAG
 vectorDB — specifically the mmd→spl compiler direction.
 
 Usage examples:
-    # Single recipe → cookbook/05_self_refine/mermaid/{svg,png,pdf,...}
+    # Single recipe → cookbook/005_self_refine/mermaid/{svg,png,pdf,...}
     python cookbook/spl2mmd_batch.py --ids 05
 
     # Multiple recipes

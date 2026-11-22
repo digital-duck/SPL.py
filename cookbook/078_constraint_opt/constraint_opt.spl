@@ -17,9 +17,9 @@
 --
 -- Requires: pip install pulp
 -- Run:
---   spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+--   spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
 --       --llm claude_cli --param use_solver=true
---   spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+--   spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
 --       --llm claude_cli --param use_solver=false
 -- ============================================================
 
@@ -382,7 +382,7 @@ WORKFLOW constraint_opt
   INPUT @use_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
   INPUT @lang TEXT := "English"
-  INPUT @out_dir TEXT := "./cookbook/78_constraint_opt/output"
+  INPUT @out_dir TEXT := "./cookbook/078_constraint_opt/output"
   OUTPUT @report TEXT
 DO
   -- 0. Timing + run-id

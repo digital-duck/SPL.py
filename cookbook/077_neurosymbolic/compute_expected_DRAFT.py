@@ -1,6 +1,6 @@
 """
 Independently computes 'expected' ground-truth answers for the 20 math
-problems in cookbook/77_neurosymbolic/run_experiment.py, using SymPy
+problems in cookbook/077_neurosymbolic/run_experiment.py, using SymPy
 directly (not via any LLM or the SPL solver arm being evaluated).
 
 This is a draft for Wen to review problem-by-problem before it is wired

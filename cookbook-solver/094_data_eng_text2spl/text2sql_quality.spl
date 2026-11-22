@@ -37,9 +37,9 @@
 --
 -- Requires: stdlib sqlite3 only — no new pip dependency
 -- Run:
---   spl3 run cookbook/94_data_eng_text2spl/text2sql_quality.spl \
+--   spl3 run cookbook/094_data_eng_text2spl/text2sql_quality.spl \
 --       --llm claude_cli
---   spl3 run cookbook/94_data_eng_text2spl/text2sql_quality.spl \
+--   spl3 run cookbook/094_data_eng_text2spl/text2sql_quality.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -324,7 +324,7 @@ WORKFLOW text2sql_quality
   INPUT @stat_sql_b TEXT := "SELECT SUM(o.amount) * 1.0 / COUNT(*) FROM orders o JOIN customers c ON o.customer_id = c.id WHERE c.segment = 'Enterprise'"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/94_data_eng_text2spl/output"
+  INPUT @out_dir TEXT := "./cookbook/094_data_eng_text2spl/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

@@ -61,25 +61,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/38_bedrock_quickstart/bedrock_quickstart.spl \
+spl3 run cookbook/038_bedrock_quickstart/bedrock_quickstart.spl \
     --adapter bedrock \
     prompt="Explain the CAP theorem in two sentences."
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/38_bedrock_quickstart/langgraph/bedrock_langgraph.py \
+python cookbook/038_bedrock_quickstart/langgraph/bedrock_langgraph.py \
     --prompt "Explain the CAP theorem in two sentences."
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/38_bedrock_quickstart/autogen/bedrock_autogen.py \
+python cookbook/038_bedrock_quickstart/autogen/bedrock_autogen.py \
     --prompt "Explain the CAP theorem in two sentences."
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/38_bedrock_quickstart/crewai/bedrock_crewai.py \
+python cookbook/038_bedrock_quickstart/crewai/bedrock_crewai.py \
     --prompt "Explain the CAP theorem in two sentences."
 ```

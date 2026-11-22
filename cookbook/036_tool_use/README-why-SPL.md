@@ -58,25 +58,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/36_tool_use/tool_use.spl \
-    --adapter ollama --tools cookbook/36_tool_use/tools.py \
+spl3 run cookbook/036_tool_use/tool_use.spl \
+    --adapter ollama --tools cookbook/036_tool_use/tools.py \
     sales="1200,1450,1380,1600,1750,1900"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/36_tool_use/langgraph/tool_use_langgraph.py \
+python cookbook/036_tool_use/langgraph/tool_use_langgraph.py \
     --sales "1200,1450,1380,1600,1750,1900"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/36_tool_use/autogen/tool_use_autogen.py \
+python cookbook/036_tool_use/autogen/tool_use_autogen.py \
     --sales "1200,1450,1380,1600,1750,1900"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/36_tool_use/crewai/tool_use_crewai.py \
+python cookbook/036_tool_use/crewai/tool_use_crewai.py \
     --sales "1200,1450,1380,1600,1750,1900"
 ```

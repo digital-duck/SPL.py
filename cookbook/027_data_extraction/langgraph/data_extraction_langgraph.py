@@ -5,7 +5,7 @@ Pattern: select_schema → extract_data (one node)
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/27_data_extraction/langgraph/data_extraction_langgraph.py \
+    python cookbook/027_data_extraction/langgraph/data_extraction_langgraph.py \
         --text "Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 """
 
@@ -136,7 +136,7 @@ def build_graph():
 @click.option("--format",  default="general", show_default=True,
               type=click.Choice(["general", "invoice", "contract"]))
 @click.option("--model",   default="gemma3", show_default=True)
-@click.option("--log-dir", default="cookbook/27_data_extraction/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir", default="cookbook/027_data_extraction/langgraph/logs-langgraph", show_default=True)
 def main(text: str, format: str, model: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

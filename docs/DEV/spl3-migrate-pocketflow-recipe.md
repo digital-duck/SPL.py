@@ -197,8 +197,8 @@ Migrate after Tiers 1–4 are complete.
 | pocketflow-fastapi-{background,hitl,websocket} | FastAPI server wiring; no SPL workflow logic |
 | pocketflow-gradio-hitl | UI framework; use 41_human_steering as SPL reference |
 | pocketflow-streamlit-fsm | UI framework |
-| pocketflow-voice-chat | Audio I/O; covered by cookbook/60_voice_dialogue |
-| pocketflow-google-calendar | Generic tool; covered by cookbook/36_tool_use pattern |
+| pocketflow-voice-chat | Audio I/O; covered by cookbook/060_voice_dialogue |
+| pocketflow-google-calendar | Generic tool; covered by cookbook/036_tool_use pattern |
 | pocketflow-llm-streaming | Runtime concern; SPL abstracts streaming |
 
 ---

@@ -24,7 +24,7 @@ WORKFLOW review_code
         @code    TEXT,
         @lang    TEXT DEFAULT 'python',
         @review_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @feedback TEXT
 DO
     LOGGING f'[02_review_code] started | lang={@lang}' LEVEL INFO

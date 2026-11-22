@@ -1,6 +1,6 @@
 """
 Shared round-trip / back-substitution verification logic for the solver arm
-of the neurosymbolic experiment (cookbook/77_neurosymbolic).
+of the neurosymbolic experiment (cookbook/077_neurosymbolic).
 
 Design (Wen, 2026-07-16): rather than compare the solver's final result
 against a precomputed expected-answer table (form comparison), substitute

@@ -25,7 +25,7 @@
 --                             checks — the first two-axis badge sets.
 --
 -- Requires: bash cookbook/tools/lean/setup_lean.sh --with-mathlib
--- Run:      spl3 run cookbook/71_linalg_concept_book/lean_payoffs.spl
+-- Run:      spl3 run cookbook/071_linalg_concept_book/lean_payoffs.spl
 --               --kernel --llm claude_cli
 -- ============================================================
 

@@ -36,15 +36,15 @@ pip install pint
 
 ```bash
 # Default problem (kinematics: final speed after constant acceleration)
-spl3 run cookbook/83_unit_dimensional_check/unit_dimensional_check.spl \
+spl3 run cookbook/083_unit_dimensional_check/unit_dimensional_check.spl \
     --llm claude_cli
 
 # Unaided baseline arm
-spl3 run cookbook/83_unit_dimensional_check/unit_dimensional_check.spl \
+spl3 run cookbook/083_unit_dimensional_check/unit_dimensional_check.spl \
     --llm claude_cli --param enable_solver=false
 
 # Custom problem
-spl3 run cookbook/83_unit_dimensional_check/unit_dimensional_check.spl \
+spl3 run cookbook/083_unit_dimensional_check/unit_dimensional_check.spl \
     --llm claude_cli \
     --param problem="A 500 g mass falls from 3 meters. What is its speed in mph when it hits the ground (g = 9.8 m/s^2)?"
 

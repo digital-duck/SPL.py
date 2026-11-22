@@ -6,7 +6,7 @@ batch sentiment analysis pipeline managed by a Python-orchestrated flow.
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/31_sentiment_pipeline/crewai/sentiment_crewai.py \
+    python cookbook/031_sentiment_pipeline/crewai/sentiment_crewai.py \
         --items "Great product! | Terrible experience" --delimiter "|"
 """
 
@@ -149,7 +149,7 @@ def run(filename: str, items_raw: str, delimiter: str, domain: str, model: str, 
 @click.option("--delimiter", default="\\n",     show_default=True)
 @click.option("--domain",    default="general", show_default=True)
 @click.option("--model",     default="gemma3",  show_default=True)
-@click.option("--log-dir",   default="cookbook/31_sentiment_pipeline/crewai/logs-crewai", show_default=True)
+@click.option("--log-dir",   default="cookbook/031_sentiment_pipeline/crewai/logs-crewai", show_default=True)
 def main(filename: str, items: str, delimiter: str, domain: str, model: str, log_dir: str):
     result = run(filename, items, delimiter, domain, model, log_dir)
     print("\n" + "=" * 60)

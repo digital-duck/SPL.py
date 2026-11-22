@@ -3,11 +3,11 @@
 -- Demonstrates tool-augmented analysis, multi-criteria evaluation, and structured output.
 --
 -- Usage:
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama --model gemma3 code="$(cat myfile.py)"
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="$(cat main.go)" language="Go"
---   spl3 run cookbook/15_code_review/code_review.spl --adapter ollama code="def foo(x): return eval(x)" language="Python"
+--   spl3 run cookbook/015_code_review/code_review.spl --adapter ollama --model gemma3 code="$(cat myfile.py)"
+--   spl3 run cookbook/015_code_review/code_review.spl --adapter ollama code="$(cat main.go)" language="Go"
+--   spl3 run cookbook/015_code_review/code_review.spl --adapter ollama code="def foo(x): return eval(x)" language="Python"
 --
--- Logs written to @log_dir (default: cookbook/15_code_review/logs):
+-- Logs written to @log_dir (default: cookbook/015_code_review/logs):
 --   security.md    — security audit findings
 --   performance.md — performance analysis findings
 --   style.md       — style and best-practice findings
@@ -18,7 +18,7 @@ WORKFLOW code_review
     INPUT:
         @code     TEXT,
         @language TEXT,
-        @log_dir  TEXT DEFAULT 'cookbook/15_code_review/logs'
+        @log_dir  TEXT DEFAULT 'cookbook/015_code_review/logs'
     OUTPUT: @review TEXT
 DO
     LOGGING f'Code review | language={@language}' LEVEL INFO

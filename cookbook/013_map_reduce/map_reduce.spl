@@ -4,15 +4,15 @@
 -- Demonstrates the map-reduce pattern for handling content beyond context limits.
 --
 -- Usage:
---   spl3 run cookbook/13_map_reduce/map_reduce.spl --tools cookbook/13_map_reduce/tools.py --adapter ollama --model gemma3 document="$(cat large_doc.txt)"
---   spl3 run cookbook/13_map_reduce/map_reduce.spl --tools cookbook/13_map_reduce/tools.py --adapter ollama document="$(cat README.md)" style="bullet points"
---   spl3 run cookbook/13_map_reduce/map_reduce.spl --tools cookbook/13_map_reduce/tools.py --adapter ollama document="long text here..." style="executive brief"
+--   spl3 run cookbook/013_map_reduce/map_reduce.spl --tools cookbook/013_map_reduce/tools.py --adapter ollama --model gemma3 document="$(cat large_doc.txt)"
+--   spl3 run cookbook/013_map_reduce/map_reduce.spl --tools cookbook/013_map_reduce/tools.py --adapter ollama document="$(cat README.md)" style="bullet points"
+--   spl3 run cookbook/013_map_reduce/map_reduce.spl --tools cookbook/013_map_reduce/tools.py --adapter ollama document="long text here..." style="executive brief"
 --
 -- Tools: chunk_plan(), extract_chunk() are in tools.py (CALL, zero tokens).
 --        write_file(), read_file() are SPL built-ins — no --tools flag needed.
 --        summarize_chunk(), reduce_summaries(), quality_score(), improve_summary() call the LLM.
 --
--- Logs written to @log_dir (default: cookbook/13_map_reduce/logs):
+-- Logs written to @log_dir (default: cookbook/013_map_reduce/logs):
 --   chunk_00.md, chunk_01.md, ...    — raw extracted chunks
 --   summary_00.md, summary_01.md, ... — per-chunk LLM summaries
 --   final_summary.md                  — combined final summary
@@ -21,7 +21,7 @@ WORKFLOW map_reduce_summarizer
     INPUT:  
         @document TEXT, 
         @style TEXT,
-        @log_dir TEXT DEFAULT 'cookbook/13_map_reduce/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/013_map_reduce/logs-spl'
     OUTPUT: @final_summary TEXT
 DO
     @chunk_index := 0

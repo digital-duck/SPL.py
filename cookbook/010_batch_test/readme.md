@@ -19,10 +19,10 @@ Uses parallel CTEs to fan out all recipe × model combinations in a single workf
 
 ```bash
 # Default models (gemma3, llama3.2)
-spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama
+spl3 run cookbook/010_batch_test/batch_test.spl --adapter ollama
 
 # Custom models
-spl3 run cookbook/10_batch_test/batch_test.spl --adapter ollama \
+spl3 run cookbook/010_batch_test/batch_test.spl --adapter ollama \
     model_1=gemma3 model_2=mistral
 ```
 
@@ -45,16 +45,16 @@ Sequential nested loop — good for CI/CD where shell exit codes matter.
 
 ```bash
 # Full test: all recipes x default models (gemma3, llama3.2)
-bash cookbook/10_batch_test/batch_test.sh
+bash cookbook/010_batch_test/batch_test.sh
 
 # Single model
-MODELS="gemma3" bash cookbook/10_batch_test/batch_test.sh
+MODELS="gemma3" bash cookbook/010_batch_test/batch_test.sh
 
 # Dry run with echo adapter (no Ollama needed)
-ADAPTER=echo bash cookbook/10_batch_test/batch_test.sh
+ADAPTER=echo bash cookbook/010_batch_test/batch_test.sh
 
 # Custom model set
-MODELS="gemma3 llama3.2 phi3" bash cookbook/10_batch_test/batch_test.sh \
+MODELS="gemma3 llama3.2 phi3" bash cookbook/010_batch_test/batch_test.sh \
     2>&1 | tee cookbook/out/10_batch_test-$(date +%Y%m%d_%H%M%S).md 
 ```
 

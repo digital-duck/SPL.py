@@ -33,9 +33,9 @@
 --
 -- Requires: pip install python-constraint
 -- Run:
---   spl3 run cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl \
+--   spl3 run cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl \
 --       --llm claude_cli
---   spl3 run cookbook/82_logic_puzzle_solver/logic_puzzle_solver.spl \
+--   spl3 run cookbook/082_logic_puzzle_solver/logic_puzzle_solver.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -277,7 +277,7 @@ WORKFLOW logic_puzzle_solver
   INPUT @problem TEXT := "There are 3 houses in a row, numbered 1 to 3 from left to right. Each house has a unique color (Red, Green, Blue), is occupied by a person of a unique nationality (Brit, Swede, Dane), and that person drinks a unique beverage (Tea, Coffee, Milk). Clues: (1) The Brit lives in the Red house. (2) The Swede drinks Tea. (3) The Dane lives in house 1. (4) The owner of the Green house drinks Coffee. (5) The Blue house is house 2. Who drinks Coffee?"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/82_logic_puzzle_solver/output"
+  INPUT @out_dir TEXT := "./cookbook/082_logic_puzzle_solver/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

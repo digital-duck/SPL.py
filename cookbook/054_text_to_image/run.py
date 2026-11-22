@@ -18,14 +18,14 @@ Backends
 Usage
 -----
   # Minimal — gpt-image-1 with default prompt
-  python cookbook/54_text_to_image/run.py --prompt "A fox in a moonlit forest"
+  python cookbook/054_text_to_image/run.py --prompt "A fox in a moonlit forest"
 
   # With prompt enhancement via Gemma4
-  python cookbook/54_text_to_image/run.py \\
+  python cookbook/054_text_to_image/run.py \\
       --prompt "A fox in a forest" --enhance --style "oil painting"
 
   # Landscape aspect, high quality
-  python cookbook/54_text_to_image/run.py \\
+  python cookbook/054_text_to_image/run.py \\
       --prompt "Tokyo skyline at night" \\
       --aspect landscape --quality high
 """
@@ -176,7 +176,7 @@ async def run(
               type=click.Choice(["gpt-image-1"]))
 @click.option("--llm-model",   default="gemma4:12b", show_default=True,
               help="Ollama model for prompt enhancement")
-@click.option("--output-dir",  default="cookbook/54_text_to_image/outputs", show_default=True)
+@click.option("--output-dir",  default="cookbook/054_text_to_image/outputs", show_default=True)
 def main(prompt, style, aspect, quality, enhance, model, llm_model, output_dir) -> None:
     """Recipe 52 — Text to Image (SPL 3.0 multimodal output)."""
     out_dir = Path(output_dir)

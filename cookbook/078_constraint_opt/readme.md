@@ -111,7 +111,7 @@ Each recipe is self-contained. The SPL structure is identical — only the tool 
 
 ```bash
 # Default problem (bakery production planning) — solver ON
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli
 
 
@@ -120,18 +120,18 @@ export PROBLEM="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tab
 
 
 # solver ON (default)
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
     --param problem="$PROBLEM"
 
 # solver OFF — LLM baseline for ablation comparison
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
     --param use_solver=false \
     --param problem="$PROBLEM"
 
 # More repair attempts (default 3)
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli \
     --param max_tries=5 \
     --param problem="$PROBLEM"
@@ -287,7 +287,7 @@ The `use_solver` ablation on the chairs-and-tables factory problem (claude-sonne
 | `use_solver` | TEXT | `"true"` | `"true"` = PuLP/CBC pipeline; `"false"` = LLM-only baseline |
 | `max_tries` | INTEGER | `3` | Max LLM repair attempts before giving up (solver=ON only) |
 | `lang` | TEXT | `"English"` | Output language for interpretation |
-| `out_dir` | TEXT | `./cookbook/78_constraint_opt/output` | Directory for the generated report |
+| `out_dir` | TEXT | `./cookbook/078_constraint_opt/output` | Directory for the generated report |
 
 ## Exception handling
 
@@ -310,7 +310,7 @@ The same `GENERATE → SOLVE → ASSERT → WHILE` pattern replicates directly t
 
 ## Experiment runner
 
-`run_experiment.py` is the systematic harness for the solver=ON vs solver=OFF ablation study. It follows the same design as `cookbook/77_neurosymbolic/run_experiment.py` — SQLite persistence, multi-axis CLI, streaming output.
+`run_experiment.py` is the systematic harness for the solver=ON vs solver=OFF ablation study. It follows the same design as `cookbook/077_neurosymbolic/run_experiment.py` — SQLite persistence, multi-axis CLI, streaming output.
 
 ### Axes
 
@@ -331,54 +331,54 @@ conda activate spl123
 cd ~/projects/digital-duck/SPL.py
 
 # List all available recipe and model IDs
-python cookbook/78_constraint_opt/run_experiment.py --list
+python cookbook/078_constraint_opt/run_experiment.py --list
 
 # H1: one recipe, one model, default scale, both arms
-bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05
-# bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m002 -n n05
+bash cookbook/078_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05
+# bash cookbook/078_constraint_opt/run_experiment.sh -r r78d -m m002 -n n05
 
 # H2: run 4 recipes with claude/gemma3 for size=10,20
-bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s true
-# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-175154.md
+bash cookbook/078_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s true
+# Log: cookbook/078_constraint_opt/logs/recipe-78-log-20260830-175154.md
 
 
 # solver=OFF tax heavily on LLM
 LLM_TIMEOUT=1800 \
-   bash cookbook/78_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s false
+   bash cookbook/078_constraint_opt/run_experiment.sh -m m001 -n n05,n10,n20 -s false
 # 4/12 done
 
 # run in smaller batch to avoid session limit
 # Batch 2 — r78b n10,n20 (2 cells)
-LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78b -m m001 -n n10,n20 -s false
-# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-202050.md
+LLM_TIMEOUT=1800 bash cookbook/078_constraint_opt/run_experiment.sh -r r78b -m m001 -n n10,n20 -s false
+# Log: cookbook/078_constraint_opt/logs/recipe-78-log-20260830-202050.md
 
 # Batch 3 — r78c all sizes (3 cells)
-LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78c -m m001 -n n05,n10,n20 -s false
-# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-203434.md
+LLM_TIMEOUT=1800 bash cookbook/078_constraint_opt/run_experiment.sh -r r78c -m m001 -n n05,n10,n20 -s false
+# Log: cookbook/078_constraint_opt/logs/recipe-78-log-20260830-203434.md
 
 # Batch 4 — r78d all sizes (3 cells)
-LLM_TIMEOUT=1800 bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05,n10,n20 -s false
-# Log: cookbook/78_constraint_opt/logs/recipe-78-log-20260830-204031.md
+LLM_TIMEOUT=1800 bash cookbook/078_constraint_opt/run_experiment.sh -r r78d -m m001 -n n05,n10,n20 -s false
+# Log: cookbook/078_constraint_opt/logs/recipe-78-log-20260830-204031.md
 
 
 LLM_TIMEOUT=1800 \
-   bash cookbook/78_constraint_opt/run_experiment.sh -m m001,m002 -n n05,n10,n20 -s false
+   bash cookbook/078_constraint_opt/run_experiment.sh -m m001,m002 -n n05,n10,n20 -s false
 
-# see /home/papagame/projects/digital-duck/SPL.py/cookbook/78_constraint_opt/logs/recipe-78-log-20260830-131237.md
+# see /home/papagame/projects/digital-duck/SPL.py/cookbook/078_constraint_opt/logs/recipe-78-log-20260830-131237.md
 
 # Full H2 scale-sensitivity study (all recipes, all scales)
-bash cookbook/78_constraint_opt/run_experiment.sh \
+bash cookbook/078_constraint_opt/run_experiment.sh \
     -r r78a,r78b,r78c,r78d -m m001 -n n05,n10,n20
 
 # Swap to gemma3 for model comparison
 MODELS="m001 m002" SIZES="n05 n10" \
-    bash cookbook/78_constraint_opt/run_experiment.sh -r r78d
+    bash cookbook/078_constraint_opt/run_experiment.sh -r r78d
 
 # solver=ON only (ground-truth pass to establish known optima)
-bash cookbook/78_constraint_opt/run_experiment.sh -r r78d -m m001 -n n10,n20 -s true
+bash cookbook/078_constraint_opt/run_experiment.sh -r r78d -m m001 -n n10,n20 -s true
 
 # Dry run — shows commands without executing
-python cookbook/78_constraint_opt/run_experiment.py \
+python cookbook/078_constraint_opt/run_experiment.py \
     -r r78a,r78d -m m001,m002 -n n05,n10 --dry-run
 ```
 

@@ -194,7 +194,7 @@ Keep the Action Items section under 150 words."""
             logger.error(f"Error getting response from {agent.name}: {str(e)}")
             return f"[ERROR] Agent {agent.name} failed: {str(e)}"
 
-    async def run_parallel_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+    async def run_parallel_review(self, code: str, lang: str = "python", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
         """Run parallel code review workflow - main entry point"""
         try:
             logger.info(f"[parallel_code_review] starting 3-way parallel review | lang={lang} review_model={self.review_model}")
@@ -234,7 +234,7 @@ Keep the Action Items section under 150 words."""
             else:
                 raise
 
-def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/63_parallel_code_review/logs-spl") -> str:
+def parallel_code_review(code: str, lang: str = "python", review_model: str = "gemma4", log_dir: str = "cookbook/063_parallel_code_review/logs-spl") -> str:
     """Main function equivalent to SPL workflow parallel_code_review"""
     reviewer = ParallelCodeReview(review_model)
     return asyncio.run(reviewer.run_parallel_review(code, lang, log_dir))

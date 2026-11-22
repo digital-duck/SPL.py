@@ -12,13 +12,13 @@
 -- in the K most relevant chunks for that specific question.
 --
 -- Usage (local Ollama):
---   spl3 run cookbook/97_pdf_digest_rag/pdf_digest_rag.spl \
+--   spl3 run cookbook/097_pdf_digest_rag/pdf_digest_rag.spl \
 --       --adapter ollama --model gemma3 \
 --       -p pdf_url=https://arxiv.org/pdf/2607.07727
 --
 -- Usage (momagrid hub for LLM, local Ollama for embeddings):
 --   spl3 --hub http://192.168.0.177:9000 \
---       run cookbook/97_pdf_digest_rag/pdf_digest_rag.spl \
+--       run cookbook/097_pdf_digest_rag/pdf_digest_rag.spl \
 --       --adapter momagrid --model gemma3 \
 --       -p pdf_url=/path/to/doc.pdf
 --

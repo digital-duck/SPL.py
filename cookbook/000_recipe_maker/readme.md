@@ -27,34 +27,34 @@ Always pass `--tools tools.py`:
 
 ```bash
 # Minimal — concept only
-spl3 run cookbook/00_recipe_maker/recipe_maker.spl \
+spl3 run cookbook/000_recipe_maker/recipe_maker.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/00_recipe_maker/tools.py \
+    --tools cookbook/000_recipe_maker/tools.py \
     concept="Customer churn predictor with SHAP explainability" \
     output_dir="cookbook/38_churn_predictor/"
 
 # With existing dataset
-spl3 run cookbook/00_recipe_maker/recipe_maker.spl \
+spl3 run cookbook/000_recipe_maker/recipe_maker.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/00_recipe_maker/tools.py \
+    --tools cookbook/000_recipe_maker/tools.py \
     concept="Resume screener for software engineering roles" \
     dataset="data/resumes.json" \
     output_dir="cookbook/39_resume_screener/"
 
 # With reference material
-spl3 run cookbook/00_recipe_maker/recipe_maker.spl \
+spl3 run cookbook/000_recipe_maker/recipe_maker.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/00_recipe_maker/tools.py \
+    --tools cookbook/000_recipe_maker/tools.py \
     concept="Legal contract risk analyser" \
     resources="references/legal_risk_taxonomy.md" \
     output_dir="cookbook/40_contract_risk/"
 
 # Regenerate an existing recipe (iterate mode)
-spl3 run cookbook/00_recipe_maker/recipe_maker.spl \
+spl3 run cookbook/000_recipe_maker/recipe_maker.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/00_recipe_maker/tools.py \
+    --tools cookbook/000_recipe_maker/tools.py \
     concept="Improve recipe 28 support triage with priority routing" \
-    dataset="cookbook/28_support_triage/orders.json" \
+    dataset="cookbook/028_support_triage/orders.json" \
     output_dir="cookbook/28_support_triage_v2/"
 ```
 

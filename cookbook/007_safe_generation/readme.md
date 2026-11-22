@@ -21,14 +21,14 @@ response(prompt)
 ## Usage
 
 ```bash
-spl3 run cookbook/07_safe_generation/safe_generation.spl --adapter ollama \
+spl3 run cookbook/007_safe_generation/safe_generation.spl --adapter ollama \
     --model phi4 prompt="Explain how internet works" \
     2>&1 | tee cookbook/out/07_safe_generation-$(date +%Y%m%d_%H%M%S).md 
 
-spl3 run cookbook/07_safe_generation/safe_generation.spl --adapter ollama \
+spl3 run cookbook/007_safe_generation/safe_generation.spl --adapter ollama \
     prompt="What are the trade-offs of microservices?"
 
-spl3 run cookbook/07_safe_generation/safe_generation.spl --adapter claude_cli \
+spl3 run cookbook/007_safe_generation/safe_generation.spl --adapter claude_cli \
     prompt="Summarise the history of the internet"
 ```
 

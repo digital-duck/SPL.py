@@ -81,7 +81,7 @@ is unchanged.
     "problem": "integrate the square root of (4 minus x squared)",
     "solver":  "true",
     "run":     1,
-    "script":  "cookbook/67_symbolic_math/sympy_llm.spl"
+    "script":  "cookbook/067_symbolic_math/sympy_llm.spl"
   },
   ...
 ]
@@ -99,15 +99,15 @@ Extracted from the existing `stream_run` + RESULT-tag logic inside
 
 **Interface:**
 ```
-python cookbook/67_symbolic_math/run_cell.py \
+python cookbook/067_symbolic_math/run_cell.py \
     --job     '{"mid":"m002","pid":"p007","solver":"true",...}'  \
-    --log     cookbook/67_symbolic_math/logs-spl/run-<timestamp>.md \
-    --log-dir cookbook/67_symbolic_math/logs-spl
+    --log     cookbook/067_symbolic_math/logs-spl/run-<timestamp>.md \
+    --log-dir cookbook/067_symbolic_math/logs-spl
 ```
 
 Or via a job-file index:
 ```
-python cookbook/67_symbolic_math/run_cell.py --jobs jobs.json --index 42 --log ...
+python cookbook/067_symbolic_math/run_cell.py --jobs jobs.json --index 42 --log ...
 ```
 
 **Responsibilities:**

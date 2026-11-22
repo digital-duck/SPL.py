@@ -31,23 +31,23 @@
 --   select_winner(candidates, scores)    — argmax: deterministic, zero tokens
 --
 -- Usage:
---   spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+--   spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
 --       --adapter ollama \
---       --tools cookbook/20_ensemble_voting/tools.py \
+--       --tools cookbook/020_ensemble_voting/tools.py \
 --       question="What causes inflation?"
 --
---   spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+--   spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
 --       --adapter ollama \
---       --tools cookbook/20_ensemble_voting/tools.py \
+--       --tools cookbook/020_ensemble_voting/tools.py \
 --       question="Is Rust faster than C++?" \
 --       models="llama3.2,qwen2.5,gemma3,mistral" \
 --       polish_model="deepseek-r1" \
 --       n_candidates=7
 --
 --   # Positional mode — reproducible, each model gets one turn as generator
---   spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+--   spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
 --       --adapter ollama \
---       --tools cookbook/20_ensemble_voting/tools.py \
+--       --tools cookbook/020_ensemble_voting/tools.py \
 --       question="What is the best database for time-series data?" \
 --       random_selection=false
 
@@ -122,7 +122,7 @@ WORKFLOW ensemble_voting_v2
         @random_selection  BOOL    DEFAULT TRUE,
         @consensus_model   TEXT    DEFAULT 'qwen2.5',
         @polish_model      TEXT    DEFAULT 'deepseek-r1',
-        @log_dir           TEXT    DEFAULT 'cookbook/20_ensemble_voting/logs-spl'
+        @log_dir           TEXT    DEFAULT 'cookbook/020_ensemble_voting/logs-spl'
     OUTPUT: @final_answer TEXT
 DO
     LOGGING f'Ensemble v2 | question={@question} | n={@n_candidates} | random={@random_selection} | models={@models}' LEVEL INFO

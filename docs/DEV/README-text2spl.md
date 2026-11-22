@@ -31,8 +31,8 @@ The critical one for code generation is **Section 0: High-level Description** â€
 and key conventions of the script.
 
 ```bash
-spl3 describe cookbook/05_self_refine/self_refine.spl --adapter claude_cli
-# Writes: cookbook/05_self_refine/self_refine-spec.md
+spl3 describe cookbook/005_self_refine/self_refine.spl --adapter claude_cli
+# Writes: cookbook/005_self_refine/self_refine-spec.md
 ```
 
 Section 0 from this example reads like:
@@ -102,7 +102,7 @@ spl3 code-rag stats
 # test
 spl3 text2spl "self-refine a product description with writer and critic" \
     --mode workflow --adapter claude_cli \
-    -o cookbook/05_self_refine/self_refine-product_gen.spl 
+    -o cookbook/005_self_refine/self_refine-product_gen.spl 
 ```
 
 > The `-spec.md` files in the cookbook are the source of truth â€” as long as those
@@ -170,7 +170,7 @@ regenerated before re-seeding so the RAG store reflects the new truth.
 
 ```bash
 # 1. Re-describe the changed recipe, overwriting the stale spec
-spl3 describe cookbook/05_self_refine/self_refine.spl --adapter claude_cli
+spl3 describe cookbook/005_self_refine/self_refine.spl --adapter claude_cli
 
 # 2. Re-seed the full store (picks up the updated Section 0)
 spl3 code-rag seed cookbook/ --from-specs

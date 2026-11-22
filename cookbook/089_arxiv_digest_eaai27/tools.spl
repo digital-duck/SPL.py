@@ -3,9 +3,9 @@
 --
 -- Reused as-is from earlier recipes (attributed per function):
 --   download_arxiv_pdf, semantic_chunk_plan, list_count, parse_urls
---     — cookbook/47_arxiv_morning_brief/tools.spl
+--     — cookbook/047_arxiv_morning_brief/tools.spl
 --   extract_arxiv_id, lookup_arxiv, json_field
---     — cookbook/72_verify_arxiv_references/verify_arxiv_references.spl
+--     — cookbook/072_verify_arxiv_references/verify_arxiv_references.spl
 -- New for this recipe: get_chunk_field, append_json_array,
 --   make_run_dir, save_pdf_copy, save_chunks (debug/out_dir logging)
 --
@@ -41,7 +41,7 @@ def semantic_chunk_plan(pdf_path: str, max_chars: str) -> str:
         raise RuntimeError(f"PDF not found: {pdf_path}")
 
     # Default 200_000 chars — raised from the 40_000 originally inherited from
-    # cookbook/47_arxiv_morning_brief/tools.spl, which silently truncated
+    # cookbook/047_arxiv_morning_brief/tools.spl, which silently truncated
     # mid-paper and dropped trailing sections entirely (confirmed 2026-08-19: a
     # 54,945-char paper had its Conclusion section, starting at offset 48,484,
     # cut off before the header regex below ever saw it). Now caller-tunable —

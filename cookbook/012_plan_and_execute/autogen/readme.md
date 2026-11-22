@@ -20,9 +20,9 @@ ollama pull gemma3   # or any model you prefer
 
 ```bash
 # From SPL20/ root
-python cookbook/12_plan_and_execute/autogen/plan_execute_autogen.py \
+python cookbook/012_plan_and_execute/autogen/plan_execute_autogen.py \
     --task "Build a simple URL shortener in Python" \
-    --output-dir "cookbook/12_plan_and_execute/autogen/output"
+    --output-dir "cookbook/012_plan_and_execute/autogen/output"
 ```
 
 ## Validate
@@ -46,17 +46,17 @@ FINAL REPORT:
 <summary report text>
 ```
 
-Check output files in `cookbook/12_plan_and_execute/autogen/output`.
-Check logs in `cookbook/12_plan_and_execute/autogen/logs-autogen`.
+Check output files in `cookbook/012_plan_and_execute/autogen/output`.
+Check logs in `cookbook/012_plan_and_execute/autogen/logs-autogen`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/12_plan_and_execute/tools.py \
+    --tools cookbook/012_plan_and_execute/tools.py \
     task="Build a simple URL shortener in Python" \
-    output_dir="cookbook/12_plan_and_execute/output"
+    output_dir="cookbook/012_plan_and_execute/output"
 ```
 
 ## LOC comparison

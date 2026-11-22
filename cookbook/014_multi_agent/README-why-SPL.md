@@ -58,25 +58,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/14_multi_agent/multi_agent.spl \
+spl3 run cookbook/014_multi_agent/multi_agent.spl \
     --adapter ollama --model gemma3 \
     topic="Impact of AI on healthcare"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/14_multi_agent/langgraph/multi_agent_langgraph.py \
+python cookbook/014_multi_agent/langgraph/multi_agent_langgraph.py \
     --topic "Impact of AI on healthcare"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/14_multi_agent/autogen/multi_agent_autogen.py \
+python cookbook/014_multi_agent/autogen/multi_agent_autogen.py \
     --topic "Impact of AI on healthcare"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/14_multi_agent/crewai/multi_agent_crewai.py \
+python cookbook/014_multi_agent/crewai/multi_agent_crewai.py \
     --topic "Impact of AI on healthcare"
 ```

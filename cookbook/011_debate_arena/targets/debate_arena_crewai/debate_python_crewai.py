@@ -155,7 +155,7 @@ Declare a winner (PRO or CON) and explain your reasoning in 2-3 paragraphs."""
 def debate_arena(
     topic: str = "AI should be open-sourced",           # SPL: @topic TEXT DEFAULT ...
     max_rounds: int = 3,                                 # SPL: @max_rounds INTEGER DEFAULT 3
-    log_dir: str = "cookbook/11_debate_arena/logs-crewai",  # SPL: @log_dir TEXT DEFAULT ...
+    log_dir: str = "cookbook/011_debate_arena/logs-crewai",  # SPL: @log_dir TEXT DEFAULT ...
     llm=None,
 ) -> dict:
     """
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Debate Arena — CrewAI")
     ap.add_argument("--topic",      default="AI should be open-sourced")
     ap.add_argument("--max-rounds", type=int, default=3)
-    ap.add_argument("--log-dir",    default="cookbook/11_debate_arena/logs-crewai")
+    ap.add_argument("--log-dir",    default="cookbook/011_debate_arena/logs-crewai")
     ap.add_argument(
         "--model",
         default=None,

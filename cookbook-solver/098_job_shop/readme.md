@@ -38,13 +38,13 @@ The challenge: Job 1 needs M1 first, but Job 2 also needs M1 (second step). They
 export PROBLEM="3 jobs, 3 machines. Job1: M1(3)→M2(2)→M3(2). Job2: M2(2)→M1(3)→M3(1). Job3: M3(2)→M2(1)→M1(2). Minimize makespan."
 
 # solver=ON, claude_cli
-spl3 run cookbook/98_job_shop/job_shop.spl \
+spl3 run cookbook/098_job_shop/job_shop.spl \
   --llm claude_cli \
   --param use_solver=true \
   --param problem="$PROBLEM"
 
 # solver=OFF
-spl3 run cookbook/98_job_shop/job_shop.spl \
+spl3 run cookbook/098_job_shop/job_shop.spl \
   --llm claude_cli \
   --param use_solver=false \
   --param problem="$PROBLEM"

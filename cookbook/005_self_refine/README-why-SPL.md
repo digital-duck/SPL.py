@@ -24,7 +24,7 @@ WORKFLOW self_refine
     @max_iterations INTEGER DEFAULT 5,
     @writer_model  TEXT    DEFAULT 'gemma3',
     @critic_model  TEXT    DEFAULT 'llama3.2',
-    @log_dir       TEXT    DEFAULT 'cookbook/05_self_refine/logs'
+    @log_dir       TEXT    DEFAULT 'cookbook/005_self_refine/logs'
   OUTPUT: @result TEXT
 DO
   GENERATE draft(@task)   USING MODEL @writer_model INTO @current
@@ -55,27 +55,27 @@ Key SPL features at work:
 ### Ollama (local, free)
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter ollama \
     task="Write an executive summary of the benefits of SPL" \
     max_iterations=3 \
     output_budget=2000 \
     writer_model=gemma3 \
     critic_model=llama3.2 \
-    log_dir=cookbook/05_self_refine/logs-spl
+    log_dir=cookbook/005_self_refine/logs-spl
 ```
 
 ### Claude (claude_cli adapter — uses Claude Code subscription)
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter claude_cli \
     task="Who is Srinivasa Ramanujan" \
     max_iterations=3 \
     output_budget=3000 \
     writer_model=claude-sonnet-4-6 \
     critic_model=claude-sonnet-4-6 \
-    log_dir=cookbook/05_self_refine/logs-ramanujan
+    log_dir=cookbook/005_self_refine/logs-ramanujan
 ```
 
 ### OpenAI
@@ -86,14 +86,14 @@ spl3 run cookbook/05_self_refine/self_refine.spl \
 
 ```bash
 export OPENAI_API_KEY=sk-...
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter openai \
     task="How does Transformer work in deep learning" \
     max_iterations=3 \
     output_budget=2000 \
     writer_model=gpt-4o \
     critic_model=gpt-4o-mini \
-    log_dir=cookbook/05_self_refine/logs-openai
+    log_dir=cookbook/005_self_refine/logs-openai
 ```
 
 ### Anthropic API
@@ -103,14 +103,14 @@ spl3 run cookbook/05_self_refine/self_refine.spl \
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter anthropic \
     task="How does Transformer work in deep learning" \
     max_iterations=3 \
     output_budget=2000 \
     writer_model=claude-sonnet-4-5-20250929 \
     critic_model=claude-haiku-4-5-20251001 \
-    log_dir=cookbook/05_self_refine/logs-anthropic
+    log_dir=cookbook/005_self_refine/logs-anthropic
 ```
 
 ### OpenRouter
@@ -120,23 +120,23 @@ spl3 run cookbook/05_self_refine/self_refine.spl \
 
 ```bash
 export OPENROUTER_API_KEY=sk-or-...
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter openrouter \
     task="How does Transformer work in deep learning" \
     max_iterations=3 \
     output_budget=2000 \
     writer_model=anthropic/claude-sonnet-4.6 \
     critic_model=anthropic/claude-haiku-4.5 \
-    log_dir=cookbook/05_self_refine/logs-openrouter
+    log_dir=cookbook/005_self_refine/logs-openrouter
 ```
 
 ### Global model override (all GENERATE calls use the same model)
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl \
+spl3 run cookbook/005_self_refine/self_refine.spl \
     --adapter ollama --model gemma3 \
     task="Explain recursion" \
-    log_dir=cookbook/05_self_refine/logs-gemma3
+    log_dir=cookbook/005_self_refine/logs-gemma3
 ```
 
 ---

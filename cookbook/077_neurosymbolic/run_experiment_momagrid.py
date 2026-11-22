@@ -18,8 +18,8 @@ Key differences from run_experiment.py:
 
 Run with:
   export MOMAGRID_HUB_URL=http://192.168.0.184:9000
-  python cookbook/77_neurosymbolic/run_experiment_momagrid.py              # 400 cells, 6 workers
-  python cookbook/77_neurosymbolic/run_experiment_momagrid.py -m m001 -p p021 --workers 2   # smoke test
+  python cookbook/077_neurosymbolic/run_experiment_momagrid.py              # 400 cells, 6 workers
+  python cookbook/077_neurosymbolic/run_experiment_momagrid.py -m m001 -p p021 --workers 2   # smoke test
 
 Expected speedup vs run_experiment.py (sequential):
   - Wall-clock time ≈ (total_cells / num_workers) × avg_cell_latency
@@ -159,7 +159,7 @@ _SPL3_BIN = _find_spl3()
 import click
 
 # ── SQLite persistence ────────────────────────────────────────────────────────
-DB_PATH_DEFAULT = "cookbook/77_neurosymbolic/experiment_results.db"
+DB_PATH_DEFAULT = "cookbook/077_neurosymbolic/experiment_results.db"
 
 # Pass criteria, per arm and rung:
 #   solver + sympy/sage — the chain verified end-to-end
@@ -406,8 +406,8 @@ DISABLED_PROBLEMS: set[str] = {
 }
 
 BACKENDS = ("sympy", "sage", "lean")
-SCRIPT_DEFAULT = "cookbook/77_neurosymbolic/symbolic_math.spl"
-LOG_DIR_DEFAULT = "cookbook/77_neurosymbolic/logs-spl"
+SCRIPT_DEFAULT = "cookbook/077_neurosymbolic/symbolic_math.spl"
+LOG_DIR_DEFAULT = "cookbook/077_neurosymbolic/logs-spl"
 
 
 def stream_run(cmd: list, log_file) -> tuple:

@@ -5,7 +5,7 @@ Pattern: keyword_prescreen → llm_classify_input → pii_detect_redact → safe
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/18_guardrails/langgraph/guardrails_langgraph.py \
+    python cookbook/018_guardrails/langgraph/guardrails_langgraph.py \
         --user-input "My SSN is 123-45-6789, help me file taxes"
 """
 
@@ -211,7 +211,7 @@ def build_graph():
 @click.command()
 @click.option("--user-input", required=True,    help="User message to process")
 @click.option("--model",      default="gemma3", show_default=True)
-@click.option("--log-dir",    default="cookbook/18_guardrails/langgraph/logs-langgraph", show_default=True)
+@click.option("--log-dir",    default="cookbook/018_guardrails/langgraph/logs-langgraph", show_default=True)
 def main(user_input: str, model: str, log_dir: str):
     Path(log_dir).mkdir(parents=True, exist_ok=True)
 

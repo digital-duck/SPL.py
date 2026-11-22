@@ -34,7 +34,7 @@ WORKFLOW extract_spec
     INPUT:
         @code    TEXT,
         @extract_model   TEXT DEFAULT 'gemma4',
-        @log_dir TEXT DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir TEXT DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @out_spec TEXT
 DO
     LOGGING '[06_extract_spec] reverse-engineering spec from implementation ...' LEVEL INFO

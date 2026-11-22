@@ -70,25 +70,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/47_arxiv_morning_brief/arxiv_morning_brief.spl \
-    --adapter ollama --model gemma3 --tools cookbook/47_arxiv_morning_brief/tools.py \
+spl3 run cookbook/047_arxiv_morning_brief/arxiv_morning_brief.spl \
+    --adapter ollama --model gemma3 --tools cookbook/047_arxiv_morning_brief/tools.py \
     urls="https://arxiv.org/pdf/2501.12948"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/47_arxiv_morning_brief/langgraph/arxiv_langgraph.py \
+python cookbook/047_arxiv_morning_brief/langgraph/arxiv_langgraph.py \
     --urls "https://arxiv.org/pdf/2501.12948"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/47_arxiv_morning_brief/autogen/arxiv_autogen.py \
+python cookbook/047_arxiv_morning_brief/autogen/arxiv_autogen.py \
     --urls "https://arxiv.org/pdf/2501.12948"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/47_arxiv_morning_brief/crewai/arxiv_crewai.py \
+python cookbook/047_arxiv_morning_brief/crewai/arxiv_crewai.py \
     --urls "https://arxiv.org/pdf/2501.12948"
 ```

@@ -25,7 +25,7 @@ _MODULE_CACHE: dict[str, object] = {}
 
 
 def _cb_module(name: str):
-    """Import a module from the cookbook/74_concept_book/ directory (cached)."""
+    """Import a module from the cookbook/074_concept_book/ directory (cached)."""
     if name not in _MODULE_CACHE:
         import importlib.util
         spec = importlib.util.spec_from_file_location(name, _CB_DIR / f"{name}.py")
@@ -58,7 +58,7 @@ def _domain_id_from_yaml(domain_yaml: str) -> str:
 
     Handles two conventions:
     - A bare filename like 'mechanics_graph.yaml', resolved by
-      graph_lib.load_domain() against SPL.py's own cookbook/74_concept_book
+      graph_lib.load_domain() against SPL.py's own cookbook/074_concept_book
       directory -- domain_id is the filename with '_graph.yaml'/'.yaml' stripped.
     - An absolute path like '.../public/domains/{domain_id}/input/graph.yaml',
       used for domains synced from an external pipeline (e.g. concept-book-press)

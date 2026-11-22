@@ -81,7 +81,7 @@ WORKFLOW code_pipeline
         @task_models   MAP     DEFAULT {},
         @max_cycles    INTEGER DEFAULT 3,
         @check_closure BOOL    DEFAULT TRUE,
-        @log_dir       TEXT    DEFAULT 'cookbook/50_code_pipeline/logs-spl'
+        @log_dir       TEXT    DEFAULT 'cookbook/050_code_pipeline/logs-spl'
     OUTPUT: @docs TEXT
 DO
     -- ── Resolve per-task models (task_models overrides @pipeline_model per step) ──

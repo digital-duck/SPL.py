@@ -5,7 +5,7 @@ Pattern: Fan-out (Parallel nodes) → Synthesize
 
 Usage:
     pip install langgraph langchain-aws
-    python cookbook/38_bedrock_quickstart/langgraph/bedrock_langgraph.py \\
+    python cookbook/038_bedrock_quickstart/langgraph/bedrock_langgraph.py \\
         --prompt "Explain the CAP theorem in two sentences."
 """
 
@@ -112,7 +112,7 @@ def build_graph():
 @click.option("--model_2", default="anthropic.claude-haiku-4-5")
 @click.option("--model_3", default="amazon.nova-pro")
 @click.option("--judge_model", default="gemma3")
-@click.option("--log-dir", default="cookbook/38_bedrock_quickstart/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/038_bedrock_quickstart/logs-langgraph", help="Log directory")
 def main(prompt, model_1, model_2, model_3, judge_model, log_dir):
     """Bedrock Quickstart — LangGraph edition"""
     build_graph().invoke({

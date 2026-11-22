@@ -5,7 +5,7 @@ Demonstrates the natural language → SPL 3.0 compiler. Given a plain-English de
 ## Usage
 
 ```bash
-bash cookbook/22_text2spl_demo/text2spl_demo.sh [adapter] [model]
+bash cookbook/022_text2spl_demo/text2spl_demo.sh [adapter] [model]
 ```
 
 Default adapter: `ollama`, default model: `gemma3`.
@@ -28,8 +28,8 @@ Default adapter: `ollama`, default model: `gemma3`.
 
 ## Output
 
-Generated `.spl` files are written to `cookbook/22_text2spl_demo/generated/` and validated with `spl validate`. To run a generated file:
+Generated `.spl` files are written to `cookbook/022_text2spl_demo/generated/` and validated with `spl validate`. To run a generated file:
 
 ```bash
-spl3 run cookbook/22_text2spl_demo/generated/summarize.spl --adapter ollama
+spl3 run cookbook/022_text2spl_demo/generated/summarize.spl --adapter ollama
 ```

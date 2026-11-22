@@ -29,9 +29,9 @@
 --
 -- Requires: pip install ortools
 -- Run:
---   spl3 run cookbook/87_route_optimization/route_optimization.spl \
+--   spl3 run cookbook/087_route_optimization/route_optimization.spl \
 --       --llm claude_cli
---   spl3 run cookbook/87_route_optimization/route_optimization.spl \
+--   spl3 run cookbook/087_route_optimization/route_optimization.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -246,7 +246,7 @@ WORKFLOW route_optimization
   INPUT @problem TEXT := "A delivery driver starts and ends at the depot (location 0) and must visit 5 customer locations (1-5). The distance matrix in miles is: [[0,29,20,21,16,31],[29,0,15,29,28,40],[20,15,0,15,14,25],[21,29,15,0,4,12],[16,28,14,4,0,16],[31,40,25,12,16,0]] (row/col order = depot,1,2,3,4,5). Find the shortest round-trip route visiting every location exactly once."
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 3
-  INPUT @out_dir TEXT := "./cookbook/87_route_optimization/output"
+  INPUT @out_dir TEXT := "./cookbook/087_route_optimization/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

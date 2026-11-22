@@ -3,7 +3,7 @@
 -- Uses parallel CTEs instead of a bash loop for a pure-SPL implementation.
 --
 -- Usage:
---   spl3 run cookbook/04_model_showdown/showdown.spl --adapter ollama \
+--   spl3 run cookbook/004_model_showdown/showdown.spl --adapter ollama \
 --       prompt="What is the meaning of life?"
 
 CREATE FUNCTION answer(prompt TEXT)
@@ -41,7 +41,7 @@ WORKFLOW model_showdown
         @prompt  TEXT DEFAULT 'What is the meaning of life?',
         @model_1 TEXT DEFAULT 'gemma3',
         @model_2 TEXT DEFAULT 'phi3',
-        @log_dir TEXT := 'cookbook/04_model_showdown/logs-spl'
+        @log_dir TEXT := 'cookbook/004_model_showdown/logs-spl'
     OUTPUT: @comparison TEXT
 DO
     -- Run the same prompt against all three models in parallel CTEs

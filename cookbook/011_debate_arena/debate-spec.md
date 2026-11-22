@@ -16,7 +16,7 @@ Simulate a structured debate between two LLM personas arguing for and against a 
 |---|---|---|
 | `@topic` | `'AI should be open-sourced'` | The debate motion both sides argue about |
 | `@max_rounds` | `3` | Number of rebuttal rounds after opening statements |
-| `@log_dir` | `'cookbook/11_debate_arena/logs-spl'` | Directory path where all generated artifacts are written |
+| `@log_dir` | `'cookbook/011_debate_arena/logs-spl'` | Directory path where all generated artifacts are written |
 
 ---
 

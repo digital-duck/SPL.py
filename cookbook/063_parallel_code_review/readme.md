@@ -52,24 +52,24 @@ No API keys required for local runs.
 
 ```bash
 # Inline code snippet
-spl3 run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl3 run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --param code="def add(a, b): return a - b" \
     --param review_model="gemma3"
 
 # From a file
-spl3 run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl3 run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --param code="$(cat my_module.py)" lang=python
 
 # Go code
-spl3 run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl3 run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --param code="$(cat main.go)" lang=go model=gemma4
 
 # With spl-go
-spl-go run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl-go run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --param code="def add(a, b): return a - b" --adapter ollama -m gemma4
 
 # Dry-run
-spl-go run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl-go run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --param code="def add(a, b): return a - b" --adapter echo
 ```
 
@@ -122,7 +122,7 @@ LLM calls breakdown: 3 parallel sub-workflow calls + 1 serial merge.
 
 ## LLM-compiled targets (recipe 65)
 
-Generated via `cookbook/65_llm_splc/` using `--adapter claude_cli`. See recipe 65 readme for commands.
+Generated via `cookbook/065_llm_splc/` using `--adapter claude_cli`. See recipe 65 readme for commands.
 
 ### AutoGen (`targets/autogen/parallel_code_review.py`)
 

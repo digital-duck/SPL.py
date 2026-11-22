@@ -58,28 +58,28 @@ GENERATE answer(question)
 spl doc-rag add path/to/your/document.md
 
 # Then run the query
-spl3 run cookbook/08_rag_query/rag_query.spl \
+spl3 run cookbook/008_rag_query/rag_query.spl \
     --adapter ollama --model gemma3 \
     question="What is Momagrid?"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/08_rag_query/langgraph/rag_langgraph.py \
+python cookbook/008_rag_query/langgraph/rag_langgraph.py \
     --doc path/to/your/document.md \
     --question "What is Momagrid?"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/08_rag_query/autogen/rag_autogen.py \
+python cookbook/008_rag_query/autogen/rag_autogen.py \
     --doc path/to/your/document.md \
     --question "What is Momagrid?"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/08_rag_query/crewai/rag_crewai.py \
+python cookbook/008_rag_query/crewai/rag_crewai.py \
     --doc path/to/your/document.md \
     --question "What is Momagrid?"
 ```

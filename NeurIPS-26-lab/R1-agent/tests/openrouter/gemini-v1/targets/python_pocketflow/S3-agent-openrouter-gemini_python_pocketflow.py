@@ -9,7 +9,7 @@ except ImportError:
     # Fallback to local pocketflow if available
     import sys
     from pathlib import Path
-    sys.path.append(str(Path(__file__).resolve().parents[3] / "cookbook/05_self_refine"))
+    sys.path.append(str(Path(__file__).resolve().parents[3] / "cookbook/005_self_refine"))
     from pocketflow import Node, Workflow
 
 # --- LLM Functions (SPL Functions) ---

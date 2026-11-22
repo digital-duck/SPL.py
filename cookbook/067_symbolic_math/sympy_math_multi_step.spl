@@ -68,7 +68,7 @@ END;
 
 WORKFLOW math_solver_multi_step
   INPUT @problem TEXT := 'differentiate e**x and then simplify the result'
-  INPUT @log_dir TEXT := 'cookbook/67_symbolic_math/logs-spl'
+  INPUT @log_dir TEXT := 'cookbook/067_symbolic_math/logs-spl'
   OUTPUT @explanation TEXT
 DO
   -- Step 1 (probabilistic): LLM decomposes the problem into an ordered chain

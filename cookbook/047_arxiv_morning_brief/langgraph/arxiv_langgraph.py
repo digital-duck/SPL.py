@@ -5,7 +5,7 @@ Pattern: urls → [process_paper] → assemble_brief
 
 Usage:
     pip install langgraph langchain-ollama requests PyPDF2
-    python cookbook/47_arxiv_morning_brief/langgraph/arxiv_langgraph.py \\
+    python cookbook/047_arxiv_morning_brief/langgraph/arxiv_langgraph.py \\
         --urls "https://arxiv.org/pdf/2501.12948"
 """
 
@@ -116,7 +116,7 @@ def build_graph():
 @click.option("--urls", required=True, help="Arxiv URLs (comma-separated or file)")
 @click.option("--date", default="", help="Date for the brief")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/47_arxiv_morning_brief/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/047_arxiv_morning_brief/logs-langgraph", help="Log directory")
 def main(urls, date, model, log_dir):
     """arXiv Morning Brief — LangGraph edition"""
     build_graph().invoke({

@@ -31,15 +31,15 @@ No new dependency — NumPy is already required by the cookbook.
 
 ```bash
 # Default problem (elastic collision, equal masses: velocities swap)
-spl3 run cookbook/90_compsci_physics/physics_conservation.spl --llm claude_cli
+spl3 run cookbook/090_compsci_physics/physics_conservation.spl --llm claude_cli
 
 # Custom problem
-spl3 run cookbook/90_compsci_physics/physics_conservation.spl \
+spl3 run cookbook/090_compsci_physics/physics_conservation.spl \
     --llm ollama:gemma3 \
     --param problem="A 3 kg cart at 4 m/s collides and sticks to a stationary 1 kg cart. What is their common final velocity, in m/s?"
 
 # Unaided baseline arm
-spl3 run cookbook/90_compsci_physics/physics_conservation.spl \
+spl3 run cookbook/090_compsci_physics/physics_conservation.spl \
     --llm claude_cli --param enable_solver=false
 ```
 

@@ -49,7 +49,7 @@ All runs: model `claude-sonnet-4-6`, 2026-08-30.
 | `resource_allocation` | ON  | `logs/resource_allocation-claude_cli-claude-sonnet-4-6-20260830-072057.md` | `output/resource_allocation_2026-08-30_07-20-57.md` |
 | `resource_allocation` | OFF | `logs/resource_allocation-claude_cli-claude-sonnet-4-6-20260830-072157.md` | `output/resource_allocation_2026-08-30_07-21-58.md` |
 
-All files are under `cookbook/78_constraint_opt/` — `output/` for the formatted reports, `logs/` for the full execution traces (prompts, raw LLM responses, timing).
+All files are under `cookbook/078_constraint_opt/` — `output/` for the formatted reports, `logs/` for the full execution traces (prompts, raw LLM responses, timing).
 
 ---
 
@@ -74,12 +74,12 @@ x = 3.6 chairs, y = 3.2 tables → Profit = **$168**
 export PROBLEM="A factory makes chairs (2h labor, 4kg wood, \$20 profit) and tables (4h labor, 3kg wood, \$30 profit). Available: 20h labor, 24kg wood. Maximize profit."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/constraint_opt.spl \
+spl3 run cookbook/078_constraint_opt/constraint_opt.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM"
 ```
@@ -122,12 +122,12 @@ W1→S3: 50, W1→S1: 30, W2→S1: 20, W2→S2: 40 → Cost = **$370**
 export PROBLEM="A company has two warehouses and three retail stores. Warehouse W1 has 80 units of inventory; Warehouse W2 has 60 units. Store S1 needs 50 units, Store S2 needs 40 units, Store S3 needs 50 units. Shipping costs per unit: W1 to S1 costs \$2, W1 to S2 costs \$3, W1 to S3 costs \$1; W2 to S1 costs \$5, W2 to S2 costs \$4, W2 to S3 costs \$8. All store demand must be met exactly. Minimize total shipping cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/supply_chain.spl \
+spl3 run cookbook/078_constraint_opt/supply_chain.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM"
 ```
@@ -173,12 +173,12 @@ Cost = 2×$200 + 2×$180 + 1×$320 = **$1,080**
 export PROBLEM="A clinic needs to staff one day with 3 shifts: Morning, Afternoon, and Night. Minimum nurse coverage required: Morning needs at least 2 nurses, Afternoon needs at least 2 nurses, Night needs at least 1 nurse. Five nurses are available (Nurse1 through Nurse5). Each nurse can work at most 1 shift today. Wage per nurse-shift: Morning costs \$200, Afternoon costs \$180, Night costs \$320. Assign nurses to shifts to meet all minimum coverage requirements at minimum total wage cost."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/staff_scheduling.spl \
+spl3 run cookbook/078_constraint_opt/staff_scheduling.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM"
 ```
@@ -230,12 +230,12 @@ Why not alternatives?
 export PROBLEM="An IT department must select a portfolio of projects for next quarter. Six candidate projects are available. Project P1 costs \$120K and requires 3 developer-months, delivering strategic value 8. Project P2 costs \$80K and requires 2 developer-months, delivering value 5. Project P3 costs \$200K and requires 5 developer-months, delivering value 10. Project P4 costs \$150K and requires 3 developer-months, delivering value 9. Project P5 costs \$60K and requires 2 developer-months, delivering value 4. Project P6 costs \$90K and requires 2 developer-months, delivering value 6. The total budget is \$500K and the team has 10 developer-months available. Each project is either fully funded or not funded — no partial investment. Select which projects to fund to maximize total strategic value."
 
 # solver=ON
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=true \
     --param problem="$PROBLEM"
 
 # solver=OFF
-spl3 run cookbook/78_constraint_opt/resource_allocation.spl \
+spl3 run cookbook/078_constraint_opt/resource_allocation.spl \
     --llm claude_cli --param use_solver=false \
     --param problem="$PROBLEM"
 ```

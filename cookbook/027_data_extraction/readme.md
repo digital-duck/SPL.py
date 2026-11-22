@@ -24,16 +24,16 @@ Pulls structured fields from messy free-form text using schema-constrained extra
 
 ```bash
 # General extraction (names, dates, amounts, references)
-spl3 run cookbook/27_data_extraction/data_extraction.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction.spl --adapter ollama \
     text="Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 
 # Invoice extraction
-spl3 run cookbook/27_data_extraction/data_extraction.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction.spl --adapter ollama \
     text="$(cat invoice.txt)" \
     format="invoice"
 
 # Contract extraction
-spl3 run cookbook/27_data_extraction/data_extraction.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction.spl --adapter ollama \
     text="$(cat contract.txt)" \
     format="contract"
 ```
@@ -70,33 +70,33 @@ Adding a new format is one line in the MAP — no new branch needed.
 | `text` | TEXT | sample invoice text | The raw text to extract fields from |
 | `format` | TEXT | `invoice` | `general`, `invoice`, or `contract` (falls back to `general` if unknown) |
 | `model` | TEXT | `gemma3` | LLM model to use |
-| `log_dir` | TEXT | `cookbook/27_data_extraction/logs-map` | Output directory |
+| `log_dir` | TEXT | `cookbook/027_data_extraction/logs-map` | Output directory |
 
 ### Usage
 
 ```bash
 # Default (invoice format, gemma3)
-spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama
+spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama
 
 # General extraction
-spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama \
     format="general" \
     text="Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 
 # Invoice with Claude
-spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter claude_cli \
+spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter claude_cli \
     format="invoice" \
     text="Invoice #INV-042 from Acme Corp, USD 3,750.00 due 2024-04-15, PO: PO-9901." \
     model="claude-sonnet-4-6" \
-    log_dir="cookbook/27_data_extraction/logs-map2"
+    log_dir="cookbook/027_data_extraction/logs-map2"
 
 # Contract
-spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama \
     format="contract" \
     text="$(cat contract.txt)"
 
 # Unknown format → auto-falls back to general
-spl3 run cookbook/27_data_extraction/data_extraction_map.spl --adapter ollama \
+spl3 run cookbook/027_data_extraction/data_extraction_map.spl --adapter ollama \
     format="email"
 ```
 

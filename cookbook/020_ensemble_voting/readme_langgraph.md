@@ -80,18 +80,18 @@ ollama pull deepseek-r1
 
 ```bash
 # Minimal — uses all defaults (random mode, 5 candidates)
-python cookbook/20_ensemble_voting/ensemble_langgraph.py \
+python cookbook/020_ensemble_voting/ensemble_langgraph.py \
     --question "What causes inflation?"
 
 # Custom pool, more candidates
-python cookbook/20_ensemble_voting/ensemble_langgraph.py \
+python cookbook/020_ensemble_voting/ensemble_langgraph.py \
     --question "Is Rust faster than C++?" \
     --models llama3.2 qwen2.5 gemma3 mistral \
     --n-candidates 7 \
     --polish-model deepseek-r1
 
 # Positional / reproducible mode
-python cookbook/20_ensemble_voting/ensemble_langgraph.py \
+python cookbook/020_ensemble_voting/ensemble_langgraph.py \
     --question "What is the best database for time-series data?" \
     --random-selection false
 ```
@@ -99,9 +99,9 @@ python cookbook/20_ensemble_voting/ensemble_langgraph.py \
 ## Equivalent SPL command
 
 ```bash
-spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
+spl3 run cookbook/020_ensemble_voting/ensemble_v2.spl \
     --adapter ollama \
-    --tools cookbook/20_ensemble_voting/tools.py \
+    --tools cookbook/020_ensemble_voting/tools.py \
     question="What causes inflation?"
 ```
 
@@ -117,7 +117,7 @@ spl3 run cookbook/20_ensemble_voting/ensemble_v2.spl \
 | `--random-selection` | `true` | `true` = random draw; `false` = positional rotation |
 | `--consensus-model` | `qwen2.5` | Model for the consensus step |
 | `--polish-model` | `deepseek-r1` | Model for the final polish pass |
-| `--log-dir` | `cookbook/20_ensemble_voting/logs` | Directory for per-step logs |
+| `--log-dir` | `cookbook/020_ensemble_voting/logs` | Directory for per-step logs |
 
 ---
 

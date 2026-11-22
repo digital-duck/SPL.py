@@ -215,9 +215,9 @@ problems, evaluated by the same criteria.
 
 Every prompt, every token count, every log line is public. Clone and run:
 
-- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/67_symbolic_math/sympy_llm.spl)
-- [run_experiment.py](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/run_experiment.py)
-- [experiment log (rerun 20260610)](https://github.com/digital-duck/SPL.py/blob/main/cookbook/67_symbolic_math/logs-spl/case-2-log-rerun-20260610-062904.md)
+- [recipe #67 SPL script](https://github.com/digital-duck/SPL.py/tree/main/cookbook/067_symbolic_math/sympy_llm.spl)
+- [run_experiment.py](https://github.com/digital-duck/SPL.py/blob/main/cookbook/067_symbolic_math/run_experiment.py)
+- [experiment log (rerun 20260610)](https://github.com/digital-duck/SPL.py/blob/main/cookbook/067_symbolic_math/logs-spl/case-2-log-rerun-20260610-062904.md)
 
 ```bash
 git clone https://github.com/digital-duck/SPL.py.git
@@ -226,13 +226,13 @@ conda create -n spl123 python=3.11 -y && conda activate spl123
 pip install -e .
 
 # run a single model on all 20 problems (both arms):
-python cookbook/67_symbolic_math/run_experiment.py -m m001
+python cookbook/067_symbolic_math/run_experiment.py -m m001
 
 # run all 10 models (400 cells):
-python cookbook/67_symbolic_math/run_experiment.py
+python cookbook/067_symbolic_math/run_experiment.py
 
 # explore results in the Streamlit UI:
-streamlit run cookbook/67_symbolic_math/app_experiment.py
+streamlit run cookbook/067_symbolic_math/app_experiment.py
 ```
 
 To run local models, install [Ollama](https://ollama.ai) first:

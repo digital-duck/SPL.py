@@ -1,7 +1,7 @@
 # SPL: Verifiable Math Workflows, Distributed Across Consumer GPUs
 
 *Repo: https://github.com/digital-duck/SPL.py — this document lives at
-`cookbook/77_neurosymbolic/`, next to the workflow it describes. Lineage:
+`cookbook/077_neurosymbolic/`, next to the workflow it describes. Lineage:
 [`hackernews-v0.1.md`](hackernews-v0.1.md) is the pre-registered,
 SymPy-only benchmark design;
 [`hackernews-v0.2.md`](hackernews-v0.2.md) is the full-ladder announcement
@@ -146,7 +146,7 @@ The full recipe-77 experiment grid: 10 models × 20 problems × 2 solver modes
 dispatched via Momagrid with 6 parallel workers.
 
 ```bash
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 6
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 6
 ```
 
 Measured wall-clock comparison on the same problem set:
@@ -500,24 +500,24 @@ python -m sage.repl.ipython_kernel.install --user    # register the 'sagemath' k
 cookbook/tools/lean/setup_lean.sh --with-mathlib     # elan + pinned Lean REPL (optional, ~5 GB oleans)
 
 # Rung 2+ (default backend): math SymPy cannot do, running locally
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param problem="find the Galois group of x**5 - x - 1 over the rationals"
 
 # Same workflow, GENERATE steps distributed across consumer GPU grid
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:gemma4:e2b \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm momagrid:gemma4:e2b \
     --param problem="find the Galois group of x**5 - x - 1 over the rationals"
 
 # Rung 3: a CLAIM, kernel-checked against mathlib, citation-first
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param problem="the square of any real number is nonnegative"
 
 # Baseline arm: same problem, no verifier (the A/B from the benchmark design)
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param enable_solver=false \
     --param problem="the square of any real number is nonnegative"
 
 # Full 400-cell benchmark on Momagrid (10 models × 20 problems × 2 solver modes)
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 6
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 6
 
 # Monitor dispatched tasks and model routing in real time
 mg tasks

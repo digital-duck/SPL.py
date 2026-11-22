@@ -3,7 +3,7 @@
 # Showcases the natural language → SPL 3.0 compiler.
 #
 # Usage:
-#   bash cookbook/22_text2spl_demo/text2spl_demo.sh [adapter] [model]
+#   bash cookbook/022_text2spl_demo/text2spl_demo.sh [adapter] [model]
 #
 # Requires: spl installed, Ollama running with gemma3 (or pass adapter/model)
 
@@ -27,7 +27,7 @@ done
 # spl-go removed the -m shorthand; use --model for both (both accept it)
 MODEL_FLAG="--model"
 TS=$(date +%Y%m%d_%H%M%S)
-OUTDIR="cookbook/22_text2spl_demo/generated-${TS}"
+OUTDIR="cookbook/022_text2spl_demo/generated-${TS}"
 mkdir -p "$OUTDIR"
 
 PASS=0

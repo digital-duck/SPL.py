@@ -433,7 +433,7 @@ The deterministic transpilers (`go`, `ts`, `pocketflow`, `langgraph`, domain tar
 produce structured code from a fixed `.spl` input. Add a golden-file test harness:
 
 ```bash
-spl3 test cookbook/05_self_refine/self_refine.spl --lang python/pocketflow --golden
+spl3 test cookbook/005_self_refine/self_refine.spl --lang python/pocketflow --golden
 ```
 
 Compares transpiler output against a committed `.golden.py` file, fails on diff.
@@ -518,7 +518,7 @@ via its peer table — Hub-to-Hub WAN routing. CLI: `spl3 register <path>`,
 
 A model-affinity parallelization design for batch experiments (one worker per Ollama
 model, file-locked shared log) is drafted in
-`cookbook/67_symbolic_math/readme-momagrid.md`.
+`cookbook/067_symbolic_math/readme-momagrid.md`.
 
 ---
 

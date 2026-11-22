@@ -73,7 +73,7 @@ def load_catalog(catalog_file: str | None = None) -> dict:
     def _spl_path(r):
         for a in r.get("args", []):
             if a.endswith(".spl"):
-                return a.lstrip("./")  # e.g. "cookbook/01_hello_world/hello.spl"
+                return a.lstrip("./")  # e.g. "cookbook/001_hello_world/hello.spl"
         return ""
 
     return {

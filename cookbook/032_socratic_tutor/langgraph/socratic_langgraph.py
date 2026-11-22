@@ -5,7 +5,7 @@ Pattern: load_topic → opening → student_1 → follow_up → student_2 → as
 
 Usage:
     pip install langgraph langchain-ollama
-    python cookbook/32_socratic_tutor/langgraph/socratic_langgraph.py \\
+    python cookbook/032_socratic_tutor/langgraph/socratic_langgraph.py \\
         --topic_id "recursion" --subject "programming"
 """
 
@@ -179,7 +179,7 @@ def build_graph():
 @click.option("--subject", default="programming", help="Subject")
 @click.option("--student_level", default="high school", help="Student level")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/32_socratic_tutor/logs-langgraph", help="Log directory")
+@click.option("--log-dir", default="cookbook/032_socratic_tutor/logs-langgraph", help="Log directory")
 def main(topic, topic_id, subject, student_level, model, log_dir):
     """Socratic Tutor — LangGraph edition"""
     build_graph().invoke({

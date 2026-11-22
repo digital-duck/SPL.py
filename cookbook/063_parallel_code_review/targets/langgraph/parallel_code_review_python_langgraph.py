@@ -97,7 +97,7 @@ class ParallelCodeReviewState(TypedDict):
     code:                 str
     lang:                 str  # default: 'python'
     review_model:         str  # default: 'gemma4'
-    log_dir:              str  # default: 'cookbook/63_parallel_code_review/logs-spl'
+    log_dir:              str  # default: 'cookbook/063_parallel_code_review/logs-spl'
     # runtime variables
     report:               str
     sec_fb:               str
@@ -172,7 +172,7 @@ def build_graph():
 @click.option("--code", required=True)
 @click.option("--lang", default='python', show_default=True)
 @click.option("--review-model", default='gemma4', show_default=True)
-@click.option("--log-dir", default='cookbook/63_parallel_code_review/logs-spl', show_default=True)
+@click.option("--log-dir", default='cookbook/063_parallel_code_review/logs-spl', show_default=True)
 def main(code: str, lang: str, review_model: str, log_dir: str):
     result = build_graph().invoke({
         "code": code,

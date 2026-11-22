@@ -68,25 +68,25 @@ END
 
 ### 1. SPL (Native)
 ```bash
-spl3 run cookbook/37_headline_news/headline_news.spl \
+spl3 run cookbook/037_headline_news/headline_news.spl \
     --adapter ollama --model gemma3 \
     topic="artificial intelligence"
 ```
 
 ### 2. LangGraph
 ```bash
-python cookbook/37_headline_news/langgraph/headline_news_langgraph.py \
+python cookbook/037_headline_news/langgraph/headline_news_langgraph.py \
     --topic "artificial intelligence"
 ```
 
 ### 3. AutoGen
 ```bash
-python cookbook/37_headline_news/autogen/headline_news_autogen.py \
+python cookbook/037_headline_news/autogen/headline_news_autogen.py \
     --topic "artificial intelligence"
 ```
 
 ### 4. CrewAI
 ```bash
-python cookbook/37_headline_news/crewai/headline_news_crewai.py \
+python cookbook/037_headline_news/crewai/headline_news_crewai.py \
     --topic "artificial intelligence"
 ```

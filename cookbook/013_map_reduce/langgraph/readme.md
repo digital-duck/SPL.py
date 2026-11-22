@@ -20,8 +20,8 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/13_map_reduce/langgraph/map_reduce_langgraph.py \
-    --document "$(cat cookbook/13_map_reduce/large_doc.txt)" \
+python cookbook/013_map_reduce/langgraph/map_reduce_langgraph.py \
+    --document "$(cat cookbook/013_map_reduce/large_doc.txt)" \
     --style "bullet points"
 ```
 
@@ -36,15 +36,15 @@ Map: summarizing chunk 1/4
 Reduce: combining summaries
 Quality Check: scoring final summary
 Score: 0.85
-Commit: saving final summary to cookbook/13_map_reduce/logs-langgraph/final_summary.md
+Commit: saving final summary to cookbook/013_map_reduce/logs-langgraph/final_summary.md
 ```
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/13_map_reduce/map_reduce.spl \
-    --adapter ollama --model gemma3 --tools cookbook/13_map_reduce/tools.py \
-    document="$(cat cookbook/13_map_reduce/large_doc.txt)" \
+spl3 run cookbook/013_map_reduce/map_reduce.spl \
+    --adapter ollama --model gemma3 --tools cookbook/013_map_reduce/tools.py \
+    document="$(cat cookbook/013_map_reduce/large_doc.txt)" \
     style="bullet points"
 ```
 

@@ -5,7 +5,7 @@ Pattern: Plain Python math → LLM narrative generation.
 
 Usage:
     pip install pyautogen
-    python cookbook/36_tool_use/autogen/tool_use_autogen.py \\
+    python cookbook/036_tool_use/autogen/tool_use_autogen.py \\
         --sales "1200,1450,1380,1600,1750,1900" --prev_total "7800"
 """
 
@@ -85,7 +85,7 @@ Write a concise narrative analysis."""
 @click.option("--prev_total", default="7800", help="Previous period total")
 @click.option("--period", default="H1 2025", help="Reporting period")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/36_tool_use/logs-autogen", help="Log directory")
+@click.option("--log-dir", default="cookbook/036_tool_use/logs-autogen", help="Log directory")
 def main(sales, prev_total, period, model, log_dir):
     """Tool Use — AutoGen edition"""
     run(sales, prev_total, period, model, log_dir)

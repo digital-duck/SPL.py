@@ -212,7 +212,7 @@ def parallel_code_review(
     code: str,
     lang: str = "python",                                          # SPL: @lang    TEXT DEFAULT 'python'
     review_model: str = "gemma4",                                  # SPL: @review_model TEXT DEFAULT 'gemma4'
-    log_dir: str = "cookbook/63_parallel_code_review/logs-spl",   # SPL: @log_dir  TEXT DEFAULT '...'
+    log_dir: str = "cookbook/063_parallel_code_review/logs-spl",   # SPL: @log_dir  TEXT DEFAULT '...'
 ) -> str:
     """Fan-out three concurrent LLM reviews, then merge into a prioritised report.
 
@@ -322,7 +322,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         help="Ollama model name (default: gemma4)",
     )
     p.add_argument(
-        "--log-dir", default="cookbook/63_parallel_code_review/logs-spl", dest="log_dir",
+        "--log-dir", default="cookbook/063_parallel_code_review/logs-spl", dest="log_dir",
         help="Directory for log output",
     )
     return p

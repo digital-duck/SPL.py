@@ -23,14 +23,14 @@ parse_urls(urls) → N papers
 Assembled from two existing cookbook recipes rather than written fresh — see
 attribution comments in `tools.spl`:
 
-- **`cookbook/47_arxiv_morning_brief`** — the download/chunk/map/reduce shape
+- **`cookbook/047_arxiv_morning_brief`** — the download/chunk/map/reduce shape
   (`download_arxiv_pdf`, `semantic_chunk_plan`, `parse_urls`, `list_count` reused
   near-verbatim).
-- **`cookbook/72_verify_arxiv_references`** — ground-truth paper metadata via the
+- **`cookbook/072_verify_arxiv_references`** — ground-truth paper metadata via the
   arXiv Atom API (`extract_arxiv_id`, `lookup_arxiv`, `json_field` reused
   near-verbatim), and the per-item `DO ... EXCEPTION ... END` error-isolation
   pattern inside the loop (one bad paper doesn't kill the whole batch).
-- **`cookbook/13_map_reduce`** — the general map-reduce shape this recipe is an
+- **`cookbook/013_map_reduce`** — the general map-reduce shape this recipe is an
   arXiv-specific instance of.
 
 New in this recipe: `get_chunk_field` (pulls one field out of a chunked section
@@ -78,7 +78,7 @@ matches the per-item error isolation in recipe 72.
 `tools.spl`'s `CREATE TOOL_API` defs load automatically via `IMPORT 'tools'` inside
 the `.spl` files themselves — no `--tools` flag needed. (That flag is for a
 different mechanism: external `@spl_tool`-decorated Python modules, as in
-`cookbook/13_map_reduce/tools.py`.)
+`cookbook/013_map_reduce/tools.py`.)
 
 Params go through spl3's `-p`/`--param KEY=VALUE` flag — spl3 (unlike the
 older `spl` CLI some sibling recipes were written against) does not accept
@@ -86,21 +86,21 @@ bare positional `key=value` args.
 
 ```bash
 # Local run against Ollama
-spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
     --adapter ollama --model gemma3 \
     -p urls='["https://arxiv.org/abs/2501.12948","https://arxiv.org/abs/1706.03762"]'
 
 # From a file
-spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
     --llm claude_cli:claude-sonnet-5 \
-    -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt" \
-    -p out_dir="cookbook/89_arxiv_digest_eaai27/output/"
+    -p urls="cookbook/089_arxiv_digest_eaai27/arxiv-papers.txt" \
+    -p out_dir="cookbook/089_arxiv_digest_eaai27/output/"
 
 # Workshop grid dispatch — the capstone demo path. The hub never runs SPL;
 # a driver process (a person running spl3 by hand, or arxiv-digest-eaai27's
 # thin FastAPI backend on the web form's behalf) does the orchestration and
 # submits each individual GENERATE call to the hub as a single-prompt task.
-spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
     --adapter momagrid --hub https://hub.WORKSHOP_DOMAIN \
     -p urls='["https://arxiv.org/abs/2501.12948"]'
 ```
@@ -134,9 +134,9 @@ standalone (see below) and it makes its own `RUN_DIR` from `@out_dir`
 directly.
 
 ```bash
-spl3 run cookbook/89_arxiv_digest_eaai27/arxiv_digest.spl \
+spl3 run cookbook/089_arxiv_digest_eaai27/arxiv_digest.spl \
     --adapter echo \
-    -p urls="cookbook/89_arxiv_digest_eaai27/arxiv-papers.txt" \
+    -p urls="cookbook/089_arxiv_digest_eaai27/arxiv-papers.txt" \
     -p out_dir="/tmp/arxiv_digest_debug"
 ```
 
@@ -164,10 +164,10 @@ summarize → reduce) from the outer loop and `parse_urls` normalization in
 `arxiv_digest.spl`:
 
 ```bash
-spl3 run cookbook/89_arxiv_digest_eaai27/summarize_arxiv_paper.spl \
+spl3 run cookbook/089_arxiv_digest_eaai27/summarize_arxiv_paper.spl \
     --adapter ollama --model gemma3 \
     -p url="https://arxiv.org/abs/1706.03762" \
-    -p out_dir="$HOME/projects/digital-duck/SPL.py/cookbook/89_arxiv_digest_eaai27/output/"
+    -p out_dir="$HOME/projects/digital-duck/SPL.py/cookbook/089_arxiv_digest_eaai27/output/"
 ```
 
 Useful when a paper misbehaves inside the full batch and you want to isolate
@@ -177,7 +177,7 @@ or in the summarization pipeline itself.
 ## Validated
 
 ```
-spl3 validate cookbook/89_arxiv_digest_eaai27/*.spl
+spl3 validate cookbook/089_arxiv_digest_eaai27/*.spl
 ```
 
 All four files parse clean (0 errors). The `CALL target not found` / `WHILE loop
@@ -190,7 +190,7 @@ issues in this recipe.
 
 Today's SPL (3.0) dispatches sub-workflow `CALL`s sequentially within one script
 run — `CALL PARALLEL` fan-out is flagged for a future SPL version (see
-`cookbook/47_arxiv_morning_brief/readme.md`). The "several papers' worth of jobs
+`cookbook/047_arxiv_morning_brief/readme.md`). The "several papers' worth of jobs
 in flight simultaneously" the EAAI-27 capstone describes comes from **concurrent
 attendee submissions**, each becoming its own script run against the shared hub —
 not from a single run's internal per-paper loop running in parallel. Worth being

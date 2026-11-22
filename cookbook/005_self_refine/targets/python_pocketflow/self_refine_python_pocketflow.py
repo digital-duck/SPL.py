@@ -205,7 +205,7 @@ def build_flow() -> Flow:
 @click.option("--max-iterations", default=3, show_default=True, type=int)
 @click.option("--writer-model", default='gemma3', show_default=True)
 @click.option("--critic-model", default='llama3.2', show_default=True)
-@click.option("--log-dir", default='cookbook/05_self_refine/logs-spl', show_default=True)
+@click.option("--log-dir", default='cookbook/005_self_refine/logs-spl', show_default=True)
 def main(task: str, output_budget: int, max_iterations: int, writer_model: str, critic_model: str, log_dir: str):
     # SPL: INPUT @vars → shared store (ETL staging area)
     shared = {

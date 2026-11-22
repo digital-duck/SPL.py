@@ -1,6 +1,6 @@
 """graph_lib — shared, YAML-driven concept-graph algorithm library.
 
-Part of recipe 74 (`cookbook/74_concept_book/`) — the proof that the
+Part of recipe 74 (`cookbook/074_concept_book/`) — the proof that the
 "concept graph → concept-book" pattern recipes 71/73 each ship a frozen,
 domain-specific copy of (`linalg_graph.py` / `geometry_graph.py`) is actually
 ONE domain-agnostic algorithm library plus a thin per-domain *data* file.

@@ -8,23 +8,23 @@ No LLM is required — this is a deterministic codec operation.
 Usage
 -----
   # PNG → JPEG (default quality 85)
-  python cookbook/57_image_convert/run.py \\
-      --image cookbook/51_image_caption/sample/photo.jpg \\
+  python cookbook/057_image_convert/run.py \\
+      --image cookbook/051_image_caption/sample/photo.jpg \\
       --target-format png
 
   # JPEG → WebP (quality 90)
-  python cookbook/57_image_convert/run.py \\
-      --image cookbook/51_image_caption/sample/photo.jpg \\
+  python cookbook/057_image_convert/run.py \\
+      --image cookbook/051_image_caption/sample/photo.jpg \\
       --target-format webp --quality 90
 
   # JPEG → BMP (lossless)
-  python cookbook/57_image_convert/run.py \\
-      --image cookbook/51_image_caption/sample/photo.jpg \\
+  python cookbook/057_image_convert/run.py \\
+      --image cookbook/051_image_caption/sample/photo.jpg \\
       --target-format bmp
 
   # Custom output directory
-  python cookbook/57_image_convert/run.py \\
-      --image cookbook/51_image_caption/sample/photo.jpg \\
+  python cookbook/057_image_convert/run.py \\
+      --image cookbook/051_image_caption/sample/photo.jpg \\
       --target-format webp --output-dir /tmp/converted
 """
 
@@ -95,7 +95,7 @@ def convert_image(
               type=click.Choice(["jpeg", "jpg", "png", "webp", "bmp", "gif", "tiff"]))
 @click.option("--quality",       default=85, show_default=True, type=int,
               help="Compression quality for JPEG/WebP (1–95)")
-@click.option("--output-dir",    default="cookbook/57_image_convert/outputs", show_default=True)
+@click.option("--output-dir",    default="cookbook/057_image_convert/outputs", show_default=True)
 def main(image, target_format, quality, output_dir) -> None:
     """Recipe 57 — Image Format Conversion (SPL 3.0)."""
     dst = convert_image(

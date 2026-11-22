@@ -117,7 +117,7 @@ def main(document, query, storage_dir, top_k, reset):
     store.close()
 
     click.echo(f"\nDone. Run the recipe:")
-    click.echo(f'  spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama question="{query}"')
+    click.echo(f'  spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama question="{query}"')
 
 
 if __name__ == "__main__":

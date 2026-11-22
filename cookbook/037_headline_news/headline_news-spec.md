@@ -15,7 +15,7 @@ Automatically generates, expands, evaluates, and optionally refines a formatted 
 | `@max_headlines` | `7` | Number of top headlines to generate in the first step. |
 | `@style` | `'structured'` | Output format style; drives `news_format_guide`. Accepted values: `structured`, `executive brief`, `bullet points`, `narrative`. |
 | `@perspective` | `'balanced'` | Analytical lens applied throughout; drives `perspective_guide`. Accepted values: `balanced`, `technical`, `business`, `global`, `policy`. |
-| `@log_dir` | `'cookbook/37_headline_news/logs'` | Directory path where intermediate and final files are written. |
+| `@log_dir` | `'cookbook/037_headline_news/logs'` | Directory path where intermediate and final files are written. |
 
 ## 3. Process
 

@@ -22,13 +22,13 @@ approach_1/2/3(problem)
 ## Usage
 
 ```bash
-spl3 run cookbook/17_tree_of_thought/tree_of_thought.spl --adapter ollama \
+spl3 run cookbook/017_tree_of_thought/tree_of_thought.spl --adapter ollama \
     problem="Should we rewrite the legacy system or incrementally refactor?"
 
-spl3 run cookbook/17_tree_of_thought/tree_of_thought.spl --adapter ollama \
+spl3 run cookbook/017_tree_of_thought/tree_of_thought.spl --adapter ollama \
     problem="Design a caching strategy for a high-traffic API"
 
-spl3 run cookbook/17_tree_of_thought/tree_of_thought.spl --adapter ollama --model llama3.2 \
+spl3 run cookbook/017_tree_of_thought/tree_of_thought.spl --adapter ollama --model llama3.2 \
     problem="How should a startup prioritize between growth and profitability?"
 ```
 

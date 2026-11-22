@@ -19,7 +19,7 @@ Concurrently summarise three user-specified news topics using parallel LLM calls
 | `@topic_business` | `'global markets and energy transition'` | Subject line for the business news summary |
 | `@digest_model` | `'gemma3'` | LLM model identifier used for every GENERATE call |
 | `@output_budget` | `512` | Maximum token budget for the final merged digest |
-| `@log_dir` | `'cookbook/64_parallel_news_digest/logs-spl'` | Directory path passed to sub-workflows for log output |
+| `@log_dir` | `'cookbook/064_parallel_news_digest/logs-spl'` | Directory path passed to sub-workflows for log output |
 
 ---
 

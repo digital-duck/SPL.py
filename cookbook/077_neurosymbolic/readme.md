@@ -77,19 +77,19 @@ Single problems, three rungs, one flag apart:
 
 ```bash
 # Sage rung (default backend): Galois group — SymPy cannot do this
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param problem="find the Galois group of x**5 - x - 1 over the rationals"
 
 # SymPy rung: same chain machinery, classic battery
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=sympy --param problem="differentiate 3*x**3-x, then factor if needed, finally solve for x"
 
 # Lean rung: a CLAIM, kernel-checked against mathlib (citation-first)
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param problem="the square of any real number is nonnegative"
 
 # Baseline arm: same problem, NO verifier — the A/B contrast
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel --llm claude_cli \
     --param backend=lean --param enable_solver=false \
     --param problem="the square of any real number is nonnegative"
 ```
@@ -98,14 +98,14 @@ The experiment harness (axes: problems × models × solver on/off × repetitions
 plus the backend override):
 
 ```bash
-python cookbook/77_neurosymbolic/run_experiment.py --list          # see all IDs
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p021  # smoke: Galois
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p025  # smoke: Lean citation
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p "p001,p003" --backend sympy
-python cookbook/77_neurosymbolic/run_experiment.py -m "m001,m010"   # full battery, 2 models
+python cookbook/077_neurosymbolic/run_experiment.py --list          # see all IDs
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p021  # smoke: Galois
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p025  # smoke: Lean citation
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p "p001,p003" --backend sympy
+python cookbook/077_neurosymbolic/run_experiment.py -m "m001,m010"   # full battery, 2 models
 
 # or via the driver (recipe-67 style env presets)
-MODELS=m001 PROBLEMS=p025 bash cookbook/77_neurosymbolic/run_experiment.sh
+MODELS=m001 PROBLEMS=p025 bash cookbook/077_neurosymbolic/run_experiment.sh
 ```
 
 ## Running on Mac Mini over Momagrid (distributed grid)
@@ -167,23 +167,23 @@ conda activate spl123
 export MOMAGRID_HUB_URL=http://192.168.0.170:9000/
 
 # Smoke test — 1 model, 1 problem, dry run
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py \
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py \
     -m m002 -p p003 -s true -r 1 --workers 3 --dry-run
 
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py \
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py \
     -m m002 -s true -r 1 --workers 3 
 
 # Verify 360-cell plan (9 models × 20 problems × 2 arms)
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --dry-run
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --dry-run
 
 # Launch — 3 workers (one per GPU node)
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 3
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 3
 
 # Override backend for the whole run (e.g. re-score on SymPy rung)
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --workers 3 --backend sympy
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --workers 3 --backend sympy
 
 # Disable momagrid — fall back to local Ollama (sequential)
-python cookbook/77_neurosymbolic/run_experiment_momagrid.py --no-momagrid
+python cookbook/077_neurosymbolic/run_experiment_momagrid.py --no-momagrid
 ```
 
 Results are written to the same `experiment_results.db` as `run_experiment.py`,
@@ -202,7 +202,7 @@ After running experiments, visualize and explore results via the interactive das
 
 ```bash
 conda activate spl123
-streamlit run cookbook/77_neurosymbolic/app_experiment.py
+streamlit run cookbook/077_neurosymbolic/app_experiment.py
 ```
 
 Open your browser to `http://localhost:8501`. The dashboard provides:
@@ -221,19 +221,19 @@ Generate paper-ready markdown tables and figures from experiment results:
 
 ```bash
 # Print all tables for the latest run to stdout
-python cookbook/77_neurosymbolic/analyze_experiment.py
+python cookbook/077_neurosymbolic/analyze_experiment.py
 
 # Specify a run by source ID
-python cookbook/77_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
+python cookbook/077_neurosymbolic/analyze_experiment.py --source exp-20260615-073849
 
 # Generate figures (heatmap, bootstrap CI, pass comparison) as PDF/PNG
-python cookbook/77_neurosymbolic/analyze_experiment.py --figures ./figs --source exp-20260615-073849
+python cookbook/077_neurosymbolic/analyze_experiment.py --figures ./figs --source exp-20260615-073849
 
 # List all available experiment runs in the database
-python cookbook/77_neurosymbolic/analyze_experiment.py --list-sources
+python cookbook/077_neurosymbolic/analyze_experiment.py --list-sources
 
 # Save markdown tables to a file
-python cookbook/77_neurosymbolic/analyze_experiment.py --out results.md
+python cookbook/077_neurosymbolic/analyze_experiment.py --out results.md
 ```
 
 The analyzer aggregates results across multiple runs per cell (e.g., `--backend sympy --backend sage` runs 3 times each), computes mean pass rates, and outputs:

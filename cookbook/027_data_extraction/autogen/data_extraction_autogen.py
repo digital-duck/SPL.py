@@ -6,7 +6,7 @@ data from messy text.
 
 Usage:
     pip install pyautogen
-    python cookbook/27_data_extraction/autogen/data_extraction_autogen.py \
+    python cookbook/027_data_extraction/autogen/data_extraction_autogen.py \
         --text "Please process payment of USD 4,250.00 to Riverside Consulting (ref: PO-8821) by end of March."
 """
 
@@ -118,7 +118,7 @@ def run(text: str, format_name: str, model: str, log_dir: str) -> dict:
 @click.option("--format",  default="general", show_default=True,
               type=click.Choice(["general", "invoice", "contract"]))
 @click.option("--model",   default="gemma3", show_default=True)
-@click.option("--log-dir", default="cookbook/27_data_extraction/autogen/logs-autogen", show_default=True)
+@click.option("--log-dir", default="cookbook/027_data_extraction/autogen/logs-autogen", show_default=True)
 def main(text: str, format: str, model: str, log_dir: str):
     result = run(text, format, model, log_dir)
     print("\n" + "=" * 60)

@@ -14,11 +14,11 @@ Must be run from the SPL.py repo root:
   cd ~/projects/digital-duck/SPL.py
 
 Quick start:
-  python cookbook/78_constraint_opt/run_experiment.py --list
-  python cookbook/78_constraint_opt/run_experiment.py -r r78d -m m001 -n n05 -s true
-  python cookbook/78_constraint_opt/run_experiment.py -r r78d -m m001 -n n10 -s false
-  python cookbook/78_constraint_opt/run_experiment.py -r r78a,r78b,r78c,r78d -m m001 -n n05,n10,n20
-  python cookbook/78_constraint_opt/run_experiment.py --dry-run
+  python cookbook/078_constraint_opt/run_experiment.py --list
+  python cookbook/078_constraint_opt/run_experiment.py -r r78d -m m001 -n n05 -s true
+  python cookbook/078_constraint_opt/run_experiment.py -r r78d -m m001 -n n10 -s false
+  python cookbook/078_constraint_opt/run_experiment.py -r r78a,r78b,r78c,r78d -m m001 -n n05,n10,n20
+  python cookbook/078_constraint_opt/run_experiment.py --dry-run
 """
 
 import re
@@ -31,7 +31,7 @@ from pathlib import Path
 import click
 
 # ── SQLite persistence ────────────────────────────────────────────────────────
-DB_PATH_DEFAULT = "cookbook/78_constraint_opt/experiment_results.db"
+DB_PATH_DEFAULT = "cookbook/078_constraint_opt/experiment_results.db"
 
 
 def init_db(db_path: str) -> sqlite3.Connection:
@@ -183,7 +183,7 @@ RECIPES = {
     "r78a": {
         "name":   "constraint_opt",
         "label":  "LP (production)",
-        "script": "cookbook/78_constraint_opt/constraint_opt.spl",
+        "script": "cookbook/078_constraint_opt/constraint_opt.spl",
         "problems": {
             "n05": (
                 "A furniture workshop produces chairs and tables. Each chair requires 2 hours of "
@@ -232,7 +232,7 @@ RECIPES = {
     "r78b": {
         "name":   "supply_chain",
         "label":  "LP (transportation)",
-        "script": "cookbook/78_constraint_opt/supply_chain.spl",
+        "script": "cookbook/078_constraint_opt/supply_chain.spl",
         "problems": {
             "n05": (
                 "A company has two warehouses and three retail stores. Warehouse W1 has 80 units of "
@@ -267,7 +267,7 @@ RECIPES = {
     "r78c": {
         "name":   "staff_scheduling",
         "label":  "ILP (scheduling)",
-        "script": "cookbook/78_constraint_opt/staff_scheduling.spl",
+        "script": "cookbook/078_constraint_opt/staff_scheduling.spl",
         "problems": {
             "n05": (
                 "A clinic needs to staff one day with 3 shifts: Morning, Afternoon, and Night. Minimum "
@@ -304,7 +304,7 @@ RECIPES = {
     "r78d": {
         "name":   "resource_allocation",
         "label":  "Binary ILP (portfolio)",
-        "script": "cookbook/78_constraint_opt/resource_allocation.spl",
+        "script": "cookbook/078_constraint_opt/resource_allocation.spl",
         "problems": {
             "n05": (
                 "An IT department must select a portfolio of projects for next quarter. Six candidate "
@@ -354,9 +354,9 @@ RECIPES = {
 
 N_SIZES  = ("n05", "n10", "n20")
 SOLVERS  = ("true", "false")
-SCRIPT_DEFAULT = "cookbook/78_constraint_opt/constraint_opt.spl"
-LOG_DIR_DEFAULT = "cookbook/78_constraint_opt/logs"
-OUT_DIR         = "cookbook/78_constraint_opt/output"
+SCRIPT_DEFAULT = "cookbook/078_constraint_opt/constraint_opt.spl"
+LOG_DIR_DEFAULT = "cookbook/078_constraint_opt/logs"
+OUT_DIR         = "cookbook/078_constraint_opt/output"
 
 
 # ── Output parser ─────────────────────────────────────────────────────────────

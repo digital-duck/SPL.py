@@ -102,15 +102,15 @@ git-ignored):
 mkdir -p /tmp/spl_cache_test && cd /tmp/spl_cache_test
 
 # 1. Generates + caches section 1A (cache MISS)
-spl3 run /path/to/cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
+spl3 run /path/to/cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1A-real-complex.spl \
     --adapter ollama --model gemma3
 
 # 2. Reuses 1A from cache (HIT, 0 LLM calls); generates + caches 1B and 1C (MISS)
-spl3 run /path/to/cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
+spl3 run /path/to/cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
     --adapter ollama --model gemma3
 
 # 3. Run again — now ALL THREE are cache hits
-spl3 run /path/to/cookbook/70_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
+spl3 run /path/to/cookbook/070_linalg_core_concepts/chapter-1-vector-spaces-1C-subspaces.spl \
     --adapter ollama --model gemma3
 ```
 

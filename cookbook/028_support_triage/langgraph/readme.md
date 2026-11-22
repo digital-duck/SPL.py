@@ -21,7 +21,7 @@ ollama pull gemma3
 
 ```bash
 # From SPL20/ root
-python cookbook/28_support_triage/langgraph/support_triage_langgraph.py \
+python cookbook/028_support_triage/langgraph/support_triage_langgraph.py \
     --ticket "My account has been charged twice for order #ORD-12345"
 ```
 
@@ -43,14 +43,14 @@ RESULT:
 Dear [Name], I understand you've been charged twice for order ORD-12345...
 ```
 
-Check logs in `cookbook/28_support_triage/langgraph/logs-langgraph`.
+Check logs in `cookbook/028_support_triage/langgraph/logs-langgraph`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/28_support_triage/support_triage.spl \
+spl3 run cookbook/028_support_triage/support_triage.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/28_support_triage/tools.py \
+    --tools cookbook/028_support_triage/tools.py \
     ticket="My account has been charged twice for order #ORD-12345"
 ```
 

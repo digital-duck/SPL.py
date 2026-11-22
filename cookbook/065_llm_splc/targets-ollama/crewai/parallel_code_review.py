@@ -35,7 +35,7 @@ def parallel_code_review(code, lang="python", review_model="gemma3"):
         code=code,
         lang=lang,
         review_model=review_model,
-        log_dir="cookbook/63_parallel_code_review/logs-spl"
+        log_dir="cookbook/063_parallel_code_review/logs-spl"
     )
 
     sec_fb = agent.call(
@@ -43,7 +43,7 @@ def parallel_code_review(code, lang="python", review_model="gemma3"):
         code=code,
         lang=lang,
         review_model=review_model,
-        log_dir="cookbook/63_parallel_code_review/logs-spl"
+        log_dir="cookbook/063_parallel_code_review/logs-spl"
     )
 
     tests = agent.call(
@@ -51,7 +51,7 @@ def parallel_code_review(code, lang="python", review_model="gemma3"):
         code=code,
         lang=lang,
         review_model=review_model,
-        log_dir="cookbook/63_parallel_code_review/logs-spl"
+        log_dir="cookbook/063_parallel_code_review/logs-spl"
     )
 
     report = agent.call(

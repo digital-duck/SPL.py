@@ -21,9 +21,9 @@ ollama pull gemma3   # or any model you prefer
 
 ```bash
 # From SPL20/ root
-python cookbook/12_plan_and_execute/crewai/plan_execute_crewai.py \
+python cookbook/012_plan_and_execute/crewai/plan_execute_crewai.py \
     --task "Build a simple URL shortener in Python" \
-    --output-dir "cookbook/12_plan_and_execute/crewai/output"
+    --output-dir "cookbook/012_plan_and_execute/crewai/output"
 ```
 
 ## Validate
@@ -47,17 +47,17 @@ FINAL REPORT:
 <summary report text>
 ```
 
-Check output files in `cookbook/12_plan_and_execute/crewai/output`.
-Check logs in `cookbook/12_plan_and_execute/crewai/logs-crewai`.
+Check output files in `cookbook/012_plan_and_execute/crewai/output`.
+Check logs in `cookbook/012_plan_and_execute/crewai/logs-crewai`.
 
 ## SPL equivalent
 
 ```bash
-spl3 run cookbook/12_plan_and_execute/plan_execute.spl \
+spl3 run cookbook/012_plan_and_execute/plan_execute.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/12_plan_and_execute/tools.py \
+    --tools cookbook/012_plan_and_execute/tools.py \
     task="Build a simple URL shortener in Python" \
-    output_dir="cookbook/12_plan_and_execute/output"
+    output_dir="cookbook/012_plan_and_execute/output"
 ```
 
 ## LOC comparison

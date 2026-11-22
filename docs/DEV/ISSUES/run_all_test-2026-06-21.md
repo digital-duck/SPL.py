@@ -122,7 +122,7 @@ The promoted TOOL_API version won (last-write-wins) and lost the `mode` paramete
 
 ### Fix 3 — Catalog pointed to nonexistent .spl file (recipe 67)
 
-**Error:** `Error: File not found: cookbook/67_symbolic_math/symbolic_math.spl`
+**Error:** `Error: File not found: cookbook/067_symbolic_math/symbolic_math.spl`
 
 **Root cause:** Catalog `args` referenced `symbolic_math.spl` which does not exist. The actual entry-point file is `hello_symbolic_math.spl`.
 

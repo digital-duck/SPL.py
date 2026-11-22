@@ -5,7 +5,7 @@ Pattern: Researcher → Analyst → Writer (Sequential process)
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/14_multi_agent/crewai/multi_agent_crewai.py \\
+    python cookbook/014_multi_agent/crewai/multi_agent_crewai.py \\
         --topic "Impact of AI on healthcare"
 """
 
@@ -86,7 +86,7 @@ def run(topic: str, model: str, log_dir: str):
 @click.command()
 @click.option("--topic", required=True, help="Topic for the report")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/14_multi_agent/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/014_multi_agent/logs-crewai", help="Log directory")
 def main(topic, model, log_dir):
     """Multi-Agent Collaboration — CrewAI edition"""
     run(topic, model, log_dir)

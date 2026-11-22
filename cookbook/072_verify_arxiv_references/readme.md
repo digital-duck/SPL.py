@@ -32,7 +32,7 @@ For each entry in `@in_refs`:
    **not** the citing paper's own description of the work.
 4. **Download** — fetch the PDF into `@out_dir` (cached by filename,
    rate-limited to be polite to arXiv — same shape as
-   `cookbook/47_arxiv_morning_brief`'s `download_arxiv_pdf`).
+   `cookbook/047_arxiv_morning_brief`'s `download_arxiv_pdf`).
 5. **Digest** — the LLM writes a **plain-prose digest of the verified
    abstract in fewer than 5 sentences** (`summary_desc`). The model only
    condenses; the facts (title, authors, abstract) come from arXiv, not
@@ -57,7 +57,7 @@ log, only the workflow's own `[LEVEL] message` lines.
 ## File structure
 
 ```
-cookbook/72_verify_arxiv_references/
+cookbook/072_verify_arxiv_references/
 ├── readme.md                      ← this file
 ├── verify_arxiv_references.spl    ← workflow + inline TOOL_API + LLM function
 ├── neurosymbolic-spl-refs.txt     ← real reference list (our own paper) for testing
@@ -96,12 +96,12 @@ beyond arXiv. Only step 5, the digest, calls the model.)
 ### Smoke test — single reference
 
 ```bash
-spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
+spl3 run cookbook/072_verify_arxiv_references/verify_arxiv_references.spl \
     --adapter ollama --model phi3 \
     in_refs="## References
 
 Smith, J. (2025). A test paper for citation verification. arXiv:2501.12948." \
-    out_dir="cookbook/72_verify_arxiv_references/output"
+    out_dir="cookbook/072_verify_arxiv_references/output"
 ```
 
 Expected: 1 verified, `output/2501.12948.pdf` downloaded, and `summary.csv`
@@ -114,10 +114,10 @@ recipe is built to surface.
 
 ```bash
 cd ~/projects/digital-duck/SPL.py
-spl3 run cookbook/72_verify_arxiv_references/verify_arxiv_references.spl \
+spl3 run cookbook/072_verify_arxiv_references/verify_arxiv_references.spl \
     --llm ollama:gemma3 \
-    --param in_refs="cookbook/72_verify_arxiv_references/spl-dual-mode-refs.txt \
-    --param out_dir="cookbook/72_verify_arxiv_references/output"
+    --param in_refs="cookbook/072_verify_arxiv_references/spl-dual-mode-refs.txt \
+    --param out_dir="cookbook/072_verify_arxiv_references/output"
 ```
 
 `neurosymbolic-spl-refs.txt` holds the real `## References` block from our

@@ -36,7 +36,7 @@ LLM-generated prose is needed inside SPL f-strings.
 ## Files
 
 ```
-cookbook/69_notebook_gen/
+cookbook/069_notebook_gen/
 ├── readme.md          ← this file
 ├── notebook_gen.spl   ← workflow + LLM prompt templates (IMPORT 'tools')
 ├── tools.spl          ← CREATE TOOL_API assemble_notebook(...) — builds the .ipynb
@@ -54,13 +54,13 @@ path so the tool definition lives alongside the workflow as plain SPL source.
 ## Run
 
 ```bash
-spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+spl3 run cookbook/069_notebook_gen/notebook_gen.spl \
     --kernel --adapter claude_cli
 
 # With a custom topic and matrix
-spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
+spl3 run cookbook/069_notebook_gen/notebook_gen.spl \
     --kernel --adapter claude_cli \
-    -p output_path=cookbook/69_notebook_gen/output/dot_prod.ipynb \
+    -p output_path=cookbook/069_notebook_gen/output/dot_prod.ipynb \
     -p topic="dot products and orthogonality" \
     -p matrix_a="[[1, 0], [0, -1]]"
 ```
@@ -68,7 +68,7 @@ spl3 run cookbook/69_notebook_gen/notebook_gen.spl \
 Open the result:
 
 ```bash
-jupyter notebook cookbook/69_notebook_gen/output/eigenvalues.ipynb
+jupyter notebook cookbook/069_notebook_gen/output/eigenvalues.ipynb
 ```
 
 ## Key learning points

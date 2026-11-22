@@ -76,8 +76,8 @@ Then remove the three-line `# spl3` block from `~/.claude/CLAUDE.md`.
 Once installed, strip the leading `/spl3` and use any `spl3` sub-command:
 
 ```
-/spl3 run cookbook/01_hello_world/hello.spl
-/spl3 run cookbook/01_hello_world/hello.spl --adapter claude
+/spl3 run cookbook/001_hello_world/hello.spl
+/spl3 run cookbook/001_hello_world/hello.spl --adapter claude
 /spl3 describe my_workflow.spl
 /spl3 validate my_workflow.spl
 /spl3 explain my_workflow.spl

@@ -17,7 +17,7 @@ def load_patterns(pattern_id: str) -> str:
             lines.append(textwrap.fill(paragraph, width=width, subsequent_indent=indent))
         return "\n".join(lines)
 
-    recipe_dir = "cookbook/00_recipe_maker"
+    recipe_dir = "cookbook/000_recipe_maker"
     path = os.path.join(recipe_dir, "patterns.json")
     with open(path, encoding="utf-8") as fh:
         data = json.load(fh)

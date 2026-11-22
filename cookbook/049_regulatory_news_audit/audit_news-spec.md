@@ -14,8 +14,8 @@ Automatically audit a batch of financial news items for regulatory risk, log the
 
 | Parameter | Default | Description |
 |---|---|---|
-| `@news_batch_path` | `cookbook/49_regulatory_news_audit/data/news_feed.txt` | Path to the flat-file news feed to be audited |
-| `@log_dir` | `cookbook/49_regulatory_news_audit/logs-spl` | Directory where per-batch JSON audit results are written |
+| `@news_batch_path` | `cookbook/049_regulatory_news_audit/data/news_feed.txt` | Path to the flat-file news feed to be audited |
+| `@log_dir` | `cookbook/049_regulatory_news_audit/logs-spl` | Directory where per-batch JSON audit results are written |
 
 ---
 

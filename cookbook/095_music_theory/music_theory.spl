@@ -42,8 +42,8 @@
 --
 -- Requires: stdlib json only — no new pip dependency
 -- Run:
---   spl3 run cookbook/95_music_theory/music_theory.spl --llm claude_cli
---   spl3 run cookbook/95_music_theory/music_theory.spl \
+--   spl3 run cookbook/095_music_theory/music_theory.spl --llm claude_cli
+--   spl3 run cookbook/095_music_theory/music_theory.spl \
 --       --llm ollama:gemma3 --param enable_solver=false
 -- ============================================================
 
@@ -284,7 +284,7 @@ WORKFLOW music_theory
   INPUT @melody TEXT := "72,74,76,77,79,77,76,72"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INTEGER := 4
-  INPUT @out_dir TEXT := "./cookbook/95_music_theory/output"
+  INPUT @out_dir TEXT := "./cookbook/095_music_theory/output"
   OUTPUT @report TEXT
 DO
   CALL time_monotonic() INTO @t_start;

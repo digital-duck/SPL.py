@@ -17,7 +17,7 @@
 -- Requires: pip install sympy
 --           pip install 'spl-llm[sage]'                      (sage)
 --           bash cookbook/tools/lean/setup_lean.sh --with-mathlib  (lean)
--- Run:      spl3 run cookbook/77_neurosymbolic/symbolic_math.spl \
+-- Run:      spl3 run cookbook/077_neurosymbolic/symbolic_math.spl \
 --               --kernel --llm claude_cli \
 --               --param problem="..." --param backend=sage
 -- ============================================================
@@ -66,7 +66,7 @@ WORKFLOW neurosymbolic_solver
   INPUT @backend TEXT := "sage"
   INPUT @enable_solver TEXT := "true"
   INPUT @max_tries INT := 3
-  INPUT @log_dir TEXT := "cookbook/77_neurosymbolic/logs-spl"
+  INPUT @log_dir TEXT := "cookbook/077_neurosymbolic/logs-spl"
   INPUT @hostname TEXT := ""
   INPUT @pid TEXT := ""
   INPUT @thinking_note TEXT := ""

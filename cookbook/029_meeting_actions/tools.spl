@@ -3,7 +3,7 @@
 CREATE TOOL_API load_transcript(filename TEXT) RETURNS TEXT AS PYTHON $$
 import os
 
-_TRANSCRIPTS_DIR = "cookbook/29_meeting_actions/transcripts"
+_TRANSCRIPTS_DIR = "cookbook/029_meeting_actions/transcripts"
 
 def load_transcript(filename):
     filename = filename.strip()

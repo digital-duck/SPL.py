@@ -8,7 +8,7 @@ and provides filtering, search, CRUD, and summary views.
 
 Run from the SPL.py repo root:
   conda activate spl123
-  streamlit run cookbook/67_symbolic_math/app.py
+  streamlit run cookbook/067_symbolic_math/app.py
 """
 
 import sqlite3
@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-DB_PATH = Path("cookbook/67_symbolic_math/experiment_results.db")
+DB_PATH = Path("cookbook/067_symbolic_math/experiment_results.db")
 
 # ── DB ────────────────────────────────────────────────────────────────────────
 
@@ -165,7 +165,7 @@ def main():
         uploaded = st.file_uploader("Upload CSV file", type="csv", key="uploader")
         path_txt = st.text_input(
             "Or enter local path",
-            placeholder="cookbook/67_symbolic_math/logs-spl/….csv",
+            placeholder="cookbook/067_symbolic_math/logs-spl/….csv",
         )
 
         if st.button("Import", type="primary", use_container_width=True):

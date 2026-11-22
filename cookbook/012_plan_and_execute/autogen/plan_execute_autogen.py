@@ -6,7 +6,7 @@ A procedural script coordinates the agents to match the SPL workflow.
 
 Usage:
     pip install pyautogen
-    python cookbook/12_plan_and_execute/autogen/plan_execute_autogen.py \
+    python cookbook/012_plan_and_execute/autogen/plan_execute_autogen.py \
         --task "Build a REST API for a todo app"
 """
 
@@ -191,8 +191,8 @@ def run(task: str, max_steps: int, max_replans: int, model: str, output_dir: str
 @click.option("--max-steps",   default=5, show_default=True, type=int)
 @click.option("--max-replans", default=3, show_default=True, type=int)
 @click.option("--model",       default="gemma3", show_default=True)
-@click.option("--output-dir",  default="cookbook/12_plan_and_execute/autogen/output", show_default=True)
-@click.option("--log-dir",     default="cookbook/12_plan_and_execute/autogen/logs-autogen", show_default=True)
+@click.option("--output-dir",  default="cookbook/012_plan_and_execute/autogen/output", show_default=True)
+@click.option("--log-dir",     default="cookbook/012_plan_and_execute/autogen/logs-autogen", show_default=True)
 def main(task: str, max_steps: int, max_replans: int, model: str, output_dir: str, log_dir: str):
     result = run(task, max_steps, max_replans, model, output_dir, log_dir)
     print("\n" + "=" * 60)

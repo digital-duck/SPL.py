@@ -5,7 +5,7 @@ Pattern: Loop over papers → [process_paper] → assemble_brief
 
 Usage:
     pip install pyautogen requests PyPDF2
-    python cookbook/47_arxiv_morning_brief/autogen/arxiv_autogen.py \\
+    python cookbook/047_arxiv_morning_brief/autogen/arxiv_autogen.py \\
         --urls "https://arxiv.org/pdf/2501.12948"
 """
 
@@ -84,7 +84,7 @@ def run(urls_input: str, date: str, model: str, log_dir: str):
 @click.option("--urls", required=True, help="Arxiv URLs")
 @click.option("--date", default="", help="Brief date")
 @click.option("--model", default="gemma3", help="LLM model")
-@click.option("--log-dir", default="cookbook/47_arxiv_morning_brief/logs-autogen", help="Log dir")
+@click.option("--log-dir", default="cookbook/047_arxiv_morning_brief/logs-autogen", help="Log dir")
 def main(urls, date, model, log_dir):
     """arXiv Morning Brief — AutoGen edition"""
     run(urls, date, model, log_dir)

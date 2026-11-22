@@ -5,7 +5,7 @@ General-purpose LLM query — proxy any prompt to any adapter/model. This recipe
 ## Usage
 
 ```bash
-export FILE_SPL="$HOME/projects/digital-duck/SPL.py/cookbook/02_ollama_proxy/proxy.spl"
+export FILE_SPL="$HOME/projects/digital-duck/SPL.py/cookbook/002_ollama_proxy/proxy.spl"
 
 ## different commands
 # python

@@ -71,20 +71,20 @@ python cookbook/run_all.py --catalog-file cookbook/cookbook_catalog-go.json --ca
 
 ```bash
 # Recipe 36 — Tool-Use (deterministic math via Python, narrative via LLM)
-spl-go run cookbook/36_tool_use/tool_use.spl \
+spl-go run cookbook/036_tool_use/tool_use.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/36_tool_use/tools.py \
+    --tools cookbook/036_tool_use/tools.py \
     sales="1200,1450,1380,1600,1750,1900"
 
 # Recipe 13 — Map-Reduce
-spl-go run cookbook/13_map_reduce/map_reduce.spl \
+spl-go run cookbook/013_map_reduce/map_reduce.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/13_map_reduce/tools.py
+    --tools cookbook/013_map_reduce/tools.py
 
 # Recipe 41 — Human Steering
-spl-go run cookbook/41_human_steering/human_steering.spl \
+spl-go run cookbook/041_human_steering/human_steering.spl \
     --adapter ollama --model gemma3 \
-    --tools cookbook/41_human_steering/tools.py
+    --tools cookbook/041_human_steering/tools.py
 ```
 
 The `--tools` flag loads any Python file with `@spl_tool`-decorated functions.
@@ -96,15 +96,15 @@ interpreter is embedded in the Go binary.
 
 ```bash
 # Recipe 37 — Headline News (claude_cli, no WebSearch needed)
-spl-go run cookbook/37_headline_news/headline_news.spl \
+spl-go run cookbook/037_headline_news/headline_news.spl \
     --adapter claude_cli --model claude-opus-4-6 \
     topic="artificial intelligence"
 
 # Recipe 06 — ReAct Agent (claude_cli + WebSearch tool)
-spl-go run cookbook/06_react_agent/react_agent.spl \
+spl-go run cookbook/006_react_agent/react_agent.spl \
     --adapter claude_cli --model claude-sonnet-4-6 \
     --allowed-tools WebSearch \
-    --tools cookbook/06_react_agent/tools.py \
+    --tools cookbook/006_react_agent/tools.py \
     country="France"
 ```
 
@@ -116,8 +116,8 @@ Each recipe writes a `-go.md` suffixed log to `~/.spl/logs/` (e.g. `hello-ollama
 
 ```bash
 # Run the same recipe on both runtimes, then diff the logs
-spl     run ./cookbook/01_hello_world/hello.spl --adapter ollama
-spl-go  run ./cookbook/01_hello_world/hello.spl --adapter ollama
+spl     run ./cookbook/001_hello_world/hello.spl --adapter ollama
+spl-go  run ./cookbook/001_hello_world/hello.spl --adapter ollama
 
 ls -lt ~/.spl/logs/hello-* | head -4
 ```
@@ -139,13 +139,13 @@ These recipes use Python tool functions (`tools.py` or inline Python via `SOLVE`
 
 Run them:
 ```bash
-spl-go run cookbook/90_compsci_physics/physics_conservation.spl --adapter claude_cli
-spl-go run cookbook/91_compsci_chemistry/chemistry_balance.spl --adapter claude_cli
-spl-go run cookbook/92_compsci_materials/materials_crystal.spl --adapter claude_cli
-spl-go run cookbook/93_auto_planning/auto_planning.spl --adapter claude_cli
-spl-go run cookbook/94_data_eng_text2spl/text2sql_quality.spl --adapter claude_cli
-spl-go run cookbook/95_music_theory/music_theory.spl --adapter claude_cli
-spl-go run cookbook/96_drug_sim/drug_sim.spl --adapter claude_cli
+spl-go run cookbook/090_compsci_physics/physics_conservation.spl --adapter claude_cli
+spl-go run cookbook/091_compsci_chemistry/chemistry_balance.spl --adapter claude_cli
+spl-go run cookbook/092_compsci_materials/materials_crystal.spl --adapter claude_cli
+spl-go run cookbook/093_auto_planning/auto_planning.spl --adapter claude_cli
+spl-go run cookbook/094_data_eng_text2spl/text2sql_quality.spl --adapter claude_cli
+spl-go run cookbook/095_music_theory/music_theory.spl --adapter claude_cli
+spl-go run cookbook/096_drug_sim/drug_sim.spl --adapter claude_cli
 ```
 
 ## latest test results
@@ -192,33 +192,33 @@ The commands to run:
 ```bash
 cd ~/projects/digital-duck/SPL30
 
-spl-go run cookbook/05_self_refine/self_refine.spl \
+spl-go run cookbook/005_self_refine/self_refine.spl \
     --adapter ollama \
     --param writer_model="gemma3" \
     --param critic_model="gemma3" \
     --param max_iterations=1
 
-spl-go run cookbook/50_code_pipeline/code_pipeline.spl \
+spl-go run cookbook/050_code_pipeline/code_pipeline.spl \
     --adapter ollama \
     --param model="gemma3" \
-    --param log_dir="cookbook/50_code_pipeline/logs-spl-go" \
+    --param log_dir="cookbook/050_code_pipeline/logs-spl-go" \
     --param spec="write a Python function that reverses a string" 
 
 export SPEC="write a Python function reverse_string(s: str) -> str that returns the input string with characters in reverse order, handles empty string by returning empty string"
 export MODEL="gemma4:e4b"            #   "gemma3"
-spl-go run cookbook/50_code_pipeline/code_pipeline.spl \
+spl-go run cookbook/050_code_pipeline/code_pipeline.spl \
     --adapter ollama \
     --param model="$MODEL" \
-    --param log_dir="cookbook/50_code_pipeline/logs-spl-go" \
+    --param log_dir="cookbook/050_code_pipeline/logs-spl-go" \
     --param spec="$SPEC" 
 
 
-spl-go run cookbook/63_parallel_code_review/parallel_code_review.spl \
+spl-go run cookbook/063_parallel_code_review/parallel_code_review.spl \
     --adapter ollama \
     --param model="gemma4:e4b" \
     --param code="def add(a, b): return a - b"
 
-spl-go run cookbook/64_parallel_news_digest/parallel_news_digest.spl \
+spl-go run cookbook/064_parallel_news_digest/parallel_news_digest.spl \
     --adapter ollama \
     --param model="gemma4:e4b" \
     --param topic="AI"

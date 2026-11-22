@@ -46,19 +46,19 @@ spl doc-rag query "Who is Wen?" --top-k 3
 ## Usage
 
 ```bash
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="Who is Wen?"
 
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="What is Momagrid and why was it built?"
 
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="What is the Gang of Four in the ZiNets research team?"
 
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="What is eta_AI and how is it measured?"
 
-spl3 run cookbook/08_rag_query/rag_query.spl --adapter ollama \
+spl3 run cookbook/008_rag_query/rag_query.spl --adapter ollama \
     question="How did Wen transition from physics to software engineering?"
 ```
 

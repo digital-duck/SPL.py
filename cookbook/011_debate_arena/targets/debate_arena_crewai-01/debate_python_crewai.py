@@ -113,7 +113,7 @@ def _generate(agent: Agent, prompt: str) -> str:
 def debate_arena(
     topic: str = "AI should be open-sourced",              # SPL: @topic TEXT DEFAULT '...'
     max_rounds: int = 3,                                    # SPL: @max_rounds INTEGER DEFAULT 3
-    log_dir: str = "cookbook/11_debate_arena/logs-crewai", # SPL: @log_dir TEXT DEFAULT '...'
+    log_dir: str = "cookbook/011_debate_arena/logs-crewai", # SPL: @log_dir TEXT DEFAULT '...'
     model: str = "ollama/gemma3",
 ) -> dict:
     """
@@ -287,7 +287,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--log-dir",
-        default="cookbook/11_debate_arena/logs-crewai",
+        default="cookbook/011_debate_arena/logs-crewai",
         help="Directory for per-round logs and verdict",
     )
     parser.add_argument(

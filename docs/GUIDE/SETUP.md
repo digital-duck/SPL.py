@@ -104,7 +104,7 @@ Extras explained:
   (a conda-forge or distro Sage would reintroduce a separate-Python gap).
 - `dev` — pytest + the vector/embedding backends the test suite exercises.
 - `ui` (optional, not needed for the verifier ladder) — Streamlit apps
-  (`cookbook/67_symbolic_math/app*.py`).
+  (`cookbook/067_symbolic_math/app*.py`).
 
 **Verify:**
 
@@ -152,7 +152,7 @@ ollama pull rnj-1        # Essential AI 8B STEM model (m010)
 **Verify** (one LLM call):
 
 ```bash
-spl3 run cookbook/05_self_refine/self_refine.spl --llm claude_cli
+spl3 run cookbook/005_self_refine/self_refine.spl --llm claude_cli
 ```
 
 ---
@@ -176,7 +176,7 @@ jupyter kernelspec list        # must show: sagemath
 ```bash
 python -c "from sage.all import QQ; print(QQ['x']('x^5-x-1').galois_group())"
 # → Transitive group number 5 of degree 5
-spl3 run cookbook/75_sage_math/basic_sagemath.spl --kernel-name sagemath --llm claude_cli
+spl3 run cookbook/075_sage_math/basic_sagemath.spl --kernel-name sagemath --llm claude_cli
 ```
 
 ---
@@ -247,10 +247,10 @@ python -c "from spl3.lean_bridge import repl_available, mathlib_available; print
 # → True True
 
 # Stdlib tier (fast, ~5 s warm-up):
-spl3 run cookbook/76_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3  # claude_cli
+spl3 run cookbook/076_lean_proof/lean_proof.spl --kernel --llm ollama:gemma3  # claude_cli
 
 # Mathlib tier (first warm-up imports mathlib, 10–40 s):
-spl3 run cookbook/77_neurosymbolic/symbolic_math.spl --kernel \
+spl3 run cookbook/077_neurosymbolic/symbolic_math.spl --kernel \
   --llm ollama:gemma3 \
   --param backend=lean --param problem="the square of any real number is nonnegative"
   # --llm claude_cli \
@@ -277,9 +277,9 @@ python -c "from spl3.lean_bridge import repl_available, mathlib_available; print
 jupyter kernelspec list | grep sagemath
 
 # 3. One smoke run per verifier rung (recipe 77 covers all three):
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p003 -s true --backend sympy   # ✓ complete
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p021 -s true                   # ✓ complete (Galois → S5)
-python cookbook/77_neurosymbolic/run_experiment.py -m m001 -p p025 -s true                   # ✓ machine_proved (Nat.add_comm)
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p003 -s true --backend sympy   # ✓ complete
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p021 -s true                   # ✓ complete (Galois → S5)
+python cookbook/077_neurosymbolic/run_experiment.py -m m001 -p p025 -s true                   # ✓ machine_proved (Nat.add_comm)
 ```
 
 If all three smoke cells pass, the entire ladder — SymPy instance checks,

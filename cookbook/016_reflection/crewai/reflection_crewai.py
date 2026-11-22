@@ -5,7 +5,7 @@ Pattern: solve → reflect → score → (confident? commit : correct → loop)
 
 Usage:
     pip install crewai langchain-ollama
-    python cookbook/16_reflection/crewai/reflection_crewai.py \\
+    python cookbook/016_reflection/crewai/reflection_crewai.py \\
         --problem "What are the trade-offs of microservices vs monoliths?"
 """
 
@@ -95,7 +95,7 @@ def run(problem: str, max_refs: int, model: str, log_dir: str):
 @click.option("--problem", required=True, help="Problem to solve")
 @click.option("--max-reflections", default=3, help="Max reflection cycles")
 @click.option("--model", default="gemma3", help="LLM model name")
-@click.option("--log-dir", default="cookbook/16_reflection/logs-crewai", help="Log directory")
+@click.option("--log-dir", default="cookbook/016_reflection/logs-crewai", help="Log directory")
 def main(problem, max_reflections, model, log_dir):
     """Reflection Agent — CrewAI edition"""
     run(problem, max_reflections, model, log_dir)

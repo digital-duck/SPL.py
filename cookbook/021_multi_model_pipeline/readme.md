@@ -23,10 +23,10 @@ write_summary(@analysis) USING MODEL gemma3 → @draft
 ## Usage
 
 ```bash
-spl3 run cookbook/21_multi_model_pipeline/multi_model.spl --adapter ollama \
+spl3 run cookbook/021_multi_model_pipeline/multi_model.spl --adapter ollama \
     topic="climate change"
 
-spl3 run cookbook/21_multi_model_pipeline/multi_model.spl --adapter ollama \
+spl3 run cookbook/021_multi_model_pipeline/multi_model.spl --adapter ollama \
     topic="the future of edge computing"
 ```
 
