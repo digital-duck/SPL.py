@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPL.py</title>
+<style>
+  :root {
+    --ink: #1c2330; --muted: #5b6678; --paper: #fbfbfa; --line: #dfe3ea;
+    --blue: #4f8df5; --gray: #8a919c; --green: #2e9e6b; --orange: #e8913a; --red: #d8473f;
+    --code-bg: #0f1623; --code-ink: #dbe4f3;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #e9ebef; color: var(--ink);
+    font: 26px/1.42 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .deck { position: fixed; inset: 0 0 4.5vh 0; display: grid; place-items: center; }
+  .slide { display: none; width: min(96vw, 158vh); height: min(54vw, 89vh); background: var(--paper);
+    border-radius: 14px; box-shadow: 0 8px 40px rgba(20,30,50,.18); padding: 4.2% 5.5% 3.5%;
+    flex-direction: column; overflow: hidden; position: relative; }
+  .slide.on { display: flex; }
+  h1 { font-size: 2.5em; line-height: 1.1; margin: 0 0 .3em; letter-spacing: -.02em; }
+  h2 { font-size: 1.7em; margin: 0 0 .5em; letter-spacing: -.01em; }
+  h2::after { content: ""; display: block; width: 64px; height: 4px; background: var(--blue); border-radius: 2px; margin-top: .25em; }
+  h3 { font-size: 1.05em; margin: 0 0 .3em; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: 0 0 .6em; }
+  ul { margin: 0; padding-left: 1.1em; }
+  li { margin: .3em 0; }
+  li > ul { font-size: .82em; margin-top: .1em; }
+  li::marker { color: var(--blue); }
+  .sub { color: var(--muted); font-size: 1.15em; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; align-items: start; flex: 1; min-height: 0; }
+  .cols.wide-left { grid-template-columns: 1.25fr 1fr; }
+  .cols.wide-right { grid-template-columns: 1fr 1.25fr; }
+  pre, code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  code { background: #eef0f4; padding: .05em .35em; border-radius: 4px; font-size: .88em; }
+  pre { background: var(--code-bg); color: var(--code-ink); padding: .7em .9em; border-radius: 10px; font-size: .66em; line-height: 1.45;
+    margin: 0 0 .6em; overflow: hidden; white-space: pre; }
+  pre .c { color: #7d8ba3; } pre .k { color: #8cc4ff; } pre .s { color: #a5e3b4; } pre .h { color: #ffcf7a; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: .6em .9em; }
+  .tag { display: inline-block; font-size: .62em; font-weight: 700; padding: .12em .6em; border-radius: 99px; color: #fff; vertical-align: middle; }
+  .t-gen { background: var(--blue); } .t-io { background: var(--gray); } .t-sol { background: var(--green); }
+  .t-ctl { background: var(--orange); } .t-safe { background: var(--red); }
+  table { border-collapse: collapse; width: 100%; font-size: .92em; }
+  th, td { text-align: left; padding: .35em .6em; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85em; text-transform: uppercase; letter-spacing: .05em; }
+  .big { font-size: 1.5em; line-height: 1.3; }
+  .center { text-align: center; }
+  .grow { flex: 1; min-height: 0; }
+  .foot { position: absolute; left: 5.5%; right: 5.5%; bottom: 1.8%; display: flex; justify-content: space-between;
+    color: #9aa3b2; font-size: .5em; }
+  .foot a { color: inherit; text-decoration: underline; }
+  .refs a { color: var(--blue); display: block; }
+  .refs li { font-size: .78em; }
+  .quiet { color: var(--muted); }
+  .good { color: var(--green); font-weight: 600; } .bad { color: var(--red); font-weight: 600; }
+  .demo { border-left: 6px solid var(--orange); background: #fff6ea; border-radius: 0 10px 10px 0; padding: .5em .9em; margin-bottom: .7em; font-size: .85em; }
+  .demo b { color: var(--orange); letter-spacing: .06em; font-size: .8em; text-transform: uppercase; }
+  .stack > * { margin-bottom: .45em; }
+  svg { max-width: 100%; height: auto; }
+  svg text { font: 600 13px system-ui, sans-serif; }
+  #bar { position: fixed; left: 0; top: 0; height: 4px; background: var(--blue); width: 0; transition: width .2s; z-index: 5; }
+  #nav { position: fixed; left: 50%; bottom: 8px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 6; }
+  #nav button { font: 600 14px system-ui, sans-serif; min-width: 44px; padding: 6px 12px; border-radius: 8px; border: 1px solid #c9ced8;
+    background: #fff; color: var(--ink); cursor: pointer; }
+  #nav button:hover { background: #eef2fb; border-color: var(--blue); }
+  #nav button:disabled { opacity: .4; cursor: default; background: #fff; border-color: #c9ced8; }
+  #nav #pdf { margin-left: 10px; }
+  #nav #tocbtn { margin-right: 10px; }
+  #hud { position: fixed; right: 14px; bottom: 10px; font-size: 13px; color: #7d8696; z-index: 5; }
+  .toc { columns: 3; column-gap: 3%; list-style: none; margin: 0; padding: 0; font-size: .8em; }
+  .toc li { break-inside: avoid; margin: .22em 0; padding: .12em .3em; border-radius: 6px; cursor: pointer; display: flex; gap: .6em; }
+  .toc li:hover { background: #eef2fb; }
+  .toc .n { color: var(--blue); font-weight: 700; min-width: 1.6em; text-align: right; }
+  .notes { display: none; }
+  #notes-box { display: none; }
+  body.show-notes #notes-box { display: block; position: fixed; left: 0; right: 0; bottom: 0; max-height: 34vh; overflow: auto;
+    background: #141a26; color: #d7deeb; padding: 14px 6vw; font-size: 17px; line-height: 1.5; z-index: 9; }
+  @page { size: 13.333in 7.5in; margin: 0; }
+  @media print {
+    html, body { background: #fff; height: auto; font-size: 24px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .deck { position: static; display: block; }
+    .slide { display: flex !important; width: 13.333in; height: 7.5in; border-radius: 0; box-shadow: none; break-after: page; page-break-after: always; }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    pre { font-size: .58em; }       /* the page is smaller than the screen: keep code lines inside their box */
+    #bar, #hud, #nav, .notes, #notes-box { display: none !important; }
+  }
+</style>
+</head>
+<body data-title="SPL.py">
+<div id="bar"></div>
+<div id="nav">
+  <button id="tocbtn" title="Outline (T)">TOC</button>
+  <button id="first" title="First slide (Home)">&lt;&lt;</button>
+  <button id="prev" title="Previous slide (←)">&lt;</button>
+  <button id="next" title="Next slide (→ or space)">&gt;</button>
+  <button id="last" title="Last slide (End)">&gt;&gt;</button>
+  <button id="pdf" title="Opens the print dialog: choose Save as PDF, landscape, margins None, and tick Background graphics">PDF</button>
+</div>
+<div id="hud">← → or space · T outline · F fullscreen · N notes · O overview</div>
+<div class="deck" id="deck">
+<section class="slide">
+  <div style="margin:auto 0">
+    <h1>SPL — Structured Prompt Language</h1>
+    <p class="big">A declarative language for agentic AI workflows: SQL for LLMs.</p>
+    <p class="sub">Published as <code>spl-llm</code> 3.4.1 · Apache-2.0</p>
+
+    <br>
+    <p class="quiet" style="margin-top:3.2em"><a href="mailto:wen.gong.research@gmail.com" style="color:inherit">wen.gong.research@gmail.com</a></p>
+
+  </div>
+  <div class="foot"><span>PyPI package: spl-llm</span><span></span></div>
+  <aside class="notes">SPL is a declarative language for agentic LLM workflows. SQL abstracts over databases, and SPL abstracts over language models in the same way. The Python runtime is published on PyPI as spl-llm, version 3.4.1, under Apache-2.0.</aside>
+</section>
+
+<section class="slide" id="outline">
+  <h2>Outline</h2>
+  <ol class="toc" id="toc"></ol>
+  <aside class="notes">The outline lists every slide title; click a line to jump.</aside>
+</section>
+
+<section class="slide">
+  <h2>The problem: glue code around every LLM call</h2>
+  <p>Most agentic frameworks need <b>hundreds of lines of imperative Python</b> to wire up prompts, manage context, handle errors and switch LLM providers.</p>
+  <table>
+    <tr><th>Concern</th><th>Framework approach</th><th>SPL approach</th></tr>
+    <tr><td>Provider switch</td><td>Rewrite adapter glue code</td><td><code>--adapter ollama</code> → <code>--adapter momagrid</code></td></tr>
+    <tr><td>Retry logic</td><td>Try/except boilerplate</td><td><code>RETRY</code> / <code>EXCEPTION WHEN</code></td></tr>
+    <tr><td>Sub-agent calls</td><td>Async queue + callbacks</td><td><code>CALL workflow_name() INTO @result</code></td></tr>
+    <tr><td>Parallel agents</td><td><code>asyncio.gather</code> + coordination</td><td><code>CALL PARALLEL ... END</code></td></tr>
+    <tr><td>Token budgets</td><td>Manual prompt trimming</td><td><code>OPTIMIZE ... WITHIN 2000 TOKENS</code></td></tr>
+  </table>
+  <aside class="notes">This table comes from the README. Each row is a concern that frameworks handle in imperative code. SPL handles each one with a single declarative construct or a run-time flag.</aside>
+</section>
+
+<section class="slide">
+  <h2>The idea: declare what, not how</h2>
+  <div class="cols">
+    <ul>
+      <li>The same <code>.spl</code> file runs on <b>Ollama, Claude, OpenAI, Gemini or Momagrid</b> without changing a line.</li>
+      <li><b>DODA</b>: Design Once, Deploy Anywhere.</li>
+      <li>The <code>.spl</code> file is the logical specification. It is the same whatever the runtime, adapter or deployment.</li>
+      <li>Provider, parallelism and infrastructure are chosen at run time with <code>--adapter</code> and <code>--model</code>.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Rule</h3>
+      <div>✔ No provider-specific logic in <code>.spl</code> files</div>
+      <div>✔ Physical choices are made at execution time</div>
+    </div>
+  </div>
+  <aside class="notes">The central design pattern is DODA, Design Once, Deploy Anywhere. A workflow file never names a provider. Which provider, how much parallelism and which machines are all decided when you run it.</aside>
+</section>
+
+<section class="slide">
+  <h2>Three paradigms in one language</h2>
+  <table>
+    <tr><th>Layer</th><th>Inspiration</th><th>SPL construct</th></tr>
+    <tr><td>Data</td><td>SQL</td><td><code>SELECT</code>, <code>WITH</code>, <code>GENERATE</code></td></tr>
+    <tr><td>Logic</td><td>Python</td><td><code>CALL</code>, <code>@spl_tool</code>, typed variables</td></tr>
+    <tr><td>Orchestration</td><td>Linux shell</td><td><code>WORKFLOW</code> composition, <code>IMPORT</code></td></tr>
+  </table>
+  <aside class="notes">SPL combines three programming paradigms. The data layer borrows from SQL, the logic layer from Python with tools and typed variables, and the orchestration layer from shell-style composition and imports.</aside>
+</section>
+
+<section class="slide">
+  <h2>A workflow in SPL: self_refine</h2>
+  <pre><span class="k">WORKFLOW</span> self_refine
+    <span class="k">INPUT</span>:  @topic TEXT
+    <span class="k">OUTPUT</span>: @essay TEXT
+<span class="k">DO</span>
+    <span class="k">GENERATE</span> draft(@topic) <span class="k">INTO</span> @essay
+    <span class="k">CALL</span> critique(@essay) <span class="k">INTO</span> @feedback
+    <span class="k">GENERATE</span> refine(@essay, @feedback) <span class="k">INTO</span> @essay
+    <span class="k">COMMIT</span> @essay
+<span class="k">END</span></pre>
+  <pre>spl3 run cookbook/005_self_refine/self_refine.spl \
+  <span class="h">--llm ollama:gemma3</span> --param task=<span class="s">"What is vibe coding?"</span></pre>
+  <aside class="notes">This is the condensed self_refine workflow from the README. It declares its inputs and outputs, generates a draft, calls a critique, refines the draft and commits the result. One command runs it on a local Ollama model.</aside>
+</section>
+
+<section class="slide">
+  <h2>Core language constructs</h2>
+  <div class="cols">
+    <div class="card stack">
+      <h3>Steps and units</h3>
+      <div><code>GENERATE ... INTO @var</code>: one LLM call, result kept in a variable</div>
+      <div><code>WORKFLOW</code> / <code>PROCEDURE</code>: named units with <code>INPUT:</code> / <code>OUTPUT:</code></div>
+      <div><code>CALL name(...) INTO @var</code>: run a sub-workflow</div>
+      <div><code>CALL PARALLEL ... END</code>: run branches at the same time</div>
+      <div><code>IMPORT 'file.spl'</code>: resolved at parse time</div>
+    </div>
+    <div class="card stack">
+      <h3>Control and exit</h3>
+      <div><code>EVALUATE @var WHEN ... END</code>: the LLM judges the condition, not string equality</div>
+      <div><code>WHILE condition DO ... END</code>: refine in a loop</div>
+      <div><code>EXCEPTION WHEN Type THEN ... END</code>: typed recovery from errors</div>
+      <div><code>COMMIT @var WITH STATUS = '...'</code>: a non-<code>complete</code> status raises <code>WorkflowCompositionError</code> in the caller</div>
+    </div>
+  </div>
+  <aside class="notes">These are the constructs the executor handles. Note that EVALUATE is semantic branching: the condition is judged by an LLM, not by string comparison. COMMIT with a status other than complete turns into an error in the calling workflow.</aside>
+</section>
+
+<section class="slide">
+  <h2>Execution pipeline</h2>
+  <pre>.spl source
+  → Lexer      <span class="c">spl/lexer.py            chars → tokens</span>
+  → Parser     <span class="c">spl/parser.py + spl3/parser.py  → AST</span>
+  → Executor   <span class="c">spl/executor.py + spl3/executor.py</span>
+      → Adapter          <span class="c">spl3/adapters/</span>
+      → WorkflowComposer <span class="c">spl3/composer.py</span>
+                         <span class="h">CALL / CALL PARALLEL dispatch</span></pre>
+  <aside class="notes">Source text becomes tokens, then an AST, then LLM calls. The executor sends generation to an adapter. Workflow composition, meaning CALL and CALL PARALLEL, goes through the WorkflowComposer.</aside>
+</section>
+
+<section class="slide">
+  <h2>Two runtimes, one package</h2>
+  <div class="cols">
+    <ul>
+      <li><code>spl/</code> is the <b>SPL 2.0 base</b>: lexer, parser, executor, adapters, storage.</li>
+      <li><code>spl3/</code> extends it by inheritance: <code>SPL3Executor(SPL2Executor)</code>, <code>SPL3Parser(SPL2Parser)</code>.</li>
+      <li>v3 features never go into <code>spl/</code>. They are overrides in <code>spl3/</code>.</li>
+      <li>The <code>spl3</code> CLI is permanent and always points to the highest available runtime layer.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Later versions</h3>
+      <div>✔ <code>spl4/</code>, <code>spl5/</code> are planned as new subpackages next to <code>spl/</code> and <code>spl3/</code></div>
+      <div>✔ <code>spl/cli.py</code> stays for backward compatibility</div>
+    </div>
+  </div>
+  <aside class="notes">The 2.0 to 3.0 extension is clean inheritance, so both packages ship in the same wheel. New features are added by overriding in spl3, never by editing the base.</aside>
+</section>
+
+<section class="slide">
+  <h2>Adapters and the dd-llm bridge</h2>
+  <div class="cols">
+    <ul>
+      <li>Four <b>mandatory adapters</b>: <code>ollama</code>, <code>claude_cli</code>, <code>openrouter</code>, <code>momagrid</code>.</li>
+      <li>The interface has two methods: <code>generate(...)</code> and <code>generate_multimodal(...)</code>.</li>
+      <li><code>generate_multimodal</code> is used when an INPUT is <code>IMAGE</code>, <code>AUDIO</code> or <code>VIDEO</code>.</li>
+      <li>All providers live in <b>dd-llm</b> and are reached through <code>DDLLMBridge</code> / <code>MultiModalDDLLMBridge</code>.</li>
+      <li>Only <code>echo</code> (a test double), <code>liquid</code> and <code>snap</code> are in this repo.</li>
+    </ul>
+    <table>
+      <tr><th>Adapter</th><th>Stage</th></tr>
+      <tr><td><code>ollama</code></td><td>Local prototyping</td></tr>
+      <tr><td><code>claude_cli</code></td><td>Best-model validation</td></tr>
+      <tr><td><code>openrouter</code></td><td>Broad model coverage</td></tr>
+      <tr><td><code>momagrid</code></td><td>Production grid</td></tr>
+    </table>
+  </div>
+  <aside class="notes">Together the four mandatory adapters cover the path from local prototyping to grid deployment. Any new runtime port must implement them before it counts as feature-complete. Provider behaviour is changed in dd-llm, not in this repo.</aside>
+</section>
+
+<section class="slide">
+  <h2>Momagrid: CALL as a system call</h2>
+  <pre><span class="k">export</span> MOMAGRID_HUB_URL=http://192.168.1.10:9000
+
+<span class="c"># single recipe on the grid</span>
+spl3 run cookbook/005_self_refine/self_refine.spl \
+  <span class="h">--llm momagrid:llama3.2</span>
+
+<span class="c"># whole cookbook, queue filled so every node gets work</span>
+python cookbook/run_all.py --adapter momagrid --workers 5</pre>
+  <ul>
+    <li>Each <code>CALL</code> becomes a Hub-dispatched system call, and <code>CALL PARALLEL</code> sends branches to different nodes.</li>
+    <li>The hub result is <b>nested</b> (<code>{"state": "COMPLETE", "result": {...}}</code>) and must not be flattened.</li>
+  </ul>
+  <aside class="notes">Momagrid is a hub that dispatches inference across a LAN grid of GPU nodes. SPL 3.0 treats it as a compute OS, where workflow calls are system calls. The adapter relies on the hub's nested result shape.</aside>
+</section>
+
+<section class="slide">
+  <h2>The verifier ladder: SOLVE and ASSERT</h2>
+  <table>
+    <tr><th>Rung</th><th>Verifies</th><th>Trust badge</th></tr>
+    <tr><td>NumPy</td><td>numeric spot-check</td><td></td></tr>
+    <tr><td>SymPy / SageMath</td><td>an exact <b>instance</b></td><td><code>machine_verified</code></td></tr>
+    <tr><td>Lean 4 + mathlib</td><td>a <b>statement</b>, proof-checked</td><td><code>machine_proved</code></td></tr>
+  </table>
+  <ul>
+    <li>No new SPL constructs: <code>SOLVE</code>/<code>ASSERT</code> are the same at every rung.</li>
+    <li>The backend is chosen at run time: <code>spl3 run &lt;file.spl&gt; --kernel --kernel-name sagemath</code></li>
+  </ul>
+  <aside class="notes">An instance check says that this particular eigenpair satisfies A v equals lambda v. A Lean proof covers the universally quantified statement. Both use the same two constructs, and only the backend behind them changes.</aside>
+</section>
+
+<section class="slide">
+  <h2>Persistent kernel for deterministic Python</h2>
+  <div class="cols">
+    <ul>
+      <li>Before: <code>run_python</code> started a <b>fresh subprocess on every call</b> and lost all state.</li>
+      <li>Now: a persistent IPython kernel owned by the executor (<code>spl3/kernel.py</code>).</li>
+      <li>New capability comes from <code>pip install</code> + <code>import</code>, not from new stdlib tools.</li>
+      <li><code>CREATE TOOL_API</code> bodies and <code>run_python</code> share one namespace.</li>
+    </ul>
+    <div class="card stack">
+      <h3>Boundaries</h3>
+      <div>✔ The executor stays the source of truth for <code>@variables</code></div>
+      <div>✔ <code>GENERATE</code> stays on the adapter path and never reaches the kernel</div>
+      <div>✔ The subprocess fallback is used when no kernel is present</div>
+    </div>
+  </div>
+  <aside class="notes">The design rule is that SPL owns orchestration, typed state and the IR, and the kernel owns Python execution. Prompts go to adapters and deterministic code goes to the kernel. The two never mix. The design note says the first slice is implemented.</aside>
+</section>
+
+<section class="slide">
+  <h2>Text2SPL with Code-RAG</h2>
+  <pre>cookbook/*.spl
+  └─► spl3 describe    → *-spec.md   <span class="c">(Section 0 = description)</span>
+       └─► code-rag seed  → vector store
+            └─► spl3 text2spl → nearest examples as few-shot
+                 └─► new .spl workflow</pre>
+  <ul>
+    <li><b>No fine-tuning</b>: SPL is a new language with no training data, so examples are retrieved when it compiles.</li>
+    <li>ChromaDB with <code>all-MiniLM-L6-v2</code> embeddings, in <code>.spl/code_rag/chroma.sqlite3</code>.</li>
+    <li>The store is one SQLite file, so no server process is needed. Back it up by copying the directory.</li>
+  </ul>
+  <aside class="notes">The cookbook is used to bootstrap generation. Each recipe gets a prose spec, the specs are indexed, and text2spl retrieves the nearest ones as few-shot context.</aside>
+</section>
+
+<section class="slide">
+  <h2>Compile to other frameworks: splc</h2>
+  <pre>spl3 splc compile &lt;file.spl&gt; --lang &lt;target&gt;
+
+<span class="c"># show the LLM prompt without making a call</span>
+spl3 splc compile agent.spl --lang python/pocketflow --llm <span class="h">--prompt</span></pre>
+  <div class="cols">
+    <div class="card stack">
+      <h3>Framework targets</h3>
+      <div><code>go</code>, <code>ts</code>, <code>python</code></div>
+      <div><code>python/langgraph</code>, <code>python/crewai</code>, <code>python/autogen</code></div>
+      <div><code>python/pocketflow</code>, <code>python/liquid</code></div>
+    </div>
+    <div class="card stack">
+      <h3>Textbook targets (python/&lt;domain&gt;)</h3>
+      <div><code>python/linalg</code>, <code>python/intro_geometry</code></div>
+      <div><code>python/domain_textbook</code></div>
+    </div>
+  </div>
+  <aside class="notes">splc takes the logical .spl view and turns it into a physical target in another framework. The --prompt flag prints the system and user prompts and exits, so it costs nothing.</aside>
+</section>
+
+<section class="slide">
+  <h2>The cookbook: 113 recipes</h2>
+  <table>
+    <tr><th>Range</th><th>Theme</th></tr>
+    <tr><td><code>001–019</code></td><td>Basics and patterns: hello world, self-refine, ReAct, debate, map-reduce</td></tr>
+    <tr><td><code>020–049</code></td><td>Applied, applications, advanced: text2SPL, code gen, failover, vision</td></tr>
+    <tr><td><code>050–064</code></td><td>SPL 3.0: multimodal, parallel code review, voice dialogue</td></tr>
+    <tr><td><code>065–087</code></td><td>Verifier ladder: <code>CREATE TOOL_API</code>, <code>SOLVE</code>/<code>ASSERT</code>, concept-book</td></tr>
+    <tr><td><code>089–121</code></td><td>Applied solvers: LP/MILP, CP-SAT, Z3, forecasting</td></tr>
+  </table>
+  <p><code>cookbook/cookbook_catalog.json</code> is the single source of truth · <code>run_all.py --list</code> / <code>--catalog</code> / <code>--check</code> · <code>cookbook-solver/</code> holds 47 solver recipes</p>
+  <aside class="notes">There are 113 catalogued recipes with ids from 001 to 121. The catalog records whether each recipe is approved and active, which adapters it excludes, and its tier. You edit the catalog, not the runner. Solver recipes are also collected separately.</aside>
+</section>
+
+<section class="slide">
+  <h2>Real example: concept-book</h2>
+  <pre>YAML graph → learning navigator (HTML)
+           → content generator (SPL) → verified lesson</pre>
+  <div class="cols">
+    <ul>
+      <li>Ten domain graphs are authored, including linear algebra, geometry, mechanics and music theory.</li>
+      <li><code>linalg_graph.yaml</code> has <b>37 nodes and 51 edges</b>.</li>
+      <li>The math is verified by SymPy / Sage / Lean, and the LLM writes the narrative.</li>
+    </ul>
+    <pre><span class="c"># scripts/concept_graph.py</span>
+python concept_graph.py \
+  --domain linalg_graph.yaml \
+  path spectral_theorem
+python concept_graph.py \
+  --domain linalg_graph.yaml \
+  visualize --format html</pre>
+  </div>
+  <aside class="notes">A concept-book takes its curriculum from a graph of concepts and their prerequisites. In a demo session, the Gram-Schmidt learning path was traced in 11 steps and the HTML output was checked in a browser.</aside>
+</section>
+
+<section class="slide">
+  <h2>Demo: one workflow, two backends</h2>
+  <pre><span class="c"># 1. local models</span>
+spl3 run cookbook/005_self_refine/self_refine.spl --adapter ollama \
+  --param task=<span class="s">"Explain vibe coding"</span> \
+  --param writer_model=<span class="s">"gemma3"</span> --param critic_model=<span class="s">"llama3.2"</span>
+
+<span class="c"># 2. the same file on the grid</span>
+spl3 run cookbook/005_self_refine/self_refine.spl --llm momagrid:llama3.2
+
+<span class="c"># 3. execution plan, dry run, no LLM</span>
+spl3 util explain cookbook/005_self_refine/self_refine.spl</pre>
+  <div class="demo"><b>Demo</b> Run step 1, then step 2 without editing the file, then step 3 to show the plan.</div>
+  <aside class="notes">The point of the demo is that the .spl file does not change between steps 1 and 2. Only the flag changes. Step 3 shows the execution plan without making any LLM call.</aside>
+</section>
+
+<section class="slide">
+  <h2>How to try it</h2>
+  <pre>conda create -n spl123 python=3.11
+conda activate spl123
+pip install -e <span class="s">".[dev]"</span>
+spl3 --help
+spl3 run cookbook/001_hello_world/hello.spl --adapter ollama
+pytest                      <span class="c"># 900+ tests</span></pre>
+  <ul>
+    <li>Optional extras include <code>ui</code>, <code>kernel</code>, <code>sage</code>, <code>solver</code> and <code>media</code>.</li>
+    <li>For the full verifier ladder on a fresh machine, see <code>docs/GUIDE/SETUP.md</code>.</li>
+  </ul>
+  <aside class="notes">Python 3.11 or later is required. The hello-world recipe on Ollama needs no credentials. Extras add the Streamlit UI, the kernel, SageMath wheels, solver backends and image tools.</aside>
+</section>
+
+<section class="slide">
+  <h2>What is not done yet</h2>
+  <ul>
+    <li>Cache: Phase 1 is done. <b>Phase 2</b> (adapter-level prefix caching) and <b>Phase 3</b> (<code>CACHE BY</code> / <code>UNLESS STALE</code> syntax) are pending.</li>
+    <li><code>docs/DEV/ROADMAP.md</code> items are <b>candidates, not commitments</b>.</li>
+    <li>The human review of the PocketFlow recipes is still open. Their catalog status gets updated as the review goes.</li>
+    <li>New features are prototyped in SPL30 first. They move into SPL.py once they have tests and a cookbook recipe.</li>
+  </ul>
+  <aside class="notes">Here is what is pending. The roadmap is a list of candidates for discussion, not a schedule. SPL.py is the stable repo, and experiments happen in SPL30.</aside>
+</section>
+
+<section class="slide">
+  <h2>References</h2>
+  <ul class="refs">
+    <li><a href="https://github.com/digital-duck/momagrid">Momagrid Hub: github.com/digital-duck/momagrid</a></li>
+    <li><a href="https://github.com/digital-duck/SPL30">SPL30 prototyping repo: github.com/digital-duck/SPL30</a></li>
+    <li><a href="https://pypi.org/project/dd-llm/">dd-llm on PyPI</a></li>
+    <li><a href="docs/GUIDE/SETUP.md">docs/GUIDE/SETUP.md: fresh-machine setup</a></li>
+    <li><a href="docs/DEV/ROADMAP.md">docs/DEV/ROADMAP.md: feature roadmap</a></li>
+    <li><a href="docs/DEV/sage_lean_integration_plan.md">docs/DEV/sage_lean_integration_plan.md: verifier ladder plan</a></li>
+  </ul>
+  <aside class="notes">These are the related repos and the design documents in the repo for anyone who wants more detail.</aside>
+</section>
+
+<section class="slide">
+  <h2>Questions?</h2>
+  <aside class="notes">Take questions.</aside>
+</section>
+</div>
+
+<script>
+(function () {
+  // the outline slide is built from the other slides' titles, so it cannot drift when a slide is added or renamed
+  (function () {
+    const all = [...document.querySelectorAll('.slide')], toc = document.getElementById('toc');
+    if (!toc) return;
+    all.forEach((sl, k) => {
+      const h = sl.querySelector('h2');
+      if (!h || sl === toc.closest('.slide')) return;
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="n">' + (k + 1) + '</span><span>' + h.innerHTML + '</span>';
+      li.onclick = e => { e.stopPropagation(); window.__show && window.__show(k); };
+      toc.appendChild(li);
+    });
+  })();
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  let i = Math.min(Math.max(parseInt(location.hash.slice(1), 10) - 1 || 0, 0), slides.length - 1);
+  let overview = false;
+
+  function notesBox() {
+    let box = document.getElementById('notes-box');
+    if (!box) { box = document.createElement('div'); box.id = 'notes-box'; document.body.appendChild(box); }
+    const aside = slides[i].querySelector('.notes');
+    box.innerHTML = aside ? aside.innerHTML : '';
+  }
+  function show(n) {
+    i = Math.min(Math.max(n, 0), slides.length - 1);
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    ['first', 'prev'].forEach(id => document.getElementById(id).disabled = i === 0);
+    ['next', 'last'].forEach(id => document.getElementById(id).disabled = i === slides.length - 1);
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#' + (i + 1));
+    notesBox();
+    // page number in the corner of every slide but the first
+    slides.forEach((s, k) => {
+      let f = s.querySelector('.foot');
+      if (!f && k > 0) { f = document.createElement('div'); f.className = 'foot'; f.innerHTML = '<span></span><span></span>'; f.firstElementChild.textContent = document.body.dataset.title; s.appendChild(f); }
+      if (f && k > 0) f.lastElementChild.textContent = (k + 1) + ' / ' + slides.length;
+    });
+  }
+  window.__show = show;
+  function toggleOverview() {
+    overview = !overview;
+    const deck = document.getElementById('deck');
+    if (overview) {
+      deck.style.cssText = 'position:static;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:14px;place-items:start';
+      slides.forEach((s, k) => { s.classList.add('on'); s.style.cssText = 'width:100%;height:auto;aspect-ratio:16/9;font-size:9px;cursor:pointer'; s.onclick = () => { toggleOverview(); show(k); }; });
+      document.documentElement.style.overflow = 'auto'; document.body.style.overflow = 'auto';
+    } else {
+      deck.style.cssText = '';
+      slides.forEach(s => { s.style.cssText = ''; s.onclick = null; });
+      document.documentElement.style.overflow = ''; document.body.style.overflow = '';
+      show(i);
+    }
+  }
+  const go = (id, f) => document.getElementById(id).addEventListener('click', e => { e.stopPropagation(); if (!overview) f(); });
+  const outline = Math.max(0, slides.findIndex(s => s.id === 'outline'));
+  go('tocbtn', () => show(outline)); go('first', () => show(0)); go('prev', () => show(i - 1)); go('next', () => show(i + 1)); go('last', () => show(slides.length - 1));
+  document.getElementById('pdf').addEventListener('click', () => { if (overview) toggleOverview(); window.print(); });
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); if (!overview) show(i + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); if (!overview) show(i - 1); }
+    else if (e.key === 't' || e.key === 'T') { if (!overview) show(outline); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+    else if (e.key === 'n' || e.key === 'N') document.body.classList.toggle('show-notes');
+    else if (e.key === 'o' || e.key === 'O' || e.key === 'Escape' && overview) toggleOverview();
+  });
+  document.addEventListener('click', e => {
+    if (overview || e.target.closest('a, button, pre')) return;
+    show(e.clientX > innerWidth / 2 ? i + 1 : i - 1);
+  });
+  show(i);
+})();
+</script>
+</body>
+</html>
