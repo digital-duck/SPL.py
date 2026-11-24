@@ -5127,6 +5127,8 @@ def cmd_clean_port(ports: str, force: bool, dry_run: bool) -> None:
 # ------------------------------------------------------------------ #
 
 from spl3.splc.cli import splc as _splc_command
+from spl3.docs.cli import cmd_docs as _docs_command      # noqa: E402
+main.add_command(_docs_command, name="docs")
 main.add_command(_splc_command, name="splc")
 
 

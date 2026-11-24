@@ -159,6 +159,7 @@ include = ["spl*"]
 
 [tool.setuptools.package-data]
 "spl3" = ["_skill/SKILL.md"]
+"spl3.docs" = ["doc_it.spl", "styles/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
