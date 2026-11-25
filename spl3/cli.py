@@ -3300,6 +3300,8 @@ def cmd_mmd2img(mmd_files, fmt, out, out_dir, background, theme, width, height):
                 args += ["-w", str(width)]
             if height is not None and fmt in ("png", "svg"):
                 args += ["-H", str(height)]
+            if fmt == "pdf":
+                args.append("--pdfFit")  # one page sized to the diagram, not paginated A4
             try:
                 r = subprocess.run(args, capture_output=True, timeout=60)
                 if r.returncode == 0:
