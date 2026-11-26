@@ -56,6 +56,7 @@ gemini = ["dd-llm[gemini]>=0.2.0"]
 bedrock = ["dd-llm[bedrock]>=0.2.0"]
 vertex = ["dd-llm[vertex]>=0.2.0"]
 momagrid = ["dd-llm[momagrid]>=0.2.0"]
+format = ["dd-format>=0.2.0"]   # `spl3 util md2pdf | html2pdf` and the html page of `spl3 docs` (the conversions live in dd-format)
 ui = [
     "streamlit>=1.35",
     "pandas>=2.0",

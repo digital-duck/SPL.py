@@ -25,7 +25,7 @@ PATHISH = re.compile(rf"^[\w.\-]+(/[\w.\-]+)*{EXT}$|^[\w.\-]+(/[\w.\-]+)*/$")   
 
 
 def slug(title: str) -> str:
-    """The GitHub anchor of a heading (also what spl3/docs/md2html.py uses for ids): lower case, no punctuation, spaces to hyphens."""
+    """The GitHub anchor of a heading (also what dd-format uses for heading ids): lower case, no punctuation, spaces to hyphens."""
     t = re.sub(r"[`*_]|<[^>]+>", "", title).strip().lower()
     t = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", t)
     return re.sub(r"\s", "-", re.sub(r"[^\w\s-]", "", t))

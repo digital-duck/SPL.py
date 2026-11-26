@@ -5,7 +5,7 @@
     spl3 docs https://github.com/org/repo --style tutorial --format markdown  # cloned to the temp area first: ./repo.tutorial.md
     spl3 docs ./proj --style custom --prompt "a one-page FAQ"      # your own instructions (--prompt TEXT or @FILE)
 
-The default format is html (the Markdown styles are converted to a page, `md2html.py`); `--format markdown` keeps Markdown (a deck is html only).
+The default format is html (the Markdown styles are converted to a page by dd-format); `--format markdown` keeps Markdown (a deck is html only).
 A program reads the codebase into a digest (`gather.py`), the SPL workflow `doc_it.spl` plans and writes (two model calls), a program assembles
 and checks the page (`assemble.py`), and if the check fails the workflow's `doc_fix` fixes it once (one more call). The styles are files
 (`spl3/docs/styles/*.md`): edit them to change a style.
@@ -68,7 +68,7 @@ def style_file(style: str, prompt: Optional[str], fmt: Optional[str], folder: Pa
     if not prompt:
         raise click.UsageError("--style custom needs --prompt TEXT (or --prompt @FILE) saying how the document should be built and structured")
     text = Path(prompt[1:]).expanduser().read_text(encoding="utf-8") if prompt.startswith("@") else prompt
-    fmt = "markdown"      # a model writes Markdown; an HTML page is made from it (spl3/docs/md2html.py)
+    fmt = "markdown"      # a model writes Markdown; an HTML page is made from it (dd-format)
     body = (STYLES_DIR / "custom.md").read_text(encoding="utf-8").replace("{{PROMPT}}", text.strip())
     path = folder / "custom.md"
     path.write_text(f"---\nformat: {fmt}\nmin_sections: 2\n---\n{body}", encoding="utf-8")
@@ -223,8 +223,11 @@ def make_one(root, source, style, prompt, fmt, name, out_dir, out, force, llm, b
     target.parent.mkdir(parents=True, exist_ok=True)
     document = result["document"]
     if to_html:
-        from .md2html import convert
-        document = convert(document, title)
+        try:
+            from dd_format.md_html import convert
+        except ImportError as e:
+            raise click.ClickException(f"the html format is dd-format's ({e}): pip install \"spl-llm[format]\" (or ask for --format markdown)")
+        document = convert(document, title, "52rem", "light")
     target.write_text(document, encoding="utf-8")
     for w in result.get("warnings", []):
         click.echo(f"warning: {w}")
